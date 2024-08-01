@@ -1,0 +1,282 @@
+:root {
+  --mainBlue: #45669d;
+  --secound: #ad8135;
+  --FontsColor: #193a6e;
+   --borderColor:#b7b7b7;
+   --fontFamily:'Roboto', sans-serif;
+   --labelColor:  #333333;
+ 
+}
+input::placeholder,
+textarea::placeholder {
+  color: var(--labelColor) !important;
+  opacity: 0.9; /* Override default opacity */
+  font-family: var(--fontFamily) !important;
+}
+.ant-input-textarea::placeholder {
+  color: var(--labelColor);
+  opacity: 1; /* Override default opacity */
+  font-family: var(--fontFamily) !important;
+}
+
+/* Apply the custom placeholder color for select elements */
+select option:first-child {
+  color: var(--labelColor) !important;
+  font-family: var(--fontFamily) !important;
+  opacity: 0.9; 
+}
+
+/* Additional styling to ensure the placeholder is visible in select */
+select {
+  color: var(--labelColor) !important;
+  font-family: var(--fontFamily) !important;
+  opacity: 0.9; 
+  border-radius: 4px !important;
+}
+
+select:focus option:first-child {
+  color: initial; /* Reset color on focus to show selected option */
+}
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-placeholder {
+  color: var(--labelColor) !important;
+  opacity: 0.9; 
+}
+.ant-select-dropdown {
+  font-family: var(--font-family-primary) !important;
+  color: var(--labelColor) !important;
+}
+body{
+font-family: var(--fontFamily) !important;
+
+}
+.App {
+  text-align: center;
+}
+
+.App-logo {
+  height: 40vmin;
+  pointer-events: none;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .App-logo {
+    animation: App-logo-spin infinite 20s linear;
+  }
+}
+
+.App-header {
+  background-color: #282c34;
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  font-size: calc(10px + 2vmin);
+  color: white;
+}
+
+.App-link {
+  color: #61dafb;
+}
+
+@keyframes App-logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+.nav-link.active {
+  border-bottom: 2px solid #007bff; /* Border color for the active link */
+  font-weight: bold;
+}
+.nav-links-container {
+  margin-right: 2rem;
+}
+.Header-border {
+  border-bottom: 2px solid #f6f7f8;
+  padding-bottom: 1rem;
+}
+.Header-padding {
+  padding: 0.1rem 0.4rem;
+}
+.top-search {
+  height: 80%;
+}
+.details-header {
+  /* border: 2px solid #71a3f0; */
+  /* margin-right: 2.5rem;
+margin-left: 2.5rem; */
+  margin-top: 2rem;
+  padding: 5px;
+  border-radius: 5px;
+}
+.search-main {
+  /* margin-top: 1rem; */
+}
+.title {
+}
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
+  .ant-input-prefix,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
+  .ant-input-suffix {
+  display: flex;
+  flex: none;
+  /* align-items: flex-end; */
+  justify-content: flex-end !important;
+}
+.search-fliters input {
+  padding: 4px;
+  margin-left: 4px !important;
+}
+.margin {
+  margin-left: 6px !important;
+}
+.sid-nav-main
+  :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
+  .ant-menu-item
+  .ant-menu-item-icon,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
+  .ant-menu-submenu-title
+  .ant-menu-item-icon,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-item .anticon,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
+  .ant-menu-submenu-title
+  .anticon {
+  font-size: 22px !important;
+  color: #fff;
+}
+.label-nav {
+  background-color: white !important;
+  padding: 0.3rem;
+  border-radius: 50%;
+  color: var(--secound) !important;
+}
+.label-nav .ant-menu-item-icon {
+}
+
+.sid-nav-main .ant-menu-item.specific-icon .ant-menu-item-icon svg {
+  color: white !important;
+}
+
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  .ant-menu-item:first-child.ant-menu-item-selected,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item:first-child.ant-menu-item-selected {
+  background-color: transparent !important;
+}
+
+.label-nav-collaps {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: #fff;
+  color: var(--secound) !important;
+  padding: 0.4rem;
+  border-radius: 50%;
+}
+
+.specific-icon{
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 0.4rem;
+  border-radius: 50%;
+}
+.sid-nav-main ul li {
+  margin: 8px 15px !important;
+  padding: 0px !important;
+}
+
+.label-nav-collaps .ant-menu-item-icon,
+.label-nav-collaps .ant-menu-submenu-title .ant-menu-item-icon {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline .ant-menu-item {
+  height: 50px !important;
+}
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline > .ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical
+  > .ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title {
+  height: 50px !important;
+}
+
+.ant-menu {
+  background-color: #45669d !important;
+}
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  .ant-menu-item-selected,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item-selected {
+  background-color: var(--secound);
+  
+}
+.ant-table-thead > tr > th {
+  padding: 6px 10px !important; /* Adjust the value as needed */
+  white-space: nowrap; /* Prevent text from wrapping */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis; 
+  background-color: #fff;
+  color: var(--FontsColor) !important;
+}
+.ant-table-thead > tr > th {
+  border-top: 2px solid #b7b7b7 !important;
+  border-bottom: 2px solid #b7b7b7 !important;
+  background-color: #fff !important;
+  border-radius: 0px !important;
+}
+.ant-table-tbody > tr > td {
+  padding-top: 10px !important; /* Adjust padding top as needed */
+  padding-bottom: 0px !important; /* Adjust padding bottom as needed */
+  overflow: hidden; /* Hide overflow text */
+  text-overflow: ellipsis !important; /* Add ellipsis for overflow text */
+  color: var(--FontsColor) !important; /* Ensure text color is applied */
+  font-size: 12px;
+  font-weight: 600;
+}
+
+
+/* select */
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(.ant-select-customize-input) .ant-select-selector {
+  border: 1.5px solid var(--borderColor);
+}
+/* input */
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-outlined {
+  border: 1.5px solid var(--borderColor);
+
+}
+.sid-nav-main ul {
+  height: 100vh;
+}
+.navbar-nav  a {
+  /* list-style: none !important; */
+  text-decoration: none !important;
+}
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item, :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item, :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-submenu-title, :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
+color: #fff !important;
+font-family: var(--fontFamily) !important;
+}
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-select {
+  font-family: var(--fontFamily) !important;
+  color: #272727 !important;
+}
+.btn{
+  border-radius: 4px !important; 
+}
+.bred-cram-main{
+font-size: 14px;
+font-weight: 500;
+margin: 0px;
+font-family: var(--fontFamily);
+color: var(--labelColor) !important;
+}
