@@ -89,7 +89,9 @@ export default function Projects() {
   return (
     
     <div>
-      <Table dataSource={dataSource} columns={columns} bordered />;
+      <Table dataSource={dataSource} columns={columns} bordered 
+          rowClassName={(record, index) => (index % 2 !== 0 ? 'odd-row' : 'even-row')}
+      />;
     </div>
   )
 }
