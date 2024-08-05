@@ -20,8 +20,7 @@ function HeaderDetails() {
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const formattedNav = nav.replace(/^\//, "");
-  console.log(location?.key, "123");
-  console.log(typeof nav);
+ 
   const [isSideNav, setisSideNav] = useState(true);
 
   const mriatalStatus = [
@@ -42,6 +41,7 @@ function HeaderDetails() {
       key: "4",
     },
   ];
+
   const SubscriptionsLookups1 = [
     {
       label: "Single",
@@ -60,6 +60,7 @@ function HeaderDetails() {
       key: "4",
     },
   ];
+
   const Gender = [
     {
       key: "1",
@@ -74,6 +75,7 @@ function HeaderDetails() {
       label: "Other",
     },
   ];
+  
   const [selectedValue, setSelectedValue] = useState(null);
 
   const handleChange = (value) => {
@@ -120,6 +122,7 @@ function HeaderDetails() {
               suffix={<SearchOutlined />}
             />
             <MySelect
+              style={{ width: "400px" }}
               placeholder={"Gender"}
               className="margin"
               options={Gender}
@@ -145,12 +148,6 @@ function HeaderDetails() {
               placeholder={"Subscriptions"}
               options={SubscriptionsLookups}
             />
-            {/* <MySelect placeholder={"Project"} className="margin" />
-        <MySelect placeholder={"Project"} className="margin" />
-        <MySelect placeholder={"Assignee"} className="margin" />
-        <Button className='margin'>
-            More <PlusOutlined />
-        </Button> */}
           </div>
         </div>
       </div>

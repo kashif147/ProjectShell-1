@@ -7,7 +7,9 @@
    --fontFamily:'Roboto', sans-serif;
    --labelColor:  #333333;
    --table-row: #deebff;
-   
+
+   --btn-hover: #dcdfe4;
+
 
 }
 input::placeholder,
@@ -21,7 +23,7 @@ textarea::placeholder {
   opacity: 1; 
   font-family: var(--fontFamily) !important;
 }
-
+.ant-
 select option:first-child {
   color: var(--labelColor) !important;
   font-family: var(--fontFamily) !important;
@@ -58,7 +60,6 @@ select:focus option:first-child {
   border-left: none !important;
   margin-inline-end: -1px;
 }
-
 
 body{
 font-family: var(--fontFamily) !important;
@@ -106,11 +107,14 @@ font-family: var(--fontFamily) !important;
   border-bottom: 2px solid #007bff; /* Border color for the active link */
   font-weight: bold;
 }
+.nav-item .nav-links-container{
+border-bottom:2px solid red !important;
+}
 .nav-links-container {
   margin-right: 2rem;
 }
 .Header-border {
-  border-bottom: 2px solid var(--borderColor);
+  border-bottom: 1px solid #E0E0E0;
   background-color: #f6f7f8;
 }
 .Header-padding {
@@ -251,19 +255,17 @@ font-family: var(--fontFamily) !important;
   border-radius: 0px !important;
 }
 .ant-table-tbody > tr > td {
-  padding-top: 10px !important; /* Adjust padding top as needed */
-  padding-bottom: 0px !important; /* Adjust padding bottom as needed */
-  overflow: hidden; /* Hide overflow text */
-  text-overflow: ellipsis !important; /* Add ellipsis for overflow text */
-  color: var(--FontsColor) !important; /* Ensure text color is applied */
+  padding-top: 10px !important; 
+  padding-bottom: 0px !important; 
+  overflow: hidden; 
+  text-overflow: ellipsis !important;
+  color: var(--FontsColor) !important;
   font-size: 12px;
   font-weight: 600;
 }
 
-
-/* select */
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(.ant-select-customize-input) .ant-select-selector {
-  border: 1.5px solid var(--borderColor);
+  border: 1.5px solid var(--labelColor);
   border-radius: 3px !important;
 }
 /* input */
@@ -308,4 +310,14 @@ color: var(--labelColor);
 }
 .odd-row{
   background-color: var(--table-row);
+}
+.ant-input-outlined {
+  border-radius: 3px !important;
+}
+.ant-select-selector {
+width: 150px !important;
+}
+.ant-btn:hover {
+  background-color: var(--btn-hover) !important;
+  color: var(--labelColor) !important;
 }
