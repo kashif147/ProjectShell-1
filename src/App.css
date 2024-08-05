@@ -2,49 +2,64 @@
   --mainBlue: #45669d;
   --secound: #ad8135;
   --FontsColor: #193a6e;
-   --borderColor:#b7b7b7;
+   --borderColor:#C0B9E7;
+   
    --fontFamily:'Roboto', sans-serif;
    --labelColor:  #333333;
- 
+   --table-row: #deebff;
+   
+
 }
 input::placeholder,
 textarea::placeholder {
   color: var(--labelColor) !important;
-  opacity: 0.9; /* Override default opacity */
+  opacity: 1; 
   font-family: var(--fontFamily) !important;
 }
 .ant-input-textarea::placeholder {
   color: var(--labelColor);
-  opacity: 1; /* Override default opacity */
+  opacity: 1; 
   font-family: var(--fontFamily) !important;
 }
 
-/* Apply the custom placeholder color for select elements */
 select option:first-child {
   color: var(--labelColor) !important;
   font-family: var(--fontFamily) !important;
   opacity: 0.9; 
 }
-
-/* Additional styling to ensure the placeholder is visible in select */
 select {
   color: var(--labelColor) !important;
   font-family: var(--fontFamily) !important;
   opacity: 0.9; 
-  border-radius: 4px !important;
+  border-radius: 0px !important;
 }
-
 select:focus option:first-child {
-  color: initial; /* Reset color on focus to show selected option */
+  color: initial;
 }
 .ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-placeholder {
   color: var(--labelColor) !important;
   opacity: 0.9; 
 }
+.ant-input {
+  border-color:4px solid gray !important;
+  border-radius:  3px !important;
+}
 .ant-select-dropdown {
   font-family: var(--font-family-primary) !important;
   color: var(--labelColor) !important;
 }
+.butn{
+  border-radius: 3px !important;
+  border: none !important;
+  font-weight: 500;
+}
+.ant-input-search-button {
+  border-radius: 0px !important; 
+  border-left: none !important;
+  margin-inline-end: -1px;
+}
+
+
 body{
 font-family: var(--fontFamily) !important;
 
@@ -57,13 +72,11 @@ font-family: var(--fontFamily) !important;
   height: 40vmin;
   pointer-events: none;
 }
-
 @media (prefers-reduced-motion: no-preference) {
   .App-logo {
     animation: App-logo-spin infinite 20s linear;
   }
 }
-
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -74,7 +87,9 @@ font-family: var(--fontFamily) !important;
   font-size: calc(10px + 2vmin);
   color: white;
 }
-
+.gray-btn{
+  background-color: rgba(9, 30, 66, 0.04) !important;
+}
 .App-link {
   color: #61dafb;
 }
@@ -95,8 +110,8 @@ font-family: var(--fontFamily) !important;
   margin-right: 2rem;
 }
 .Header-border {
-  border-bottom: 2px solid #f6f7f8;
-  padding-bottom: 1rem;
+  border-bottom: 2px solid var(--borderColor);
+  background-color: #f6f7f8;
 }
 .Header-padding {
   padding: 0.1rem 0.4rem;
@@ -105,16 +120,11 @@ font-family: var(--fontFamily) !important;
   height: 80%;
 }
 .details-header {
-  /* border: 2px solid #71a3f0; */
-  /* margin-right: 2.5rem;
-margin-left: 2.5rem; */
-  margin-top: 2rem;
-  padding: 5px;
-  border-radius: 5px;
+  padding-top: 25px;
+  padding-left: 30px;
+  padding-right: 30px;
 }
-.search-main {
-  /* margin-top: 1rem; */
-}
+
 .title {
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
@@ -125,6 +135,10 @@ margin-left: 2.5rem; */
   flex: none;
   /* align-items: flex-end; */
   justify-content: flex-end !important;
+}
+.search-fliters{
+  padding-top: 7px;
+  padding-bottom: 7px;
 }
 .search-fliters input {
   padding: 4px;
@@ -166,6 +180,7 @@ margin-left: 2.5rem; */
   > .ant-menu
   .ant-menu-item:first-child.ant-menu-item-selected {
   background-color: transparent !important;
+  padding-top: 15px !important;
 }
 
 .label-nav-collaps {
@@ -249,11 +264,11 @@ margin-left: 2.5rem; */
 /* select */
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(.ant-select-customize-input) .ant-select-selector {
   border: 1.5px solid var(--borderColor);
+  border-radius: 3px !important;
 }
 /* input */
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-input-outlined {
-  border: 1.5px solid var(--borderColor);
-
+  border: 1.5px solid var(--labelColor) !important;
 }
 .sid-nav-main ul {
   height: 100vh;
@@ -279,4 +294,18 @@ font-weight: 500;
 margin: 0px;
 font-family: var(--fontFamily);
 color: var(--labelColor) !important;
+}
+.title-main {
+  /* style={{fontSize:"20px", marginBottom:"1rem"}} */
+font-size: 20px !important;
+font-weight: 600;
+font-family: var(--fontFamily) !important;
+color: var(--labelColor);
+}
+.main-main{
+  padding-left: 30px;
+  padding-right: 30px;
+}
+.odd-row{
+  background-color: var(--table-row);
 }
