@@ -1,5 +1,5 @@
 import { useState, React } from "react";
-import { useLocation } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 import {
   RightOutlined,
   PlusOutlined,
@@ -20,7 +20,7 @@ function HeaderDetails() {
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const formattedNav = nav.replace(/^\//, "");
- 
+
   const [isSideNav, setisSideNav] = useState(true);
 
   const mriatalStatus = [
@@ -75,7 +75,7 @@ function HeaderDetails() {
       label: "Other",
     },
   ];
-  
+
   const [selectedValue, setSelectedValue] = useState(null);
 
   const handleChange = (value) => {
@@ -89,6 +89,7 @@ function HeaderDetails() {
     };
     SubscriptionsLookups.push(obj);
   });
+
   return (
     <div className="details-header d-flex w-100%">
       <div style={{ width: "100%" }}>
@@ -100,13 +101,11 @@ function HeaderDetails() {
           </p>
         </div>
         <div className="search-main">
-          <div className="title d-flex justify-content-between">
+          <div className="title d-flex justify-content-between ">
             <h2 className="title-main">
               {nav == "/" && location?.state == null
-                ? `Profile  /  Details`
-                  ? nav == "/"
-                  : `${location?.state?.search} /  Details`
-                : ` ${location?.state?.search}${formattedNav}`}
+                ? `Profile`
+                : ` ${location?.state?.search}`}
             </h2>
             <div>
               <Button className="me-1 gray-btn butn">Export</Button>
@@ -118,36 +117,37 @@ function HeaderDetails() {
           <div className="d-flex search-fliters">
             <Input
               placeholder="Search..."
-              style={{ width: "15%" }}
+              style={{ width: "13%", height:"29px" }}
               suffix={<SearchOutlined />}
             />
+            <Input
+              placeholder="Postal Code"
+              style={{ width: "13%", height:"29px" }}
+              className="margin"
+            />
             <MySelect
-              style={{ width: "400px" }}
+              style={{ width: "300px" }}
               placeholder={"Gender"}
               className="margin"
               options={Gender}
             />
             <MySelect placeholder={"Partnership"} options={mriatalStatus} />
-            <Input
-              placeholder="Search by name"
-              type="search"
-              style={{ width: "12.5%" }}
-              className="margin"
-            />
-            <Input
-              type="search"
-              style={{ width: "12.5%" }}
-              className="margin"
-            />
-            <Input
-              type="search"
-              style={{ width: "12.5%" }}
-              className="margin"
-            />
+
             <MySelect
               placeholder={"Subscriptions"}
               options={SubscriptionsLookups}
             />
+            <div className="last-chalid-search-filter">
+              <MySelect
+                placeholder={"Subscriptions"}
+                options={SubscriptionsLookups}
+              />
+              <Button className="margin gray-btn search-fliters-btn " style={{fontSize:"12px"}}>More <PlusOutlined  /></Button>
+            </div>
+            <Link className="link" style={{ color: "#333333" }}>
+              Reset
+            </Link>
+            <Link className="link">Save fliter</Link>
           </div>
         </div>
       </div>

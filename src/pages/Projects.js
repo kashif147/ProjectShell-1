@@ -1,8 +1,10 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom';
-import { Table,Space, Button } from 'antd';
+import { Table,Space, Button, Pagination } from 'antd';
 import { CiEdit } from "react-icons/ci";
 import { FiDelete } from "react-icons/fi";
+import { tableData } from '../Data';
+import { LuRefreshCw } from "react-icons/lu";
 
 export default function Projects() {
     const location = useLocation();
@@ -87,90 +89,25 @@ export default function Projects() {
           key: 'updated',
         },
       ];
-      const dataSource = [
-        {
-          key: '1',
-          name: 'Jack Smith',
-          RegNo: "56606L",
-          rank:"0001",
-          duty:"Garda",
-          station:"STOC",
-          distric:"0109",
-          division:"0026",
-          address:"Phoenix Park, Saint James",
-          status:"Member",
-          attested:"01/01/1988",
-          graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
-        },
-        {
-          key: '1',
-          name: 'Jack Smith',
-          RegNo: "56606L",
-          rank:"0001",
-          duty:"Garda",
-          station:"STOC",
-          distric:"0109",
-          division:"0026",
-          address:"Phoenix Park, Saint James",
-          status:"Member",
-          attested:"01/01/1988",
-          graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
-        },
-        {
-          key: '2',
-          name: 'Jack Smith',
-          RegNo: "56606L",
-          rank:"0001",
-          duty:"Garda",
-          station:"STOC",
-          distric:"0109",
-          division:"0026",
-          address:"Phoenix Park, Saint James",
-          status:"Member",
-          attested:"01/01/1988",
-          graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
-        },
-        {
-          key: '3',
-          name: 'Jack Smith',
-          RegNo: "56606L",
-          rank:"0001",
-          duty:"Garda",
-          station:"STOC",
-          distric:"0109",
-          division:"0026",
-          address:"Phoenix Park, Saint James",
-          status:"Member",
-          attested:"01/01/1988",
-          graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
-        },
-        {
-          key: '4',
-          name: 'Jack Smith',
-          RegNo: "56606L",
-          rank:"0001",
-          duty:"Garda",
-          station:"STOC",
-          distric:"0109",
-          division:"0026",
-          address:"Phoenix Park, Saint James",
-          status:"Member",
-          attested:"01/01/1988",
-          graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
-        },
-        
-      ];
+     
   return (
     
     <div>
-      <Table dataSource={dataSource} columns={columns} bordered 
+      <Table dataSource={tableData} columns={columns} 
+      className='Project-table'
+        pagination={false}
           rowClassName={(record, index) => (index % 2 !== 0 ? 'odd-row' : 'even-row')}
-      />;
+          footer={() => (
+            <div className='d-flex justify-content-between'>
+            <div style={{ display: 'flex',  alignItems: 'center', justifyContent:'center', width:'100%' }}>
+              <span style={{marginRight:'4px', fontSize:'12px', fontWeight:"500"}}>1-{tableData.length}</span>
+              <span style={{marginRight:'4px',fontSize:'12px', fontWeight:"500" }}> of  {`${tableData.length}`}</span>
+             <LuRefreshCw />
+            </div>
+              <Pagination defaultCurrent={1} total={tableData.length} pageSize={5} />
+            </div>
+          )}
+      />
     </div>
   )
 }
