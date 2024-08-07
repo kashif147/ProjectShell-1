@@ -5,7 +5,7 @@
   --borderColor: #c0b9e7;
   --fontFamily: "Roboto", sans-serif;
   --labelColor: #333333;
-  --table-row: #deebff;
+  --table-row: #fafafa;
   --btn-hover: #dcdfe4;
   --gray:rgba(9, 30, 66, 0.04);
 }
@@ -117,6 +117,7 @@ body {
 .search-fliters {
   padding-top: 7px;
   padding-bottom: 7px;
+  
 }
 .search-fliters input {
   padding: 4px;
@@ -303,6 +304,7 @@ box-shadow: none !important;
 .main-main {
   padding-left: 30px;
   padding-right: 30px;
+  overflow: hidden;
 }
 .odd-row {
   background-color: var(--table-row);
@@ -360,7 +362,6 @@ box-shadow: none !important;
  background-color: #E9F2FF !important; 
 }
 
-
 .Project-table .custom-table .ant-table {
   border: 1px solid --gray !important; 
   border-bottom: none ;}
@@ -388,3 +389,23 @@ box-shadow: none !important;
   .ant-table-cell {
     vertical-align: middle !important; 
   }
+ .nav-links-container a{
+  color: rgb(105, 105, 105) !important;
+  font-size: 14px !important;
+  font-weight: 600 !important;
+ }
+ .configuratin-titles{
+  size: 24px !important;
+  color: var(--labelColor) !important;
+ }
+ .icons{
+  font-weight: bold !important;
+  font-size: 4rem !important;
+ }
+ .lookups-main-continer{
+  display: flex;
+ }
+ .lookups-title{
+  text-align: center;
+  font-weight: 600;
+ }

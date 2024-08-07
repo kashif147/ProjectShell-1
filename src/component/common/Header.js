@@ -34,13 +34,6 @@ function Header() {
     <div className="Header-border">
       <div className="Header-padding d-flex justify-content-between align-items-baseline">
         <nav class="navbar navbar-expand-lg navbar-light ">
-          <a
-            class="navbar-brand"
-            href="#"
-            style={{ color: "black", fontSize: "16px", fontWeight: "600" }}
-          >
-            Logo
-          </a>
           <button
             class="navbar-toggler"
             type="button"
@@ -74,6 +67,9 @@ function Header() {
               </li>
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Roster"} items={navLinks} />
+              </li>
+              <li class="nav-item nav-links-container">
+                <Link className="links" to="Configuratin"  state={{ search: "Configuration" }}>System Configuration</Link>
               </li>
             </ul>
           </div>

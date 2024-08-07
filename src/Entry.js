@@ -6,23 +6,28 @@ import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
 import Projects from "./pages/Projects";
 import SideNav from "./component/common/SideNav";
-
+import { useLocation } from "react-router-dom";
+import Configuratin from "./pages/Configuratin";
 function Entry() {
+  const location = useLocation();
   return (
-    <div>
+    <div className="">
       <Header />
       <div className="main-route d-flex ">
-        <div>
-          <SideNav />
-        </div>
-        <div style={{ width: "100%" }}>
+        {location?.pathname == "/Details" && (
+          <div>
+            <SideNav />
+          </div>
+        )}
+        <div style={{ width: "100%", overflow: "hidden" }}>
           <div>
             <HeaderDetails />
           </div>
-          <div className="main-main" >
+          <div className="main-main">
             <Routes>
               <Route path="/" element={<MainDashBoard />} />
               <Route path="Details" element={<Projects />} />
+              <Route path="Configuratin" element={<Configuratin /> } />
             </Routes>
           </div>
         </div>

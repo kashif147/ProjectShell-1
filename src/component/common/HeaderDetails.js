@@ -13,6 +13,7 @@ import { FaLess } from "react-icons/fa";
 import MyDrowpDown from "./MyDrowpDown";
 import { SerachFitersLookups } from "../../Data";
 import { SearchOutlined } from "@ant-design/icons";
+import { BsThreeDots } from "react-icons/bs";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -91,7 +92,7 @@ function HeaderDetails() {
   });
 
   return (
-    <div className="details-header d-flex w-100%">
+    <div className="details-header d-flex w-100% overflow-hidden">
       <div style={{ width: "100%" }}>
         <div className="d-flex ">
           <p className="bred-cram-main">
@@ -112,9 +113,12 @@ function HeaderDetails() {
               <Button className="me-1 gray-btn butn">Share</Button>
               <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
               <Button className="me-1 gray-btn butn">LIST VIEW</Button>
+              <Button className="me-1 gray-btn butn">
+              <BsThreeDots />
+              </Button>
             </div>
           </div>
-          <div className="d-flex search-fliters">
+          <div className="d-flex search-fliters align-items-baseline">
             <Input
               placeholder="Search..."
               style={{ width: "13%", height:"29px" }}
@@ -132,7 +136,6 @@ function HeaderDetails() {
               options={Gender}
             />
             <MySelect placeholder={"Partnership"} options={mriatalStatus} />
-
             <MySelect
               placeholder={"Subscriptions"}
               options={SubscriptionsLookups}
