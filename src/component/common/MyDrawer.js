@@ -1,7 +1,7 @@
 import React from 'react'
 import { Button, Drawer, Space } from 'antd';
 
-function MyDrawer({title,open,onClose,}) {
+function MyDrawer({title,open,onClose,children,add}) {
   return (
     <Drawer
     title={title}
@@ -11,16 +11,15 @@ function MyDrawer({title,open,onClose,}) {
     open={open}
     extra={
       <Space>
-        <Button onClick={onClose}>Cancel</Button>
-        <Button type="primary" onClick={onClose}>
-          OK
+        <Button onClick={onClose}>Close</Button>
+
+        <Button className="gray-btn" onClick={add}>
+          Add
         </Button>
       </Space>
     }
   >
-    <p>Some contents...</p>
-    <p>Some contents...</p>
-    <p>Some contents...</p>
+    {children}
   </Drawer>
   )
 }

@@ -401,6 +401,7 @@ box-shadow: none !important;
  .icons{
   font-weight: bold !important;
   font-size: 4rem !important;
+  color: var(--mainBlue) !important;
  }
  .lookups-main-continer{
   display: flex;
@@ -408,4 +409,15 @@ box-shadow: none !important;
  .lookups-title{
   text-align: center;
   font-weight: 600;
+  color: var(--mainBlue); 
+ }
+ .lookup-memeber{
+  margin-right: 4rem;
+ }
+ .input-group{
+  margin-bottom: 14px;
+ }
+ .input-group p{
+ margin-bottom: 4px !important;
+ font-weight: 600;
  }
