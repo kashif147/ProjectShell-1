@@ -15,6 +15,7 @@ import { SerachFitersLookups } from "../../Data";
 import { SearchOutlined } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 
+
 function HeaderDetails() {
   const { Search } = Input;
   const location = useLocation();
