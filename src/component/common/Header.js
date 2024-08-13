@@ -16,7 +16,7 @@ function Header() {
     {
       key: "1",
       label: (
-        <Link to="/" state={{ search: "Profile" }}>
+        <Link to="Summary" state={{ search: "Profile" }}>
           Main Page
         </Link>
       ),
@@ -69,7 +69,7 @@ function Header() {
                 <MyDrowpDown title={"Roster"} items={navLinks} />
               </li>
               <li class="nav-item nav-links-container">
-                <Link className="links" to="Configuratin"  state={{ search: "Configuration" }}>System Configuration</Link>
+                <Link className="links" to="Configuratin"  state={{ search: "" }}>System Configuration</Link>
               </li>
             </ul>
           </div>

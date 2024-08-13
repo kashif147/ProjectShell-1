@@ -15,7 +15,8 @@ import {
 } from "@mui/icons-material";
 import { Button, Menu, MenuItem, Divider } from "@mui/material";
 import MySelect from "../component/common/MySelect";
-import {SerachFitersLookups} from '../Data'
+import { SerachFitersLookups } from "../Data";
+import JiraLikeMenu from "../component/common/JiraLikeMenu";
 
 function Configuratin() {
   const [genderModal, setgenderModal] = useState(false);
@@ -79,27 +80,31 @@ function Configuratin() {
   const [anchorEl, setAnchorEl] = useState(false);
   const open = Boolean(anchorEl);
 
-  const handleClick = () => {
-    setAnchorEl(!anchorEl)
+  const handleClick = (e) => {
+    e.stopPropagation()
+    setAnchorEl(false);
   };
 
   const handleClose = () => {
-    setAnchorEl(!anchorEl)
+    setAnchorEl(!anchorEl);
   };
+
   const handleMenuItemClick = (item) => {
-    setSelectedItem(item.text); // Update the selected item
+    setSelectedItem(item.text); 
     handleClose();
   };
+
   const SubscriptionsLookups = [];
-  SerachFitersLookups?.SubscriptionsLookups.map((item) => {
+  SerachFitersLookups?.SubscriptionsLookups?.map((item) => {
     let obj = {
       key: item?.key,
       label: item?.label,
     };
     SubscriptionsLookups.push(obj);
   });
+
   return (
-    <div>
+    <div className="configuration-main">
       <p className="configuratin-titles">Lookups Configuration</p>
       <div className="lookups-main-continer">
         <div onClick={() => genderModalOpen()} className="lookup-memeber">
@@ -110,36 +115,8 @@ function Configuratin() {
           <PiHandshakeDuotone className="icons" />
           <p className="lookups-title">Partnership</p>
         </div>
-        
-        <MyMneu
-          buttonLabel={selectedItem}
-          aria-controls={open ? "customized-menu" : undefined}
-          aria-haspopup="true"
-          aria-expanded={open ? "true" : undefined}
-          variant="contained"
-          disableElevation
-          onClick={handleClick}
-          endIcon={<KeyboardArrowDownIcon />}
-        >
-          {/* {menuItems?.map((item, index) => (
-            <div key={index}>
-              <MenuItem onClick={() => {handleMenuItemClick(item) 
-                handleClose()}}  disableRipple>
-                {item.icon}
-                {item.text}
-              </MenuItem>
-              {item.divider && <Divider />}
-            </div>
-          ))} */}
-              <MenuItem >
-              <div className="d-flex flex-column">
-              <MySelect options={SubscriptionsLookups} />
-              <MySelect options={SubscriptionsLookups} />
-
-              </div>
-              </MenuItem>
-        </MyMneu>
       </div>
+   
       <MyDrawer
         open={genderModal}
         onClose={genderModalOpen}
@@ -169,8 +146,6 @@ function Configuratin() {
           <TextArea placeholder="Please Enter Description" />
         </div>
       </MyDrawer>
-
-      {/* Partnership */}
       <MyDrawer
         open={ModalPartnership}
         onClose={PartnershipModalOpen}

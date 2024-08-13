@@ -8,6 +8,8 @@ import Projects from "./pages/Projects";
 import SideNav from "./component/common/SideNav";
 import { useLocation } from "react-router-dom";
 import Configuratin from "./pages/Configuratin";
+import Details from "./pages/Details";
+
 function Entry() {
   const location = useLocation();
   return (
@@ -21,13 +23,15 @@ function Entry() {
         )}
         <div style={{ width: "100%", overflow: "hidden" }}>
           <div>
-            <HeaderDetails />
+         
+          <HeaderDetails />
           </div>
           <div className="main-main">
             <Routes>
               <Route path="/" element={<MainDashBoard />} />
-              <Route path="Details" element={<Projects />} />
+              <Route path="Summary" element={<Projects />} />
               <Route path="Configuratin" element={<Configuratin /> } />
+              <Route path="Details" element={<Details /> } />
             </Routes>
           </div>
         </div>

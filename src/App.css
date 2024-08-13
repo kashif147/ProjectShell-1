@@ -7,7 +7,7 @@
   --labelColor: #333333;
   --table-row: #fafafa;
   --btn-hover: #dcdfe4;
-  --gray:rgba(9, 30, 66, 0.04);
+  --gray: rgba(9, 30, 66, 0.04);
 }
 input::placeholder,
 textarea::placeholder {
@@ -17,7 +17,6 @@ textarea::placeholder {
   font-size: 12px !important;
   font-weight: bold !important;
 }
-
 .ant- select option:first-child {
   color: var(--labelColor) !important;
   font-family: var(--fontFamily) !important;
@@ -33,8 +32,9 @@ select {
   font-weight: bold !important;
   font-size: 12px !important;
 }
-.search-main .ant-select-selector{
-  background-color: var(--gray) !important;
+.search-main .ant-select-selector {
+  /* background-color: var(--gray) !important; */
+  color: var(--mainBlue) !important;
 }
 .ant-select-single:not(.ant-select-customize-input)
   .ant-select-selector
@@ -81,9 +81,7 @@ body {
   border-bottom: 2px solid #007bff; /* Border color for the active link */
   font-weight: bold;
 }
-.nav-item .nav-links-container {
-  border-bottom: 2px solid red !important;
-}
+
 .nav-links-container {
   margin-right: 2rem;
 }
@@ -117,7 +115,6 @@ body {
 .search-fliters {
   padding-top: 7px;
   padding-bottom: 7px;
-  
 }
 .search-fliters input {
   padding: 4px;
@@ -161,7 +158,6 @@ body {
   background-color: transparent !important;
   padding-top: 15px !important;
 }
-
 .label-nav-collaps {
   display: flex;
   justify-content: center;
@@ -171,7 +167,6 @@ body {
   padding: 0.4rem;
   border-radius: 50%;
 }
-
 .specific-icon {
   display: flex;
   justify-content: center;
@@ -183,7 +178,6 @@ body {
   margin: 8px 15px !important;
   padding: 0px !important;
 }
-
 .label-nav-collaps .ant-menu-item-icon,
 .label-nav-collaps .ant-menu-submenu-title .ant-menu-item-icon {
   margin: 0 !important;
@@ -225,7 +219,7 @@ body {
 .ant-table-thead > tr > th {
   /* border-top: 2px solid #b7b7b7 !important;
   border-bottom: 2px solid #b7b7b7 !important; */
-  background-color: #F7F8F9 !important;
+  background-color: #f7f8f9 !important;
   border-radius: 0px !important;
 }
 .ant-table-tbody > tr > td {
@@ -249,9 +243,8 @@ body {
 }
 
 .ant-select.ant-select-focused .ant-select-selector {
-border: none !important;
-box-shadow: none !important;
-
+  border: none !important;
+  box-shadow: none !important;
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-input-outlined {
@@ -312,8 +305,8 @@ box-shadow: none !important;
 .ant-input-outlined {
   border-radius: 3px !important;
 }
-.ant-select-selector {
-  width: 150px !important;
+.search-fliters .ant-select-selector {
+  /* width: 150px !important; */
 }
 .ant-btn:hover {
   background-color: var(--btn-hover) !important;
@@ -330,8 +323,8 @@ box-shadow: none !important;
   text-decoration: none !important;
   margin-right: 18px;
   margin-left: 18px;
- font-weight: bold !important;
- font-size: 12px !important;
+  font-weight: bold !important;
+  font-size: 12px !important;
 }
 .last-chalid-search-filter {
   padding-right: 2px;
@@ -340,7 +333,7 @@ box-shadow: none !important;
   display: flex;
   align-items: baseline;
 }
-.search-fliters .ant-select-selection-item{
+.search-fliters .ant-select-selection-item {
   font-weight: bold !important;
 }
 .search-fliters .ant-select .ant-select-selector:hover {
@@ -349,75 +342,158 @@ box-shadow: none !important;
   color: #333;
 }
 .search-fliters-btn {
-    border-radius: 3px !important;
-    border: none !important;
-    font-weight: bold !important;
-    font-size: 12px !important;
-    height: 29px !important;
+  border-radius: 3px !important;
+  border: none !important;
+  font-weight: bold !important;
+  font-size: 12px !important;
+  height: 29px !important;
 }
 .ant-table-wrapper .ant-table-footer {
   padding: 0px !important;
 }
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination .ant-pagination-item-active {
- background-color: #E9F2FF !important; 
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination
+  .ant-pagination-item-active {
+  background-color: #e9f2ff !important;
 }
 
 .Project-table .custom-table .ant-table {
-  border: 1px solid --gray !important; 
-  border-bottom: none ;}
+  border: 1px solid --gray !important;
+  border-bottom: none;
+}
 
-  .Project-table :where(.css-dev-only-do-not-override-1uq9j6g).ant-table-wrapper {
-    border: 1px solid #d9d9d9 !important; /* Add border to table headers */
-  }
-  
-  .Project-table .ant-table-tbody > tr > td {
-    border-bottom: 1px solid #d9d9d9 !important; /* Add border to table rows */
-  }
-  :where(.css-dev-only-do-not-override-1uq9j6g)[class^="ant-table"]{
-    border: 0.5px solid #DCDFE4 !important;
-    border-radius: 7px !important;
-    overflow: hidden !important;  
-    border-collapse: collapse !important;
-  }
-  .Project-table  tbody, td, tfoot, th, thead, tr {
-    border: 0.5px solid #DCDFE4  !important ;
-    border-collapse: collapse !important;
-    font-size: 13px !important;
-    font-weight: 400;
-    vertical-align: middle !important;
-  }
-  .ant-table-cell {
-    vertical-align: middle !important; 
-  }
- .nav-links-container a{
+.Project-table :where(.css-dev-only-do-not-override-1uq9j6g).ant-table-wrapper {
+  border: 1px solid #d9d9d9 !important; /* Add border to table headers */
+}
+
+.Project-table .ant-table-tbody > tr > td {
+  border-bottom: 1px solid #d9d9d9 !important; /* Add border to table rows */
+}
+:where(.css-dev-only-do-not-override-1uq9j6g)[class^="ant-table"] {
+  border: 0.5px solid #dcdfe4 !important;
+  border-radius: 7px !important;
+  overflow: hidden !important;
+  border-collapse: collapse !important;
+}
+.Project-table tbody,
+td,
+tfoot,
+th,
+thead,
+tr {
+  border: 0.5px solid #dcdfe4 !important ;
+  border-collapse: collapse !important;
+  font-size: 13px !important;
+  font-weight: 400;
+  vertical-align: middle !important;
+}
+.ant-table-cell {
+  vertical-align: middle !important;
+}
+.nav-links-container a {
   color: rgb(105, 105, 105) !important;
   font-size: 14px !important;
   font-weight: 600 !important;
- }
- .configuratin-titles{
+}
+.configuratin-titles {
   size: 24px !important;
   color: var(--labelColor) !important;
- }
- .icons{
+}
+.icons {
   font-weight: bold !important;
   font-size: 4rem !important;
   color: var(--mainBlue) !important;
- }
- .lookups-main-continer{
+}
+.lookups-main-continer {
   display: flex;
- }
- .lookups-title{
+}
+.lookups-title {
   text-align: center;
   font-weight: 600;
-  color: var(--mainBlue); 
- }
- .lookup-memeber{
+  color: var(--mainBlue);
+}
+.lookup-memeber {
   margin-right: 4rem;
- }
- .input-group{
+}
+.input-group {
   margin-bottom: 14px;
- }
- .input-group p{
- margin-bottom: 4px !important;
- font-weight: 600;
- }
+}
+.input-group p {
+  margin-bottom: 4px !important;
+  font-weight: 600;
+}
+
+
+
+
+.searchfilter- {
+  /* background-color: var(--gray) !important;
+  padding: 1rem;
+  opacity: 1 !important; */
+}
+.searchfilter- .ant-select {
+  background-color: #f0f0f0 !important; /* Replace with your desired background color */
+ /* Optional: add padding if needed */
+  border-radius: 0px !important; /* Optional: add border radius for rounded corners */
+ border: none !important;
+}
+.ant-dropdown-menu-item {
+  padding: 0px;
+}
+.ant-dropdown-menu {
+  border-radius: 0px !important;
+}
+.searchfilter- Button {
+  background-color: var(
+    --gray
+  ) !important; 
+
+  border-radius: 3px !important;
+  font-weight: 600; 
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0px 12px;
+}
+.searchfilter- Button:hover {
+  background-color: var(--btn-hover) !important; 
+
+  border-radius: 3px !important;
+  font-weight: 600; 
+  /* color: #007bff !important; */
+  border: none !important;
+  box-shadow: none !important;
+}
+.searchfilterbtn- Button {
+border-radius: 3px !important;
+font-weight: 600; 
+background-color: var(--gray) !important;
+box-shadow: none !important;
+
+}
+.ant-btn:focus, .ant-btn:active {
+  background-color:var(--btn-hover) !important; 
+  border-color: none !important;
+}
+.searchfilter- .ant-btn:focus,
+.searchfilter- .ant-btn:active {
+  outline: none !important; 
+  border: none !important; 
+  box-shadow: none !important; 
+}
+.searchfilter- .active {
+  color: var(--mainBlue) !important;
+}
+.searchfilter- .ant-select-selector {
+  color: var(--mainBlue); /* Your desired color */
+}
+.searchfilter- .ant-select-selector {
+  background-color: #f0f0f0; /* Your desired background color */
+}
+.d .ant-select-single {
+  width: 100%;
+}
+.last-chalid-search-filter{
+
+}
+.configuration-main{
+  margin-top: 2rem;
+}

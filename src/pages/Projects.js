@@ -1,13 +1,15 @@
 import React from 'react'
 import { useLocation } from 'react-router-dom';
-import { Table,Space, Button, Pagination,Select, Dropdown, Menu } from 'antd';
+import { Table,Space, Button, Pagination,Select, Dropdown, Menu, } from 'antd';
 import { CiEdit } from "react-icons/ci";
 import { FiDelete } from "react-icons/fi";
 import { tableData } from '../Data';
 import { LuRefreshCw } from "react-icons/lu";
 import { MdOutlineSettingsInputComponent } from "react-icons/md";
+import { Link, useNavigate } from 'react-router-dom';
 
 export default function Projects() {
+  const navigate = useNavigate();
   const menu = (
     <Menu>
       <Menu.Item key="1">Option 1</Menu.Item>
@@ -43,6 +45,16 @@ export default function Projects() {
           dataIndex: 'name',
           key: 'name',
           width:100,
+          render:(_,record)=>(
+            <Space>
+              {/* <p onClick={()=>navigate("Details")}>
+              {record?.name }
+              </p> */}
+           <Link to="Details" state={{ search: "" }}>
+           {record?.name}
+           </Link>
+            </Space>
+          )
         },
         {
           title: 'Rank',

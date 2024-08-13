@@ -6,7 +6,7 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
-import { Input, Button } from "antd";
+import { Input, Button, Row } from "antd";
 import MySelect from "./MySelect";
 import SideNav from "./SideNav";
 import { FaLess } from "react-icons/fa";
@@ -14,6 +14,7 @@ import MyDrowpDown from "./MyDrowpDown";
 import { SerachFitersLookups } from "../../Data";
 import { SearchOutlined } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
+import JiraLikeMenu from "./JiraLikeMenu";
 
 
 function HeaderDetails() {
@@ -24,44 +25,22 @@ function HeaderDetails() {
   const formattedNav = nav.replace(/^\//, "");
 
   const [isSideNav, setisSideNav] = useState(true);
+console.log(location,"location")
+  const mriatalStatus =
+    {
+      Male: false,
+      Female: false,
+      Other: false,  
+    }
+  const Mebership =
+    {
+      Probation: false,
+      Trainee: false,
+      Associate: false,  
+      Retired: false,  
+    }
 
-  const mriatalStatus = [
-    {
-      label: "Single",
-      key: "1",
-    },
-    {
-      label: "Married",
-      key: "2",
-    },
-    {
-      label: "Seperated",
-      key: "3",
-    },
-    {
-      label: "Divorced",
-      key: "4",
-    },
-  ];
-
-  const SubscriptionsLookups1 = [
-    {
-      label: "Single",
-      key: "1",
-    },
-    {
-      label: "Married",
-      key: "2",
-    },
-    {
-      label: "Seperated",
-      key: "3",
-    },
-    {
-      label: "Divorced",
-      key: "4",
-    },
-  ];
+ 
 
   const Gender = [
     {
@@ -83,15 +62,15 @@ function HeaderDetails() {
   const handleChange = (value) => {
     setSelectedValue(value);
   };
-  const SubscriptionsLookups = [];
-  SerachFitersLookups?.SubscriptionsLookups.map((item) => {
-    let obj = {
-      key: item?.key,
-      label: item?.label,
-    };
-    SubscriptionsLookups.push(obj);
-  });
-
+  
+  // SerachFitersLookups?.SubscriptionsLookups.map((item) => {
+  //   let obj = {
+  //     key: item?.key,
+  //     label: item?.label,
+  //   };
+  //   SubscriptionsLookups.push(obj);
+  // });
+console.log(SerachFitersLookups,"123")
   return (
     <div className="details-header d-flex w-100% overflow-hidden">
       <div style={{ width: "100%" }}>
@@ -102,6 +81,7 @@ function HeaderDetails() {
               : ` ${location?.state?.search}  / ${formattedNav}`}
           </p>
         </div>
+        {location?.pathname != "/Configuratin" && (
         <div className="search-main">
           <div className="title d-flex justify-content-between ">
             <h2 className="title-main">
@@ -120,6 +100,7 @@ function HeaderDetails() {
             </div>
           </div>
           <div className="d-flex search-fliters align-items-baseline">
+            <Row className="align-items-baseline">
             <Input
               placeholder="Search..."
               style={{ width: "13%", height:"29px" }}
@@ -130,30 +111,26 @@ function HeaderDetails() {
               style={{ width: "13%", height:"29px" }}
               className="margin"
             />
-            <MySelect
-              style={{ width: "300px" }}
-              placeholder={"Gender"}
-              className="margin"
-              options={Gender}
-            />
-            <MySelect placeholder={"Partnership"} options={mriatalStatus} />
-            <MySelect
-              placeholder={"Subscriptions"}
-              options={SubscriptionsLookups}
-            />
-            <div className="last-chalid-search-filter">
-              <MySelect
-                placeholder={"Subscriptions"}
-                options={SubscriptionsLookups}
-              />
-              <Button className="margin gray-btn search-fliters-btn " style={{fontSize:"12px"}}>More <PlusOutlined  /></Button>
+            <JiraLikeMenu title="Gender" data={mriatalStatus}  />
+            <JiraLikeMenu title="Partnership" data={SerachFitersLookups} />
+            <JiraLikeMenu title="Subscriptions" data={SerachFitersLookups} />
+            <JiraLikeMenu title="Membership" data={Mebership} />
+          
+            <div className="searchfilter- margin">
+              <Button className="margin" >More <PlusOutlined style={{marginLeft:"-2px"}} /></Button>
+             
             </div>
+            <div>
             <Link className="link" style={{ color: "#333333" }}>
               Reset
             </Link>
             <Link className="link">Save fliter</Link>
+            </div>
+            </Row>
           </div>
         </div>
+          
+          )}
       </div>
     </div>
   );
