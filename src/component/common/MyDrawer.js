@@ -4,16 +4,18 @@ import { Button, Drawer, Space } from 'antd';
 function MyDrawer({title,open,onClose,children,add}) {
   return (
     <Drawer
+    width={520}
     title={title}
     placement="right"
+
     // size={size}
     onClose={onClose}
     open={open}
     extra={
       <Space>
-        <Button onClick={onClose}>Close</Button>
+        <Button className="my-btn" onClick={onClose}>Close</Button>
 
-        <Button className="gray-btn" onClick={add}>
+        <Button className="gray-btn my-btn" onClick={add}>
           Add
         </Button>
       </Space>

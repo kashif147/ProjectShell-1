@@ -1,10 +1,11 @@
 import { React, useState } from "react";
 import { SiActigraph } from "react-icons/si";
 import MyDrawer from "../component/common/MyDrawer";
-import { Input, Table } from "antd";
+import { Input, Table, Row, Col } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
+
 import MyMneu from "../component/common/MyMneu";
 import {
   Edit as EditIcon,
@@ -17,7 +18,8 @@ import { Button, Menu, MenuItem, Divider } from "@mui/material";
 import MySelect from "../component/common/MySelect";
 import { SerachFitersLookups } from "../Data";
 import JiraLikeMenu from "../component/common/JiraLikeMenu";
-
+import { LuCalendarDays } from "react-icons/lu";
+import { PiUsersFourDuotone } from "react-icons/pi";
 function Configuratin() {
   const [genderModal, setgenderModal] = useState(false);
   const [AddgenderModal, setAddgenderModal] = useState(false);
@@ -27,33 +29,39 @@ function Configuratin() {
   const [AddModalPartnership, setAddPartnershipModal] = useState(false);
   const column = [
     {
-      title: "Lookup",
-      dataIndex: "Lookup",
-      key: "Lookup",
+      title: "Short Name",
+      dataIndex: "ShortName",
+      key: "ShortName",
       width: 60,
     },
     {
-      title: "Description",
-      dataIndex: "Description",
-      key: "Description",
+      title: "Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+    },
+    {
+      title: "Action",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
   ];
   const gander = [
     {
       key: "1",
-      Lookup: "Male",
-      Description: "Male",
+      ShortName: "Male",
+      DisplayName: "Male",
     },
     {
       key: "2",
-      Lookup: "Female",
-      Description: "Female",
+      ShortName: "Female",
+      DisplayName: "Female",
     },
     {
       key: "3",
-      Lookup: "Other",
-      Description: "Other",
+      ShortName: "Other",
+      DisplayName: "Other",
     },
+    
   ];
   const genderModalOpen = () => {
     setgenderModal(!genderModal);
@@ -81,7 +89,7 @@ function Configuratin() {
   const open = Boolean(anchorEl);
 
   const handleClick = (e) => {
-    e.stopPropagation()
+    e.stopPropagation();
     setAnchorEl(false);
   };
 
@@ -90,7 +98,7 @@ function Configuratin() {
   };
 
   const handleMenuItemClick = (item) => {
-    setSelectedItem(item.text); 
+    setSelectedItem(item.text);
     handleClose();
   };
 
@@ -106,83 +114,79 @@ function Configuratin() {
   return (
     <div className="configuration-main">
       <p className="configuratin-titles">Lookups Configuration</p>
-      <div className="lookups-main-continer">
-        <div onClick={() => genderModalOpen()} className="lookup-memeber">
-          <SiActigraph className="icons" />
-          <p className="lookups-title">Gender</p>
-        </div>
-        <div onClick={() => PartnershipModalOpen()}>
-          <PiHandshakeDuotone className="icons" />
-          <p className="lookups-title">Partnership</p>
-        </div>
-      </div>
-   
+
+      <Row>
+        <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem",display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div onClick={() => genderModalOpen()} className="">
+            <SiActigraph className="icons" />
+            <p className="lookups-title">Gender</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div onClick={() => PartnershipModalOpen()}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Partnership</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+        <div onClick={() => genderModalOpen()} className="">
+            <LuCalendarDays  className="icons" />
+            <p className="lookups-title">Subscriptions</p>
+          </div>
+        </Col>
+       
+        <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div onClick={() => PartnershipModalOpen()}>
+            <PiUsersFourDuotone  className="icons" />
+            <p className="lookups-title">Membership</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div onClick={() => PartnershipModalOpen()}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Dummy</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+          <div onClick={() => PartnershipModalOpen()}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Dummy</p>
+          </div>
+        </Col>
+      </Row>
+
       <MyDrawer
         open={genderModal}
         onClose={genderModalOpen}
         add={addGenderModalOpen}
+        title="Gender"
       >
+         <div className="input-group">
+          <p className="inpt-lbl">Short Name</p>
+          <Input placeholder="Please Enter Short Name" />
+        </div>
+        <div className="input-group">
+          <p className="inpt-lbl">Display Name</p>
+          <Input placeholder="Please Enter Display Name " />
+        </div>
+        <div className="input-group">
         <Input
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
         />
+        </div>
         <Table
           columns={column}
+          pagination={true}
           dataSource={gander}
-          pagination={false}
+          className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
         />
       </MyDrawer>
-      <MyDrawer open={AddgenderModal} onClose={addGenderModalOpen}>
-        <div className="input-group">
-          <p>Lookup</p>
-          <Input placeholder="Please Enter Lookups" />
-        </div>
-        <div className="input-group">
-          <p>Description</p>
-          <TextArea placeholder="Please Enter Description" />
-        </div>
-      </MyDrawer>
-      <MyDrawer
-        open={ModalPartnership}
-        onClose={PartnershipModalOpen}
-        add={addPartnershipModalOpen}
-      >
-        <div className="input-group">
-          <p>Lookup</p>
-          <Input placeholder="Please Enter Lookups" />
-        </div>
-        <div className="input-group">
-          <p>Description</p>
-          <TextArea placeholder="Please Enter Description" />
-        </div>
-        <Input
-          placeholder="Search..."
-          style={{ marginBottom: "5px" }}
-          suffix={<SearchOutlined />}
-        />
-        <Table
-          columns={column}
-          dataSource={gander}
-          pagination={false}
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-        />
-        <MyDrawer open={AddModalPartnership} onClose={addPartnershipModalOpen}>
-          <div className="input-group">
-            <p>Lookup</p>
-            <Input placeholder="Please Enter Lookups" />
-          </div>
-          <div className="input-group">
-            <p>Description</p>
-            <TextArea placeholder="Please Enter Description" />
-          </div>
-        </MyDrawer>
-      </MyDrawer>
+      
     </div>
   );
 }

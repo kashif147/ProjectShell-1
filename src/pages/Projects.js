@@ -50,7 +50,7 @@ export default function Projects() {
               {/* <p onClick={()=>navigate("Details")}>
               {record?.name }
               </p> */}
-           <Link to="Details" state={{ search: "" }}>
+           <Link to="/Details" state={{ search: "" }}>
            {record?.name}
            </Link>
             </Space>

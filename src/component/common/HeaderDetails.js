@@ -103,12 +103,12 @@ console.log(SerachFitersLookups,"123")
             <Row className="align-items-baseline">
             <Input
               placeholder="Search..."
-              style={{ width: "13%", height:"29px" }}
+              style={{ width: "13%", height:"31px" }}
               suffix={<SearchOutlined />}
             />
             <Input
               placeholder="Postal Code"
-              style={{ width: "13%", height:"29px" }}
+              style={{ width: "13%", height:"31px" }}
               className="margin"
             />
             <JiraLikeMenu title="Gender" data={mriatalStatus}  />

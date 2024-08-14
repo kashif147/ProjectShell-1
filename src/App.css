@@ -422,9 +422,6 @@ tr {
   font-weight: 600;
 }
 
-
-
-
 .searchfilter- {
   /* background-color: var(--gray) !important;
   padding: 1rem;
@@ -432,9 +429,9 @@ tr {
 }
 .searchfilter- .ant-select {
   background-color: #f0f0f0 !important; /* Replace with your desired background color */
- /* Optional: add padding if needed */
+  /* Optional: add padding if needed */
   border-radius: 0px !important; /* Optional: add border radius for rounded corners */
- border: none !important;
+  border: none !important;
 }
 .ant-dropdown-menu-item {
   padding: 0px;
@@ -443,57 +440,112 @@ tr {
   border-radius: 0px !important;
 }
 .searchfilter- Button {
-  background-color: var(
-    --gray
-  ) !important; 
-
+  background-color: var(--gray) !important;
   border-radius: 3px !important;
-  font-weight: 600; 
+  font-weight: 600;
   border: none !important;
   box-shadow: none !important;
   padding: 0px 12px;
 }
 .searchfilter- Button:hover {
-  background-color: var(--btn-hover) !important; 
+  background-color: var(--btn-hover) !important;
 
   border-radius: 3px !important;
-  font-weight: 600; 
+  font-weight: 600;
   /* color: #007bff !important; */
   border: none !important;
   box-shadow: none !important;
 }
 .searchfilterbtn- Button {
-border-radius: 3px !important;
-font-weight: 600; 
-background-color: var(--gray) !important;
-box-shadow: none !important;
-
+  border-radius: 3px !important;
+  font-weight: 600;
+  background-color: var(--gray) !important;
+  box-shadow: none !important;
 }
-.ant-btn:focus, .ant-btn:active {
-  background-color:var(--btn-hover) !important; 
+.ant-btn:focus,
+.ant-btn:active {
+  background-color: var(--btn-hover) !important;
   border-color: none !important;
 }
 .searchfilter- .ant-btn:focus,
 .searchfilter- .ant-btn:active {
-  outline: none !important; 
-  border: none !important; 
-  box-shadow: none !important; 
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
 }
 .searchfilter- .active {
   color: var(--mainBlue) !important;
 }
 .searchfilter- .ant-select-selector {
-  color: var(--mainBlue); /* Your desired color */
+  color: var(--mainBlue);
 }
 .searchfilter- .ant-select-selector {
-  background-color: #f0f0f0; /* Your desired background color */
+  background-color: #f0f0f0;
 }
 .d .ant-select-single {
   width: 100%;
 }
-.last-chalid-search-filter{
-
+.last-chalid-search-filter {
 }
-.configuration-main{
+.configuration-main {
   margin-top: 2rem;
+}
+.sid-nav-main .ant-menu > li:first-child {
+  background-color: transparent;
+}
+.sid-nav-main .ant-menu-title-content {
+  color: #fff;
+  font-family: var(--fontFamily);
+}
+.navbar {
+  width: 100%; 
+  overflow: hidden;
+}
+
+.ant-menu {
+  width: 100%; 
+}
+.ant-menu-item .ant-menu-item-selected {
+  background-color: red !important; 
+  max-width: 100%;
+  box-sizing: border-box;
+}
+.hover-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  transition: background-color 0.3s ease;
+}
+
+.hover-col:hover {
+  background-color: #f0f0f0; 
+  cursor: pointer; 
+}
+.drawer-tbl
+.ant-table-thead > tr > th {
+  background-color: #45669d !important;  /* Custom background color */
+  color: #ffffff !important;  /* Custom font color */
+  font-weight: bold;  /* Custom font weight */
+    /* Optional: Center align the text */
+}
+.inpt-lbl{
+  font-size: 12px !important;
+  font-weight: bolder !important;
+  font-family: var(--fontFamily);
+  color: var(--FontsColor) !important;
+}
+.input-group input::placeholder
+ {
+  color: var(--labelColor) !important;
+  opacity: 1;
+  font-family: var(--fontFamily) !important;
+  font-size: 12px !important;
+  /* font-weight: bold !important; */
+}
+.my-btn{
+  color: var(--FontsColor);
+  font-size: 16px;
+  font-family: var(--fontFamily);
+  border-radius: 3px !important;
+  /* font-weight: bold; */
 }
