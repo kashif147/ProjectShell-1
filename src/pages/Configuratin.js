@@ -123,7 +123,7 @@ function Configuratin() {
           </div>
         </Col>
         <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div onClick={() => PartnershipModalOpen()}>
+          <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Partnership</p>
           </div>
@@ -136,13 +136,13 @@ function Configuratin() {
         </Col>
        
         <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div onClick={() => PartnershipModalOpen()}>
+          <div>
             <PiUsersFourDuotone  className="icons" />
             <p className="lookups-title">Membership</p>
           </div>
         </Col>
         <Col className="hover-col" span={4} style={{ paddingTop:"0.5rem", display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-          <div onClick={() => PartnershipModalOpen()}>
+          <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Dummy</p>
           </div>
