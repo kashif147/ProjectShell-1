@@ -7,6 +7,7 @@ import { tableData } from '../Data';
 import { LuRefreshCw } from "react-icons/lu";
 import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from 'react-router-dom';
+import { PiSlidersHorizontalBold } from "react-icons/pi";
 
 export default function Projects() {
   const navigate = useNavigate();
@@ -141,9 +142,9 @@ export default function Projects() {
           width:150,
         },
         {
-          title: <MdOutlineSettingsInputComponent />,
+          title: <div className='fixed-header'> <PiSlidersHorizontalBold style={{ fontSize: '24px' }}/> </div>,
           render: (_, record) => (
-            <Space size="middle" className="">
+            <Space size="middle">
 
             </Space>),
             width:56,
@@ -155,8 +156,8 @@ export default function Projects() {
   return (
     <div className=''>
       <Table dataSource={tableData} columns={columns} 
-       scroll={{ x: 300, y: 300 }}
-      className='Project-table '
+       scroll={{ x: 300, y: 400 }}
+      className='Project-table'
         pagination={false}
           rowClassName={(record, index) => (index % 2 !== 0 ? 'odd-row' : 'even-row')}
           footer={() => (

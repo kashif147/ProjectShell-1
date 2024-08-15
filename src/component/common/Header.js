@@ -47,8 +47,9 @@ function Header() {
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav align-items-baseline">
-              <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Profile"} items={navLinks} />
+              <li class="nav-item nav-links-container activ-link">
+                {/* <MyDrowpDown title={"Profile"} items={navLinks} /> */}
+                <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link>
               </li>
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Cases"} items={navLinks} />
