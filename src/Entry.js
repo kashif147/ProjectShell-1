@@ -9,6 +9,7 @@ import SideNav from "./component/common/SideNav";
 import { useLocation } from "react-router-dom";
 import Configuratin from "./pages/Configuratin";
 import Details from "./pages/Details";
+import ProfileDetails from "./pages/Profiles/ProfileDetails";
 
 function Entry() {
   const location = useLocation();
@@ -29,9 +30,10 @@ function Entry() {
           <div className="main-main">
             <Routes>
               <Route path="/" element={<MainDashBoard />} />
+              <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<Projects />} />
               <Route path="Configuratin" element={<Configuratin /> } />
-              <Route path="Details" element={<Details /> } />
+              {/* <Route path="Details" element={<Details /> } /> */}
             </Routes>
           </div>
         </div>
