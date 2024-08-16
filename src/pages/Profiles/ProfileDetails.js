@@ -9,6 +9,8 @@ import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 
+import MyDeatails from "../../component/common/MyDeatails";
+
 function ProfileDetails() {
     const navigate = useNavigate();
 
@@ -20,7 +22,7 @@ function ProfileDetails() {
   
     return (
       <div className="">
-       
+       <MyDeatails />
       </div>
     );
   }

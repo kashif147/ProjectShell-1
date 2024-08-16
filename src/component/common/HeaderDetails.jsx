@@ -76,7 +76,8 @@ console.log(SerachFitersLookups,"123")
               : ` ${location?.state?.search}  / ${formattedNav}`}
           </p>
         </div>
-        {location?.pathname != "/Configuratin" && (
+        
+        {(location?.pathname == "/CasesSummary" || location?.pathname == "/Summary" || location?.pathname == "/ClaimSummary"  ) && (
         <div className="search-main">
           <div className="title d-flex justify-content-between ">
             <h2 className="title-main" >

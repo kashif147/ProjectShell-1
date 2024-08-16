@@ -21,7 +21,7 @@ function Entry() {
     <div className="">
       <Header />
       <div className="main-route d-flex ">
-        {location?.pathname == "/Details" && (
+        {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
           <div>
             <SideNav />
           </div>

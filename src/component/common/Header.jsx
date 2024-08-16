@@ -6,12 +6,13 @@ import Input from "antd/es/input/Input";
 import { FaUserCircle } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
 import { IoNotifications } from "react-icons/io5";
-import { Link } from "react-router-dom";
+import { Link, useLocation } from "react-router-dom";
 
 function Header() {
   const [token, settoken] = useState(null);
   const navigate = useNavigate();
-
+const location = useLocation();
+const pathname = location?.pathname
   const navLinks = [
     {
       key: "1",
@@ -68,7 +69,7 @@ function Header() {
   ];
   return (
     <div className="Header-border">
-      <div className="Header-padding d-flex justify-content-between align-items-baseline">
+      <div className=" d-flex justify-content-between align-items-baseline">
         <nav class="navbar navbar-expand-lg navbar-light ">
           <button
             class="navbar-toggler"
@@ -83,14 +84,14 @@ function Header() {
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav align-items-baseline">
-              <li class="nav-item nav-links-container activ-link">
+              <li className={`${pathname=="/Summary"|| pathname=="/Details" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Profile"} items={navLinks} />
                 {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
               </li>
-              <li class="nav-item nav-links-container">
+              <li className={`${pathname=="/CasesSummary"|| pathname=="/CasesDetails" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
               </li>
-              <li class="nav-item nav-links-container">
+              <li  className={`${pathname=="/ClaimSummary"|| pathname=="/ClaimsDetails" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
               </li>
               <li class="nav-item nav-links-container">

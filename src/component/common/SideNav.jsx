@@ -20,12 +20,15 @@ import { TfiMenu } from "react-icons/tfi";
 import { FaDiagramProject, FaSun  } from "react-icons/fa6";
 import { IoDocumentsSharp } from "react-icons/io5";
 import { MdWbSunny } from "react-icons/md";
-
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { ClassNames } from '@emotion/react';
 
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 function SideNav() {
-  const [isSideNav, setisSideNav] = useState(false)
+  const location = useLocation();
+  
+  const [isSideNav, setisSideNav] = useState(true)
   const toggleCollapsedFtn = ()=>{
       setisSideNav(!isSideNav)
   }
@@ -40,19 +43,23 @@ function SideNav() {
   const items = [
     {
       key: '1',
-      icon: <TfiMenu   className=''style={{ color: 'white', fontSize: '27px' }} onClick={toggleCollapsed} />,
+      icon:
+      <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"}`}>
+        <TfiMenu   className=''style={{ color: 'white', fontSize: '25px' }} onClick={toggleCollapsed} />
+      </div>
+      // className: location?.state=="location?.state?.search" ? 'custom-highlight' : '',
     }, 
     {
       key: '2',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-         <FaUser  style={{ fontSize: '27px' }} />
+         <FaUser  style={{ fontSize: '24px',  }} />
         </div>,
       label: 'Profile',
     },
     {
       key: '3',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-        <FaListCheck   style={{ fontSize: '27px' }} /> 
+        <FaListCheck   style={{ fontSize: '24px' }} /> 
         </div>,
       label: 'Cases',
     },
@@ -60,14 +67,14 @@ function SideNav() {
     {
       key: '4',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaMoneyCheckAlt style={{ fontSize: '27px' }} /> 
+      <FaMoneyCheckAlt style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Claims',
     },
     {
       key: '5',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaArrowRightArrowLeft style={{ fontSize: '27px' }} /> 
+      <FaArrowRightArrowLeft style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Correspondences',
     },
@@ -75,7 +82,7 @@ function SideNav() {
       key: '6',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <IoDocumentsSharp  style={{ fontSize: '27px' }} /> 
+      <IoDocumentsSharp  style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Documents',
     },
@@ -83,7 +90,7 @@ function SideNav() {
       key: '7',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <FaDiagramProject  style={{ fontSize: '27px' }} /> 
+      <FaDiagramProject  style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Projects',
     },
@@ -91,7 +98,7 @@ function SideNav() {
       key: '8',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <FaCalendarDays style={{ fontSize: '27px' }} /> 
+      <FaCalendarDays style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Roster',
     },
@@ -99,7 +106,7 @@ function SideNav() {
       key: '9',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <FaSun style={{ fontSize: '27px' }} /> 
+      <FaSun style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Tranings',
     },
@@ -109,7 +116,6 @@ function SideNav() {
   return (
     <div className='sid-nav-main'
       style={{
-        maxWidth:'300',
         height:"100%"
       }}
     >
