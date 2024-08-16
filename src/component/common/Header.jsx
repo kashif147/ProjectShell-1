@@ -16,16 +16,52 @@ function Header() {
     {
       key: "1",
       label: (
-        <Link to="Summary" state={{ search: "Profile" }}>
-          Main Page
+        <Link to="Summary" state={{ search: "Profile" }} className="link" style={{textDecoration:"none"}}>
+          Summary
         </Link>
       ),
     },
     {
       key: "",
       label: (
-        <Link to="Details" state={{ search: "Profile" }}>
-          Details Page
+        <Link className="link" to="Dummy" state={{ search: "Profile" }}>
+          Dummy Page
+        </Link>
+      ),
+    },
+  ];
+  const CasesnavLinks = [
+    {
+      key: "1",
+      label: (
+        <Link to="CasesSummary" state={{ search: "Cases" }} className="link" style={{textDecoration:"none"}}>
+          Summary
+        </Link>
+      ),
+    },
+    {
+      key: "",
+      label: (
+        <Link className="link" to="Dummy" state={{ search: "Cases" }}>
+          Dummy Page
+        </Link>
+      ),
+    },
+  ];
+  const ClaimsnavLinks = [
+    {
+      key: "1",
+      label: (
+        <Link to="ClaimSummary" state={{ search: "Claim" }} className="link" style={{textDecoration:"none"}}>
+          Summary
+        </Link>
+      ),
+    },
+    {
+      key: "",
+      label: (
+        <Link className="link" to="Dummy" state={{ search: "Claims" }}>
+          Dummy Page
         </Link>
       ),
     },
@@ -48,14 +84,14 @@ function Header() {
           <div class="collapse navbar-collapse" id="navbarNav">
             <ul class="navbar-nav align-items-baseline">
               <li class="nav-item nav-links-container activ-link">
-                {/* <MyDrowpDown title={"Profile"} items={navLinks} /> */}
-                <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link>
+                <MyDrowpDown title={"Profile"} items={navLinks} />
+                {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
               </li>
               <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Cases"} items={navLinks} />
+                <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
               </li>
               <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Claims"} items={navLinks} />
+                <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
               </li>
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Correspondences"} items={navLinks} />

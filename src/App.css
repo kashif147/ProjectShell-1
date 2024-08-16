@@ -555,3 +555,7 @@ tr {
 .activ-link{
 
 }
+.link{
+text-decoration: none !important;
+font-weight: 500;
+}

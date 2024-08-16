@@ -9,7 +9,7 @@ import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 
-function CasesSummary() {
+function ClaimSummary() {
     const navigate = useNavigate();
 
     const menu = (
@@ -51,7 +51,7 @@ function CasesSummary() {
         width: 100,
         render: (_, record) => (
           <Space>
-             <Link to="/CasesDetails" state={{ search: "Cases" }}>
+             <Link to="/ClaimsDetails" state={{ search: "Claims" }}>
             {record?.name}
           </Link>
           </Space>
@@ -208,4 +208,4 @@ function CasesSummary() {
     );
   }
 
-export default CasesSummary
+export default ClaimSummary

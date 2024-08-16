@@ -1,5 +1,5 @@
 import { useState, React } from "react";
-import { Link, useLocation } from "react-router-dom";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   RightOutlined,
   PlusOutlined,
@@ -25,6 +25,7 @@ function HeaderDetails() {
   const formattedNav = nav.replace(/^\//, "");
 
   const [isSideNav, setisSideNav] = useState(true);
+  const navigate = useNavigate()
 console.log(location,"location")
   const mriatalStatus =
     {
@@ -32,6 +33,7 @@ console.log(location,"location")
       Female: false,
       Other: false,  
     }
+
   const Mebership =
     {
       Probation: false,
@@ -39,8 +41,6 @@ console.log(location,"location")
       Associate: false,  
       Retired: false,  
     }
-
- 
 
   const Gender = [
     {
@@ -62,20 +62,15 @@ console.log(location,"location")
   const handleChange = (value) => {
     setSelectedValue(value);
   };
-  
-  // SerachFitersLookups?.SubscriptionsLookups.map((item) => {
-  //   let obj = {
-  //     key: item?.key,
-  //     label: item?.label,
-  //   };
-  //   SubscriptionsLookups.push(obj);
-  // });
+  const goBack = () => {
+    navigate(-1); 
+  }; 
 console.log(SerachFitersLookups,"123")
   return (
     <div className="details-header d-flex w-100% overflow-hidden">
       <div style={{ width: "100%" }}>
         <div className="d-flex ">
-          <p className="bred-cram-main">
+          <p className="bred-cram-main" onClick={goBack}>
             {(location?.key == "default" && nav == "/") || nav == "/"
               ? `Profile / Main`
               : ` ${location?.state?.search}  / ${formattedNav}`}
@@ -84,7 +79,7 @@ console.log(SerachFitersLookups,"123")
         {location?.pathname != "/Configuratin" && (
         <div className="search-main">
           <div className="title d-flex justify-content-between ">
-            <h2 className="title-main">
+            <h2 className="title-main" >
               {nav == "/" && location?.state == null
                 ? `Profile`
                 : ` ${location?.state?.search}`}

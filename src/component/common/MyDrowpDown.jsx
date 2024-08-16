@@ -26,6 +26,7 @@ function MyDrowpDown({ title, items }) {
           fontSize: "14px",
           fontWeight: "600",
           color: "#696969",
+         
         }}
       >
         <Space>

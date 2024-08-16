@@ -4,12 +4,16 @@ import { useNavigate } from "react-router-dom";
 import MainDashBoard from "./pages/MainDashBoard";
 import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
-import Projects from "./pages/Projects";
 import SideNav from "./component/common/SideNav";
 import { useLocation } from "react-router-dom";
 import Configuratin from "./pages/Configuratin";
-import Details from "./pages/Details";
 import ProfileDetails from "./pages/Profiles/ProfileDetails";
+import ProfileSummary from "./pages/Profiles/ProfileSummary";
+import CasesSummary from "./pages/Cases/CasesSummary";
+import Dummy from "./component/common/Dummy";
+import CasesDetails from "./pages/Cases/CasesDetails";
+import ClaimSummary from "./pages/Claims/ClaimSummary";
+import ClaimsDetails from "./pages/Claims/ClaimsDetails";
 
 function Entry() {
   const location = useLocation();
@@ -30,10 +34,14 @@ function Entry() {
           <div className="main-main">
             <Routes>
               <Route path="/" element={<MainDashBoard />} />
+              <Route path="Dummy" element={<Dummy />} />
               <Route path="Details" element={<ProfileDetails />} />
-              <Route path="Summary" element={<Projects />} />
+              <Route path="Summary" element={<ProfileSummary />}  />
+              <Route path="CasesDetails" element={< CasesDetails/> } />
+              <Route path="CasesSummary" element={< CasesSummary/> } />
+              <Route path="ClaimSummary" element={< ClaimSummary/> } />
+              <Route path="ClaimsDetails" element={< ClaimsDetails/> } />
               <Route path="Configuratin" element={<Configuratin /> } />
-              {/* <Route path="Details" element={<Details /> } /> */}
             </Routes>
           </div>
         </div>

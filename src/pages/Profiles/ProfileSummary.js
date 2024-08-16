@@ -10,7 +10,8 @@ import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 
 function ProfileSummary() {
-  const navigate = useNavigate();
+const navigate = useNavigate();
+
   const menu = (
     <Menu>
       <Menu.Item key="1">Option 1</Menu.Item>
@@ -18,6 +19,7 @@ function ProfileSummary() {
       <Menu.Item key="3">Option 3</Menu.Item>
     </Menu>
   );
+
   const location = useLocation();
   // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
   const currentURL = `${location.hash}`;
@@ -49,12 +51,9 @@ function ProfileSummary() {
       width: 100,
       render: (_, record) => (
         <Space>
-          {/* <p onClick={()=>navigate("Details")}>
-                {record?.name }
-                </p> */}
-          <Link to="/Details" state={{ search: "" }}>
-            {record?.name}
-          </Link>
+           <Link to="/Details" state={{ search: "Profile" }}>
+          {record?.name}
+        </Link>
         </Space>
       ),
     },
@@ -154,6 +153,7 @@ function ProfileSummary() {
       fixed: "right",
     },
   ];
+
   return (
     <div className="">
       <Table
