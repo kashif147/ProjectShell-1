@@ -25,6 +25,7 @@ import { PiUsersFourDuotone } from "react-icons/pi";
 import { render } from "@testing-library/react";
 function Configuratin() {
   const [genderModal, setgenderModal] = useState(false);
+  const [testing, settesting] = useState(false)
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isAddSubscriptionsModal, setIsAddSubscriptionsModal] = useState(false);
   const [AddgenderModal, setAddgenderModal] = useState(false);
@@ -105,7 +106,9 @@ function Configuratin() {
   const genderModalOpen = () => {
     setgenderModal(!genderModal);
   };
-
+const testingModalFtn= ()=>{
+  settesting(!testing)
+}
   const subscriptionsModalOpenClosFtn = () => {
     setIsSubscriptionsModal(!isSubscriptionsModal);
   };
@@ -187,7 +190,7 @@ function Configuratin() {
             alignItems: "center",
           }}
         >
-          <div>
+          <div onClick={testingModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Partnership</p>
           </div>
@@ -254,6 +257,7 @@ function Configuratin() {
           </div>
         </Col>
       </Row>
+      {/* Gender */}
       <MyDrawer
         open={genderModal}
         onClose={genderModalOpen}
@@ -261,6 +265,23 @@ function Configuratin() {
         title="Gender"
       >
         <div className="input-group">
+        <div className="input-group">
+            <p className="inpt-lbl">Short Name</p>
+            <Input placeholder="Please enter short name" />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Display Name</p>
+            <Input placeholder="Please enter display name " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Alpha</p>
+            <Input placeholder="Please enter alpha " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Beta</p>
+            <Input placeholder="Please enter Beta " />
+          </div>
+
           <Input
             placeholder="Search..."
             style={{ marginBottom: "5px" }}
@@ -276,9 +297,16 @@ function Configuratin() {
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
         />
-      </MyDrawer>
 
-      {/* multi level drawer */}
+
+        
+      </MyDrawer>
+{/* testing */}
+<MyDrawer title="test with Ayan" open={testing} onClose={testingModalFtn} >
+
+
+</MyDrawer>
+     
       <MyDrawer
         open={isSubscriptionsModal}
         onClose={subscriptionsModalOpenClosFtn}
