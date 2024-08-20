@@ -10,7 +10,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 import { MdOutlineAttachment } from "react-icons/md";
 import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
+import { HiOutlineDotsVertical } from "react-icons/hi";
+import { BsThreeDots } from "react-icons/bs";
+import { BsThreeDotsVertical } from "react-icons/bs";
 
+import SimpleMenu from "../../component/common/SimpleMenu";
 function ProfileSummary() {
 const navigate = useNavigate();
 
@@ -21,7 +25,12 @@ const navigate = useNavigate();
       <Menu.Item key="3">Option 3</Menu.Item>
     </Menu>
   );
-
+  const testing = { 
+    testinig:"false",
+    testinigA:"false",
+    testinigB:"false",
+    testinigc:"false",
+  }
   const location = useLocation();
   // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
   const currentURL = `${location.hash}`;
@@ -33,7 +42,7 @@ const navigate = useNavigate();
       render: (_, record) => (
         <Space size="middle" className="action-buttons">
           <MdOutlineAttachment />
-          <PiDotsThreeOutlineVerticalFill />
+          <SimpleMenu  title={<> <BsThreeDotsVertical  /></>} data={testing} checkbox={false} isSearched={false} isTransparent={true} />
         </Space>
       ),
       width: 100,
@@ -145,7 +154,8 @@ const navigate = useNavigate();
       title: (
         <div className="fixed-header">
           {" "}
-          <PiSlidersHorizontalBold style={{ fontSize: "24px" }} />{" "}
+          {/* <PiSlidersHorizontalBold  style={{ fontSize: "24px" }} />{" "} */}
+          <SimpleMenu  title={<> <PiSlidersHorizontalBold style={{ fontSize: "24px" }} /></>} data={testing} checkbox={false} isSearched={false} isTransparent={true} />
         </div>
       ),
       render: (_, record) => <Space size="middle"></Space>,

@@ -91,14 +91,14 @@ console.log(SerachFitersLookups,"123")
                 ? `Profile`
                 : ` ${location?.state?.search}`}
             </h2>
-            <div>
+            <div className="d-flex">
               <Button className="me-1 gray-btn butn">Export</Button>
               <Button className="me-1 gray-btn butn">Share</Button>
               <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
               <Button className="me-1 gray-btn butn">LIST VIEW</Button>
-              <Button className="me-1 gray-btn butn">
-              <BsThreeDots />
-              </Button>
+              <Button className="me-1 gray-btn butn">LIST VIEW</Button>
+              <SimpleMenu  title={<> <BsThreeDots /></>} data={testing} checkbox={false} isSearched={false} />
+            
             </div>
           </div>
           <div className="d-flex search-fliters align-items-baseline">
@@ -117,11 +117,8 @@ console.log(SerachFitersLookups,"123")
             <JiraLikeMenu title="Partnership" data={SerachFitersLookups} />
             <JiraLikeMenu title="Subscriptions" data={SerachFitersLookups} />
             <JiraLikeMenu title="Membership" data={Mebership} />
-          
             <div className="searchfilter- margin">
-
-             {/* <JiraLikeMenu title={<>More <PlusOutlined style={{marginLeft:"-2px"}} /></>} isSimple={true} data={testing} /> */}
-            <SimpleMenu  title={<>More <PlusOutlined style={{marginLeft:"-2px"}}/></>} data={testing}/>
+            <SimpleMenu  title={<>More <PlusOutlined style={{marginLeft:"-2px"}}/></>} data={testing} isSearched={false}  />
             </div>
             <div>
             <Link className="link" style={{ color: "#333333" }}>
