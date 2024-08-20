@@ -8,6 +8,8 @@ import { LuRefreshCw } from "react-icons/lu";
 import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
+import { MdOutlineAttachment } from "react-icons/md";
+import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
 
 function ProfileSummary() {
 const navigate = useNavigate();
@@ -30,10 +32,8 @@ const navigate = useNavigate();
       title: "Action",
       render: (_, record) => (
         <Space size="middle" className="action-buttons">
-          <CiEdit />
-          <FiDelete color="red" />
-          {/* <Button >Edit</Button>
-                <Button >Delete</Button> */}
+          <MdOutlineAttachment />
+          <PiDotsThreeOutlineVerticalFill />
         </Space>
       ),
       width: 100,
@@ -152,6 +152,7 @@ const navigate = useNavigate();
       width: 56,
       fixed: "right",
     },
+    
   ];
 
   return (

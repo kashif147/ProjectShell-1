@@ -8,7 +8,7 @@ function MySelect({placeholder,options,defaultValue,value,onChange,isMenu}) {
     className={`${isMenu==true?"d":""}`}
     defaultValue={defaultValue}
     value={value}
-    style={{width:"100%"}}
+    style={isMenu?{width:"100%"}:{}}
     onChange={onChange}
     onClick={(e) => e.stopPropagation()}
   >

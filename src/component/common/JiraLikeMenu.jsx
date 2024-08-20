@@ -1,7 +1,4 @@
-// import React, { useState } from 'react';
-// import { Menu, MenuItem, Button, Select, FormControl, InputLabel } from '@mui/material';
 
-// import KeyboardArrowDownIcon from '@mui/icons-material/KeyboardArrowDown';
 import React, { useEffect, useState } from "react";
 import {
   Menu,
@@ -16,7 +13,7 @@ import {
 import { DownOutlined } from "@ant-design/icons";
 import MySelect from "./MySelect";
 
-const JiraLikeMenu = ({ title, options, data }) => {
+const JiraLikeMenu = ({ title, data, isSimple=false }) => {
   console.log(data, "data");
   const [anchorEl, setAnchorEl] = useState(null);
   const open = Boolean(anchorEl);
@@ -34,7 +31,6 @@ const JiraLikeMenu = ({ title, options, data }) => {
 
   const handleSelectChange = (value) => {
     setSelectedOption(value);
-    console.log(value, "123");
   };
   const handleDropdownClick = (e) => {
     e.preventDefault();
@@ -72,19 +68,25 @@ const JiraLikeMenu = ({ title, options, data }) => {
   const menu = (
     <Menu>
       <Menu.Item key="1">
-        <MySelect
-          isMenu={true}
-          options={graterEqualDD}
-          defaultValue={graterEqualDD?.key == "!="}
-          value={selectedOption}
-          onChange={(e) => setSelectedOption(e)}
-        />
-        <Divider />
+        {
+          isSimple==false && 
+          <>
+          <MySelect
+            isMenu={true}
+            options={graterEqualDD}
+            defaultValue={graterEqualDD?.key == "!="}
+            value={selectedOption}
+            onChange={(e) => setSelectedOption(e)}
+          />
+          <Divider />
+          </>
+        }
         <Row>
           {data != null &&
             Object.keys(data)?.map((key) => (
-              <Col span={8}>
+              <Col span={24}>
                 <Checkbox
+                style={{marginBottom:"8px"}}
                   onClick={(e) => {
                     e.stopPropagation();
                     checkboxChangeFtn(key, e);
@@ -108,9 +110,16 @@ const JiraLikeMenu = ({ title, options, data }) => {
         placement="bottomLeft"
         overlayStyle={{ width: 300, padding: "0px" }}
       >
+        {
+          isSimple==false?
         <Button className={`${trueKeys?.length > 0 ? "active" : ""}`}>
           {title} {trueKeys?.length == 0 && <DownOutlined />}
         </Button>
+        :
+        <Button >
+          {title} 
+        </Button>
+        }
       </Dropdown>
       {trueKeys?.length > 0 && (
         <MySelect

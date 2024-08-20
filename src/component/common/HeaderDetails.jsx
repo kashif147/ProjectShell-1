@@ -15,6 +15,7 @@ import { SerachFitersLookups } from "../../Data";
 import { SearchOutlined } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 import JiraLikeMenu from "./JiraLikeMenu";
+import SimpleMenu from "./SimpleMenu";
 
 
 function HeaderDetails() {
@@ -56,7 +57,12 @@ console.log(location,"location")
       label: "Other",
     },
   ];
-
+const testing = { 
+  testinig:"false",
+  testinigA:"false",
+  testinigB:"false",
+  testinigc:"false",
+}
   const [selectedValue, setSelectedValue] = useState(null);
 
   const handleChange = (value) => {
@@ -113,8 +119,9 @@ console.log(SerachFitersLookups,"123")
             <JiraLikeMenu title="Membership" data={Mebership} />
           
             <div className="searchfilter- margin">
-              <Button className="margin" >More <PlusOutlined style={{marginLeft:"-2px"}} /></Button>
-             
+
+             {/* <JiraLikeMenu title={<>More <PlusOutlined style={{marginLeft:"-2px"}} /></>} isSimple={true} data={testing} /> */}
+            <SimpleMenu  title={<>More <PlusOutlined style={{marginLeft:"-2px"}}/></>} data={testing}/>
             </div>
             <div>
             <Link className="link" style={{ color: "#333333" }}>
