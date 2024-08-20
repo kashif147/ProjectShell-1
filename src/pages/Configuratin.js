@@ -119,6 +119,7 @@ const testingModalFtn= ()=>{
     setAddgenderModal(!AddgenderModal);
   };
 
+
   const PartnershipModalOpen = () => {
     setPartnershipModal(!ModalPartnership);
   };
@@ -164,6 +165,7 @@ const testingModalFtn= ()=>{
     <div className="configuration-main">
       <p className="configuratin-titles">Lookups Configuration</p>
 
+      <h1>TESTING</h1>
       <Row>
         <Col
           className="hover-col"

@@ -6,6 +6,7 @@ import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
 import SideNav from "./component/common/SideNav";
 import { useLocation } from "react-router-dom";
+import Dummy from "./component/common/Dummy";
 import Configuratin from "./pages/Configuratin";
 import ProfileDetails from "./pages/Profiles/ProfileDetails";
 import ProfileSummary from "./pages/Profiles/ProfileSummary";
