@@ -70,7 +70,7 @@ function SimpleMenu({ title, data, checkbox = true, isSearched=true, isTranspare
       >
         
           
-            <Button className={`${isTransparent?"transparent-bg":"gray-btn"} butn`}>{title}</Button>
+            <Button style={{ width: "100%", border: '1px solid #333333',borderRadius:"3px" }} className={`${isTransparent?"transparent-bg":"gray-btn"} butn`}>{title}</Button>
         
        
       </Dropdown>

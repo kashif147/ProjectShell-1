@@ -16,7 +16,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 
 import SimpleMenu from "../../component/common/SimpleMenu";
 function ProfileSummary() {
-const navigate = useNavigate();
+  const navigate = useNavigate();
 
   const menu = (
     <Menu>
@@ -25,12 +25,12 @@ const navigate = useNavigate();
       <Menu.Item key="3">Option 3</Menu.Item>
     </Menu>
   );
-  const testing = { 
-    testinig:"false",
-    testinigA:"false",
-    testinigB:"false",
-    testinigc:"false",
-  }
+  const testing = {
+    testinig: "false",
+    testinigA: "false",
+    testinigB: "false",
+    testinigc: "false",
+  };
   const location = useLocation();
   // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
   const currentURL = `${location.hash}`;
@@ -42,7 +42,18 @@ const navigate = useNavigate();
       render: (_, record) => (
         <Space size="middle" className="action-buttons">
           <MdOutlineAttachment />
-          <SimpleMenu  title={<> <BsThreeDotsVertical  /></>} data={testing} checkbox={false} isSearched={false} isTransparent={true} />
+          <SimpleMenu
+            title={
+              <>
+                {" "}
+                <BsThreeDotsVertical />
+              </>
+            }
+            data={testing}
+            checkbox={false}
+            isSearched={false}
+            isTransparent={true}
+          />
         </Space>
       ),
       width: 100,
@@ -60,9 +71,9 @@ const navigate = useNavigate();
       width: 100,
       render: (_, record) => (
         <Space>
-           <Link to="/Details" state={{ search: "Profile" }}>
-          {record?.name}
-        </Link>
+          <Link to="/Details" state={{ search: "Profile" }}>
+            {record?.name}
+          </Link>
         </Space>
       ),
     },
@@ -154,15 +165,26 @@ const navigate = useNavigate();
       title: (
         <div className="fixed-header">
           {" "}
-          {/* <PiSlidersHorizontalBold  style={{ fontSize: "24px" }} />{" "} */}
-          <SimpleMenu  title={<> <PiSlidersHorizontalBold style={{ fontSize: "24px" }} /></>} data={testing} checkbox={false} isSearched={false} isTransparent={true} />
+          <SimpleMenu
+            title={
+              <>
+                {" "}
+                <PiSlidersHorizontalBold
+                  style={{ fontSize: "24px", color: "#fff" }}
+                />
+              </>
+            }
+            data={testing}
+            checkbox={false}
+            isSearched={true}
+            isTransparent={true}
+          />
         </div>
       ),
       render: (_, record) => <Space size="middle"></Space>,
       width: 56,
       fixed: "right",
     },
-    
   ];
 
   return (

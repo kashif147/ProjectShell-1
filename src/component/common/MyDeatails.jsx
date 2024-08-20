@@ -32,7 +32,6 @@ function MyDeatails() {
       return;
     }
     if (info.file.status === "done") {
-      // Assuming the server returns the URL of the uploaded image
       setLoading(false);
       setImageUrl(info.file.response.url);
       message.success("Image uploaded successfully");
@@ -41,20 +40,15 @@ function MyDeatails() {
       message.error("Image upload failed.");
     }
   };
-
   const customRequest = ({ file, onSuccess, onError }) => {
-    // Simulate an upload process with a delay
     setTimeout(() => {
       if (file) {
-        // Here you would typically send the file to your server
-        // For this example, we'll simulate a successful upload
         onSuccess({ url: URL.createObjectURL(file) }, file);
       } else {
         onError(new Error("Upload failed."));
       }
     }, 1000);
   };
-
   const uploadButton = (
     <Button
       style={{ marginTop: "5px" }}
@@ -63,43 +57,96 @@ function MyDeatails() {
       {loading ? "Uploading" : "Upload"}
     </Button>
   );
+  const contact = [
+    {
+      key: "1",
+      label:<h1 className="primary-contact">Primary Contact</h1>,
+      children: <div>
+        <Row gutter={20}>
+          <Col span={8}>
+          <p className="lbl">Building</p>
+          <Input />
+          </Col>
+          <Col span={8}>
+          <p className="lbl">Street</p>
+          <Input />
+          </Col>
+          <Col span={8}>
+          <p className="lbl">Area</p>
+          <MySelect placeholder="Select area" isSimple={true} />
+          </Col>
+        </Row>
+        <Row gutter={20}>
+        <Col span={8}>
+          <p className="lbl">City</p>
+          <MySelect placeholder="Select City" isSimple={true} />
+          </Col>
+        <Col span={8}>
+          <p className="lbl">Eircode</p>
+          <Input />
+          </Col>
+        <Col span={8}>
+          <p className="lbl"> contact No</p>
+         <Input />
+          </Col>
+        </Row>
+      </div>,
+    },
+    {
+      key: "2",
+      label: <h1 className="primary-contact">Secondary Contact</h1>,
+      children: <div>
+      <Row gutter={20}>
+        <Col span={8}>
+        <p className="lbl">Building</p>
+        <Input />
+        </Col>
+        <Col span={8}>
+        <p className="lbl">Street</p>
+        <Input />
+        </Col>
+        <Col span={8}>
+        <p className="lbl">Area</p>
+        <MySelect placeholder="Select area" isSimple={true} />
+        </Col>
+      </Row>
+      <Row gutter={20}>
+      <Col span={8}>
+        <p className="lbl">City</p>
+        <MySelect placeholder="Select City" isSimple={true} />
+        </Col>
+      <Col span={8}>
+        <p className="lbl">Eircode</p>
+        <Input />
+        </Col>
+      <Col span={8}>
+        <p className="lbl"> contact No</p>
+       <Input />
+        </Col>
+      </Row>
+    </div>,
+    },
+  ];
   return (
     <Tabs
       defaultActiveKey="1"
       items={[
         {
-          label: "Personal Information",
+          label: <h1 className="primary-contact">Personal Information</h1>,
           key: "1",
           children: (
-            <div>
-              <Row gutter={20}>
-                <Col span={7}>
-                  <p className="lbl">Garda Reg No:</p>
-                  <Input />
-                  <div className="d-flex w-100">
-                    <div className="w-100">
-                      <p className="lbl">Date Of Birth</p>
-                      <DatePicker style={{ width: "100%" }} className="" />
-                    </div>
-                    <div className="w-100" style={{ marginLeft: "1rem" }}>
-                      <p className="lbl">Date Aged 65</p>
-                      <DatePicker style={{ width: "100%" }} className="" />
-                    </div>
-                  </div>
-                </Col>
-                <Col span={7}>
-                  <p className="lbl">Forename</p>
-                  <Input />
-                  <p className="lbl">Forename</p>
-                  <Input />
-                </Col>
-                <Col span={7}>
-                  <p className="lbl">Gernder</p>
-                  <Input />
-                  <p className="lbl">Forename</p>
-                  <Input />
-                </Col>
-                <Col span={3}>
+            <div className="">
+              <Row>
+                <Col
+                  span={24}
+                  style={{
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "center",
+                    alignItems: "center",
+                    height: "100%",
+                  }}
+                >
                   <Upload
                     customRequest={customRequest}
                     showUploadList={false}
@@ -114,8 +161,6 @@ function MyDeatails() {
                           style={{
                             width: "150px",
                             height: "auto",
-                            marginTop: "10px",
-                            marginBottom: "10px",
                           }}
                         />
                       ) : (
@@ -134,32 +179,54 @@ function MyDeatails() {
                 </Col>
               </Row>
               <Row gutter={20}>
-                <Col span={7}>
-                  <p className="lbl">Partnership</p>
-                  <div className="d-flex align-items-baseline">
-                    <MySelect placeholder="Partnership" />
-                    
-                  </div>
+                <Col span={6}>
+                  <p className="lbl">Garda Reg No:</p>
+                  <Input />
                 </Col>
-                <Col span={7}>
-                <p className="lbl">
-                Children
-                </p>
+                <Col span={6}>
+                  <p className="lbl">Forename</p>
+                  <Input />
+                </Col>
+                <Col span={6}>
+                  <p className="lbl">Surename</p>
+                  <Input />
+                </Col>
+                <Col span={6}>
+                  <p className="lbl">Gender</p>
+                  <MySelect placeholder="Select Gender" isSimple={true} />
+                </Col>
+              </Row>
+              <Row gutter={20}>
+                <Col span={6}>
+                  <p className="lbl">Date Of Birth</p>
+                  <DatePicker style={{ width: "100%", border: '1px solid #333333', borderRadius:"3px" }} className="" />
+                </Col>
+                <Col span={6}>
+                  <p className="lbl">Date Aged 65</p>
+                  <DatePicker style={{ width: "100%", border: '1px solid #333333',borderRadius:"3px" }} className="" />
+                </Col>
+                <Col span={6}>
+                  <p className="lbl">Partnership</p>
+                  <MySelect placeholder="Select Partnership" isSimple={true} />
+                </Col>
+                <Col span={6}>
+                  <p className="lbl">Children</p>
                   <Input type="number" />
                 </Col>
-                <Col span={7}></Col>
               </Row>
-              <h2 className="primary-contact">Primery Contact:</h2>
+
+              {/* <h2 className="primary-contact">Primery Contact:</h2> */}
+              <Tabs defaultActiveKey="1" items={contact} onChange={()=>{}} />
             </div>
           ),
         },
         {
-          label: "Offical Information",
+          label: <h1 className="primary-contact">Offical Information</h1>,
           key: "2",
           children: "Tab 3",
         },
         {
-          label: "Membership",
+          label: <h1 className="primary-contact">Membership</h1>,
           key: "3",
           children: "Tab 3",
         },
