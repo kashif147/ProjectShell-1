@@ -60,71 +60,79 @@ function MyDeatails() {
   const contact = [
     {
       key: "1",
-      label:<h1 className="primary-contact">Primary Contact</h1>,
-      children: <div>
-        <Row gutter={20}>
-          <Col span={8}>
-          <p className="lbl">Building</p>
-          <Input />
-          </Col>
-          <Col span={8}>
-          <p className="lbl">Street</p>
-          <Input />
-          </Col>
-          <Col span={8}>
-          <p className="lbl">Area</p>
-          <MySelect placeholder="Select area" isSimple={true} />
-          </Col>
-        </Row>
-        <Row gutter={20}>
-        <Col span={8}>
-          <p className="lbl">City</p>
-          <MySelect placeholder="Select City" isSimple={true} />
-          </Col>
-        <Col span={8}>
-          <p className="lbl">Eircode</p>
-          <Input />
-          </Col>
-        <Col span={8}>
-          <p className="lbl"> contact No</p>
-         <Input />
-          </Col>
-        </Row>
-      </div>,
+      label: <h1 className="primary-contact">Primary Contact</h1>,
+      children: (
+        <div>
+          <Row gutter={20}>
+            <Col span={12}>
+              <p className="lbl">Building</p>
+              <Input />
+            </Col>
+            <Col span={12}>
+              <p className="lbl">Street</p>
+              <Input />
+            </Col>
+           
+          </Row>
+          <Row gutter={20}>
+          <Col span={12}>
+              <p className="lbl">Area</p>
+              <MySelect placeholder="Select area" isSimple={true} />
+            </Col>
+            <Col span={12}>
+              <p className="lbl">City</p>
+              <MySelect placeholder="Select City" isSimple={true} />
+            </Col>
+           
+          </Row>
+          <Row>
+          <Col span={12}>
+              <p className="lbl">Eircode</p>
+              <Input />
+            </Col>
+            <Col span={12}>
+            </Col>
+          </Row>
+        </div>
+      ),
     },
     {
       key: "2",
       label: <h1 className="primary-contact">Secondary Contact</h1>,
-      children: <div>
-      <Row gutter={20}>
-        <Col span={8}>
-        <p className="lbl">Building</p>
-        <Input />
-        </Col>
-        <Col span={8}>
-        <p className="lbl">Street</p>
-        <Input />
-        </Col>
-        <Col span={8}>
-        <p className="lbl">Area</p>
-        <MySelect placeholder="Select area" isSimple={true} />
-        </Col>
-      </Row>
-      <Row gutter={20}>
-      <Col span={8}>
-        <p className="lbl">City</p>
-        <MySelect placeholder="Select City" isSimple={true} />
-        </Col>
-      <Col span={8}>
-        <p className="lbl">Eircode</p>
-        <Input />
-        </Col>
-      <Col span={8}>
-        <p className="lbl"> contact No</p>
-       <Input />
-        </Col>
-      </Row>
-    </div>,
+      children: (
+        <div>
+        <Row gutter={20}>
+          <Col span={12}>
+            <p className="lbl">Building</p>
+            <Input />
+          </Col>
+          <Col span={12}>
+            <p className="lbl">Street</p>
+            <Input />
+          </Col>
+         
+        </Row>
+        <Row gutter={20}>
+        <Col span={12}>
+            <p className="lbl">Area</p>
+            <MySelect placeholder="Select area" isSimple={true} />
+          </Col>
+          <Col span={12}>
+            <p className="lbl">City</p>
+            <MySelect placeholder="Select City" isSimple={true} />
+          </Col>
+         
+        </Row>
+        <Row>
+        <Col span={12}>
+            <p className="lbl">Eircode</p>
+            <Input />
+          </Col>
+          <Col span={12}>
+          </Col>
+        </Row>
+      </div>
+      ),
     },
   ];
   return (
@@ -135,9 +143,9 @@ function MyDeatails() {
           label: <h1 className="primary-contact">Personal Information</h1>,
           key: "1",
           children: (
-            <div className="">
+            <div className="padding-bottom">
               <Row gutter={20}>
-              <Col span={12}>
+                <Col span={12}>
                   <p className="lbl">Garda Reg No:</p>
                   <Input />
                 </Col>
@@ -147,8 +155,6 @@ function MyDeatails() {
                 </Col>
               </Row>
               <Row gutter={20}>
-                
-                
                 <Col span={12}>
                   <p className="lbl">Surename</p>
                   <Input />
@@ -159,31 +165,59 @@ function MyDeatails() {
                 </Col>
               </Row>
               <Row gutter={20}>
-              <Col span={12}>
+                
+               
+                  <Col span={12}>
                   <p className="lbl">Date Of Birth</p>
-                  <DatePicker style={{ width: "100%", border: '1px solid #333333', borderRadius:"3px" }} className="" />
-                  <p className="lbl">Date Aged 65</p>
-                  <DatePicker style={{ width: "100%", border: '1px solid #333333',borderRadius:"3px" }} className="" />
-                </Col>
-                <Col span={12}>
-                <p className="lbl">Partnership</p>
-                <MySelect placeholder="Select Partnership" isSimple={true} />
-                </Col>
+                      <DatePicker
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+                      
+                  </Col>
+                  <Col span={12}>
+                   <p className="lbl">Date Aged 65</p>
+                      <DatePicker
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+                  </Col>
+                
               </Row>
               <Row gutter={20}>
-               
-                
-                <Col span={6}>
-                 
+                <Col span={12}>
+                  <p className="lbl">Partnership</p>
+                  <MySelect placeholder="Select Partnership" isSimple={true} />
                 </Col>
-                <Col span={6}>
+                <Col span={12}>
                   <p className="lbl">Children</p>
                   <Input type="number" />
                 </Col>
               </Row>
+              <Row gutter={20}>
+                <Col span={12}>
+                  <p className="lbl">Email</p>
+                  <Input type="number" />
+                </Col>
+                <Col span={12}>
+                  <p className="lbl">Contact</p>
+                  <Input type="number" />
+                </Col>
+              </Row>
+              <Tabs defaultActiveKey="1" items={contact} onChange={() => {}} />
+                <div className="btn-main-con">
+                <Button className="gray-btn butn">Save</Button>
+                <Button className=" butn" onClick={()=>{}}>Cancel</Button>
 
-              {/* <h2 className="primary-contact">Primery Contact:</h2> */}
-              <Tabs defaultActiveKey="1" items={contact} onChange={()=>{}} />
+                </div>
             </div>
           ),
         },

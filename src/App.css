@@ -665,6 +665,7 @@ tr {
   text-align: center;
   border: 4px solid var(--mainBlue);
   position: relative; /* Ensure that child elements can be absolutely positioned */
+  cursor: pointer;
 }
 
 .upload-icon {
@@ -677,4 +678,11 @@ tr {
 h1 {
   position: relative; /* Ensure text appears above the icon */
   z-index: 1;
+}
+.padding-bottom{
+  padding-bottom: 20px;
+}
+.btn-main-con{
+  margin: 1rem 0rem;
+  float: right;
 }
