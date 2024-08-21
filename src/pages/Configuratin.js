@@ -1,7 +1,9 @@
 import { React, useState } from "react";
 import { SiActigraph } from "react-icons/si";
 import MyDrawer from "../component/common/MyDrawer";
-import { Input, Table, Row, Col, Space } from "antd";
+import { tableData } from "../Data";
+import { LuRefreshCw } from "react-icons/lu";
+import { Input, Table, Pagination, Row, Col, Space } from "antd";
 import TextArea from "antd/es/input/TextArea";
 import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
@@ -16,7 +18,7 @@ import {
   MoreHoriz as MoreHorizIcon,
   KeyboardArrowDown as KeyboardArrowDownIcon,
 } from "@mui/icons-material";
-import { Button, Menu, MenuItem, Divider } from "@mui/material";
+import { FaEdit } from "react-icons/fa";
 import MySelect from "../component/common/MySelect";
 import { SerachFitersLookups } from "../Data";
 import JiraLikeMenu from "../component/common/JiraLikeMenu";
@@ -41,16 +43,22 @@ function Configuratin() {
       dataIndex: "ShortName",
       key: "ShortName",
       width: 60,
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Action",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
   ];
   const SubscriptionsColumn = [
@@ -59,34 +67,54 @@ function Configuratin() {
       dataIndex: "ShortName",
       key: "ShortName",
       width: 60,
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Alpha",
       dataIndex: "Alpha",
       key: "Alpha",
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Beta",
       dataIndex: "Beta",
       key: "Beta",
+      align: 'center',  // Horizontally center the content
+    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
     },
 
     {
       title: "Action",
       dataIndex: "DisplayName",
       render: (_, record) => (
-        <Space size="middle" className="action-buttons">
-          <FaRegEdit />
-          <AiFillDelete />
+        <Space 
+        size="middle" 
+        className="action-buttons"
+        style={{ justifyContent: 'center', display: 'flex' }}
+        >
+          <FaEdit 
+          size ={20}
+          style={{ marginRight: '5px' }}
+          />
+          <AiFillDelete
+          size ={20} 
+          />
         </Space>
       ),
     },
   ];
+
+
+
   const gander = [
     {
       key: "1",
@@ -104,6 +132,8 @@ function Configuratin() {
       DisplayName: "Other",
     },
   ];
+
+  
 
   const genderModalOpen = () => {
     setgenderModal(!genderModal);
@@ -337,19 +367,54 @@ const AddMembershipModalOpenCloseFtn = () =>{
         </div>
         <Table
           columns={SubscriptionsColumn}
-          pagination={true}
+          pagination={false}
           dataSource={gander}
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{tableData.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${tableData.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={tableData.length}
+                pageSize={10}
+              />
+            </div>
+          )}
         />
 
-           <MyDrawer
-          title="Add Membership"
-          open={AddMembershipModal}
-          onClose={AddMembershipModalOpenCloseFtn}
-        >
+          
+        
           <div className="input-group">
             <p className="inpt-lbl">Short Name</p>
             <Input placeholder="Please enter short name" />
@@ -366,7 +431,6 @@ const AddMembershipModalOpenCloseFtn = () =>{
             <p className="inpt-lbl">Beta</p>
             <Input placeholder="Please enter Beta " />
           </div>
-        </MyDrawer>
 
       </MyDrawer>
 
@@ -404,8 +468,6 @@ const AddMembershipModalOpenCloseFtn = () =>{
           }
         />
 
-        {/* drawer after clicking add butn */}
-        {/* I opened this drawer from add button of main drawer */}
         <MyDrawer
           title="Add Subscriptions"
           open={isAddSubscriptionsModal}

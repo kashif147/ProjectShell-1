@@ -15,7 +15,7 @@ function MyDrawer({ title, open, onClose, children, add }) {
             Close
           </Button>
           <Button className="gray-btn butn" onClick={add}>
-            Add
+            Add 
           </Button>
         </Space>
       }
