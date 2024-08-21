@@ -136,78 +136,45 @@ function MyDeatails() {
           key: "1",
           children: (
             <div className="">
-              <Row>
-                <Col
-                  span={24}
-                  style={{
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
-                    alignItems: "center",
-                    height: "100%",
-                  }}
-                >
-                  <Upload
-                    customRequest={customRequest}
-                    showUploadList={false}
-                    onChange={handleChange}
-                    accept="image/*"
-                  >
-                    <div className="d-flex flex-column">
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt="Uploaded"
-                          style={{
-                            width: "150px",
-                            height: "auto",
-                          }}
-                        />
-                      ) : (
-                        <FaRegCircleUser
-                          style={{
-                            width: "100px",
-                            height: "auto",
-                            opacity: "0.9",
-                            marginTop: "10px",
-                          }}
-                        />
-                      )}
-                      {uploadButton}
-                    </div>
-                  </Upload>
-                </Col>
-              </Row>
               <Row gutter={20}>
-                <Col span={6}>
+              <Col span={12}>
                   <p className="lbl">Garda Reg No:</p>
                   <Input />
                 </Col>
-                <Col span={6}>
+                <Col span={12}>
                   <p className="lbl">Forename</p>
                   <Input />
                 </Col>
-                <Col span={6}>
+              </Row>
+              <Row gutter={20}>
+                
+                
+                <Col span={12}>
                   <p className="lbl">Surename</p>
                   <Input />
                 </Col>
-                <Col span={6}>
+                <Col span={12}>
                   <p className="lbl">Gender</p>
                   <MySelect placeholder="Select Gender" isSimple={true} />
                 </Col>
               </Row>
               <Row gutter={20}>
-                <Col span={6}>
+              <Col span={12}>
                   <p className="lbl">Date Of Birth</p>
                   <DatePicker style={{ width: "100%", border: '1px solid #333333', borderRadius:"3px" }} className="" />
-                </Col>
-                <Col span={6}>
                   <p className="lbl">Date Aged 65</p>
                   <DatePicker style={{ width: "100%", border: '1px solid #333333',borderRadius:"3px" }} className="" />
                 </Col>
+                <Col span={12}>
+                <p className="lbl">Partnership</p>
+                <MySelect placeholder="Select Partnership" isSimple={true} />
+                </Col>
+              </Row>
+              <Row gutter={20}>
+               
+                
                 <Col span={6}>
-                  <p className="lbl">Partnership</p>
-                  <MySelect placeholder="Select Partnership" isSimple={true} />
+                 
                 </Col>
                 <Col span={6}>
                   <p className="lbl">Children</p>

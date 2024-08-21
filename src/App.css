@@ -107,6 +107,7 @@ body {
   height: 80%;
 }
 .details-header {
+  padding-top: 10px;
   padding-left: 30px;
   padding-right: 30px;
   width: 100%;
@@ -304,6 +305,7 @@ body {
   font-family: var(--fontFamily);
   color: var(--labelColor) !important;
   cursor: pointer;
+  padding-bottom: 10px;
 }
 .title-main {
   font-size: 20px !important;
@@ -634,13 +636,45 @@ tr {
   box-shadow: none !important;
 }
 
-.ant-input {
-}
 .patient-header {
   height: 15vh !important;
   background-color: var(--gray);
   padding-left: 30px;
   display: flex;
-  align-items: center;
+  /* align-items: center; */
+  /* justify-content: center; */
+}
+.icon-align {
+  vertical-align: baseline;
+}
+.deatil-header-icon{
+  font-size: 13px !important;
+  font-weight: 500;
+  margin-left: 4px;
+}
+
+.profile-imag {
+  background: transparent !important;
+  padding: 5px;
+  border-radius: 50%;
+  width: 80px;
+  height: 80px;
+  display: flex;
   justify-content: center;
+  align-items: center;
+  text-align: center;
+  border: 4px solid var(--mainBlue);
+  position: relative; /* Ensure that child elements can be absolutely positioned */
+}
+
+.upload-icon {
+  position: absolute;
+  font-size: 60px; /* Adjust size accordingly */
+  color: var(--mainBlue);
+  opacity: 0.3; /* Make it appear as a background */
+}
+
+h1 {
+  position: relative; /* Ensure text appears above the icon */
+  z-index: 1;
 }
