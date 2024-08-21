@@ -42,23 +42,26 @@ function Configuratin() {
       title: "Short Name",
       dataIndex: "ShortName",
       key: "ShortName",
+      verticalAlign: 'center',
       width: 60,
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center' , verticalAlign: 'center'}}>{text}</div>,
     },
     {
       title: "Action",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', verticalAlign: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
   ];
   const SubscriptionsColumn = [
@@ -66,30 +69,34 @@ function Configuratin() {
       title: "Short Name",
       dataIndex: "ShortName",
       key: "ShortName",
+      verticalAlign: 'center',
       width: 60,
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
     },
     {
       title: "Alpha",
       dataIndex: "Alpha",
       key: "Alpha",
+      verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Beta",
       dataIndex: "Beta",
       key: "Beta",
+      verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ textAlign: 'center' }}>{text}</div>,
+    render: (text) => <div style={{display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
     },
 
     {
@@ -102,11 +109,11 @@ function Configuratin() {
         style={{ justifyContent: 'center', display: 'flex' }}
         >
           <FaEdit 
-          size ={20}
-          style={{ marginRight: '5px' }}
+          size ={16}
+          style={{ marginRight: '10px' }}
           />
           <AiFillDelete
-          size ={20} 
+          size ={16} 
           />
         </Space>
       ),
@@ -357,6 +364,27 @@ const AddMembershipModalOpenCloseFtn = () =>{
           add = {AddMembershipModalOpenCloseFtn}
           >
 
+            
+          
+        
+          <div className="input-group">
+            <p className="inpt-lbl">Short Name</p>
+            <Input placeholder="Please enter short name" />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Display Name</p>
+            <Input placeholder="Please enter display name " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Alpha</p>
+            <Input placeholder="Please enter alpha " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Beta</p>
+            <Input placeholder="Please enter Beta " />
+          </div>
+
+
 
           <div className="input-group">
           <Input
@@ -390,7 +418,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
                     fontWeight: "500",
                   }}
                 >
-                  1-{tableData.length}
+                  1-{gander.length}
                 </span>
                 <span
                   style={{
@@ -400,37 +428,18 @@ const AddMembershipModalOpenCloseFtn = () =>{
                   }}
                 >
                   {" "}
-                  of {`${tableData.length}`}
+                  of {`${gander.length}`}
                 </span>
                 <LuRefreshCw />
               </div>
               <Pagination
                 defaultCurrent={1}
-                total={tableData.length}
+                total={gander.length}
                 pageSize={10}
               />
             </div>
           )}
         />
-
-          
-        
-          <div className="input-group">
-            <p className="inpt-lbl">Short Name</p>
-            <Input placeholder="Please enter short name" />
-          </div>
-          <div className="input-group">
-            <p className="inpt-lbl">Display Name</p>
-            <Input placeholder="Please enter display name " />
-          </div>
-          <div className="input-group">
-            <p className="inpt-lbl">Alpha</p>
-            <Input placeholder="Please enter alpha " />
-          </div>
-          <div className="input-group">
-            <p className="inpt-lbl">Beta</p>
-            <Input placeholder="Please enter Beta " />
-          </div>
 
       </MyDrawer>
 
