@@ -43,7 +43,7 @@ select {
   opacity: 1;
 }
 .ant-input {
-  border-color: 4px solid gray !important;
+  border-color: 4px solid var(--labelColor) !important;
   border-radius: 3px !important;
 }
 .ant-select-dropdown {
@@ -88,13 +88,12 @@ body {
 .navbar {
   padding: 0px !important;
 }
-.activ-link{
-  border-bottom:3px solid var(--mainBlue) ;
+.activ-link {
+  border-bottom: 3px solid var(--mainBlue);
 }
-.nav-links-container{
+.nav-links-container {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
-
 }
 
 .Header-border {
@@ -108,7 +107,6 @@ body {
   height: 80%;
 }
 .details-header {
-  padding-top: 25px;
   padding-left: 30px;
   padding-right: 30px;
   width: 100%;
@@ -317,7 +315,6 @@ body {
   padding-left: 30px;
   padding-right: 30px;
   overflow: hidden;
- 
 }
 .odd-row {
   background-color: var(--table-row);
@@ -377,7 +374,7 @@ body {
   border-bottom: none;
 }
 .Project-table :where(.css-dev-only-do-not-override-1uq9j6g).ant-table-wrapper {
-  border: 1px solid #d9d9d9 !important; 
+  border: 1px solid #d9d9d9 !important;
 }
 .Project-table .ant-table-tbody > tr > td {
   border-bottom: 1px solid #d9d9d9 !important; /* Add border to table rows */
@@ -437,7 +434,7 @@ tr {
 }
 
 .searchfilter- .ant-select {
-  background-color: #f0f0f0 !important; 
+  background-color: #f0f0f0 !important;
   border-radius: 0px !important;
   border: none !important;
 }
@@ -509,11 +506,10 @@ tr {
   /* width: 100%;  */
   overflow: hidden;
 }
-.ant-menu .ant-menu-item{
+.ant-menu .ant-menu-item {
   border-radius: 3px !important;
-  width: auto ;
+  width: auto;
   margin: 8px 0px !important;
-  
 }
 .hover-col {
   display: flex;
@@ -523,76 +519,128 @@ tr {
 }
 
 .hover-col:hover {
-  background-color: #f0f0f0; 
-  cursor: pointer; 
+  background-color: #f0f0f0;
+  cursor: pointer;
 }
-.drawer-tbl
-.ant-table-thead > tr > th {
-  background-color: #45669d !important;  
-  color: #ffffff !important;  
-  font-weight: bold;  
+.drawer-tbl .ant-table-thead > tr > th {
+  background-color: #45669d !important;
+  color: #ffffff !important;
+  font-weight: bold;
 }
-.inpt-lbl{
+.inpt-lbl {
   font-size: 12px !important;
   font-weight: bolder !important;
   font-family: var(--fontFamily);
   color: var(--FontsColor) !important;
 }
-.input-group input::placeholder
- {
+.input-group input::placeholder {
   color: var(--labelColor) !important;
   opacity: 1;
   font-family: var(--fontFamily) !important;
   font-size: 12px !important;
 }
-.my-btn{
+.my-btn {
   color: var(--FontsColor);
   font-size: 16px;
   font-family: var(--fontFamily);
   border-radius: 3px !important;
 }
-.Project-table
-.ant-table-thead > tr > th {
-  background-color: var(--mainBlue) !important; 
+.Project-table .ant-table-thead > tr > th {
+  background-color: var(--mainBlue) !important;
   color: white !important;
   font-size: 14px !important;
   font-weight: 500;
 }
-.btn-border{
+.btn-border {
   border: 1px solid #c0b9e7 !important ;
 }
-.activ-link{
-
+.activ-link {
 }
-.link{
-text-decoration: none !important;
-font-weight: 500;
+.link {
+  text-decoration: none !important;
+  font-weight: 500;
 }
-.sid-nav-activ :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark .ant-menu-item-selected, 
-.sid-nav-activ :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark > .ant-menu .ant-menu-item-selected {
-    background-color: #1677ff;
+.sid-nav-activ
+  :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
+  .ant-menu-item-selected,
+.sid-nav-activ
+  :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item-selected {
+  background-color: #1677ff;
 }
 .custom-highlight {
   background-color: red !important;
 }
-:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed > .ant-menu-item {
-  padding-inline: 0 ; 
+:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed
+  > .ant-menu-item {
+  padding-inline: 0;
 }
 :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed {
   width: 60px !important;
 }
-.lbl{
- margin: 10px  0px !important;
- font-size: 12px;
+.lbl {
+  margin: 10px 0px !important;
+  font-size: 12px;
   font-family: var(--fontFamily) !important;
-  color: var(--FontsColor) !important;
+  color: var(--labelColor) !important;
   font-weight: 450;
 }
-.primary-contact{
+.primary-contact {
   font-size: 14px;
   font-family: var(--fontFamily) !important;
-  color: var(--FontsColor) !important;
+  color: var(--labelColor) !important;
   font-weight: 500;
-  text-align: center;
-  margin: 1rem 0px ;
+  /* text-align: center; */
+  margin: 1rem 0px;
+}
+.menu-item:hover {
+  background-color: var(--gray);
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+.menu-item {
+  padding: 4px !important;
+}
+.without-checkbox {
+  font-size: 16px !important;
+  font-weight: 400;
+}
+.ant-dropdown-menu-item {
+  padding-left: 4px !important;
+  padding-right: 4px !important;
+}
+:where(.css-dev-only-do-not-override-d2lrxs).ant-space-gap-col-middle {
+  column-gap: unset !important;
+}
+.transparent-bg {
+  background-color: transparent !important;
+
+  border: none !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.transparent-bg:hover,
+.transparent-bg:focus,
+.transparent-bg:active {
+  background-color: transparent !important;
+  box-shadow: none !important;
+  outline: none !important;
+}
+.transparent-bg:focus-visible {
+  background-color: transparent !important;
+  outline: none !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ant-input {
+}
+.patient-header {
+  height: 15vh !important;
+  background-color: var(--gray);
+  padding-left: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }

@@ -11,8 +11,9 @@ import {
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 
-function SimpleMenu({ title, data }) {
+function SimpleMenu({ title, data, checkbox = true, isSearched=true, isTransparent=false }) {
   const [checkboxes, setCheckboxes] = useState();
+  console.log(checkboxes, "132");
   const [trueKeys, setTrueKeys] = useState([]);
   const checkboxChangeFtn = (key, event) => {
     setCheckboxes((prevState) => {
@@ -27,20 +28,21 @@ function SimpleMenu({ title, data }) {
       return updatedState;
     });
   };
-  useEffect(()=>{
-    setCheckboxes(data)
-  },[data])
+  useEffect(() => {
+    setCheckboxes(data);
+  }, [data]);
   const menu = (
     <Menu>
-      <Menu.Item key="1">
+    { isSearched==true && <Menu.Item key="1">
         <>
           <Input suffix={<SearchOutlined />} />
         </>
-      </Menu.Item>
-      <Row>
-        {data != null &&
-          Object.keys(data)?.map((key) => (
-            <Col span={24}>
+      </Menu.Item>}
+
+      {data != null &&
+        Object.keys(data)?.map((key) => (
+          <Col span={24} className="menu-item">
+            {checkbox ? (
               <Checkbox
                 style={{ marginBottom: "8px" }}
                 onClick={(e) => {
@@ -51,21 +53,11 @@ function SimpleMenu({ title, data }) {
               >
                 {key}
               </Checkbox>
-            </Col>
-          ))}
-      </Row>
-      {/* <Menu.Item key="2">
-            <>
-           <Input suffix={<SearchOutlined />} />
-              <Divider />
-            </>
-          </Menu.Item>
-          <Menu.Item key="3">
-            <>
-           <Input suffix={<SearchOutlined />} />
-              <Divider />
-            </>
-          </Menu.Item> */}
+            ) : (
+              <h1 className="without-checkbox">{key}</h1>
+            )}
+          </Col>
+        ))}
     </Menu>
   );
   return (
@@ -76,7 +68,11 @@ function SimpleMenu({ title, data }) {
         placement="bottomLeft"
         overlayStyle={{ width: 200, padding: "0px" }}
       >
-        <Button>{title}</Button>
+        
+          
+            <Button style={{ width: "100%", border: '1px solid #333333',borderRadius:"3px" }} className={`${isTransparent?"transparent-bg":"gray-btn"} butn`}>{title}</Button>
+        
+       
       </Dropdown>
     </div>
   );
