@@ -223,9 +223,41 @@ function MyDeatails() {
           ),
         },
         {
-          label: <h1 className="primary-contact">Offical Information</h1>,
+          label: <h1 className="primary-contact">Official Information</h1>,
           key: "2",
-          children: "Tab 3",
+          children: (
+            <div className="padding-bottom">
+            <Row gutter={20}>
+              <Col span={12}>
+                <p className="lbl">Station:</p>
+                <MySelect placeholder="STOC" isSimple={true} />
+                <br/>
+                <br/>
+                <Input />
+                <br/>
+                <br/>
+                <Input />
+              </Col>
+              <Col span={12}>
+                <p className="lbl">Forename</p>
+                <Input />
+              </Col>
+              <Col span={12}>
+                <p className="lbl">Station Ph :</p>
+                <Input />
+              </Col>
+              <Col span={12}>
+                <p className="lbl">District:</p>
+                <MySelect placeholder="0000-AAA-BBB" isSimple={true} />
+                </Col>
+                <Col span={12}>
+                <p className="lbl">Division:</p>
+                <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
+                </Col>
+            </Row>
+            </div>
+          ),
+          
         },
         {
           label: <h1 className="primary-contact">Membership</h1>,
