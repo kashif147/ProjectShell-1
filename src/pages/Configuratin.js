@@ -127,16 +127,22 @@ function Configuratin() {
       key: "1",
       ShortName: "Male",
       DisplayName: "Male",
+      Alpha: "A163",
+      Beta:"B762",
     },
     {
       key: "2",
       ShortName: "Female",
       DisplayName: "Female",
+      Alpha: "A164",
+      Beta:"B763",
     },
     {
       key: "3",
       ShortName: "Other",
       DisplayName: "Other",
+      Alpha: "A165",
+      Beta:"B764",
     },
   ];
 

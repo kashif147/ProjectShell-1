@@ -241,8 +241,8 @@ body {
 }
 
 .ant-table-tbody > tr > td {
-  padding-top: 10px !important;
-  padding-bottom: 0px !important;
+  padding-top: 5px !important;
+  padding-bottom: 5px !important;
   overflow: hidden;
   text-overflow: ellipsis !important;
   color: var(--FontsColor) !important;
