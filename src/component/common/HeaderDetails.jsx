@@ -12,7 +12,11 @@ import SideNav from "./SideNav";
 import { FaChevronUp, FaLess } from "react-icons/fa";
 import MyDrowpDown from "./MyDrowpDown";
 import { SerachFitersLookups } from "../../Data";
-import { SearchOutlined, LoadingOutlined, UploadOutlined  } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  LoadingOutlined,
+  UploadOutlined,
+} from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 import JiraLikeMenu from "./JiraLikeMenu";
 import SimpleMenu from "./SimpleMenu";
@@ -58,11 +62,11 @@ function HeaderDetails() {
       label: "Other",
     },
   ];
-  const testing = {
-    testinig: "false",
-    testinigA: "false",
-    testinigB: "false",
-    testinigc: "false",
+  const addMore = {
+    Mebership: "false",
+  };
+  const topThreeDots = {
+    BulkChnages: "false",
   };
   const [selectedValue, setSelectedValue] = useState(null);
   const [loading, setLoading] = useState(false);
@@ -114,29 +118,28 @@ function HeaderDetails() {
               {(location?.key == "default" && nav == "/") || nav == "/"
                 ? `Profile / Main`
                 : ` ${location?.state?.search}  / ${formattedNav}`}
-            </p>{
-
-            }
-            {
-              location?.pathname == "/Details" && (
-            <div className="d-flex align-items-baseline">
-              <Button onClick={goBack} className="me-1 gray-btn butn">Return to summary</Button>
-              <p className="lbl">1 of 12</p>
-              <span className=" ">
-                <FaChevronDown className="deatil-header-icon" />
-              </span>
-              <span >
-                <FaChevronUp className="deatil-header-icon" />
-              </span>
-            </div>
-              )
-            }
+            </p>
+            {}
+            {location?.pathname == "/Details" && (
+              <div className="d-flex align-items-baseline">
+                <Button onClick={goBack} className="me-1 gray-btn butn">
+                  Return to summary
+                </Button>
+                <p className="lbl">1 of 12</p>
+                <span className=" ">
+                  <FaChevronDown className="deatil-header-icon" />
+                </span>
+                <span>
+                  <FaChevronUp className="deatil-header-icon" />
+                </span>
+              </div>
+            )}
           </div>
           {location?.pathname == "/Details" && (
             <div className="patient-header">
               <Row gutter={5}>
                 <Col span={4}>
-                <Upload
+                  <Upload
                     customRequest={customRequest}
                     showUploadList={false}
                     onChange={handleChange1}
@@ -154,17 +157,15 @@ function HeaderDetails() {
                         />
                       ) : (
                         <div className="profile-imag">
- <FiUpload className="upload-icon" />
+                          <FiUpload className="upload-icon" />
                           <h1>JS</h1>
                         </div>
                       )}
-                     
                     </div>
                   </Upload>
                 </Col>
-             
               </Row>
-               
+
               <h1 className="primary-contact">Profile Header</h1>
             </div>
           )}
@@ -190,7 +191,7 @@ function HeaderDetails() {
                         <BsThreeDots />
                       </>
                     }
-                    data={testing}
+                    data={topThreeDots}
                     checkbox={false}
                     isSearched={false}
                   />
@@ -217,6 +218,7 @@ function HeaderDetails() {
                     title="Subscriptions"
                     data={SerachFitersLookups}
                   />
+
                   <JiraLikeMenu title="Membership" data={Mebership} />
                   <div className="searchfilter- margin">
                     <SimpleMenu
@@ -225,7 +227,7 @@ function HeaderDetails() {
                           More <PlusOutlined style={{ marginLeft: "-2px" }} />
                         </>
                       }
-                      data={testing}
+                      data={addMore}
                       isSearched={true}
                     />
                   </div>

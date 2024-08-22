@@ -13,6 +13,7 @@ import { PiDotsThreeOutlineVerticalFill } from "react-icons/pi";
 import { HiOutlineDotsVertical } from "react-icons/hi";
 import { BsThreeDots } from "react-icons/bs";
 import { BsThreeDotsVertical } from "react-icons/bs";
+import { CgAttachment } from "react-icons/cg";
 
 import SimpleMenu from "../../component/common/SimpleMenu";
 function ProfileSummary() {
@@ -26,10 +27,14 @@ function ProfileSummary() {
     </Menu>
   );
   const testing = {
-    testinig: "false",
-    testinigA: "false",
-    testinigB: "false",
-    testinigc: "false",
+    Delete: "false",
+    Attached:"false",
+    view:'false'
+  };
+  const configuration = {
+    Graduated: "false",
+    Updated:"false",
+    
   };
   const location = useLocation();
   // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
@@ -41,7 +46,7 @@ function ProfileSummary() {
       title: "Action",
       render: (_, record) => (
         <Space size="middle" className="action-buttons">
-          <MdOutlineAttachment />
+          <CgAttachment />
           <SimpleMenu
             title={
               <>
@@ -63,6 +68,7 @@ function ProfileSummary() {
       dataIndex: "RegNo",
       key: "RegNo",
       width: 100,
+      // render: (text) => <div className="table-cell-content">{text}</div>,
     },
     {
       title: "Name",
@@ -174,8 +180,7 @@ function ProfileSummary() {
                 />
               </>
             }
-            data={testing}
-            checkbox={false}
+            data={configuration}
             isSearched={true}
             isTransparent={true}
           />
