@@ -1,5 +1,5 @@
 import { React, useState } from "react";
-import { Tabs, Upload, Flex, message, Button, DatePicker } from "antd";
+import { Tabs, Upload, Flex, message, Button, DatePicker, Select } from "antd";
 import { AndroidOutlined, AppleOutlined } from "@ant-design/icons";
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
 import { FaRegCircleUser } from "react-icons/fa6";
@@ -21,6 +21,7 @@ const beforeUpload = (file) => {
   }
   return isJpgOrPng && isLt2M;
 };
+ 
 
 function MyDeatails() {
   const [loading, setLoading] = useState(false);
@@ -208,8 +209,8 @@ function MyDeatails() {
                   <Input type="number" />
                 </Col>
                 <Col span={12}>
-                  <p className="lbl">Contact</p>
-                  <Input type="number" />
+                  <p className="lbl">Contact Number</p>
+                  <Input type placeholder="000-000-0000" />
                 </Col>
               </Row>
               <Tabs defaultActiveKey="1" items={contact} onChange={() => {}} />

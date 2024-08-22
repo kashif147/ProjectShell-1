@@ -156,7 +156,7 @@ function HeaderDetails() {
                           }}
                         />
                       ) : (
-                        <div className="profile-imag">
+                        <div className="profile-image">
                           <FiUpload className="upload-icon" />
                           <h1>JS</h1>
                         </div>

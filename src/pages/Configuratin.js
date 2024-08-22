@@ -122,7 +122,7 @@ function Configuratin() {
 
 
 
-  const gander = [
+  const gender = [
     {
       key: "1",
       ShortName: "Male",
@@ -348,7 +348,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
         <Table
           columns={column}
           pagination={true}
-          dataSource={gander}
+          dataSource={gender}
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
@@ -402,7 +402,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
         <Table
           columns={SubscriptionsColumn}
           pagination={false}
-          dataSource={gander}
+          dataSource={gender}
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
@@ -424,7 +424,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
                     fontWeight: "500",
                   }}
                 >
-                  1-{gander.length}
+                  1-{gender.length}
                 </span>
                 <span
                   style={{
@@ -434,13 +434,13 @@ const AddMembershipModalOpenCloseFtn = () =>{
                   }}
                 >
                   {" "}
-                  of {`${gander.length}`}
+                  of {`${gender.length}`}
                 </span>
                 <LuRefreshCw />
               </div>
               <Pagination
                 defaultCurrent={1}
-                total={gander.length}
+                total={gender.length}
                 pageSize={10}
               />
             </div>
@@ -476,7 +476,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
         <Table
           columns={SubscriptionsColumn}
           pagination={true}
-          dataSource={gander}
+          dataSource={gender}
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
