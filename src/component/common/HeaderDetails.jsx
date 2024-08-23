@@ -33,6 +33,7 @@ function HeaderDetails() {
 
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
+    const [checkboxes, setCheckboxes] = useState();
   const navigate = useNavigate();
   console.log(location, "location");
   const mriatalStatus = {
@@ -185,7 +186,7 @@ function HeaderDetails() {
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
-                  <SimpleMenu
+                  {/* <SimpleMenu
                     title={
                       <>
                         {" "}
@@ -195,7 +196,7 @@ function HeaderDetails() {
                     data={topThreeDots}
                     checkbox={false}
                     isSearched={false}
-                  />
+                  /> */}
                 </div>
               </div>
               <div className="d-flex search-fliters align-items-baseline">
@@ -230,6 +231,8 @@ function HeaderDetails() {
                       }
                       data={addMore}
                       isSearched={true}
+                      checkboxes={checkboxes}
+                      setCheckboxes={setCheckboxes}
                     />
                   </div>
                   <div>

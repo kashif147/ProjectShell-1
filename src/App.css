@@ -670,13 +670,13 @@ tr {
 
 .upload-icon {
   position: absolute;
-  font-size: 60px; /* Adjust size accordingly */
+  font-size: 60px; 
   color: var(--mainBlue);
-  opacity: 0.3; /* Make it appear as a background */
+  opacity: 0.3; 
 }
 
 h1 {
-  position: relative; /* Ensure text appears above the icon */
+  position: relative; 
   z-index: 1;
 }
 .padding-bottom{
