@@ -108,8 +108,6 @@ body {
 }
 .details-header {
   padding-top: 10px;
-  padding-left: 30px;
-  padding-right: 30px;
   width: 100%;
 }
 
@@ -639,14 +637,7 @@ tr {
   box-shadow: none !important;
 }
 
-.patient-header {
-  height: 15vh !important;
-  background-color: var(--gray);
-  padding-left: 30px;
-  display: flex;
-  /* align-items: center; */
-  /* justify-content: center; */
-}
+
 .icon-align {
   vertical-align: baseline;
 }
@@ -691,4 +682,11 @@ h1 {
 }
 .sid-nav-main{
   background-color: #45669d;
+}
+.profil-container-main{
+  width: 23%;
+  padding: 10px;
+  border: 1px solid var(--labelColor);
+  margin-inline: 10px;
+  background-color: var(--gray);
 }

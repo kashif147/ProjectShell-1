@@ -6,10 +6,11 @@ const SearchFilterContext = createContext();
 // Create the provider component
 export const SearchFilterProvider = ({ children }) => {
   const [trueKeys, setTrueKeys] = useState([]);
+  const [checkboxes, setCheckboxes] = useState({})
 
   return (
     <>
-    <SearchFilterContext.Provider value={{ trueKeys, setTrueKeys }}>
+    <SearchFilterContext.Provider value={{ trueKeys, setTrueKeys,checkboxes, setCheckboxes }}>
       {children}
     </SearchFilterContext.Provider>
     </>

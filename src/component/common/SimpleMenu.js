@@ -13,33 +13,39 @@ import { SearchOutlined } from "@ant-design/icons";
 import { useSearchFilters } from "../../context/SearchFilterContext";
 
 function SimpleMenu({ title, data, checkbox = true, isSearched=true, isTransparent=false }) {
-  const [checkboxes, setCheckboxes] = useState({});
-  const { trueKeys, setTrueKeys } = useSearchFilters();
+  
+  const { trueKeys, setTrueKeys,checkboxes, setCheckboxes } = useSearchFilters();
 
-  // Update checkboxes state when data or trueKeys change
   useEffect(() => {
-    const initialCheckboxes = Object.keys(data || {}).reduce((acc, key) => {
-      acc[key] = trueKeys.includes(key);
-      return acc;
-    }, {});
-    setCheckboxes(initialCheckboxes);
-  }, [data, trueKeys]);
+    if (data) {
+      const initialCheckboxes = Object.keys(data).reduce((acc, key) => {
+        acc[key] = checkboxes[key] ?? true; // Use global state or default to true
+        return acc;
+      }, {});
+
+      // Only update if there's a difference
+      const isDifferent = Object.keys(initialCheckboxes).some(
+        key => checkboxes[key] !== initialCheckboxes[key]
+      );
+
+      if (isDifferent) {
+        setCheckboxes(prevState => ({
+          ...prevState,
+          ...initialCheckboxes,
+        }));
+      }
+    }
+  }, [data, checkboxes, setCheckboxes]);
+
   const checkboxChangeFtn = (key, event) => {
     const isChecked = event.target.checked;
     setCheckboxes(prevState => ({
       ...prevState,
       [key]: isChecked,
     }));
-    
-    setTrueKeys(prevKeys => {
-      if (isChecked) {
-        return [...prevKeys, key];
-      } else {
-        return prevKeys.filter(k => k !== key);
-      }
-    });
   };
   console.log(trueKeys,"trueKeys")
+
   const menu = (
     <Menu>
     { isSearched==true && <Menu.Item key="1">
@@ -48,41 +54,37 @@ function SimpleMenu({ title, data, checkbox = true, isSearched=true, isTranspare
         </>
       </Menu.Item>}
 
-      {data != null &&
-        Object.keys(data)?.map((key) => (
-          <Col span={24} className="menu-item">
-            {checkbox ? (
-              <Checkbox
-                style={{ marginBottom: "8px" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  checkboxChangeFtn(key, e);
-                }}
-                checked={checkboxes?.[key]}
-              >
-                {key}
-              </Checkbox>
-            ) : (
-              <h1 className="without-checkbox">{key}</h1>
-            )}
-          </Col>
-        ))}
+      {data &&
+  Object.keys(data).map((key) => (
+    <Col span={24} className="menu-item" key={key}>
+      {checkbox ? (
+        <Checkbox
+          style={{ marginBottom: "8px" }}
+          onClick={(e) => {
+            e.stopPropagation();
+            checkboxChangeFtn(key, e);
+          }}
+          checked={checkboxes?.[key]} // Use the global state to determine if it's checked
+        >
+          {key}
+        </Checkbox>
+      ) : (
+        <h1 className="without-checkbox">{key}</h1>
+      )}
+    </Col>
+  ))}
+ 
     </Menu>
   );
   return (
-    <div>
-      
+    <div> 
       <Dropdown
         overlay={menu}
         trigger={["click"]}
         placement="bottomLeft"
         overlayStyle={{ width: 200, padding: "0px" }}
       >
-        
-          
             <Button style={{ width: "100%", border: '1px solid #333333',borderRadius:"3px" }} className={`${isTransparent?"transparent-bg":"gray-btn"} butn`}>{title}</Button>
-        
-       
       </Dropdown>
     </div>
   );

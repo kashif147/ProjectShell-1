@@ -32,10 +32,12 @@ const JiraLikeMenu = ({ title, data, isSimple=false }) => {
   const handleSelectChange = (value) => {
     setSelectedOption(value);
   };
+  
   const handleDropdownClick = (e) => {
     e.preventDefault();
     e.stopPropagation();
   };
+
   const graterEqualDD = [
     {
       key: "!=",

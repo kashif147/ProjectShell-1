@@ -14,6 +14,7 @@ import CasesSummary from "./pages/Cases/CasesSummary";
 import CasesDetails from "./pages/Cases/CasesDetails";
 import ClaimSummary from "./pages/Claims/ClaimSummary";
 import ClaimsDetails from "./pages/Claims/ClaimsDetails";
+import ProfileHeader from "./component/common/ProfileHeader";
 
 function Entry() {
   const location = useLocation();
@@ -24,8 +25,11 @@ function Entry() {
         {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
           <div>
             <SideNav />
+            
           </div>
+ 
         )}
+        <ProfileHeader />
         <div style={{ width: "100%", overflow: "hidden" }}>
           <div>
          

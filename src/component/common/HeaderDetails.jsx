@@ -45,7 +45,7 @@ function HeaderDetails() {
     Female: false,
     Other: false,
   };
-  // console.log(,"55")
+  
   const Mebership = {
     Probation: false,
     Trainee: false,
@@ -142,41 +142,7 @@ function HeaderDetails() {
               </div>
             )}
           </div>
-          {location?.pathname == "/Details" && (
-            <div className="patient-header">
-              <Row gutter={5}>
-                <Col span={4}>
-                  <Upload
-                    customRequest={customRequest}
-                    showUploadList={false}
-                    onChange={handleChange1}
-                    accept="image/*"
-                  >
-                    <div className="d-flex flex-column">
-                      {imageUrl ? (
-                        <img
-                          src={imageUrl}
-                          alt="Uploaded"
-                          style={{
-                            width: "150px",
-                            height: "auto",
-                          }}
-                        />
-                      ) : (
-                        <div className="profile-image">
-                          <FiUpload className="upload-icon" />
-
-                          <h1>JS</h1>
-                        </div>
-                      )}
-                    </div>
-                  </Upload>
-                </Col>
-              </Row>
-
-              <h1 className="primary-contact">Profile Header</h1>
-            </div>
-          )}
+         
           {(location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/ClaimSummary") && (
@@ -192,17 +158,7 @@ function HeaderDetails() {
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
-                  {/* <SimpleMenu
-                    title={
-                      <>
-                        {" "}
-                        <BsThreeDots />
-                      </>
-                    }
-                    data={topThreeDots}
-                    checkbox={false}
-                    isSearched={false}
-                  /> */}
+                 
                 </div>
               </div>
               <div className="d-flex search-fliters align-items-baseline">
