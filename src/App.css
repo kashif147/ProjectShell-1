@@ -281,7 +281,11 @@ body {
 .custom-highlight  {
   background-color:#1677ff !important; 
   color: white !important
+<<<<<<< HEAD
 
+=======
+  
+>>>>>>> 5467c459a103614900edad65a508c0e705f8b4b2
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item,
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
@@ -673,13 +677,13 @@ tr {
 
 .upload-icon {
   position: absolute;
-  font-size: 60px; /* Adjust size accordingly */
+  font-size: 60px; 
   color: var(--mainBlue);
-  opacity: 0.3; /* Make it appear as a background */
+  opacity: 0.3; 
 }
 
 h1 {
-  position: relative; /* Ensure text appears above the icon */
+  position: relative; 
   z-index: 1;
 }
 .padding-bottom{
@@ -691,4 +695,6 @@ h1 {
 }
 .sid-nav-main{
   background-color: #45669d;
+
 }
+

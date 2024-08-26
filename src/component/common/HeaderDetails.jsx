@@ -36,6 +36,7 @@ function HeaderDetails() {
   const [checkboxes, setCheckboxes] = useState();
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
+  const [checkboxes, setCheckboxes] = useState();
   const navigate = useNavigate();
   console.log(location, "location");
 
@@ -44,8 +45,12 @@ function HeaderDetails() {
     Female: false,
     Other: false,
   };
+<<<<<<< HEAD
 
     // console.log(,"55")
+=======
+  // console.log(,"55")
+>>>>>>> 5467c459a103614900edad65a508c0e705f8b4b2
   const Mebership = {
     Probation: false,
     Trainee: false,
@@ -185,7 +190,7 @@ function HeaderDetails() {
                       ) : (
                         <div className="profile-image">
                           <FiUpload className="upload-icon" />
-                          
+
                           <h1>JS</h1>
                         </div>
                       )}
@@ -212,7 +217,7 @@ function HeaderDetails() {
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
-                  <SimpleMenu
+                  {/* <SimpleMenu
                     title={
                       <>
                         {" "}
@@ -222,7 +227,7 @@ function HeaderDetails() {
                     data={topThreeDots}
                     checkbox={false}
                     isSearched={false}
-                  />
+                  /> */}
                 </div>
               </div>
               <div className="d-flex search-fliters align-items-baseline">
@@ -246,7 +251,10 @@ function HeaderDetails() {
                     title="Subscriptions"
                     data={SerachFitersLookups}
                   />
+<<<<<<< HEAD
 
+=======
+>>>>>>> 5467c459a103614900edad65a508c0e705f8b4b2
                   {trueKeys.includes("Mebership") == true && (
                     <JiraLikeMenu title="Membership" data={Mebership} />
                   )}

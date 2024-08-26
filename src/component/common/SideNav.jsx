@@ -47,11 +47,14 @@ function SideNav() {
       <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"} `}>
         <TfiMenu   className=''style={{ color: 'white', fontSize: '25px' }} onClick={toggleCollapsed} />
       </div>
-      // className: location?.state=="location?.state?.search" ? 'custom-highlight' : '',
     }, 
     {
       key: '2',
+<<<<<<< HEAD
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"} &{location.pathname === '/Details, ? 'custom-highlight' : ''}`}>
+=======
+      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"} ${location.pathname === '/Details' ? 'custom-highlight' : ''}`}>
+>>>>>>> 5467c459a103614900edad65a508c0e705f8b4b2
          <FaUser  style={{ fontSize: '24px',  }} />
         </div>,
       label: 'Profile',
