@@ -1,8 +1,6 @@
 import { React, useState } from "react";
-import { Tabs, Upload, Flex, message, Button, DatePicker, Select } from "antd";
-import { AndroidOutlined, AppleOutlined } from "@ant-design/icons";
+import { Tabs, message, Button, DatePicker } from "antd";
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
-import { FaRegCircleUser } from "react-icons/fa6";
 import MySelect from "../common/MySelect";
 import { Input, Row, Col } from "antd";
 const getBase64 = (img, callback) => {
@@ -21,6 +19,8 @@ const beforeUpload = (file) => {
   }
   return isJpgOrPng && isLt2M;
 };
+
+
  
 
 function MyDeatails() {
@@ -183,6 +183,7 @@ function MyDeatails() {
                   <Col span={12}>
                    <p className="lbl">Date Aged 65</p>
                       <DatePicker
+                       placeholder="../../...."
                         style={{
                           width: "100%",
                           border: "1px solid #333333",
@@ -244,7 +245,7 @@ function MyDeatails() {
               </Col>
               <Col span={12}>
                 <p className="lbl">Station Ph :</p>
-                <Input />
+                <Input placeholder ="00-000-0000"/>
               </Col>
               <Col span={12}>
                 <p className="lbl">District:</p>
@@ -254,6 +255,19 @@ function MyDeatails() {
                 <p className="lbl">Division:</p>
                 <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
                 </Col>
+                <Col span={12}>
+                   <p className="lbl">Date Retired</p>
+                      <DatePicker
+                      placeholder="../../...."
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+                  </Col>
+
             </Row>
             </div>
           ),
