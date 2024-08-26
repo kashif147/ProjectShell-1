@@ -10,27 +10,36 @@ import {
   Checkbox,
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import { useSearchFilters } from "../../context/SearchFilterContext";
 
 function SimpleMenu({ title, data, checkbox = true, isSearched=true, isTransparent=false }) {
-  const [checkboxes, setCheckboxes] = useState();
-  console.log(checkboxes, "132");
-  const [trueKeys, setTrueKeys] = useState([]);
+  const [checkboxes, setCheckboxes] = useState({});
+  const { trueKeys, setTrueKeys } = useSearchFilters();
+
+  // Update checkboxes state when data or trueKeys change
+  useEffect(() => {
+    const initialCheckboxes = Object.keys(data || {}).reduce((acc, key) => {
+      acc[key] = trueKeys.includes(key);
+      return acc;
+    }, {});
+    setCheckboxes(initialCheckboxes);
+  }, [data, trueKeys]);
   const checkboxChangeFtn = (key, event) => {
-    setCheckboxes((prevState) => {
-      const updatedState = {
-        ...prevState,
-        [key]: event.target.checked,
-      };
-      const newTrueKeys = Object.entries(updatedState)
-        .filter(([_, value]) => value)
-        .map(([key]) => key);
-      setTrueKeys(newTrueKeys);
-      return updatedState;
+    const isChecked = event.target.checked;
+    setCheckboxes(prevState => ({
+      ...prevState,
+      [key]: isChecked,
+    }));
+    
+    setTrueKeys(prevKeys => {
+      if (isChecked) {
+        return [...prevKeys, key];
+      } else {
+        return prevKeys.filter(k => k !== key);
+      }
     });
   };
-  useEffect(() => {
-    setCheckboxes(data);
-  }, [data]);
+  console.log(trueKeys,"trueKeys")
   const menu = (
     <Menu>
     { isSearched==true && <Menu.Item key="1">
@@ -62,6 +71,7 @@ function SimpleMenu({ title, data, checkbox = true, isSearched=true, isTranspare
   );
   return (
     <div>
+      
       <Dropdown
         overlay={menu}
         trigger={["click"]}

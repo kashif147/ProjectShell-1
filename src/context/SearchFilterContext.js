@@ -8,9 +8,11 @@ export const SearchFilterProvider = ({ children }) => {
   const [trueKeys, setTrueKeys] = useState([]);
 
   return (
+    <>
     <SearchFilterContext.Provider value={{ trueKeys, setTrueKeys }}>
       {children}
     </SearchFilterContext.Provider>
+    </>
   );
 };
 

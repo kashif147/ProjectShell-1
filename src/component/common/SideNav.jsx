@@ -44,17 +44,17 @@ function SideNav() {
     {
       key: '1',
       icon:
-      <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"}`}>
+      <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"} `}>
         <TfiMenu   className=''style={{ color: 'white', fontSize: '25px' }} onClick={toggleCollapsed} />
       </div>
-      // className: location?.state=="location?.state?.search" ? 'custom-highlight' : '',
     }, 
     {
       key: '2',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
+      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"} ${location.pathname === '/Details' ? 'custom-highlight' : ''}`}>
          <FaUser  style={{ fontSize: '24px',  }} />
         </div>,
       label: 'Profile',
+      className: location.pathname === '/Details' ? 'custom-highlight' : '',
     },
     {
       key: '3',

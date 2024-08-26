@@ -23,8 +23,11 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
+import { useSearchFilters } from "../../context/SearchFilterContext";
 
 function HeaderDetails() {
+  const { trueKeys } = useSearchFilters();
+  // console.log(trueKeys?.includes("Mebership"),"8888")
   const { Search } = Input;
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
@@ -33,15 +36,16 @@ function HeaderDetails() {
 
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
-    const [checkboxes, setCheckboxes] = useState();
+  const [checkboxes, setCheckboxes] = useState();
   const navigate = useNavigate();
   console.log(location, "location");
+
   const mriatalStatus = {
     Male: false,
     Female: false,
     Other: false,
   };
-
+  // console.log(,"55")
   const Mebership = {
     Probation: false,
     Trainee: false,
@@ -102,6 +106,7 @@ function HeaderDetails() {
       }
     }, 1000);
   };
+
   const uploadButton = (
     <Button
       style={{ marginTop: "5px" }}
@@ -110,6 +115,7 @@ function HeaderDetails() {
       {loading ? "Uploading" : "Upload"}
     </Button>
   );
+
   return (
     <div className="">
       <div className="details-header d-flex w-100% overflow-hidden">
@@ -159,7 +165,7 @@ function HeaderDetails() {
                       ) : (
                         <div className="profile-image">
                           <FiUpload className="upload-icon" />
-                          
+
                           <h1>JS</h1>
                         </div>
                       )}
@@ -220,8 +226,9 @@ function HeaderDetails() {
                     title="Subscriptions"
                     data={SerachFitersLookups}
                   />
-
-                  <JiraLikeMenu title="Membership" data={Mebership} />
+                  {trueKeys.includes("Mebership") == true && (
+                    <JiraLikeMenu title="Membership" data={Mebership} />
+                  )}
                   <div className="searchfilter- margin">
                     <SimpleMenu
                       title={
@@ -231,8 +238,6 @@ function HeaderDetails() {
                       }
                       data={addMore}
                       isSearched={true}
-                      checkboxes={checkboxes}
-                      setCheckboxes={setCheckboxes}
                     />
                   </div>
                   <div>
