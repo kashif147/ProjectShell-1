@@ -39,8 +39,8 @@ function SimpleMenu({ title, data }) {
       </Menu.Item>
       <Row>
         {data != null &&
-          Object.keys(data)?.map((key)
- => (
+          // Object.keys(data)?.map((key)
+  Object.keys(data)?.map((key)=> (
             <Col span={24}>
               <Checkbox
                 style={{ marginBottom: "8px" }}
