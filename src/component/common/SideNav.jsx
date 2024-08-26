@@ -7,28 +7,17 @@ import {
   MenuFoldOutlined,
   MenuUnfoldOutlined,
   PieChartOutlined,
-  QuestionOutlined,
-  MenuOutlined
+  QuestionOutlined 
 } from '@ant-design/icons';
-import { FaUser } from "react-icons/fa6";
 import { FaUserCircle,  FaMoneyCheckAlt } from "react-icons/fa";
-import { FaListCheck, FaArrowRightArrowLeft,FaCalendarDays,    } from "react-icons/fa6";
+import { FaListCheck, FaArrowRightArrowLeft   } from "react-icons/fa6";
 import { IoDocumentsOutline } from "react-icons/io5";
-import { GiHamburgerMenu } from "react-icons/gi";
-import { Button, Menu } from 'antd';
-import { TfiMenu } from "react-icons/tfi";
-import { FaDiagramProject, FaSun  } from "react-icons/fa6";
-import { IoDocumentsSharp } from "react-icons/io5";
-import { MdWbSunny } from "react-icons/md";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { ClassNames } from '@emotion/react';
 
+import { Button, Menu } from 'antd';
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 function SideNav() {
-  const location = useLocation();
-  
-  const [isSideNav, setisSideNav] = useState(true)
+  const [isSideNav, setisSideNav] = useState(false)
   const toggleCollapsedFtn = ()=>{
       setisSideNav(!isSideNav)
   }
@@ -43,74 +32,66 @@ function SideNav() {
   const items = [
     {
       key: '1',
-      icon:
-      <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"} `}>
-        <TfiMenu   className=''style={{ color: 'white', fontSize: '25px' }} onClick={toggleCollapsed} />
-      </div>
+      icon: isSideNav? <MenuUnfoldOutlined className='specific-icon'style={{ color: 'white' }} onClick={toggleCollapsed} />:<MenuFoldOutlined style={{ color: 'white' }} className='specific-icon'  onClick={toggleCollapsed} />,
     }, 
     {
       key: '2',
-<<<<<<< HEAD
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"} &{location.pathname === '/Details, ? 'custom-highlight' : ''}`}>
-=======
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"} ${location.pathname === '/Details' ? 'custom-highlight' : ''}`}>
->>>>>>> 5467c459a103614900edad65a508c0e705f8b4b2
-         <FaUser  style={{ fontSize: '24px',  }} />
+      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
+         <FaUserCircle style={{ fontSize: '27px' }} />
         </div>,
       label: 'Profile',
-      className: location.pathname === '/Details' ? 'custom-highlight' : '',
     },
     {
-      key: '3',
+      key: '2',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-        <FaListCheck   style={{ fontSize: '24px' }} /> 
+        <FaListCheck /> 
         </div>,
       label: 'Cases',
     },
     
     {
-      key: '4',
+      key: '3',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaMoneyCheckAlt style={{ fontSize: '24px' }} /> 
+      <FaMoneyCheckAlt /> 
       </div>,
       label: 'Claims',
     },
     {
-      key: '5',
+      key: '4',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaArrowRightArrowLeft style={{ fontSize: '24px' }} /> 
+      <FaArrowRightArrowLeft /> 
       </div>,
       label: 'Correspondences',
+    },
+    {
+      key: '5',
+      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
+      
+      <IoDocumentsOutline /> 
+      </div>,
+      label: 'Documents',
     },
     {
       key: '6',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <IoDocumentsSharp  style={{ fontSize: '24px' }} /> 
+      <IoDocumentsOutline /> 
       </div>,
-      label: 'Documents',
+      label: 'Projects',
     },
     {
       key: '7',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <FaDiagramProject  style={{ fontSize: '24px' }} /> 
+      <IoDocumentsOutline /> 
       </div>,
-      label: 'Projects',
+      label: 'Roster',
     },
     {
       key: '8',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
-      <FaCalendarDays style={{ fontSize: '24px' }} /> 
-      </div>,
-      label: 'Roster',
-    },
-    {
-      key: '9',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      
-      <FaSun style={{ fontSize: '24px' }} /> 
+      <IoDocumentsOutline /> 
       </div>,
       label: 'Tranings',
     },
@@ -120,6 +101,8 @@ function SideNav() {
   return (
     <div className='sid-nav-main'
       style={{
+  
+        maxWidth:'256',
         height:"100%"
       }}
     >
