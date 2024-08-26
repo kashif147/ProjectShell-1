@@ -1,30 +1,22 @@
 import { React, useState } from "react";
 import { SiActigraph } from "react-icons/si";
 import MyDrawer from "../component/common/MyDrawer";
-import { tableData } from "../Data";
 import { LuRefreshCw } from "react-icons/lu";
 import { Input, Table, Pagination, Row, Col, Space } from "antd";
-import TextArea from "antd/es/input/TextArea";
 import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
-import { FaRegEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 
-import MyMneu from "../component/common/MyMneu";
 import {
   Edit as EditIcon,
   Archive as ArchiveIcon,
   FileCopy as FileCopyIcon,
   MoreHoriz as MoreHorizIcon,
-  KeyboardArrowDown as KeyboardArrowDownIcon,
 } from "@mui/icons-material";
 import { FaEdit } from "react-icons/fa";
-import MySelect from "../component/common/MySelect";
 import { SerachFitersLookups } from "../Data";
-import JiraLikeMenu from "../component/common/JiraLikeMenu";
 import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
-import { render } from "@testing-library/react";
 function Configuratin() {
   const [genderModal, setgenderModal] = useState(false);
   const [testing, settesting] = useState(false);
@@ -36,6 +28,7 @@ function Configuratin() {
   const [selectedItem, setSelectedItem] = useState("buttonLabel");
   const [modaltitle, setmodaltitle] = useState(null);
   const [ModalPartnership, setPartnershipModal] = useState(false);
+  const [DummyModal2, setDummyModal2] = useState(false);
   const [AddModalPartnership, setAddPartnershipModal] = useState(false);
   const column = [
     {
@@ -62,6 +55,7 @@ function Configuratin() {
       verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
     render: (text) => <div style={{ justifyContent: 'center', display: 'flex', alignItems: 'center', verticalAlign: 'center', verticalAlign: 'center' }}>{text}</div>,
+  
     },
   ];
   const SubscriptionsColumn = [
@@ -146,6 +140,67 @@ function Configuratin() {
     },
   ];
 
+  const partnership = [
+    {
+      key: "1",
+      ShortName: "Single",
+      DisplayName: "Single",
+      Alpha: "A163",
+      Beta:"B762",
+    },
+    {
+      key: "2",
+      ShortName: "Married",
+      DisplayName: "Married",
+      Alpha: "A164",
+      Beta:"B763",
+    },
+    {
+      key: "3",
+      ShortName: "Seperated",
+      DisplayName: "Seperated",
+      Alpha: "A165",
+      Beta:"B764",
+    },
+    {
+      key: "4",
+      ShortName: "Divorced",
+      DisplayName: "Divorced",
+      Alpha: "A165",
+      Beta:"B764",
+    },
+  ];
+
+  const membership = [
+    {
+      key: "1",
+      ShortName: "Probation",
+      DisplayName: "Single",
+      Alpha: "A163",
+      Beta:"B762",
+    },
+    {
+      key: "2",
+      ShortName: "Trainee",
+      DisplayName: "Trainee",
+      Alpha: "A165",
+      Beta:"B764",
+    },
+    {
+      key: "3",
+      ShortName: "Associate",
+      DisplayName: "Associate",
+      Alpha: "A165",
+      Beta:"B764",
+    },
+    {
+      key: "4",
+      ShortName: "Retired",
+      DisplayName: "Retired",
+      Alpha: "A165",
+      Beta:"B764",
+    },
+  ];
   
 
   const genderModalOpen = () => {
@@ -158,6 +213,14 @@ const testingModalFtn= ()=>{
 
 const MembershipModalFtn= ()=>{
   setMembershipModal(!MembershipModal)
+}
+
+const PartnershipModalFtn= () =>{
+ setPartnershipModal(!ModalPartnership);
+}
+
+const DummyModal2Ftn = () =>{
+  setDummyModal2(!DummyModal2);
 }
 
 const AddMembershipModalOpenCloseFtn = () =>{
@@ -175,6 +238,10 @@ const AddMembershipModalOpenCloseFtn = () =>{
   const addGenderModalOpen = () => {
     setAddgenderModal(!AddgenderModal);
   };
+
+  const DummyModal2Open = () =>{
+    setDummyModal2(!DummyModal2);
+  }
 
   const PartnershipModalOpen = () => {
     setPartnershipModal(!ModalPartnership);
@@ -247,11 +314,12 @@ const AddMembershipModalOpenCloseFtn = () =>{
             alignItems: "center",
           }}
         >
-          <div onClick={testingModalFtn}>
-            <PiHandshakeDuotone className="icons" />
+          <div onClick={() => PartnershipModalFtn()} className="">
+          <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Partnership</p>
           </div>
         </Col>
+ 
         <Col
           className="hover-col"
           span={4}
@@ -293,7 +361,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
             alignItems: "center",
           }}
         >
-          <div>
+         <div onClick={() => DummyModal2Open()}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Dummy</p>
           </div>
@@ -308,12 +376,13 @@ const AddMembershipModalOpenCloseFtn = () =>{
             alignItems: "center",
           }}
         >
-          <div onClick={() => PartnershipModalOpen()}>
+          <div onClick={() => DummyModal2Open()}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Dummy</p>
           </div>
         </Col>
       </Row>
+      
       {/* Gender */}
       <MyDrawer
         open={genderModal}
@@ -369,9 +438,6 @@ const AddMembershipModalOpenCloseFtn = () =>{
           onClose={MembershipModalFtn}
           add = {AddMembershipModalOpenCloseFtn}
           >
-
-            
-          
         
           <div className="input-group">
             <p className="inpt-lbl">Short Name</p>
@@ -402,7 +468,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
         <Table
           columns={SubscriptionsColumn}
           pagination={false}
-          dataSource={gender}
+          dataSource={membership}
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
@@ -452,19 +518,12 @@ const AddMembershipModalOpenCloseFtn = () =>{
 
 
 
-{/* testing */}
-<MyDrawer title="test with Ayan" open={testing} onClose={testingModalFtn} >
-
-
- </MyDrawer>
-
-
-     
-      <MyDrawer
-        open={isSubscriptionsModal}
-        onClose={subscriptionsModalOpenClosFtn}
-        add={addSubscriptionsModalOpenClosFtn}
-        title="Subscriptions"
+{/* Partnership */}
+<MyDrawer
+        open={ModalPartnership}
+        onClose={PartnershipModalFtn}
+        add={PartnershipModalFtn}
+        title="Partnership"
       >
         <div className="input-group">
           <Input
@@ -473,22 +532,7 @@ const AddMembershipModalOpenCloseFtn = () =>{
             suffix={<SearchOutlined />}
           />
         </div>
-        <Table
-          columns={SubscriptionsColumn}
-          pagination={true}
-          dataSource={gender}
-          className="drawer-tbl"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-        />
-
-        <MyDrawer
-          title="Add Subscriptions"
-          open={isAddSubscriptionsModal}
-          onClose={addSubscriptionsModalOpenClosFtn}
-        >
-          <div className="input-group">
+        <div className="input-group">
             <p className="inpt-lbl">Short Name</p>
             <Input placeholder="Please enter short name" />
           </div>
@@ -504,7 +548,214 @@ const AddMembershipModalOpenCloseFtn = () =>{
             <p className="inpt-lbl">Beta</p>
             <Input placeholder="Please enter Beta " />
           </div>
-        </MyDrawer>
+        <Table
+          columns={SubscriptionsColumn}
+          pagination={false}
+          dataSource={partnership}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{gender.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${gender.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={gender.length}
+                pageSize={10}
+              />
+            </div>
+          )}
+        />
+      </MyDrawer>
+
+ {/*Dummy2*/ }
+ <MyDrawer
+        open={DummyModal2}
+        onClose={DummyModal2Ftn}
+        add={DummyModal2Ftn}
+        title="Dummy2"
+      >
+        <div className="input-group">
+          <Input
+            placeholder="Search..."
+            style={{ marginBottom: "5px" }}
+            suffix={<SearchOutlined />}
+          />
+        </div>
+        <div className="input-group">
+            <p className="inpt-lbl">Short Name</p>
+            <Input placeholder="Please enter short name" />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Display Name</p>
+            <Input placeholder="Please enter display name " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Alpha</p>
+            <Input placeholder="Please enter alpha " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Beta</p>
+            <Input placeholder="Please enter Beta " />
+          </div>
+        <Table
+          columns={SubscriptionsColumn}
+          pagination={false}
+          dataSource={partnership}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{gender.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${gender.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={gender.length}
+                pageSize={10}
+              />
+            </div>
+          )}
+        />
+      </MyDrawer>
+
+
+
+{/* Subscription */}
+     
+      <MyDrawer
+        open={isSubscriptionsModal}
+        onClose={subscriptionsModalOpenClosFtn}
+        add={addSubscriptionsModalOpenClosFtn}
+        title="Subscriptions"
+      >
+        <div className="input-group">
+          <Input
+            placeholder="Search..."
+            style={{ marginBottom: "5px" }}
+            suffix={<SearchOutlined />}
+          />
+        </div>
+        <div className="input-group">
+            <p className="inpt-lbl">Short Name</p>
+            <Input placeholder="Please enter short name" />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Display Name</p>
+            <Input placeholder="Please enter display name " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Alpha</p>
+            <Input placeholder="Please enter alpha " />
+          </div>
+          <div className="input-group">
+            <p className="inpt-lbl">Beta</p>
+            <Input placeholder="Please enter Beta " />
+          </div>
+        <Table
+          columns={SubscriptionsColumn}
+          pagination={false}
+          dataSource={partnership}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{gender.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${gender.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={gender.length}
+                pageSize={10}
+              />
+            </div>
+          )}
+        />
       </MyDrawer>
     </div>
   );

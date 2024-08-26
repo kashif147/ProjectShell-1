@@ -278,6 +278,11 @@ body {
 .navbar-nav a {
   text-decoration: none !important;
 }
+.custom-highlight  {
+  background-color:#1677ff !important; 
+  color: white !important
+
+}
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item,
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
   > .ant-menu
@@ -571,9 +576,7 @@ tr {
   .ant-menu-item-selected {
   background-color: #1677ff;
 }
-.custom-highlight {
-  background-color: red !important;
-}
+
 :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed
   > .ant-menu-item {
   padding-inline: 0;
@@ -685,4 +688,7 @@ h1 {
 .btn-main-con{
   margin: 1rem 0rem;
   float: right;
+}
+.sid-nav-main{
+  background-color: #45669d;
 }
