@@ -33,7 +33,6 @@ function HeaderDetails() {
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const formattedNav = nav.replace(/^\//, "");
-
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
@@ -67,6 +66,26 @@ function HeaderDetails() {
       label: "Other",
     },
   ];
+
+  const Partnershipstatus = [
+    {
+      key: "1",
+      label: "Single",
+    },
+    {
+      key: "2",
+      label: "Married",
+    },
+    {
+      key: "3",
+      label: "Seperated",
+    },
+    {
+      key: "4",
+      label: "Divorced",
+    },
+  ];
+
   const addMore = {
     Mebership: "false",
   };
