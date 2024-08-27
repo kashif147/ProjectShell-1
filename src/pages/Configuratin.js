@@ -19,6 +19,10 @@ import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
 function Configuratin() {
   const [genderModal, setgenderModal] = useState(false);
+  const [genderSrtName ,setgenderSrtName ] = useState("");
+  const [genderDisName ,setgenderDisName ] = useState("");
+  const [genderAlp ,setgenderAlp ] = useState("");
+  const [genderBet ,setgenderBet ] = useState("");
   const [testing, settesting] = useState(false);
   const [MembershipModal, setMembershipModal] = useState(false);
   const [AddMembershipModal, setAddMembershipModal] = useState(false);
@@ -30,6 +34,7 @@ function Configuratin() {
   const [ModalPartnership, setPartnershipModal] = useState(false);
   const [DummyModal2, setDummyModal2] = useState(false);
   const [AddModalPartnership, setAddPartnershipModal] = useState(false);
+  
   const column = [
     {
       title: "Short Name",
@@ -284,6 +289,18 @@ const AddMembershipModalOpenCloseFtn = () =>{
     SubscriptionsLookups.push(obj);
   });
 
+  const addgenderftn =() =>{
+    let data ={
+      ShortName:genderSrtName,
+      DisplayName: genderDisName,
+      Alpha:genderAlp,
+      Beta: genderBet,
+
+    }
+
+    console.log(data)
+  }
+
   return (
     <div className="configuration-main">
       <p className="configuratin-titles">Lookups Configuration</p>
@@ -387,25 +404,25 @@ const AddMembershipModalOpenCloseFtn = () =>{
       <MyDrawer
         open={genderModal}
         onClose={genderModalOpen}
-        add={addGenderModalOpen}
+        add={addgenderftn}
         title="Gender"
       >
         <div className="input-group">
         <div className="input-group">
             <p className="inpt-lbl">Short Name</p>
-            <Input placeholder="Please enter short name" />
+            <Input placeholder="Please enter short name" onChange={(e) => {setgenderSrtName(e.target.value)}} />
           </div>
           <div className="input-group">
             <p className="inpt-lbl">Display Name</p>
-            <Input placeholder="Please enter display name " />
+            <Input placeholder="Please enter display name " onChange={(e) => {setgenderDisName(e.target.value)}}/>
           </div>
           <div className="input-group">
             <p className="inpt-lbl">Alpha</p>
-            <Input placeholder="Please enter alpha " />
+            <Input placeholder="Please enter alpha " onChange={(e) => {setgenderAlp(e.target.value)}}/>
           </div>
           <div className="input-group">
             <p className="inpt-lbl">Beta</p>
-            <Input placeholder="Please enter Beta " />
+            <Input placeholder="Please enter Beta " onChange={(e) => {setgenderBet(e.target.value)}}/>
           </div>
 
           <Input
@@ -423,9 +440,6 @@ const AddMembershipModalOpenCloseFtn = () =>{
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
         />
-
-
- 
       </MyDrawer>
 
 
