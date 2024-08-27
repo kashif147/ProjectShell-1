@@ -15,6 +15,7 @@ import CasesDetails from "./pages/Cases/CasesDetails";
 import ClaimSummary from "./pages/Claims/ClaimSummary";
 import ClaimsDetails from "./pages/Claims/ClaimsDetails";
 import ProfileHeader from "./component/common/ProfileHeader";
+import ResizableComp from "./component/common/ResizableComp";
 
 function Entry() {
   const location = useLocation();
@@ -52,6 +53,9 @@ function Entry() {
             </Routes>
           </div>
         </div>
+        {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
+        <ResizableComp />
+        )}
       </div>
     </div>
   );

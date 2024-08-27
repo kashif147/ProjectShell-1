@@ -689,7 +689,8 @@ h1 {
 .profil-container-main{
   width: 23%;
   padding: 10px;
-  border: 1px solid var(--labelColor);
+  border: 2px solid #e0e0e0;
+  border-top: none;
   margin-inline: 10px;
   background-color: var(--gray);
 }

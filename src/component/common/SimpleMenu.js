@@ -27,9 +27,9 @@ function SimpleMenu({ title, data }) {
       return updatedState;
     });
   };
-  useEffect(()=>{
-    setCheckboxes(data)
-  },[data])
+  useEffect(() => {
+    setCheckboxes(data);
+  }, [data]);
   const menu = (
     <Menu>
       <Menu.Item key="1">
@@ -39,8 +39,7 @@ function SimpleMenu({ title, data }) {
       </Menu.Item>
       <Row>
         {data != null &&
-          // Object.keys(data)?.map((key)
-  Object.keys(data)?.map((key)=> (
+          Object.keys(data)?.map((key) => (
             <Col span={24}>
               <Checkbox
                 style={{ marginBottom: "8px" }}
@@ -77,7 +76,7 @@ function SimpleMenu({ title, data }) {
         placement="bottomLeft"
         overlayStyle={{ width: 200, padding: "0px" }}
       >
-        <Button>{title}</Button>
+        <Button className="transparent-bg">{title}</Button>
       </Dropdown>
     </div>
   );

@@ -150,23 +150,24 @@ function MyDeatails() {
                   <p className="lbl">Garda Reg No:</p>
                   <Input />
                 </Col>
-                <Col span={12}>
+                
+              </Row>
+              <Row gutter={20}>
+              <Col span={12}>
                   <p className="lbl">Forename</p>
                   <Input />
                 </Col>
-              </Row>
-              <Row gutter={20}>
                 <Col span={12}>
                   <p className="lbl">Surename</p>
                   <Input />
                 </Col>
-                <Col span={12}>
+               
+              </Row>
+              <Row gutter={20}>
+              <Col span={12}>
                   <p className="lbl">Gender</p>
                   <MySelect placeholder="Select Gender" isSimple={true} />
                 </Col>
-              </Row>
-              <Row gutter={20}>
-                
                
                   <Col span={12}>
                   <p className="lbl">Date Of Birth</p>
