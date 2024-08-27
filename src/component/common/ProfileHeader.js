@@ -32,8 +32,8 @@ function ProfileHeader() {
       };
   return (
     <div className='profil-container-main d-flex flex-column'>
-       {location?.pathname == "/Details" && (
-            <div className="patient-header">
+
+            
               
                   <Upload
                     customRequest={customRequest}
@@ -62,8 +62,8 @@ function ProfileHeader() {
                   </Upload>
                 
 
-            </div>
-          )}
+           
+         
           <h1 className="primary-contact">Profile Header</h1>
     </div>
   )

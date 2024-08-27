@@ -108,6 +108,8 @@ body {
 }
 .details-header {
   padding-top: 10px;
+  padding-left: 30px;
+  padding-right: 30px;
   width: 100%;
 }
 
@@ -279,6 +281,7 @@ body {
 .custom-highlight  {
   background-color:#1677ff !important; 
   color: white !important
+  
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item,
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
@@ -690,10 +693,4 @@ h1 {
   margin-inline: 10px;
   background-color: var(--gray);
 }
-.profil-container-main{
-  width: 23%;
-  padding: 10px;
-  border: 1px solid var(--labelColor);
-  margin-inline: 10px;
-  background-color: var(--gray);
-}
+

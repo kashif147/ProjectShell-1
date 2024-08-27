@@ -25,15 +25,18 @@ function Entry() {
         {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
           <div>
             <SideNav />
-            
           </div>
- 
         )}
-        <ProfileHeader />
+        {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
+        
+            <ProfileHeader />
+       
+        )}
         <div style={{ width: "100%", overflow: "hidden" }}>
           <div>
+          
+            <HeaderDetails />
          
-          <HeaderDetails />
           </div>
           <div className="main-main">
             <Routes>
