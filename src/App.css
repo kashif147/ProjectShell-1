@@ -694,4 +694,16 @@ h1 {
   margin-inline: 10px;
   background-color: var(--gray);
 }
+/* .ant-table-tbody > tr:first-child {
+  display: none;
+} */
+
+
+.ant-table-header {
+  position: sticky;
+  top: 0;
+  z-index: 1; /* Ensure the header is above other content */
+  background-color: #fff; /* Or another color if needed */
+}
+
 

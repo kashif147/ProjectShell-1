@@ -23,10 +23,10 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
-import { useSearchFilters } from "../../context/SearchFilterContext";
+// import { useSearchFilters } from "../../context/SearchFilterContext";
 
 function HeaderDetails() {
-  const { trueKeys } = useSearchFilters();
+  // const { trueKeys } = useSearchFilters();
   // console.log(trueKeys?.includes("Mebership"),"8888")
   const { Search } = Input;
   const location = useLocation();
@@ -201,9 +201,9 @@ function HeaderDetails() {
                     title="Subscriptions"
                     data={SerachFitersLookups}
                   />
-                  {trueKeys.includes("Mebership") == true && (
                     <JiraLikeMenu title="Membership" data={Mebership} />
-                  )}
+                  {/* {trueKeys.includes("Mebership") == true && (
+                  )} */}
                   <div className="searchfilter- margin">
                     <SimpleMenu
                       title={
