@@ -1,6 +1,4 @@
 export const SerachFitersLookups ={
-  
-        
           Single: false,
           Married: false,
           Seperated: false,

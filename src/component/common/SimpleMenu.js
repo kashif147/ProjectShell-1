@@ -54,18 +54,6 @@ function SimpleMenu({ title, data }) {
             </Col>
           ))}
       </Row>
-      {/* <Menu.Item key="2">
-            <>
-           <Input suffix={<SearchOutlined />} />
-              <Divider />
-            </>
-          </Menu.Item>
-          <Menu.Item key="3">
-            <>
-           <Input suffix={<SearchOutlined />} />
-              <Divider />
-            </>
-          </Menu.Item> */}
     </Menu>
   );
   return (
