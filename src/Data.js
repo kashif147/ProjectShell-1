@@ -158,5 +158,67 @@ export const SerachFitersLookups ={
           Graduated: "01/09/1987",
           Updated: '12/04/2022 13:29'
         },
+        {
+          key: '11',
+          Name: 'Jack Smith',
+          RegNo: "56606L",
+          Rank: "0001",
+          Duty: "Garda",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Member",
+          Attested: "01/01/1988",
+          Graduated: "01/09/1987",
+          Updated: '12/04/2022 13:29'
+        },
+        {
+          key: '12',
+          Name: 'Jack Smith12',
+          RegNo: "56606L",
+          Rank: "0001",
+          Duty: "Garda",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Member",
+          Attested: "01/01/1988",
+          Graduated: "01/09/1987",
+          Updated: '12/04/2022 13:29'
+        },
+       
+        {
+          key: '13',
+          Name: 'Jack Smith12',
+          RegNo: "56606L",
+          Rank: "0001",
+          Duty: "Garda",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Member",
+          Attested: "01/01/1988",
+          Graduated: "01/09/1987",
+          Updated: '12/04/2022 13:29'
+        },
+       
+        {
+          key: '14',
+          Name: 'Jack Smith12',
+          RegNo: "56606L",
+          Rank: "0001",
+          Duty: "Garda",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Member",
+          Attested: "01/01/1988",
+          Graduated: "01/09/1987",
+          Updated: '12/04/2022 13:29'
+        },
        
       ]

@@ -6,27 +6,42 @@ import { MoreOutlined } from "@ant-design/icons";
 import { tableData } from "../../Data";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 import { LuRefreshCw } from "react-icons/lu";
+import { Link } from "react-router-dom";
 
 function TableComponent({ dataSource }) {
   const { columns } = useTableColumns();
+  const nameColumnIndex = columns.findIndex(col => col.key === "Name");
+  const modifiedColumns = columns.map((col, index) => {
+    if (index === nameColumnIndex) {
+      return {
+        ...col,
+        render: (text, record) => (
+          <Link to={`/Details`} style={{ color: 'blue' }} state={{ search: "Profile", name:record.Name }}>
+            {text}
+          </Link>
+        ),
+      };
+    }
+    return col;
+  });
 
   const actionColumn = {
     title: () => (
       <Gridmenu
-        title={<PiSlidersHorizontalBold />}
-        data={{ RegNo: true, Name: true, Rank: true, Duty: true, Station:true, Distric:true, Division:true, Address:true, Status:true, Updated:true, }}
+        title={<PiSlidersHorizontalBold style={{fontSize:"24px", color:"white", fontWeight:600}} />}
+        data={{ RegNo: true, Name: true, Rank: false, Duty: false, Station:false, Distric:false, Division:false, Address:true, Status:false, Updated:false, alpha:false, beta:false, giga:false, }}
       />
     ),
     key: "actions",
     width: 50,
   };
-
+  
   return (
     <div className="common-table">
    <Table
-  columns={[actionColumn, ...columns]}
+  columns={[actionColumn, ...modifiedColumns]}
   dataSource={tableData}
-  scroll={{ x: '70%', y: 300 }}
+  scroll={{ x: '100%', y: 400 }}
   pagination={false}
   footer={() => (
     <div className="d-flex justify-content-between">

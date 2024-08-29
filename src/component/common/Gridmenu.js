@@ -4,23 +4,43 @@ import { SearchOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
 function Gridmenu({ title, data }) {
-    const { columns, updateColumns } = useTableColumns();
+  const { columns, updateColumns } = useTableColumns();
   const [checkboxes, setCheckboxes] = useState({});
 
   useEffect(() => {
     if (data && columns) {
       const initialCheckboxes = Object.keys(data).reduce((acc, key) => {
-        acc[key] = columns.some(column => column.key === key);
+        acc[key] = data[key];
         return acc;
       }, {});
-      setCheckboxes(initialCheckboxes);
-    }
-  }, [data, columns]);
 
+      setCheckboxes(initialCheckboxes);
+      const initialColumns = Object.entries(initialCheckboxes)
+        .filter(([_, isChecked]) => isChecked)
+        .map(([key]) => ({
+          title: key,
+          dataIndex: key,
+          key: key,
+        }));
+      updateColumns(initialColumns);
+    }
+  }, []);
+  const widthMapping = {
+    RegNo: 100,
+    Name: 120,
+    Rank: 140,
+    Duty: 100,
+    Station: 120,
+    Distric: 120,
+    Division: 120,
+    Address: 200,
+  };
+  
+  const getColumnWidth = (key) => widthMapping[key] || 120;
   const checkboxChangeFtn = (key, event) => {
     const isChecked = event.target.checked;
     setCheckboxes((prevState) => {
-      const updatedState = { 
+      const updatedState = {
         ...prevState,
         [key]: isChecked,
       };
@@ -31,6 +51,8 @@ function Gridmenu({ title, data }) {
           title: key,
           dataIndex: key,
           key: key,
+          width: getColumnWidth(key),
+          ellipsis: true,
         }));
 
       updateColumns(newColumns);
@@ -75,4 +97,4 @@ function Gridmenu({ title, data }) {
     </Dropdown>
   );
 }
-export default Gridmenu
+export default Gridmenu;
