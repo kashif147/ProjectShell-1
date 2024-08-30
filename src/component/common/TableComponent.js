@@ -1,23 +1,26 @@
-import React from "react";
+import React, { useEffect } from "react";
 import { Table, Pagination,Space } from "antd";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import Gridmenu from "./Gridmenu";
+
 import { MoreOutlined } from "@ant-design/icons";
-import { tableData } from "../../Data";
+import { maleTblData } from "../../Data";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 import { LuRefreshCw } from "react-icons/lu";
 import { Link } from "react-router-dom";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import SimpleMenu from "./SimpleMenu";
+import { tableData } from "../../Data";
 
 function TableComponent({ dataSource }) {
+
   const testing = {
     Delete: "false",
     Attached:"false",
     view:'false'
   };
-  const { columns } = useTableColumns();
+  const { columns, state,isMale,gridData } = useTableColumns();
   const nameColumnIndex = columns.findIndex((col) => col.key === "Name");
   const modifiedColumns = columns.map((col, index) => {
     if (index === nameColumnIndex) {
@@ -63,7 +66,7 @@ function TableComponent({ dataSource }) {
       />
     ),
     key: "actions",
-    width: 50,
+    width: 100,
     render: (_, record) => (
       <Space size="middle" className="action-buttons">
         <CgAttachment />
@@ -82,12 +85,12 @@ function TableComponent({ dataSource }) {
       </Space>
     ),
   };
-
+console.log(gridData,"gridData")
   return (
     <div className="common-table">
-      <Table
+      <Table 
         columns={[actionColumn, ...modifiedColumns]}
-        dataSource={tableData}
+        dataSource={gridData}
         scroll={{ x: "100%", y: 300 }}
         pagination={false}
         footer={() => (
@@ -107,7 +110,7 @@ function TableComponent({ dataSource }) {
                   fontWeight: "500",
                 }}
               >
-                1-{tableData.length}
+                1-{gridData.length}
               </span>
               <span
                 style={{
@@ -117,13 +120,13 @@ function TableComponent({ dataSource }) {
                 }}
               >
                 {" "}
-                of {`${tableData.length}`}
+                of {`${gridData.length}`}
               </span>
               <LuRefreshCw />
             </div>
             <Pagination
               defaultCurrent={1}
-              total={tableData.length}
+              total={gridData.length}
               pageSize={10}
             />
           </div>

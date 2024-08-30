@@ -4,7 +4,6 @@ export const SerachFitersLookups ={
           Seperated: false,
           Divorced: false,
        }
-
        export const tableData = [
         {
           key: '1',
@@ -19,7 +18,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Male",
         },
         {
           key: '2',
@@ -34,7 +34,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Male",
         },
         {
           key: '3',
@@ -49,7 +50,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Male",
         },
         {
           key: '4',
@@ -64,7 +66,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Male",
         },
         {
           key: '5',
@@ -79,7 +82,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Male",
         },
         {
           key: '6',
@@ -94,7 +98,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Female"
         },
         {
           key: '7',
@@ -109,7 +114,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Female"
         },
         {
           key: '8',
@@ -124,7 +130,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Female"
         },
         {
           key: '9',
@@ -139,7 +146,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"Female"
         },
         {
           key: '10',
@@ -154,7 +162,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"male"
         },
         {
           key: '11',
@@ -169,7 +178,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"male"
         },
         {
           key: '12',
@@ -184,7 +194,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"female"
         },
        
         {
@@ -200,7 +211,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"male"
         },
        
         {
@@ -216,7 +228,12 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          Gender:"other"
         },
        
       ]
+      const filterByGender = (data, gender) => {
+        return data?.filter(item => item.Gender.toLowerCase() === gender.toLowerCase());
+      };
+     export const maleTblData = filterByGender(tableData, "male");

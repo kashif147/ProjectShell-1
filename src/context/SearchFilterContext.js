@@ -1,10 +1,22 @@
 import React, { createContext, useState, useContext } from 'react';
-// Create the context
+
 const SearchFilterContext = createContext();
-// Create the provider component
+
 export const SearchFilterProvider = ({ children }) => {
   const [trueKeys, setTrueKeys] = useState([]);
   const [checkboxes, setCheckboxes] = useState({})
+  const checkGenderCondition = (state) => {
+    const genderState = state.Gender;
+    if (genderState?.selectedOption === "=" && genderState.checkboxes["Male"]) {
+      return true; // Indication that the condition is met
+    }
+    return false; // Condition not met
+  };
+  const isMale =checkGenderCondition(state)
+  const filterByGender = (data, gender) => {
+    return data.filter(item => item.Gender.toLowerCase() === gender.toLowerCase());
+  };
+  
 
   return (
     <>
@@ -15,5 +27,5 @@ export const SearchFilterProvider = ({ children }) => {
   );
 };
 
-// Custom hook to use the context
+
 export const useSearchFilters = () => useContext(SearchFilterContext);

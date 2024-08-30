@@ -12,24 +12,35 @@ import {
 import { SearchOutlined } from "@ant-design/icons";
 
 function SimpleMenu({ title, data }) {
-  const [checkboxes, setCheckboxes] = useState();
-  const [trueKeys, setTrueKeys] = useState([]);
+  const [checkboxes, setCheckboxes] = useState({});
+  const [selectedValues, setSelectedValues] = useState({ checkboxes: {}, searchValue: "" });
+
   const checkboxChangeFtn = (key, event) => {
-    setCheckboxes((prevState) => {
-      const updatedState = {
-        ...prevState,
-        [key]: event.target.checked,
-      };
-      const newTrueKeys = Object.entries(updatedState)
-        .filter(([_, value]) => value)
-        .map(([key]) => key);
-      setTrueKeys(newTrueKeys);
-      return updatedState;
-    });
+    const updatedCheckboxes = {
+      ...checkboxes,
+      [key]: event.target.checked,
+    };
+    setCheckboxes(updatedCheckboxes);
+
+    setSelectedValues((prevValues) => ({
+      ...prevValues,
+      checkboxes: updatedCheckboxes,
+    }));
   };
+
   useEffect(() => {
     setCheckboxes(data);
+    setSelectedValues((prevValues) => ({
+      ...prevValues,
+      checkboxes: data || {},
+    }));
   }, [data]);
+  const handleSearchChange = (event) => {
+    setSelectedValues((prevValues) => ({
+      ...prevValues,
+      searchValue: event.target.value,
+    }));
+  };
   const menu = (
     <Menu>
       <Menu.Item key="1">

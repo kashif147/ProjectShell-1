@@ -35,7 +35,6 @@ function Gridmenu({ title, data }) {
     Division: 120,
     Address: 200,
   };
-  
   const getColumnWidth = (key) => widthMapping[key] || 120;
   const checkboxChangeFtn = (key, event) => {
     const isChecked = event.target.checked;
