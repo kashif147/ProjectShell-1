@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 
-function SimpleMenu({ title, data, isCheckBox = true, actions }) {
+function SimpleMenu({ title, data, isCheckBox = true, actions, }) {
   const [checkboxes, setCheckboxes] = useState({});
   const [selectedValues, setSelectedValues] = useState({
     checkboxes: {},
@@ -81,7 +81,7 @@ function SimpleMenu({ title, data, isCheckBox = true, actions }) {
       placement="bottomLeft"
       overlayStyle={{ width: 200, padding: "0px" }}
     >
-      <Button className="transparent-bg">{title}</Button>
+      <Button className="transparent-bg p-0">{title}</Button>
     </Dropdown>
   );
 }
