@@ -67,9 +67,9 @@ function TableComponent({ dataSource }) {
       />
     ),
     key: "actions",
-    width: 100,
+    width: 70,
     render: (_, record) => (
-      <Space size="middle" className="action-buttons">
+      <Space size="small" className="action-buttons">
         <CgAttachment />
         <SimpleMenu
           title={
