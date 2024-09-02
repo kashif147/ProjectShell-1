@@ -98,7 +98,7 @@ body {
 
 .Header-border {
   border-bottom: 2px solid #e0e0e0;
-  background-color: #f6f7f8;
+  /* background-color: #f6f7f8; */
 }
 .Header-padding {
   /* padding: 0.1rem 0.4rem; */
@@ -108,9 +108,10 @@ body {
 }
 .details-header {
   padding-top: 10px;
-  padding-left: 30px;
+  padding-left: 92px;
   padding-right: 30px;
   width: 100%;
+
 }
 
 .title {
@@ -707,8 +708,7 @@ h1 {
   font-weight: 500;
 }
 .details-header{
-  border-bottom: 2px solid #e0e0e0;
-  background-color: #f2f2f2;
+ 
 }
 :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item,
 :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item-group > .ant-menu-item-group-list > .ant-menu-item,

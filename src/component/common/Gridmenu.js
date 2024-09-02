@@ -7,24 +7,7 @@ function Gridmenu({ title, data }) {
   const { columns, updateColumns } = useTableColumns();
   const [checkboxes, setCheckboxes] = useState({});
 
-  useEffect(() => {
-    if (data && columns) {
-      const initialCheckboxes = Object.keys(data).reduce((acc, key) => {
-        acc[key] = data[key];
-        return acc;
-      }, {});
 
-      setCheckboxes(initialCheckboxes);
-      const initialColumns = Object.entries(initialCheckboxes)
-        .filter(([_, isChecked]) => isChecked)
-        .map(([key]) => ({
-          title: key,
-          dataIndex: key,
-          key: key,
-        }));
-      updateColumns(initialColumns);
-    }
-  }, []);
   const widthMapping = {
     RegNo: 100,
     Name: 120,
@@ -33,8 +16,9 @@ function Gridmenu({ title, data }) {
     Station: 120,
     Distric: 120,
     Division: 120,
-    Address: 200,
+    Address: 220,
   };
+
   const getColumnWidth = (key) => widthMapping[key] || 120;
   const checkboxChangeFtn = (key, event) => {
     const isChecked = event.target.checked;
@@ -59,7 +43,27 @@ function Gridmenu({ title, data }) {
       return updatedState;
     });
   };
+  useEffect(() => {
+    if (data && columns) {
+      const initialCheckboxes = Object.keys(data).reduce((acc, key) => {
+        acc[key] = data[key];
+        return acc;
+      }, {});
 
+      setCheckboxes(initialCheckboxes);
+      const initialColumns = Object.entries(initialCheckboxes)
+        .filter(([_, isChecked]) => isChecked)
+        .map(([key]) => ({
+          title: key,
+          dataIndex: key,
+          key: key,
+          width: getColumnWidth(key),
+          ellipsis: true,
+        }));
+      updateColumns(initialColumns);
+    }
+  }, []);
+console.log(columns,"update")
   const menu = (
     <Menu>
       <Menu.Item key="1">

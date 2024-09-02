@@ -17,7 +17,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="Summary" state={{ search: "Profile" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="Summary" state={{ search: "Profile" }} className="link" style={{textDecoration:"none", }}>
           Summary
         </Link>
       ),
@@ -83,7 +83,7 @@ const pathname = location?.pathname
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav align-items-baseline"  style={{paddingLeft:"10px"}}>
+            <ul class="navbar-nav align-items-baseline"  style={{paddingLeft:"90px"}}>
               <li className={`${pathname=="/Summary"|| pathname=="/Details" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Profile"} items={navLinks} />
                 {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
