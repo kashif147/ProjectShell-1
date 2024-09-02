@@ -695,3 +695,19 @@ h1 {
   background-color: var(--gray);
 }
 
+.ant-table-header {
+  position: sticky;
+  top: 0;
+  z-index: 1; 
+  background-color: #fff; 
+}
+.common-table .ant-table-thead > tr > th {
+  background-color: #45669d; 
+  color: white !important;
+  font-family: var(--fontFamily) !important;
+  font-weight: 500;
+}
+.details-header{
+  border-bottom: 2px solid #e0e0e0;
+  background-color: #f2f2f2;
+}

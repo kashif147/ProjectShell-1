@@ -16,6 +16,7 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 
 import SimpleMenu from "../../component/common/SimpleMenu";
+import TableComponent from "../../component/common/TableComponent";
 function ProfileSummary() {
   const navigate = useNavigate();
 
@@ -36,6 +37,9 @@ function ProfileSummary() {
     Updated:"false",
     
   };
+  const dataSource = [
+   
+  ];
   const location = useLocation();
   // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
   const currentURL = `${location.hash}`;
@@ -208,7 +212,7 @@ function ProfileSummary() {
 
   return (
     <div className="">
-      <Table
+      {/* <Table
         dataSource={tableData}
         columns={columns}
         scroll={{ x: 300, y: 400 }}
@@ -255,7 +259,8 @@ function ProfileSummary() {
             />
           </div>
         )}
-      />
+      /> */}
+      <TableComponent dataSource={dataSource}  />
     </div>
   );
 }

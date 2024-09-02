@@ -1,5 +1,6 @@
-import { useState, React } from "react";
+import { useState, React, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { usePDF } from 'react-to-pdf';
 import {
   RightOutlined,
   PlusOutlined,
@@ -23,12 +24,14 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
-import { useSearchFilters } from "../../context/SearchFilterContext";
+// import { useSearchFilters } from "../../context/SearchFilterContext";
+
 
 function HeaderDetails() {
-  const { trueKeys } = useSearchFilters();
+  // const { trueKeys } = useSearchFilters();
   // console.log(trueKeys?.includes("Mebership"),"8888")
   const { Search } = Input;
+  const { toPDF, targetRef } = usePDF({filename: 'page.pdf'});
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
@@ -38,7 +41,12 @@ function HeaderDetails() {
   const [checkboxes, setCheckboxes] = useState();
   const navigate = useNavigate();
   console.log(location, "location");
-
+  const inputRef = useRef(null); 
+  const genaratePdf = (e) =>{
+    e.stopPropagation();
+    console.log("testing")
+    toPDF()
+  }
   const mriatalStatus = {
     Male: false,
     Female: false,
@@ -134,7 +142,6 @@ function HeaderDetails() {
       {loading ? "Uploading" : "Upload"}
     </Button>
   );
-
   return (
     <div className="">
       <div className="details-header d-flex w-100% overflow-hidden">
@@ -173,7 +180,18 @@ function HeaderDetails() {
                     : ` ${location?.state?.search}`}
                 </h2>
                 <div className="d-flex">
-                  <Button className="me-1 gray-btn butn">Export</Button>
+                <SimpleMenu
+                      title={
+                        <>
+                          <Button className="me-1 gray-btn butn">Export</Button>
+                        </>
+                      }
+                      data={addMore}
+                      isSearched={true}
+                      isCheckBox={false}
+                      actions={genaratePdf}
+                    />
+                  
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
@@ -201,9 +219,9 @@ function HeaderDetails() {
                     title="Subscriptions"
                     data={SerachFitersLookups}
                   />
-                  {trueKeys.includes("Mebership") == true && (
                     <JiraLikeMenu title="Membership" data={Mebership} />
-                  )}
+                  {/* {trueKeys.includes("Mebership") == true && (
+                  )} */}
                   <div className="searchfilter- margin">
                     <SimpleMenu
                       title={
