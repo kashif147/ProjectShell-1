@@ -31,7 +31,7 @@ function TableComponent({ dataSource }) {
           <Link
             to={`/Details`}
             style={{ color: "blue" }}
-            state={{ search: "Profile", name: record.Name }}
+            state={{ search: "Profile", name: record.Name, code:record?.RegNo }}
           >
             {text}
           </Link>
@@ -52,14 +52,14 @@ function TableComponent({ dataSource }) {
         data={{
           RegNo: true,
           Name: true,
-          Rank: false,
-          Duty: false,
-          Station: false,
-          Distric: false,
-          Division: false,
+          Rank: true,
+          Duty: true,
+          Station: true,
+          Distric: true,
+          Division: true,
           Address: true,
-          Status: false,
-          Updated: false,
+          Status: true,
+          Updated: true,
           alpha: false,
           beta: false,
           giga: false,
@@ -86,7 +86,7 @@ function TableComponent({ dataSource }) {
       </Space>
     ),
   };
-console.log(gridData,"gridData")
+console.log(actionColumn,"gridData")
 
 
   return (
@@ -94,7 +94,7 @@ console.log(gridData,"gridData")
       <Table 
         columns={[actionColumn, ...modifiedColumns]}
         dataSource={gridData}
-        scroll={{ x: "100%", y: 300 }}
+        scroll={{ x: 400, y: 350 }}
         pagination={false}
         footer={() => (
           <div className="d-flex justify-content-between">

@@ -98,7 +98,7 @@ body {
 
 .Header-border {
   border-bottom: 2px solid #e0e0e0;
-  background-color: #f6f7f8;
+  /* background-color: #f6f7f8; */
 }
 .Header-padding {
   /* padding: 0.1rem 0.4rem; */
@@ -108,9 +108,10 @@ body {
 }
 .details-header {
   padding-top: 10px;
-  padding-left: 30px;
+  padding-left: 92px;
   padding-right: 30px;
   width: 100%;
+
 }
 
 .title {
@@ -172,13 +173,12 @@ body {
 }
 .label-nav-collaps {
   display: flex;
-  justify-content: center;
-  align-items: center;
+  justify-content: center !important;
+  align-items: center !important;
   background-color: #fff;
   color: var(--secound) !important;
   padding: 0.4rem;
   border-radius: 50%;
-  margin-left: 10px !important;
 }
 .label-nav-collaps1 {
   display: flex;
@@ -188,7 +188,7 @@ body {
   color: #fff !important;
   padding: 0.4rem;
   border-radius: 50%;
-  margin-left: 10px !important;
+  /* margin-left: 10px !important; */
 }
 .specific-icon {
   display: flex;
@@ -708,6 +708,36 @@ h1 {
   font-weight: 500;
 }
 .details-header{
-  border-bottom: 2px solid #e0e0e0;
-  background-color: #f2f2f2;
+ 
+}
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item-group > .ant-menu-item-group-list > .ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item-group > .ant-menu-item-group-list > .ant-menu-submenu > .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-submenu > .ant-menu-submenu-title {
+    text-align: center;
+    padding-inline: 0; /* Optional: remove padding if needed */
+    text-overflow: clip;
+}
+.ant-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: center; /* Center content horizontally */
+  padding: 0; /* Remove padding if needed */
+  /* text-align: center;  */
+  align-items: center !important;
+}
+.sidenav-collapsed .ant-menu-item .ant-menu-title-content {
+  display: none; /* Hide the text when the side nav is collapsed */
+}
+
+.sidenav-collapsed .sid-nav-item,
+.sidenav-collapsed .label-nav-collaps {
+  justify-content: center; /* Center the icons */
+}
+
+
+
+
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-submenu>.ant-menu-submenu-title .anticon +span {
+  display: none !important;
 }

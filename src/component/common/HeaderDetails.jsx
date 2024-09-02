@@ -142,9 +142,10 @@ function HeaderDetails() {
       {loading ? "Uploading" : "Upload"}
     </Button>
   );
+  
   return (
     <div className="">
-      <div className="details-header d-flex w-100% overflow-hidden">
+      <div className={`details-header d-flex w-100% overflow-hidden ${location?.pathname=="/Details"?"Header-border":""}`}>
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
             <p className="bred-cram-main" onClick={goBack}>

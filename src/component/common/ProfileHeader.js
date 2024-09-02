@@ -1,10 +1,12 @@
 import React, { useState } from 'react';
 import { Upload, message, Divider } from 'antd';
 import { FiUpload } from "react-icons/fi";
+import { useLocation } from 'react-router-dom';
 
 function ProfileHeader() {
     const [imageUrl, setImageUrl] = useState("");
     const [loading, setLoading] = useState(false);
+    const location = useLocation();
 
     const customRequest = ({ file, onSuccess, onError }) => {
         setTimeout(() => {
@@ -75,12 +77,11 @@ function ProfileHeader() {
                 </Upload>
             </div>
             <Divider type='horizontal' />
-            
             {/* Other content remains unchanged */}
             <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '12px', color: '#6B7AAB' }}>
                 <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '12px' }}>Code 56606L</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>Jack Smith</div>
+                    <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '12px' }}>Code {location?.state?.code}</div>
+                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>{location?.state?.name}</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>20/06/1979 (36 Y)</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>Married</div>
                     <div style={{ fontWeight: 'bold', color: '#FF7F7F', fontSize: '12px' }}>11/10/2015 (Deceased)</div>
