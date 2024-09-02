@@ -1,8 +1,8 @@
-import React, { useEffect } from "react";
+import React, { useEffect,useRef } from "react";
 import { Table, Pagination,Space } from "antd";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import Gridmenu from "./Gridmenu";
-
+import { usePDF } from 'react-to-pdf';
 import { MoreOutlined } from "@ant-design/icons";
 import { maleTblData } from "../../Data";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
@@ -14,7 +14,8 @@ import SimpleMenu from "./SimpleMenu";
 import { tableData } from "../../Data";
 
 function TableComponent({ dataSource }) {
-
+  const inputRef = useRef(null);
+  const { toPDF, targetRef } = usePDF({filename: 'page.pdf'});
   const testing = {
     Delete: "false",
     Attached:"false",
@@ -86,8 +87,10 @@ function TableComponent({ dataSource }) {
     ),
   };
 console.log(gridData,"gridData")
+
+
   return (
-    <div className="common-table">
+    <div className="common-table" ref={inputRef}>
       <Table 
         columns={[actionColumn, ...modifiedColumns]}
         dataSource={gridData}
