@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 
-function SimpleMenu({ title, data, isCheckBox = true, actions, }) {
+function SimpleMenu({ title, data, isCheckBox = true, actions, isBtn=false }) {
   const [checkboxes, setCheckboxes] = useState({});
   const [selectedValues, setSelectedValues] = useState({
     checkboxes: {},
@@ -46,7 +46,7 @@ function SimpleMenu({ title, data, isCheckBox = true, actions, }) {
           <Input suffix={<SearchOutlined />} onChange={handleSearchChange} />
         </Menu.Item>
       )}
-      <Row>
+      <Row >
         {data &&
           isCheckBox &&
           Object.keys(data)?.map((key) => (

@@ -387,7 +387,7 @@ body {
   border-bottom: 1px solid #d9d9d9 !important; /* Add border to table rows */
 }
 :where(.css-dev-only-do-not-override-1uq9j6g)[class^="ant-table"] {
-  border: 0.5px solid #dcdfe4 !important;
+  border: 1px solid #dcdfe4 !important;
   border-radius: 7px !important;
   overflow: hidden !important;
   border-collapse: collapse !important;
@@ -457,7 +457,7 @@ tr {
   font-weight: 600;
   border: none !important;
   box-shadow: none !important;
-  padding: 0px 12px;
+  padding: 0px 12px !important;
 }
 .searchfilter- Button:hover {
   background-color: var(--btn-hover) !important;
@@ -735,9 +735,34 @@ h1 {
   justify-content: center; /* Center the icons */
 }
 
-
-
-
 :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-submenu>.ant-menu-submenu-title .anticon +span {
   display: none !important;
+}
+.common-table table tr th{
+background-color: var(--mainBlue) !important;
+color: white ;
+padding: 4px;
+font-weight: 600;
+position: sticky !important;
+z-index: 10;
+top:0
+}
+.common-table table tr td{
+padding:2px 4px;
+font-weight: 400;
+color: var(--mainBlue) !important;
+
+}
+
+.table-wrapper {
+  max-height: 385px; 
+  overflow-y: auto;
+  overflow-x: auto; /* Horizontal scroll */
+}
+.table {
+  margin-bottom: 0px !important;
+}
+.tbl-footer{
+  background-color: #fafafa !important;
+  border-top: none;
 }

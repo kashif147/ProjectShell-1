@@ -4,7 +4,67 @@ import {tableData} from "../Data"
 const TableColumnsContext = createContext();
 
 export const TableColumnsProvider = ({ children }) => {
-  const [columns, setColumns] = useState([]);
+
+  const [columns, setColumns] = useState({ Profile: [
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true },
+    { titleColumn: "Name", ellipsis: true, isVisible:true },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true },
+    { titleColumn: "Station", ellipsis: true, isVisible:true },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true },
+    { titleColumn: "Division", ellipsis: true, isVisible:true },
+    { titleColumn: "Address", ellipsis: true, isVisible:true },
+    { titleColumn: "Status", ellipsis: true, isVisible:true },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true },
+    { titleColumn: "alpha", ellipsis: true, isVisible:false },
+    { titleColumn: "beta", ellipsis: true, isVisible:false },
+    { titleColumn: "giga", ellipsis: true, isVisible:false },
+  ],
+  Cases: [
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true },
+    { titleColumn: "Name", ellipsis: true, isVisible:true },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true },
+    { titleColumn: "Station", ellipsis: true, isVisible:true },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true },
+    { titleColumn: "Division", ellipsis: true, isVisible:true },
+    { titleColumn: "Address", ellipsis: true, isVisible:true },
+    { titleColumn: "Status", ellipsis: true, isVisible:true },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true },
+    { titleColumn: "alpha", ellipsis: true, isVisible:false },
+    { titleColumn: "beta", ellipsis: true, isVisible:false },
+    { titleColumn: "giga", ellipsis: true, isVisible:false },
+  ],
+  Claims: [
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true },
+    { titleColumn: "Name", ellipsis: true, isVisible:true },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true },
+    { titleColumn: "Station", ellipsis: true, isVisible:true },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true },
+    { titleColumn: "Division", ellipsis: true, isVisible:true },
+    { titleColumn: "Address", ellipsis: true, isVisible:true },
+    { titleColumn: "Status", ellipsis: true, isVisible:true },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true },
+    { titleColumn: "alpha", ellipsis: true, isVisible:false },
+    { titleColumn: "beta", ellipsis: true, isVisible:false },
+    { titleColumn: "giga", ellipsis: true, isVisible:false },
+  ]
+
+});
+
+  const handleCheckboxFilterChange = (key, isChecked, screenName) => {
+    setColumns(prevColumns => {
+      const updatedColumns = prevColumns?.[screenName].map(column => {
+        if (column.titleColumn === key) {
+          return { ...column, isVisible: isChecked };
+        }
+        return column;
+      });
+
+      return { ...prevColumns, [screenName]: updatedColumns };
+    });
+  };
   const [gridData, setGridData] = useState(tableData);
   
   const [state, setState] = useState({
@@ -23,7 +83,7 @@ export const TableColumnsProvider = ({ children }) => {
   };
 
   const updateColumns = (newColumns) => {
-    setColumns(newColumns);
+    // setColumns(newColumns);
   };
 
   const checkGenderCondition = (state) => {
@@ -48,9 +108,9 @@ export const TableColumnsProvider = ({ children }) => {
       setGridData(tableData); // Reset gridData if the condition isn't met
     }
   }, [isMale]);
-
+console.log(columns,"khan")
   return (
-    <TableColumnsContext.Provider value={{ columns, updateColumns, state, setState, updateState, isMale, gridData }}>
+    <TableColumnsContext.Provider value={{ columns, updateColumns, state, setState, updateState, isMale, gridData,handleCheckboxFilterChange }}>
       {children}
     </TableColumnsContext.Provider>
   );

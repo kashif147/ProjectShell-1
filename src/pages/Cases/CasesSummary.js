@@ -8,6 +8,8 @@ import { LuRefreshCw } from "react-icons/lu";
 import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
+import TableComponent from "../../component/common/TableComponent";
+
 
 function CasesSummary() {
     const navigate = useNavigate();
@@ -156,55 +158,9 @@ function CasesSummary() {
   
     return (
       <div className="">
-        <Table
-          dataSource={tableData}
-          columns={columns}
-          scroll={{ x: 300, y: 400 }}
-          className="Project-table"
-          pagination={false}
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          footer={() => (
-            <div className="d-flex justify-content-between">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                }}
-              >
-                <span
-                  style={{
-                    marginRight: "4px",
-                    fontSize: "12px",
-                    fontWeight: "500",
-                  }}
-                >
-                  1-{tableData.length}
-                </span>
-                <span
-                  style={{
-                    marginRight: "4px",
-                    fontSize: "12px",
-                    fontWeight: "500",
-                  }}
-                >
-                  {" "}
-                  of {`${tableData.length}`}
-                </span>
-                <LuRefreshCw />
-              </div>
-              <Pagination
-                defaultCurrent={1}
-                total={tableData.length}
-                pageSize={10}
-              />
-            </div>
-          )}
-        />
-      </div>
+   
+      <TableComponent screenName="Cases" redirect="/CasesDetails" />
+    </div>
     );
   }
 

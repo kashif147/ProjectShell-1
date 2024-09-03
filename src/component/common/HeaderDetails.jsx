@@ -1,6 +1,7 @@
 import { useState, React, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePDF } from 'react-to-pdf';
+import { FaUser } from "react-icons/fa6";
 import {
   RightOutlined,
   PlusOutlined,
@@ -24,6 +25,7 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
+import { BsHouseFill } from "react-icons/bs";
 // import { useSearchFilters } from "../../context/SearchFilterContext";
 
 
@@ -148,11 +150,15 @@ function HeaderDetails() {
       <div className={`details-header d-flex w-100% overflow-hidden ${location?.pathname=="/Details"?"Header-border":""}`}>
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
+            <div className="d-flex ">
+              <BsHouseFill    style={{ fontSize: '20px', marginRight:"20px" }} />
             <p className="bred-cram-main" onClick={goBack}>
               {(location?.key == "default" && nav == "/") || nav == "/"
                 ? `Profile / Main`
-                : ` ${location?.state?.search}  / ${formattedNav}`}
+                : ` ${location?.state?.search}  / ${formattedNav}  ${ location?.state?.name? ` / ${location.state.code}`:""}`} 
             </p>
+
+            </div>
             {}
             {location?.pathname == "/Details" && (
               <div className="d-flex align-items-baseline">
@@ -189,7 +195,7 @@ function HeaderDetails() {
                       }
                       data={addMore}
                       isSearched={true}
-                      isCheckBox={false}
+                      isCheckBox={true}
                       actions={genaratePdf}
                     />
                   
@@ -203,12 +209,12 @@ function HeaderDetails() {
                 <Row className="align-items-baseline">
                   <Input
                     placeholder="Search..."
-                    style={{ width: "13%", height: "31px" }}
+                    style={{ width: "13%", height: "31px", border: "1px solid" }}
                     suffix={<SearchOutlined />}
                   />
                   <Input
                     placeholder="Postal Code"
-                    style={{ width: "13%", height: "31px" }}
+                    style={{ width: "13%", height: "31px", }}
                     className="margin"
                   />
                   <JiraLikeMenu title="Gender" data={mriatalStatus} />
@@ -231,7 +237,8 @@ function HeaderDetails() {
                         </>
                       }
                       data={addMore}
-                      isSearched={true}
+                      checkbox={false}
+                      isSearched={false}
                     />
                   </div>
                   <div>
