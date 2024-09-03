@@ -22,6 +22,11 @@ function Entry() {
   return (
     <div className="">
       <Header />
+      <div>
+          
+          <HeaderDetails />
+       
+        </div>
       <div className="main-route d-flex ">
         {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
           <div>
@@ -34,11 +39,7 @@ function Entry() {
        
         )}
         <div style={{ width: "100%", overflow: "hidden" }}>
-          <div>
-          
-            <HeaderDetails />
          
-          </div>
           <div className="main-main">
             <Routes>
               <Route path="/" element={<MainDashBoard />} />

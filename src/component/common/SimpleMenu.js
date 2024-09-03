@@ -1,46 +1,56 @@
-import { React, useState, useEffect } from "react";
-import {
-  Dropdown,
-  Menu,
-  Input,
-  Divider,
-  Button,
-  Row,
-  Col,
-  Checkbox,
-} from "antd";
+import React, { useState, useEffect } from "react";
+import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 
-function SimpleMenu({ title, data }) {
-  const [checkboxes, setCheckboxes] = useState();
-  const [trueKeys, setTrueKeys] = useState([]);
+function SimpleMenu({ title, data, isCheckBox = true, actions, }) {
+  const [checkboxes, setCheckboxes] = useState({});
+  const [selectedValues, setSelectedValues] = useState({
+    checkboxes: {},
+    searchValue: "",
+  });
+
   const checkboxChangeFtn = (key, event) => {
-    setCheckboxes((prevState) => {
-      const updatedState = {
-        ...prevState,
-        [key]: event.target.checked,
-      };
-      const newTrueKeys = Object.entries(updatedState)
-        .filter(([_, value]) => value)
-        .map(([key]) => key);
-      setTrueKeys(newTrueKeys);
-      return updatedState;
-    });
+    const updatedCheckboxes = {
+      ...checkboxes,
+      [key]: event.target.checked,
+    };
+    setCheckboxes(updatedCheckboxes);
+
+    setSelectedValues((prevValues) => ({
+      ...prevValues,
+      checkboxes: updatedCheckboxes,
+    }));
   };
+
   useEffect(() => {
-    setCheckboxes(data);
+    if (data) {
+      setCheckboxes(data);
+      setSelectedValues((prevValues) => ({
+        ...prevValues,
+        checkboxes: data || {},
+      }));
+    }
   }, [data]);
+
+  const handleSearchChange = (event) => {
+    setSelectedValues((prevValues) => ({
+      ...prevValues,
+      searchValue: event.target.value,
+    }));
+  };
+
   const menu = (
     <Menu>
-      <Menu.Item key="1">
-        <>
-          <Input suffix={<SearchOutlined />} />
-        </>
-      </Menu.Item>
+      {isCheckBox && (
+        <Menu.Item key="1">
+          <Input suffix={<SearchOutlined />} onChange={handleSearchChange} />
+        </Menu.Item>
+      )}
       <Row>
-        {data != null &&
+        {data &&
+          isCheckBox &&
           Object.keys(data)?.map((key) => (
-            <Col span={24}>
+            <Col span={24} key={key}>
               <Checkbox
                 style={{ marginBottom: "8px" }}
                 onClick={(e) => {
@@ -54,31 +64,25 @@ function SimpleMenu({ title, data }) {
             </Col>
           ))}
       </Row>
-      {/* <Menu.Item key="2">
-            <>
-           <Input suffix={<SearchOutlined />} />
-              <Divider />
-            </>
+      {!isCheckBox &&
+        data &&
+        Object.keys(data)?.map((key) => (
+          <Menu.Item key={key} onClick={(e)=>actions(e)}>
+            {key}
           </Menu.Item>
-          <Menu.Item key="3">
-            <>
-           <Input suffix={<SearchOutlined />} />
-              <Divider />
-            </>
-          </Menu.Item> */}
+        ))}
     </Menu>
   );
+
   return (
-    <div>
-      <Dropdown
-        overlay={menu}
-        trigger={["click"]}
-        placement="bottomLeft"
-        overlayStyle={{ width: 200, padding: "0px" }}
-      >
-        <Button className="transparent-bg">{title}</Button>
-      </Dropdown>
-    </div>
+    <Dropdown
+      overlay={menu}
+      trigger={["click"]}
+      placement="bottomLeft"
+      overlayStyle={{ width: 200, padding: "0px" }}
+    >
+      <Button className="transparent-bg p-0">{title}</Button>
+    </Dropdown>
   );
 }
 
