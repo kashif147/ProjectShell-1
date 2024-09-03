@@ -2,20 +2,40 @@ import React, { useState } from "react";
 import { SiActigraph } from "react-icons/si";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
-import { Input, Table, Row, Col, Space, Pagination } from "antd";
+import { Input, Table, Row, Col, Space, Pagination, Divider} from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
+import { UserOutlined } from "@ant-design/icons";
 import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
+import { tableData } from "../Data";
+
 
 function Configuratin() {
   const [genderModal, setGenderModal] = useState(false);
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
+  const [isProfileModal, setisProfileModal] = useState(false);
+  const [isAddProfileModal, setisAddProfileModal] = useState(false);
   const [partnershipModal, setPartnershipModal] = useState(false);
   const [dummyModal, setDummyModal] = useState(false);
+  const [profileData, setprofileData] = useState({
+    RegNo: "",
+    Name: "",
+    Rank:"",
+    Duty:"",
+    Station:"",
+    District:"",
+    Division:"",
+    Address:"",
+    Status:"",
+    Updated:"",
+    alpha:"",
+    beta :"",
+    giga:"",
+  }); 
   const [genderData, setGenderData] = useState({
     ShortName: "",
     DisplayName: "",
@@ -70,6 +90,13 @@ function Configuratin() {
     }));
   };
 
+  const handleInputChange0 = (name0, value0) => {
+    setprofileData((prevState) => ({
+      ...prevState,
+      [name0]: value0,
+    }));
+  }; 
+
   const SubscriptionsColumn = [
     {
       title: "Short Name",
@@ -105,6 +132,157 @@ function Configuratin() {
     render: (text) => <div style={{display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
     },
 
+    {
+      title: "Action",
+      dataIndex: "DisplayName",
+      render: (_, record) => (
+        <Space 
+        size="middle" 
+        className="action-buttons"
+        style={{ justifyContent: 'center', display: 'flex' }}
+        >
+          <FaEdit 
+          size ={16}
+          style={{ marginRight: '10px' }}
+          />
+          <AiFillDelete
+          size ={16} 
+          />
+        </Space>
+      ),
+    },
+  ];
+
+  const ProfileColumns = [
+    {
+      title: "RegNo",
+      dataIndex: "RegNo",
+      key: "RegNo",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Name",
+      dataIndex: "Name",
+      key: "Name",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Rank",
+      dataIndex: "Rank",
+      key: "Rank",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Duty",
+      dataIndex: "Duty",
+      key: "Duty",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Station",
+      dataIndex: "Station",
+      key: "Station",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "District",
+      dataIndex: "District",
+      key: "District",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Division",
+      dataIndex: "Division",
+      key: "Division",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Address",
+      dataIndex: "Address",
+      key: "Address",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Status",
+      dataIndex: "Status",
+      key: "Status",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Updated",
+      dataIndex: "Updated",
+      key: "Updated",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Alpha",
+      dataIndex: "Alpha",
+      key: "Alpha",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Beta",
+      dataIndex: "Beta",
+      key: "Beta",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "Giga",
+      dataIndex: "Giga",
+      key: "Giga",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
     {
       title: "Action",
       dataIndex: "DisplayName",
@@ -280,6 +458,8 @@ function Configuratin() {
   const partnershipModalFtn = () => setPartnershipModal(!partnershipModal);
   const dummyModalFtn = () => setDummyModal(!dummyModal);
   const subscriptionsModalFtn = () => setIsSubscriptionsModal(!isSubscriptionsModal);
+  const profileModalOpenCloseFtn = () => setisProfileModal(!isProfileModal);
+  const addprofileModalOpenCloseFtn = () => setisAddProfileModal(!isAddProfileModal);
 
   const addmembershipFtn = () => {
     console.log(membershipdata);
@@ -294,13 +474,17 @@ function Configuratin() {
     console.log(PartnershipData);
   }
 
+  const AddprofileModalFtn = () => {
+    console.log(profileData)
+  }
+
   const AddSubscriptionsFtn = () => {
     console.log(SubscriptionData);
   }
 
   return (
     <div className="configuration-main">
-      <p className="configuratin-titles">Lookups Configuration</p>
+     <Divider orientation="left">lookups Configuration</Divider>
 
       <Row>
         <Col className="hover-col" span={4} style={styles.centeredCol}>
@@ -308,7 +492,7 @@ function Configuratin() {
             <SiActigraph className="icons" />
             <p className="lookups-title">Gender</p>
           </div>
-        </Col>
+        </Col>  
         <Col className="hover-col" span={4} style={styles.centeredCol}>
           <div onClick={partnershipModalFtn}>
             <PiHandshakeDuotone className="icons" />
@@ -334,6 +518,16 @@ function Configuratin() {
           </div>
         </Col>
       </Row>
+      <Divider orientation="left">Grid Configuration</Divider>
+      <Row>
+      <Col className="hover-col" span={4} style={styles.centeredCol}>
+          <div onClick={profileModalOpenCloseFtn}>
+             <UserOutlined className="icons" />
+            <p className="lookups-title">Profile</p>
+          </div>
+        </Col>  
+      </Row>
+
 
       {/* Gender Drawer */}
       <MyDrawer
@@ -643,7 +837,7 @@ function Configuratin() {
         add={AddSubscriptionsFtn}
         title="Subscriptions"
       >
-<div className="input-group">
+          <div className="input-group">
           <p className="inpt-lbl">Short Name</p>
           <Input
             placeholder="Please enter short name"
@@ -725,6 +919,184 @@ function Configuratin() {
           )}
         />
       </MyDrawer>
+      {/* Profile multi drawer*/}
+      <MyDrawer
+      width={"1000px"}
+        open={isProfileModal}
+        onClose={profileModalOpenCloseFtn}
+        add={addprofileModalOpenCloseFtn}
+        title="Profile"
+      >
+        <MyDrawer
+          title="Add profile"
+          open={isAddProfileModal}
+          add={AddprofileModalFtn}
+          onClose={addprofileModalOpenCloseFtn}
+        >  
+         <div className="input-group">
+  <p className="inpt-lbl">RegNo</p>
+  <Input
+    placeholder="Please enter RegNo"
+    onChange={(e) => handleInputChange0("RegNo", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Name</p>
+  <Input
+    placeholder="Please enter Name"
+    onChange={(e) => handleInputChange0("Name", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Rank</p>
+  <Input
+    placeholder="Please enter Rank"
+    onChange={(e) => handleInputChange0("Rank", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Duty</p>
+  <Input
+    placeholder="Please enter Duty"
+    onChange={(e) => handleInputChange0("Duty", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Station</p>
+  <Input
+    placeholder="Please enter Station"
+    onChange={(e) => handleInputChange0("Station", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">District</p>
+  <Input
+    placeholder="Please enter District"
+    onChange={(e) => handleInputChange0("District", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Division</p>
+  <Input
+    placeholder="Please enter Division"
+    onChange={(e) => handleInputChange0("Division", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Address</p>
+  <Input
+    placeholder="Please enter Address"
+    onChange={(e) => handleInputChange0("Address", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Status</p>
+  <Input
+    placeholder="Please enter Status"
+    onChange={(e) => handleInputChange0("Status", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Updated</p>
+  <Input
+    placeholder="Please enter Updated"
+    onChange={(e) => handleInputChange0("Updated", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Alpha</p>
+  <Input
+    placeholder="Please enter Alpha"
+    onChange={(e) => handleInputChange0("alpha", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Beta</p>
+  <Input
+    placeholder="Please enter Beta"
+    onChange={(e) => handleInputChange0("beta", e.target.value0)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Giga</p>
+  <Input
+    placeholder="Please enter Giga"
+    onChange={(e) => handleInputChange0("giga", e.target.value0)}
+  />
+</div>
+         </MyDrawer>
+
+
+
+        <Input
+          placeholder="Search..."
+          style={{ marginBottom: "5px" }}
+          suffix={<SearchOutlined />}
+        />
+
+        <Table
+          columns={ProfileColumns}
+          pagination={false}
+          dataSource={tableData}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{gender.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${gender.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={gender.length}
+                pageSize={10}
+              />
+            </div>
+          )}
+        />
+      </MyDrawer>
+
+
+
     </div>
   );
 }
