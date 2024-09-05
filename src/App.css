@@ -751,16 +751,18 @@ top:0
 padding:2px 4px;
 font-weight: 400;
 color: var(--mainBlue) !important;
-
 }
-
 .table-wrapper {
-  max-height: 377px; 
-  overflow-y: auto;
-  overflow-x: auto; /* Horizontal scroll */
+  max-height: 385px; 
+  overflow-y: auto;  
+  overflow-x: auto;  
+  white-space: nowrap; 
+  width: 100%;        
 }
+
 .table {
-  margin-bottom: 0px !important;
+  width: 100%;        
+  min-width: 1200px;  
 }
 .tbl-footer{
   background-color: #fafafa !important;

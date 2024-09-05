@@ -79,7 +79,7 @@ export const SerachFitersLookups ={
           Status: "Trainee",
           Attested: "01/03/1968",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 19:05'
+          Updated: '12/04/2022 19:05',
         },
         {
           Key: '6',
@@ -154,7 +154,8 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          alpha:'alpha',
         },
         {
           Key: '11',
@@ -165,7 +166,7 @@ export const SerachFitersLookups ={
           Station: "STOC",
           Distric: "0109",
           Division: "0026",
-          Address: "Phoenix Park, Saint James",
+          Address: "Phoenix Park, Saint James usdhf jsb fsdbfjs dbn fh sdb fhsd bfh sdbfhb",
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
