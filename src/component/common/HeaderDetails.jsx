@@ -1,6 +1,6 @@
 import { useState, React, useRef } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { usePDF } from 'react-to-pdf';
+import { usePDF } from "react-to-pdf";
 import { FaUser } from "react-icons/fa6";
 import {
   RightOutlined,
@@ -25,15 +25,12 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
-import { BsHouseFill } from "react-icons/bs";
-// import { useSearchFilters } from "../../context/SearchFilterContext";
-
+import { FaListCheck, FaArrowRightArrowLeft,FaCalendarDays, FaClipboardList,   } from "react-icons/fa6";
+import { FaUserCircle,  FaMoneyCheckAlt } from "react-icons/fa";
 
 function HeaderDetails() {
-  // const { trueKeys } = useSearchFilters();
-  // console.log(trueKeys?.includes("Mebership"),"8888")
   const { Search } = Input;
-  const { toPDF, targetRef } = usePDF({filename: 'page.pdf'});
+  const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
@@ -43,18 +40,19 @@ function HeaderDetails() {
   const [checkboxes, setCheckboxes] = useState();
   const navigate = useNavigate();
   console.log(location, "location");
-  const inputRef = useRef(null); 
-  const genaratePdf = (e) =>{
+  const inputRef = useRef(null);
+
+  const genaratePdf = (e) => {
     e.stopPropagation();
-    console.log("testing")
-    toPDF()
-  }
+    console.log("testing");
+    toPDF();
+  };
   const mriatalStatus = {
     Male: false,
     Female: false,
     Other: false,
   };
-  
+
   const Mebership = {
     Probation: false,
     Trainee: false,
@@ -111,7 +109,7 @@ function HeaderDetails() {
   const goBack = () => {
     navigate(-1);
   };
-  console.log(SerachFitersLookups, "123");
+
   const handleChange1 = (info) => {
     if (info.file.status === "uploading") {
       setLoading(true);
@@ -126,6 +124,7 @@ function HeaderDetails() {
       message.error("Image upload failed.");
     }
   };
+
   const customRequest = ({ file, onSuccess, onError }) => {
     setTimeout(() => {
       if (file) {
@@ -144,20 +143,81 @@ function HeaderDetails() {
       {loading ? "Uploading" : "Upload"}
     </Button>
   );
-  
+
+  const iconFtn = () => {
+    return (
+      <>
+        {(location?.pathname === "/ClaimSummary" ||
+          location?.pathname === "/Summary" ||
+          location?.pathname === "/Cases") && (
+          <FaClipboardList
+            style={{
+              fontSize: "15px",
+              marginRight: "10px",
+              marginLeft: "10px",
+            }}
+          />
+        )}
+      </>
+    );
+  };
   return (
     <div className="">
-      <div className={`details-header d-flex w-100% overflow-hidden ${location?.pathname=="/Details"?"Header-border":""}`}>
+      <div
+        className={`details-header d-flex w-100% overflow-hidden ${
+          location?.pathname == "/Details" ? "Header-border" : ""
+        }`}
+      >
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
-            <div className="d-flex ">
-              <BsHouseFill    style={{ fontSize: '20px', marginRight:"20px" }} />
-            <p className="bred-cram-main" onClick={goBack}>
-              {(location?.key == "default" && nav == "/") || nav == "/"
-                ? `Profile / Main`
-                : ` ${location?.state?.search}  / ${formattedNav}  ${ location?.state?.name? ` / ${location.state.code}`:""}`} 
-            </p>
+            <div className="d-flex">
+              <div className="bred-cram-main d-flex" onClick={goBack}>
+                {location?.key === "default" && nav === "/" ? (
+                  <>
+                    <p>Profile / Main</p>
+                  </>
+                ) : (
+                  <>
+                    <p>{location?.state?.search}</p>
+                    <p>&nbsp; &nbsp;/{iconFtn()}</p>
+                    { location?.pathname=="/Details" &&
+                      <FaUser
+                        style={{
+                          fontSize: "16px",
+                          marginLeft: "10px",
+                          marginRight: "10px",
+                        }}
+                      />
+                    }
+                    { location?.pathname=="/CasesDetails" &&
+                      <FaListCheck
+                        style={{
+                          fontSize: "16px",
+                          marginLeft: "10px",
+                          marginRight: "10px",
+                        }}
+                      />
+                    }
+                    { location?.pathname=="/ClaimsDetails" &&
+                      <FaMoneyCheckAlt
+                        style={{
+                          fontSize: "16px",
+                          marginLeft: "10px",
+                          marginRight: "10px",
+                        }}
+                      />
+                    }
+                    <p>{formattedNav}</p>
+                    {location?.state?.name && (
+                      <>
+                        <p>&nbsp; &nbsp;/&nbsp; &nbsp;</p>
 
+                        <p> {location.state.code}</p>
+                      </>
+                    )}
+                  </>
+                )}
+              </div>
             </div>
             {}
             {location?.pathname == "/Details" && (
@@ -175,8 +235,8 @@ function HeaderDetails() {
               </div>
             )}
           </div>
-         
-          {(location?.pathname == "/CasesSummary" ||
+
+          {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/ClaimSummary") && (
             <div className="search-main">
@@ -187,34 +247,37 @@ function HeaderDetails() {
                     : ` ${location?.state?.search}`}
                 </h2>
                 <div className="d-flex">
-                <SimpleMenu
-                      title={
-                        <>
-                          <Button className="me-1 gray-btn butn">Export</Button>
-                        </>
-                      }
-                      data={addMore}
-                      isSearched={true}
-                      isCheckBox={true}
-                      actions={genaratePdf}
-                    />
-                  
+                  <SimpleMenu
+                    title={
+                      <>
+                        <Button className="me-1 gray-btn butn">Export</Button>
+                      </>
+                    }
+                    data={addMore}
+                    isSearched={true}
+                    isCheckBox={true}
+                    actions={genaratePdf}
+                  />
+
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
-                 
                 </div>
               </div>
               <div className="d-flex search-fliters align-items-baseline">
                 <Row className="align-items-baseline">
                   <Input
                     placeholder="Search..."
-                    style={{ width: "13%", height: "31px", border: "1px solid" }}
+                    style={{
+                      width: "13%",
+                      height: "31px",
+                      border: "1px solid",
+                    }}
                     suffix={<SearchOutlined />}
                   />
                   <Input
                     placeholder="Postal Code"
-                    style={{ width: "13%", height: "31px", }}
+                    style={{ width: "13%", height: "31px" }}
                     className="margin"
                   />
                   <JiraLikeMenu title="Gender" data={mriatalStatus} />
@@ -226,7 +289,7 @@ function HeaderDetails() {
                     title="Subscriptions"
                     data={SerachFitersLookups}
                   />
-                    <JiraLikeMenu title="Membership" data={Mebership} />
+                  <JiraLikeMenu title="Membership" data={Mebership} />
                   {/* {trueKeys.includes("Mebership") == true && (
                   )} */}
                   <div className="searchfilter- margin">

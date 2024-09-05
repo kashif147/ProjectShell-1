@@ -4,7 +4,7 @@ import {tableData} from "../Data"
 const TableColumnsContext = createContext();
 
 export const TableColumnsProvider = ({ children }) => {
-
+  const [ascending, setAscending] = useState(true); // State to toggle sort order
   const [columns, setColumns] = useState({ Profile: [
     { titleColumn: "RegNo", ellipsis: true, isVisible:true },
     { titleColumn: "Name", ellipsis: true, isVisible:true },
@@ -108,6 +108,20 @@ export const TableColumnsProvider = ({ children }) => {
       setGridData(tableData); // Reset gridData if the condition isn't met
     }
   }, [isMale]);
+  const handleSort = () => {
+    setAscending(!ascending); // Toggle the sorting order
+
+    // Add your sorting logic here
+    const sortedData = [...gridData].sort((a, b) => {
+      if (ascending) {
+        return a.Name.localeCompare(b.Name); // Ascending order
+      } else {
+        return b.Name.localeCompare(a.Name); // Descending order
+      }
+    });
+
+    setGridData(sortedData); // Update the grid data after sorting
+  };
 console.log(columns,"khan")
   return (
     <TableColumnsContext.Provider value={{ columns, updateColumns, state, setState, updateState, isMale, gridData,handleCheckboxFilterChange }}>

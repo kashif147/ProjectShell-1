@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Table, Pagination, Space } from "antd";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import Gridmenu from "./Gridmenu";
@@ -12,19 +12,21 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import SimpleMenu from "./SimpleMenu";
 import { tableData } from "../../Data";
+import { FaSliders } from "react-icons/fa6";
 
 function TableComponent({ dataSource, screenName, redirect }) {
+  const [ascending, setAscending] = useState(true);
   const inputRef = useRef(null);
 
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const testing = {
     Delete: "false",
     Attached: "false",
-    view: "false",
+    View: "false",
   };
-  const { columns, state, isMale, gridData } = useTableColumns();
+  const { columns, state, isMale, gridData,handleSort } = useTableColumns();
   const profilColumn = columns?.[screenName]?.filter((item) => item?.isVisible);
-  console.log(columns, "columns");
+
 
   return (
     <div className="common-table" ref={inputRef}>
@@ -35,9 +37,9 @@ function TableComponent({ dataSource, screenName, redirect }) {
               <th>
                 <Gridmenu
                   title={
-                    <PiSlidersHorizontalBold
+                    <FaSliders 
                       style={{
-                        fontSize: "24px",
+                        fontSize: "20px",
                         color: "white",
                         fontWeight: 600,
                       }}
@@ -64,6 +66,20 @@ function TableComponent({ dataSource, screenName, redirect }) {
               {profilColumn?.map((th) => (
                 <th scope="col" key={th?.titleColumn}>
                   {th?.titleColumn}
+                  {th?.titleColumn === "Name" && (
+                    <button
+                      type="button"
+                      className="btn btn-outline-secondary"
+                      onClick={handleSort}
+                    >
+                      Sort{" "}
+                      <span
+                        className={`bi ${
+                          ascending ? "bi-arrow-down" : "bi-arrow-up"
+                        }`}
+                      ></span>
+                    </button>
+                  )}
                 </th>
               ))}
             </tr>
@@ -86,7 +102,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
                         </>
                       }
                       data={testing}
-                      checkbox={false}
+                      isCheckBox={false}
                       isSearched={false}
                       isTransparent={true}
                     />
