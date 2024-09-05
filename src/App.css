@@ -755,7 +755,7 @@ color: var(--mainBlue) !important;
 }
 
 .table-wrapper {
-  max-height: 385px; 
+  max-height: 377px; 
   overflow-y: auto;
   overflow-x: auto; /* Horizontal scroll */
 }

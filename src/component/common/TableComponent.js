@@ -12,7 +12,8 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import SimpleMenu from "./SimpleMenu";
 import { tableData } from "../../Data";
-import { FaSliders } from "react-icons/fa6";
+import { BsSliders } from "react-icons/bs";
+
 
 function TableComponent({ dataSource, screenName, redirect }) {
   const [ascending, setAscending] = useState(true);
@@ -37,7 +38,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
               <th>
                 <Gridmenu
                   title={
-                    <FaSliders 
+                    <BsSliders  
                       style={{
                         fontSize: "20px",
                         color: "white",

@@ -300,7 +300,6 @@ function HeaderDetails() {
                         </>
                       }
                       data={addMore}
-                      checkbox={false}
                       isSearched={false}
                     />
                   </div>

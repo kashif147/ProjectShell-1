@@ -7,7 +7,9 @@ export const TableColumnsProvider = ({ children }) => {
   const [ascending, setAscending] = useState(true); // State to toggle sort order
   const [columns, setColumns] = useState({ Profile: [
     { titleColumn: "RegNo", ellipsis: true, isVisible:true },
-    { titleColumn: "Name", ellipsis: true, isVisible:true },
+    { titleColumn: "Forename", ellipsis: true, isVisible:true },
+    { titleColumn: "Surename", ellipsis: true, isVisible:true },
+    { titleColumn: "FullName", ellipsis: true, isVisible:true },
     { titleColumn: "Rank", ellipsis: true, isVisible:true },
     { titleColumn: "Duty", ellipsis: true, isVisible:true },
     { titleColumn: "Station", ellipsis: true, isVisible:true },
