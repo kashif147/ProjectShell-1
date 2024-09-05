@@ -109,7 +109,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
                         style={{ color: "blue" }}
                         state={{
                           search: screenName,
-                          name: item.Name,
+                          name: item.FullName,
                           code: item?.RegNo,
                         }}
                       >

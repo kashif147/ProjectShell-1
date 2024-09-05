@@ -38,7 +38,8 @@ function ProfileHeader() {
             <div className="profile-header-container" style={{ 
                 display: 'flex', 
                 justifyContent: 'center',  // Center horizontally
-                alignItems: 'center',       // Center vertically
+                alignItems: 'center',  
+                flexDirection:'column'     // Center vertically
             }}>
                 <Upload
                     customRequest={customRequest}
@@ -75,17 +76,26 @@ function ProfileHeader() {
                         )}
                     </div>
                 </Upload>
-            </div>
-            <Divider type='horizontal' />
-            {/* Other content remains unchanged */}
-            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '12px', color: '#6B7AAB' }}>
-                <div style={{ display: 'flex', flexDirection: 'column' }}>
-                    <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '12px' }}>Code {location?.state?.code}</div>
+                
+            <div style={{ 
+                display: 'flex', 
+                justifyContent: 'center',  // Center horizontally
+                alignItems: 'center',       // Center vertically
+            }}>
+                <div>
+                <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '12px' }}>Code {location?.state?.code}</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>{location?.state?.name}</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>20/06/1979 (36 Y)</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>Married</div>
                     <div style={{ fontWeight: 'bold', color: '#FF7F7F', fontSize: '12px' }}>11/10/2015 (Deceased)</div>
                 </div>
+                   
+                </div>
+            </div>
+            <Divider type='horizontal' />
+            {/* Other content remains unchanged */}
+            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '12px', color: '#6B7AAB' }}>
+               
                 <br/>
                 <div>Cases:</div>
                 <br/>
