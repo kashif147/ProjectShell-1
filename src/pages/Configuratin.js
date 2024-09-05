@@ -24,17 +24,17 @@ function Configuratin() {
   const [profileData, setprofileData] = useState({
     RegNo: "",
     Name: "",
-    Rank:"",
-    Duty:"",
-    Station:"",
-    District:"",
-    Division:"",
-    Address:"",
-    Status:"",
-    Updated:"",
-    alpha:"",
-    beta :"",
-    giga:"",
+    Rank: "",
+    Duty: "",
+    Station: "",
+    District: "",
+    Division: "",
+    Address: "",
+    Status: "",
+    Updated: "",
+    alpha: "",
+    beta: "",
+    giga: "",
   }); 
   const [genderData, setGenderData] = useState({
     ShortName: "",
@@ -90,10 +90,10 @@ function Configuratin() {
     }));
   };
 
-  const handleInputChange0 = (name0, value0) => {
-    setprofileData((prevState) => ({
-      ...prevState,
-      [name0]: value0,
+  const handleInputChange7 = (name7, value7) => {
+    setprofileData((prevState7) => ({
+      ...prevState7,
+      [name7]: value7,
     }));
   }; 
 
@@ -181,7 +181,9 @@ function Configuratin() {
       verticalAlign: 'center',
       width: 60,
       align: 'center',
-      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+      render: (text) => 
+      <div
+       style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
     
     {
@@ -937,7 +939,7 @@ function Configuratin() {
   <p className="inpt-lbl">RegNo</p>
   <Input
     placeholder="Please enter RegNo"
-    onChange={(e) => handleInputChange0("RegNo", e.target.value0)}
+    onChange={(e) => handleInputChange7("RegNo", e.target.value)}
   />
 </div>
 
@@ -945,7 +947,7 @@ function Configuratin() {
   <p className="inpt-lbl">Name</p>
   <Input
     placeholder="Please enter Name"
-    onChange={(e) => handleInputChange0("Name", e.target.value0)}
+    onChange={(e) => handleInputChange7("Name", e.target.value)}
   />
 </div>
 
@@ -953,7 +955,7 @@ function Configuratin() {
   <p className="inpt-lbl">Rank</p>
   <Input
     placeholder="Please enter Rank"
-    onChange={(e) => handleInputChange0("Rank", e.target.value0)}
+    onChange={(e) => handleInputChange7("Rank", e.target.value)}
   />
 </div>
 
@@ -961,7 +963,7 @@ function Configuratin() {
   <p className="inpt-lbl">Duty</p>
   <Input
     placeholder="Please enter Duty"
-    onChange={(e) => handleInputChange0("Duty", e.target.value0)}
+    onChange={(e) => handleInputChange7("Duty", e.target.value)}
   />
 </div>
 
@@ -969,7 +971,7 @@ function Configuratin() {
   <p className="inpt-lbl">Station</p>
   <Input
     placeholder="Please enter Station"
-    onChange={(e) => handleInputChange0("Station", e.target.value0)}
+    onChange={(e) => handleInputChange7("Station", e.target.value)}
   />
 </div>
 
@@ -977,7 +979,7 @@ function Configuratin() {
   <p className="inpt-lbl">District</p>
   <Input
     placeholder="Please enter District"
-    onChange={(e) => handleInputChange0("District", e.target.value0)}
+    onChange={(e) => handleInputChange7("District", e.target.value)}
   />
 </div>
 
@@ -985,7 +987,7 @@ function Configuratin() {
   <p className="inpt-lbl">Division</p>
   <Input
     placeholder="Please enter Division"
-    onChange={(e) => handleInputChange0("Division", e.target.value0)}
+    onChange={(e) => handleInputChange7("Division", e.target.value)}
   />
 </div>
 
@@ -993,7 +995,7 @@ function Configuratin() {
   <p className="inpt-lbl">Address</p>
   <Input
     placeholder="Please enter Address"
-    onChange={(e) => handleInputChange0("Address", e.target.value0)}
+    onChange={(e) => handleInputChange7("Address", e.target.value)}
   />
 </div>
 
@@ -1001,7 +1003,7 @@ function Configuratin() {
   <p className="inpt-lbl">Status</p>
   <Input
     placeholder="Please enter Status"
-    onChange={(e) => handleInputChange0("Status", e.target.value0)}
+    onChange={(e) => handleInputChange7("Status", e.target.value)}
   />
 </div>
 
@@ -1009,7 +1011,7 @@ function Configuratin() {
   <p className="inpt-lbl">Updated</p>
   <Input
     placeholder="Please enter Updated"
-    onChange={(e) => handleInputChange0("Updated", e.target.value0)}
+    onChange={(e) => handleInputChange7("Updated", e.target.value)}
   />
 </div>
 
@@ -1017,7 +1019,7 @@ function Configuratin() {
   <p className="inpt-lbl">Alpha</p>
   <Input
     placeholder="Please enter Alpha"
-    onChange={(e) => handleInputChange0("alpha", e.target.value0)}
+    onChange={(e) => handleInputChange7("alpha", e.target.value)}
   />
 </div>
 
@@ -1025,7 +1027,7 @@ function Configuratin() {
   <p className="inpt-lbl">Beta</p>
   <Input
     placeholder="Please enter Beta"
-    onChange={(e) => handleInputChange0("beta", e.target.value0)}
+    onChange={(e) => handleInputChange7("beta", e.target.value)}
   />
 </div>
 
@@ -1033,7 +1035,7 @@ function Configuratin() {
   <p className="inpt-lbl">Giga</p>
   <Input
     placeholder="Please enter Giga"
-    onChange={(e) => handleInputChange0("giga", e.target.value0)}
+    onChange={(e) => handleInputChange7("giga", e.target.value)}
   />
 </div>
          </MyDrawer>

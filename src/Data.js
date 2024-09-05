@@ -21,7 +21,7 @@ export const SerachFitersLookups ={
           status:"Member",
           attested:"01/01/1988",
           graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
+          updated:'12/04/2022 13:29',
         },
         {
           key: '2',
@@ -36,7 +36,7 @@ export const SerachFitersLookups ={
           status:"Member",
           attested:"01/01/1988",
           graduated:"01/09/1987",
-          updated:'12/04/2022 13:25'
+          updated:'12/04/2022 13:25',
         },
         {
           key: '3',
@@ -51,12 +51,12 @@ export const SerachFitersLookups ={
           status:"Member",
           attested:"01/01/1988",
           graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
+          updated:'12/04/2022 13:29',
         },
         {
           key: '4',
           name: 'Joe Blog',
-          RegNo: "512345H6606L",
+          RegNo: "512345",
           rank:"0021",
           duty:"Sargent",
           station:"STOC",
@@ -66,7 +66,7 @@ export const SerachFitersLookups ={
           status:"Probationer",
           attested:"07/02/1978",
           graduated:"01/09/2002",
-          updated:'27/02/2022 09:25'
+          updated:'27/02/2022 09:25',
         },
         {
           key: '5',
@@ -81,7 +81,7 @@ export const SerachFitersLookups ={
           status:"Trainee",
           attested:"01/03/1968",
           graduated:"01/09/1987",
-          updated:'12/04/2022 19:05'
+          updated:'12/04/2022 19:05',
         },
         {
           key: '6',
@@ -96,7 +96,7 @@ export const SerachFitersLookups ={
           status:"Retired",
           attested:"01/01/1988",
           graduated:"01/09/1987",
-          updated:'03/04/2021 13:25'
+          updated:'03/04/2021 13:25',
         },
         {
           key: '7',
@@ -111,7 +111,7 @@ export const SerachFitersLookups ={
           status:"Member",
           attested:"01/01/1988",
           graduated:"01/09/1987",
-          updated:'12/04/2022 13:29'
+          updated:'12/04/2022 13:29',
         },
         
       ];
