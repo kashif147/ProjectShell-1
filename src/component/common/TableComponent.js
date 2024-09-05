@@ -57,9 +57,9 @@ function TableComponent({ dataSource, screenName, redirect }) {
                 />
               </th>
               {profilColumn?.map((th) => (
-                <th scope="col" key={th?.titleColumn} style={{textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden", }}>
+                <th scope="col" key={th?.titleColumn} style={{width:th?.width,textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden", }}>
                   {th?.titleColumn}
-                  {th?.titleColumn === "Name" && (
+                  {th?.titleColumn === "FullName" && (
                     <button
                       type="button"
                       className="btn btn-outline-secondary"
@@ -103,7 +103,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
                 </td>
                 {profilColumn?.map((th) => (
                   <td key={th.titleColumn} style={{ width:th?.width,textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden",}}>
-                    {th?.titleColumn === "Name" ? (
+                    {th?.titleColumn === "FullName" ? (
                       <Link
                         to={redirect}
                         style={{ color: "blue" }}

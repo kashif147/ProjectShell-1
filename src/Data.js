@@ -7,7 +7,20 @@ export const SerachFitersLookups ={
        export const tableData = [
         {
           Key: '1',
+          Forename:"Jack 00000111 00000",
+          Surename:"Smith",
+          DateOfBirth:"01/02/1997",
+          DateRetired:"01/02/2045",
+          DateAged65:"01/02/2045",
+          DateOfDeath:"01/02/2045",
+          StationID:"04555",
+          StationPh:744188,
           FullName: 'Jack Smith',
+          PensionNo:"1555",
+          GRAMember:"1415",
+          DateJoined:"01/02/2045",
+          DateLeft:"01/02/2045",
+          AssociateMember:"yes",
           RegNo: "56606L",
           Rank: "0001",
           Duty: "Garda",
@@ -128,6 +141,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '9',
+
           FullName: 'Tom Malone',
           RegNo: "56026L",
           Rank: "0001",
