@@ -6,23 +6,7 @@ export const SerachFitersLookups ={
        }
        export const tableData = [
         {
-          key: '1',
-          Name: 'Jack Smith1',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Male",
-        },
-        {
-          key: '2',
+          Key: '1',
           Name: 'Jack Smith',
           RegNo: "56606L",
           Rank: "0001",
@@ -34,11 +18,25 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Male",
+          Updated: '12/04/2022 13:29'
         },
         {
-          key: '3',
+          Key: '2',
+          Name: 'Michael Johnson',
+          RegNo: "99999G",
+          Rank: "0001",
+          Duty: "Sargent",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Member",
+          Attested: "01/01/1988",
+          Graduated: "01/09/1987",
+          Updated: '12/04/2022 13:25'
+        },
+        {
+          Key: '3',
           Name: 'Jack Smith',
           RegNo: "56606L",
           Rank: "0001",
@@ -50,13 +48,57 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Male",
+          Updated: '12/04/2022 13:29'
         },
         {
-          key: '4',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
+          Key: '4',
+          Name: 'Joe Blog',
+          RegNo: "512345H6606L",
+          Rank: "0021",
+          Duty: "Sargent",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Probationer",
+          Attested: "07/02/1978",
+          Graduated: "01/09/2002",
+          Updated: '27/02/2022 09:25'
+        },
+        {
+          Key: '5',
+          Name: 'John Doe',
+          RegNo: "34567D",
+          Rank: "0101",
+          Duty: "Sargent",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Trainee",
+          Attested: "01/03/1968",
+          Graduated: "01/09/1987",
+          Updated: '12/04/2022 19:05'
+        },
+        {
+          Key: '6',
+          Name: 'John Doe',
+          RegNo: "56688K",
+          Rank: "0099",
+          Duty: "Sargent",
+          Station: "STOC",
+          Distric: "0109",
+          Division: "0026",
+          Address: "Phoenix Park, Saint James",
+          Status: "Retired",
+          Attested: "01/01/1988",
+          Graduated: "01/09/1987",
+          Updated: '03/04/2021 13:25'
+        },
+        {
+          Key: '7',
+          Name: 'Tom Malone',
+          RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
           Station: "STOC",
@@ -66,13 +108,12 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Male",
+          Updated: '12/04/2022 13:29'
         },
         {
-          key: '5',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
+          Key: '8',
+          Name: 'Tom Malone',
+          RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
           Station: "STOC",
@@ -82,13 +123,12 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Male",
+          Updated: '12/04/2022 13:29'
         },
         {
-          key: '6',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
+          Key: '9',
+          Name: 'Tom Malone',
+          RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
           Station: "STOC",
@@ -98,13 +138,12 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Female"
+          Updated: '12/04/2022 13:29'
         },
         {
-          key: '7',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
+          Key: '10',
+          Name: 'Tom Malone',
+          RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
           Station: "STOC",
@@ -114,13 +153,12 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Female"
+          Updated: '12/04/2022 13:29'
         },
         {
-          key: '8',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
+          Key: '11',
+          Name: 'ATom Malone',
+          RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
           Station: "STOC",
@@ -130,110 +168,11 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Female"
+          Updated: '12/04/2022 13:29'
         },
-        {
-          key: '9',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"Female"
-        },
-        {
-          key: '10',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"male"
-        },
-        {
-          key: '11',
-          Name: 'Jack Smith',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"male"
-        },
-        {
-          key: '12',
-          Name: 'Jack Smith12',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"female"
-        },
-       
-        {
-          key: '13',
-          Name: 'Jack Smith12',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"male"
-        },
-       
-        {
-          key: '14',
-          Name: 'Jack Smith12',
-          RegNo: "56606L",
-          Rank: "0001",
-          Duty: "Garda",
-          Station: "STOC",
-          Distric: "0109",
-          Division: "0026",
-          Address: "Phoenix Park, Saint James",
-          Status: "Member",
-          Attested: "01/01/1988",
-          Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29',
-          Gender:"other"
-        },
-       
-      ]
-      const filterByGender = (data, gender) => {
-        return data?.filter(item => item.Gender.toLowerCase() === gender.toLowerCase());
-      };
-     export const maleTblData = filterByGender(tableData, "male");
+      ];
+      
+    //   const filterByGender = (data, gender) => {
+    //     return data?.filter(item => item.Gender.toLowerCase() === gender.toLowerCase());
+    //   };
+    //  export const maleTblData = filterByGender(tableData, "male");

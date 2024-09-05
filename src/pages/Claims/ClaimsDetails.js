@@ -1,11 +1,11 @@
 import React from 'react'
 
-function ClaimsDetails() {
+function Claims() {
   return (
     <div>
-      <h1>Claim Deatils</h1>
+      <h1>ClaimSummary Deatils</h1>
     </div>
   )
 }
 
-export default ClaimsDetails
+export default Claims

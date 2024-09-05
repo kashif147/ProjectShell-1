@@ -1,8 +1,17 @@
 import React, { useState, useEffect } from "react";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import { FaTrashAlt } from "react-icons/fa";
+import { ImAttachment } from "react-icons/im";
+import { GrView } from "react-icons/gr";
 
-function SimpleMenu({ title, data, isCheckBox = true, actions, }) {
+function SimpleMenu({
+  title,
+  data,
+  isCheckBox = true,
+  actions,
+  isBtn = false,
+}) {
   const [checkboxes, setCheckboxes] = useState({});
   const [selectedValues, setSelectedValues] = useState({
     checkboxes: {},
@@ -67,8 +76,28 @@ function SimpleMenu({ title, data, isCheckBox = true, actions, }) {
       {!isCheckBox &&
         data &&
         Object.keys(data)?.map((key) => (
-          <Menu.Item key={key} onClick={(e)=>actions(e)}>
-            {key}
+          <Menu.Item key={key} onClick={(e) => actions(e)}>
+            {key === "Delete" ? (
+  <div className="d-flex align-items-baseline">
+    <FaTrashAlt style={{fontSize: "12px", marginRight: "10px"}} /> 
+    Delete
+  </div>
+) 
+: key === "Attached" ? (
+  <div className="d-flex align-items-baseline">
+    <ImAttachment   style={{fontSize: "12px", marginRight: "10px",fontWeight:"500"}} /> 
+    Attached
+  </div>
+) :
+ key === "View" ? (
+  <div className="d-flex align-items-baseline">
+    <GrView   style={{fontSize: "12px", marginRight: "10px", }} /> 
+    View
+  </div>
+) : 
+(
+  key
+)}
           </Menu.Item>
         ))}
     </Menu>

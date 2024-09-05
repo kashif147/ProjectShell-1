@@ -35,7 +35,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="CasesSummary" state={{ search: "Cases" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="Cases" state={{ search: "Cases" }} className="link" style={{textDecoration:"none"}}>
           Summary
         </Link>
       ),
@@ -53,7 +53,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="ClaimSummary" state={{ search: "Claim" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="ClaimSummary" state={{ search: "Claims" }} className="link" style={{textDecoration:"none"}}>
           Summary
         </Link>
       ),
@@ -83,15 +83,15 @@ const pathname = location?.pathname
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav align-items-baseline"  style={{paddingLeft:"90px"}}>
+            <ul class="navbar-nav align-items-baseline"  style={{paddingLeft:"30px"}}>
               <li className={`${pathname=="/Summary"|| pathname=="/Details" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Profile"} items={navLinks} />
                 {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
               </li>
-              <li className={`${pathname=="/CasesSummary"|| pathname=="/CasesDetails" ?"activ-link":"" } nav-item nav-links-container `}>
+              <li className={`${pathname=="/Cases"|| pathname=="/CasesDetails" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
               </li>
-              <li  className={`${pathname=="/ClaimSummary"|| pathname=="/ClaimsDetails" ?"activ-link":"" } nav-item nav-links-container `}>
+              <li  className={`${pathname=="/ClaimSummary"|| pathname=="/Claims" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
               </li>
               <li class="nav-item nav-links-container">

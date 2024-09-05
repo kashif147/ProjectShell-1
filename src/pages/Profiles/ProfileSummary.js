@@ -212,55 +212,8 @@ function ProfileSummary() {
 
   return (
     <div className="">
-      {/* <Table
-        dataSource={tableData}
-        columns={columns}
-        scroll={{ x: 300, y: 400 }}
-        className="Project-table"
-        pagination={false}
-        rowClassName={(record, index) =>
-          index % 2 !== 0 ? "odd-row" : "even-row"
-        }
-        footer={() => (
-          <div className="d-flex justify-content-between">
-            <div
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "100%",
-              }}
-            >
-              <span
-                style={{
-                  marginRight: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                }}
-              >
-                1-{tableData.length}
-              </span>
-              <span
-                style={{
-                  marginRight: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                }}
-              >
-                {" "}
-                of {`${tableData.length}`}
-              </span>
-              <LuRefreshCw />
-            </div>
-            <Pagination
-              defaultCurrent={1}
-              total={tableData.length}
-              pageSize={10}
-            />
-          </div>
-        )}
-      /> */}
-      <TableComponent dataSource={dataSource}  />
+   
+      <TableComponent dataSource={dataSource}  screenName="Profile" redirect="/Details" />
     </div>
   );
 }
