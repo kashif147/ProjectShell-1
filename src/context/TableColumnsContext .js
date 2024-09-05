@@ -6,58 +6,59 @@ const TableColumnsContext = createContext();
 export const TableColumnsProvider = ({ children }) => {
   const [ascending, setAscending] = useState(true); // State to toggle sort order
   const [columns, setColumns] = useState({ Profile: [
-    { titleColumn: "RegNo", ellipsis: true, isVisible:true },
-    { titleColumn: "Name", ellipsis: true, isVisible:true },
-    { titleColumn: "Rank", ellipsis: true, isVisible:true },
-    { titleColumn: "Duty", ellipsis: true, isVisible:true },
-    { titleColumn: "Station", ellipsis: true, isVisible:true },
-    { titleColumn: "Distric", ellipsis: true, isVisible:true },
-    { titleColumn: "Division", ellipsis: true, isVisible:true },
-    { titleColumn: "Address", ellipsis: true, isVisible:true },
-    { titleColumn: "Status", ellipsis: true, isVisible:true },
-    { titleColumn: "Updated", ellipsis: true, isVisible:true },
-    { titleColumn: "alpha", ellipsis: true, isVisible:false },
-    { titleColumn: "beta", ellipsis: true, isVisible:false },
-    { titleColumn: "giga", ellipsis: true, isVisible:false },
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Name", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Station", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Division", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Address", ellipsis: true, isVisible:true,width:"250px" },
+    { titleColumn: "Status", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "alpha", ellipsis: true, isVisible:false,width:"250px" },
+    { titleColumn: "beta", ellipsis: true, isVisible:false,width:"500px" },
+    { titleColumn: "giga", ellipsis: true, isVisible:false,width:"300px" },
+    { titleColumn: "zeta", ellipsis: true, isVisible:false,width:"800px" },
   ],
   Cases: [
-    { titleColumn: "RegNo", ellipsis: true, isVisible:true },
-    { titleColumn: "Name", ellipsis: true, isVisible:true },
-    { titleColumn: "Rank", ellipsis: true, isVisible:true },
-    { titleColumn: "Duty", ellipsis: true, isVisible:true },
-    { titleColumn: "Station", ellipsis: true, isVisible:true },
-    { titleColumn: "Distric", ellipsis: true, isVisible:true },
-    { titleColumn: "Division", ellipsis: true, isVisible:true },
-    { titleColumn: "Address", ellipsis: true, isVisible:true },
-    { titleColumn: "Status", ellipsis: true, isVisible:true },
-    { titleColumn: "Updated", ellipsis: true, isVisible:true },
-    { titleColumn: "alpha", ellipsis: true, isVisible:false },
-    { titleColumn: "beta", ellipsis: true, isVisible:false },
-    { titleColumn: "giga", ellipsis: true, isVisible:false },
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:100 },
+    { titleColumn: "Name", ellipsis: true, isVisible:true,width:100 },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Station", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Division", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Address", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Status", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "alpha", ellipsis: true, isVisible:false,width:100 },
+    { titleColumn: "beta", ellipsis: true, isVisible:false,width:100 },
+    { titleColumn: "giga", ellipsis: true, isVisible:false,width:100 },
   ],
   Claims: [
-    { titleColumn: "RegNo", ellipsis: true, isVisible:true },
-    { titleColumn: "Name", ellipsis: true, isVisible:true },
-    { titleColumn: "Rank", ellipsis: true, isVisible:true },
-    { titleColumn: "Duty", ellipsis: true, isVisible:true },
-    { titleColumn: "Station", ellipsis: true, isVisible:true },
-    { titleColumn: "Distric", ellipsis: true, isVisible:true },
-    { titleColumn: "Division", ellipsis: true, isVisible:true },
-    { titleColumn: "Address", ellipsis: true, isVisible:true },
-    { titleColumn: "Status", ellipsis: true, isVisible:true },
-    { titleColumn: "Updated", ellipsis: true, isVisible:true },
-    { titleColumn: "alpha", ellipsis: true, isVisible:false },
-    { titleColumn: "beta", ellipsis: true, isVisible:false },
-    { titleColumn: "giga", ellipsis: true, isVisible:false },
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Name", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Station", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Division", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Address", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Status", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "alpha", ellipsis: true, isVisible:false,width:100 },
+    { titleColumn: "beta", ellipsis: true, isVisible:false,width:100 },
+    { titleColumn: "giga", ellipsis: true, isVisible:false,width:100 },
   ]
 
 });
 
-  const handleCheckboxFilterChange = (key, isChecked, screenName) => {
+  const handleCheckboxFilterChange = (key, isChecked, screenName,width) => {
     setColumns(prevColumns => {
       const updatedColumns = prevColumns?.[screenName].map(column => {
         if (column.titleColumn === key) {
-          return { ...column, isVisible: isChecked };
+          return { ...column, isVisible: isChecked, width:width };
         }
         return column;
       });
@@ -65,6 +66,7 @@ export const TableColumnsProvider = ({ children }) => {
       return { ...prevColumns, [screenName]: updatedColumns };
     });
   };
+  
   const [gridData, setGridData] = useState(tableData);
   
   const [state, setState] = useState({
@@ -108,6 +110,7 @@ export const TableColumnsProvider = ({ children }) => {
       setGridData(tableData); // Reset gridData if the condition isn't met
     }
   }, [isMale]);
+
   const handleSort = () => {
     setAscending(!ascending); // Toggle the sorting order
 
@@ -122,7 +125,7 @@ export const TableColumnsProvider = ({ children }) => {
 
     setGridData(sortedData); // Update the grid data after sorting
   };
-console.log(columns,"khan")
+
   return (
     <TableColumnsContext.Provider value={{ columns, updateColumns, state, setState, updateState, isMale, gridData,handleCheckboxFilterChange }}>
       {children}

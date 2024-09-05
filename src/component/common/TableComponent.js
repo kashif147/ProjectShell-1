@@ -19,25 +19,31 @@ function TableComponent({ dataSource, screenName, redirect }) {
   const inputRef = useRef(null);
 
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
+
   const testing = {
     Delete: "false",
     Attached: "false",
     View: "false",
   };
-  const { columns, state, isMale, gridData,handleSort } = useTableColumns();
-  const profilColumn = columns?.[screenName]?.filter((item) => item?.isVisible);
+  const { columns, state, isMale, gridData, handleSort } = useTableColumns();
 
-
+  const profilColumn = columns?.[screenName]
+    ?.filter((item) => item?.isVisible)
+    ?.map((item) => ({
+      ...item,
+      width: item?.width, // Fallback to 'auto' if no width is provided
+    }));
+  console.log(profilColumn, "profilColumn");
   return (
     <div className="common-table" ref={inputRef}>
-      <div className="common-table table-wrapper">
-        <table className="table table-bordered table-hover">
+    <div className="table-wrapper">
+      <table className="table table-bordered table-hover">
           <thead>
             <tr>
               <th>
                 <Gridmenu
                   title={
-                    <FaSliders 
+                    <FaSliders
                       style={{
                         fontSize: "20px",
                         color: "white",
@@ -45,26 +51,12 @@ function TableComponent({ dataSource, screenName, redirect }) {
                       }}
                     />
                   }
-                  data={{
-                    RegNo: true,
-                    Name: true,
-                    Rank: true,
-                    Duty: true,
-                    Station: true,
-                    Distric: true,
-                    Division: true,
-                    Address: true,
-                    Status: true,
-                    Updated: true,
-                    alpha: false,
-                    beta: false,
-                    giga: false,
-                  }}
+                  data={columns?.[screenName]}
                   screenName={screenName}
                 />
               </th>
               {profilColumn?.map((th) => (
-                <th scope="col" key={th?.titleColumn}>
+                <th scope="col" key={th?.titleColumn} style={{textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden", }}>
                   {th?.titleColumn}
                   {th?.titleColumn === "Name" && (
                     <button
@@ -109,7 +101,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
                   </Space>
                 </td>
                 {profilColumn?.map((th) => (
-                  <td key={th.titleColumn}>
+                  <td key={th.titleColumn} style={{ width:th?.width,textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden",}}>
                     {th?.titleColumn === "Name" ? (
                       <Link
                         to={redirect}

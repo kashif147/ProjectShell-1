@@ -18,10 +18,11 @@ function SimpleMenu({
     searchValue: "",
   });
 
-  const checkboxChangeFtn = (key, event) => {
+  const checkboxChangeFtn = (key, event, width) => {
     const updatedCheckboxes = {
       ...checkboxes,
       [key]: event.target.checked,
+      width:width
     };
     setCheckboxes(updatedCheckboxes);
 
@@ -64,7 +65,7 @@ function SimpleMenu({
                 style={{ marginBottom: "8px" }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  checkboxChangeFtn(key, e);
+                  checkboxChangeFtn(key, e,70);
                 }}
                 checked={checkboxes?.[key]}
               >

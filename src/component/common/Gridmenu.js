@@ -39,7 +39,8 @@ function Gridmenu({ title, data, screenName }) {
                 handleCheckboxFilterChange(
                   key?.titleColumn,
                   e.target.checked,
-                  screenName
+                  screenName,
+                  key?.width,
                 );
               }}
               checked={key?.isVisible}
