@@ -1,4 +1,4 @@
-import React from "react";
+import React from 'react'
 import { useLocation } from "react-router-dom";
 import { Table, Space, Button, Pagination, Select, Dropdown, Menu } from "antd";
 import { CiEdit } from "react-icons/ci";
@@ -11,7 +11,7 @@ import { PiSlidersHorizontalBold } from "react-icons/pi";
 import TableComponent from "../../component/common/TableComponent";
 
 
-function CasesSummary() {
+function Claims() {
     const navigate = useNavigate();
 
     const menu = (
@@ -158,10 +158,10 @@ function CasesSummary() {
   
     return (
       <div className="">
-   
       <TableComponent screenName="Cases" redirect="/CasesDetails" />
     </div>
     );
   }
 
-export default CasesSummary
+export default Claims
+

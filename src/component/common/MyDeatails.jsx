@@ -61,7 +61,7 @@ function MyDeatails() {
   const contact = [
     {
       key: "1",
-      label: <h1 className="primary-contact">Primary Contact</h1>,
+      label: <h1 className="primary-contact">Primary Adress</h1>,
       children: (
         <div>
           <Row gutter={20}>
@@ -99,7 +99,7 @@ function MyDeatails() {
     },
     {
       key: "2",
-      label: <h1 className="primary-contact">Secondary Contact</h1>,
+      label: <h1 className="primary-contact">Secondary Adress</h1>,
       children: (
         <div>
         <Row gutter={20}>
@@ -146,152 +146,77 @@ function MyDeatails() {
           children: (
             <div className="padding-bottom">
               <Row gutter={20}>
-                <Col style={{ width: '33.00%' }}>
+                <Col span={8}>
                   <p className="lbl">Garda Reg No:</p>
                   <Input />
                 </Col>
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">...</p>
-                  <Input />
-                </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">...</p>
-                  <Input />
-                </Col> */}
-                
               </Row>
-
               <Row gutter={20}>
-              <Col  style={{ width: '33.00%' }}>
-                  <p className="lbl">Forename</p>
-                  <Input />
-                </Col>
-                <Col  style={{ width: '33.00%' }}>
-                  <p className="lbl">Surname</p>
-                  <Input />
-                </Col>
-                <Col style={{ width: '33.00%' }}>
+              <Col span={8}>
                   <p className="lbl">Fullname</p>
                   <Input />
                 </Col>
-
-              </Row>
-
-
-              <Row gutter={20}>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Gender</p>
-                  <MySelect placeholder="Select Gender" isSimple={true} />
-
-                </Col>
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Sexual Orientation</p>
-                  <Input />
-                </Col> */}
-
-                <Col style={{ width: '33.00%' }}>
-                   <p className="lbl">Date Of Birth</p>
-                      <DatePicker
-                        style={{
-                          width: "100%",
-                          border: "1px solid #333333",
-                          borderRadius: "3px",
-                        }}
-                        className=""
-                      />
-               </Col>
-               <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Next B/d :</p>
+              <Col span={8}>
+                  <p className="lbl">Forename</p>
                   <Input />
                 </Col>
-              </Row>
-
-              <Row gutter={20}>
-              
-                <Col style={{ width: '33.00%' }}>
-                   <p className="lbl">Date Retired</p>
-                      <DatePicker
-                        style={{
-                          width: "100%",
-                          border: "1px solid #333333",
-                          borderRadius: "3px",
-                        }}
-                        className=""
-                      />
-               </Col>
-               <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Date Aged 65 :</p>
-                  <DatePicker
-                        style={{
-                          width: "100%",
-                          border: "1px solid #333333",
-                          borderRadius: "3px",
-                        }}
-                        className=""
-                      />
+                <Col span={8}>
+                  <p className="lbl">Surename</p>
+                  <Input />
                 </Col>
-                <Col style={{ width: '13.00%' }}>
-                  <p className="lbl">Deceased</p>
-                  <MySelect placeholder="Yes/No" isSimple={true} />
-                </Col>
-                <Col style={{ width: '20.00%' }}>
-                   <p className="lbl">Date of death</p>
-                      <DatePicker
-                        style={{
-                          width: "100%",
-                          border: "1px solid #333333",
-                          borderRadius: "3px",
-                        }}
-                        className=""
-                      />
-               </Col>
                
               </Row>
-
               <Row gutter={20}>
-                
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Partnership</p>
-                  <MySelect  isSimple={true} />
+              <Col span={8}>
+                  <p className="lbl">Gender</p>
+                  <MySelect placeholder="Select Gender" isSimple={true} />
                 </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Children</p>
-                 <Input/>
-                </Col>
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Address</p>
+               
+                  <Col span={8}>
+                  <p className="lbl">Date Of Birth</p>
+                      <DatePicker
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+                      
+                  </Col>
+                  <Col span={8}>
+                  <p className="lbl">Next B/D</p>
                   <Input />
-                </Col> */}
+                      
+                  </Col>
+                
+                
               </Row>
-
-              {/* <Row gutter={20}> 
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Address:</p>
-                  <Input />
+              <Row gutter={20}>
+                <Col span={12}>
+                  <p className="lbl">Partnership</p>
+                  <MySelect placeholder="Select Partnership" isSimple={true} />
                 </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">PostCode:</p>
-                  <Input />
-                </Col>
-              </Row> */}
-
-              {/* <Row gutter={20}> 
-                
-              <Col style={{ width: '33.00%' }}>
+                <Col span={12}>
                   <p className="lbl">Children</p>
-                 <Input/>
+                  <Input type="number" />
                 </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">.</p>
-                 <Input/>
+              </Row>
+              <Row gutter={20}>
+                <Col span={8}>
+                  <p className="lbl">Email</p>
+                  <Input type="number" />
                 </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">.</p>
-                 <Input/>
+                <Col span={8}>
+                  <p className="lbl">Primary Contact</p>
+                  <Input type placeholder="000-000-0000" />
                 </Col>
-              </Row> */}
- 
-              
+                <Col span={8}>
+                  <p className="lbl">Secondary Contact</p>
+                  <Input type placeholder="000-000-0000" />
+                </Col>
+               
+              </Row>
               <Tabs defaultActiveKey="1" items={contact} onChange={() => {}} />
                 <div className="btn-main-con">
                 <Button className="gray-btn butn">Save</Button>
