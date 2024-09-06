@@ -3,7 +3,7 @@ import { Tabs, message, Button, DatePicker, Radio } from "antd";
 import { RadioChangeEvent } from 'antd';
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
-import { Input, Row, Col } from "antd";
+import { Input, Row, Col, Checkbox } from "antd";
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
@@ -26,6 +26,8 @@ const beforeUpload = (file) => {
 {/* Extra */}
 
 function MyDeatails() {
+
+  const [isChecked, setIsChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [value, setValue]= useState(1);
@@ -50,6 +52,10 @@ function MyDeatails() {
     setValue(e.target.value);
   };
 
+  const onCheckboxChange = (e) => {
+    setIsChecked(e.target.checked);
+  };
+
 
   const customRequest = ({ file, onSuccess, onError }) => {
     setTimeout(() => {
@@ -71,7 +77,7 @@ function MyDeatails() {
   const contact = [
     {
       key: "1",
-      label: <h1 className="primary-contact">Primary Contact</h1>,
+      label: <h1 className="primary-contact">Primary Adress</h1>,
       children: (
         <div>
           <Row gutter={20}>
@@ -109,7 +115,7 @@ function MyDeatails() {
     },
     {
       key: "2",
-      label: <h1 className="primary-contact">Secondary Contact</h1>,
+      label: <h1 className="primary-contact">Secondary Adress</h1>,
       children: (
         <div>
         <Row gutter={20}>
@@ -156,38 +162,29 @@ function MyDeatails() {
           children: (
             <div className="padding-bottom">
               <Row gutter={20}>
-                <Col style={{ width: '33.00%' }}>
+                <Col span={8}>
                   <p className="lbl">Garda Reg No:</p>
                   <Input />
                 </Col>
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">...</p>
-                  <Input />
-                </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">...</p>
-                  <Input />
-                </Col> */}
-                
               </Row>
-
               <Row gutter={20}>
-              <Col  style={{ width: '33.00%' }}>
-                  <p className="lbl">Forename</p>
-                  <Input />
-                </Col>
-                <Col  style={{ width: '33.00%' }}>
-                  <p className="lbl">Surname</p>
-                  <Input />
-                </Col>
-                <Col style={{ width: '33.00%' }}>
+              <Col span={8}>
                   <p className="lbl">Fullname</p>
                   <Input />
                 </Col>
+              <Col span={8}>
+                  <p className="lbl">Forename</p>
+                  <Input />
+                </Col>
+                <Col span={8}>
+                  <p className="lbl">Surename</p>
+                  <Input />
+                </Col>
+               
               </Row>
               <Row gutter={20}>
-              <Col style={{ width: '33.00%' }}>
-                   <p className="lbl">Date Of Birth</p>
+                  <Col span={8}>
+                  <p className="lbl">Date Of Birth</p>
                       <DatePicker
                         style={{
                           width: "100%",
@@ -201,14 +198,7 @@ function MyDeatails() {
                   <p className="lbl">Next B/d :</p>
                   <Input />
                 </Col>
-              
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Sexual Orientation</p>
-                  <Input />
-                </Col> */}
-
-                
-               <Col style={{ width: "33.00%" }}>
+                <Col style={{ width: "33.00%" }}>
                   <p className="lbl">Gender</p>
                   <>
                     <Radio.Group onChange={onChange} value={value}>
@@ -218,6 +208,14 @@ function MyDeatails() {
                     </Radio.Group>
                   </>
                 </Col>
+              
+                {/* <Col style={{ width: '33.00%' }}>
+                  <p className="lbl">Sexual Orientation</p>
+                  <Input />
+                </Col> */}
+
+                
+               
               </Row>
 
               <Row gutter={20}>
@@ -246,11 +244,12 @@ function MyDeatails() {
                 </Col>
                 <Col style={{ width: '13.00%' }}>
                   <p className="lbl">Deceased</p>
-                  <MySelect placeholder="Yes/No" isSimple={true} />
+                  <Checkbox onChange={onCheckboxChange}></Checkbox>
                 </Col>
                 <Col style={{ width: '20.00%' }}>
                    <p className="lbl">Date of death</p>
                       <DatePicker
+                      disabled={!isChecked}
                         style={{
                           width: "100%",
                           border: "1px solid #333333",
@@ -261,51 +260,31 @@ function MyDeatails() {
                </Col>
                
               </Row>
-
               <Row gutter={20}>
-                
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Partnership</p>
-                  <MySelect  isSimple={true} />
+                  <MySelect placeholder="Select Partnership" isSimple={true} />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Children</p>
-                 <Input/>
+                  <Input type="number" />
                 </Col>
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Address</p>
-                  <Input />
-                </Col> */}
               </Row>
-
-              {/* <Row gutter={20}> 
+              <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Address:</p>
-                  <Input />
-                </Col>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">PostCode:</p>
-                  <Input />
-                </Col>
-              </Row> */}
-
-              {/* <Row gutter={20}> 
-                
-              <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Children</p>
-                 <Input/>
+                  <p className="lbl">Email</p>
+                  <Input type="number" />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">.</p>
-                 <Input/>
+                  <p className="lbl">Primary Contact</p>
+                  <Input type placeholder="000-000-0000" />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">.</p>
-                 <Input/>
+                  <p className="lbl">Secondary Contact</p>
+                  <Input type placeholder="000-000-0000" />
                 </Col>
-              </Row> */}
- 
-              
+               
+              </Row>
               <Tabs defaultActiveKey="1" items={contact} onChange={() => {}} />
                 <div className="btn-main-con">
                 <Button className="gray-btn butn">Save</Button>

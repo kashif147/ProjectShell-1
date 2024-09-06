@@ -3,28 +3,13 @@ import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
-function Gridmenu({ title, data }) {
-  const { columns, updateColumns } = useTableColumns();
-  const [checkboxes, setCheckboxes] = useState({});
-
+function Gridmenu({ title, data, screenName }) {
+  const { columns, updateColumns, handleCheckboxFilterChange } =
+    useTableColumns();
+  const [checkBoxData, setcheckBoxData] = useState();
   useEffect(() => {
-    if (data && columns) {
-      const initialCheckboxes = Object.keys(data).reduce((acc, key) => {
-        acc[key] = data[key];
-        return acc;
-      }, {});
-
-      setCheckboxes(initialCheckboxes);
-      const initialColumns = Object.entries(initialCheckboxes)
-        .filter(([_, isChecked]) => isChecked)
-        .map(([key]) => ({
-          title: key,
-          dataIndex: key,
-          key: key,
-        }));
-      updateColumns(initialColumns);
-    }
-  }, []);
+    setcheckBoxData(columns?.[screenName]);
+  }, [columns]);
   const widthMapping = {
     RegNo: 100,
     Name: 120,
@@ -33,54 +18,37 @@ function Gridmenu({ title, data }) {
     Station: 120,
     Distric: 120,
     Division: 120,
-    Address: 200,
+    Address: 220,
   };
+  console.log(checkBoxData, "checkBoxData");
   const getColumnWidth = (key) => widthMapping[key] || 120;
-  const checkboxChangeFtn = (key, event) => {
-    const isChecked = event.target.checked;
-    setCheckboxes((prevState) => {
-      const updatedState = {
-        ...prevState,
-        [key]: isChecked,
-      };
 
-      const newColumns = Object.entries(updatedState)
-        .filter(([_, value]) => value)
-        .map(([key]) => ({
-          title: key,
-          dataIndex: key,
-          key: key,
-          width: getColumnWidth(key),
-          ellipsis: true,
-        }));
-
-      updateColumns(newColumns);
-
-      return updatedState;
-    });
-  };
-
+  console.log(columns, "update");
   const menu = (
     <Menu>
       <Menu.Item key="1">
         <Input suffix={<SearchOutlined />} />
       </Menu.Item>
-      <Row>
-        {data &&
-          Object.keys(data).map((key) => (
-            <Col span={24} key={key}>
-              <Checkbox
-                style={{ marginBottom: "8px" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  checkboxChangeFtn(key, e);
-                }}
-                checked={checkboxes[key]}
-              >
-                {key}
-              </Checkbox>
-            </Col>
-          ))}
+      <Row style={{ maxHeight: "200px", overflowY: "auto" }}>
+        {checkBoxData?.map((key) => (
+          <Col span={24}>
+            <Checkbox
+              style={{ marginBottom: "8px" }}
+              onClick={(e) => {
+                e.stopPropagation();
+                handleCheckboxFilterChange(
+                  key?.titleColumn,
+                  e.target.checked,
+                  screenName,
+                  key?.width,
+                );
+              }}
+              checked={key?.isVisible}
+            >
+              {key?.titleColumn}
+            </Checkbox>
+          </Col>
+        ))}
       </Row>
     </Menu>
   );
