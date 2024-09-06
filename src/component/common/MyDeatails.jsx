@@ -162,28 +162,28 @@ function MyDeatails() {
           children: (
             <div className="padding-bottom">
               <Row gutter={20}>
-                <Col span={8}>
+                <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Garda Reg No:</p>
                   <Input />
                 </Col>
               </Row>
               <Row gutter={20}>
-              <Col span={8}>
+              <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Fullname</p>
                   <Input />
                 </Col>
-              <Col span={8}>
+              <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Forename</p>
                   <Input />
                 </Col>
-                <Col span={8}>
+                <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Surename</p>
                   <Input />
                 </Col>
                
               </Row>
               <Row gutter={20}>
-                  <Col span={8}>
+                  <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Date Of Birth</p>
                       <DatePicker
                         style={{
@@ -196,7 +196,7 @@ function MyDeatails() {
                </Col>
               <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Next B/d :</p>
-                  <Input />
+                  <Input disabled={true} />
                 </Col>
                 <Col style={{ width: "33.00%" }}>
                   <p className="lbl">Gender</p>
@@ -233,7 +233,8 @@ function MyDeatails() {
                </Col>
                <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Date Aged 65 :</p>
-                  <DatePicker
+                  <DatePicker 
+                  disabled={true}
                         style={{
                           width: "100%",
                           border: "1px solid #333333",
@@ -260,16 +261,22 @@ function MyDeatails() {
                </Col>
                
               </Row>
-              <Row gutter={20}>
+                 
+                <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Partnership</p>
                   <MySelect placeholder="Select Partnership" isSimple={true} />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Children</p>
-                  <Input type="number" />
+                  <p className="lbl">Childern</p>
+                  <Checkbox onChange={onCheckboxChange}></Checkbox>
                 </Col>
+                <Col style={{ width: '33.00%' }}>
+                   <p className="lbl">Amount of children</p>
+                      <Input   disabled={!isChecked}/>
+               </Col>
               </Row>
+             
               <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Email</p>
