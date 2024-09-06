@@ -32,6 +32,7 @@ export const TableColumnsProvider = ({ children }) => {
   ],
   Cases: [
     { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "FullName", ellipsis: true, isVisible:true,width:"420px" },
     { titleColumn: "Name", ellipsis: true, isVisible:true,width:"100px" },
     { titleColumn: "Rank", ellipsis: true, isVisible:true,width:"120px" },
     { titleColumn: "Duty", ellipsis: true, isVisible:true,width:"120px" },
@@ -47,6 +48,7 @@ export const TableColumnsProvider = ({ children }) => {
   ],
   Claims: [
     { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:120 },
+    { titleColumn: "FullName", ellipsis: true, isVisible:true,width:"420px" },
     { titleColumn: "Name", ellipsis: true, isVisible:true,width:120 },
     { titleColumn: "Rank", ellipsis: true, isVisible:true,width:120 },
     { titleColumn: "Duty", ellipsis: true, isVisible:true,width:120 },

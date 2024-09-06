@@ -52,7 +52,6 @@ function Gridmenu({ title, data, screenName }) {
       </Row>
     </Menu>
   );
-
   return (
     <Dropdown
       overlay={menu}
