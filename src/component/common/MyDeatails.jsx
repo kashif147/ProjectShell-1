@@ -1,5 +1,6 @@
 import { React, useState } from "react";
-import { Tabs, message, Button, DatePicker } from "antd";
+import { Tabs, message, Button, DatePicker, Radio } from "antd";
+import { RadioChangeEvent } from 'antd';
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
 import { Input, Row, Col } from "antd";
@@ -20,12 +21,14 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
-
+{/* Extra */} 
  
+{/* Extra */}
 
 function MyDeatails() {
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
+  const [value, setValue]= useState(1);
   console.log(imageUrl, "imageUrl");
   const handleChange = (info) => {
     if (info.file.status === "uploading") {
@@ -41,6 +44,13 @@ function MyDeatails() {
       message.error("Image upload failed.");
     }
   };
+
+  const onChange = (e) => {
+    console.log("radio checked", e.target.value);
+    setValue(e.target.value);
+  };
+
+
   const customRequest = ({ file, onSuccess, onError }) => {
     setTimeout(() => {
       if (file) {
@@ -174,22 +184,9 @@ function MyDeatails() {
                   <p className="lbl">Fullname</p>
                   <Input />
                 </Col>
-
               </Row>
-
-
               <Row gutter={20}>
-                <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Gender</p>
-                  <MySelect placeholder="Select Gender" isSimple={true} />
-
-                </Col>
-                {/* <Col style={{ width: '33.00%' }}>
-                  <p className="lbl">Sexual Orientation</p>
-                  <Input />
-                </Col> */}
-
-                <Col style={{ width: '33.00%' }}>
+              <Col style={{ width: '33.00%' }}>
                    <p className="lbl">Date Of Birth</p>
                       <DatePicker
                         style={{
@@ -200,9 +197,26 @@ function MyDeatails() {
                         className=""
                       />
                </Col>
-               <Col style={{ width: '33.00%' }}>
+              <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Next B/d :</p>
                   <Input />
+                </Col>
+              
+                {/* <Col style={{ width: '33.00%' }}>
+                  <p className="lbl">Sexual Orientation</p>
+                  <Input />
+                </Col> */}
+
+                
+               <Col style={{ width: "33.00%" }}>
+                  <p className="lbl">Gender</p>
+                  <>
+                    <Radio.Group onChange={onChange} value={value}>
+                      <Radio value={1}>Male</Radio>
+                      <Radio value={2}>Female</Radio>
+                      <Radio value={3}>Other</Radio> 
+                    </Radio.Group>
+                  </>
                 </Col>
               </Row>
 
