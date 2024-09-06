@@ -12,7 +12,8 @@ import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import SimpleMenu from "./SimpleMenu";
 import { tableData } from "../../Data";
-import { FaSliders } from "react-icons/fa6";
+import { BsSliders } from "react-icons/bs";
+
 
 function TableComponent({ dataSource, screenName, redirect }) {
   const [ascending, setAscending] = useState(true);
@@ -43,7 +44,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
               <th>
                 <Gridmenu
                   title={
-                    <FaSliders
+                    <BsSliders  
                       style={{
                         fontSize: "20px",
                         color: "white",
@@ -56,9 +57,9 @@ function TableComponent({ dataSource, screenName, redirect }) {
                 />
               </th>
               {profilColumn?.map((th) => (
-                <th scope="col" key={th?.titleColumn} style={{textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden", }}>
+                <th scope="col" key={th?.titleColumn} style={{width:th?.width,textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden", }}>
                   {th?.titleColumn}
-                  {th?.titleColumn === "Name" && (
+                  {th?.titleColumn === "FullName" && (
                     <button
                       type="button"
                       className="btn btn-outline-secondary"
@@ -102,13 +103,13 @@ function TableComponent({ dataSource, screenName, redirect }) {
                 </td>
                 {profilColumn?.map((th) => (
                   <td key={th.titleColumn} style={{ width:th?.width,textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden",}}>
-                    {th?.titleColumn === "Name" ? (
+                    {th?.titleColumn === "FullName" ? (
                       <Link
                         to={redirect}
                         style={{ color: "blue" }}
                         state={{
                           search: screenName,
-                          name: item.Name,
+                          name: item.FullName,
                           code: item?.RegNo,
                         }}
                       >

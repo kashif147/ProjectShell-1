@@ -741,14 +741,14 @@ h1 {
 .common-table table tr th{
 background-color: var(--mainBlue) !important;
 color: white ;
-padding: 4px;
+padding: 4px 12px;
 font-weight: 600;
 position: sticky !important;
 z-index: 10;
 top:0
 }
 .common-table table tr td{
-padding:2px 4px;
+padding: 4px 12px;
 font-weight: 400;
 color: var(--mainBlue) !important;
 }

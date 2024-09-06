@@ -7,7 +7,20 @@ export const SerachFitersLookups ={
        export const tableData = [
         {
           Key: '1',
-          Name: 'Jack Smith',
+          Forename:"Jack 00000111 00000",
+          Surename:"Smith",
+          DateOfBirth:"01/02/1997",
+          DateRetired:"01/02/2045",
+          DateAged65:"01/02/2045",
+          DateOfDeath:"01/02/2045",
+          StationID:"04555",
+          StationPh:744188,
+          FullName: 'Jack Smith',
+          PensionNo:"1555",
+          GRAMember:"1415",
+          DateJoined:"01/02/2045",
+          DateLeft:"01/02/2045",
+          AssociateMember:"yes",
           RegNo: "56606L",
           Rank: "0001",
           Duty: "Garda",
@@ -18,11 +31,12 @@ export const SerachFitersLookups ={
           Status: "Member",
           Attested: "01/01/1988",
           Graduated: "01/09/1987",
-          Updated: '12/04/2022 13:29'
+          Updated: '12/04/2022 13:29',
+          
         },
         {
           Key: '2',
-          Name: 'Michael Johnson',
+          FullName: 'Michael Johnson',
           RegNo: "99999G",
           Rank: "0001",
           Duty: "Sargent",
@@ -37,7 +51,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '3',
-          Name: 'Jack Smith',
+          FullName: 'Jack Smith',
           RegNo: "56606L",
           Rank: "0001",
           Duty: "Garda",
@@ -52,7 +66,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '4',
-          Name: 'Joe Blog',
+          FullName: 'Joe Blog',
           RegNo: "512345H6606L",
           Rank: "0021",
           Duty: "Sargent",
@@ -67,7 +81,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '5',
-          Name: 'John Doe',
+          FullName: 'John Doe',
           RegNo: "34567D",
           Rank: "0101",
           Duty: "Sargent",
@@ -82,7 +96,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '6',
-          Name: 'John Doe',
+          FullName: 'John Doe',
           RegNo: "56688K",
           Rank: "0099",
           Duty: "Sargent",
@@ -97,7 +111,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '7',
-          Name: 'Tom Malone',
+          FullName: 'Tom Malone',
           RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
@@ -112,7 +126,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '8',
-          Name: 'Tom Malone',
+          FullName: 'Tom Malone',
           RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
@@ -127,7 +141,8 @@ export const SerachFitersLookups ={
         },
         {
           Key: '9',
-          Name: 'Tom Malone',
+
+          FullName: 'Tom Malone',
           RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
@@ -142,7 +157,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '10',
-          Name: 'Tom Malone',
+          FullName: 'Tom Malone',
           RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",
@@ -158,7 +173,7 @@ export const SerachFitersLookups ={
         },
         {
           Key: '11',
-          Name: 'ATom Malone',
+          FullName: 'ATom Malone',
           RegNo: "56026L",
           Rank: "0001",
           Duty: "Garda",

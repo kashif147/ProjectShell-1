@@ -94,9 +94,31 @@ function HeaderDetails() {
     },
   ];
 
-  const addMore = {
-    Mebership: "false",
-  };
+  const addMore = [
+    { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Forename", ellipsis: true, isVisible:true,width:"120px" },
+    { titleColumn: "Surename", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "FullName", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "DateOfBirth", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "DateRetired", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "DateAged65", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "DateOfDeath", ellipsis: true, isVisible:true,width:"420px" },
+    { titleColumn: "Rank", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Duty", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Station", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "StationID", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "StationPh", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "PensionNo", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "GRAMember", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "DateJoined", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "DateLeft", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "AssociateMember", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Distric", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Division", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Address", ellipsis: true, isVisible:true,width:"250px" },
+    { titleColumn: "Status", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Updated", ellipsis: true, isVisible:true,width:"100px" },
+  ];
   const topThreeDots = {
     BulkChnages: "false",
   };
@@ -208,7 +230,7 @@ function HeaderDetails() {
                       />
                     }
                     <p>{formattedNav}</p>
-                    {location?.state?.name && (
+                    {location?.state?.code && (
                       <>
                         <p>&nbsp; &nbsp;/&nbsp; &nbsp;</p>
 
@@ -300,7 +322,6 @@ function HeaderDetails() {
                         </>
                       }
                       data={addMore}
-                      checkbox={false}
                       isSearched={false}
                     />
                   </div>

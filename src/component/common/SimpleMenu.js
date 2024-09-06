@@ -56,20 +56,20 @@ function SimpleMenu({
           <Input suffix={<SearchOutlined />} onChange={handleSearchChange} />
         </Menu.Item>
       )}
-      <Row>
+      <Row style={{ maxHeight: "300px", overflowY: "auto" }}>
         {data &&
           isCheckBox &&
-          Object.keys(data)?.map((key) => (
-            <Col span={24} key={key}>
+          data?.map((item,indexs) => (
+            <Col span={24} key={indexs}>
               <Checkbox
                 style={{ marginBottom: "8px" }}
                 onClick={(e) => {
                   e.stopPropagation();
-                  checkboxChangeFtn(key, e,70);
+                  checkboxChangeFtn(item?.titleColumn, e,70);
                 }}
-                checked={checkboxes?.[key]}
+                checked={checkboxes?.[item?.titleColumn]}
               >
-                {key}
+                {item?.titleColumn}
               </Checkbox>
             </Col>
           ))}

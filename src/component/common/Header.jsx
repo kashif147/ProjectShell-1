@@ -35,7 +35,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="Cases" state={{ search: "Cases" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="CasesSummary" state={{ search: "Cases" }} className="link" style={{textDecoration:"none"}}>
           Summary
         </Link>
       ),
