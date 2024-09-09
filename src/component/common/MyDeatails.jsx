@@ -21,6 +21,9 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
+{/* Extra */} 
+ 
+{/* Extra */}
 
 function MyDeatails() {
 
@@ -284,7 +287,7 @@ function MyDeatails() {
               </Row>
               <Tabs defaultActiveKey="1" items={contact} onChange={() => {}} />
                 <div className="btn-main-con">
-                <Button className="gray-btn butn">Save</Button>
+                <Button className="gray-btn butn">Next</Button>
                 <Button className=" butn" onClick={()=>{}}>Cancel</Button>
 
                 </div>
@@ -292,7 +295,7 @@ function MyDeatails() {
           ),
         },
         {
-          label: <h1 className="primary-contact">Official Information</h1>,
+          label: <h1 className="primary-contact">GRA Information</h1>,
           key: "2",
           children: (
             <div className="padding-bottom">
@@ -337,6 +340,11 @@ function MyDeatails() {
                   </Col>
 
             </Row>
+            <div className="btn-main-con">
+                <Button className="gray-btn butn">Next</Button>
+                <Button className=" butn" onClick={()=>{}}>Cancel</Button>
+
+                </div>
             </div>
           ),
           
@@ -344,7 +352,57 @@ function MyDeatails() {
         {
           label: <h1 className="primary-contact">Membership</h1>,
           key: "3",
-          children: "Tab 3",
+          children: (
+            <div className="padding-bottom">
+            <Row gutter={20}>
+              <Col span={12}>
+                <p className="lbl">Station:</p>
+                <MySelect placeholder="STOC" isSimple={true} />
+                <br/>
+                <br/>
+                <Input />
+                <br/>
+                <br/>
+                <Input />
+              </Col>
+              <Col span={12}>
+                <p className="lbl">Forename</p>
+                <Input />
+              </Col>
+              <Col span={12}>
+                <p className="lbl">Station Ph :</p>
+                <Input placeholder ="00-000-0000"/>
+              </Col>
+              <Col span={12}>
+                <p className="lbl">District:</p>
+                <MySelect placeholder="0000-AAA-BBB" isSimple={true} />
+                </Col>
+                <Col span={12}>
+                <p className="lbl">Division:</p>
+                <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
+                </Col>
+                <Col span={12}>
+                   <p className="lbl">Date Retired</p>
+                      <DatePicker
+                      placeholder="../../...."
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+                  </Col>
+
+            </Row>
+            <div className="btn-main-con">
+                <Button className="gray-btn butn">Save</Button>
+                <Button className=" butn" onClick={()=>{}}>Cancel</Button>
+
+                </div>
+            </div>
+          ),
+
         },
       ]}
     />
