@@ -1,9 +1,11 @@
 import { React, useState } from "react";
-import { Tabs, message, Button, DatePicker, Radio } from "antd";
+import { Tabs, message, Button, DatePicker, Radio, Divider } from "antd";
 import { RadioChangeEvent } from 'antd';
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
 import { Input, Row, Col, Checkbox } from "antd";
+import MyDrawer from "./MyDrawer";
+
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
@@ -26,12 +28,31 @@ const beforeUpload = (file) => {
 {/* Extra */}
 
 function MyDeatails() {
-
+  const [activeTab, setActiveTab] = useState("1");
   const [isChecked, setIsChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [value, setValue]= useState(1);
   console.log(imageUrl, "imageUrl");
+  const [isTransfer, setisTransfer] = useState(false); 
+
+  const [TransferData, setTransferData] = useState({
+    NewStationID: "",
+    NewStationName: "",
+    NewStationAddress: "",
+    NewDistrict: "",
+    NewDivision: "",
+    TransferDate:"",
+    TransferMemo:"",
+  });
+
+  const handleInputChange = (name, value) => {
+    setTransferData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+  };
+
   const handleChange = (info) => {
     if (info.file.status === "uploading") {
       setLoading(true);
@@ -56,6 +77,16 @@ function MyDeatails() {
     setIsChecked(e.target.checked);
   };
 
+  const handleNext = () => {
+    setActiveTab("2"); // Switch to the second tab (Official Information)
+  };
+
+  const TransferOpenCloseFtn = () => setisTransfer(!isTransfer);
+  
+  const AddTransferFtn = () => {
+    // Logic for adding gender
+    console.log(TransferData);
+  };
 
   const customRequest = ({ file, onSuccess, onError }) => {
     setTimeout(() => {
@@ -153,8 +184,11 @@ function MyDeatails() {
     },
   ];
   return (
+    
     <Tabs
       defaultActiveKey="1"
+      activeKey={activeTab}
+      onChange={setActiveTab}
       items={[
         {
           label: <h1 className="primary-contact">Personal Information</h1>,
@@ -294,7 +328,9 @@ function MyDeatails() {
               </Row>
               <Tabs defaultActiveKey="1" items={contact} onChange={() => {}} />
                 <div className="btn-main-con">
-                <Button className="gray-btn butn">Save</Button>
+                <Button className="gray-btn butn" onClick={handleNext }>
+                  Next
+                </Button>
                 <Button className=" butn" onClick={()=>{}}>Cancel</Button>
 
                 </div>
@@ -302,38 +338,44 @@ function MyDeatails() {
           ),
         },
         {
-          label: <h1 className="primary-contact">Official Information</h1>,
+          label: <h1 className="primary-contact">WorkStation Information</h1>,
           key: "2",
           children: (
             <div className="padding-bottom">
             <Row gutter={20}>
-              <Col span={12}>
+              <Col  style={{ width: '45.00%' }}>
                 <p className="lbl">Station:</p>
                 <MySelect placeholder="STOC" isSimple={true} />
                 <br/>
                 <br/>
-                <Input />
-                <br/>
-                <br/>
-                <Input />
               </Col>
-              <Col span={12}>
-                <p className="lbl">Forename</p>
-                <Input />
+              <Col style={{ width: '10.00%' }}>
+              <p className="lbl">transfer Station:</p>
+              <Button onClick={TransferOpenCloseFtn}
+              style={{ marginLeft: '10px' }}
+              
+              >
+                Action
+              </Button>
               </Col>
-              <Col span={12}>
+              <Col style={{ width: '45.00%' }}>
+                <p className="lbl">.</p>
+                  <Input placeholder="Harcout Square D2" />
+                  </Col>
+             
+              <Col  style={{ width: '33.00%' }}>
                 <p className="lbl">Station Ph :</p>
                 <Input placeholder ="00-000-0000"/>
               </Col>
-              <Col span={12}>
+              <Col  style={{ width: '33.00%' }}>
                 <p className="lbl">District:</p>
                 <MySelect placeholder="0000-AAA-BBB" isSimple={true} />
                 </Col>
-                <Col span={12}>
+                <Col  style={{ width: '33.00%' }}>
                 <p className="lbl">Division:</p>
                 <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
                 </Col>
-                <Col span={12}>
+                <Col  style={{ width: '33.00%' }}>
                    <p className="lbl">Date Retired</p>
                       <DatePicker
                       placeholder="../../...."
@@ -345,16 +387,239 @@ function MyDeatails() {
                         className=""
                       />
                   </Col>
+                  <Col style={{ width: '33.00%' }}>
+                  <p className="lbl">Pensioner</p>
+                  <Checkbox onChange={onCheckboxChange}></Checkbox>
+                </Col>
+                <Col style={{ width: '33.00%' }}>
+                   <p className="lbl">Pension NO:</p>
+                      <Input
+                      disabled={!isChecked}
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+               </Col>
+            </Row>
+            <Row gutter={20}>
+            <Col style={{ width: '33.00%' }}>
+              <p className="lbl">Rank</p>
+              <MySelect placeholder="STOC" isSimple={true} />
+              </Col>
+              <Col style={{ width: '33.00%' }}>
+              <p className="lbl">rk btn:</p>
+              <Button onClick={TransferOpenCloseFtn}
+              style={{ marginLeft: '10px' }}
+              >
+                Action
+              </Button>
+              </Col>
+              <Col  style={{ width: '33.00%' }}>
+                <p className="lbl">Division:</p>
+                <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
+                </Col>
 
             </Row>
+            
+            <Row gutter={20}>
+              
+              <Col style={{ width: '33.00%' }}>
+              <p className="lbl">Duty</p>
+              <MySelect placeholder="STOC" isSimple={true} />
+              </Col>
+              <Col style={{ width: '33.00%' }}>
+              <p className="lbl">dt btn:</p>
+              <Button onClick={TransferOpenCloseFtn}
+              style={{ marginLeft: '10px' }}
+              
+              >
+                Action
+              </Button>
+              </Col>
+
+              <Col style={{ width: '33.00%' }}>
+              <p className="lbl">Templemore:</p>
+              <DatePicker
+                      placeholder="../../...."
+                        style={{
+                          width: "100%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+              </Col>
+              <Col style ={{width: '33.00%'}}>
+              <p className="lbl">Class:</p>
+              <Input />
+              </Col>
+              <Col style ={{width: '33.00%'}}>
+              <p className="lbl">Attested:</p>
+              <Input />
+              </Col>
+              <Col style ={{width: '33.00%'}}>
+              <p className="lbl">Graduated:</p>
+              <Input />
+              </Col>
+              <Col style ={{width: '100.00%'}}>
+              <p className="lbl">Notes:</p>
+              <Input />
+              </Col>
+            </Row>
+            
+            <MyDrawer 
+            width={"1000px"}
+        open={isTransfer}
+        onClose={TransferOpenCloseFtn}
+        add={AddTransferFtn}
+        title="Transfer">
+              <div className="input-group">
+          <p className="inpt-lbl">New Station ID:</p>
+          <Input
+            placeholder="Please enter New Station ID"
+            onChange={(e) => handleInputChange("NewStationID", e.target.value)}
+          />
+        </div>
+        <div className="input-group">
+          <p className="inpt-lbl">New Station Name:</p>
+          <Input
+            placeholder="Please enter New Station Name"
+            onChange={(e) => handleInputChange("NewStationName", e.target.value)}
+          />
+        </div>
+        <div className="input-group">
+          <p className="inpt-lbl">New Station Address:</p>
+          <Input
+            placeholder="Please enter New Station Address"
+            onChange={(e) => handleInputChange("NewStationAddress", e.target.value)}
+          /> 
+        </div>
+        <div className="input-group">
+          <p className="inpt-lbl">New District</p>
+          <Input
+            placeholder="Please enter New District"
+            onChange={(e) => handleInputChange("NewDistrict", e.target.value)}
+          />
+        </div>
+        <div className="input-group">
+          <p className="inpt-lbl">New Division:</p>
+          <Input
+            placeholder="Please enter New Division"
+            onChange={(e) => handleInputChange("NewDivision", e.target.value)}
+          />
+        </div>
+        <Divider  style={{ borderColor: '#333' }} />
+
+        <div className="input-group">
+          <p className="inpt-lbl">Transefer Date:</p>
+          <DatePicker
+                        style={{
+                          width: "100.00%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+        </div>
+        <div className="input-group">
+          <p className="inpt-lbl">Transefer Memo:</p>
+          <Input
+            placeholder="Please enter Transfer Memo"
+            onChange={(e) => handleInputChange("TransferMemo", e.target.value)}
+          />
+        </div>
+
+            </MyDrawer>
+             
             </div>
           ),
           
+           
+
         },
         {
-          label: <h1 className="primary-contact">Membership</h1>,
+          label: <h1 className="primary-contact">Membership Information</h1>,
           key: "3",
-          children: "Tab 3",
+          children: (
+            <div className="padding-bottom">
+            <Row gutter={20}>
+            <Col style={{ width: '33.00%' }}>
+            <p className="lbl">GRA Member</p>
+            <Checkbox onChange={onCheckboxChange}></Checkbox>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+             <p className="lbl">Date Joined:</p>
+             <DatePicker
+                        disabled={!isChecked}
+                        style={{
+                          width: "100.00%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+         </Col>
+         <Col style={{ width: '33.00%' }}>
+             <p className="lbl">Date Left:</p>
+             <DatePicker
+                        disabled={!isChecked}
+                        style={{
+                          width: "100.00%",
+                          border: "1px solid #333333",
+                          borderRadius: "3px",
+                        }}
+                        className=""
+                      />
+         </Col>
+         </Row>
+         <Row gutter={20}>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl">Associate Member:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl">.</p>
+            <Button  disabled={!isChecked}>Statue </Button>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> District Rep:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> District Sec:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> District Chair:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> Division Rep:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> Division Sec:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> Division Chair:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> C.E.C:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+          <Col style={{ width: '33.00%' }}>
+            <p className="lbl"> Panel of Friends:</p>
+            <Checkbox  disabled={!isChecked}/>
+          </Col>
+
+         </Row>
+         </div>
+          ),
         },
       ]}
     />
