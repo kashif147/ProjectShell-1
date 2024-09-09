@@ -310,7 +310,7 @@ body {
   font-family: var(--fontFamily);
   color: var(--labelColor) !important;
   cursor: pointer;
-  padding-bottom: 10px;
+  padding-bottom: 5px;
 }
 .title-main {
   font-size: 20px !important;
@@ -334,10 +334,10 @@ body {
   color: var(--labelColor) !important;
 }
 .title {
-  margin-bottom: 25px !important;
+  /* margin-bottom: 8px !important; */
 }
 .search-fliters {
-  margin-bottom: 20px !important;
+  margin-bottom: 10px !important;
 }
 .search-fliters .link {
   text-decoration: none !important;
@@ -705,7 +705,7 @@ h1 {
   background-color: #45669d; 
   color: white !important;
   font-family: var(--fontFamily) !important;
-  font-weight: 500;
+  font-weight: 480;
 }
 .details-header{
  
@@ -753,7 +753,7 @@ font-weight: 400;
 color: var(--mainBlue) !important;
 }
 .table-wrapper {
-  max-height: 385px; 
+  max-height: 500px; 
   overflow-y: auto;  
   overflow-x: auto;  
   white-space: nowrap; 
@@ -767,4 +767,10 @@ color: var(--mainBlue) !important;
 .tbl-footer{
   background-color: #fafafa !important;
   border-top: none;
+}
+.header-detail-main icon{
+color: red !important;
+}
+.bred-cram-main p{
+  margin-bottom: 0px !important;
 }

@@ -80,19 +80,19 @@ function SimpleMenu({
           <Menu.Item key={key} onClick={(e) => actions(e)}>
             {key === "Delete" ? (
   <div className="d-flex align-items-baseline">
-    <FaTrashAlt style={{fontSize: "12px", marginRight: "10px"}} /> 
+    <FaTrashAlt style={{fontSize: "12px", marginRight: "10px", color:"#45669d"}} /> 
     Delete
   </div>
 ) 
 : key === "Attached" ? (
   <div className="d-flex align-items-baseline">
-    <ImAttachment   style={{fontSize: "12px", marginRight: "10px",fontWeight:"500"}} /> 
+    <ImAttachment   style={{fontSize: "12px", marginRight: "10px",fontWeight:"500", color:"#45669d"}} /> 
     Attached
   </div>
 ) :
  key === "View" ? (
   <div className="d-flex align-items-baseline">
-    <GrView   style={{fontSize: "12px", marginRight: "10px", }} /> 
+    <GrView   style={{fontSize: "12px", marginRight: "10px", color:"#45669d"}} /> 
     View
   </div>
 ) : 

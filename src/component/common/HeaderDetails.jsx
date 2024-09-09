@@ -25,8 +25,13 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
-import { FaListCheck, FaArrowRightArrowLeft,FaCalendarDays, FaClipboardList,   } from "react-icons/fa6";
-import { FaUserCircle,  FaMoneyCheckAlt } from "react-icons/fa";
+import {
+  FaListCheck,
+  FaArrowRightArrowLeft,
+  FaCalendarDays,
+  FaClipboardList,
+} from "react-icons/fa6";
+import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -95,29 +100,104 @@ function HeaderDetails() {
   ];
 
   const addMore = [
-    { titleColumn: "RegNo", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Forename", ellipsis: true, isVisible:true,width:"120px" },
-    { titleColumn: "Surename", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "FullName", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "DateOfBirth", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "DateRetired", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "DateAged65", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "DateOfDeath", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Rank", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Duty", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Station", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "StationID", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "StationPh", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "PensionNo", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "GRAMember", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "DateJoined", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "DateLeft", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "AssociateMember", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Distric", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Division", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Address", ellipsis: true, isVisible:true,width:"250px" },
-    { titleColumn: "Status", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Updated", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "RegNo", ellipsis: true, isVisible: true, width: "100px" },
+    {
+      titleColumn: "Forename",
+      ellipsis: true,
+      isVisible: true,
+      width: "120px",
+    },
+    {
+      titleColumn: "Surename",
+      ellipsis: true,
+      isVisible: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "FullName",  
+      ellipsis: true,
+      isVisible: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "DateOfBirth",
+      ellipsis: true,
+      isVisible: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "DateRetired",
+      ellipsis: true,
+      isVisible: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "DateAged65",
+      ellipsis: true,
+      isVisible: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "DateOfDeath",
+      ellipsis: true,
+      isVisible: true,
+      width: "420px",
+    },
+    { titleColumn: "Rank", ellipsis: true, isVisible: true, width: "100px" },
+    { titleColumn: "Duty", ellipsis: true, isVisible: true, width: "100px" },
+    { titleColumn: "Station", ellipsis: true, isVisible: true, width: "100px" },
+    {
+      titleColumn: "StationID",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "StationPh",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "PensionNo",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "GRAMember",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "DateJoined",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "DateLeft",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "AssociateMember",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    { titleColumn: "Distric", ellipsis: true, isVisible: true, width: "100px" },
+    {
+      titleColumn: "Division",
+      ellipsis: true,
+      isVisible: true,
+      width: "100px",
+    },
+    { titleColumn: "Address", ellipsis: true, isVisible: true, width: "250px" },
+    { titleColumn: "Status", ellipsis: true, isVisible: true, width: "100px" },
+    { titleColumn: "Updated", ellipsis: true, isVisible: true, width: "100px" },
   ];
   const topThreeDots = {
     BulkChnages: "false",
@@ -171,12 +251,13 @@ function HeaderDetails() {
       <>
         {(location?.pathname === "/ClaimSummary" ||
           location?.pathname === "/Summary" ||
-          location?.pathname === "/Cases") && (
+          location?.pathname === "/CasesSummary") && (
           <FaClipboardList
             style={{
               fontSize: "15px",
               marginRight: "10px",
               marginLeft: "10px",
+              color: "#45669d",
             }}
           />
         )}
@@ -184,10 +265,10 @@ function HeaderDetails() {
     );
   };
   return (
-    <div className="">
+    <div className="header-detail-main">
       <div
         className={`details-header d-flex w-100% overflow-hidden ${
-          location?.pathname == "/Details" ? "Header-border" : ""
+          location?.pathname == "/Details" ||  location?.pathname =="/CasesDetails" ||  location?.pathname =="/ClaimsDetails"? "Header-border" : ""
         }`}
       >
         <div style={{ width: "100%" }}>
@@ -200,35 +281,39 @@ function HeaderDetails() {
                   </>
                 ) : (
                   <>
-                    <p>{location?.state?.search}</p>
-                    <p>&nbsp; &nbsp;/{iconFtn()}</p>
-                    { location?.pathname=="/Details" &&
+                    {(location?.pathname === "/Details" ||
+                      location?.state?.search === "Profile") && (
                       <FaUser
                         style={{
                           fontSize: "16px",
-                          marginLeft: "10px",
+                          color: "#45669d",
                           marginRight: "10px",
                         }}
                       />
-                    }
-                    { location?.pathname=="/CasesDetails" &&
+                    )}
+                    {(location?.pathname == "/CasesDetails" ||
+                      location?.state?.search == "Cases") && (
                       <FaListCheck
                         style={{
                           fontSize: "16px",
-                          marginLeft: "10px",
+                          color: "#45669d",
                           marginRight: "10px",
                         }}
                       />
-                    }
-                    { location?.pathname=="/ClaimsDetails" &&
-                      <FaMoneyCheckAlt
-                        style={{
-                          fontSize: "16px",
-                          marginLeft: "10px",
-                          marginRight: "10px",
-                        }}
-                      />
-                    }
+                    )}
+                    {(location?.pathname == "/ClaimsDetails" ||
+                      location?.state?.search == "Claims") && (
+                        <FaMoneyCheckAlt
+                          style={{
+                            fontSize: "16px",
+                            color: "#45669d",
+                            marginRight: "10px",
+                          }}
+                        />
+                      )}
+                    <p>{location?.state?.search}</p>
+                    <p>&nbsp; &nbsp;/{iconFtn()}</p>
+
                     <p>{formattedNav}</p>
                     {location?.state?.code && (
                       <>
@@ -242,7 +327,7 @@ function HeaderDetails() {
               </div>
             </div>
             {}
-            {location?.pathname == "/Details" && (
+            {(location?.pathname == "/Details" || location?.pathname == "/CasesDetails") && (
               <div className="d-flex align-items-baseline">
                 <Button onClick={goBack} className="me-1 gray-btn butn">
                   Return to summary
@@ -258,7 +343,7 @@ function HeaderDetails() {
             )}
           </div>
 
-          {(location?.pathname == "/ClaimSummary" ||
+          {(location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/ClaimSummary") && (
             <div className="search-main">

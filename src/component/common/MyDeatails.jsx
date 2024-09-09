@@ -21,9 +21,6 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
-{/* Extra */} 
- 
-{/* Extra */}
 
 function MyDeatails() {
 
