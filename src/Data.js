@@ -8,7 +8,7 @@ export const tableData = [
 {
   Key: '1',
   Forename:"Jack 00000111 00000",
-  Surename:"Smith",
+  Surname:"Smith",
   "Date Of Birth":"01/02/1997",
   "Date Retired":"01/02/2045",
   "Date Aged 65":"01/02/2045",

@@ -1,7 +1,8 @@
-import { useState, React, useRef } from "react";
+import { useState, React, useRef, useEffect } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePDF } from "react-to-pdf";
 import { FaUser } from "react-icons/fa6";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 import {
   RightOutlined,
   PlusOutlined,
@@ -25,8 +26,13 @@ import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
-import { FaListCheck, FaArrowRightArrowLeft,FaCalendarDays, FaClipboardList,   } from "react-icons/fa6";
-import { FaUserCircle,  FaMoneyCheckAlt } from "react-icons/fa";
+import {
+  FaListCheck,
+  FaArrowRightArrowLeft,
+  FaCalendarDays,
+  FaClipboardList,
+} from "react-icons/fa6";
+import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -38,15 +44,26 @@ function HeaderDetails() {
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
+  const [trueFilters, settrueFilters] = useState()
   const navigate = useNavigate();
   console.log(location, "location");
   const inputRef = useRef(null);
+  const { searchFilters } = useTableColumns();
+  function filterSearchableColumns(data) {
+    settrueFilters(data.filter(column => column.isSearch === true));
+  }
+  useEffect(() => {
+    filterSearchableColumns(searchFilters)
+  }, [searchFilters])
+  
+  console.log(trueFilters,"44")
 
   const genaratePdf = (e) => {
     e.stopPropagation();
     console.log("testing");
     toPDF();
   };
+
   const mriatalStatus = {
     Male: false,
     Female: false,
@@ -59,6 +76,7 @@ function HeaderDetails() {
     Associate: false,
     Retired: false,
   };
+
 
   const Gender = [
     {
@@ -95,30 +113,83 @@ function HeaderDetails() {
   ];
 
   const addMore = [
-    { titleColumn: "Reg No", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Forename", ellipsis: true, isVisible:true,width:"120px" },
-    { titleColumn: "Surename", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Full Name", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Date Of Birth", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Date Retired", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Date Aged 65", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Date Of Death", ellipsis: true, isVisible:true,width:"420px" },
-    { titleColumn: "Rank", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Duty", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Station", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Station ID", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Station Ph", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Pension No", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "GRA Member", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Date Joined", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Date Left", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Associate Member", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "District", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Division", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Address", ellipsis: true, isVisible:true,width:"250px" },
-    { titleColumn: "Status", ellipsis: true, isVisible:true,width:"100px" },
-    { titleColumn: "Updated", ellipsis: true, isVisible:true,width:"100px" },
+    { titleColumn: "Reg No", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Forename", ellipsis: true, isGride: true, width: "120px" },
+    { titleColumn: "Surname", ellipsis: true, isGride: true, width: "420px" },
+    { titleColumn: "Full Name", ellipsis: true, isGride: true, width: "420px" },
+    {
+      titleColumn: "Date Of Birth",
+      ellipsis: true,
+      isGride: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "Date Retired",
+      ellipsis: true,
+      isGride: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "Date Aged 65",
+      ellipsis: true,
+      isGride: true,
+      width: "420px",
+    },
+    {
+      titleColumn: "Date Of Death",
+      ellipsis: true,
+      isGride: true,
+      width: "420px",
+    },
+    { titleColumn: "Rank", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Duty", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Station", ellipsis: true, isGride: true, width: "100px" },
+    {
+      titleColumn: "Station ID",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "Station Ph",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "Pension No",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "GRA Member",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
+    {
+      titleColumn: "Date Joined",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
+    { titleColumn: "Date Left", ellipsis: true, isGride: true, width: "100px" },
+    {
+      titleColumn: "Associate Member",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
+    { titleColumn: "District", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Division", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Address", ellipsis: true, isGride: true, width: "250px" },
+    { titleColumn: "Status", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Updated", ellipsis: true, isGride: true, width: "100px" },
   ];
+  const exportbtn =
+    {"Export PDF":true,"Export CSV":true,}
+   
   const topThreeDots = {
     BulkChnages: "false",
   };
@@ -171,12 +242,14 @@ function HeaderDetails() {
       <>
         {(location?.pathname === "/ClaimSummary" ||
           location?.pathname === "/Summary" ||
-          location?.pathname === "/Cases") && (
+          location?.pathname === "/CasesSummary"
+        ) && (
           <FaClipboardList
             style={{
               fontSize: "15px",
               marginRight: "10px",
               marginLeft: "10px",
+              color:"#45669d"
             }}
           />
         )}
@@ -200,27 +273,30 @@ function HeaderDetails() {
                   </>
                 ) : (
                   <>
+                    {location?.state?.search == "Profile" &&
+                      (location?.pathname == "/Summary"  || location?.pathname == "/Details" )&&(
+                        <FaUser
+                          style={{
+                            fontSize: "16px",
+                            marginRight: "10px",
+                            color: "#45669d",
+                          }}
+                        />
+                      )}
+                    {location?.state?.search == "Cases" &&
+                      (location?.pathname == "CasesSummary"  || location?.pathname == "/CasesDetails" )&&(
+                        <FaListCheck
+                        style={{
+                          fontSize: "16px",
+                          marginLeft: "10px",
+                          marginRight: "10px",
+                          color: "#45669d",
+                        }}
+                      />
+                      )}
                     <p>{location?.state?.search}</p>
                     <p>&nbsp; &nbsp;/{iconFtn()}</p>
-                    { location?.pathname=="/Details" &&
-                      <FaUser
-                        style={{
-                          fontSize: "16px",
-                          marginLeft: "10px",
-                          marginRight: "10px",
-                        }}
-                      />
-                    }
-                    { location?.pathname=="/CasesDetails" &&
-                      <FaListCheck
-                        style={{
-                          fontSize: "16px",
-                          marginLeft: "10px",
-                          marginRight: "10px",
-                        }}
-                      />
-                    }
-                    { location?.pathname=="/ClaimsDetails" &&
+                    {location?.pathname == "/ClaimsDetails" && (
                       <FaMoneyCheckAlt
                         style={{
                           fontSize: "16px",
@@ -228,7 +304,7 @@ function HeaderDetails() {
                           marginRight: "10px",
                         }}
                       />
-                    }
+                    )}
                     <p>{formattedNav}</p>
                     {location?.state?.code && (
                       <>
@@ -260,7 +336,7 @@ function HeaderDetails() {
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Summary" ||
-            location?.pathname == "/ClaimSummary") && (
+            location?.pathname == "/CasesSummary") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between ">
                 <h2 className="title-main">
@@ -275,9 +351,9 @@ function HeaderDetails() {
                         <Button className="me-1 gray-btn butn">Export</Button>
                       </>
                     }
-                    data={addMore}
+                    data={exportbtn}
                     isSearched={true}
-                    isCheckBox={true}
+                    isCheckBox={false}
                     actions={genaratePdf}
                   />
 
@@ -288,33 +364,23 @@ function HeaderDetails() {
               </div>
               <div className="d-flex search-fliters align-items-baseline">
                 <Row className="align-items-baseline">
-                  <Input 
+                  <Input
                     placeholder="Reg No or Surname"
                     style={{
                       width: "21%",
                       height: "31px",
                       border: "1px solid",
-                      color:  "gray"
+                      color: "gray",
                     }}
                     suffix={<SearchOutlined />}
                   />
-                  {/* <Input
-                    placeholder="Postal Code"
-                    style={{ width: "13%", height: "31px" }}
-                    className="margin"
-                  /> */}
-                  <JiraLikeMenu title="Gender" data={mriatalStatus} />
-                  <JiraLikeMenu
-                    title="Partnership"
-                    data={SerachFitersLookups}
-                  />
-                  <JiraLikeMenu
-                    title="Subscriptions"
-                    data={SerachFitersLookups}
-                  />
-                  <JiraLikeMenu title="Membership" data={Mebership} />
-                  {/* {trueKeys.includes("Mebership") == true && (
-                  )} */}
+{
+  trueFilters?.map((item,index)=>(
+  <JiraLikeMenu title={item?.titleColumn} data={item?.lookups} />
+                   
+  ))
+}
+
                   <div className="searchfilter- margin">
                     <SimpleMenu
                       title={
@@ -326,6 +392,7 @@ function HeaderDetails() {
                       isSearched={false}
                     />
                   </div>
+                  
                   <div>
                     <Link className="link" style={{ color: "#333333" }}>
                       Reset

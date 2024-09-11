@@ -29,7 +29,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
   const { columns, state, isMale, gridData, handleSort } = useTableColumns();
 
   const profilColumn = columns?.[screenName]
-    ?.filter((item) => item?.isVisible)
+    ?.filter((item) => item?.isGride)
     ?.map((item) => ({
       ...item,
       width: item?.width, // Fallback to 'auto' if no width is provided

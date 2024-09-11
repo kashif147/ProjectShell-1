@@ -177,7 +177,7 @@ function MyDeatails() {
                   <Input />
                 </Col>
                 <Col span={8}>
-                  <p className="lbl">Surename</p>
+                  <p className="lbl">Surname</p>
                   <Input />
                 </Col>
                

@@ -83,7 +83,7 @@ body {
 }
 
 .nav-links-container {
-  margin-right: 2rem;
+  margin-right: 1.2rem;
 }
 .navbar {
   padding: 0px !important;
@@ -113,7 +113,23 @@ body {
   width: 100%;
 
 }
+.ant-table {
+  display: flex;
+  flex-direction: column;
+}
 
+.ant-table-container {
+  overflow: auto;
+}
+
+.ant-table-header {
+  flex: 0 0 auto;
+}
+
+.ant-table-body {
+  flex: 1 1 auto;
+  overflow: auto;
+}
 .title {
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
@@ -126,7 +142,7 @@ body {
   justify-content: flex-end !important;
 }
 .search-fliters {
-  padding-top: 7px;
+  /* padding-top: 7px; */
   padding-bottom: 7px;
 }
 .search-fliters input {
@@ -135,6 +151,38 @@ body {
 }
 .margin {
   margin-left: 6px !important;
+}
+.table-wrapper {
+  overflow: auto;
+}
+
+.fixed-header {
+  position: sticky;
+  top: 0;
+  background: #fff; /* Match the table background */
+  z-index: 10; /* Ensure it is above other content */
+  border-bottom: 2px solid #ddd; /* Optional: Add a border for visual separation */
+}
+
+.fixed-column {
+  position: sticky;
+  left: 0;
+  background: #fff; /* Match the table background */
+  z-index: 10; /* Ensure it is above other content */
+  border-right: 1px solid #ddd; /* Optional: Add a border for visual separation */
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1); /* Optional: Add shadow for better visibility */
+}
+.editable-cell {
+  position: relative;
+}
+
+.editable-cell input {
+  display: none; /* Hide input by default */
+  width: 100%; /* Full width for the input */
+}
+
+.editable-cell:hover input {
+  display: block; /* Show input on hover */
 }
 .sid-nav-main
   :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
@@ -317,6 +365,8 @@ body {
   font-weight: 600;
   font-family: var(--fontFamily) !important;
   color: var(--labelColor);
+  padding-bottom: 0px !important;
+  margin-bottom: 0px !important;
 }
 .main-main {
   padding-left: 30px;
@@ -336,9 +386,9 @@ body {
 .title {
   /* margin-bottom: 8px !important; */
 }
-.search-fliters {
+/* .search-fliters {
   margin-bottom: 10px !important;
-}
+} */
 .search-fliters .link {
   text-decoration: none !important;
   margin-right: 18px;
@@ -753,7 +803,7 @@ font-weight: 400;
 color: var(--mainBlue) !important;
 }
 .table-wrapper {
-  max-height: 500px; 
+  max-height: 430px; 
   overflow-y: auto;  
   overflow-x: auto;  
   white-space: nowrap; 
