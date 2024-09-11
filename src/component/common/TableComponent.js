@@ -29,7 +29,7 @@ function TableComponent({ dataSource, screenName, redirect }) {
   const { columns, state, isMale, gridData, handleSort } = useTableColumns();
 
   const profilColumn = columns?.[screenName]
-    ?.filter((item) => item?.isVisible)
+    ?.filter((item) => item?.isGride)
     ?.map((item) => ({
       ...item,
       width: item?.width, // Fallback to 'auto' if no width is provided
@@ -103,14 +103,14 @@ function TableComponent({ dataSource, screenName, redirect }) {
                 </td>
                 {profilColumn?.map((th) => (
                   <td key={th.titleColumn} style={{ width:th?.width,textOverflow: "ellipsis",hiteSpace: "nowrap",overflow: "hidden",}}>
-                    {th?.titleColumn === "FullName" ? (
+                    {th?.titleColumn === "Full Name" ? (
                       <Link
                         to={redirect}
                         style={{ color: "blue" }}
                         state={{
                           search: screenName,
-                          name: item.FullName,
-                          code: item?.RegNo,
+                          name: item['FullName'],
+                          code: item?.['Reg No'],
                         }}
                       >
                         {item[th.titleColumn]}
