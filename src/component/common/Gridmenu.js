@@ -24,10 +24,21 @@ function Gridmenu({ title, data, screenName }) {
   const getColumnWidth = (key) => widthMapping[key] || 120;
 
   console.log(columns, "update");
+  const searchInFilters = (query) => {
+    // Trim and convert the query to lowercase for a case-insensitive search
+    const normalizedQuery = query.trim().toLowerCase();
+  
+    // Filter the searchFilters array
+    const filteredResults = columns[screenName]?.filter((item) =>
+      item.titleColumn.toLowerCase().includes(normalizedQuery)
+    );
+    console.log(filteredResults, "//"); 
+    setcheckBoxData(filteredResults);
+  };
   const menu = (
     <Menu>
       <Menu.Item key="1">
-        <Input suffix={<SearchOutlined />} />
+        <Input suffix={<SearchOutlined />} onClick={(e) => e.stopPropagation() } onChange={(e)=>searchInFilters(e.target.value)} />
       </Menu.Item>
       <Row style={{ maxHeight: "200px", overflowY: "auto" }}>
         {checkBoxData?.map((key) => (
@@ -43,7 +54,7 @@ function Gridmenu({ title, data, screenName }) {
                   key?.width,
                 );
               }}
-              checked={key?.isVisible}
+              checked={key?.isGride}
             >
               {key?.titleColumn}
             </Checkbox>
