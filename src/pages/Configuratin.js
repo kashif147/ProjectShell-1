@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import { SiActigraph } from "react-icons/si";
+import { FaRegMap } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
 import { Input, Table, Row, Col, Space, Pagination, Divider} from "antd";
@@ -11,6 +12,7 @@ import { UserOutlined } from "@ant-design/icons";
 import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
 import { tableData } from "../Data";
+import { TiContacts } from "react-icons/ti";
 
 
 function Configuratin() {
@@ -19,6 +21,10 @@ function Configuratin() {
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
   const [isAddProfileModal, setisAddProfileModal] = useState(false);
+  const [isRegionTypeModal,setisRegionTypeModal] = useState(false);
+  const [isAddRegionTypeModal,setisAddRegionTypeModal ] = useState(false);
+  const [isContactTypeModal,setisContactTypeModal] = useState(false);
+  const [isAddContactTypeModal,setisAddContactTypeModal ] = useState(false);
   const [partnershipModal, setPartnershipModal] = useState(false);
   const [dummyModal, setDummyModal] = useState(false);
   const [profileData, setprofileData] = useState({
@@ -36,6 +42,19 @@ function Configuratin() {
     beta: "",
     giga: "",
   }); 
+  const [RegionTypeData, setRegionTypeData] = useState({
+    ReigonTypeId: "",
+    ContactType: "",
+    DisplayName: "", 
+  }); 
+
+  const [ContactTypeData, setContactTypeData] = useState({
+    ReigonTypeId: "",
+    ReigonType: "",
+    DisplayName: "",
+    HasChildren: "", 
+  }); 
+
   const [genderData, setGenderData] = useState({
     ShortName: "",
     DisplayName: "",
@@ -60,12 +79,26 @@ function Configuratin() {
     DisplayName: "",
     Alpha: "",
     Beta: ""
-  });
+  }); 
 
   const handleInputChange = (name, value) => {
     setGenderData((prevState) => ({
       ...prevState,
       [name]: value,
+    }));
+  };
+
+  const handleInputChange00 = (name00, value00) => {
+    setRegionTypeData((prevState00) => ({
+      ...prevState00,
+      [name00]: value00,
+    }));
+  };
+
+  const handleInputChange01 = (name01, value01) => {
+    setContactTypeData((prevState01) => ({
+      ...prevState01,
+      [name01]: value01,
     }));
   };
 
@@ -152,6 +185,7 @@ function Configuratin() {
       ),
     },
   ];
+
 
   const ProfileColumns = [
     {
@@ -306,6 +340,108 @@ function Configuratin() {
     },
   ];
 
+  const RegionTypeColumnss = [
+    
+    {
+      title: "RegionType",
+      dataIndex: "RegionType",
+      key: "RegionType",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "DisplayName",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => 
+      <div
+       style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "HasChildren",
+      dataIndex: "HasChildren",
+      key: "HasChildren",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+       
+    {
+      title: "Action",
+      dataIndex: "DisplayName",
+      render: (_, record) => (
+        <Space 
+        size="middle" 
+        className="action-buttons"
+        style={{ justifyContent: 'center', display: 'flex' }}
+        >
+          <FaEdit 
+          size ={16}
+          style={{ marginRight: '10px' }}
+          />
+          <AiFillDelete
+          size ={16} 
+          />
+        </Space>
+      ),
+    },
+  ];
+
+  const ContactTypeColumns = [
+    
+    {
+      title: "ContactType",
+      dataIndex: "ContactType",
+      key: "ContactType",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+    
+    {
+      title: "DisplayName",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+      verticalAlign: 'center',
+      width: 60,
+      align: 'center',
+      render: (text) => 
+      <div
+       style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+    },
+     
+       
+    {
+      title: "Action",
+      dataIndex: "DisplayName",
+      render: (_, record) => (
+        <Space 
+        size="middle" 
+        className="action-buttons"
+        style={{ justifyContent: 'center', display: 'flex' }}
+        >
+          <FaEdit 
+          size ={16}
+          style={{ marginRight: '10px' }}
+          />
+          <AiFillDelete
+          size ={16} 
+          />
+        </Space>
+      ),
+    },
+  ];
+
+  
 
   const column = [
     {
@@ -454,6 +590,66 @@ function Configuratin() {
     },
   ];
 
+  const RegionTy = [
+    {
+      key: "1",
+      RegionTypeId: "1",
+      RegionType: 'Province',
+      DisplayName: 'Province',
+      HasChildren: "1", 
+    },
+    {
+      key: "2",
+      RegionTypeId: "2",
+      RegionType: 'County',
+      DisplayName: 'County',
+      HasChildren: "1", 
+    }, 
+    {
+      key: "3",
+      RegionTypeId: "3",
+      RegionType: 'Administerative Districts',
+      DisplayName: 'District',
+      HasChildren: "1", 
+    }, 
+    {
+      key: "4",
+      RegionTypeId: "4",
+      RegionType: 'City',
+      DisplayName: 'City',
+      HasChildren: "1", 
+    }, 
+    {
+      key: "5",
+      RegionTypeId: "5",
+      RegionType: 'PostCode',
+      DisplayName: 'PostCode',
+      HasChildren: "0", 
+    }, 
+  ];
+
+  const ContactTy = [
+    {
+      key: "1",
+      ContactTypeId: "1",
+      ContactType: 'office',
+      DisplayName: 'office', 
+    },
+    {
+      key: "2",
+      ContactTypeId: "2",
+      ContactType: 'office',
+      DisplayName: 'office', 
+    }, 
+    {
+      key: "3",
+      ContactTypeId: "3",
+      ContactType: 'office',
+      DisplayName: 'office', 
+    },  
+  ];
+
+
   // Toggling Modal Functions
   const genderModalOpen = () => setGenderModal(!genderModal);
   const membershipModalFtn = () => setMembershipModal(!membershipModal);
@@ -462,6 +658,10 @@ function Configuratin() {
   const subscriptionsModalFtn = () => setIsSubscriptionsModal(!isSubscriptionsModal);
   const profileModalOpenCloseFtn = () => setisProfileModal(!isProfileModal);
   const addprofileModalOpenCloseFtn = () => setisAddProfileModal(!isAddProfileModal);
+  const RegionTypeModalOpenCloseFtn = () => setisRegionTypeModal(!isRegionTypeModal);
+  const addRegionTypeModalOpenCloseFtn = () => setisAddRegionTypeModal(!isAddRegionTypeModal);
+  const ContactTypeModalOpenCloseFtn = () => setisContactTypeModal(!isContactTypeModal);
+  const addContactTypeModalOpenCloseFtn = () => setisAddContactTypeModal(!isAddContactTypeModal);
 
   const addmembershipFtn = () => {
     console.log(membershipdata);
@@ -478,6 +678,14 @@ function Configuratin() {
 
   const AddprofileModalFtn = () => {
     console.log(profileData)
+  }
+
+  const AddRegionTypeModalFtn = () => {
+    console.log(RegionTypeData)
+  }
+
+  const AddContactTypeModalFtn = () => {
+    console.log(ContactTypeData)
   }
 
   const AddSubscriptionsFtn = () => {
@@ -512,6 +720,10 @@ function Configuratin() {
             <PiUsersFourDuotone className="icons" />
             <p className="lookups-title">Membership</p>
           </div>
+
+
+
+
         </Col>
         <Col className="hover-col" span={4} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
@@ -528,6 +740,18 @@ function Configuratin() {
             <p className="lookups-title">Profile</p>
           </div>
         </Col>  
+        <Col className="hover-col" span={4} style={styles.centeredCol}>
+          <div onClick={RegionTypeModalOpenCloseFtn}>
+            <FaRegMap   className="icons" />
+            <p className="lookups-title">Reigon type</p>
+          </div>
+        </Col>  
+        <Col className="hover-col" span={4} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+          <TiContacts    className="icons" />
+            <p className="lookups-title">Contact Type</p>
+          </div>
+        </Col> 
       </Row>
 
 
@@ -1097,7 +1321,182 @@ function Configuratin() {
         />
       </MyDrawer>
 
+      {/*Reigon type Drawer */}
 
+      <MyDrawer
+      width={"1000px"}
+        open={isRegionTypeModal}
+        onClose={RegionTypeModalOpenCloseFtn}
+        add={addRegionTypeModalOpenCloseFtn}
+        title="Profile"
+      >
+        <MyDrawer
+          title="Add Regiontype"
+          open={isAddRegionTypeModal}
+          add={AddRegionTypeModalFtn}
+          onClose={addRegionTypeModalOpenCloseFtn}
+        >  
+         <div className="input-group">
+  <p className="inpt-lbl">Reigon type</p>
+  <Input
+    placeholder="Please enter RegionType"
+    onChange={(e) => handleInputChange00("RegionType", e.target.value)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Display Name</p>
+  <Input
+    placeholder="Please enter DisplayName"
+    onChange={(e) => handleInputChange00("DisplayName", e.target.value)}
+  />
+</div>
+         </MyDrawer>
+
+
+
+        <Input
+          placeholder="Search..."
+          style={{ marginBottom: "5px" }}
+          suffix={<SearchOutlined />}
+        />
+
+        <Table
+          columns={RegionTypeColumnss}
+          pagination={false}
+          dataSource={RegionTy}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{RegionTy.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${RegionTy.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={RegionTy.length}
+                pageSize={10}
+              />
+            </div>
+          )}
+        />
+      </MyDrawer>
+      {/* ContactType Modal */}
+
+      <MyDrawer
+      width={"1000px"}
+        open={isContactTypeModal}
+        onClose={ContactTypeModalOpenCloseFtn}
+        add={addContactTypeModalOpenCloseFtn}
+        title="Profile"
+      >
+        <MyDrawer
+          title="Add ContactType"
+          open={isAddContactTypeModal}
+          add={AddContactTypeModalFtn}
+          onClose={addContactTypeModalOpenCloseFtn}
+        >  
+         <div className="input-group">
+  <p className="inpt-lbl">Reigon type</p>
+  <Input
+    placeholder="Please enter ContactType"
+    onChange={(e) => handleInputChange01("ContactType", e.target.value)}
+  />
+</div>
+
+<div className="input-group">
+  <p className="inpt-lbl">Display Name</p>
+  <Input
+    placeholder="Please enter DisplayName"
+    onChange={(e) => handleInputChange01("DisplayName", e.target.value)}
+  />
+</div>
+         </MyDrawer>
+
+
+
+        <Input
+          placeholder="Search..."
+          style={{ marginBottom: "5px" }}
+          suffix={<SearchOutlined />}
+        />
+
+        <Table
+          columns={ContactTypeColumns}
+          pagination={false}
+          dataSource={ContactTy}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          footer={() => (
+            <div className="d-flex justify-content-between">
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  width: "100%",
+                }}
+              >
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  1-{ContactTy.length}
+                </span>
+                <span
+                  style={{
+                    marginRight: "4px",
+                    fontSize: "12px",
+                    fontWeight: "500",
+                  }}
+                >
+                  {" "}
+                  of {`${ContactTy.length}`}
+                </span>
+                <LuRefreshCw />
+              </div>
+              <Pagination
+                defaultCurrent={1}
+                total={ContactTy.length}
+                pageSize={10}
+              />
+            </div>
+          )}
+        />
+      </MyDrawer>
 
     </div>
   );
