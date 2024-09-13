@@ -9,6 +9,7 @@ import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 import TableComponent from "../../component/common/TableComponent";
+import GridWithAGGrid from '../../GridWithAGGrid';
 
 
 function Claims() {
@@ -158,7 +159,8 @@ function Claims() {
   
     return (
       <div className="">
-      <TableComponent screenName="Cases" redirect="/CasesDetails" />
+      {/* <TableComponent screenName="Cases" redirect="/CasesDetails" /> */}
+      <GridWithAGGrid />
     </div>
     );
   }

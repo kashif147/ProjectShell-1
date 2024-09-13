@@ -33,6 +33,7 @@ import {
   FaClipboardList,
 } from "react-icons/fa6";
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
+import DateRang from "./DateRang";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -44,19 +45,19 @@ function HeaderDetails() {
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
-  const [trueFilters, settrueFilters] = useState()
+  const [trueFilters, settrueFilters] = useState();
   const navigate = useNavigate();
   console.log(location, "location");
   const inputRef = useRef(null);
   const { searchFilters } = useTableColumns();
   function filterSearchableColumns(data) {
-    settrueFilters(data.filter(column => column.isSearch === true));
+    settrueFilters(data.filter((column) => column.isSearch === true));
   }
   useEffect(() => {
-    filterSearchableColumns(searchFilters)
-  }, [searchFilters])
-  
-  console.log(trueFilters,"44")
+    filterSearchableColumns(searchFilters);
+  }, [searchFilters]);
+
+  console.log(trueFilters, "44");
 
   const genaratePdf = (e) => {
     e.stopPropagation();
@@ -76,7 +77,6 @@ function HeaderDetails() {
     Associate: false,
     Retired: false,
   };
-
 
   const Gender = [
     {
@@ -187,9 +187,8 @@ function HeaderDetails() {
     { titleColumn: "Status", ellipsis: true, isGride: true, width: "100px" },
     { titleColumn: "Updated", ellipsis: true, isGride: true, width: "100px" },
   ];
-  const exportbtn =
-    {"Export PDF":true,"Export CSV":true,}
-   
+  const exportbtn = { "Export PDF": true, "Export CSV": true };
+
   const topThreeDots = {
     BulkChnages: "false",
   };
@@ -242,14 +241,13 @@ function HeaderDetails() {
       <>
         {(location?.pathname === "/ClaimSummary" ||
           location?.pathname === "/Summary" ||
-          location?.pathname === "/CasesSummary"
-        ) && (
+          location?.pathname === "/CasesSummary") && (
           <FaClipboardList
             style={{
               fontSize: "15px",
               marginRight: "10px",
               marginLeft: "10px",
-              color:"#45669d"
+              color: "#45669d",
             }}
           />
         )}
@@ -274,7 +272,8 @@ function HeaderDetails() {
                 ) : (
                   <>
                     {location?.state?.search == "Profile" &&
-                      (location?.pathname == "/Summary"  || location?.pathname == "/Details" )&&(
+                      (location?.pathname == "/Summary" ||
+                        location?.pathname == "/Details") && (
                         <FaUser
                           style={{
                             fontSize: "16px",
@@ -284,15 +283,16 @@ function HeaderDetails() {
                         />
                       )}
                     {location?.state?.search == "Cases" &&
-                      (location?.pathname == "CasesSummary"  || location?.pathname == "/CasesDetails" )&&(
+                      (location?.pathname == "CasesSummary" ||
+                        location?.pathname == "/CasesDetails") && (
                         <FaListCheck
-                        style={{
-                          fontSize: "16px",
-                          marginLeft: "10px",
-                          marginRight: "10px",
-                          color: "#45669d",
-                        }}
-                      />
+                          style={{
+                            fontSize: "16px",
+                            marginLeft: "10px",
+                            marginRight: "10px",
+                            color: "#45669d",
+                          }}
+                        />
                       )}
                     <p>{location?.state?.search}</p>
                     <p>&nbsp; &nbsp;/{iconFtn()}</p>
@@ -374,12 +374,13 @@ function HeaderDetails() {
                     }}
                     suffix={<SearchOutlined />}
                   />
-{
-  trueFilters?.map((item,index)=>(
-  <JiraLikeMenu title={item?.titleColumn} data={item?.lookups} />
-                   
-  ))
-}
+                 {trueFilters?.map((item, index) => (
+  item?.titleColumn === "Date Of Birth" ? (
+    <DateRang key={index} title={item?.titleColumn} />
+  ) : (
+    <JiraLikeMenu key={index} title={item?.titleColumn} data={item?.lookups} />
+  )
+))}
 
                   <div className="searchfilter- margin">
                     <SimpleMenu
@@ -392,7 +393,7 @@ function HeaderDetails() {
                       isSearched={false}
                     />
                   </div>
-                  
+
                   <div>
                     <Link className="link" style={{ color: "#333333" }}>
                       Reset
