@@ -116,7 +116,8 @@ function SideNav() {
   return (
     <div className='sid-nav-main'
       style={{
-        height:"100%"
+        height:"100%",
+       
       }}
     >
       <Menu
@@ -124,6 +125,7 @@ function SideNav() {
         defaultOpenKeys={['sub1']}
         mode="inline"
         theme="dark"
+        style={{ width: isSideNav ? '60px' : '200px' }}
         inlineCollapsed={isSideNav}
         items={items}
       />
