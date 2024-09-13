@@ -81,7 +81,10 @@ body {
   border-bottom: 2px solid #007bff; /* Border color for the active link */
   font-weight: bold;
 }
-
+.checkbox{
+  font-size: 14px;
+  font-weight: 500;
+}
 .nav-links-container {
   margin-right: 1.2rem;
 }
@@ -823,4 +826,74 @@ color: red !important;
 }
 .bred-cram-main p{
   margin-bottom: 0px !important;
+}
+/* Custom styles for AG Grid header */
+.custom-grid-container {
+  border-radius: 4px; /* Optional: rounded corners */
+  overflow: hidden; /* Ensure that borders don't break with rounded corners */
+}
+
+.custom-grid .ag-header {
+  background-color: #f4f4f4; /* Background color for the header */
+}
+
+.custom-grid .ag-header-cell {
+}
+
+.custom-grid .ag-cell {
+  border-right: 0.5px solid var(--borderColor) !important;
+}
+
+.ag-cell-label-container{
+  background-color: var(--mainBlue) !important;
+  color: white;
+  border-right: 0.5px solid var(--borderColor) !important;
+  padding-left: 10px !important;
+}
+.ag-theme-alpine{
+  --ag-header-column-resize-handle-width: 1px !important;
+    --ag-header-column-resize-handle-height: 100% !important;
+}
+.sort-icon{
+  color: white !important;
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+/* Custom styles to move the resize handle to the top of the header cell */
+.custom-grid .ag-header-cell {
+  position: relative; /* Ensure header cell is positioned relative */
+}
+
+.custom-grid .ag-header-cell .ag-header-cell-resize {
+  position: absolute;
+  top: 0; /* Move to the top of the header cell */
+  right: 0; /* Adjust right if needed */
+  width: 10px; /* Adjust the width of the resize handle */
+  height: 100%; /* Full height of the header cell */
+  cursor: ew-resize; /* Horizontal resize cursor */
+  background-color: rgba(0, 0, 0, 0.2); /* Background color for visibility */
+  z-index: 1; /* Ensure it's above other content */
+}
+
+/* Optional: Hide the default resize handle */
+.custom-grid .ag-header-cell .ag-header-cell-resize-default {
+  display: none;
+}
+
+.ag-header-cell, .ag-header-group-cell {
+  padding-left: 0px !important;
+  padding-right: 0px !important;
 }

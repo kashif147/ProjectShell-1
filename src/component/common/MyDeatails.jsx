@@ -338,7 +338,7 @@ function MyDeatails() {
           ),
         },
         {
-          label: <h1 className="primary-contact">WorkStation Information</h1>,
+          label: <h1 className="primary-contact">GRA Information</h1>,
           key: "2",
           children: (
             <div className="padding-bottom">
@@ -405,17 +405,21 @@ function MyDeatails() {
                </Col>
             </Row>
             <Row gutter={20}>
-            <Col style={{ width: '33.00%' }}>
+            <Col style={{ width: '20.00%' }} >
+          
+
               <p className="lbl">Rank</p>
               <MySelect placeholder="STOC" isSimple={true} />
-              </Col>
-              <Col style={{ width: '33.00%' }}>
-              <p className="lbl">rk btn:</p>
+           
               <Button onClick={TransferOpenCloseFtn}
-              style={{ marginLeft: '10px' }}
+              style={{ marginLeft: '10px', width:"13%" }}
               >
                 Action
               </Button>
+              </Col>
+              <Col style={{ width: '33.00%' }}>
+              <p className="lbl">rk btn:</p>
+             
               </Col>
               <Col  style={{ width: '33.00%' }}>
                 <p className="lbl">Division:</p>

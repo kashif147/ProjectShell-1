@@ -1,6 +1,6 @@
 import React from 'react'
 import { Select } from 'antd'
-function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimple}) {
+function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimple,width}) {
   const { Option } = Select;
   return (
     <Select
@@ -11,7 +11,9 @@ function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimp
     style={isMenu 
       ? { width: "100%" } 
       : isSimple 
-        ? { width: "100%", border: '1px solid #333333', borderRadius:"3px" } 
+        ? { width: "100%", border: '1px solid #333333', borderRadius:"3px" } :
+        width?
+        { width: width, border: '1px solid #333333', borderRadius:"3px" } 
         : {}}
     onChange={onChange}
     onClick={(e) => e.stopPropagation()}
