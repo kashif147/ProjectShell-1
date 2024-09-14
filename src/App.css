@@ -1,13 +1,13 @@
 :root {
   --mainBlue: #45669d;
-  --secound: #ad8135;
+  --secound: #c97a2f; /*#ad8135 */
   --FontsColor: #193a6e;
   --borderColor: #c0b9e7;
   --fontFamily: "Roboto", sans-serif;
   --labelColor: #333333;
   --table-row: #fafafa;
   --btn-hover: #dcdfe4;
-  --gray: rgba(9, 30, 66, 0.04);
+  --gray:  #ebf1fd;  /*rgba(9, 30, 66, 0.04);*/
 }
 input::placeholder,
 textarea::placeholder {
@@ -744,7 +744,7 @@ h1 {
   padding: 10px;
   border: 2px solid #e0e0e0;
   border-top: none;
-  margin-inline: 10px;
+  margin-inline: 0px;
   background-color: var(--gray);
 }
 

@@ -2,6 +2,7 @@ import React, { useState } from 'react';
 import { Upload, message, Divider } from 'antd';
 import { FiUpload } from "react-icons/fi";
 import { useLocation } from 'react-router-dom';
+import { Repeat } from '@mui/icons-material';
 
 function ProfileHeader() {
     const [imageUrl, setImageUrl] = useState("");
@@ -69,6 +70,7 @@ function ProfileHeader() {
                                 backgroundColor: "#FF0000",
                                 fontSize: "32px",
                                 color: "#FF0000", // Change the color to white for better visibility
+                                
                             }}>
                                 <FiUpload className="upload-icon" />
                                 <h1 style={{ margin: 0 }}>JS</h1>
@@ -79,66 +81,70 @@ function ProfileHeader() {
                 
             <div style={{ 
                 display: 'flex', 
-                justifyContent: 'center',  // Center horizontally
-                alignItems: 'center',       // Center vertically
+                // justifyContent: 'center',  // Center horizontally
+                // alignItems: 'center',       // Center vertically
             }}>
                 <div>
-                <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '12px' }}>Code {location?.state?.code}</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>{location?.state?.name}</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>20/06/1979 (36 Y)</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '12px' }}>Married</div>
-                    <div style={{ fontWeight: 'bold', color: '#FF7F7F', fontSize: '12px' }}>11/10/2015 (Deceased)</div>
+                    <br/>
+                <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '14px' }}>Code {location?.state?.code}</div>
+                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>{location?.state?.name}</div>
+                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>20/06/1979 (36 Y)</div>
+                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Married</div>
+                    <div style={{ fontWeight: 'bold', color: '#FF7F7F', fontSize: '14px' }}>11/10/2015 (Deceased)</div>
+                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Cases:</div>
+                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Claims:</div>
                 </div>
                    
                 </div>
             </div>
             <Divider type='horizontal' />
             {/* Other content remains unchanged */}
-            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '12px', color: '#6B7AAB' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',                 justifyContent: 'center',  // Center horizontally
+                alignItems: 'center',  }}>
                
-                <br/>
-                <div>Cases:</div>
-                <br/>
-                <div>Claims:</div>
-                <br/>
+                
                 <div>Member (01/01/2020 - 11/10/2015)</div>
                 <div>Graduated on: 01/09/2007</div>
                 <div>Attested on: 01/01/2008</div>
-                <br/>
+
                 <div>Statue</div>
-                <br/>
+
                 <div>0001 Garda</div>
                 <div>0021 Garda</div>
                 <div>0109 CDU-SDU</div>
                 <div>0026 CDU/SDU</div>
                 <Divider type='horizontal' />
                 <div>District Rep:</div>
-                <br/>
+
                 <div>District Secretary:</div>
-                <br/>
+
                 <div>District Chairman:</div>
-                <br/>
+
                 <div>CEC Rep:</div>
                 <Divider type='horizontal' />
-                <div>Life Assurance:</div>
-                <br/>
-                <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '12px' }}>
+                <div>Life Assurance (Member):</div>
+                
+                <div>Life Assurance (Partner):</div>
+
+                {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
                    <span style={{ marginRight: '45px' }}>Member</span>
                    <span>Partner</span>
-                </div>
+                </div> */}
                 <br/>
-                <div>Special Illness:</div>
-                <br/>
-                <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '12px' }}>
+                <div>Special Illness (Member):</div>
+                
+                <div>Special Illness (Partner):</div>
+
+                {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
                     <span style={{ marginRight: '45px' }}>Member</span>
                     <span>Partner</span>
-                </div>
-                <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '12px' }}>
+                </div> */}
+                <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px' }}>
                     <br/>
                     <div>Illness & Injury</div>
-                    <br/>
+
                     <div>Legal Assistance</div>
-                    <br/>
+
                     <div>Salary Protection</div>
                 </div>
             </div>

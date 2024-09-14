@@ -140,9 +140,9 @@ function MyDeatails() {
       value: 'Female',
     },
     {
-      label: 'Other',
-      value: 'Other',
-      title: 'Other',
+      label: 'Not Specified',
+      value: 'Not Specified',
+      title: 'Not Specified',
     },
   ];
   const optionsWithDisabled = [
@@ -155,8 +155,8 @@ function MyDeatails() {
       value: 'Female',
     },
     {
-      label: 'Other',
-      value: 'Other',
+      label: 'Not Specified',
+      value: 'Not Specified',
       disabled: false,
     },
   ];
@@ -414,6 +414,7 @@ function MyDeatails() {
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
+            
           }}
         />
         <DatePicker

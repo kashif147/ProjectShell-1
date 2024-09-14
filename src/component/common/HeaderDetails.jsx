@@ -65,10 +65,10 @@ function HeaderDetails() {
     toPDF();
   };
 
-  const mriatalStatus = {
+  const gender = {
     Male: false,
     Female: false,
-    Other: false,
+    "Not Specified": false,
   };
 
   const Mebership = {
@@ -89,7 +89,7 @@ function HeaderDetails() {
     },
     {
       key: "3",
-      label: "Other",
+      label: "Not Specified",
     },
   ];
 
