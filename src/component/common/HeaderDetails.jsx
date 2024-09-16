@@ -49,7 +49,7 @@ function HeaderDetails() {
   const navigate = useNavigate();
   console.log(location, "location");
   const inputRef = useRef(null);
-  const { searchFilters } = useTableColumns();
+  const { searchFilters, filterGridDataFtn } = useTableColumns();
   function filterSearchableColumns(data) {
     settrueFilters(data.filter((column) => column.isSearch === true));
   }
@@ -335,6 +335,7 @@ function HeaderDetails() {
           </div>
 
           {(location?.pathname == "/ClaimSummary" ||
+          location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/CasesSummary") && (
             <div className="search-main">
@@ -374,13 +375,17 @@ function HeaderDetails() {
                     }}
                     suffix={<SearchOutlined />}
                   />
-                 {trueFilters?.map((item, index) => (
-  item?.titleColumn === "Date Of Birth" ? (
-    <DateRang key={index} title={item?.titleColumn} />
-  ) : (
-    <JiraLikeMenu key={index} title={item?.titleColumn} data={item?.lookups} />
-  )
-))}
+                  {trueFilters?.map((item, index) =>
+                    item?.titleColumn === "Date Of Birth" ? (
+                      <DateRang key={index} title={item?.titleColumn} />
+                    ) : (
+                      <JiraLikeMenu
+                        key={index}
+                        title={item?.titleColumn}
+                        data={item?.lookups}
+                      />
+                    )
+                  )}
 
                   <div className="searchfilter- margin">
                     <SimpleMenu

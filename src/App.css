@@ -897,3 +897,7 @@ color: red !important;
   padding-left: 0px !important;
   padding-right: 0px !important;
 }
+.ag-cell {
+  padding-top: 0px !important; /* Adjust the top padding */
+  padding-bottom: 0px !important; /* Adjust the bottom padding */
+}

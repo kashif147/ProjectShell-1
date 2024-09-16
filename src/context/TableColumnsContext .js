@@ -154,75 +154,164 @@ export const TableColumnsProvider = ({ children }) => {
       { titleColumn: "giga", ellipsis: true, isGride: false, width: 100 },
     ],
   });
-  const [searchFilters, setsearchFilters] = useState([{ titleColumn: "Reg No", isSearch: false },
-    { titleColumn: "Forename", isSearch: false,
-     lookups:{ Male: false,
-      Female: false,
-      Other: false,}
-     },
-    { titleColumn: "Surname", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,}, },
-    { titleColumn: "Full Name", isSearch: false ,lookups:{ Male: false,
-      Female: false,
-      Other: false,}}, // Important (4)
-    { titleColumn: "Date Of Birth", isSearch: false ,lookups:{ Male: false,
-      Female: false,
-      Other: false,}}, // Important (5)
-    { titleColumn: "Date Retired", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Date Aged 65", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Date Of Death", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Rank", isSearch: true,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Duty", isSearch: true,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Station", isSearch: true,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Station ID", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Station Phone", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Pension No", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "GRA Member", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Date Joined", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Date Left", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Associate Member", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "District", isSearch: true,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Division", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Address", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Status", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },
-    { titleColumn: "Updated", isSearch: false,lookups:{ Male: false,
-      Female: false,
-      Other: false,} },]);
+  const [searchFilters, setsearchFilters] = useState([
+    {
+      titleColumn: "Rank",
+      isSearch: true,
+      isCheck: false,
+      lookups: { "All Ranks": false, "0001": false, "0021": false },
+      comp:"!="
+    },
+    {
+      titleColumn: "Duty",
+      isSearch: true,
+
+      isCheck: false,
+      lookups: { "All Duties": false },
+    },
+    {
+      titleColumn: "Division",
+      isSearch: true,
+      isCheck: false,
+      lookups: {
+        "All Divisions": false,
+        Northland: false,
+        Southland: false,
+        Eastland: false,
+      },
+    },
+    {
+      titleColumn: "District",
+      isSearch: true,
+
+      isCheck: false,
+      lookups: { "All District": false },
+    },
+    {
+      titleColumn: "Station",
+      isSearch: true,
+
+      isCheck: false,
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Station ID",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Pensioner ",
+      isSearch: false,
+      isCheck: false,
+      lookups: { Pensioner: false },
+    },
+    {
+      titleColumn: "Date Of Birth",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Date Retired",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Date Aged 65",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Date Of Death",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Station Phone",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Distric Rep",
+      isSearch: false,
+      isCheck: false,
+      lookups: { "Distric Rep": false },
+    },
+    {
+      titleColumn: "Division Rep",
+      isSearch: false,
+      isCheck: false,
+      lookups: { "Division Rep": false },
+    },
+    {
+      titleColumn: "Pension No",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "GRA Member",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Date Joined",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Date Left",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Associate Member",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+
+    {
+      titleColumn: "Address",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Status",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+    {
+      titleColumn: "Updated",
+      isSearch: false,
+      isCheck: false,
+
+      lookups: { Male: false, Female: false, Other: false },
+    },
+  ]);
 
   const handleCheckboxFilterChange = (key, isChecked, screenName, width) => {
     setColumns((prevColumns) => {
@@ -246,11 +335,64 @@ export const TableColumnsProvider = ({ children }) => {
       });
     });
   };
-  
-  
- 
-  const [gridData, setGridData] = useState(tableData);
 
+  const updateLookupValue = (titleColumn, gender, value) => {
+    setsearchFilters((prevFilters) =>
+      prevFilters.map((filter) => {
+        // Find the filter by the titleColumn
+        if (filter.titleColumn === titleColumn) {
+          return {
+            ...filter,
+            // Update the lookups for the specified gender
+            lookups: {
+              ...filter.lookups,
+              [gender]: value,
+            },
+          };
+        }
+        // Return the unchanged filter if the titleColumn doesn't match
+        return filter;
+      })
+    );
+  };
+
+  const [gridData, setGridData] = useState(tableData);
+  const filterGridDataFtn = (columnName, value, comp) => {
+    if(value=="All Ranks" && comp=="="){
+      return setGridData(tableData)
+    }
+    if(value=="All Ranks" && comp=="!=" ){
+      return setGridData([])
+    }
+    if (columnName !== "" && value !== "" && comp) {
+      const filteredData = tableData.filter((row) => {
+        const cellValue = row[columnName]?.toString().toLowerCase();
+
+        switch (comp) {
+          case "=":
+            return cellValue === value.toLowerCase();
+          case "!=":
+            return cellValue !== value.toLowerCase();
+          default:
+            return false;
+        }
+      });
+      setGridData(filteredData);
+    } else {
+      setGridData(tableData);
+    }
+  };
+  const handleCompChang = (title,value) => {
+    setsearchFilters((prevProfile) => {
+      return prevProfile.map((item) => {
+        if (item?.titleColumn === title) {
+          return { ...item, comp: value }; // Update isSearch based on isChecked
+        }
+        return item;
+      });
+    });
+    filterGridDataFtn()
+  };
   const [state, setState] = useState({
     selectedOption: "!=",
     checkboxes: {},
@@ -309,7 +451,20 @@ export const TableColumnsProvider = ({ children }) => {
 
     setGridData(sortedData); // Update the grid data after sorting
   };
-
+  useEffect(() => {
+    setsearchFilters((prevFilters) =>
+      prevFilters.map((item) => {
+        const updatedItem = { ...item };
+        if (updatedItem.lookups) {
+          const hasTrueValue = Object.values(updatedItem.lookups).some(
+            (value) => value === true
+          );
+          updatedItem.isCheck = hasTrueValue;
+        }
+        return updatedItem;
+      })
+    );
+  }, [searchFilters]);
   return (
     <TableColumnsContext.Provider
       value={{
@@ -323,6 +478,9 @@ export const TableColumnsProvider = ({ children }) => {
         handleCheckboxFilterChange,
         searchFilters,
         updateSelectedTitles,
+        updateLookupValue,
+        filterGridDataFtn,
+        handleCompChang
       }}
     >
       {children}
