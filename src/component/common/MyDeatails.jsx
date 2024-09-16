@@ -329,7 +329,11 @@ function MyDeatails() {
               <Row gutter={20}>
               <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Fullname</p>
-                  <Input />
+                  <Input  style={{
+                          width: "100%",
+                          border: "1px solid #9c9da1",
+                          borderRadius: "3px",
+                        }} className=""/>
                 </Col>
               <Col style ={{ width: '33.00%' }}>
                   <p className="lbl">Forename</p>
@@ -347,7 +351,7 @@ function MyDeatails() {
                       <DatePicker
                         style={{
                           width: "100%",
-                          border: "1px solid #333333",
+                          border: "1px solid #9c9da1",
                           borderRadius: "3px",
                         }}
                         className=""
@@ -384,7 +388,7 @@ function MyDeatails() {
                       <DatePicker
                         style={{
                           width: "100%",
-                          border: "1px solid #333333",
+                          border: "1px solid #9c9da1",
                           borderRadius: "3px",
                         }}
                         className=""
@@ -396,7 +400,7 @@ function MyDeatails() {
                   disabled={true}
                         style={{
                           width: "100%",
-                          border: "1px solid #333333",
+                          border: "1px solid #9c9da1",
                           borderRadius: "3px",
                         }}
                         className=""
@@ -425,10 +429,10 @@ function MyDeatails() {
             flex: '3', // 75% width
             padding: '6px',  // Reduced padding to match checkbox
             borderRadius: '0 5px 5px 0', // Border radius adjusted for left side
-            border: "1px solid #333333",
+            border: "1px solid #9c9da1",
             outline: 'none',
             height: '33px', // Set height
-            backgroundColor: isChecked ? 'white' : '#f0f0f0', // Change background if disabled
+            backgroundColor: isChecked ? '#ebf1fd' : '#f0f1f1', // Change background if disabled
           }}
         />
       </div>

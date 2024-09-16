@@ -84,9 +84,11 @@ function ProfileHeader() {
                 // justifyContent: 'center',  // Center horizontally
                 // alignItems: 'center',       // Center vertically
             }}>
-                <div>
+
+            </div>
+            <div>
                     <br/>
-                <div style={{ fontWeight: 'bold', color: '#FFD700', fontSize: '14px' }}>Code {location?.state?.code}</div>
+                <div style={{ fontWeight: 'bold', color: '#c97a2f', fontSize: '20px' }}> {location?.state?.code}</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>{location?.state?.name}</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>20/06/1979 (36 Y)</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Married</div>
@@ -96,11 +98,12 @@ function ProfileHeader() {
                 </div>
                    
                 </div>
-            </div>
             <Divider type='horizontal' />
             {/* Other content remains unchanged */}
-            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',                 justifyContent: 'center',  // Center horizontally
-                alignItems: 'center',  }}>
+            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',                 
+            // justifyContent: 'center',  // Center horizontally
+                //alignItems: 'center',  
+                }}>
                
                 
                 <div>Member (01/01/2020 - 11/10/2015)</div>

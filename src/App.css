@@ -7,7 +7,7 @@
   --labelColor: #333333;
   --table-row: #fafafa;
   --btn-hover: #dcdfe4;
-  --gray:  #ebf1fd;  /*rgba(9, 30, 66, 0.04);*/
+  --gray:  rgba(9, 30, 66, 0.04); 
 }
 input::placeholder,
 textarea::placeholder {
@@ -204,7 +204,7 @@ body {
 .label-nav {
   background-color: white !important;
   padding: 0.3rem;
-  border-radius: 50%;
+  border-radius: 5%;
   color: var(--secound) !important;
 }
 .label-nav .ant-menu-item-icon {
@@ -229,7 +229,7 @@ body {
   background-color: #fff;
   color: var(--secound) !important;
   padding: 0.4rem;
-  border-radius: 50%;
+  border-radius: 5%;
 }
 .label-nav-collaps1 {
   display: flex;
@@ -238,7 +238,7 @@ body {
   /* background-color: #fff; */
   color: #fff !important;
   padding: 0.4rem;
-  border-radius: 50%;
+  border-radius: 5%;
   /* margin-left: 10px !important; */
 }
 .specific-icon {
@@ -569,7 +569,7 @@ tr {
 .ant-menu .ant-menu-item {
   border-radius: 3px !important;
   width: auto;
-  margin: 8px 0px !important;
+  margin: 12px 0px !important;
 }
 .hover-col {
   display: flex;
@@ -745,7 +745,7 @@ h1 {
   border: 2px solid #e0e0e0;
   border-top: none;
   margin-inline: 0px;
-  background-color: var(--gray);
+  background-color: #ebf1fd/*var(--gray);*/
 }
 
 .ant-table-header {
