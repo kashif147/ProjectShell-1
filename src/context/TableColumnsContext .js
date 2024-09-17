@@ -165,9 +165,9 @@ export const TableColumnsProvider = ({ children }) => {
     {
       titleColumn: "Duty",
       isSearch: true,
-
+     comp:"!=",
       isCheck: false,
-      lookups: { "All Duties": false },
+      lookups: { "All Duties": false, "Sargent":false, "Garda":false },
     },
     {
       titleColumn: "Division",
