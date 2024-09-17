@@ -420,22 +420,6 @@ export const TableColumnsProvider = ({ children }) => {
     return false; // Condition not met
   };
 
-  const isMale = checkGenderCondition(state);
-
-  const filterByGender = (data, gender) => {
-    return data.filter(
-      (item) => item.Gender.toLowerCase() === gender.toLowerCase()
-    );
-  };
-
-  useEffect(() => {
-    if (isMale) {
-      const filteredData = filterByGender(tableData, "Male");
-      setGridData(filteredData); // Update gridData with the filtered data
-    } else {
-      setGridData(tableData); // Reset gridData if the condition isn't met
-    }
-  }, [isMale]);
 
   const handleSort = () => {
     setAscending(!ascending); // Toggle the sorting order
@@ -451,20 +435,20 @@ export const TableColumnsProvider = ({ children }) => {
 
     setGridData(sortedData); // Update the grid data after sorting
   };
-  useEffect(() => {
-    setsearchFilters((prevFilters) =>
-      prevFilters.map((item) => {
-        const updatedItem = { ...item };
-        if (updatedItem.lookups) {
-          const hasTrueValue = Object.values(updatedItem.lookups).some(
-            (value) => value === true
-          );
-          updatedItem.isCheck = hasTrueValue;
-        }
-        return updatedItem;
-      })
-    );
-  }, [searchFilters]);
+  // useEffect(() => {
+  //   setsearchFilters((prevFilters) =>
+  //     prevFilters.map((item) => {
+  //       const updatedItem = { ...item };
+  //       if (updatedItem.lookups) {
+  //         const hasTrueValue = Object.values(updatedItem.lookups).some(
+  //           (value) => value === true
+  //         );
+  //         updatedItem.isCheck = hasTrueValue;
+  //       }
+  //       return updatedItem;
+  //     })
+  //   );
+  // }, [searchFilters]);
   return (
     <TableColumnsContext.Provider
       value={{
@@ -473,7 +457,6 @@ export const TableColumnsProvider = ({ children }) => {
         state,
         setState,
         updateState,
-        isMale,
         gridData,
         handleCheckboxFilterChange,
         searchFilters,
