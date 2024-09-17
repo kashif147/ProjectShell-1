@@ -86,26 +86,26 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
   // Declare globally
   const [firstTrueLookups1, setFirstTrueLookups1] = useState(null);
 
-  useEffect(() => {
-    // Declare variable to hold the result
-    let foundLookup = null;
+  // useEffect(() => {
+  //   // Declare variable to hold the result
+  //   let foundLookup = null;
 
-    searchFilters?.forEach((item) => {
-      if (item?.titleColumn === title && item?.isCheck) {
-        // Find the first true value in lookups
-        const firstTrue = Object.keys(item.lookups).find(
-          (key) => item.lookups[key] === true
-        );
+  //   searchFilters?.forEach((item) => {
+  //     if (item?.titleColumn === title && item?.isCheck) {
+  //       // Find the first true value in lookups
+  //       const firstTrue = Object.keys(item.lookups).find(
+  //         (key) => item.lookups[key] === true
+  //       );
 
-        if (firstTrue) {
-          foundLookup = firstTrue;
-        }
-      }
-    });
+  //       if (firstTrue) {
+  //         foundLookup = firstTrue;
+  //       }
+  //     }
+  //   });
 
-    // Update the state once after the loop
-    setFirstTrueLookups1(foundLookup);
-  }, [searchFilters, title]);
+  //   // Update the state once after the loop
+  //   setFirstTrueLookups1(foundLookup);
+  // }, [searchFilters]);
   const handleOnChange = (selectedValue) => {
     // Now the onChange can pass both firstTrueLookups1 and the selected value
     filterGridDataFtn(title, firstTrueLookups1, selectedValue);
