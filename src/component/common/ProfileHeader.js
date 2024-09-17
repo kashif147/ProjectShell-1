@@ -18,7 +18,6 @@ function ProfileHeader() {
             }
         }, 1000);
     };
-
     const handleChange1 = (info) => {
         if (info.file.status === "uploading") {
             setLoading(true);
@@ -96,7 +95,6 @@ function ProfileHeader() {
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Cases:</div>
                     <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Claims:</div>
                 </div>
-                   
                 </div>
             <Divider type='horizontal' />
             {/* Other content remains unchanged */}
@@ -118,24 +116,18 @@ function ProfileHeader() {
                 <div>0026 CDU/SDU</div>
                 <Divider type='horizontal' />
                 <div>District Rep:</div>
-
                 <div>District Secretary:</div>
-
                 <div>District Chairman:</div>
-
                 <div>CEC Rep:</div>
                 <Divider type='horizontal' />
                 <div>Life Assurance (Member):</div>
-                
                 <div>Life Assurance (Partner):</div>
-
                 {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
                    <span style={{ marginRight: '45px' }}>Member</span>
                    <span>Partner</span>
                 </div> */}
                 <br/>
                 <div>Special Illness (Member):</div>
-                
                 <div>Special Illness (Partner):</div>
 
                 {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
@@ -145,9 +137,7 @@ function ProfileHeader() {
                 <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px' }}>
                     <br/>
                     <div>Illness & Injury</div>
-
                     <div>Legal Assistance</div>
-
                     <div>Salary Protection</div>
                 </div>
             </div>

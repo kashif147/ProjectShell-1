@@ -5,6 +5,10 @@ import { FaTrashAlt } from "react-icons/fa";
 import { ImAttachment } from "react-icons/im";
 import { GrView } from "react-icons/gr";
 import { useTableColumns } from "../../context/TableColumnsContext "; // Import the context
+import ExportCSV from "./ExportCSV";
+import ExportPDF from "./ExportPDF";
+
+
 
 function SimpleMenu({
   title,
@@ -22,7 +26,7 @@ function SimpleMenu({
     searchValue: "",
   });
 
-  const { updateState, state, updateSelectedTitles, searchFilters } =useTableColumns(); 
+  const { updateState, state, updateSelectedTitles, searchFilters, gridData } =useTableColumns(); 
   useEffect(() => {
     if (searchInFilters) {
       setCheckboxes(searchFilters);
@@ -40,7 +44,6 @@ function SimpleMenu({
   };
 console.log(searchFilters,"searchFilters")
 const searchInFilters = (query) => {
-    // Trim and convert the query to lowercase for a case-insensitive search
     const normalizedQuery = query.trim().toLowerCase();
   
     // Filter the searchFilters array
@@ -53,12 +56,6 @@ const searchInFilters = (query) => {
     // Update the searchFilters state with the filtered results
     setCheckboxes(filteredResults);
   };
-  // const handleSearchChange = (event) => {
-  //   setCheckboxes((prevValues) => ({
-  //     ...prevValues,
-  //     searchValue: value,
-  //   }));
-  // };
 
   const menu = (
     <Menu>
@@ -130,7 +127,18 @@ const searchInFilters = (query) => {
                 />
                 View
               </div>
-            ) : (
+            ) : key === "Export CSV" ? (
+              <div className="d-flex align-items-baseline">
+               <ExportCSV data={gridData} filename="my-data.csv" />
+               
+              </div>
+            ): key === "Export PDF" ? (
+              <div className="d-flex align-items-baseline">
+               {/* <ExportCSV data={gridData} filename="my-data.csv" /> */}
+               <ExportPDF data={gridData} filename="my-data.pdf" />
+               
+              </div>
+            ) :(
               key
             )}
           </Menu.Item>
