@@ -60,7 +60,7 @@ function HeaderDetails() {
   console.log(trueFilters, "44");
 
   const genaratePdf = (e) => {
-    e.stopPropagation();
+    // e.stopPropagation();
     console.log("testing");
     toPDF();
   };

@@ -73,7 +73,6 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
           .map(([key]) => key),
       };
     }
-
     return {
       [titleColumn]: [],
     };
@@ -227,21 +226,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
             />
           ) : null
         )}
-      {/* {searchFilters?.map((item) => {
-  item?.titleColumn === title && item?.isCheck ? (
-        <Dropdown
-          overlay={menu}
-          trigger={["click"]}
-          placement="bottomRight"
-          overlayStyle={{ width: 300, padding: "0px" }}
-        >
-          <Button className="">
-            <span className="ml-4 active">  </span>
-            <DownOutlined className="ml-4 active" />
-          </Button>
-        </Dropdown>
-      )
-      )})} */}
+
       {searchFilters?.map((item) => {
         if (item?.titleColumn === title && item?.isCheck) {
           // Find the first true value in lookups
