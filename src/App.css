@@ -1,14 +1,27 @@
 :root {
-  --mainBlue: #45669d;
-  --secound: #c97a2f; /*#ad8135 */
-  --FontsColor: #193a6e;
+  --mainBlue: #215e97;
+  --second: #c97a2f; /*#ad8135 */
+  --FontsColor: #123c63;
   --borderColor: #c0b9e7;
   --fontFamily: "Roboto", sans-serif;
-  --labelColor: #333333;
+  --labelColor: #393b3d;
+  --borderColor: #9c9da1; 
   --table-row: #fafafa;
   --btn-hover: #dcdfe4;
   --gray:  rgba(9, 30, 66, 0.04); 
 }
+
+/* Global focus styles */
+.ant-input:focus, 
+.ant-textarea:focus, 
+.ant-select:focus
+.ant-btn:focus{
+  background-color: #edf1fd; /* Light blue background on focus */
+  border-color: #c97a2f;     /*Change border color on focus */
+  outline: none;             /*Remove the default outline*/
+}
+
+
 input::placeholder,
 textarea::placeholder {
   color: var(--labelColor) !important;
@@ -43,8 +56,11 @@ select {
   opacity: 1;
 }
 .ant-input {
-  border-color: 4px solid var(--labelColor) !important;
+  border-color: 4px solid var(--borderColor) !important;
   border-radius: 3px !important;
+}
+.ant-input-focused {
+  background-color: #ebf1fd;
 }
 .ant-select-dropdown {
   font-family: var(--font-family-primary) !important;
@@ -92,7 +108,7 @@ body {
   padding: 0px !important;
 }
 .activ-link {
-  border-bottom: 3px solid var(--mainBlue);
+  border-bottom: 3px solid var(--second);
 }
 .nav-links-container {
   padding-top: 0.5rem;
@@ -182,6 +198,7 @@ body {
 .editable-cell input {
   display: none; /* Hide input by default */
   width: 100%; /* Full width for the input */
+  
 }
 
 .editable-cell:hover input {
@@ -205,7 +222,7 @@ body {
   background-color: white !important;
   padding: 0.3rem;
   border-radius: 5%;
-  color: var(--secound) !important;
+  color: var(--second) !important;
 }
 .label-nav .ant-menu-item-icon {
 }
@@ -227,7 +244,7 @@ body {
   justify-content: center !important;
   align-items: center !important;
   background-color: #fff;
-  color: var(--secound) !important;
+  color: var(--second) !important;
   padding: 0.4rem;
   border-radius: 5%;
 }
@@ -280,7 +297,7 @@ body {
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
   > .ant-menu
   .ant-menu-item-selected {
-  background-color: var(--secound);
+  background-color: var(--second);
 }
 .ant-table-thead > tr > th {
   padding: 6px 10px !important; /* Adjust the value as needed */
@@ -314,10 +331,12 @@ body {
 .ant-select.ant-select-focused .ant-select-selector {
   border: none !important;
   box-shadow: none !important;
+  /* background-color: #ebf1fd; */
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-input-outlined {
-  border: 1.5px solid var(--labelColor) !important;
+  border: 1.5px solid var(--borderColor) !important;
+  
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-select-single {
   height: 29px !important;
