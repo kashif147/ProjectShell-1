@@ -26,12 +26,11 @@ function SimpleMenu({
     searchValue: "",
   });
 
+  const [ddSearch, setddSearch] = useState("")
   const { updateState, state, updateSelectedTitles, searchFilters, gridData } =useTableColumns(); 
   useEffect(() => {
-    if (searchInFilters) {
-      setCheckboxes(searchFilters);
-    }
-  }, []);
+    searchInFilters(ddSearch);
+  }, [ddSearch]);
   const updateSelectedTitlesA = (title, isChecked) => {
     setCheckboxes((prevProfile) => {
       return prevProfile.map((item) => {
@@ -64,7 +63,7 @@ const searchInFilters = (query) => {
           <Input
             suffix={<SearchOutlined />}
             onChange={(e) => {
-              searchInFilters(e.target.value);
+              setddSearch(e.target.value)
             }}
             onClick={(e) => e.stopPropagation()}
           />
