@@ -47,7 +47,7 @@ function HeaderDetails() {
   const [checkboxes, setCheckboxes] = useState();
   const [trueFilters, settrueFilters] = useState();
   const navigate = useNavigate();
-  console.log(location, "location");
+  // console.log(location, "location");
   const inputRef = useRef(null);
   const { searchFilters, filterGridDataFtn } = useTableColumns();
   function filterSearchableColumns(data) {
@@ -57,11 +57,11 @@ function HeaderDetails() {
     filterSearchableColumns(searchFilters);
   }, [searchFilters]);
 
-  console.log(trueFilters, "44");
+  // console.log(trueFilters, "44");
 
   const genaratePdf = (e) => {
     // e.stopPropagation();
-    console.log("testing");
+    // console.log("testing");
     toPDF();
   };
 
