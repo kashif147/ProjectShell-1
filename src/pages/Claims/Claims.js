@@ -1,169 +1,161 @@
-import React from 'react'
-import { useLocation } from "react-router-dom";
-import { Table, Space, Button, Pagination, Select, Dropdown, Menu } from "antd";
-import { CiEdit } from "react-icons/ci";
-import { FiDelete } from "react-icons/fi";
-import { tableData } from "../../Data";
-import { LuRefreshCw } from "react-icons/lu";
-import { MdOutlineSettingsInputComponent } from "react-icons/md";
-import { Link, useNavigate } from "react-router-dom";
-import { PiSlidersHorizontalBold } from "react-icons/pi";
-import TableComponent from "../../component/common/TableComponent";
-import GridWithAGGrid from '../../GridWithAGGrid';
+import React, { useState, useEffect, useRef } from 'react';
+import { Button, Form, Input, Popconfirm, Table } from 'antd';
 
+// EditableRow component for wrapping rows with Form
+const EditableRow = ({ index, ...props }) => {
+  const [form] = Form.useForm();
+  return (
+    <Form form={form} component={false}>
+      <tr {...props} />
+    </Form>
+  );
+};
 
-function Claims() {
-    const navigate = useNavigate();
+// EditableCell component for handling editing of each cell
+const EditableCell = ({
+  title,
+  editable,
+  children,
+  dataIndex,
+  record,
+  handleSave,
+  ...restProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef(null);
+  const form = Form.useFormInstance(); // Get form instance from context
 
-    const menu = (
-      <Menu>
-        <Menu.Item key="1">Option 1</Menu.Item>
-        <Menu.Item key="2">Option 2</Menu.Item>
-        <Menu.Item key="3">Option 3</Menu.Item>
-      </Menu>
-    );
-  
-    const location = useLocation();
-    // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
-    const currentURL = `${location.hash}`;
-    let { state } = useLocation();
-  
-    const columns = [
-      {
-        title: "Action",
-        render: (_, record) => (
-          <Space size="middle" className="action-buttons">
-            <CiEdit />
-            <FiDelete color="red" />
-            {/* <Button >Edit</Button>
-                  <Button >Delete</Button> */}
-          </Space>
-        ),
-        width: 100,
-      },
-      {
-        title: "Reg No",
-        dataIndex: "RegNo",
-        key: "RegNo",
-        width: 100,
-      },
-      {
-        title: "Name",
-        dataIndex: "name",
-        key: "name",
-        width: 100,
-        render: (_, record) => (
-          <Space>
-             <Link to="/CasesDetails" state={{ search: "Cases" }}>
-            {record?.name}
-          </Link>
-          </Space>
-        ),
-      },
-      {
-        title: "Rank",
-        dataIndex: "rank",
-        key: "rank",
-        width: 100,
-      },
-      {
-        title: "Duty",
-        dataIndex: "duty",
-        key: "duty",
-        width: 100,
-      },
-      {
-        title: "Station",
-        dataIndex: "station",
-        key: "station",
-        width: 100,
-      },
-      {
-        title: "Distric",
-        dataIndex: "distric",
-        key: "distric",
-        width: 100,
-      },
-      {
-        title: "Division",
-        dataIndex: "division",
-        key: "division",
-        width: 100,
-      },
-      {
-        title: "Address",
-        dataIndex: "address",
-        key: "address",
-        width: 300,
-      },
-      {
-        title: "Status",
-        dataIndex: "status",
-        key: "status",
-        width: 100,
-      },
-      {
-        title: "Status",
-        dataIndex: "status",
-        key: "status",
-        width: 100,
-      },
-      {
-        title: "Attested",
-        dataIndex: "attested",
-        key: "attested",
-        width: 100,
-      },
-      {
-        title: "Graduated",
-        dataIndex: "graduated",
-        key: "graduated",
-        width: 100,
-      },
-      {
-        title: "Updated",
-        dataIndex: "updated",
-        key: "updated",
-        width: 150,
-      },
-      {
-        title: "Updated",
-        dataIndex: "updated",
-        key: "updated",
-        width: 150,
-      },
-      {
-        title: "Updated",
-        dataIndex: "updated",
-        key: "updated",
-        width: 150,
-      },
-      {
-        title: "Updated",
-        dataIndex: "updated",
-        key: "updated",
-        width: 150,
-      },
-      {
-        title: (
-          <div className="fixed-header">
-            {" "}
-            <PiSlidersHorizontalBold style={{ fontSize: "24px" }} />{" "}
-          </div>
-        ),
-        render: (_, record) => <Space size="middle"></Space>,
-        width: 56,
-        fixed: "right",
-      },
-    ];
-  
-    return (
-      <div className="">
-      {/* <TableComponent screenName="Cases" redirect="/CasesDetails" /> */}
-      <GridWithAGGrid />
-    </div>
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+    }
+  }, [editing]);
+
+  const toggleEdit = () => {
+    setEditing(!editing);
+    form.setFieldsValue({
+      [dataIndex]: record[dataIndex],
+    });
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      toggleEdit();
+      handleSave({ ...record, ...values });
+    } catch (errInfo) {
+      console.log('Save failed:', errInfo);
+    }
+  };
+
+  let childNode = children;
+
+  if (editable) {
+    childNode = editing ? (
+      <Form.Item
+        style={{ margin: 0 }}
+        name={dataIndex}
+        rules={[{ required: true, message: `${title} is required.` }]}
+      >
+        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
+      </Form.Item>
+    ) : (
+      <div
+        className="editable-cell-value-wrap"
+        style={{ paddingInlineEnd: 24 }}
+        onClick={toggleEdit}
+      >
+        {children}
+      </div>
     );
   }
 
-export default Claims
+  return <td {...restProps}>{childNode}</td>;
+};
 
+const Claims = () => {
+  const [dataSource, setDataSource] = useState([
+    { key: '0', name: 'Edward King 0', age: '32', address: 'London, Park Lane no. 0' },
+    { key: '1', name: 'Edward King 1', age: '32', address: 'London, Park Lane no. 1' },
+  ]);
+
+  const [count, setCount] = useState(2);
+
+  const handleDelete = (key) => {
+    const newData = dataSource.filter((item) => item.key !== key);
+    setDataSource(newData);
+  };
+
+  const handleAdd = () => {
+    const newData = {
+      key: count,
+      name: `Edward King ${count}`,
+      age: '32',
+      address: `London, Park Lane no. ${count}`,
+    };
+    setDataSource([...dataSource, newData]);
+    setCount(count + 1);
+  };
+
+  const handleSave = (row) => {
+    const newData = [...dataSource];
+    const index = newData.findIndex((item) => row.key === item.key);
+    const item = newData[index];
+    newData.splice(index, 1, { ...item, ...row });
+    setDataSource(newData);
+  };
+
+  const defaultColumns = [
+    { title: 'name', dataIndex: 'name', editable: true },   // Editable column
+    { title: 'age', dataIndex: 'age', editable: true },     // Editable column
+    { title: 'address', dataIndex: 'address', editable: true }, // Editable column
+    {
+      title: 'operation',
+      dataIndex: 'operation',
+      render: (_, record) =>
+        dataSource.length >= 1 ? (
+          <Popconfirm title="Sure to delete?" onConfirm={() => handleDelete(record.key)}>
+            <a>Delete</a>
+          </Popconfirm>
+        ) : null,
+    },
+  ];
+
+  const columns = defaultColumns.map((col) => {
+    if (!col.editable) {
+      return col;
+    }
+    return {
+      ...col,
+      onCell: (record) => ({
+        record,
+        editable: col.editable,
+        dataIndex: col.dataIndex,
+        title: col.title,
+        handleSave,
+      }),
+    };
+  });
+
+  return (
+    <div>
+      <Button onClick={handleAdd} type="primary" style={{ marginBottom: 16 }}>
+        Add a row
+      </Button>
+      <Table
+        rowClassName={() => 'editable-row'}
+        bordered
+        dataSource={dataSource}
+        columns={columns}
+        components={{
+          body: {
+            row: EditableRow,
+            cell: EditableCell,
+          },
+        }}
+      />
+    </div>
+  );
+};
+
+export default Claims;
