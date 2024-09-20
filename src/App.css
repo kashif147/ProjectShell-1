@@ -108,7 +108,7 @@ body {
   padding: 0px !important;
 }
 .activ-link {
-  border-bottom: 3px solid var(--second);
+  border-bottom: 3px solid var(--mainBlue);
 }
 .nav-links-container {
   padding-top: 0.5rem;
@@ -714,6 +714,7 @@ tr {
 
 .icon-align {
   vertical-align: baseline;
+  
 }
 .deatil-header-icon{
   font-size: 13px !important;

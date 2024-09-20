@@ -5,6 +5,9 @@ import { SettingOutlined } from "@ant-design/icons";
 import Input from "antd/es/input/Input";
 import { FaUserCircle } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
+import { IoMdSettings } from "react-icons/io";
+
+
 import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 
@@ -112,14 +115,18 @@ const pathname = location?.pathname
             </ul>
           </div>
         </nav>
-        <div className="input-container d-flex">
+        <div className="input-container d-flex ">
           <Input className=" top-search" style={{ marginRight: "1rem" }} />
-          <IoNotifications style={{ fontSize: "27px", marginRight: "1rem" }} />
-          <HiMiniQuestionMarkCircle
-            style={{ fontSize: "27px", marginRight: "1rem" }}
-          />
-          <SettingOutlined style={{ fontSize: "20px", marginRight: "1rem" }} />
-          <FaUserCircle style={{ fontSize: "27px", marginRight: "1rem" }} />
+
+            <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />
+            <HiMiniQuestionMarkCircle
+              style={{ fontSize: "30px", marginRight: "1rem"}}
+            />
+            {/* <SettingOutlined style={{ fontSize: "20px", marginRight: "1rem" }} /> */}
+            <IoMdSettings style={{ fontSize: "30px", marginRight: "1rem" }}/>
+            
+            <FaUserCircle style={{ fontSize: "30px", marginRight: "1rem" }} />
+
         </div>
       </div>
     </div>
