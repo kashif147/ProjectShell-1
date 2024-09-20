@@ -48,15 +48,16 @@ function Gridmenu({ title, data, screenName }) {
               onClick={(e) => {
                 e.stopPropagation();
                 handleCheckboxFilterChange(
-                  key?.titleColumn,
+                  key?.title,
                   e.target.checked,
                   screenName,
                   key?.width,
+                  e
                 );
               }}
               checked={key?.isGride}
             >
-              {key?.titleColumn}
+              {key?.title}
             </Checkbox>
           </Col>
         ))}

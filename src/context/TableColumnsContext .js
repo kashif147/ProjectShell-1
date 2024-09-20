@@ -4,107 +4,42 @@ import { tableData } from "../Data";
 const TableColumnsContext = createContext();
 
 export const TableColumnsProvider = ({ children }) => {
-  const [ascending, setAscending] = useState(true); // State to toggle sort order
+  const [ascending, setAscending] = useState(true); 
+  const handleSaveAfterEdit = (row) => {
+    const newData = [...gridData];
+    const index = newData.findIndex((item) => row.key === item.key);
+    if (index > -1) {
+      const item = newData[index];
+      newData.splice(index, 1, { ...item, ...row });
+      setGridData(newData);
+    }
+  };
+  // State to toggle sort order
   const [columns, setColumns] = useState({
     Profile: [
-      { titleColumn: "Reg No", ellipsis: true, isGride: true, width: "100px" },
-      {
-        titleColumn: "Forename",
-        ellipsis: true,
-        isGride: true,
-        width: "120px",
-      },
-      { titleColumn: "Surname", ellipsis: true, isGride: true, width: "420px" },
-      {
-        titleColumn: "Full Name",
-        ellipsis: true,
-        isGride: true,
-        width: "420px",
-      },
-      {
-        titleColumn: "Date Of Birth",
-        ellipsis: true,
-        isGride: true,
-        width: "420px",
-      },
-      {
-        titleColumn: "Date Retired",
-        ellipsis: true,
-        isGride: true,
-        width: "420px",
-      },
-      {
-        titleColumn: "Date Aged 65",
-        ellipsis: true,
-        isGride: true,
-        width: "420px",
-      },
-      {
-        titleColumn: "Date Of Death",
-        ellipsis: true,
-        isGride: true,
-        width: "420px",
-      },
-      { titleColumn: "Rank", ellipsis: true, isGride: true, width: "100px" },
-      { titleColumn: "Duty", ellipsis: true, isGride: true, width: "100px" },
-      { titleColumn: "Station", ellipsis: true, isGride: true, width: "100px" },
-      {
-        titleColumn: "Station ID",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "Station Phone",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "Pension No",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "GRA Member",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "Date Joined",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "Date Left",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "Associate Member",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "District",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      {
-        titleColumn: "Division",
-        ellipsis: true,
-        isGride: true,
-        width: "100px",
-      },
-      { titleColumn: "Address", ellipsis: true, isGride: true, width: "250px" },
-      { titleColumn: "Status", ellipsis: true, isGride: true, width: "100px" },
-      { titleColumn: "Updated", ellipsis: true, isGride: true, width: "100px" },
+      { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, width: 200 },
+      { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, width: 150 },
+      { dataIndex: "dateRetired", title: "Date Retired", ellipsis: true, isGride: true, width: 200 },
+      { dataIndex: "dateAged65", title: "Date Aged 65", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "dateOfDeath", title: "Date Of Death", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "stationID", title: "Station ID", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "stationPhone", title: "Station Phone", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "pensionNo", title: "Pension No", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "graMember", title: "GRA Member", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "dateJoined", title: "Date Joined", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "dateLeft", title: "Date Left", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "associateMember", title: "Associate Member", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, width: 200 },
+      { dataIndex: "status", title: "Status", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "updated", title: "Updated", ellipsis: true, isGride: true, width: 150 },
     ],
     Cases: [
       { titleColumn: "Reg No", ellipsis: true, isGride: true, width: "100px" },
@@ -313,10 +248,11 @@ export const TableColumnsProvider = ({ children }) => {
     },
   ]);
 
-  const handleCheckboxFilterChange = (key, isChecked, screenName, width) => {
+  const handleCheckboxFilterChange = (key, isChecked, screenName, width,e) => {
+    e.stopPropagation()
     setColumns((prevColumns) => {
       const updatedColumns = prevColumns?.[screenName].map((column) => {
-        if (column.titleColumn === key) {
+        if (column.title === key) {
           return { ...column, isGride: isChecked, width: width };
         }
         return column;
@@ -463,7 +399,9 @@ export const TableColumnsProvider = ({ children }) => {
         updateSelectedTitles,
         updateLookupValue,
         filterGridDataFtn,
-        handleCompChang
+        handleCompChang,
+        setGridData
+        
       }}
     >
       {children}

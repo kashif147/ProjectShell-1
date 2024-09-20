@@ -283,7 +283,8 @@ body {
   background-color: var(--secound);
 }
 .ant-table-thead > tr > th {
-  padding: 6px 10px !important; /* Adjust the value as needed */
+  /* padding: 6px 10px !important;  Adjust the value as needed */ 
+  padding: 6px 2px !important;
   white-space: nowrap; /* Prevent text from wrapping */
   overflow: hidden; /* Hide overflow text */
   text-overflow: ellipsis;
@@ -445,17 +446,36 @@ body {
   overflow: hidden !important;
   border-collapse: collapse !important;
 }
+.custom-header{
+  border: none !important;
+}
+.ant-table-cell{
+  border-inline-end: 2px solid #f0f0f0 !important;
+  padding: 8px 12px !important;
+  color: var(--mainBlue) !important;
+}
+.ant-table {
+  border-radius: 2px !important; /* Adjust the radius as needed */
+  overflow: hidden; /* Ensures that corners are rounded properly */
+}
+.ant-table-thead > tr > th {
+  border-radius: 0; /* Removes border radius from top corners */
+}
+
 .Project-table tbody,
 td,
 tfoot,
 th,
 thead,
 tr {
-  border: 0.5px solid #dcdfe4 !important ;
+  /* border: 0.5px solid #dcdfe4 !important ; */
   border-collapse: collapse !important;
   font-size: 13px !important;
   font-weight: 400;
   vertical-align: middle !important;
+}
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-column-sorter {
+  color: white !important;
 }
 .ant-table-cell {
   vertical-align: middle !important;
@@ -900,4 +920,32 @@ color: red !important;
 .ag-cell {
   padding-top: 0px !important; /* Adjust the top padding */
   padding-bottom: 0px !important; /* Adjust the bottom padding */
+}
+
+
+
+
+
+
+
+
+
+
+
+/* table .editable-cell */
+
+
+.editable-cell {
+  position: relative;
+}
+
+.editable-cell-value-wrap {
+  padding: 5px 12px;
+  cursor: pointer;
+}
+
+.editable-row:hover .editable-cell-value-wrap {
+  padding: 4px 11px;
+  border: 1px solid #d9d9d9;
+  border-radius: 2px;
 }

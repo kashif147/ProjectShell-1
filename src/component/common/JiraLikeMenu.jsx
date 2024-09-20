@@ -15,6 +15,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { emphasize } from "@mui/material";
 
 const JiraLikeMenu = ({ title, data, isSimple = false }) => {
+  
   const {
     state,
     updateState,
