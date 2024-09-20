@@ -378,7 +378,7 @@ body {
   overflow: hidden;
 }
 .odd-row {
-  background-color: var(--table-row);
+  background-color: var(--table-row) !important;
 }
 .ant-input-outlined {
   border-radius: 3px !important;

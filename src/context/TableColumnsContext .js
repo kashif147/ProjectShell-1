@@ -17,12 +17,12 @@ export const TableColumnsProvider = ({ children }) => {
   // State to toggle sort order
   const [columns, setColumns] = useState({
     Profile: [
-      { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, width: 200 },
-      { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, width: 150 },
-      { dataIndex: "dateRetired", title: "Date Retired", ellipsis: true, isGride: true, width: 200 },
+      { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, width: 150, editable:true, },
+      { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, width: 150, editable:true },
+      { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, width: 150, editable:true },
+      { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, width: 200, editable:true },
+      { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, width: 150,  },
+      { dataIndex: "dateRetired", title: "Date Retired", ellipsis: true, isGride: true, width: 200, },
       { dataIndex: "dateAged65", title: "Date Aged 65", ellipsis: true, isGride: true, width: 150 },
       { dataIndex: "dateOfDeath", title: "Date Of Death", ellipsis: true, isGride: true, width: 150 },
       { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, width: 150 },
