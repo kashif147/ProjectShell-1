@@ -7,6 +7,7 @@ import { GrView } from "react-icons/gr";
 import { useTableColumns } from "../../context/TableColumnsContext "; // Import the context
 import ExportCSV from "./ExportCSV";
 import ExportPDF from "./ExportPDF";
+import { MdOutlineLocalPrintshop } from "react-icons/md";
 
 
 
@@ -27,7 +28,7 @@ function SimpleMenu({
   });
 
   const [ddSearch, setddSearch] = useState("")
-  const { updateState, state, updateSelectedTitles, searchFilters, gridData } =useTableColumns(); 
+  const { updateState, state, updateSelectedTitles, searchFilters, gridData } = useTableColumns();
   useEffect(() => {
     searchInFilters(ddSearch);
   }, [ddSearch]);
@@ -41,17 +42,17 @@ function SimpleMenu({
       });
     });
   };
-console.log(searchFilters,"searchFilters")
-const searchInFilters = (query) => {
+  console.log(searchFilters, "searchFilters")
+  const searchInFilters = (query) => {
     const normalizedQuery = query.trim().toLowerCase();
-  
+
     // Filter the searchFilters array
     const filteredResults = searchFilters.filter((item) =>
       item.titleColumn.toLowerCase().includes(normalizedQuery)
     );
-  
+
     console.log(filteredResults, "//"); // Log filtered results
-  
+
     // Update the searchFilters state with the filtered results
     setCheckboxes(filteredResults);
   };
@@ -128,16 +129,25 @@ const searchInFilters = (query) => {
               </div>
             ) : key === "Export CSV" ? (
               <div className="d-flex align-items-baseline">
-               <ExportCSV data={gridData} filename="my-data.csv" />
-               
+                <ExportCSV data={gridData} filename="my-data.csv" />
+
               </div>
-            ): key === "Export PDF" ? (
+            ) : key === "Print Label" ? (
               <div className="d-flex align-items-baseline">
-               {/* <ExportCSV data={gridData} filename="my-data.csv" /> */}
-               <ExportPDF data={gridData} filename="my-data.pdf" />
-               
+                <MdOutlineLocalPrintshop style={{
+                  fontSize: "12px",
+                  marginRight: "10px",
+                  color: "#45669d",
+                }} />
+         Print Label
               </div>
-            ) :(
+            ) : key === "Export PDF" ? (
+              <div className="d-flex align-items-baseline">
+                {/* <ExportCSV data={gridData} filename="my-data.csv" /> */}
+                <ExportPDF data={gridData} filename="my-data.pdf" />
+
+              </div>
+            ) : (
               key
             )}
           </Menu.Item>

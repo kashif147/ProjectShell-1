@@ -22,13 +22,11 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 
 import Gridmenu from "./Gridmenu";
+import SimpleMenu from '../common/SimpleMenu'
 import { Link } from "react-router-dom";
+import { Label } from "@mui/icons-material";
 const EditableContext = React.createContext(null);
 
-const SimpleMenu = ({ title, data, isCheckBox, isSearched, isTransparent }) => {
-  // SimpleMenu implementation here
-  return <div>{title}</div>;
-};
 
 const DraggableHeaderCell = ({ id, style, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
@@ -127,15 +125,15 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       width: 100,
       fixed: "left", // Ensure this column is fixed
       render: () => (
-        <Space size="small" className="action-buttons">
-          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
+        <Space size="small" className="action-buttons" >
+          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} onClick={()=>alert("khan")}  />
           <SimpleMenu
             title={
               <BsThreeDotsVertical
                 style={{ fontSize: "15px", fontWeight: 500 }}
               />
             }
-            data={{ Delete: "false", Attached: "false", View: "false" }}
+            data={{ Delete: "false", Attached: "false", View: "false", "Print Label":false }}
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
@@ -267,7 +265,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     return <td {...restProps}>{childNode}</td>;
   };
   const handleSave = (row) => {
-    // console.log({ currentPageData });
     const newData = [...currentPageData];
     const index = newData.findIndex((item) => row.key === item.key);
     const item = newData[index];
