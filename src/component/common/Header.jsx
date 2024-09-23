@@ -112,6 +112,9 @@ const pathname = location?.pathname
               <li class="nav-item nav-links-container">
                 <Link className="links" to="Configuratin"  state={{ search: "" }}>System Configuration</Link>
               </li>
+              <li class="nav-item nav-links-container">
+                <Link className="links" to="Configuratin"  state={{ search: "" }}>Filters</Link>
+              </li>
             </ul>
           </div>
         </nav>

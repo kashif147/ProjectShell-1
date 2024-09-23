@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Table, Pagination, Space, Form, Input } from "antd";
+import { Table, Pagination, Space, Form, Input, Checkbox } from "antd";
 // import { useTableColumns } from '../../context/TableColumnsContext';
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
@@ -98,7 +98,14 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
   //   setFilteredData(newFilteredData);
   // }, [columnsDragbe]); // Dependency array
 
-  
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+  const onSelectChange = (key) => {
+      const newSelectedRowKeys = selectedRowKeys.includes(key)
+          ? selectedRowKeys.filter(k => k !== key)
+          : [...selectedRowKeys, key];
+      setSelectedRowKeys(newSelectedRowKeys);
+  };
   const reorderColumns = (list, startIndex, endIndex) => {
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
@@ -138,72 +145,83 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
   const draggableColumns = [
     {
       title: (
-        <Gridmenu
-          title={
-            <BsSliders
-              style={{ fontSize: "20px", color: "white", fontWeight: 600 }}
+        <div style={{ marginLeft: '8px' }}> {/* Adjust the margin as needed */}
+            <Checkbox
+                indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
+                checked={selectedRowKeys.length === dataSource.length}
+                onChange={e => {
+                    const checked = e.target.checked;
+                    setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
+                }}
             />
-          }
-          // data={columns}
-          
-          columnsForFilter={columnsForFilter}
-          setColumnsForFilter={setColumnsForFilter}
-          screenName={screenName}
-          // cols={columnsDragbe}
-          data={columnsDragbe}
-          setColumnsDragbe={setColumnsDragbe}
-        />
-      ),
-      key: "gridmenu",
-      width: 100,
-      fixed: "left", // Ensure this column is fixed
-      render: () => (
-        <Space size="small" className="action-buttons">
-          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
-          <SimpleMenu
-            title={
-              <BsThreeDotsVertical
-                style={{ fontSize: "15px", fontWeight: 500 }}
-              />
-            }
-            data={{ Delete: "false", Attached: "false", View: "false" }}
-            isCheckBox={false}
-            isSearched={false}
-            isTransparent={true}
-          />
-        </Space>
-      ),
-    },
-    ...columnsDragbe.map((col, index) => ({
-      ...col,
-      title: (
-        <DraggableHeaderCell id={col.key} key={col.key}>
-          {col.title}
-        </DraggableHeaderCell>
-      ),
-      render: (text, record) =>
-        col.title === "Full Name" ? (
-          <Link
-            to={redirect} // Replace with actual path and dynamic part if needed
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-            }}
-          >
-            {text}
-          </Link>
-        ) : (
-          text
+        </div>
+    ),
+        key: 'selection',
+        width: 50,
+        fixed: 'left',
+        render: (text, record) => (
+            <Checkbox
+                checked={selectedRowKeys.includes(record.key)}
+                onChange={() => onSelectChange(record.key)}
+            />
         ),
-      sorter:
-        col.title === "Full Name"
-          ? (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex])
-          : undefined,
-      sortDirections: ["ascend", "descend"],
+    },
+    {
+        title: (
+            <Gridmenu
+                title={<BsSliders style={{ fontSize: "20px", color: "white", fontWeight: 600 }} />}
+                columnsForFilter={columnsForFilter}
+                setColumnsForFilter={setColumnsForFilter}
+                screenName={screenName}
+                data={columnsDragbe}
+                setColumnsDragbe={setColumnsDragbe}
+            />
+        ),
+        key: "gridmenu",
+        width: 150,
+        fixed: "left",
+        render: () => (
+            <Space size="small" className="action-buttons">
+                <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
+                <SimpleMenu
+                    title={<BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />}
+                    data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false" }}
+                    isCheckBox={false}
+                    isSearched={false}
+                    isTransparent={true}
+                />
+            </Space>
+        ),
+    },
+    ...columnsDragbe.map((col) => ({
+        ...col,
+        title: (
+            <DraggableHeaderCell id={col.key} key={col.key}>
+                {col.title}
+            </DraggableHeaderCell>
+        ),
+        render: (text, record) =>
+            col.title === "Full Name" ? (
+                <Link
+                    to={redirect}
+                    state={{
+                        search: screenName,
+                        name: record?.fullName,
+                        code: record?.regNo,
+                    }}
+                >
+                    {text}
+                </Link>
+            ) : (
+                text
+            ),
+        sorter:
+            col.title === "Full Name"
+                ? (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex])
+                : undefined,
+        sortDirections: ["ascend", "descend"],
     })),
-  ];
-
+];
   // Pagination Starts
 
   const pageSize = 5;
@@ -345,6 +363,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         <div className="common-table">
           <Table
             rowClassName={() => "editable-column"}
+           
             components={components}
             columns={editableColumns}
             dataSource={currentPageData}
