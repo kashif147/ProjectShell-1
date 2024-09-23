@@ -145,6 +145,7 @@ body {
   flex: 0 0 auto;
 }
 
+
 .ant-table-body {
   flex: 1 1 auto;
   overflow: auto;
@@ -794,6 +795,9 @@ h1 {
   z-index: 1; 
   background-color: #fff; 
 }
+th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last{
+  z-index: 300;
+ }
 .common-table .ant-table-thead > tr > th {
   background-color: #45669d; 
   color: white !important;

@@ -17,29 +17,29 @@ export const TableColumnsProvider = ({ children }) => {
   // State to toggle sort order
   const [columns, setColumns] = useState({
     Profile: [
-      { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, width: 150, editable:true, },
-      { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, width: 150, editable:true },
-      { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, width: 150, editable:true },
-      { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, width: 200, editable:true },
-      { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, width: 150,  },
-      { dataIndex: "dateRetired", title: "Date Retired", ellipsis: true, isGride: true, width: 200, },
-      { dataIndex: "dateAged65", title: "Date Aged 65", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "dateOfDeath", title: "Date Of Death", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "stationID", title: "Station ID", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "stationPhone", title: "Station Phone", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "pensionNo", title: "Pension No", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "graMember", title: "GRA Member", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "dateJoined", title: "Date Joined", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "dateLeft", title: "Date Left", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "associateMember", title: "Associate Member", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, width: 200 },
-      { dataIndex: "status", title: "Status", ellipsis: true, isGride: true, width: 150 },
-      { dataIndex: "updated", title: "Updated", ellipsis: true, isGride: true, width: 150 },
+      { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, isVisible:true, width: 150, editable: true, },
+      { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, isVisible:true, width: 150, editable: true, },
+      { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, isVisible:true, width: 150, editable:true },
+      { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible:true, width: 200 },
+      { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, isVisible:true, width: 150 },
+      { dataIndex: "dateRetired", title: "Date Retired", ellipsis: true, isGride: true, isVisible:true, width: 200 },
+      { dataIndex: "dateAged65", title: "Date Aged 65", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "dateOfDeath", title: "Date Of Death", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "stationID", title: "Station ID", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "stationPhone", title: "Station Phone", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "pensionNo", title: "Pension No", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "graMember", title: "GRA Member", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "dateJoined", title: "Date Joined", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "dateLeft", title: "Date Left", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "associateMember", title: "Associate Member", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, isVisible:true, width: 200 },
+      { dataIndex: "status", title: "Status", ellipsis: true, isGride: true, isVisible:true, width: 150 },
+      { dataIndex: "updated", title: "Updated", ellipsis: true, isGride: true, isVisible:true, width: 150 },
     ],
     Cases: [
       { titleColumn: "Reg No", ellipsis: true, isGride: true, width: "100px" },
@@ -385,7 +385,35 @@ export const TableColumnsProvider = ({ children }) => {
   //     })
   //   );
   // }, [searchFilters]);
+  const filterGridDataBasedOnLookups = (data, searchFilters) => {
+    let filteredData = data;
+  
+    searchFilters.forEach(({ titleColumn, lookups, comp }) => {
+      // Get keys where the lookup value is true
+      const trueKeys = Object.entries(lookups)
+        .filter(([key, value]) => value) // Filter for true values
+        .map(([key]) => key); // Get just the keys
+  
+      // If there are true keys, filter the data based on them
+      if (trueKeys.length > 0) {
+        filteredData = filteredData.filter((row) => {
+          const cellValue = row[titleColumn]?.toString().toLowerCase();
+          return trueKeys.includes(cellValue);
+        });
+      }
+    });
+  
+    return filteredData; // Return the filtered data
+  };
+
+  useEffect(() => {
+    const filteredData = filterGridDataBasedOnLookups(gridData, searchFilters);
+    debugger
+    setGridData(filteredData);
+  }, [searchFilters, gridData]);
+ 
   return (
+    
     <TableColumnsContext.Provider
       value={{
         columns,

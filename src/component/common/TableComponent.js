@@ -1,9 +1,11 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Table, Pagination, Space, Form, Input } from "antd";
+// import { useTableColumns } from '../../context/TableColumnsContext';
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
+import SimpleMenu from "./SimpleMenu";
 
 import {
   DndContext,
@@ -24,10 +26,7 @@ import Gridmenu from "./Gridmenu";
 import { Link } from "react-router-dom";
 const EditableContext = React.createContext(null);
 
-const SimpleMenu = ({ title, data, isCheckBox, isSearched, isTransparent }) => {
-  // SimpleMenu implementation here
-  return <div>{title}</div>;
-};
+
 
 const DraggableHeaderCell = ({ id, style, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });

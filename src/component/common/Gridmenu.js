@@ -3,13 +3,10 @@ import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
-function Gridmenu({ title, screenName,data, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
+function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const { columns, updateColumns, handleCheckboxFilterChange } =
     useTableColumns();
-    const handleChange = (e) => {
-      console.log('ahmad_data', data)
-      console.log('ahmad_columnsForFilter', columnsForFilter)
-      
+    const handleChange = (e) => {      
       const filtered_columns = columnsForFilter.map(col => {
         if (col.title === e){
           col.isGride = !col.isGride
@@ -18,8 +15,7 @@ function Gridmenu({ title, screenName,data, setColumnsDragbe, columnsForFilter, 
         return col;
       })
       setColumnsForFilter(filtered_columns);
-       const newData = columnsForFilter.filter(col => col.isGride
-      )
+       const newData = columnsForFilter.filter(col => col.isGride)
       setColumnsDragbe(newData);
     }
   const [checkBoxData, setcheckBoxData] = useState();
@@ -41,15 +37,28 @@ function Gridmenu({ title, screenName,data, setColumnsDragbe, columnsForFilter, 
 
   console.log(columns, "update");
   const searchInFilters = (query) => {
+    console.log({columnsForFilter})
+    console.log({query}, query.trim().toLowerCase())
     // Trim and convert the query to lowercase for a case-insensitive search
     const normalizedQuery = query.trim().toLowerCase();
   
     // Filter the searchFilters array
-    const filteredResults = columns[screenName]?.filter((item) =>
-      item.titleColumn.toLowerCase().includes(normalizedQuery)
+    // const filteredResults = columnsForFilter?.filter((item) =>
+    //   item.title.toLowerCase().includes(normalizedQuery)
+    // );
+    const filteredResults = columnsForFilter?.map((item) =>
+      {
+        // Create a new object based on the condition
+        return {
+          ...item, // Spread existing properties
+          isVisible: item.title.toLowerCase().includes(normalizedQuery), // Set isVisible based on the condition
+        }
+      }
+      
     );
-    console.log(filteredResults, "//"); 
-    setcheckBoxData(filteredResults);
+    // console.log(filteredResults, "//"); 
+    setColumnsForFilter(filteredResults);
+    
   };
   const menu = (
     <Menu>
@@ -57,7 +66,8 @@ function Gridmenu({ title, screenName,data, setColumnsDragbe, columnsForFilter, 
         <Input suffix={<SearchOutlined />} onClick={(e) => e.stopPropagation() } onChange={(e)=>searchInFilters(e.target.value)} />
       </Menu.Item>
       <Row style={{ maxHeight: "200px", overflowY: "auto" }}>
-        {columnsForFilter?.map((col) => (
+        {columnsForFilter?.map((col) => 
+        col.isVisible && (
           <Col span={24}>
             <Checkbox
               style={{ marginBottom: "8px" }}
