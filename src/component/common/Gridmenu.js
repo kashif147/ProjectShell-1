@@ -3,9 +3,25 @@ import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
-function Gridmenu({ title, data, screenName }) {
+function Gridmenu({ title, screenName,data, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const { columns, updateColumns, handleCheckboxFilterChange } =
     useTableColumns();
+    const handleChange = (e) => {
+      console.log('ahmad_data', data)
+      console.log('ahmad_columnsForFilter', columnsForFilter)
+      
+      const filtered_columns = columnsForFilter.map(col => {
+        if (col.title === e){
+          col.isGride = !col.isGride
+          return col;
+        }
+        return col;
+      })
+      setColumnsForFilter(filtered_columns);
+       const newData = columnsForFilter.filter(col => col.isGride
+      )
+      setColumnsDragbe(newData);
+    }
   const [checkBoxData, setcheckBoxData] = useState();
   useEffect(() => {
     setcheckBoxData(columns?.[screenName]);
@@ -20,7 +36,7 @@ function Gridmenu({ title, data, screenName }) {
     Division: 120,
     Address: 220,
   };
-  console.log(checkBoxData, "checkBoxData");
+  // console.log(checkBoxData, "checkBoxData");
   const getColumnWidth = (key) => widthMapping[key] || 120;
 
   console.log(columns, "update");
@@ -41,23 +57,23 @@ function Gridmenu({ title, data, screenName }) {
         <Input suffix={<SearchOutlined />} onClick={(e) => e.stopPropagation() } onChange={(e)=>searchInFilters(e.target.value)} />
       </Menu.Item>
       <Row style={{ maxHeight: "200px", overflowY: "auto" }}>
-        {checkBoxData?.map((key) => (
+        {columnsForFilter?.map((col) => (
           <Col span={24}>
             <Checkbox
               style={{ marginBottom: "8px" }}
               onClick={(e) => {
                 e.stopPropagation();
-                handleCheckboxFilterChange(
-                  key?.title,
+                handleChange(
+                  col?.title,
                   e.target.checked,
                   screenName,
-                  key?.width,
+                  col?.width,
                   e
                 );
               }}
-              checked={key?.isGride}
+              checked={col.isGride}
             >
-              {key?.title}
+              {col?.title}
             </Checkbox>
           </Col>
         ))}
