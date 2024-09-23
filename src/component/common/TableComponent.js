@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Table, Pagination, Space, Form, Input } from "antd";
-// import { useTableColumns } from '../../context/TableColumnsContext';
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
@@ -22,11 +21,13 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 
 import Gridmenu from "./Gridmenu";
-import SimpleMenu from '../common/SimpleMenu'
 import { Link } from "react-router-dom";
-import { Label } from "@mui/icons-material";
 const EditableContext = React.createContext(null);
 
+const SimpleMenu = ({ title, data, isCheckBox, isSearched, isTransparent }) => {
+  // SimpleMenu implementation here
+  return <div>{title}</div>;
+};
 
 const DraggableHeaderCell = ({ id, style, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
@@ -70,8 +71,35 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         onCell: () => ({ id: `${index}` }),
       }))
   );
+
+  const [columnsForFilter, setColumnsForFilter] = useState(() =>
+    columns?.[screenName]
+      ?.filter((item) => item?.isGride)
+      ?.map((item, index) => ({
+        ...item,
+        key: `${index}`,
+        onHeaderCell: () => ({ id: `${index}` }),
+        onCell: () => ({ id: `${index}` }),
+      }))
+  );
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
+  // useEffect(()=>{
+  //   console.log({columnsDragbe})
+  //   setColumnsDragbe(
+  //     columnsDragbe.filter((column)=>{
+  //       return column.isGride
+  //     })
+  //   )
+  //   console.log({columnsDragbe})
+  // },[setColumnsDragbe]);
+  // useEffect(() => {
+  //   // Filter columns whenever columnsDragbe changes
+  //   const newFilteredData = columnsDragbe.filter(col => col.isGride);
+  //   setFilteredData(newFilteredData);
+  // }, [columnsDragbe]); // Dependency array
+
+  
   const reorderColumns = (list, startIndex, endIndex) => {
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
@@ -117,23 +145,29 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               style={{ fontSize: "20px", color: "white", fontWeight: 600 }}
             />
           }
-          data={columns?.[screenName]}
+          // data={columns}
+          
+          columnsForFilter={columnsForFilter}
+          setColumnsForFilter={setColumnsForFilter}
           screenName={screenName}
+          // cols={columnsDragbe}
+          data={columnsDragbe}
+          setColumnsDragbe={setColumnsDragbe}
         />
       ),
       key: "gridmenu",
       width: 100,
       fixed: "left", // Ensure this column is fixed
       render: () => (
-        <Space size="small" className="action-buttons" >
-          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} onClick={()=>alert("khan")}  />
+        <Space size="small" className="action-buttons">
+          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
           <SimpleMenu
             title={
               <BsThreeDotsVertical
                 style={{ fontSize: "15px", fontWeight: 500 }}
               />
             }
-            data={{ Delete: "false", Attached: "false", View: "false", "Print Label":false }}
+            data={{ Delete: "false", Attached: "false", View: "false" }}
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
@@ -173,7 +207,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 
   // Pagination Starts
 
-  const pageSize = 10;
+  const pageSize = 5;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [currentPageData, setCurrentPageData] = useState(
@@ -255,6 +289,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           className="editable-cell-value-wrap"
           style={{
             paddingInlineEnd: 24,
+            width: '1px'
           }}
           onClick={toggleEdit}
         >
@@ -265,14 +300,15 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     return <td {...restProps}>{childNode}</td>;
   };
   const handleSave = (row) => {
-    const newData = [...currentPageData];
+    // console.log({ currentPageData });
+    const newData = [...gridData];
     const index = newData.findIndex((item) => row.key === item.key);
     const item = newData[index];
     newData.splice(index, 1, {
       ...item,
       ...row,
     });
-    setCurrentPageData(newData);
+    setGridData(newData);
   };
   const components = {
     body: {
@@ -309,58 +345,52 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       >
         <div className="common-table">
           <Table
-            // rowClassName={() => "editable-row"}
+            rowClassName={() => "editable-column"}
             components={components}
             columns={editableColumns}
             dataSource={currentPageData}
             pagination={false}
             bordered
-            rowClassName={(record, index) => (index % 2 === 0 ? "even-row" : "odd-row" )}
             virtual
             rowKey="key"
-            scroll={{ x: "100%", y: 440 }}
+            scroll={{ x: "max-content", y: "100px" }}
           />
-         <div
-  className="d-flex justify-content-between align-items-center tbl-footer"
-  style={{ marginTop: "10px" }}
->
-  {/* Centered refresh icon and text */}
-  <div className="d-flex justify-content-center align-items-center w-100">
-    <span
-      style={{
-        marginRight: "4px",
-        fontSize: "12px",
-        fontWeight: "500",
-      }}
-    >
-      {currentPage}-{gridData.length}
-    </span>
-    <span
-      style={{
-        marginRight: "4px",
-        fontSize: "12px",
-        fontWeight: "500",
-      }}
-    >
-      of {gridData.length}
-    </span>
-    <LuRefreshCw
-      style={{ cursor: "pointer" }}
-      onClick={() => window.location.reload()}
-    />
-  </div>
-
-  {/* Pagination aligned to the right */}
-  <div className="d-flex justify-content-end">
-    <Pagination
-      current={currentPage}
-      pageSize={pageSize}
-      total={gridData.length}
-      onChange={(page) => setCurrentPage(page)} // Update page on pagination change
-    />
-  </div>
-</div>
-
+          <div
+            className="d-flex justify-content-between tbl-footer"
+            style={{ marginTop: "10px" }}
+          >
+            <div style={{ display: "flex", alignItems: "center" }}>
+              <span
+                style={{
+                  marginRight: "4px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}
+              >
+                1-{gridData.length}
+              </span>
+              <span
+                style={{
+                  marginRight: "4px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}
+              >
+                of {gridData.length}
+              </span>
+              <LuRefreshCw
+                style={{ cursor: "pointer" }}
+                onClick={() => window.location.reload()}
+              />
+            </div>
+            {/* <Pagination defaultCurrent={1} total={gridData.length} pageSize={5} /> */}
+            <Pagination
+              current={currentPage}
+              pageSize={pageSize}
+              total={gridData.length}
+              onChange={(page) => setCurrentPage(page)} // Update page on pagination change
+            />
+          </div>
         </div>
       </SortableContext>
       <DragOverlay>
