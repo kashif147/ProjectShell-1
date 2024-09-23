@@ -16,7 +16,7 @@ import SideNav from "./SideNav";
 import { FaChevronUp, FaLess } from "react-icons/fa";
 import MyDrowpDown from "./MyDrowpDown";
 import { SerachFitersLookups } from "../../Data";
-import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
+import { BsSliders, BsThreeDots } from "react-icons/bs";
 import {
   SearchOutlined,
   LoadingOutlined,
@@ -351,10 +351,13 @@ function HeaderDetails() {
                     ? `Profile`
                     : ` ${location?.state?.search}`}
                 </h2>
+
                 <div className="d-flex">
+                
                   <SimpleMenu
                     title={
                       <>
+                        
                         <Button className="me-1 gray-btn butn">Export</Button>
                       </>
                     }
@@ -370,7 +373,7 @@ function HeaderDetails() {
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
                   <SimpleMenu
             title={
-              <BsThreeDotsVertical
+              <BsThreeDots
                 style={{ fontSize: "15px", fontWeight: 500 }}
               />
             }
@@ -383,6 +386,7 @@ function HeaderDetails() {
               </div>
               <div className="d-flex search-fliters align-items-baseline">
                 <Row className="align-items-baseline">
+
                   <Input
                     placeholder="Reg No or Surname"
                     style={{

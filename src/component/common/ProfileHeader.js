@@ -128,7 +128,7 @@ function ProfileHeader() {
                 </div> */}
                 <br/>
                 <div>Special Illness (Member):</div>
-                <div>Special Illness (Partner):</div>
+                {/* <div>Special Illness (Partner):</div> */}
 
                 {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
                     <span style={{ marginRight: '45px' }}>Member</span>
@@ -136,13 +136,13 @@ function ProfileHeader() {
                 </div> */}
                 <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px' }}>
                     <br/>
-                    <div>Illness & Injury</div>
+                    {/* <div>Illness & Injury</div>
                     <div>Legal Assistance</div>
-                    <div>Salary Protection</div>
+                    <div>Salary Protection</div> */}
                 </div>
             </div>
         </div>
     )
 }
 
-export default ProfileHeader;
+export default ProfileHeader;   
