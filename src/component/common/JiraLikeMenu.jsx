@@ -22,6 +22,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
     updateLookupValue,
     searchFilters,
     filterGridDataFtn,
+    updateCompByTitleColumn,
     handleCompChang,
   } = useTableColumns();
   console.log(searchFilters, "state");
@@ -123,8 +124,8 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
                 options={graterEqualDD}
                 value={item?.comp}
                 onChange={(e) => {
-                  filterGridDataFtn(title, firstTrueLookups1, e)
-                 
+                  // filterGridDataFtn(title, firstTrueLookups1, e)
+                  updateCompByTitleColumn(title, e)
                 }}
               />
               <Divider />
@@ -211,51 +212,55 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
       </Dropdown>
 
       {searchFilters
-        ?.filter((item) => item.titleColumn === title) // Filter items where titleColumn matches title
-        .map((item) =>
-          item?.isCheck ? (
-            <MySelect
-              key={item.titleColumn}
-              className="active"
-              options={graterEqualDD}
-              value={item?.comp}
-              onChange={(e) =>{
-                handleCompChang(item?.titleColumn, e)
-                filterGridDataFtn(item?.titleColumn,firstTrueLookups1,e)
-              }
-              }
-            />
-          ) : null
-        )}
+  ?.filter((item) => item.titleColumn === title) // Filter items where titleColumn matches the title
+  .map((item) => {
+    // Check if any of the lookups have a true value
+    const hasTrueLookup = Object.values(item?.lookups || {}).some(value => value === true);
 
+    return hasTrueLookup ? (
+      <MySelect
+        key={item.titleColumn}
+        className="active"
+        options={graterEqualDD}
+        value={item?.comp}
+        onChange={(e) => {
+          updateCompByTitleColumn(item.titleColumn, e)
+        }}
+      />
+    ) : null;
+  })}
       {searchFilters?.map((item) => {
-        if (item?.titleColumn === title && item?.isCheck) {
-          // Find the first true value in lookups
-          const firstTrueLookup = Object.keys(item.lookups).find(
-            (key) => item.lookups[key] === true
-          );
+  // Check if the titleColumn matches and if any key in lookups is true
+  const hasTrueLookup = Object.keys(item.lookups).some(
+    (key) => item.lookups[key] === true
+  );
 
-          return (
-            <Dropdown
-              overlay={menu}
-              trigger={["click"]}
-              placement="bottomRight"
-              overlayStyle={{ width: 300, padding: "0px" }}
-              key={item.titleColumn} // Always use a key in lists
-            >
-              <Button className="">
-                <span className="ml-4 active">
-                  {firstTrueLookup ? firstTrueLookup : "No Selection"}{" "}
-                  {/* Display first true lookup or fallback */}
-                </span>
-                <DownOutlined className="ml-4 active" />
-              </Button>
-            </Dropdown>
-          );
-        }
+  // If titleColumn matches the title and any lookup has a true value
+  if (item?.titleColumn === title && hasTrueLookup) {
+    return (
+      <Dropdown
+        overlay={menu}
+        trigger={["click"]}
+        placement="bottomRight"
+        overlayStyle={{ width: 300, padding: "0px" }}
+        key={item.titleColumn} // Always use a key in lists
+      >
+        <Button className="">
+          <span className="ml-4 active">
+            {/* Display the first true lookup or fallback to "No Selection" */}
+            {Object.keys(item.lookups).find(
+              (key) => item.lookups[key] === true
+            ) || "No Selection"}{" "}
+          </span>
+          <DownOutlined className="ml-4 active" />
+        </Button>
+      </Dropdown>
+    );
+  }
 
-        return null; // Return null if the condition isn't fulfilled
-      })}
+  return null; // Return null if the conditions aren't fulfilled
+})}
+
     </div>
   );
 };

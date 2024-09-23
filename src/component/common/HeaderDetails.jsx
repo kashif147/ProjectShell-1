@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePDF } from "react-to-pdf";
 import { FaUser } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import SimpleMenu from "./SimpleMenu";
 import {
   RightOutlined,
   PlusOutlined,
@@ -15,6 +16,7 @@ import SideNav from "./SideNav";
 import { FaChevronUp, FaLess } from "react-icons/fa";
 import MyDrowpDown from "./MyDrowpDown";
 import { SerachFitersLookups } from "../../Data";
+import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import {
   SearchOutlined,
   LoadingOutlined,
@@ -22,7 +24,7 @@ import {
 } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 import JiraLikeMenu from "./JiraLikeMenu";
-import SimpleMenu from "./SimpleMenu";
+// import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
@@ -323,6 +325,9 @@ function HeaderDetails() {
                 <Button onClick={goBack} className="me-1 gray-btn butn">
                   Return to summary
                 </Button>
+                <Button onClick={goBack} className="me-1 gray-btn butn">
+                  Print
+                </Button>
                 <p className="lbl">1 of 12</p>
                 <span className=" ">
                   <FaChevronDown className="deatil-header-icon" />
@@ -330,6 +335,7 @@ function HeaderDetails() {
                 <span>
                   <FaChevronUp className="deatil-header-icon" />
                 </span>
+                
               </div>
             )}
           </div>
@@ -361,6 +367,18 @@ function HeaderDetails() {
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
+                  <Button className="me-1 gray-btn butn">LIST VIEW</Button>
+                  <SimpleMenu
+            title={
+              <BsThreeDotsVertical
+                style={{ fontSize: "15px", fontWeight: 500 }}
+              />
+            }
+            data={{ "Bulk Changes": "false", "Print Labels":"false" }}
+            isCheckBox={false}
+            isSearched={false}
+            isTransparent={true}
+          />
                 </div>
               </div>
               <div className="d-flex search-fliters align-items-baseline">
