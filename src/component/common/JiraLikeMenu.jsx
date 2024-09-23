@@ -22,6 +22,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
     updateLookupValue,
     searchFilters,
     filterGridDataFtn,
+    updateCompByTitleColumn,
     handleCompChang,
   } = useTableColumns();
   console.log(searchFilters, "state");
@@ -123,8 +124,8 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
                 options={graterEqualDD}
                 value={item?.comp}
                 onChange={(e) => {
-                  filterGridDataFtn(title, firstTrueLookups1, e)
-                 
+                  // filterGridDataFtn(title, firstTrueLookups1, e)
+                  updateCompByTitleColumn(title, e)
                 }}
               />
               <Divider />
@@ -223,8 +224,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
         options={graterEqualDD}
         value={item?.comp}
         onChange={(e) => {
-          handleCompChang(item?.titleColumn, e);
-          filterGridDataFtn(item?.titleColumn, firstTrueLookups1, e);
+          updateCompByTitleColumn(item.titleColumn, e)
         }}
       />
     ) : null;
