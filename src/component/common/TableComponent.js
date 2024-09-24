@@ -178,7 +178,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             />
         ),
         key: "gridmenu",
-        width: 150,
+        width: 75,
         fixed: "left",
         render: () => (
             <Space size="small" className="action-buttons">
@@ -224,17 +224,28 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 ];
   // Pagination Starts
 
-  const pageSize = 5;
+  const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
-  const [currentPageData, setCurrentPageData] = useState(
-    gridData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  );
+  // const [currentPageData, setCurrentPageData] = useState(
+  //   gridData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  // );
+  //Kasif making changes
+  const [currentPageData, setCurrentPageData] = useState([]);
+
+  // useEffect(() => {
+  //   setCurrentPageData(
+  //     gridData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
+  //   );
+  // }, [currentPage, gridData]);
+  //Kashif making changes
   useEffect(() => {
-    setCurrentPageData(
-      gridData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-    );
-  }, [currentPage, gridData]);
+    // Slicing the data based on current page and page size
+    const startIndex = (currentPage - 1) * pageSize;
+    const endIndex = startIndex + pageSize;
+    setCurrentPageData(gridData.slice(startIndex, endIndex));
+  }, [currentPage, gridData]); // Runs whenever currentPage or gridData changes
+
 
   // Pagination Ends
 
@@ -377,7 +388,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             className="d-flex justify-content-between tbl-footer"
             style={{ marginTop: "10px" }}
           >
-            <div style={{ display: "flex", alignItems: "center" }}>
+            <div style={{ display: "flex", alignItems: "center",}}>
               <span
                 style={{
                   marginRight: "4px",
@@ -385,7 +396,8 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
                   fontWeight: "500",
                 }}
               >
-                1-{gridData.length}
+                {/* 1-{gridData.length} */}
+                {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, gridData.length)}`}
               </span>
               <span
                 style={{

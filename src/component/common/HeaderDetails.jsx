@@ -22,7 +22,7 @@ import {
   LoadingOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-import { BsThreeDots } from "react-icons/bs";
+
 import JiraLikeMenu from "./JiraLikeMenu";
 // import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
@@ -371,9 +371,22 @@ function HeaderDetails() {
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
                   <Button className="me-1 gray-btn butn">LIST VIEW</Button>
+                  {/* <Button className="me-1 gray-btn butn">
+                    <span class="css-bwxjrz">
+                      <span data-vc="icon-undefined" role="img" aria-label="More actions" class="css-snhnyn" >
+                        <svg width="24" height="24" viewBox="0 0 24 24" role="presentation">
+                          <g fill="currentcolor" fill-rule="evenodd">
+                            <circle cx="5" cy="12" r="2"></circle>
+                            <circle cx="12" cy="12" r="2"></circle>
+                            <circle cx="19" cy="12" r="2"></circle>
+                          </g>
+                        </svg>
+                      </span>
+                    </span>
+                  </Button> */}
                   <SimpleMenu
             title={
-              <BsThreeDots
+              <BsThreeDots className="me-1 gray-btn butn"
                 style={{ fontSize: "15px", fontWeight: 500 }}
               />
             }
