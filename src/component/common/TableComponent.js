@@ -144,28 +144,27 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 
   const draggableColumns = [
     {
-      title: (
-        <div style={{ marginLeft: '8px' }}> {/* Adjust the margin as needed */}
-            <Checkbox
-                indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
-                checked={selectedRowKeys.length === dataSource.length}
-                onChange={e => {
-                    const checked = e.target.checked;
-                    setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
-                }}
-            />
-        </div>
-    ),
-        key: 'selection',
-        width: 50,
-        fixed: 'left',
-        render: (text, record) => (
-            <Checkbox
-                checked={selectedRowKeys.includes(record.key)}
-                onChange={() => onSelectChange(record.key)}
-            />
-        ),
-    },
+      title: () => (
+        <Checkbox
+          indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
+          checked={selectedRowKeys.length === dataSource.length}
+          onChange={e => {
+            const checked = e.target.checked;
+            setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
+          }}
+        />
+      ),
+      key: 'selection',
+      width: 50, // Set width for the fixed column
+      fixed: 'left', // Ensure the column is fixed
+      render: (text, record) => (
+        <Checkbox
+          checked={selectedRowKeys.includes(record.key)}
+          onChange={() => onSelectChange(record.key)}
+        />
+      ),
+    }
+,    
     {
         title: (
             <Gridmenu
@@ -224,7 +223,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 ];
   // Pagination Starts
 
-  const pageSize = 5;
+  const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [currentPageData, setCurrentPageData] = useState(
@@ -362,18 +361,17 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       >
         <div className="common-table">
           <Table
-            rowClassName={() => "editable-column"}
-           
+            rowClassName={() => ""}
             components={components}
             columns={editableColumns}
             dataSource={currentPageData}
             pagination={false}
             bordered
             virtual
-            rowKey="key"
-            scroll={{ x: "max-content", y: "100px" }}
+            scroll={{ x: "100%", y: 400 }}
+            sticky  
           />
-          <div
+           <div
             className="d-flex justify-content-between tbl-footer"
             style={{ marginTop: "10px" }}
           >

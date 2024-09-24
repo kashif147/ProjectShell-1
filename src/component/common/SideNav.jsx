@@ -23,10 +23,12 @@ import { MdWbSunny } from "react-icons/md";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ClassNames } from '@emotion/react';
 
+
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 function SideNav() {
   const location = useLocation();
+  const navigate = useNavigate();
   
   const [isSideNav, setisSideNav] = useState(true)
   const toggleCollapsedFtn = ()=>{
@@ -47,7 +49,6 @@ function SideNav() {
       <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"}`}>
         <TfiMenu   className=''style={{ color: 'white', fontSize: '25px' }} onClick={toggleCollapsed} />
       </div>
-      // className: location?.state=="location?.state?.search" ? 'custom-highlight' : '',
     }, 
     {
       key: '2',
@@ -55,6 +56,8 @@ function SideNav() {
          <FaUser  style={{ fontSize: '24px',  }} />
         </div>,
       label: 'Profile',
+      className: location?.state=="/Details" ? 'custom-highlight' : '',
+      onclick:()=>navigate("/ClaimsById")
     },
     {
       key: '3',
@@ -112,6 +115,36 @@ function SideNav() {
     },
    
   ];
+  const handleClick = ({ key }) => {
+    switch (key) {
+      case '2':
+        navigate("/ClaimsById");
+        break;
+      case '3':
+        console.log("Navigate to Cases");
+        break;
+      case '4':
+        console.log("Navigate to Claims");
+        break;
+      case '5':
+        console.log("Navigate to Correspondences");
+        break;
+      case '6':
+        console.log("Navigate to Documents");
+        break;
+      case '7':
+        console.log("Navigate to Projects");
+        break;
+      case '8':
+        console.log("Navigate to Roster");
+        break;
+      case '9':
+        console.log("Navigate to Trainings");
+        break;
+      default:
+        console.log("Toggle Menu");
+    }
+  };
   
   return (
     <div className='sid-nav-main'
@@ -128,6 +161,7 @@ function SideNav() {
         style={{ width: isSideNav ? '60px' : '200px' }}
         inlineCollapsed={isSideNav}
         items={items}
+        onClick={handleClick}
       />
     </div>
   )

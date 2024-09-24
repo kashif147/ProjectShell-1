@@ -18,6 +18,7 @@ import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
 import Filter from "./pages/Filters/Filter";
 import Claims from "./pages/Claims/Claims";
+import ClaimsById from "./pages/Claims/ClaimsById";
 
 function Entry() {
   const location = useLocation();
@@ -54,6 +55,7 @@ function Entry() {
               <Route path="ClaimsDetails" element={< ClaimsDetails/> } />
               <Route path="Configuratin" element={<Configuratin /> } />
               <Route path="Filters" element={<Filter /> } />
+              <Route path="ClaimsById" element={<ClaimsById /> } />
             </Routes>
           </div>
         </div>

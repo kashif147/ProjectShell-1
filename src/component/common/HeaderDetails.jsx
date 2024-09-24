@@ -343,7 +343,7 @@ function HeaderDetails() {
           {(location?.pathname == "/ClaimSummary" ||
           location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
-            location?.pathname == "/CasesSummary") && (
+            location?.pathname == "/CasesSummary" || location?.pathname == "/ClaimsById") && (
             <div className="search-main">
               <div className="title d-flex justify-content-between ">
                 <h2 className="title-main">
@@ -366,18 +366,20 @@ function HeaderDetails() {
 
                   <Button className="me-1 gray-btn butn">Share</Button>
                   <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                  <Button className="me-1 gray-btn butn">LIST VIEW</Button>
-                  <Button className="me-1 gray-btn butn">LIST VIEW</Button>
+                  <Button className="me-1 gray-btn butn">Grid VIEW</Button>
                   <SimpleMenu
             title={
-              <BsThreeDotsVertical
+              <BsThreeDots
                 style={{ fontSize: "15px", fontWeight: 500 }}
+                
               />
             }
             data={{ "Bulk Changes": "false", "Print Labels":"false" }}
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
+            vertical={true}
+       
           />
                 </div>
               </div>

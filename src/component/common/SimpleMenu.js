@@ -16,9 +16,11 @@ function SimpleMenu({
   data,
   isCheckBox = true,
   actions,
+  vertical,
   isBtn = false,
   isTable = false,
-  categoryKey = "gender", // Key to save checkbox data in context, e.g., 'gender'
+  categoryKey = "gender",
+   // Key to save checkbox data in context, e.g., 'gender'
 }) {
   const [checkboxes, setCheckboxes] = useState([]);
 
@@ -28,7 +30,8 @@ function SimpleMenu({
   });
 
   const [ddSearch, setddSearch] = useState("")
-  const { updateState, state, updateSelectedTitles, searchFilters, gridData } = useTableColumns();
+  const { updateState, state, updateSelectedTitles, searchFilters, gridData,  } = useTableColumns();
+
   useEffect(() => {
     searchInFilters(ddSearch);
   }, [ddSearch]);
@@ -162,7 +165,8 @@ function SimpleMenu({
       placement="bottomLeft"
       overlayStyle={{ width: 200, padding: "0px" }}
     >
-      <Button className="transparent-bg p-0">{title}</Button>
+     <Button className={` ${vertical==true ? "gray-btn butn" : "transparent-bg p-0"}`}>{title}</Button>
+
     </Dropdown>
   );
 }
