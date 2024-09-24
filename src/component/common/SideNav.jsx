@@ -124,7 +124,7 @@ function SideNav() {
         console.log("Navigate to Cases");
         break;
       case '4':
-        console.log("Navigate to Claims");
+        navigate("/ClaimsById");
         break;
       case '5':
         console.log("Navigate to Correspondences");
