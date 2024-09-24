@@ -53,7 +53,7 @@ function ResizableComp() {
       }}
       onMouseDown={handleMouseDown}
     />
-    Resizable Content
+    Recent Changes
   </div>
 );
 }

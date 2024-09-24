@@ -10,6 +10,7 @@ import { IoMdSettings } from "react-icons/io";
 
 import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
+import { Button } from "antd";
 
 function Header() {
   const [token, settoken] = useState(null);
@@ -70,6 +71,24 @@ const pathname = location?.pathname
       ),
     },
   ];
+  const ReportsnavLinks = [
+    {
+      key: "1",
+      label: (
+        <Link to="Report1" state={{ search: "Reports" }} className="link" style={{textDecoration:"none"}}>
+          Report1
+        </Link>
+      ),
+    },
+    {
+      key: "",
+      label: (
+        <Link className="link" to="Report2" state={{ search: "Reports" }}>
+          Report 2
+        </Link>
+      ),
+    },
+  ];
   return (
     <div className="Header-border">
       <div className=" d-flex justify-content-between align-items-baseline">
@@ -100,9 +119,9 @@ const pathname = location?.pathname
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Correspondences"} items={navLinks} />
               </li>
-              <li class="nav-item nav-links-container">
+              {/* <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Documents"} items={navLinks} />
-              </li>
+              </li> */}
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Projects"} items={navLinks} />
               </li>
@@ -110,11 +129,17 @@ const pathname = location?.pathname
                 <MyDrowpDown title={"Roster"} items={navLinks} />
               </li>
               <li class="nav-item nav-links-container">
-                <Link className="links" to="Configuratin"  state={{ search: "" }}>System Configuration</Link>
+                <Link className="links" to="Transfers"  state={{ search: "" }}>Transfer Requests</Link>
               </li>
               <li class="nav-item nav-links-container">
-                <Link className="links" to="Configuratin"  state={{ search: "" }}>Filters</Link>
+                <MyDrowpDown title={"Reports"} items={ReportsnavLinks} />
               </li>
+              <li class="nav-item nav-links-container">
+                <Link className="links" to="Configuratin"  state={{ search: "" }}>Configurations</Link>
+              </li>
+              {/* <li class="nav-item nav-links-container">
+                <Link className="links" to="Configuratin"  state={{ search: "" }}>Filters</Link>
+              </li> */}
             </ul>
           </div>
         </nav>
