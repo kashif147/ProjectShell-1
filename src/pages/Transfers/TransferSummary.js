@@ -17,7 +17,7 @@ import { CgAttachment } from "react-icons/cg";
 
 import SimpleMenu from "../../component/common/SimpleMenu";
 import TableComponent from "../../component/common/TableComponent";
-function ProfileSummary() {
+function TransferSummary() {
   const navigate = useNavigate();
 
   const menu = (
@@ -218,4 +218,4 @@ function ProfileSummary() {
   );
 }
 
-export default ProfileSummary;
+export default TransferSummary;

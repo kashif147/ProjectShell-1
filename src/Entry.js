@@ -18,6 +18,7 @@ import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
 import Filter from "./pages/Filters/Filter";
 import Claims from "./pages/Claims/Claims";
+import TransferSummary from "./pages/Transfers/TransferSummary";
 
 function Entry() {
   const location = useLocation();
@@ -44,7 +45,7 @@ function Entry() {
          
           <div className="main-main">
             <Routes>
-              <Route path="/" element={<MainDashBoard />} />
+              <Route path="/" element={<ProfileSummary />} />
               <Route path="Dummy" element={<Dummy />} />
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />}  />
@@ -54,6 +55,7 @@ function Entry() {
               <Route path="ClaimsDetails" element={< ClaimsDetails/> } />
               <Route path="Configuratin" element={<Configuratin /> } />
               <Route path="Filters" element={<Filter /> } />
+              <Route path="Transfers" element={<TransferSummary />} />
             </Routes>
           </div>
         </div>
