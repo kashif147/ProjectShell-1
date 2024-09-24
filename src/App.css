@@ -471,8 +471,11 @@ body {
 }
 .ant-table-cell{
   border-inline-end: 2px solid #f0f0f0 !important;
-  padding: 8px 12px !important;
+  padding: 4px 12px !important;
   color: var(--mainBlue) !important;
+}
+.ant-table-wrapper {
+  overflow-x: auto;  
 }
 .ant-table {
   border-radius: 2px !important; /* Adjust the radius as needed */
@@ -916,35 +919,14 @@ color: red !important;
 
 
 
-/* Custom styles to move the resize handle to the top of the header cell */
-.custom-grid .ag-header-cell {
-  position: relative; /* Ensure header cell is positioned relative */
-}
 
-.custom-grid .ag-header-cell .ag-header-cell-resize {
-  position: absolute;
-  top: 0; /* Move to the top of the header cell */
-  right: 0; /* Adjust right if needed */
-  width: 10px; /* Adjust the width of the resize handle */
-  height: 100%; /* Full height of the header cell */
-  cursor: ew-resize; /* Horizontal resize cursor */
-  background-color: rgba(0, 0, 0, 0.2); /* Background color for visibility */
-  z-index: 1; /* Ensure it's above other content */
-}
 
-/* Optional: Hide the default resize handle */
-.custom-grid .ag-header-cell .ag-header-cell-resize-default {
-  display: none;
-}
 
-.ag-header-cell, .ag-header-group-cell {
-  padding-left: 0px !important;
-  padding-right: 0px !important;
-}
-.ag-cell {
-  padding-top: 0px !important; /* Adjust the top padding */
-  padding-bottom: 0px !important; /* Adjust the bottom padding */
-}
+
+
+
+
+
 
 
 
@@ -959,7 +941,7 @@ color: red !important;
 /* table .editable-cell */
 
 
-.editable-cell {
+/* .editable-cell {
   position: relative;
 }
 
@@ -972,4 +954,18 @@ color: red !important;
   padding: 4px 11px;
   border: 1px solid #d9d9d9;
   border-radius: 2px;
-}
+} */
+
+
+
+
+
+
+/* claims table */
+  .claims-table .ant-table-thead > tr > th {
+    background-color: #45669d; 
+    color: white !important;
+    font-family: var(--fontFamily) !important;
+    font-weight: 480;
+    padding: 12px 12px !important;
+  }
