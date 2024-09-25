@@ -144,15 +144,18 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 
   const draggableColumns = [
     {
+      
       title: () => (
         <Checkbox
+         style={{marginLeft:"12px"}}
           indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
-          checked={selectedRowKeys.length === dataSource.length}
+          // checked={selectedRowKeys.length === dataSource.length}
           onChange={e => {
             const checked = e.target.checked;
             setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
           }}
         />
+        
       ),
       key: 'selection',
       width: 50, // Set width for the fixed column

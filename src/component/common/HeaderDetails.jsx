@@ -343,7 +343,10 @@ function HeaderDetails() {
           {(location?.pathname == "/ClaimSummary" ||
           location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
-            location?.pathname == "/CasesSummary" || location?.pathname == "/ClaimsById") && (
+            location?.pathname == "/CasesSummary" || location?.pathname == "/ClaimsById"
+            || location?.pathname == "/ClaimsById"
+            || location?.pathname == "/Transfers"
+          ) && (
             <div className="search-main">
               <div className="title d-flex justify-content-between ">
                 <h2 className="title-main">
@@ -351,9 +354,10 @@ function HeaderDetails() {
                     ? `Profile`
                     : ` ${location?.state?.search}`}
                 </h2>
-
                 <div className="d-flex">
-                
+                <Button style={{marginRight:"50px",color:'white', borderRadius:"3px", backgroundColor:"#45669d"}} className="butn" >
+                  Create
+                </Button>
                   <SimpleMenu
                     title={
                       <>
