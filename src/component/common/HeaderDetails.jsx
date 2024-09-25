@@ -345,7 +345,8 @@ function HeaderDetails() {
             location?.pathname == "/Summary" ||
             location?.pathname == "/CasesSummary" || location?.pathname == "/ClaimsById"
             || location?.pathname == "/ClaimsById"
-            || location?.pathname == "/Transfers"
+            || location?.pathname == "/Transfers" 
+            || location?.pathname == "/CorrespondencesSummary" 
           ) && (
             <div className="search-main">
               <div className="title d-flex justify-content-between ">

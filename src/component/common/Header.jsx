@@ -89,6 +89,24 @@ const pathname = location?.pathname
       ),
     },
   ];
+  const CorrespondencesLink = [
+    {
+      key: "1",
+      label: (
+        <Link to="/CorrespondencesSummary" state={{ search: "Reports" }} className="link" style={{textDecoration:"none"}}>
+          Correspondences Summary
+        </Link>
+      ),
+    },
+    {
+      key: "",
+      label: (
+        <Link className="link" to="Dummy" state={{ search: "Correspondences" }}>
+          Dummy Page
+        </Link>
+      ),
+    },
+  ];
   return (
     <div className="Header-border">
       <div className=" d-flex justify-content-between align-items-baseline">
@@ -116,8 +134,8 @@ const pathname = location?.pathname
               <li  className={`${pathname=="/ClaimSummary"|| pathname=="/Claims" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
               </li>
-              <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Correspondences"} items={navLinks} />
+              <li className={`${pathname=="/CorrespondencesSummary" ?"activ-link":"" } nav-item nav-links-container`}>
+                <MyDrowpDown title={"Correspondences"} items={CorrespondencesLink} />
               </li>
               {/* <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Documents"} items={navLinks} />
@@ -131,10 +149,10 @@ const pathname = location?.pathname
               <li className={`${pathname=="/Transfers" ?"activ-link":"" } nav-item nav-links-container `}>
                 <Link className="links" to="Transfers"  state={{ search: "" }}>Transfer Requests</Link>
               </li>
-              <li class="nav-item nav-links-container">
+              <li className={`${(pathname=="/Report2" || pathname=="/Report1") ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Reports"} items={ReportsnavLinks} />
               </li>
-              <li className={`${pathname=="/Report2" || pathname=="/Report2" ?"activ-link":"" } nav-item nav-links-container `}>
+              <li className={`${ pathname=="/Configuratin" ?"activ-link":"" } nav-item nav-links-container `} >
                 <Link className="links" to="Configuratin"  state={{ search: "" }}>Configurations</Link>
               </li>
               {/* <li class="nav-item nav-links-container">

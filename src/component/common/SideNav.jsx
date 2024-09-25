@@ -51,7 +51,7 @@ function SideNav() {
       </div>
     }, 
     {
-      key: '2',
+      key: 'Profile',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
          <FaUser  style={{ fontSize: '24px',  }} />
         </div>,
@@ -60,7 +60,7 @@ function SideNav() {
       onclick:()=>navigate("/ClaimsById")
     },
     {
-      key: '3',
+      key: 'Cases',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
         <FaListCheck   style={{ fontSize: '24px' }} /> 
         </div>,
@@ -68,21 +68,21 @@ function SideNav() {
     },
     
     {
-      key: '4',
+      key: 'Claims',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       <FaMoneyCheckAlt style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Claims',
     },
     {
-      key: '5',
+      key: 'Correspondences',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       <FaArrowRightArrowLeft style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Correspondences',
     },
     {
-      key: '6',
+      key: 'Documents',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
       <IoDocumentsSharp  style={{ fontSize: '24px' }} /> 
@@ -90,7 +90,7 @@ function SideNav() {
       label: 'Documents',
     },
     {
-      key: '7',
+      key: 'Projects',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
       <FaDiagramProject  style={{ fontSize: '24px' }} /> 
@@ -98,7 +98,7 @@ function SideNav() {
       label: 'Projects',
     },
     {
-      key: '8',
+      key: 'Roster',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
       <FaCalendarDays style={{ fontSize: '24px' }} /> 
@@ -106,7 +106,7 @@ function SideNav() {
       label: 'Roster',
     },
     {
-      key: '9',
+      key: 'Tranings',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
       
       <FaSun style={{ fontSize: '24px' }} /> 
@@ -117,13 +117,13 @@ function SideNav() {
   ];
   const handleClick = ({ key }) => {
     switch (key) {
-      case '2':
-        navigate("/ClaimsById");
-        break;
-      case '3':
+      case '':
         console.log("Navigate to Cases");
         break;
-      case '4':
+        case 'Cases':
+        navigate("/CasesById");
+        break;
+      case 'Claims':
         navigate("/ClaimsById");
         break;
       case '5':
