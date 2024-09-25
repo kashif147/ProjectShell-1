@@ -10,7 +10,7 @@ import Dummy from "./component/common/Dummy";
 import Configuratin from "./pages/Configuratin";
 import ProfileDetails from "./pages/Profiles/ProfileDetails";
 import ProfileSummary from "./pages/Profiles/ProfileSummary";
-import CasesSummary from "./pages/Cases/CasesSummary"; 
+import CasesSummary from "./pages/Cases/CasesSummary";
 import CasesDetails from "./pages/Cases/CasesDetails";
 import ClaimSummary from "./pages/Claims/ClaimSummary";
 import ClaimsDetails from "./pages/Claims/ClaimsDetails";
@@ -20,6 +20,8 @@ import Filter from "./pages/Filters/Filter";
 import Claims from "./pages/Claims/Claims";
 import TransferSummary from "./pages/Transfers/TransferSummary";
 import ClaimsById from "./pages/Claims/ClaimsById";
+import CasesById from "./pages/Cases/CasesById";
+import CorrespondencesSummary from "./pages/Correspondences/CorrespondencesSummary";
 
 function Entry() {
   const location = useLocation();
@@ -27,42 +29,56 @@ function Entry() {
     <div className="">
       <Header />
       <div>
-          
-          <HeaderDetails />
-       
-        </div>
+
+        <HeaderDetails />
+
+      </div>
       <div className="main-route d-flex ">
-        {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
+        {(location?.pathname == "/Details" 
+        || location?.pathname == "/ClaimsDetails" || 
+        location?.pathname == "/CasesDetails" ||
+        location?.pathname == "/ClaimsById"||
+        location?.pathname == "/CasesById"
+      ) && (
           <div>
             <SideNav />
           </div>
         )}
-        {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
-        
-            <ProfileHeader />
+        {(location?.pathname == "/Details" 
+        || location?.pathname == "/ClaimsDetails" || 
+        location?.pathname == "/CasesDetails" || 
+        location?.pathname == "/ClaimsById" 
+        ||location?.pathname == "/CasesById" 
        
+      
+      ) && (
+
+          <ProfileHeader />
+
         )}
         <div style={{ width: "100%", overflow: "hidden" }}>
-         
+
           <div className="main-main">
             <Routes>
               <Route path="/" element={<ProfileSummary />} />
               <Route path="Dummy" element={<Dummy />} />
               <Route path="Details" element={<ProfileDetails />} />
-              <Route path="Summary" element={<ProfileSummary />}  />
-              <Route path="CasesDetails" element={< CasesDetails/> } />
-              <Route path="CasesSummary" element={< CasesSummary/> } />
-              <Route path="ClaimSummary" element={< ClaimSummary/> } />
-              <Route path="ClaimsDetails" element={< ClaimsDetails/> } />
-              <Route path="Configuratin" element={<Configuratin /> } />
-              <Route path="Filters" element={<Filter /> } />
+              <Route path="Summary" element={<ProfileSummary />} />
+              <Route path="CasesDetails" element={< CasesDetails />} />
+              <Route path="CasesById" element={<CasesById />} />
+              <Route path="CasesSummary" element={< CasesSummary />} />
+              <Route path="ClaimSummary" element={< ClaimSummary />} />
+              <Route path="ClaimsDetails" element={< ClaimsDetails />} />
+              <Route path="Configuratin" element={<Configuratin />} />
+              <Route path="Filters" element={<Filter />} />
               <Route path="Transfers" element={<TransferSummary />} />
-              <Route path="ClaimsById" element={<ClaimsById /> } />
+              <Route path="ClaimsById" element={<ClaimsById />} />
+              <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
             </Routes>
           </div>
         </div>
         {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
-        <ResizableComp />
+          <ResizableComp />
         )}
       </div>
     </div>
