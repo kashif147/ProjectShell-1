@@ -14,6 +14,7 @@ import MyDeatails from "../../component/common/MyDeatails";
 function ProfileDetails() {
     const navigate = useNavigate();
     const location = useLocation();
+ 
     return (
       <div className="">
        <MyDeatails />

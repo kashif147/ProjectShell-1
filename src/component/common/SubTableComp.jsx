@@ -35,9 +35,9 @@ const dataSource = [
     },]
 
 
-function SubTableComp() {
+function SubTableComp({columns,dataSource}) {
   return (
-    <Table dataSource={dataSource} columns={columns} />
+    <Table bordered dataSource={dataSource} columns={columns} pagination={false}  className='claims-table'/>
   )
 }
 

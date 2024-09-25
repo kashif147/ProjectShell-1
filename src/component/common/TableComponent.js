@@ -27,7 +27,6 @@ import { Link } from "react-router-dom";
 const EditableContext = React.createContext(null);
 
 
-
 const DraggableHeaderCell = ({ id, style, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
   // const dragState = useContext(DragIndexContext);
@@ -37,12 +36,12 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
     border: `2px solid green`,
     ...(isDragging
       ? {
-          position: "relative",
-          zIndex: 9999,
-          userSelect: "none",
-          backgroundColor: "red",
-          color: "white",
-        }
+        position: "relative",
+        zIndex: 9999,
+        userSelect: "none",
+        backgroundColor: "red",
+        color: "white",
+      }
       : {}),
   };
 
@@ -59,7 +58,7 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 };
 
 const TableComponent = ({ dataSource, screenName, redirect }) => {
-  const { columns, gridData, setGridData } = useTableColumns();
+  const { columns, gridData, setGridData, getProfile } = useTableColumns();
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -101,10 +100,10 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   const onSelectChange = (key) => {
-      const newSelectedRowKeys = selectedRowKeys.includes(key)
-          ? selectedRowKeys.filter(k => k !== key)
-          : [...selectedRowKeys, key];
-      setSelectedRowKeys(newSelectedRowKeys);
+    const newSelectedRowKeys = selectedRowKeys.includes(key)
+      ? selectedRowKeys.filter(k => k !== key)
+      : [...selectedRowKeys, key];
+    setSelectedRowKeys(newSelectedRowKeys);
   };
   const reorderColumns = (list, startIndex, endIndex) => {
     const result = Array.from(list);
@@ -144,10 +143,10 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 
   const draggableColumns = [
     {
-      
+
       title: () => (
         <Checkbox
-         style={{marginLeft:"12px"}}
+          style={{ marginLeft: "12px" }}
           indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
           // checked={selectedRowKeys.length === dataSource.length}
           onChange={e => {
@@ -155,7 +154,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
           }}
         />
-        
+
       ),
       key: 'selection',
       width: 50, // Set width for the fixed column
@@ -167,63 +166,67 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         />
       ),
     }
-,    
+    ,
     {
-        title: (
-            <Gridmenu
-                title={<BsSliders style={{ fontSize: "20px", color: "white", fontWeight: 600 }} />}
-                columnsForFilter={columnsForFilter}
-                setColumnsForFilter={setColumnsForFilter}
-                screenName={screenName}
-                data={columnsDragbe}
-                setColumnsDragbe={setColumnsDragbe}
-            />
-        ),
-        key: "gridmenu",
-        width: 75,
-        fixed: "left",
-        render: () => (
-            <Space size="small" className="action-buttons">
-                <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
-                <SimpleMenu
-                    title={<BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />}
-                    data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false" }}
-                    isCheckBox={false}
-                    isSearched={false}
-                    isTransparent={true}
-                />
-            </Space>
-        ),
+      title: (
+        <Gridmenu
+          title={<BsSliders style={{ fontSize: "20px", color: "white", fontWeight: 600 }} />}
+          columnsForFilter={columnsForFilter}
+          setColumnsForFilter={setColumnsForFilter}
+          screenName={screenName}
+          data={columnsDragbe}
+          setColumnsDragbe={setColumnsDragbe}
+        />
+      ),
+      key: "gridmenu",
+      width: 75,
+      fixed: "left",
+      render: () => (
+        <Space size="small" className="action-buttons">
+          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
+          <SimpleMenu
+            title={<BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />}
+            data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false" }}
+            isCheckBox={false}
+            isSearched={false}
+            isTransparent={true}
+          />
+        </Space>
+      ),
     },
     ...columnsDragbe.map((col) => ({
-        ...col,
-        title: (
-            <DraggableHeaderCell id={col.key} key={col.key}>
-                {col.title}
-            </DraggableHeaderCell>
+      ...col,
+      title: (
+        <DraggableHeaderCell id={col.key} key={col.key}>
+          {col.title}
+        </DraggableHeaderCell>
+      ),
+      render: (text, record) =>
+        col.title === "Full Name" ? (
+          <Link
+            to={redirect}
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              code: record?.regNo,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth:record?.dateOfBirth,
+            }}
+            onClick={()=>getProfile(record)}
+          >
+            {text}
+          </Link>
+        ) : (
+          text
         ),
-        render: (text, record) =>
-            col.title === "Full Name" ? (
-                <Link
-                    to={redirect}
-                    state={{
-                        search: screenName,
-                        name: record?.fullName,
-                        code: record?.regNo,
-                    }}
-                >
-                    {text}
-                </Link>
-            ) : (
-                text
-            ),
-        sorter:
-            col.title === "Full Name"
-                ? (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex])
-                : undefined,
-        sortDirections: ["ascend", "descend"],
+      sorter:
+        col.title === "Full Name"
+          ? (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex])
+          : undefined,
+      sortDirections: ["ascend", "descend"],
     })),
-];
+  ];
   // Pagination Starts
 
   const pageSize = 10;
@@ -383,13 +386,13 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             bordered
             virtual
             scroll={{ x: "100%", y: 400 }}
-            sticky  
+            sticky
           />
-           <div
+          <div
             className="d-flex justify-content-between tbl-footer"
             style={{ marginTop: "10px" }}
           >
-            <div style={{ display: "flex", alignItems: "center",}}>
+            <div style={{ display: "flex", alignItems: "center", }}>
               <span
                 style={{
                   marginRight: "4px",

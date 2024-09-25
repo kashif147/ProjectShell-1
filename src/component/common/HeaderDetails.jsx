@@ -260,7 +260,7 @@ function HeaderDetails() {
     <div className="">
       <div
         className={`details-header d-flex w-100% overflow-hidden ${
-          location?.pathname == "/Details" ? "Header-border" : ""
+          (location?.pathname == "/Details" || location?.pathname == "/CasesById") ? "Header-border" : ""
         }`}
       >
         <div style={{ width: "100%" }}>
@@ -319,9 +319,12 @@ function HeaderDetails() {
                 )}
               </div>
             </div>
-            {}
-            {location?.pathname == "/Details" && (
+            
+            {(location?.pathname == "/Details" || location?.pathname == "/CasesById")  && (
               <div className="d-flex align-items-baseline">
+                <Button style={{marginRight:"50px",color:'white', borderRadius:"3px", backgroundColor:"#45669d"}}>
+Create
+                </Button>
                 <Button onClick={goBack} className="me-1 gray-btn butn">
                   Return to summary
                 </Button>
