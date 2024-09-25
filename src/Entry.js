@@ -52,7 +52,7 @@ function Entry() {
               <Route path="Summary" element={<ProfileSummary />}  />
               <Route path="CasesDetails" element={< CasesDetails/> } />
               <Route path="CasesSummary" element={< CasesSummary/> } />
-              <Route path="ClaimSummary" element={< Claims/> } />
+              <Route path="ClaimSummary" element={< ClaimSummary/> } />
               <Route path="ClaimsDetails" element={< ClaimsDetails/> } />
               <Route path="Configuratin" element={<Configuratin /> } />
               <Route path="Filters" element={<Filter /> } />

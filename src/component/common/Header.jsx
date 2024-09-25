@@ -110,7 +110,7 @@ const pathname = location?.pathname
                 <MyDrowpDown title={"Profile"} items={navLinks} />
                 {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
               </li>
-              <li className={`${pathname=="/Cases"|| pathname=="/CasesDetails" ?"activ-link":"" } nav-item nav-links-container `}>
+              <li className={`${pathname=="/CasesSummary"|| pathname=="/CasesDetails" ?"activ-link":"" } nav-item nav-links-container `}>
                 <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
               </li>
               <li  className={`${pathname=="/ClaimSummary"|| pathname=="/Claims" ?"activ-link":"" } nav-item nav-links-container `}>
@@ -128,13 +128,13 @@ const pathname = location?.pathname
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Roster"} items={navLinks} />
               </li>
-              <li class="nav-item nav-links-container">
+              <li className={`${pathname=="/Transfers" ?"activ-link":"" } nav-item nav-links-container `}>
                 <Link className="links" to="Transfers"  state={{ search: "" }}>Transfer Requests</Link>
               </li>
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Reports"} items={ReportsnavLinks} />
               </li>
-              <li class="nav-item nav-links-container">
+              <li className={`${pathname=="/Report2" || pathname=="/Report2" ?"activ-link":"" } nav-item nav-links-container `}>
                 <Link className="links" to="Configuratin"  state={{ search: "" }}>Configurations</Link>
               </li>
               {/* <li class="nav-item nav-links-container">
