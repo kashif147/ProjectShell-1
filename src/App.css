@@ -785,6 +785,7 @@ h1 {
 }
 .profil-container-main{
   width: 23%;
+  padding-top: 20px !important;
   padding: 10px;
   border: 2px solid #e0e0e0;
   border-top: none;

@@ -36,11 +36,11 @@ function ProfileHeader() {
     return (
         <div className='profil-container-main d-flex flex-column'>
             <div className="profile-header-container" style={{ 
-                display: 'flex', 
-                justifyContent: 'center',  // Center horizontally
-                alignItems: 'center',  
+                display: 'flex',  
                 flexDirection:'column'     // Center vertically
             }}>
+                <div className='d-flex justify-content-center'>
+
                 <Upload
                     customRequest={customRequest}
                     showUploadList={false}
@@ -77,6 +77,7 @@ function ProfileHeader() {
                         )}
                     </div>
                 </Upload>
+                </div>
                 
             <div style={{ 
                 display: 'flex', 

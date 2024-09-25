@@ -62,7 +62,7 @@ export const TableColumnsProvider = ({ children }) => {
       { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     ],
   });
-
+ 
   const [searchFilters, setsearchFilters] = useState([
     {
       titleColumn: "Rank",
@@ -357,20 +357,7 @@ const updateCompByTitleColumn = (titleColumn, newComp) => {
 
     setGridData(sortedData); // Update the grid data after sorting
   };
-  // useEffect(() => {
-  //   setsearchFilters((prevFilters) =>
-  //     prevFilters.map((item) => {
-  //       const updatedItem = { ...item };
-  //       if (updatedItem.lookups) {
-  //         const hasTrueValue = Object.values(updatedItem.lookups).some(
-  //           (value) => value === true
-  //         );
-  //         updatedItem.isCheck = hasTrueValue;
-  //       }
-  //       return updatedItem;
-  //     })
-  //   );
-  // }, [searchFilters]);
+
   const filterGridDataBasedOnLookups = (data, searchFilters) => {
     let filteredData = data; // Start with the full dataset
   
@@ -445,6 +432,10 @@ useEffect(() => {
   setGridData(result);
 }, [searchFilters]); // Re-run when gridData or filters change
 
+const [ProfileDetails, setProfileDetails] = useState()
+const getProfile =(row)=> {
+  setProfileDetails(row)
+}
   return (
 
     <TableColumnsContext.Provider
@@ -462,7 +453,9 @@ useEffect(() => {
         filterGridDataFtn,
         handleCompChang,
         setGridData,
-        updateCompByTitleColumn
+        updateCompByTitleColumn,
+        ProfileDetails,
+        getProfile
 
       }}
     >
