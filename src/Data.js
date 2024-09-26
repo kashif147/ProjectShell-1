@@ -20,7 +20,7 @@ export const tableData = [
     "surname": "Smith",
     "dateRetired": "01/02/2045",
     "dateAged65": "01/02/2045",
-    "dateOfDeath": "N/A",
+    "dateOfDeath": "01/02/2045",
     "stationID": "04555",
     "stationPh": 744188,
     "pensionNo": "1555",
