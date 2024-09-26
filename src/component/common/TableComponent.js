@@ -82,21 +82,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
   );
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
-  // useEffect(()=>{
-  //   console.log({columnsDragbe})
-  //   setColumnsDragbe(
-  //     columnsDragbe.filter((column)=>{
-  //       return column.isGride
-  //     })
-  //   )
-  //   console.log({columnsDragbe})
-  // },[setColumnsDragbe]);
-  // useEffect(() => {
-  //   // Filter columns whenever columnsDragbe changes
-  //   const newFilteredData = columnsDragbe.filter(col => col.isGride);
-  //   setFilteredData(newFilteredData);
-  // }, [columnsDragbe]); // Dependency array
-
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   const onSelectChange = (key) => {
@@ -111,7 +96,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     result.splice(endIndex, 0, removed);
     return result;
   };
-
   const onDragEnd = ({ active, over }) => {
     if (active.id !== over?.id) {
       setColumnsDragbe((prevColumns) => {
@@ -126,7 +110,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     }
     setDragIndex({ active: null, over: null });
   };
-
   const onDragOver = ({ active, over }) => {
     const activeIndex = columnsDragbe.findIndex(
       (column) => column.key === active.id
@@ -148,7 +131,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         <Checkbox
           style={{ marginLeft: "12px" }}
           indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
-          // checked={selectedRowKeys.length === dataSource.length}
           onChange={e => {
             const checked = e.target.checked;
             setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
@@ -157,8 +139,8 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 
       ),
       key: 'selection',
-      width: 50, // Set width for the fixed column
-      fixed: 'left', // Ensure the column is fixed
+      width: 50, 
+      fixed: 'left',
       render: (text, record) => (
         <Checkbox
           checked={selectedRowKeys.includes(record.key)}
@@ -204,7 +186,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       render: (text, record) =>
         col.title === "Full Name" ? (
           <Link
-            to={redirect}
+            to="/Details"
             state={{
               search: screenName,
               name: record?.fullName,
@@ -215,10 +197,34 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             }}
             onClick={()=>getProfile(record)}
           >
+            <span style={{textOverflow:"ellipsis"}}>
             {text}
+
+            </span>
+          </Link>
+        ) :   col.title === "Claim No" ? (
+          <Link
+            to="/ClaimsById"
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              code: record?.regNo,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth:record?.dateOfBirth,
+            }}
+            onClick={()=>getProfile(record)}
+          >
+            <span style={{textOverflow:"ellipsis"}}>
+            {text}
+
+            </span>
           </Link>
         ) : (
-          text
+          <span style={{textOverflow:"ellipsis"}}>
+          {text}
+
+          </span>
         ),
       sorter:
         col.title === "Full Name"
@@ -227,34 +233,19 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       sortDirections: ["ascend", "descend"],
     })),
   ];
-  // Pagination Starts
+
 
   const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
-  // const [currentPageData, setCurrentPageData] = useState(
-  //   gridData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  // );
-  //Kasif making changes
   const [currentPageData, setCurrentPageData] = useState([]);
 
-  // useEffect(() => {
-  //   setCurrentPageData(
-  //     gridData.slice((currentPage - 1) * pageSize, currentPage * pageSize)
-  //   );
-  // }, [currentPage, gridData]);
-  //Kashif making changes
   useEffect(() => {
-    // Slicing the data based on current page and page size
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    setCurrentPageData(gridData.slice(startIndex, endIndex));
-  }, [currentPage, gridData]); // Runs whenever currentPage or gridData changes
+    setCurrentPageData(dataSource.slice(startIndex, endIndex));
+  }, [currentPage, dataSource]); // Runs whenever currentPage or gridData changes
 
-
-  // Pagination Ends
-
-  //Editing Cell Starts Here
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
     return (
@@ -334,7 +325,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
   };
   const handleSave = (row) => {
     // console.log({ currentPageData });
-    const newData = [...gridData];
+    const newData = [...dataSource];
     const index = newData.findIndex((item) => row.key === item.key);
     const item = newData[index];
     newData.splice(index, 1, {
@@ -343,12 +334,14 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     });
     setGridData(newData);
   };
+
   const components = {
     body: {
       row: EditableRow,
       cell: EditableCell,
     },
   };
+
   const editableColumns = draggableColumns.map((col) => {
     if (!col.editable) {
       return col;
@@ -364,7 +357,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       }),
     };
   });
-  // Editing Cell Ends Here
 
   return (
     <DndContext
@@ -401,7 +393,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
                 }}
               >
                 {/* 1-{gridData.length} */}
-                {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, gridData.length)}`}
+                {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, dataSource.length)}`}
               </span>
               <span
                 style={{
@@ -410,7 +402,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
                   fontWeight: "500",
                 }}
               >
-                of {gridData.length}
+                of {dataSource.length}
               </span>
               <LuRefreshCw
                 style={{ cursor: "pointer" }}
@@ -421,7 +413,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             <Pagination
               current={currentPage}
               pageSize={pageSize}
-              total={gridData.length}
+              total={dataSource.length}
               onChange={(page) => setCurrentPage(page)} // Update page on pagination change
             />
           </div>

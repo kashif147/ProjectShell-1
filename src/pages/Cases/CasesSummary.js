@@ -9,11 +9,13 @@ import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 import TableComponent from "../../component/common/TableComponent";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 
 function CasesSummary() {
     const navigate = useNavigate();
-
+    const {gridData} = useTableColumns()
+ 
     const menu = (
       <Menu>
         <Menu.Item key="1">Option 1</Menu.Item>
@@ -159,7 +161,7 @@ function CasesSummary() {
     return (
       <div className="">
    
-      <TableComponent screenName="Cases" redirect="/CasesDetails" />
+      <TableComponent dataSource={gridData} screenName="Cases" redirect="/CasesDetails"  />
     </div>
     );
   }

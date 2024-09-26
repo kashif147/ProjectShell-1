@@ -91,12 +91,6 @@ const DragIndexContext = createContext({
         width: 150,
     },
     {
-        title: 'Claim Type',
-        dataIndex: 'claimType',
-        key: 'claimType',
-        width: 150,
-    },
-    {
         title: 'Start Date',
         dataIndex: 'StartDate',
         key: 'StartDate',
@@ -126,12 +120,12 @@ const DragIndexContext = createContext({
         dataIndex: 'NumberOfDays',
         key: 'NumberOfDays',
         width: 150,
-        render: (amount) => `$${amount.toFixed(2)}`,
+        render: (amount) => `${amount.toFixed(2)}`,
     },
     {
-        title: 'PayAmount',
-        dataIndex: 'Pay Amount',
-        key: 'Pay Amount',
+        title: 'Pay Amount',
+        dataIndex: 'PayAmount',
+        key: 'PayAmount',
         width: 150,
     },
     {
@@ -150,55 +144,56 @@ const DragIndexContext = createContext({
 ];
 
 const dataSource = [
-    {
-      key: '1',
-      ClaimDate: '2024-01-01',
-      ClaimType: 'Medical',
-      claimType: 'Reimbursement',
-      StartDate: '2024-01-01',
-      EndDate: '2024-01-05',
-      NumberOfDays: 5,
-      PayAmount: 1200.50,
-      ChequeNo: 'CHK12345',
-      Description: 'Claim for medical expenses',
-    },
-    {
-      key: '2',
-      ClaimDate: '2024-01-10',
-      ClaimType: 'Travel',
-      claimType: 'Advance',
-      StartDate: '2024-01-08',
-      EndDate: '2024-01-12',
-      NumberOfDays: 4,
-      PayAmount: 800.00,
-      ChequeNo: 'CHK67890',
-      Description: 'Travel expenses for conference',
-    },
-    {
-      key: '3',
-      ClaimDate: '2024-02-01',
-      ClaimType: 'Office',
-      claimType: 'Equipment',
-      StartDate: '2024-01-25',
-      EndDate: '2024-01-30',
-      NumberOfDays: 6,
-      PayAmount: 450.75,
-      ChequeNo: 'CHK09876',
-      Description: 'Office equipment purchase',
-    },
-    {
-      key: '4',
-      ClaimDate: '2024-02-15',
-      ClaimType: 'Other',
-      claimType: 'Miscellaneous',
-      StartDate: '2024-02-10',
-      EndDate: '2024-02-12',
-      NumberOfDays: 2,
-      PayAmount: 150.00,
-      ChequeNo: 'CHK54321',
-      Description: 'Miscellaneous expenses',
-    },
-  ];
+  {
+    key: '1',
+    ClaimDate: '2024-01-01',
+    ClaimCategory: 'Medical',
+    ClaimType: 'Reimbursement',
+    StartDate: '2024-01-01',
+    EndDate: '2024-01-05',
+    NumberOfDays: 5,
+    PayAmount: 1200.50,
+    ChequeNo: 'CHK12345',
+    Description: 'Claim for medical expenses',
+  },
+  {
+    key: '2',
+    ClaimDate: '2024-01-10',
+    ClaimCategory: 'Travel',
+    ClaimType: 'Advance',
+    StartDate: '2024-01-08',
+    EndDate: '2024-01-12',
+    NumberOfDays: 4,
+    PayAmount: 800.00,
+    ChequeNo: 'CHK67890',
+    Description: 'Travel expenses for conference',
+  },
+  {
+    key: '3',
+    ClaimDate: '2024-02-01',
+    ClaimCategory: 'Office',
+    ClaimType: 'Equipment',
+    StartDate: '2024-01-25',
+    EndDate: '2024-01-30',
+    NumberOfDays: 6,
+    PayAmount: 450.75,
+    ChequeNo: 'CHK09876',
+    Description: 'Office equipment purchase',
+  },
+  {
+    key: '4',
+    ClaimDate: '2024-02-15',
+    ClaimCategory: 'Other',
+    ClaimType: 'Miscellaneous',
+    StartDate: '2024-02-10',
+    EndDate: '2024-02-12',
+    NumberOfDays: 2,
+    PayAmount: 150.00,
+    ChequeNo: 'CHK54321',
+    Description: 'Miscellaneous expenses',
+  },
+];
+
   
 
 function ClaimsById() {
@@ -252,8 +247,6 @@ function ClaimsById() {
         });
       };
 
-
-
       const TableHeaderCell = (props) => {
         const dragState = useContext(DragIndexContext);
         const { attributes, listeners, setNodeRef, isDragging } = useSortable({
@@ -274,7 +267,6 @@ function ClaimsById() {
         return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
       };
     return (
-
         <DndContext
         sensors={sensors}
         modifiers={[restrictToHorizontalAxis]}
@@ -299,6 +291,7 @@ function ClaimsById() {
                   cell: TableBodyCell,
                 },
               }}
+              pagination={false}
             />
            
           </DragIndexContext.Provider>
@@ -314,7 +307,6 @@ function ClaimsById() {
           </th>
         </DragOverlay>
       </DndContext>
-
     )
 }
 

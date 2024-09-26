@@ -22,6 +22,7 @@ import TransferSummary from "./pages/Transfers/TransferSummary";
 import ClaimsById from "./pages/Claims/ClaimsById";
 import CasesById from "./pages/Cases/CasesById";
 import CorrespondencesSummary from "./pages/Correspondences/CorrespondencesSummary";
+import AddNewProfile from "./pages/Profiles/AddNewProfile";
 
 function Entry() {
   const location = useLocation();
@@ -38,7 +39,8 @@ function Entry() {
         || location?.pathname == "/ClaimsDetails" || 
         location?.pathname == "/CasesDetails" ||
         location?.pathname == "/ClaimsById"||
-        location?.pathname == "/CasesById"
+        location?.pathname == "/CasesById" 
+         || location?.pathname == "/AddNewProfile"
       ) && (
           <div>
             <SideNav />
@@ -49,6 +51,7 @@ function Entry() {
         location?.pathname == "/CasesDetails" || 
         location?.pathname == "/ClaimsById" 
         ||location?.pathname == "/CasesById" 
+         || location?.pathname == "/AddNewProfile"
        
       
       ) && (
@@ -71,13 +74,20 @@ function Entry() {
               <Route path="ClaimsDetails" element={< ClaimsDetails />} />
               <Route path="Configuratin" element={<Configuratin />} />
               <Route path="Filters" element={<Filter />} />
-              <Route path="Transfers" element={<TransferSummary />} />
               <Route path="ClaimsById" element={<ClaimsById />} />
+              <Route path="Transfers" element={<TransferSummary />} />
+              <Route path="AddNewProfile" element={<AddNewProfile />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
             </Routes>
           </div>
         </div>
-        {(location?.pathname == "/Details" || location?.pathname == "/ClaimsDetails" || location?.pathname == "/CasesDetails") && (
+        {(location?.pathname == "/Details"
+         || location?.pathname == "/ClaimsDetails" 
+         || location?.pathname == "/CasesDetails"
+         || location?.pathname == "/AddNewProfile"||
+location?.pathname == "/CasesById"
+        
+        ) && (
           <ResizableComp />
         )}
       </div>

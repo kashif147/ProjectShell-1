@@ -4,6 +4,7 @@ import { usePDF } from "react-to-pdf";
 import { FaUser } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
+import MyDrawer from "./MyDrawer";
 import {
   RightOutlined,
   PlusOutlined,
@@ -48,8 +49,8 @@ function HeaderDetails() {
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
   const [trueFilters, settrueFilters] = useState();
+  const [create, setCreate] = useState(false);
   const navigate = useNavigate();
-  // console.log(location, "location");
   const inputRef = useRef(null);
   const { searchFilters, filterGridDataFtn } = useTableColumns();
   function filterSearchableColumns(data) {
@@ -58,8 +59,6 @@ function HeaderDetails() {
   useEffect(() => {
     filterSearchableColumns(searchFilters);
   }, [searchFilters]);
-
-  // console.log(trueFilters, "44");
 
   const genaratePdf = (e) => {
     // e.stopPropagation();
@@ -244,24 +243,27 @@ function HeaderDetails() {
         {(location?.pathname === "/ClaimSummary" ||
           location?.pathname === "/Summary" ||
           location?.pathname === "/CasesSummary") && (
-          <FaClipboardList
-            style={{
-              fontSize: "15px",
-              marginRight: "10px",
-              marginLeft: "10px",
-              color: "#45669d",
-            }}
-          />
-        )}
+            <FaClipboardList
+              style={{
+                fontSize: "15px",
+                marginRight: "10px",
+                marginLeft: "10px",
+                color: "#45669d",
+              }}
+            />
+          )}
       </>
     );
   };
   return (
     <div className="">
       <div
-        className={`details-header d-flex w-100% overflow-hidden ${
-          (location?.pathname == "/Details" || location?.pathname == "/CasesById") ? "Header-border" : ""
-        }`}
+        className={`details-header d-flex w-100% overflow-hidden ${(location?.pathname == "/Details"
+            || location?.pathname == "/CasesById"
+            || location?.pathname == "/AddNewProfile"
+            || location?.pathname == "/ClaimsById"
+          ) ? "Header-border" : ""
+          }`}
       >
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
@@ -319,130 +321,136 @@ function HeaderDetails() {
                 )}
               </div>
             </div>
-            
-            {(location?.pathname == "/Details" || location?.pathname == "/CasesById")  && (
-              <div className="d-flex align-items-baseline">
-                <Button style={{marginRight:"50px",color:'white', borderRadius:"3px", backgroundColor:"#45669d"}}>
-Create
-                </Button>
-                <Button onClick={goBack} className="me-1 gray-btn butn">
-                  Return to summary
-                </Button>
-                <Button onClick={goBack} className="me-1 gray-btn butn">
-                  Print
-                </Button>
-                <p className="lbl">1 of 12</p>
-                <span className=" ">
-                  <FaChevronDown className="deatil-header-icon" />
-                </span>
-                <span>
-                  <FaChevronUp className="deatil-header-icon" />
-                </span>
-                
-              </div>
-            )}
+
+            {(location?.pathname == "/Details"
+              || location?.pathname == "/CasesById"
+              || location?.pathname == "/AddNewProfile"
+              || location?.pathname == "/ClaimsById"
+            ) && (
+                <div className="d-flex align-items-baseline">
+                  <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => setCreate(!create)}>
+                    Create
+                  </Button>
+                  <Button onClick={goBack} className="me-1 gray-btn butn" >
+                    Return to summary
+                  </Button>
+                  <Button onClick={goBack} className="me-1 gray-btn butn">
+                    Print
+                  </Button>
+                  <p className="lbl">1 of 12</p>
+                  <span className=" ">
+                    <FaChevronDown className="deatil-header-icon" />
+                  </span>
+                  <span>
+                    <FaChevronUp className="deatil-header-icon" />
+                  </span>
+
+                </div>
+              )}
           </div>
 
           {(location?.pathname == "/ClaimSummary" ||
-          location?.pathname == "/" ||
+            location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
-            location?.pathname == "/CasesSummary" || location?.pathname == "/ClaimsById"
-            || location?.pathname == "/ClaimsById"
-            || location?.pathname == "/Transfers" 
-            || location?.pathname == "/CorrespondencesSummary" 
+            location?.pathname == "/CasesSummary" 
+            || location?.pathname == "/Transfers"
+            || location?.pathname == "/CorrespondencesSummary"
           ) && (
-            <div className="search-main">
-              <div className="title d-flex justify-content-between ">
-                <h2 className="title-main">
-                  {nav == "/" && location?.state == null
-                    ? `Profile`
-                    : ` ${location?.state?.search}`}
-                </h2>
-                <div className="d-flex">
-                <Button style={{marginRight:"50px",color:'white', borderRadius:"3px", backgroundColor:"#45669d"}} className="butn" >
-                  Create
-                </Button>
-                  <SimpleMenu
-                    title={
-                      <>
-                        
-                        <Button className="me-1 gray-btn butn">Export</Button>
-                      </>
-                    }
-                    data={exportbtn}
-                    isSearched={true}
-                    isCheckBox={false}
-                    actions={genaratePdf}
-                  />
-
-                  <Button className="me-1 gray-btn butn">Share</Button>
-                  <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                  <Button className="me-1 gray-btn butn">Grid VIEW</Button>
-                  <SimpleMenu
-            title={
-              <BsThreeDots
-                style={{ fontSize: "15px", fontWeight: 500 }}
-                
-              />
-            }
-            data={{ "Bulk Changes": "false", "Print Labels":"false" }}
-            isCheckBox={false}
-            isSearched={false}
-            isTransparent={true}
-            vertical={true}
-       
-          />
-                </div>
-              </div>
-              <div className="d-flex search-fliters align-items-baseline">
-                <Row className="align-items-baseline">
-
-                  <Input
-                    placeholder="Reg No or Surname"
-                    style={{
-                      width: "21%",
-                      height: "31px",
-                      border: "1px solid",
-                      color: "gray",
-                    }}
-                    suffix={<SearchOutlined />}
-                  />
-                  {trueFilters?.map((item, index) =>
-                    item?.titleColumn === "Date Of Birth" ? (
-                      <DateRang key={index} title={item?.titleColumn} />
-                    ) : (
-                      <JiraLikeMenu
-                        key={index}
-                        title={item?.titleColumn}
-                        data={item?.lookups}
-                      />
-                    )
-                  )}
-
-                  <div className="searchfilter- margin">
+              <div className="search-main">
+                <div className="title d-flex justify-content-between ">
+                  <h2 className="title-main">
+                    {nav == "/" && location?.state == null
+                      ? `Profile`
+                      : ` ${location?.state?.search}`}
+                  </h2>
+                  <div className="d-flex">
+                    <Button onClick={() => navigate("/AddNewProfile")} style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
+                      Create
+                    </Button>
                     <SimpleMenu
                       title={
                         <>
-                          More <PlusOutlined style={{ marginLeft: "-2px" }} />
+
+                          <Button className="me-1 gray-btn butn">Export</Button>
                         </>
                       }
-                      data={addMore}
+                      data={exportbtn}
+                      isSearched={true}
+                      isCheckBox={false}
+                      actions={genaratePdf}
+                    />
+
+                    <Button className="me-1 gray-btn butn">Share</Button>
+                    <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
+                    <Button className="me-1 gray-btn butn">Grid VIEW</Button>
+                    <SimpleMenu
+                      title={
+                        <BsThreeDots
+                          style={{ fontSize: "15px", fontWeight: 500 }}
+
+                        />
+                      }
+                      data={{ "Bulk Changes": "false", "Print Labels": "false" }}
+                      isCheckBox={false}
                       isSearched={false}
+                      isTransparent={true}
+                      vertical={true}
+
                     />
                   </div>
+                </div>
+                <div className="d-flex search-fliters align-items-baseline">
+                  <Row className="align-items-baseline">
 
-                  <div>
-                    <Link className="link" style={{ color: "#333333" }}>
-                      Reset
-                    </Link>
-                    <Link className="link">Save fliter</Link>
-                  </div>
-                </Row>
+                    <Input
+                      placeholder="Reg No or Surname"
+                      style={{
+                        width: "21%",
+                        height: "31px",
+                        border: "1px solid",
+                        color: "gray",
+                      }}
+                      suffix={<SearchOutlined />}
+                    />
+                    {trueFilters?.map((item, index) =>
+                      item?.titleColumn === "Date Of Birth" ? (
+                        <DateRang key={index} title={item?.titleColumn} />
+                      ) : (
+                        <JiraLikeMenu
+                          key={index}
+                          title={item?.titleColumn}
+                          data={item?.lookups}
+                        />
+                      )
+                    )}
+
+                    <div className="searchfilter- margin">
+                      <SimpleMenu
+                        title={
+                          <>
+                            More <PlusOutlined style={{ marginLeft: "-2px" }} />
+                          </>
+                        }
+                        data={addMore}
+                        isSearched={false}
+                      />
+                    </div>
+
+                    <div>
+                      <Link className="link" style={{ color: "#333333" }}>
+                        Reset
+                      </Link>
+                      <Link className="link">Save fliter</Link>
+                    </div>
+                  </Row>
+                </div>
               </div>
-            </div>
-          )}
+            )}
         </div>
       </div>
+      <MyDrawer title="Enter Profile" open={create} onClose={() => setCreate(!create)} >
+
+      </MyDrawer>
     </div>
   );
 }

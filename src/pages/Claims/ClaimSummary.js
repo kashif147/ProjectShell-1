@@ -9,6 +9,7 @@ import { MdOutlineSettingsInputComponent } from "react-icons/md";
 import { Link, useNavigate } from "react-router-dom";
 import { PiSlidersHorizontalBold } from "react-icons/pi";
 import TableComponent from "../../component/common/TableComponent";
+import { claimsData } from "../../Data";
 
 function ClaimSummary() {
     const navigate = useNavigate();
@@ -158,7 +159,7 @@ function ClaimSummary() {
     return (
       <div className="">
    
-      <TableComponent screenName="Claims" redirect="/ClaimsDetails" />
+      <TableComponent dataSource={claimsData} screenName="Claims" redirect="/ClaimsDetails"  />
     </div>
     );
   }

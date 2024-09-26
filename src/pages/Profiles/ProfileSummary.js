@@ -14,12 +14,13 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { BsThreeDots } from "react-icons/bs";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
+import {useTableColumns} from "../../context/TableColumnsContext "
 
 import SimpleMenu from "../../component/common/SimpleMenu";
 import TableComponent from "../../component/common/TableComponent";
 function ProfileSummary() {
   const navigate = useNavigate();
-
+   const{gridData} = useTableColumns()
   const menu = (
     <Menu>
       <Menu.Item key="1">Option 1</Menu.Item>
@@ -213,7 +214,7 @@ function ProfileSummary() {
   return (
     <div className="">
    
-      <TableComponent dataSource={dataSource}  screenName="Profile" redirect="/Details" />
+      <TableComponent dataSource={gridData}  screenName="Profile" redirect="/Details" />
     </div>
   );
 }

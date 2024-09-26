@@ -42,6 +42,7 @@ function SideNav() {
   const toggleCollapsed = () => {
     toggleCollapsedFtn()
   };
+
   const items = [
     {
       key: '1',
@@ -115,6 +116,7 @@ function SideNav() {
     },
    
   ];
+  
   const handleClick = ({ key }) => {
     switch (key) {
       case '':
@@ -145,7 +147,7 @@ function SideNav() {
         console.log("Toggle Menu");
     }
   };
-  
+  const defaultSelectedKey = location.pathname === '/CasesById' ? 'Cases' : location.pathname === '/ClaimsById' ? 'Claims' : '';
   return (
     <div className='sid-nav-main'
       style={{
@@ -154,7 +156,7 @@ function SideNav() {
       }}
     >
       <Menu
-        defaultSelectedKeys={['1']}
+        defaultSelectedKeys={[defaultSelectedKey]}
         defaultOpenKeys={['sub1']}
         mode="inline"
         theme="dark"
