@@ -4,9 +4,11 @@ import { Tabs, message, Button, DatePicker, Radio, Divider } from "antd";
 import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
 import { Input, Row, Col, Checkbox } from "antd";
+import moment from 'moment';
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
@@ -43,7 +45,8 @@ const beforeUpload = (file) => {
 
 function MyDeatails() {
   const { ProfileDetails } = useTableColumns()
-  console.log(ProfileDetails, "ProfileDetails")
+  const [InfData, setInfData] = useState()
+console.log(InfData,"data")
   const location = useLocation();
   const profileData = location?.state
   const [activeTab, setActiveTab] = useState("1");
@@ -55,7 +58,7 @@ function MyDeatails() {
   const [isTransfer, setisTransfer] = useState(false);
   const [isRank, setisRank] = useState(false);
   const [isDuty, setisDuty] = useState(false);
-  const [prsnlInfData, setprsnlInfData] = useState()
+  
 
   const [TransferData, setTransferData] = useState({
     NewStationID: "",
@@ -115,34 +118,37 @@ function MyDeatails() {
   };
 
   useEffect(() => {
-    let profils;
     if (ProfileDetails) {
-      debugger
-      Object.keys(ProfileDetails)?.map((data) => profils = {
-        gardaRegNo: data?.regNo,
-        fullname: data?.fullName,
-        forename: data?.forename,
-        surname: data?.surname,
-        dateOfBirth: data?.dateOfBirth,
-        dateRetired: data?.dateRetired,
-        dateAged65: data?.dateAged65,
-        isDeceased: data?.dateOfDeath == "N/A" ? false : true,
-        Partnership: data?.Partnership,
-        stationPh:data?.stationPhone,
-        District:data?.distric,
-        Division:data?.division,
-        isPensioner:data?.pensionNo ? true:false,
-        pensionNo:data?.pensionNo,
-        duty:data?.duty,
-        graduated:data?.graduated,
-        isGRAMember:data?.graMember?true:false,
-        dateJoined:data?.dateJoined,
-        DateLeft:data?.dateLeft,
-        associateMember:data?.associateMember=="yes"?true:false,
-      })
-      setprsnlInfData(profils)
+      const profils = {
+        gardaRegNo: ProfileDetails?.regNo,
+        fullname: ProfileDetails?.fullName,
+        forename: ProfileDetails?.forename,
+        surname: ProfileDetails?.surname,
+        dateOfBirth: ProfileDetails?.dateOfBirth,   
+        dateRetired: ProfileDetails?.dateRetired,
+        dateAged65: ProfileDetails?.dateAged65,
+        isDeceased: ProfileDetails?.dateOfDeath !== "N/A",
+        dateOfDeath:ProfileDetails?.dateOfDeath,
+        Partnership: ProfileDetails?.Partnership,
+        stationPh: ProfileDetails?.stationPhone,
+        District: ProfileDetails?.district,
+        Division: ProfileDetails?.division,
+        isPensioner: ProfileDetails?.pensionNo ? true : false,
+        pensionNo: ProfileDetails?.pensionNo,
+        duty: ProfileDetails?.duty,
+        rank:ProfileDetails?.rank,
+        graduated: ProfileDetails?.graduated,
+        isGRAMember: ProfileDetails?.graMember ? true : false,
+        dateJoined: ProfileDetails?.dateJoined,
+        attested: ProfileDetails?.attested,
+        DateLeft: ProfileDetails?.dateLeft,
+        isAssociateMember: ProfileDetails?.associateMember === "yes" ? true : false,
+      
+      };
+      
+      setInfData(profils);
     }
-  },[ProfileDetails])
+  }, [ProfileDetails]);
   const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
 
   // State for GRA Information
@@ -357,7 +363,7 @@ function MyDeatails() {
               <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Garda Reg No:</p>
-                  <Input value={prsnlInfData?.GardaRegNo} />
+                  <Input value={InfData?.gardaRegNo} />
                 </Col>
               </Row>
               <Row gutter={20}>
@@ -367,15 +373,17 @@ function MyDeatails() {
                     width: "100%",
                     border: "1px solid",
                     borderRadius: "3px",
-                  }} className="" />
+                  }} className=""
+                  value={InfData?.fullname}
+                  />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Forename</p>
-                  <Input />
+                  <Input value={InfData?.forename}/>
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Surname</p>
-                  <Input />
+                  <Input value={InfData?.surname}  />
                 </Col>
 
               </Row>
@@ -389,6 +397,7 @@ function MyDeatails() {
                       borderRadius: "3px",
                     }}
                     className=""
+                    value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
                   />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
@@ -398,7 +407,6 @@ function MyDeatails() {
                 <Col style={{ width: "33.00%" }}>
                   <p className="lbl">Gender</p>
                   <>
-
 
                     <Radio.Group
 
@@ -425,6 +433,7 @@ function MyDeatails() {
                       border: "1px solid",
                       borderRadius: "3px",
                     }}
+                    value={InfData?.dateRetired ? moment(InfData?.dateRetired, 'DD/MM/YYYY') : null}
                     className=""
                   />
                 </Col>
@@ -438,6 +447,7 @@ function MyDeatails() {
                       borderRadius: "3px",
                     }}
                     className=""
+                    value={InfData?.dateAged65 ? moment(InfData?.dateAged65, 'DD/MM/YYYY') : null}
                   />
                 </Col>
                 <Col style={{ width: '33%' }}>
@@ -454,6 +464,7 @@ function MyDeatails() {
                         justifyContent: 'center',
 
                       }}
+                      checked={InfData?.isDeceased}
                     />
                     <DatePicker
                       type="text"
@@ -468,6 +479,7 @@ function MyDeatails() {
                         height: '33px', // Set height
                         backgroundColor: isChecked ? '#ebf1fd' : '#f0f1f1', // Change background if disabled
                       }}
+                      value={InfData?.dateOfDeath!="N/A" ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
                     />
                   </div>
                 </Col>
@@ -591,7 +603,7 @@ function MyDeatails() {
               <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Station Ph :</p>
-                  <Input placeholder="00-000-0000" />
+                  <Input placeholder="00-000-0000" value={InfData?.stationPh} />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">District:</p>
@@ -616,11 +628,12 @@ function MyDeatails() {
                         alignItems: 'center',
                         justifyContent: 'center',
                       }}
+                      checked={InfData?.isPensioner}
                     />
                     <input
                       type="text"
                       placeholder="Enter something..."
-                      disabled={!isChecked} // Disable input when checkbox is not checked
+                      disabled={!InfData?.isPensioner} // Disable input when checkbox is not checked
                       style={{
                         flex: '3', // 75% width
                         padding: '6px',  // Reduced padding to match checkbox
@@ -628,8 +641,9 @@ function MyDeatails() {
                         border: "1px solid #333333",
                         outline: 'none',
                         height: '33px', // Set height
-                        backgroundColor: isChecked ? 'white' : '#f0f0f0', // Change background if disabled
+                        backgroundColor: !InfData?.isPensioner ? 'white' : '#f0f0f0', // Change background if disabled
                       }}
+                      value={InfData?.pensionNo}
                     />
                   </div>
                 </Col>
@@ -647,6 +661,7 @@ function MyDeatails() {
                         outline: 'none',
                         height: '33px', // Set a specific height matching the button
                       }}
+                      value={InfData?.rank}
                     />
                     <Button
                       onClick={RankOpenCloseFtn}
@@ -681,6 +696,7 @@ function MyDeatails() {
                         outline: 'none',
                         height: '33px', // Set a specific height matching the button
                       }}
+                      value={InfData?.duty}
                     />
                     <Button
                       onClick={DutyOpenCloseFtn}
@@ -722,13 +738,13 @@ function MyDeatails() {
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Attested:</p>
-                  <Input />
+                  <Input value={InfData?.attested} />
                 </Col>
               </Row>
               <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Graduated:</p>
-                  <Input />
+                  <Input value={InfData?.graduated} />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Notes:</p>
@@ -903,7 +919,7 @@ function MyDeatails() {
               <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">GRA Member</p>
-                  <Checkbox onChange={onCheckboxChange}></Checkbox>
+                  <Checkbox checked={InfData?.isGRAMember} onChange={onCheckboxChange}></Checkbox>
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Date Joined:</p>
@@ -915,6 +931,8 @@ function MyDeatails() {
                       borderRadius: "3px",
                     }}
                     className=""
+                    value={InfData?.dateJoined ? moment(InfData?.dateJoined, 'DD/MM/YYYY') : null}
+                    // value={InfData?.dateJoined}
                   />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
@@ -927,13 +945,14 @@ function MyDeatails() {
                       borderRadius: "3px",
                     }}
                     className=""
+                    value={InfData?.DateLeft !="N/A" ? moment(InfData?.DateLeft, 'DD/MM/YYYY') : null}
                   />
                 </Col>
               </Row>
               <Row gutter={20}>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Associate Member:</p>
-                  <Checkbox disabled={!isChecked} />
+                  <Checkbox disabled={!isChecked} checked={InfData?.isAssociateMember} />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">.</p>
