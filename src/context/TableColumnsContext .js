@@ -24,7 +24,7 @@ export const TableColumnsProvider = ({ children }) => {
       { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, isVisible: true, width: 150 },
       { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, isVisible: true, width: 150 },
       { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-      { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+      { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, isVisible: true, width: 200 },
       { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
       { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
       { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, isVisible: true, width: 150 },
