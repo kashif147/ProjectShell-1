@@ -970,9 +970,14 @@ color: red !important;
     font-weight: 480;
     padding: 12px 12px !important;
   }
-  .ant-drawer {
-    z-index: 9999; /* or any high value */
+  .heading-tbl .ant-table-thead > tr > th {
+    background-color: #45669d !important; 
+    color: white !important;
+    font-family: var(--fontFamily) !important;
+    font-weight: 400;
+    padding: 8px 8px !important;
   }
+  
 
 
 

@@ -381,42 +381,46 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             sticky
           />
           <div
-            className="d-flex justify-content-between tbl-footer"
-            style={{ marginTop: "10px" }}
-          >
-            <div style={{ display: "flex", alignItems: "center", }}>
-              <span
-                style={{
-                  marginRight: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                }}
-              >
-                {/* 1-{gridData.length} */}
-                {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, dataSource.length)}`}
-              </span>
-              <span
-                style={{
-                  marginRight: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                }}
-              >
-                of {dataSource.length}
-              </span>
-              <LuRefreshCw
-                style={{ cursor: "pointer" }}
-                onClick={() => window.location.reload()}
-              />
-            </div>
-            {/* <Pagination defaultCurrent={1} total={gridData.length} pageSize={5} /> */}
-            <Pagination
-              current={currentPage}
-              pageSize={pageSize}
-              total={dataSource.length}
-              onChange={(page) => setCurrentPage(page)} // Update page on pagination change
-            />
-          </div>
+  className="d-flex justify-content-between align-items-center tbl-footer"
+  style={{ marginTop: "10px" }}
+>
+  {/* Centered content */}
+  <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
+    <span
+      style={{
+        marginRight: "4px",
+        fontSize: "12px",
+        fontWeight: "500",
+      }}
+    >
+      {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, dataSource.length)}`}
+    </span>
+    <span
+      style={{
+        marginRight: "4px",
+        fontSize: "12px",
+        fontWeight: "500",
+      }}
+    >
+      of {dataSource.length}
+    </span>
+    <LuRefreshCw
+      style={{ cursor: "pointer", marginLeft: "10px" }}
+      onClick={() => window.location.reload()}
+    />
+  </div>
+
+  {/* Right-aligned pagination */}
+  <div className="d-flex justify-content-end">
+    <Pagination
+      current={currentPage}
+      pageSize={pageSize}
+      total={dataSource.length}
+      onChange={(page) => setCurrentPage(page)}
+    />
+  </div>
+</div>
+
         </div>
       </SortableContext>
       <DragOverlay>

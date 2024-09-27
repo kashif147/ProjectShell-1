@@ -1,9 +1,10 @@
-import { Details } from '@mui/icons-material'
+
 import React from 'react'
+import MyDeatails from '../../component/common/MyDeatails'
 
 function AddNewProfile() {
   return (
-    <div><Details/></div>
+    <div><MyDeatails /></div>
   )
 }
 

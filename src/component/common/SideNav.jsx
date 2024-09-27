@@ -24,6 +24,7 @@ import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ClassNames } from '@emotion/react';
 
 
+
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 function SideNav() {
@@ -123,10 +124,20 @@ function SideNav() {
         navigate("/Details")
         break;
         case 'Cases':
-        navigate("/CasesById");
+          navigate("/CasesById", {
+            state: {
+              name: location?.state?.name,
+              code: location?.state?.code,
+            },
+          });
         break;
       case 'Claims':
-        navigate("/ClaimsById");
+        navigate("/ClaimsById", {
+          state: {
+            name: location?.state?.name,
+            code: location?.state?.code,
+          },
+        });
         break;
       case '5':
         console.log("Navigate to Correspondences");

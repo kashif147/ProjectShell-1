@@ -5,6 +5,7 @@ import { FaUser } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
+import {Table} from 'antd'
 import {
   RightOutlined,
   PlusOutlined,
@@ -53,6 +54,7 @@ function HeaderDetails() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const { searchFilters, filterGridDataFtn } = useTableColumns();
+
   function filterSearchableColumns(data) {
     settrueFilters(data.filter((column) => column.isSearch === true));
   }
@@ -188,6 +190,18 @@ function HeaderDetails() {
     { titleColumn: "Status", ellipsis: true, isGride: true, width: "100px" },
     { titleColumn: "Updated", ellipsis: true, isGride: true, width: "100px" },
   ];
+  const columns = [
+    {
+      title: 'Name',
+      dataIndex: 'name',   // The key in the data object corresponding to the name
+      key: 'name',         // A unique key for this column
+    },
+    {
+      title: 'Reg Number',
+      dataIndex: 'regNumber', // The key in the data object corresponding to the registration number
+      key: 'regNumber',       // A unique key for this column
+    },
+  ];
   const exportbtn = { "Export PDF": true, "Export CSV": true };
 
   const topThreeDots = {
@@ -259,10 +273,11 @@ function HeaderDetails() {
     <div className="">
       <div
         className={`details-header d-flex w-100% overflow-hidden ${(location?.pathname == "/Details"
-            || location?.pathname == "/CasesById"
-            || location?.pathname == "/AddNewProfile"
-            || location?.pathname == "/ClaimsById"
-          ) ? "Header-border" : ""
+          || location?.pathname == "/CasesById"
+          || location?.pathname == "/AddNewProfile"
+          || location?.pathname == "/ClaimsById"
+          ||location?.pathname == "/AddClaims"
+        ) ? "Header-border" : ""
           }`}
       >
         <div style={{ width: "100%" }}>
@@ -326,6 +341,8 @@ function HeaderDetails() {
               || location?.pathname == "/CasesById"
               || location?.pathname == "/AddNewProfile"
               || location?.pathname == "/ClaimsById"
+              ||location?.pathname == "/AddClaims"
+              
             ) && (
                 <div className="d-flex align-items-baseline">
                   <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => setCreate(!create)}>
@@ -352,7 +369,7 @@ function HeaderDetails() {
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
-            location?.pathname == "/CasesSummary" 
+            location?.pathname == "/CasesSummary"
             || location?.pathname == "/Transfers"
             || location?.pathname == "/CorrespondencesSummary"
           ) && (
@@ -448,8 +465,16 @@ function HeaderDetails() {
             )}
         </div>
       </div>
-      <MyDrawer title="Enter Profile" open={create} onClose={() => setCreate(!create)} >
+      <MyDrawer title={`${nav === "/CasesById"
+        ? "Enter Cases"
+        : nav === "/ClaimsById"
+          ? "Enter Claims"
+          : nav === "/Details"
+            ? "Enter Profile"
+            : ""}`}
+        open={create} onClose={() => setCreate(!create)} >
 
+          <Table pagination={false} bordered className="heading-tbl" columns={columns}dataSource={[{key:"1",name:location?.state?.name,regNumber:location?.state?.code}]} />
       </MyDrawer>
     </div>
   );

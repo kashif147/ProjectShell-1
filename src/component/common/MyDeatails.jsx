@@ -151,13 +151,10 @@ console.log(InfData,"data")
   }, [ProfileDetails]);
   const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
 
-  // State for GRA Information
   const [graInfoChecked, setGraInfoChecked] = useState(false);
 
-  // State for Membership Information
   const [membershipInfoChecked, setMembershipInfoChecked] = useState(false);
 
-  // Handlers for each checkbox
   const handlePersonalInfoChange = (event) => {
     setPersonalInfoChecked(event.target.checked);
   };

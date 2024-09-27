@@ -23,6 +23,7 @@ import ClaimsById from "./pages/Claims/ClaimsById";
 import CasesById from "./pages/Cases/CasesById";
 import CorrespondencesSummary from "./pages/Correspondences/CorrespondencesSummary";
 import AddNewProfile from "./pages/Profiles/AddNewProfile";
+import AddClaims from "./pages/Claims/AddClaims";
 
 function Entry() {
   const location = useLocation();
@@ -35,30 +36,32 @@ function Entry() {
 
       </div>
       <div className="main-route d-flex ">
-        {(location?.pathname == "/Details" 
-        || location?.pathname == "/ClaimsDetails" || 
-        location?.pathname == "/CasesDetails" ||
-        location?.pathname == "/ClaimsById"||
-        location?.pathname == "/CasesById" 
-         || location?.pathname == "/AddNewProfile"
-      ) && (
-          <div>
-            <SideNav />
-          </div>
-        )}
-        {(location?.pathname == "/Details" 
-        || location?.pathname == "/ClaimsDetails" || 
-        location?.pathname == "/CasesDetails" || 
-        location?.pathname == "/ClaimsById" 
-        ||location?.pathname == "/CasesById" 
-         || location?.pathname == "/AddNewProfile"
-       
-      
-      ) && (
+        {(location?.pathname == "/Details"
+          || location?.pathname == "/ClaimsDetails" ||
+          location?.pathname == "/CasesDetails" ||
+          location?.pathname == "/ClaimsById" ||
+          location?.pathname == "/CasesById"
+          || location?.pathname == "/AddNewProfile"
+          || location?.pathname == "/AddClaims"
+        ) && (
+            <div>
+              <SideNav />
+            </div>
+          )}
+        {(location?.pathname == "/Details"
+          || location?.pathname == "/ClaimsDetails" ||
+          location?.pathname == "/CasesDetails" ||
+          location?.pathname == "/ClaimsById"
+          || location?.pathname == "/CasesById"
+          || location?.pathname == "/AddNewProfile"
+          || location?.pathname == "/AddClaims"
 
-          <ProfileHeader />
 
-        )}
+        ) && (
+
+            <ProfileHeader />
+
+          )}
         <div style={{ width: "100%", overflow: "hidden" }}>
 
           <div className="main-main">
@@ -76,20 +79,21 @@ function Entry() {
               <Route path="Filters" element={<Filter />} />
               <Route path="ClaimsById" element={<ClaimsById />} />
               <Route path="Transfers" element={<TransferSummary />} />
-              <Route path="AddNewProfile" element={<AddNewProfile />} />
+              <Route path="Transfers" element={<TransferSummary />} />
+              <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
             </Routes>
           </div>
         </div>
         {(location?.pathname == "/Details"
-         || location?.pathname == "/ClaimsDetails" 
-         || location?.pathname == "/CasesDetails"
-         || location?.pathname == "/AddNewProfile"||
-location?.pathname == "/CasesById"||
-location?.pathname == "/ClaimsById"
+          || location?.pathname == "/ClaimsDetails"
+          || location?.pathname == "/CasesDetails"
+          || location?.pathname == "/AddNewProfile" 
+          || location?.pathname == "/AddClaims"
+          || location?.pathname == "/ClaimsById"
         ) && (
-          <ResizableComp />
-        )}
+            <ResizableComp />
+          )}
       </div>
     </div>
   );
