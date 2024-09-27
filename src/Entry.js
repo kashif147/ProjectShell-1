@@ -78,7 +78,7 @@ function Entry() {
               <Route path="Configuratin" element={<Configuratin />} />
               <Route path="Filters" element={<Filter />} />
               <Route path="ClaimsById" element={<ClaimsById />} />
-              <Route path="Transfers" element={<TransferSummary />} />
+              <Route path="AddNewProfile" element={<AddNewProfile />} />
               <Route path="Transfers" element={<TransferSummary />} />
               <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
