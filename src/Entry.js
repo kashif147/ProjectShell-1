@@ -85,8 +85,8 @@ function Entry() {
          || location?.pathname == "/ClaimsDetails" 
          || location?.pathname == "/CasesDetails"
          || location?.pathname == "/AddNewProfile"||
-location?.pathname == "/CasesById"
-        
+location?.pathname == "/CasesById"||
+location?.pathname == "/ClaimsById"
         ) && (
           <ResizableComp />
         )}

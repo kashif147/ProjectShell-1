@@ -119,8 +119,8 @@ function SideNav() {
   
   const handleClick = ({ key }) => {
     switch (key) {
-      case '':
-        console.log("Navigate to Cases");
+      case 'Profile':
+        navigate("/Details")
         break;
         case 'Cases':
         navigate("/CasesById");
