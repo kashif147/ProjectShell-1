@@ -381,7 +381,15 @@ function HeaderDetails() {
                       : ` ${location?.state?.search}`}
                   </h2>
                   <div className="d-flex">
-                    <Button onClick={() => navigate("/AddNewProfile")} style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
+                    <Button onClick={() =>{
+                      if(nav=="/Details"){
+
+                        navigate("/AddNewProfile")} else if(nav=="/ClaimSummary"){
+                          navigate("/AddClaims")
+                        }} }
+                        style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
+                      
+                      
                       Create
                     </Button>
                     <SimpleMenu
