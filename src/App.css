@@ -977,6 +977,9 @@ color: red !important;
     font-weight: 400;
     padding: 8px 8px !important;
   }
+  .ant-drawer {
+    /* z-index: 9999; or any high value */
+  }
   
 
 
