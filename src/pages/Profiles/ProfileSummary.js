@@ -213,10 +213,8 @@ function ProfileSummary() {
 
   return (
     <div className="">
-   
       <TableComponent dataSource={gridData}  screenName="Profile" redirect="/Details" />
     </div>
   );
 }
-
 export default ProfileSummary;
