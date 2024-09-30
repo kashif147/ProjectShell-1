@@ -94,7 +94,7 @@ const pathname = location?.pathname
       key: "1",
       label: (
         <Link to="/CorrespondencesSummary" state={{ search: "Reports" }} className="link" style={{textDecoration:"none"}}>
-          Correspondences Summary
+          Summary
         </Link>
       ),
     },
@@ -139,13 +139,13 @@ const pathname = location?.pathname
               </li>
               {/* <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Documents"} items={navLinks} />
-              </li> */}
+              </li> 
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Projects"} items={navLinks} />
               </li>
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Roster"} items={navLinks} />
-              </li>
+              </li> */}
               <li className={`${pathname=="/Transfers" ?"activ-link":"" } nav-item nav-links-container `}>
                 <Link className="links" to="Transfers"  state={{ search: "" }}>Transfer Requests</Link>
               </li>
