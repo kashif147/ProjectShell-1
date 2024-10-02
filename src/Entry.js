@@ -72,7 +72,7 @@ function Entry() {
 
           <div className="main-main">
             <Routes>
-              <Route path="/" element={<ProfileSummary />} />
+              {/* <Route path="/" element={<ProfileSummary />} /> */}
               <Route path="Dummy" element={<Dummy />} />
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
@@ -88,7 +88,7 @@ function Entry() {
               <Route path="Transfers" element={<TransferSummary />} />
               <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
-              <Route path="login" element={<Login />} />
+              <Route path="/" element={<Login />} />
             </Routes>
           </div>
         </div>
