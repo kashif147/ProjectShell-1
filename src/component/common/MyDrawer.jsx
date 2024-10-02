@@ -1,10 +1,10 @@
 import React from "react";
 import { Button, Drawer, Space } from "antd";
 
-function MyDrawer({ title, open, onClose, children, add }) {
+function MyDrawer({ title, open, onClose, children, add,width=520 }) {
   return (
     <Drawer
-      width={520}
+      width={width}
       title={title}
       placement="right"
       onClose={onClose}

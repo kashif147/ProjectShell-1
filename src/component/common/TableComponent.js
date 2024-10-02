@@ -126,7 +126,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
 
   const draggableColumns = [
     {
-
       title: () => (
         <Checkbox
           style={{ marginLeft: "12px" }}
@@ -136,10 +135,9 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             setSelectedRowKeys(checked ? dataSource.map(item => item.key) : []);
           }}
         />
-
       ),
       key: 'selection',
-      width: 50, 
+      width: 50,
       fixed: 'left',
       render: (text, record) => (
         <Checkbox
@@ -193,16 +191,16 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               code: record?.regNo,
               Forename: record?.forename,
               Fullname: record?.surname,
-              DateOfBirth:record?.dateOfBirth,
+              DateOfBirth: record?.dateOfBirth,
             }}
-            onClick={()=>getProfile(record)}
+            onClick={() => getProfile(record)}
           >
-            <span style={{textOverflow:"ellipsis"}}>
-            {text}
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
 
             </span>
           </Link>
-        ) :   col.title === "Claim No" ? (
+        ) : col.title === "Claim No" ? (
           <Link
             to="/ClaimsById"
             state={{
@@ -211,18 +209,18 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               code: record?.regNo,
               Forename: record?.forename,
               Fullname: record?.surname,
-              DateOfBirth:record?.dateOfBirth,
+              DateOfBirth: record?.dateOfBirth,
             }}
-            onClick={()=>getProfile(record)}
+            onClick={() => getProfile(record)}
           >
-            <span style={{textOverflow:"ellipsis"}}>
-            {text}
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
 
             </span>
           </Link>
         ) : (
-          <span style={{textOverflow:"ellipsis"}}>
-          {text}
+          <span style={{ textOverflow: "ellipsis" }}>
+            {text}
 
           </span>
         ),
@@ -233,8 +231,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       sortDirections: ["ascend", "descend"],
     })),
   ];
-
-
   const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -357,7 +353,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       }),
     };
   });
-
   return (
     <DndContext
       modifiers={[restrictToHorizontalAxis]}
@@ -373,53 +368,52 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             rowClassName={() => ""}
             components={components}
             columns={editableColumns}
-            dataSource={currentPageData}
+            dataSource={currentPageData} 
             pagination={false}
             bordered
             virtual
-            scroll={{ x: "100%", y: 400 }}
+            scroll={{ x: "100%", y: 350 }}
             sticky
           />
           <div
-  className="d-flex justify-content-between align-items-center tbl-footer"
-  style={{ marginTop: "10px" }}
->
-  {/* Centered content */}
-  <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
-    <span
-      style={{
-        marginRight: "4px",
-        fontSize: "12px",
-        fontWeight: "500",
-      }}
-    >
-      {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, dataSource.length)}`}
-    </span>
-    <span
-      style={{
-        marginRight: "4px",
-        fontSize: "12px",
-        fontWeight: "500",
-      }}
-    >
-      of {dataSource.length}
-    </span>
-    <LuRefreshCw
-      style={{ cursor: "pointer", marginLeft: "10px" }}
-      onClick={() => window.location.reload()}
-    />
-  </div>
+            className="d-flex justify-content-between align-items-center tbl-footer"
+            style={{ marginTop: "10px" }}
+          >
+            <div className="d-flex justify-content-center align-items-center" style={{ flex: 1 }}>
+              <span
+                style={{
+                  marginRight: "4px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}
+              >
+                {`${(currentPage - 1) * pageSize + 1}-${Math.min(currentPage * pageSize, dataSource.length)}`}
+              </span>
+              <span
+                style={{
+                  marginRight: "4px",
+                  fontSize: "12px",
+                  fontWeight: "500",
+                }}
+              >
+                of {dataSource.length}
+              </span>
+              <LuRefreshCw
+                style={{ cursor: "pointer", marginLeft: "10px" }}
+                onClick={() => window.location.reload()}
+              />
+            </div>
 
-  {/* Right-aligned pagination */}
-  <div className="d-flex justify-content-end">
-    <Pagination
-      current={currentPage}
-      pageSize={pageSize}
-      total={dataSource.length}
-      onChange={(page) => setCurrentPage(page)}
-    />
-  </div>
-</div>
+            {/* Right-aligned pagination */}
+            <div className="d-flex justify-content-end">
+              <Pagination
+                current={currentPage}
+                pageSize={pageSize}
+                total={dataSource.length}
+                onChange={(page) => setCurrentPage(page)}
+              />
+            </div>
+          </div>
 
         </div>
       </SortableContext>

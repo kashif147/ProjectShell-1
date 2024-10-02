@@ -3,10 +3,6 @@ import SubTableComp from '../../component/common/SubTableComp'
 import { Space } from 'antd';
 import  "../../styles/CasesById.css";
 
-
-
-
-  
 function CasesById() {
     const viewCase = (caseId) => {
         console.log(`Viewing case: ${caseId}`);

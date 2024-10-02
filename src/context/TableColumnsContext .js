@@ -5,6 +5,10 @@ const TableColumnsContext = createContext();
 
 export const TableColumnsProvider = ({ children }) => {
   const [ascending, setAscending] = useState(true);
+  const [claimsDrawer, setclaimsDrawer] = useState(false)
+  const handlClaimDrawerChng = () => {
+    setclaimsDrawer(!claimsDrawer)
+  }
   const handleSaveAfterEdit = (row) => {
     const newData = [...gridData];
     const index = newData.findIndex((item) => row.key === item.key);
@@ -41,7 +45,7 @@ export const TableColumnsProvider = ({ children }) => {
       { dataIndex: "status", title: "Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
       { dataIndex: "updated", title: "Updated", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     ],
-    Cases:[
+    Cases: [
       {
         dataIndex: "regNo",
         title: "Reg No",
@@ -119,7 +123,7 @@ export const TableColumnsProvider = ({ children }) => {
       { dataIndex: "description", title: "Description", ellipsis: true, isGride: true, isVisible: true, width: 200 },
     ],
   });
- 
+
   const [searchFilters, setsearchFilters] = useState([
     {
       titleColumn: "Rank",
@@ -278,18 +282,18 @@ export const TableColumnsProvider = ({ children }) => {
       lookups: { Male: false, Female: false, Other: false },
     },
   ]);
-const updateCompByTitleColumn = (titleColumn, newComp) => {
-  // Update the searchFilters state by mapping over the current array
-  setsearchFilters((prevFilters) =>
-    prevFilters.map((filter) => {
-      // If the titleColumn matches, update the 'comp' value
-      if (filter.titleColumn === titleColumn) {
-        return { ...filter, comp: newComp }; // Spread the filter and update 'comp'
-      }
-      return filter; // Return the filter unchanged if titleColumn doesn't match
-    })
-  );
-};
+  const updateCompByTitleColumn = (titleColumn, newComp) => {
+    // Update the searchFilters state by mapping over the current array
+    setsearchFilters((prevFilters) =>
+      prevFilters.map((filter) => {
+        // If the titleColumn matches, update the 'comp' value
+        if (filter.titleColumn === titleColumn) {
+          return { ...filter, comp: newComp }; // Spread the filter and update 'comp'
+        }
+        return filter; // Return the filter unchanged if titleColumn doesn't match
+      })
+    );
+  };
   const handleCheckboxFilterChange = (key, isChecked, screenName, width, e) => {
     e.stopPropagation()
     setColumns((prevColumns) => {
@@ -417,31 +421,31 @@ const updateCompByTitleColumn = (titleColumn, newComp) => {
 
   const filterGridDataBasedOnLookups = (data, searchFilters) => {
     let filteredData = data; // Start with the full dataset
-  
+
     // Iterate through each filter criteria in searchFilters
     searchFilters?.forEach(({ titleColumn, lookups, comp }) => {
       // Get the keys from lookups where the value is true
       const trueKeys = Object.entries(lookups)
         .filter(([key, value]) => value) // Only keep entries where value is true
         .map(([key]) => key); // Get the keys of those true values
-  debugger
+      debugger
       // If there are true keys for this titleColumn, filter the data
       if (trueKeys.length > 0) {
         filteredData = filteredData.filter((row) => {
           const cellValue = row[titleColumn]?.toString().toLowerCase(); // Get the cell value in lowercase
-  
+
           // Based on the comparison operator (comp), filter the data
           if (comp === "=") {
             return trueKeys.includes(cellValue); // Check if the cell value matches any of the trueKeys
           } else if (comp === "!=") {
             return !trueKeys.includes(cellValue); // Exclude rows where the cell value matches trueKeys
           }
-  
+
           return false; // Default fallback if no valid comparison
         });
       }
     });
-  
+
     return filteredData; // Return the filtered dataset
   };
 
@@ -460,39 +464,39 @@ const updateCompByTitleColumn = (titleColumn, newComp) => {
       }));
   };
   const yy = getFiltersWithTrueLookups(searchFilters)
-  
+
 
   const filterData = () => {
     return tableData?.filter(item => {
-        return yy?.every(filter => {
-            const { titleColumn, lookups, comp } = filter;
-            const itemValue = item[titleColumn.toLowerCase()]; // Adjust case to match your data
-            
-            // Check the condition based on 'comp'
-            if (comp === '=') {
-                // Return true if the itemValue is in lookups
-                return lookups[itemValue] === true;
-            } else if (comp === '!=') {
-                // Return true if the itemValue is not in lookups
-                return lookups[itemValue] !== true;
-            }
-            
-            // Fallback case if comp is neither '=' nor '!='
-            return false;
-        });
+      return yy?.every(filter => {
+        const { titleColumn, lookups, comp } = filter;
+        const itemValue = item[titleColumn.toLowerCase()]; // Adjust case to match your data
+
+        // Check the condition based on 'comp'
+        if (comp === '=') {
+          // Return true if the itemValue is in lookups
+          return lookups[itemValue] === true;
+        } else if (comp === '!=') {
+          // Return true if the itemValue is not in lookups
+          return lookups[itemValue] !== true;
+        }
+
+        // Fallback case if comp is neither '=' nor '!='
+        return false;
+      });
     });
-};
+  };
 
 
-useEffect(() => {
-  const result = filterData();
-  setGridData(result);
-}, [searchFilters]); // Re-run when gridData or filters change
+  useEffect(() => {
+    const result = filterData();
+    setGridData(result);
+  }, [searchFilters]); // Re-run when gridData or filters change
 
-const [ProfileDetails, setProfileDetails] = useState()
-const getProfile =(row)=> {
-  setProfileDetails(row)
-}
+  const [ProfileDetails, setProfileDetails] = useState()
+  const getProfile = (row) => {
+    setProfileDetails(row)
+  }
   return (
 
     <TableColumnsContext.Provider
@@ -512,7 +516,9 @@ const getProfile =(row)=> {
         setGridData,
         updateCompByTitleColumn,
         ProfileDetails,
-        getProfile
+        getProfile,
+        handlClaimDrawerChng,
+        claimsDrawer,
 
       }}
     >
