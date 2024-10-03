@@ -5,7 +5,7 @@ import { FaUser } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
-import {Table} from 'antd'
+import { Table, Checkbox, DatePicker } from 'antd'
 import {
   RightOutlined,
   PlusOutlined,
@@ -41,6 +41,7 @@ import DateRang from "./DateRang";
 
 function HeaderDetails() {
   const { Search } = Input;
+  const { TextArea } = Input;
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
@@ -53,7 +54,7 @@ function HeaderDetails() {
   const [create, setCreate] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, filterGridDataFtn } = useTableColumns();
+  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer } = useTableColumns();
 
   function filterSearchableColumns(data) {
     settrueFilters(data.filter((column) => column.isSearch === true));
@@ -276,7 +277,7 @@ function HeaderDetails() {
           || location?.pathname == "/CasesById"
           || location?.pathname == "/AddNewProfile"
           || location?.pathname == "/ClaimsById"
-          ||location?.pathname == "/AddClaims"
+          || location?.pathname == "/AddClaims"
         ) ? "Header-border" : ""
           }`}
       >
@@ -341,11 +342,14 @@ function HeaderDetails() {
               || location?.pathname == "/CasesById"
               || location?.pathname == "/AddNewProfile"
               || location?.pathname == "/ClaimsById"
-              ||location?.pathname == "/AddClaims"
-              
+              || location?.pathname == "/AddClaims"
+
             ) && (
                 <div className="d-flex align-items-baseline">
-                  <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => setCreate(!create)}>
+                  <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
+                    if (nav == "/ClaimsById")
+                      handlClaimDrawerChng()
+                  }}>
                     Create
                   </Button>
                   <Button onClick={goBack} className="me-1 gray-btn butn" >
@@ -354,13 +358,17 @@ function HeaderDetails() {
                   <Button onClick={goBack} className="me-1 gray-btn butn">
                     Print
                   </Button>
-                  <p className="lbl">1 of 12</p>
-                  <span className=" ">
+                    <Button className="me-1 gray-btn butn" >
                     <FaChevronDown className="deatil-header-icon" />
+                    </Button>
+                  <p className="lbl me-1" style={{fontWeight:"500",fontSize:"14px",marginLeft:"4px"}}>1 of 12</p>
+                  {/* <span className=" ">
                   </span>
                   <span>
+                  </span> */}
+                    <Button className="me-1 gray-btn butn" style={{marginLeft:"8px"}}>
                     <FaChevronUp className="deatil-header-icon" />
-                  </span>
+                    </Button>
 
                 </div>
               )}
@@ -381,15 +389,15 @@ function HeaderDetails() {
                       : ` ${location?.state?.search}`}
                   </h2>
                   <div className="d-flex">
-                    <Button onClick={() =>{
-                      if(nav=="/Details"){
+                    <Button onClick={() => {
+                      if (nav == "/Details" || nav =="/Summary") {
 
-                        navigate("/AddNewProfile")} else if(nav=="/ClaimSummary"){
-                          navigate("/AddClaims")
-                        }} }
-                        style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
-                      
-                      
+                        navigate("/AddNewProfile")
+                      } else if (nav == "/ClaimSummary") {
+                        handlClaimDrawerChng()
+                      }
+                    }}
+                      style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
                       Create
                     </Button>
                     <SimpleMenu
@@ -475,14 +483,63 @@ function HeaderDetails() {
       </div>
       <MyDrawer title={`${nav === "/CasesById"
         ? "Enter Cases"
-        : nav === "/ClaimsById"
-          ? "Enter Claims"
-          : nav === "/Details"
-            ? "Enter Profile"
-            : ""}`}
-        open={create} onClose={() => setCreate(!create)} >
+        : nav == "/ClaimSummary" ? "Enter Claims"
+          : nav === "/ClaimsById"
+            ? "Enter Claims"
+            : nav === "/Details"
+              ? "Enter Profile"
+              : ""}`}
+        open={claimsDrawer} onClose={() => handlClaimDrawerChng()} width={600} >
+        {
+          nav == "/ClaimSummary" && (
+            <Row style={{ marginBottom: "20px" }} gutter={24}>
+              <Col span={12}>
+                <Input placeholder="Search By Reg #" />
+              </Col>
+              <Col span={12}>
+                <MySelect placeholder="Select Profile" isSimple={true} />
+              </Col>
+            </Row>
+          )
+        }
 
-          <Table pagination={false} bordered className="heading-tbl" columns={columns}dataSource={[{key:"1",name:location?.state?.name,regNumber:location?.state?.code}]} />
+        <Row gutter={24} style={{}}>
+          <Col span={12}>
+            <div className="form-section">
+              <label className="form-label">Claim Date</label>
+              <DatePicker className="form-input" />
+
+              <label className="form-label">Claim Type</label>
+              <Input className="form-input" placeholder="Enter claim type" />
+
+              <label className="form-label">Start Date</label>
+              <DatePicker className="form-input" />
+
+              <label className="form-label">End Date</label>
+              <DatePicker className="form-input" />
+              <Checkbox className="form-checkbox">Is Approved</Checkbox>
+            </div>
+          </Col>
+          <Col span={12}>
+            <div className="form-section">
+              <label className="form-label">Number of Days</label>
+              <Input className="form-input" type="number" placeholder="Enter number of days" />
+              <label className="form-label">Pay Amount</label>
+              <Input className="form-input" type="number" placeholder="Enter pay amount" />
+
+              <label className="form-label">Cheque No</label>
+              <Input className="form-input" placeholder="Enter cheque number" />
+
+              <label className="form-label">Description</label>
+              <TextArea className="form-input" rows={2} placeholder="Enter description" />
+            </div>
+          </Col>
+        </Row>
+        <Row style={{ marginBottom: "20px" }} >
+          <Col span={24}>
+
+          </Col>
+        </Row>
       </MyDrawer>
     </div>
   );

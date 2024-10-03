@@ -15,41 +15,7 @@ function AddClaims() {
       return (
         <div style={{marginTop:"20px"}}>
         {/* Row divided into two columns */}
-        <Row gutter={24} style={{}}>
-          {/* Left section */}
-          <Col span={12}>
-            <div className="form-section">
-              <label className="form-label">Claim Date</label>
-              <DatePicker className="form-input" />
-  
-              <label className="form-label">Claim Type</label>
-              <Input className="form-input" placeholder="Enter claim type" />
-  
-              <label className="form-label">Start Date</label>
-              <DatePicker className="form-input" />
-  
-              <label className="form-label">End Date</label>
-              <DatePicker className="form-input" />
-            </div>
-          </Col>
-  
-          {/* Right section */}
-          <Col span={12}>
-            <div className="form-section">
-              <label className="form-label">Number of Days</label>
-              <Input className="form-input" type="number" placeholder="Enter number of days" />
-  
-              <label className="form-label">Pay Amount</label>
-              <Input className="form-input" type="number" placeholder="Enter pay amount" />
-  
-              <label className="form-label">Cheque No</label>
-              <Input className="form-input" placeholder="Enter cheque number" />
-  
-              <label className="form-label">Description</label>
-              <TextArea className="form-input" rows={2} placeholder="Enter description" />
-            </div>
-          </Col>
-        </Row>
+       
   
         {/* Checkbox */}
         <Row style={{ marginBottom: "20px" }}>

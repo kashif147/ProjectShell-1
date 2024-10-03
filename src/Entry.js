@@ -24,15 +24,21 @@ import CasesById from "./pages/Cases/CasesById";
 import CorrespondencesSummary from "./pages/Correspondences/CorrespondencesSummary";
 import AddNewProfile from "./pages/Profiles/AddNewProfile";
 import AddClaims from "./pages/Claims/AddClaims";
+import Login from "./pages/auth/Login";
 
 function Entry() {
   const location = useLocation();
   return (
-    <div className="">
+    <div className="">{
+      location?.pathname != "/login" &&
       <Header />
+    }
       <div>
-
-        <HeaderDetails />
+      {
+      location?.pathname != "/login" &&
+      <HeaderDetails />
+    }
+      
 
       </div>
       <div className="main-route d-flex ">
@@ -66,7 +72,7 @@ function Entry() {
 
           <div className="main-main">
             <Routes>
-              <Route path="/" element={<ProfileSummary />} />
+              {/* <Route path="/" element={<ProfileSummary />} /> */}
               <Route path="Dummy" element={<Dummy />} />
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
@@ -82,6 +88,7 @@ function Entry() {
               <Route path="Transfers" element={<TransferSummary />} />
               <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
+              <Route path="/" element={<Login />} />
             </Routes>
           </div>
         </div>
