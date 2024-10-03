@@ -5,7 +5,35 @@ import { WindowsFilled } from '@ant-design/icons';
 import { Button,Checkbox,Divider } from 'antd';
 import { Link } from 'react-router-dom';
 
-function Login() {
+import { useMsal } from '@azure/msal-react';
+import { InteractionStatus } from '@azure/msal-browser';
+
+const Login = () => {
+    const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+
+    const handleLogin = () => {
+        if (inProgress !== InteractionStatus.None) {
+            // If interaction is in progress, prevent new interaction
+            console.log("Interaction is in progress, please wait...");
+            return;
+        }
+
+        instance.loginPopup({
+            scopes: ["openid", "profile", "User.Read"], // Scopes you need
+        }).then((response) => {
+            console.log("Login response: ", response);
+        }).catch(e => {
+            console.error("Error during login:", e);
+        });
+    };
+
+    const handleLogout = () => {
+        instance.logoutPopup().catch(e => {
+            console.error("Error during logout:", e);
+        });
+    };
+
+// function Login() {
     return (
         <main role="main" className="">
             <div className="login-wrapper main-container">
@@ -15,10 +43,14 @@ function Login() {
                         src={loginImg} alt="Logo" />
                 </div>
                 <div className="login-con">
-                    <h1 className='login-welcom'>Welcome Back</h1>
-                    <h1 className='login-heading'>Continue with google or enter your details</h1>
+                    {/* <h1 className='login-welcom'>Welcome Back</h1> */}
+                    <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
                     <div style={{paddingTop:"10px", paddingBottom:"10px"}}>
-                    <Button  size="large" style={{background:"#dcdfe4",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'>
+                    <Button  size="large" style={{background:"#dcdfe4",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'
+                    
+                    onClick={handleLogin} 
+                            disabled={inProgress !== InteractionStatus.None} // Disable button if login is in progress
+                            >
                         <span
                             style={{
                                
@@ -26,6 +58,7 @@ function Login() {
                                 height: 16,
                                 marginRight: 8,
                             }}
+                            
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
                                 <rect width="22" height="22" x="2" y="2" fill="#F25022" />
@@ -34,7 +67,11 @@ function Login() {
                                 <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
                             </svg>
                         </span>
-                        <span>Login with Microsoft</span>
+                        {/* <span>Login with Microsoft</span> */}
+
+
+                {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
+
                     </Button>
 
                     </div>
