@@ -44,9 +44,9 @@ const beforeUpload = (file) => {
 
 
 function MyDeatails() {
-  const { ProfileDetails } = useTableColumns()
+  const { ProfileDetails, topSearchData } = useTableColumns()
   const [InfData, setInfData] = useState()
-console.log(InfData,"data")
+  console.log(InfData, "88")
   const location = useLocation();
   const profileData = location?.state
   const [activeTab, setActiveTab] = useState("1");
@@ -58,7 +58,7 @@ console.log(InfData,"data")
   const [isTransfer, setisTransfer] = useState(false);
   const [isRank, setisRank] = useState(false);
   const [isDuty, setisDuty] = useState(false);
-  
+
 
   const [TransferData, setTransferData] = useState({
     NewStationID: "",
@@ -118,37 +118,42 @@ console.log(InfData,"data")
   };
 
   useEffect(() => {
+    let profils;
     if (ProfileDetails) {
-      const profils = {
-        gardaRegNo: ProfileDetails?.regNo,
-        fullname: ProfileDetails?.fullName,
-        forename: ProfileDetails?.forename,
-        surname: ProfileDetails?.surname,
-        dateOfBirth: ProfileDetails?.dateOfBirth,   
-        dateRetired: ProfileDetails?.dateRetired,
-        dateAged65: ProfileDetails?.dateAged65,
-        isDeceased: ProfileDetails?.dateOfDeath !== "N/A",
-        dateOfDeath:ProfileDetails?.dateOfDeath,
-        Partnership: ProfileDetails?.Partnership,
-        stationPh: ProfileDetails?.stationPhone,
-        District: ProfileDetails?.district,
-        Division: ProfileDetails?.division,
-        isPensioner: ProfileDetails?.pensionNo ? true : false,
-        pensionNo: ProfileDetails?.pensionNo,
-        duty: ProfileDetails?.duty,
-        rank:ProfileDetails?.rank,
-        graduated: ProfileDetails?.graduated,
-        isGRAMember: ProfileDetails?.graMember ? true : false,
-        dateJoined: ProfileDetails?.dateJoined,
-        attested: ProfileDetails?.attested,
-        DateLeft: ProfileDetails?.dateLeft,
-        isAssociateMember: ProfileDetails?.associateMember === "yes" ? true : false,
-      
+      profils = {
+        gardaRegNo: ProfileDetails[0]?.regNo,
+        fullname: ProfileDetails[0]?.fullName,
+        forename: ProfileDetails[0]?.forename,
+        surname: ProfileDetails[0]?.surname,
+        dateOfBirth: ProfileDetails[0]?.dateOfBirth,
+        dateRetired: ProfileDetails[0]?.dateRetired,
+        dateAged65: ProfileDetails[0]?.dateAged65,
+        isDeceased: ProfileDetails[0]?.dateOfDeath !== "N/A",
+        dateOfDeath: ProfileDetails[0]?.dateOfDeath,
+        Partnership: ProfileDetails[0]?.Partnership,
+        stationPh: ProfileDetails[0]?.stationPhone,
+        District: ProfileDetails[0]?.district,
+        Division: ProfileDetails[0]?.division,
+        isPensioner: ProfileDetails[0]?.pensionNo ? true : false,
+        pensionNo: ProfileDetails[0]?.pensionNo,
+        duty: ProfileDetails[0]?.duty,
+        rank: ProfileDetails[0]?.rank,
+        graduated: ProfileDetails[0]?.graduated,
+        isGRAMember: ProfileDetails[0]?.graMember ? true : false,
+        dateJoined: ProfileDetails[0]?.dateJoined,
+        attested: ProfileDetails[0]?.attested,
+        DateLeft: ProfileDetails[0]?.dateLeft,
+        isAssociateMember: ProfileDetails[0]?.associateMember === "yes" ? true : false,
       };
-      
       setInfData(profils);
     }
+   
   }, [ProfileDetails]);
+  useEffect(() => {
+    return () => {
+      setInfData({});
+    };
+  }, [location?.pathname]);
   const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
 
   const [graInfoChecked, setGraInfoChecked] = useState(false);
@@ -182,6 +187,7 @@ console.log(InfData,"data")
       title: 'Not Specified',
     },
   ];
+
   const optionsWithDisabled = [
     {
       label: 'Male',
@@ -202,6 +208,7 @@ console.log(InfData,"data")
   const [value2, setValue2] = useState('Male');
   const [value3, setValue3] = useState('Male');
   const [value4, setValue4] = useState('Male');
+
   const onChange1 = ({ target: { value } }) => {
     console.log('radio1 checked', value);
     setValue1(value);
@@ -371,16 +378,16 @@ console.log(InfData,"data")
                     border: "1px solid",
                     borderRadius: "3px",
                   }} className=""
-                  value={InfData?.fullname}
+                    value={InfData?.fullname}
                   />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Forename</p>
-                  <Input value={InfData?.forename}/>
+                  <Input value={InfData?.forename} />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
                   <p className="lbl">Surname</p>
-                  <Input value={InfData?.surname}  />
+                  <Input value={InfData?.surname} />
                 </Col>
 
               </Row>
@@ -404,9 +411,7 @@ console.log(InfData,"data")
                 <Col style={{ width: "33.00%" }}>
                   <p className="lbl">Gender</p>
                   <>
-
                     <Radio.Group
-
                       options={optionsWithDisabled}
                       onChange={onChange4}
                       value={value4}
@@ -415,9 +420,6 @@ console.log(InfData,"data")
                     />
                   </>
                 </Col>
-
-
-
               </Row>
 
               <Row gutter={20}>
@@ -476,7 +478,7 @@ console.log(InfData,"data")
                         height: '33px', // Set height
                         backgroundColor: isChecked ? '#ebf1fd' : '#f0f1f1', // Change background if disabled
                       }}
-                      value={InfData?.dateOfDeath!="N/A" ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
+                      value={InfData?.dateOfDeath != "N/A" ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
                     />
                   </div>
                 </Col>
@@ -929,7 +931,7 @@ console.log(InfData,"data")
                     }}
                     className=""
                     value={InfData?.dateJoined ? moment(InfData?.dateJoined, 'DD/MM/YYYY') : null}
-                    // value={InfData?.dateJoined}
+                  // value={InfData?.dateJoined}
                   />
                 </Col>
                 <Col style={{ width: '33.00%' }}>
@@ -942,7 +944,7 @@ console.log(InfData,"data")
                       borderRadius: "3px",
                     }}
                     className=""
-                    value={InfData?.DateLeft !="N/A" ? moment(InfData?.DateLeft, 'DD/MM/YYYY') : null}
+                    value={InfData?.DateLeft != "N/A" ? moment(InfData?.DateLeft, 'DD/MM/YYYY') : null}
                   />
                 </Col>
               </Row>

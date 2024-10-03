@@ -193,7 +193,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               Fullname: record?.surname,
               DateOfBirth: record?.dateOfBirth,
             }}
-            onClick={() => getProfile(record)}
+            onClick={() => getProfile([record])}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}

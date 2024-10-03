@@ -6,22 +6,25 @@ import Input from "antd/es/input/Input";
 import { FaUserCircle } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
 import { IoMdSettings } from "react-icons/io";
-
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 import { Button } from "antd";
 
 function Header() {
+
   const [token, settoken] = useState(null);
+  const [regNo, setregNo] = useState("")
   const navigate = useNavigate();
-const location = useLocation();
-const pathname = location?.pathname
+  const { filterByRegNo,topSearchData, ProfileDetails } = useTableColumns()
+  const location = useLocation();
+  const pathname = location?.pathname
   const navLinks = [
     {
       key: "1",
       label: (
-        <Link to="Summary" state={{ search: "Profile" }} className="link" style={{textDecoration:"none", }}>
+        <Link to="Summary" state={{ search: "Profile" }} className="link" style={{ textDecoration: "none", }}>
           Summary
         </Link>
       ),
@@ -39,7 +42,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="CasesSummary" state={{ search: "Cases" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="CasesSummary" state={{ search: "Cases" }} className="link" style={{ textDecoration: "none" }}>
           Summary
         </Link>
       ),
@@ -57,7 +60,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="ClaimSummary" state={{ search: "Claims" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="ClaimSummary" state={{ search: "Claims" }} className="link" style={{ textDecoration: "none" }}>
           Summary
         </Link>
       ),
@@ -75,7 +78,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="Report1" state={{ search: "Reports" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="Report1" state={{ search: "Reports" }} className="link" style={{ textDecoration: "none" }}>
           Report1
         </Link>
       ),
@@ -93,7 +96,7 @@ const pathname = location?.pathname
     {
       key: "1",
       label: (
-        <Link to="/CorrespondencesSummary" state={{ search: "Reports" }} className="link" style={{textDecoration:"none"}}>
+        <Link to="/CorrespondencesSummary" state={{ search: "Reports" }} className="link" style={{ textDecoration: "none" }}>
           Summary
         </Link>
       ),
@@ -123,18 +126,18 @@ const pathname = location?.pathname
             <span class="navbar-toggler-icon"></span>
           </button>
           <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav align-items-baseline"  style={{paddingLeft:"30px"}}>
-              <li className={`${pathname=="/Summary"|| pathname=="/Details" ?"activ-link":"" } nav-item nav-links-container `}>
+            <ul class="navbar-nav align-items-baseline" style={{ paddingLeft: "30px" }}>
+              <li className={`${pathname == "/Summary" || pathname == "/Details" ? "activ-link" : ""} nav-item nav-links-container `}>
                 <MyDrowpDown title={"Profile"} items={navLinks} />
                 {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
               </li>
-              <li className={`${pathname=="/CasesSummary"|| pathname=="/CasesDetails" ?"activ-link":"" } nav-item nav-links-container `}>
+              <li className={`${pathname == "/CasesSummary" || pathname == "/CasesDetails" ? "activ-link" : ""} nav-item nav-links-container `}>
                 <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
               </li>
-              <li  className={`${pathname=="/ClaimSummary"|| pathname=="/Claims" ?"activ-link":"" } nav-item nav-links-container `}>
+              <li className={`${pathname == "/ClaimSummary" || pathname == "/Claims" ? "activ-link" : ""} nav-item nav-links-container `}>
                 <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
               </li>
-              <li className={`${pathname=="/CorrespondencesSummary" ?"activ-link":"" } nav-item nav-links-container`}>
+              <li className={`${pathname == "/CorrespondencesSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
                 <MyDrowpDown title={"Correspondences"} items={CorrespondencesLink} />
               </li>
               {/* <li class="nav-item nav-links-container">
@@ -146,32 +149,33 @@ const pathname = location?.pathname
               <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Roster"} items={navLinks} />
               </li> */}
-              <li className={`${pathname=="/Transfers" ?"activ-link":"" } nav-item nav-links-container `}>
-                <Link className="links" to="Transfers"  state={{ search: "" }}>Transfer Requests</Link>
+              <li className={`${pathname == "/Transfers" ? "activ-link" : ""} nav-item nav-links-container `}>
+                <Link className="links" to="Transfers" state={{ search: "" }}>Transfer Requests</Link>
               </li>
-              <li className={`${(pathname=="/Report2" || pathname=="/Report1") ?"activ-link":"" } nav-item nav-links-container `}>
+              <li className={`${(pathname == "/Report2" || pathname == "/Report1") ? "activ-link" : ""} nav-item nav-links-container `}>
                 <MyDrowpDown title={"Reports"} items={ReportsnavLinks} />
               </li>
-              <li className={`${ pathname=="/Configuratin" ?"activ-link":"" } nav-item nav-links-container `} >
-                <Link className="links" to="Configuratin"  state={{ search: "" }}>Configurations</Link>
+              <li className={`${pathname == "/Configuratin" ? "activ-link" : ""} nav-item nav-links-container `} >
+                <Link className="links" to="Configuratin" state={{ search: "" }}>Configurations</Link>
               </li>
-              {/* <li class="nav-item nav-links-container">
-                <Link className="links" to="Configuratin"  state={{ search: "" }}>Filters</Link>
-              </li> */}
             </ul>
           </div>
         </nav>
-        <div className="input-container d-flex ">
-          <Input className=" top-search" style={{ marginRight: "1rem" }} />
-
-            <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />
-            <HiMiniQuestionMarkCircle
-              style={{ fontSize: "30px", marginRight: "1rem"}}
-            />
-            {/* <SettingOutlined style={{ fontSize: "20px", marginRight: "1rem" }} /> */}
-            <IoMdSettings style={{ fontSize: "30px", marginRight: "1rem" }}/>
-            
-            <FaUserCircle style={{ fontSize: "30px", marginRight: "1rem" }} />
+        <div className="input-container d-flex">
+          <Input placeholder="Reg No" onChange={(e) => setregNo(e.target.value)} onPressEnter={async()=>{
+           filterByRegNo(regNo)
+           await  navigate("/Details", {
+            state: {
+              name:ProfileDetails[0]?.fullName,
+              code: ProfileDetails[0]?.regNo,
+            }})
+            }} className=" top-search" style={{ marginRight: "1rem" }} />
+          <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />
+          <HiMiniQuestionMarkCircle
+            style={{ fontSize: "30px", marginRight: "1rem" }}
+          />
+          <IoMdSettings style={{ fontSize: "30px", marginRight: "1rem" }} />
+          <FaUserCircle style={{ fontSize: "30px", marginRight: "1rem" }} />
 
         </div>
       </div>

@@ -1037,5 +1037,7 @@ color: red !important;
     padding: 8px 16px; /* Increased padding for better touch targets */
     font-size: 14px; /* Consistent font size for buttons */
   }
-  
+  :where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-left, :where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-right {
+    z-index: 300;
+}
   

@@ -2,10 +2,12 @@ import React, { useState } from 'react';
 import { Upload, message, Divider } from 'antd';
 import { FiUpload } from "react-icons/fi";
 import { useLocation } from 'react-router-dom';
+import { useTableColumns } from '../../context/TableColumnsContext ';
 import { Repeat } from '@mui/icons-material';
-
+import '../../styles/ProfileHeader.css'
 function ProfileHeader() {
     const [imageUrl, setImageUrl] = useState("");
+    const {ProfileDetails} = useTableColumns()
     const [loading, setLoading] = useState(false);
     const location = useLocation();
 
@@ -35,82 +37,72 @@ function ProfileHeader() {
 
     return (
         <div className='profil-container-main d-flex flex-column'>
-            <div className="profile-header-container" style={{ 
-                display: 'flex',  
-                flexDirection:'column'     // Center vertically
+            <div className="profile-header-container" style={{
+                display: 'flex',
+                flexDirection: 'column'     // Center vertically
             }}>
                 <div className='d-flex justify-content-center'>
-
-                <Upload
-                    customRequest={customRequest}
-                    showUploadList={false}
-                    onChange={handleChange1}
-                    accept="image/*"
-                >
-                    <div className="d-flex flex-column">
-                        {imageUrl ? (
-                            <img
-                                src={imageUrl}
-                                alt="Uploaded"
-                                style={{
+                    <Upload
+                        customRequest={customRequest}
+                        showUploadList={false}
+                        onChange={handleChange1}
+                        accept="image/*"
+                    >
+                        <div className="d-flex flex-column">
+                            {imageUrl ? (
+                                <img
+                                    src={imageUrl}
+                                    alt="Uploaded"
+                                    style={{
+                                        width: "100px",
+                                        height: "100px",
+                                        borderRadius: "50%",
+                                    }}
+                                />
+                            ) : (
+                                <div className="profile-image" style={{
                                     width: "100px",
                                     height: "100px",
+                                    display: "flex",
+                                    justifyContent: "center",
+                                    alignItems: "center",
                                     borderRadius: "50%",
-                                }}
-                            />
-                        ) : (
-                            <div className="profile-image" style={{
-                                width: "100px",
-                                height: "100px",
-                                display: "flex",
-                                justifyContent: "center",
-                                alignItems: "center",
-                                borderRadius: "50%",
-                                backgroundColor: "#FF0000",
-                                fontSize: "32px",
-                                color: "#FF0000", // Change the color to white for better visibility
-                                
-                            }}>
-                                <FiUpload className="upload-icon" />
-                                <h1 style={{ margin: 0 }}>JS</h1>
-                            </div>
-                        )}
-                    </div>
-                </Upload>
-                </div>
-                
-            <div style={{ 
-                display: 'flex', 
-                // justifyContent: 'center',  // Center horizontally
-                // alignItems: 'center',       // Center vertically
-            }}>
+                                    backgroundColor: "#FF0000",
+                                    fontSize: "32px",
+                                    color: "#FF0000", // Change the color to white for better visibility
 
-            </div>
-            <div>
-                    <br/>
-                <div style={{ fontWeight: 'bold', color: '#c97a2f', fontSize: '20px' }}> {location?.state?.code}</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>{location?.state?.name}</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>20/06/1979 (36 Y)</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Married</div>
-                    <div style={{ fontWeight: 'bold', color: '#FF7F7F', fontSize: '14px' }}>11/10/2015 (Deceased)</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Cases:</div>
-                    <div style={{ fontWeight: 'bold', color: '#6B7AAB', fontSize: '14px' }}>Claims:</div>
+                                }}>
+                                    <FiUpload className="upload-icon" />
+                                    <h1 style={{ margin: 0 }}>JS</h1>
+                                </div>
+                            )}
+                        </div>
+                    </Upload>
                 </div>
-                </div>
-            <Divider type='horizontal' />
-            {/* Other content remains unchanged */}
-            <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',                 
-            // justifyContent: 'center',  // Center horizontally
-                //alignItems: 'center',  
+
+                <div style={{
+                    display: 'flex',
                 }}>
-               
-                
+                </div>
+                <div className='d-flex  justify-content-center flex-column'>
+                    <div className="centered-text-large">{ProfileDetails[0]?.regNo}</div>
+                    <div className="centered-text">{ProfileDetails[0]?.fullName}</div>
+                    <div className="centered-text">20/06/1979 (36 Y)</div>
+                    <div className="centered-text">Married</div>
+                    <div className="centered-text-deceased">11/10/2015 (Deceased)</div>
+                    <div className="centered-text">Cases:</div>
+                    <div className="centered-text">Claims:</div>
+
+                </div>
+            </div>
+            <Divider type='horizontal' />
+            <div style={{
+                display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',
+            }}>
                 <div>Member (01/01/2020 - 11/10/2015)</div>
                 <div>Graduated on: 01/09/2007</div>
                 <div>Attested on: 01/01/2008</div>
-
                 <div>Statue</div>
-
                 <div>0001 Garda</div>
                 <div>0021 Garda</div>
                 <div>0109 CDU-SDU</div>
@@ -127,7 +119,7 @@ function ProfileHeader() {
                    <span style={{ marginRight: '45px' }}>Member</span>
                    <span>Partner</span>
                 </div> */}
-                <br/>
+                <br />
                 <div>Special Illness (Member):</div>
                 {/* <div>Special Illness (Partner):</div> */}
 
@@ -136,7 +128,7 @@ function ProfileHeader() {
                     <span>Partner</span>
                 </div> */}
                 <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px' }}>
-                    <br/>
+                    <br />
                     {/* <div>Illness & Injury</div>
                     <div>Legal Assistance</div>
                     <div>Salary Protection</div> */}
