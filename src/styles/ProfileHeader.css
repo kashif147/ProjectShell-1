@@ -1,0 +1,21 @@
+.centered-text {
+    font-weight: bold;
+    font-size: 14px;
+    color: #6B7AAB;
+    text-align: center;
+  }
+  
+  .centered-text-large {
+    font-weight: bold;
+    font-size: 20px;
+    color: #c97a2f;
+    text-align: center;
+  }
+  
+  .centered-text-deceased {
+    font-weight: bold;
+    font-size: 14px;
+    color: #FF7F7F;
+    text-align: center;
+  }
+  

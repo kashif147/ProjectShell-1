@@ -30,12 +30,12 @@ function Entry() {
   const location = useLocation();
   return (
     <div className="">{
-      location?.pathname != "/login" &&
+      location?.pathname != "/" &&
       <Header />
     }
       <div>
       {
-      location?.pathname != "/login" &&
+      location?.pathname != "/" &&
       <HeaderDetails />
     }
       

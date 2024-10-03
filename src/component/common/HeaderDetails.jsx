@@ -54,8 +54,7 @@ function HeaderDetails() {
   const [create, setCreate] = useState(false);
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer } = useTableColumns();
-
+  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails } = useTableColumns();
   function filterSearchableColumns(data) {
     settrueFilters(data.filter((column) => column.isSearch === true));
   }
@@ -329,7 +328,6 @@ function HeaderDetails() {
                     {location?.state?.code && (
                       <>
                         <p>&nbsp; &nbsp;/&nbsp; &nbsp;</p>
-
                         <p> {location.state.code}</p>
                       </>
                     )}

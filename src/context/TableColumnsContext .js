@@ -497,8 +497,14 @@ export const TableColumnsProvider = ({ children }) => {
   const getProfile = (row) => {
     setProfileDetails(row)
   }
+  const [topSearchData, settopSearchData] = useState()
+  async function filterByRegNo(regNo) {
+    let data;
+    data = gridData?.filter(item => item.regNo === regNo);
+    await getProfile(data)
+  }
+ 
   return (
-
     <TableColumnsContext.Provider
       value={{
         columns,
@@ -519,7 +525,8 @@ export const TableColumnsProvider = ({ children }) => {
         getProfile,
         handlClaimDrawerChng,
         claimsDrawer,
-
+        filterByRegNo,
+        topSearchData
       }}
     >
       {children}
