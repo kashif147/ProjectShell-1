@@ -36,7 +36,7 @@ const Login = () => {
     };
 
 // function Login() {
-function Login() {
+// function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate()
     const togglePasswordVisibility = () => {
@@ -51,7 +51,6 @@ function Login() {
                         src={loginImg} alt="Logo" />
                 </div>
                 <div className="login-con">
-<<<<<<< HEAD
                     {/* <h1 className='login-welcom'>Welcome Back</h1> */}
                     <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
                     <div style={{paddingTop:"10px", paddingBottom:"10px"}}>
@@ -82,29 +81,6 @@ function Login() {
                 {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
 
                     </Button>
-=======
-                    <h1 className='login-welcom'>Welcome Back</h1>
-                    <h1 className='login-heading'>Continue with google or enter your details</h1>
-                    <div style={{ paddingTop: "10px", paddingBottom: "10px" }}>
-                        <Button size="large" style={{ background: "#dcdfe4", width: "100%", margintTop: "10px", marginBottom: "10px" }} className='d-flex align-items-baseline butn'>
-                            <span
-                                style={{
-
-                                    width: 16,
-                                    height: 16,
-                                    marginRight: 8,
-                                }}
-                            >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
-                                    <rect width="22" height="22" x="2" y="2" fill="#F25022" />
-                                    <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
-                                    <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
-                                    <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
-                                </svg>
-                            </span>
-                            <span>Login with Microsoft</span>
-                        </Button>
->>>>>>> 9cf9bb7fd379dcc3e37a4b6afe5be50f5979138b
 
                     </div>
                     <Divider orientation="center" style={{ fontWeight: "400", fontSize: "12px" }}>Or</Divider>
@@ -142,4 +118,4 @@ function Login() {
     )
 }
 
-export default Login
+export default Login;
