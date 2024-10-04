@@ -38,6 +38,7 @@ import {
 } from "react-icons/fa6";
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
+import '../../styles/HeaderDetails.css'
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -46,7 +47,8 @@ function HeaderDetails() {
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
-  const formattedNav = nav.replace(/^\//, "");
+  const formattedNav = nav.replace(/^\//," ");
+  console.log(formattedNav,"formattedNav")
   const [isSideNav, setisSideNav] = useState(true);
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
@@ -260,8 +262,6 @@ function HeaderDetails() {
             <FaClipboardList
               style={{
                 fontSize: "15px",
-                marginRight: "10px",
-                marginLeft: "10px",
                 color: "#45669d",
               }}
             />
@@ -282,66 +282,87 @@ function HeaderDetails() {
       >
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
-            <div className="d-flex">
-              <div className="bred-cram-main d-flex" onClick={goBack}>
-                {location?.key === "default" && nav === "/" ? (
-                  <>
-                    <p>Profile / Main</p>
-                  </>
-                ) : (
-                  <>
-                    {location?.state?.search == "Profile" &&
-                      (location?.pathname == "/Summary" ||
-                        location?.pathname == "/Details") && (
-                        <FaUser
-                          style={{
-                            fontSize: "16px",
-                            marginRight: "10px",
-                            color: "#45669d",
-                          }}
-                        />
-                      )}
-                    {location?.state?.search == "Cases" &&
-                      (location?.pathname == "CasesSummary" ||
-                        location?.pathname == "/CasesDetails") && (
-                        <FaListCheck
-                          style={{
-                            fontSize: "16px",
-                            marginLeft: "10px",
-                            marginRight: "10px",
-                            color: "#45669d",
-                          }}
-                        />
-                      )}
-                    <p>{location?.state?.search}</p>
-                    <p>&nbsp; &nbsp;/{iconFtn()}</p>
-                    {location?.pathname == "/ClaimsDetails" && (
-                      <FaMoneyCheckAlt
-                        style={{
-                          fontSize: "16px",
-                          marginLeft: "10px",
-                          marginRight: "10px",
-                        }}
-                      />
-                    )}
-                    <p>{formattedNav}</p>
-                    {location?.state?.code && (
-                      <>
-                        <p>&nbsp; &nbsp;/&nbsp; &nbsp;</p>
-                        <p> {location.state.code}</p>
-                      </>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+            
+          <div className="bred-cram-main d-flex align-items-center" onClick={goBack}>
+  <>
+    {location?.state?.search === "Profile" && (
+      <FaUser
+        style={{
+          fontSize: "16px",
+          marginRight: "5px",
+          color: "#45669d",
+          display: "inline-flex",
+          alignSelf: "center", // Align icon vertically
+        }}
+      />
+    )}
+    {location?.state?.search === "Cases" && (
+      <FaListCheck
+        style={{
+          fontSize: "16px",
+          marginRight: "5px",
+          color: "#45669d",
+          display: "inline-flex",
+          alignSelf: "center",
+        }}
+      />
+    )}
+    <p>{location?.state?.search}</p>
+    <p>&nbsp;/&nbsp;{iconFtn()}&nbsp;</p>
 
+    {location?.pathname === "/ClaimsById" && (
+      <FaMoneyCheckAlt
+        style={{
+          fontSize: "16px",
+          marginRight: "5px",
+          color: "#45669d",
+          display: "inline-flex",
+          alignSelf: "center",
+        }}
+      />
+    )}
+    {location?.pathname === "/Details" && (
+      <FaUser
+        style={{
+          fontSize: "16px",
+          marginRight: "5px",
+          color: "#45669d",
+          display: "inline-flex",
+          alignSelf: "center",
+        }}
+      />
+    )}
+    {location?.pathname === "/CasesById" && (
+      <FaListCheck
+        style={{
+          fontSize: "16px",
+          marginRight: "5px",
+          color: "#45669d",
+          display: "inline-flex",
+          alignSelf: "center",
+        }}
+      />
+    )}
+
+    <p>{formattedNav}</p>
+
+    {location?.state?.code && (
+      <>
+        <p>&nbsp;/&nbsp;</p>
+        <p>{location.state.code}</p>
+      </>
+    )}
+  </>
+</div>
+
+
+
+            
             {(location?.pathname == "/Details"
               || location?.pathname == "/CasesById"
               || location?.pathname == "/AddNewProfile"
               || location?.pathname == "/ClaimsById"
               || location?.pathname == "/AddClaims"
-
             ) && (
                 <div className="d-flex align-items-baseline">
                   <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
@@ -360,10 +381,6 @@ function HeaderDetails() {
                     <FaChevronDown className="deatil-header-icon" />
                     </Button>
                   <p className="lbl me-1" style={{fontWeight:"500",fontSize:"14px",marginLeft:"4px"}}>1 of 12</p>
-                  {/* <span className=" ">
-                  </span>
-                  <span>
-                  </span> */}
                     <Button className="me-1 gray-btn butn" style={{marginLeft:"8px"}}>
                     <FaChevronUp className="deatil-header-icon" />
                     </Button>

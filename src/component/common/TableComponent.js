@@ -145,8 +145,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           onChange={() => onSelectChange(record.key)}
         />
       ),
-    }
-    ,
+    },
     {
       title: (
         <Gridmenu
@@ -189,15 +188,11 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               search: screenName,
               name: record?.fullName,
               code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
             }}
             onClick={() => getProfile([record])}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
-
             </span>
           </Link>
         ) : col.title === "Claim No" ? (
@@ -215,13 +210,11 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
-
             </span>
           </Link>
         ) : (
           <span style={{ textOverflow: "ellipsis" }}>
             {text}
-
           </span>
         ),
       sorter:
@@ -229,8 +222,26 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           ? (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex])
           : undefined,
       sortDirections: ["ascend", "descend"],
+      filters: col.title === "Station" ? [
+        { text: 'GALC', value: 'GALC' },
+        { text: 'DUBC', value: 'DUBC' },
+        { text: 'STOC', value: 'STOC' },
+      ] : col.title === "Division" ? [
+        { text: '0026', value: '0026' },
+        { text: '0031', value: '0031' },
+        { text: '0045', value: '0045' },
+      ] : undefined,
+      onFilter: (value, record) => {
+        if (col.title === "Station") {
+          return record[col.dataIndex] === value;
+        } else if (col.title === "Division") {
+          return record[col.dataIndex] === value;
+        }
+        return true;
+      },
     })),
   ];
+
   const pageSize = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -368,7 +379,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             rowClassName={() => ""}
             components={components}
             columns={editableColumns}
-            dataSource={currentPageData} 
+            dataSource={currentPageData}
             pagination={false}
             bordered
             virtual
@@ -403,8 +414,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
                 onClick={() => window.location.reload()}
               />
             </div>
-
-            {/* Right-aligned pagination */}
             <div className="d-flex justify-content-end">
               <Pagination
                 current={currentPage}
@@ -414,7 +423,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               />
             </div>
           </div>
-
         </div>
       </SortableContext>
       <DragOverlay>

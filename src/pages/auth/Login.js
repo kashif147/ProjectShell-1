@@ -111,7 +111,14 @@ const Login = () => {
                             <Link href="/reset-password" className='font-color-12'>Forgot Password?</Link>
 
                         </div>
-                        <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button>
+                        {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
+                        <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => {
+                              navigate("/Summary",{
+                                state: {
+                                  search: "Profile"
+                                },
+                              })
+                            }}>Log in</Button>
                     </form>
                     <p className='font-color-12 text-center'>
                         Don't have an account? <a href="/contact-us">Request access</a>

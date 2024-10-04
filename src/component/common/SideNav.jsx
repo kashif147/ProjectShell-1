@@ -29,6 +29,7 @@ import { ClassNames } from '@emotion/react';
 
 function SideNav() {
   const location = useLocation();
+  console.log(location,"location45")
   const navigate = useNavigate();
   
   const [isSideNav, setisSideNav] = useState(true)
@@ -121,13 +122,20 @@ function SideNav() {
   const handleClick = ({ key }) => {
     switch (key) {
       case 'Profile':
-        navigate("/Details")
+        navigate("/Details",{
+          state: {
+            name: location?.state?.name,
+            code: location?.state?.code,
+            search: location?.state?.search
+          },
+        })
         break;
         case 'Cases':
           navigate("/CasesById", {
             state: {
               name: location?.state?.name,
               code: location?.state?.code,
+              search: location?.state?.search
             },
           });
         break;
@@ -136,6 +144,7 @@ function SideNav() {
           state: {
             name: location?.state?.name,
             code: location?.state?.code,
+            search: location?.state?.search
           },
         });
         break;
