@@ -2,31 +2,27 @@ import logo from './logo.svg';
 import './App.css';
 import Entry from './Entry';
 
-import { PublicClientApplication } from '@azure/msal-browser';
-import { MsalProvider } from '@azure/msal-react';
-
-const msalConfig = {
-  auth: {
-    clientId: 'YOUR_CLIENT_ID', // Application (client) ID from Azure portal
-    authority: 'https://login.microsoftonline.com/YOUR_TENANT_ID', // Directory (tenant) ID
-    redirectUri: 'http://localhost:3000', // Your app's redirect URI
-  },
-};
-
-const msalInstance = new PublicClientApplication(msalConfig);
+import React from 'react';
+import AuthProvider from './pages/auth/AuthProvider';
+import Login from './pages/auth/Login';
 
 function App() {
   return (
-    <MsalProvider instance={msalInstance}>
-      {/* Your React Components */
-      <div className="">
+    <AuthProvider>
+    <div className="App">
+        <h1>Welcome to My React App</h1>
+        <Login />
+    </div>
+</AuthProvider>
       
-      <Entry />
+    //   <div className="">
+      
+    //   <Entry />
  
-     </div>}
-
-    </MsalProvider>
+    //  </div>
   );
 }
 
 export default App;
+
+

@@ -7,7 +7,36 @@ import { Link } from 'react-router-dom';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
 
-function Login() {
+import { useMsal } from '@azure/msal-react';
+import { InteractionStatus } from '@azure/msal-browser';
+
+const Login = () => {
+    const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+
+    const handleLogin = () => {
+        if (inProgress !== InteractionStatus.None) {
+            // If interaction is in progress, prevent new interaction
+            console.log("Interaction is in progress, please wait...");
+            return;
+        }
+
+        instance.loginPopup({
+            scopes: ["openid", "profile", "User.Read"], // Scopes you need
+        }).then((response) => {
+            console.log("Login response: ", response);
+        }).catch(e => {
+            console.error("Error during login:", e);
+        });
+    };
+
+    const handleLogout = () => {
+        instance.logoutPopup().catch(e => {
+            console.error("Error during logout:", e);
+        });
+    };
+
+// function Login() {
+// function Login() {
     const [showPassword, setShowPassword] = useState(false);
     const navigate = useNavigate()
     const togglePasswordVisibility = () => {
@@ -22,27 +51,36 @@ function Login() {
                         src={loginImg} alt="Logo" />
                 </div>
                 <div className="login-con">
-                    <h1 className='login-welcom'>Welcome Back</h1>
-                    <h1 className='login-heading'>Continue with google or enter your details</h1>
-                    <div style={{ paddingTop: "10px", paddingBottom: "10px" }}>
-                        <Button size="large" style={{ background: "#dcdfe4", width: "100%", margintTop: "10px", marginBottom: "10px" }} className='d-flex align-items-baseline butn'>
-                            <span
-                                style={{
-
-                                    width: 16,
-                                    height: 16,
-                                    marginRight: 8,
-                                }}
+                    {/* <h1 className='login-welcom'>Welcome Back</h1> */}
+                    <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
+                    <div style={{paddingTop:"10px", paddingBottom:"10px"}}>
+                    <Button  size="large" style={{background:"#dcdfe4",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'
+                    
+                    onClick={handleLogin} 
+                            disabled={inProgress !== InteractionStatus.None} // Disable button if login is in progress
                             >
-                                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
-                                    <rect width="22" height="22" x="2" y="2" fill="#F25022" />
-                                    <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
-                                    <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
-                                    <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
-                                </svg>
-                            </span>
-                            <span>Login with Microsoft</span>
-                        </Button>
+                        <span
+                            style={{
+                               
+                                width: 16,
+                                height: 16,
+                                marginRight: 8,
+                            }}
+                            
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
+                                <rect width="22" height="22" x="2" y="2" fill="#F25022" />
+                                <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
+                                <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
+                                <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
+                            </svg>
+                        </span>
+                        {/* <span>Login with Microsoft</span> */}
+
+
+                {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
+
+                    </Button>
 
                     </div>
                     <Divider orientation="center" style={{ fontWeight: "400", fontSize: "12px" }}>Or</Divider>
@@ -86,4 +124,4 @@ function Login() {
     )
 }
 
-export default Login
+export default Login;
