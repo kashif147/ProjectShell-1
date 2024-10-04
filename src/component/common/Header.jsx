@@ -168,6 +168,7 @@ function Header() {
             state: {
               name:ProfileDetails[0]?.fullName,
               code: ProfileDetails[0]?.regNo,
+              search: 'Profile',
             }})
             }} className=" top-search" style={{ marginRight: "1rem" }} />
           <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />

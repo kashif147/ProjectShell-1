@@ -1,12 +1,11 @@
 import React from 'react'
 import SubTableComp from '../../component/common/SubTableComp'
-import { Space } from 'antd';
+import { Space, Checkbox, Button } from 'antd';
 import  "../../styles/CasesById.css";
 
 function CasesById() {
     const viewCase = (caseId) => {
         console.log(`Viewing case: ${caseId}`);
-        // View case logic
       };
       
       const editCase = (caseId) => {
@@ -59,6 +58,42 @@ function CasesById() {
             { text: 'Closed', value: 'Closed' },
           ],
           onFilter: (value, record) => record.caseStatus.indexOf(value) === 0,
+          filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => {
+            // Function to handle checkbox change
+            const handleChange = (checkedValues) => {
+              setSelectedKeys(checkedValues);
+              confirm(); // Apply the filter immediately
+            };
+        
+            return (
+              <div style={{ padding: 8 }}>
+                <Checkbox.Group
+                  value={selectedKeys}
+                  onChange={handleChange}
+                  style={{ display: 'flex', flexDirection: 'column' }} // Ensure checkboxes are vertical
+                >
+                  {['Open', 'In Progress', 'Closed'].map((status) => (
+                    <Checkbox key={status} value={status} style={{ marginBottom: 8 }}>
+                      {status}
+                    </Checkbox>
+                  ))}
+                </Checkbox.Group>
+                <div style={{ marginTop: 8 }}>
+                  <Button
+                    onClick={() => {
+                      clearFilters(); // Clear all filters
+                      setSelectedKeys([]); // Clear selected keys
+                      confirm(); // Reapply filter with cleared values
+                    }}
+                    size="small"
+                    style={{ width: '100%' }}
+                  >
+                    Reset
+                  </Button>
+                </div>
+              </div>
+            );
+          },
           width: 150,
         },
         {
