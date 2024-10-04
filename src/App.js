@@ -10,7 +10,7 @@ function App() {
   return (
     <AuthProvider>
     <div className="App">
-        <h1>Welcome to My React App</h1>
+        {/* <h1>Welcome to My React App</h1> */}
         <Login />
     </div>
 </AuthProvider>

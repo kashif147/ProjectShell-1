@@ -43,18 +43,23 @@ const Login = () => {
         setShowPassword(!showPassword);
     };
     return (
-        <main role="main" className="">
-            <div className="login-wrapper main-container">
+
+        <main role="main" className="" >
+
+            <div className="login-wrapper main-container" >
+                <div>
+                    
+                </div>
                 <div className="imag-con">
                     <img
                         className="login-image"
                         src={loginImg} alt="Logo" />
                 </div>
-                <div className="login-con">
+                <div className="login-con" style={{ width: '50%', padding: '20px', display: 'flex', flexDirection: 'column', justifycontent: 'center',}}>
                     {/* <h1 className='login-welcom'>Welcome Back</h1> */}
                     <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
                     <div style={{paddingTop:"10px", paddingBottom:"10px"}}>
-                    <Button  size="large" style={{background:"#dcdfe4",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'
+                    <Button  size="large" style={{background:"#caccce",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'
                     
                     onClick={handleLogin} 
                             disabled={inProgress !== InteractionStatus.None} // Disable button if login is in progress
@@ -106,7 +111,7 @@ const Login = () => {
                             <Link href="/reset-password" className='font-color-12'>Forgot Password?</Link>
 
                         </div>
-                        <Button style={{ backgroundColor: "#086d99", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button>
+                        <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button>
                     </form>
                     <p className='font-color-12 text-center'>
                         Don't have an account? <a href="/contact-us">Request access</a>
@@ -119,3 +124,6 @@ const Login = () => {
 }
 
 export default Login;
+
+
+
