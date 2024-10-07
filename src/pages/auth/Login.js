@@ -6,12 +6,13 @@ import { Button, Checkbox, Divider, Input } from 'antd';
 import { Link } from 'react-router-dom';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
-
+// import {  } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 
 const Login = () => {
     const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+    const navigate = useNavigate(); // Use the useHistory hook
 
     const handleLogin = () => {
         if (inProgress !== InteractionStatus.None) {
@@ -20,10 +21,15 @@ const Login = () => {
             return;
         }
 
+        const loginRequest = {
+            scopes: ['User.Read'],
+        };
+
         instance.loginPopup({
-            scopes: ["openid", "profile", "User.Read"], // Scopes you need
+            scopes: ["openid", "profile", "User.Read", "Mail.Read"], // Scopes you need
         }).then((response) => {
             console.log("Login response: ", response);
+            navigate('/LandingPage')
         }).catch(e => {
             console.error("Error during login:", e);
         });
@@ -38,7 +44,7 @@ const Login = () => {
 // function Login() {
 // function Login() {
     const [showPassword, setShowPassword] = useState(false);
-    const navigate = useNavigate()
+    // const navigate = useNavigate()
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };

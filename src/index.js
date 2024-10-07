@@ -10,7 +10,9 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
 <Router>
 <TableColumnsProvider>
+
   <App />
+
 </TableColumnsProvider>
 
 </Router>

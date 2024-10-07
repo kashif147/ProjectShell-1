@@ -25,17 +25,18 @@ import CorrespondencesSummary from "./pages/Correspondences/CorrespondencesSumma
 import AddNewProfile from "./pages/Profiles/AddNewProfile";
 import AddClaims from "./pages/Claims/AddClaims";
 import Login from "./pages/auth/Login";
+import LandingPage from "./component/msft/LandingPage";
 
 function Entry() {
   const location = useLocation();
   return (
     <div className="">{
-      location?.pathname != "/" &&
+      location?.pathname != "/" && 
       <Header />
     }
       <div>
       {
-      location?.pathname != "/" &&
+      location?.pathname != "/" && 
       <HeaderDetails />
     }
       
@@ -62,7 +63,6 @@ function Entry() {
           || location?.pathname == "/AddNewProfile"
           || location?.pathname == "/AddClaims"
 
-
         ) && (
 
             <ProfileHeader />
@@ -72,7 +72,7 @@ function Entry() {
 
           <div className="main-main">
             <Routes>
-              {/* <Route path="/" element={<ProfileSummary />} /> */}
+
               <Route path="Dummy" element={<Dummy />} />
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
@@ -89,6 +89,8 @@ function Entry() {
               <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
               <Route path="/" element={<Login />} />
+              <Route path="LandingPage" element={<LandingPage />} /> 
+              
             </Routes>
           </div>
         </div>

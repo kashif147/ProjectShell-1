@@ -11,6 +11,7 @@
   --gray:  rgba(9, 30, 66, 0.04); 
 }
 
+
 /* Global focus styles */
 .ant-input:focus, 
 .ant-textarea:focus, 
@@ -79,7 +80,15 @@ select {
 }
 body {
   font-family: var(--fontFamily) !important;
+/* adding gobal watermark*/
+    /* background-image: url('/public/img1.png');
+    background-repeat: no-repeat;
+    background-size: 300px;
+    background-position: center center;
+    background-attachment: fixed;
+    opacity: 0.1; */
 }
+
 .App-header {
   background-color: #282c34;
   min-height: 100vh;
@@ -1041,4 +1050,19 @@ color: red !important;
 .ant-table-filter-trigger {
   color: white !important; 
   margin-right: 5px !important;
+}
+
+/* Apply watermark only to specific components or pages */
+.watermark {
+  background-image: url('/public/img1.png');
+  background-repeat: no-repeat;
+  background-size: 300px;
+  background-position: center center;
+  opacity: 0.1;
+}
+/* Additional styling for forms, tables, etc., to sit on top of watermark */
+.table .form {
+  z-index: 1;
+  position: relative; /* Ensure these elements sit above the watermark */
+  padding: 20px;
 }
