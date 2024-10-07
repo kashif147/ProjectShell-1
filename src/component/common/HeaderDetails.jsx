@@ -5,7 +5,7 @@ import { FaUser } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
-import { Table, Checkbox, DatePicker } from 'antd'
+import { Table, Checkbox, DatePicker, Modal } from 'antd'
 import {
   RightOutlined,
   PlusOutlined,
@@ -26,7 +26,6 @@ import {
 } from "@ant-design/icons";
 
 import JiraLikeMenu from "./JiraLikeMenu";
-// import SimpleMenu from "./SimpleMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
@@ -47,16 +46,22 @@ function HeaderDetails() {
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
-  const formattedNav = nav.replace(/^\//," ");
-  console.log(formattedNav,"formattedNav")
+  const formattedNav = nav.replace(/^\//, " ");
+  console.log(formattedNav, "formattedNav")
   const [isSideNav, setisSideNav] = useState(true);
+  const [ReportName, setReportName] = useState(null)
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
   const [trueFilters, settrueFilters] = useState();
   const [create, setCreate] = useState(false);
+  const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+  const showHidSavModal = () => {
+    setIsSaveModalOpen(!isSaveModalOpen);
+  };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails } = useTableColumns();
+  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave,report,isSaveChng, ReportsTitle } = useTableColumns();
+console.log(ReportsTitle,"report")
   function filterSearchableColumns(data) {
     settrueFilters(data.filter((column) => column.isSearch === true));
   }
@@ -65,8 +70,6 @@ function HeaderDetails() {
   }, [searchFilters]);
 
   const genaratePdf = (e) => {
-    // e.stopPropagation();
-    // console.log("testing");
     toPDF();
   };
 
@@ -282,82 +285,78 @@ function HeaderDetails() {
       >
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
-            
-          <div className="bred-cram-main d-flex align-items-center" onClick={goBack}>
-  <>
-    {location?.state?.search === "Profile" && (
-      <FaUser
-        style={{
-          fontSize: "16px",
-          marginRight: "5px",
-          color: "#45669d",
-          display: "inline-flex",
-          alignSelf: "center", // Align icon vertically
-        }}
-      />
-    )}
-    {location?.state?.search === "Cases" && (
-      <FaListCheck
-        style={{
-          fontSize: "16px",
-          marginRight: "5px",
-          color: "#45669d",
-          display: "inline-flex",
-          alignSelf: "center",
-        }}
-      />
-    )}
-    <p>{location?.state?.search}</p>
-    <p>&nbsp;/&nbsp;{iconFtn()}&nbsp;</p>
 
-    {location?.pathname === "/ClaimsById" && (
-      <FaMoneyCheckAlt
-        style={{
-          fontSize: "16px",
-          marginRight: "5px",
-          color: "#45669d",
-          display: "inline-flex",
-          alignSelf: "center",
-        }}
-      />
-    )}
-    {location?.pathname === "/Details" && (
-      <FaUser
-        style={{
-          fontSize: "16px",
-          marginRight: "5px",
-          color: "#45669d",
-          display: "inline-flex",
-          alignSelf: "center",
-        }}
-      />
-    )}
-    {location?.pathname === "/CasesById" && (
-      <FaListCheck
-        style={{
-          fontSize: "16px",
-          marginRight: "5px",
-          color: "#45669d",
-          display: "inline-flex",
-          alignSelf: "center",
-        }}
-      />
-    )}
+            <div className="bred-cram-main d-flex align-items-center" onClick={goBack}>
+              <>
+                {location?.state?.search === "Profile" && (
+                  <FaUser
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center", // Align icon vertically
+                    }}
+                  />
+                )}
+                {location?.state?.search === "Cases" && (
+                  <FaListCheck
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                )}
+                <p>{location?.state?.search}</p>
+                <p>&nbsp;/&nbsp;{iconFtn()}&nbsp;</p>
 
-    <p>{formattedNav}</p>
+                {location?.pathname === "/ClaimsById" && (
+                  <FaMoneyCheckAlt
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                )}
+                {location?.pathname === "/Details" && (
+                  <FaUser
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                )}
+                {location?.pathname === "/CasesById" && (
+                  <FaListCheck
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                )}
 
-    {location?.state?.code && (
-      <>
-        <p>&nbsp;/&nbsp;</p>
-        <p>{location.state.code}</p>
-      </>
-    )}
-  </>
-</div>
+                <p>{formattedNav}</p>
 
-
-
-            
+                {location?.state?.code && (
+                  <>
+                    <p>&nbsp;/&nbsp;</p>
+                    <p>{location.state.code}</p>
+                  </>
+                )}
+              </>
+            </div>
             {(location?.pathname == "/Details"
               || location?.pathname == "/CasesById"
               || location?.pathname == "/AddNewProfile"
@@ -377,13 +376,13 @@ function HeaderDetails() {
                   <Button onClick={goBack} className="me-1 gray-btn butn">
                     Print
                   </Button>
-                    <Button className="me-1 gray-btn butn" >
+                  <Button className="me-1 gray-btn butn" >
                     <FaChevronDown className="deatil-header-icon" />
-                    </Button>
-                  <p className="lbl me-1" style={{fontWeight:"500",fontSize:"14px",marginLeft:"4px"}}>1 of 12</p>
-                    <Button className="me-1 gray-btn butn" style={{marginLeft:"8px"}}>
+                  </Button>
+                  <p className="lbl me-1" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>1 of 12</p>
+                  <Button className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
                     <FaChevronUp className="deatil-header-icon" />
-                    </Button>
+                  </Button>
 
                 </div>
               )}
@@ -395,6 +394,7 @@ function HeaderDetails() {
             location?.pathname == "/CasesSummary"
             || location?.pathname == "/Transfers"
             || location?.pathname == "/CorrespondencesSummary"
+            || location?.pathname == "/Reports"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -405,7 +405,7 @@ function HeaderDetails() {
                   </h2>
                   <div className="d-flex">
                     <Button onClick={() => {
-                      if (nav == "/Details" || nav =="/Summary") {
+                      if (nav == "/Details" || nav == "/Summary") {
 
                         navigate("/AddNewProfile")
                       } else if (nav == "/ClaimSummary") {
@@ -485,10 +485,10 @@ function HeaderDetails() {
                     </div>
 
                     <div>
-                      <Link className="link" style={{ color: "#333333" }}>
+                      <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={()=>resetFilters()}>
                         Reset
-                      </Link>
-                      <Link className="link">Save fliter</Link>
+                      </Button>
+                      <Button className="transparent bordr-less" onClick={showHidSavModal} >Save fliter</Button>
                     </div>
                   </Row>
                 </div>
@@ -552,10 +552,20 @@ function HeaderDetails() {
         </Row>
         <Row style={{ marginBottom: "20px" }} >
           <Col span={24}>
-
           </Col>
         </Row>
       </MyDrawer>
+   
+      <Modal footer={<><Button onClick={async()=>{
+         try {
+          await isSaveChng(true); // Wait for this to complete first
+          handleSave(ReportName); // Then call handleSave
+      } catch (error) {
+          console.error("Error saving changes:", error);
+      }
+        }}>Save</Button ><Button onClick={showHidSavModal}>Close</Button></>} title="Report" open={isSaveModalOpen} onOk={showHidSavModal} onCancel={showHidSavModal}>
+        <Input onChange={(e)=>setReportName(e.target.value)} value={ReportName} placeholder="Enter Name For Report" />
+      </Modal>
     </div>
   );
 }

@@ -17,7 +17,7 @@ function Header() {
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("")
   const navigate = useNavigate();
-  const { filterByRegNo,topSearchData, ProfileDetails } = useTableColumns()
+  const { filterByRegNo,topSearchData, ProfileDetails, ReportsTitle } = useTableColumns()
   const location = useLocation();
   const pathname = location?.pathname
   const navLinks = [
@@ -86,7 +86,7 @@ function Header() {
     {
       key: "",
       label: (
-        <Link className="link" to="Report2" state={{ search: "Reports" }}>
+        <Link className="link" to="Reports" state={{ search: "Reports" }}>
           Report 2
         </Link>
       ),
@@ -110,6 +110,18 @@ function Header() {
       ),
     },
   ];
+  let arr =[]
+  const reportLink = ReportsTitle?.map((i, index) => {
+    return {
+        key: index,
+        label: (
+            <Link className="link" to="Reports" state={{ search: "Reports", screen:i }}>
+                {i}
+            </Link>
+        ),
+    };
+}) || [];
+console.log(reportLink,"reportLink")
   return (
     <div className="Header-border">
       <div className=" d-flex justify-content-between align-items-baseline">
@@ -153,7 +165,7 @@ function Header() {
                 <Link className="links" to="Transfers" state={{ search: "" }}>Transfer Requests</Link>
               </li>
               <li className={`${(pathname == "/Report2" || pathname == "/Report1") ? "activ-link" : ""} nav-item nav-links-container `}>
-                <MyDrowpDown title={"Reports"} items={ReportsnavLinks} />
+                <MyDrowpDown title={"Reports"} items={reportLink} />
               </li>
               <li className={`${pathname == "/Configuratin" ? "activ-link" : ""} nav-item nav-links-container `} >
                 <Link className="links" to="Configuratin" state={{ search: "" }}>Configurations</Link>

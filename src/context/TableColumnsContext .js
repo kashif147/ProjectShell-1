@@ -282,15 +282,26 @@ export const TableColumnsProvider = ({ children }) => {
       lookups: { Male: false, Female: false, Other: false },
     },
   ]);
+  const [report, setreport] = useState(null)
+  const [isSave, setisSave] = useState(false)
+  const isSaveChng = (value) =>{
+    setisSave(value)
+  }
+const handleSave= (name)=>{
+  if(isSave==true){
+   return setreport((prevReport) => ({
+      ...prevReport, 
+      [name]: searchFilters 
+    }));
+  }
+}
   const updateCompByTitleColumn = (titleColumn, newComp) => {
-    // Update the searchFilters state by mapping over the current array
     setsearchFilters((prevFilters) =>
       prevFilters.map((filter) => {
-        // If the titleColumn matches, update the 'comp' value
         if (filter.titleColumn === titleColumn) {
-          return { ...filter, comp: newComp }; // Spread the filter and update 'comp'
+          return { ...filter, comp: newComp }; 
         }
-        return filter; // Return the filter unchanged if titleColumn doesn't match
+        return filter; 
       })
     );
   };
@@ -471,10 +482,7 @@ export const TableColumnsProvider = ({ children }) => {
       return yy?.every(filter => {
         const { titleColumn, lookups, comp } = filter;
         const itemValue = item[titleColumn.toLowerCase()]; // Adjust case to match your data
-
-        // Check the condition based on 'comp'
         if (comp === '=') {
-          // Return true if the itemValue is in lookups
           return lookups[itemValue] === true;
         } else if (comp === '!=') {
           // Return true if the itemValue is not in lookups
@@ -503,7 +511,26 @@ export const TableColumnsProvider = ({ children }) => {
     data = gridData?.filter(item => item.regNo === regNo);
     await getProfile(data)
   }
- 
+  const resetFilters = () => {
+    const updatedFilters = searchFilters.map(filter => ({
+      ...filter,
+      comp: '!=', 
+      lookups: Object.keys(filter.lookups).reduce((acc, key) => {
+        acc[key] = false; 
+        return acc;
+      }, {})
+    }));
+    setsearchFilters(updatedFilters); 
+  };
+  
+function extractMainKeys() {
+  if (report == null || typeof report !== 'object') {
+    return []; 
+  }
+  
+  return Object.keys(report);
+}
+  const ReportsTitle = extractMainKeys();
   return (
     <TableColumnsContext.Provider
       value={{
@@ -526,7 +553,12 @@ export const TableColumnsProvider = ({ children }) => {
         handlClaimDrawerChng,
         claimsDrawer,
         filterByRegNo,
-        topSearchData
+        topSearchData,
+        resetFilters,
+        isSaveChng,
+        handleSave,
+        report,
+        ReportsTitle
       }}
     >
       {children}

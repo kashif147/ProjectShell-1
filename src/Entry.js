@@ -26,6 +26,7 @@ import AddNewProfile from "./pages/Profiles/AddNewProfile";
 import AddClaims from "./pages/Claims/AddClaims";
 import Login from "./pages/auth/Login";
 import LandingPage from "./component/msft/LandingPage";
+import Reports from "./pages/repots/Reports";
 
 function Entry() {
   const location = useLocation();
@@ -90,6 +91,7 @@ function Entry() {
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
               <Route path="/" element={<Login />} />
               <Route path="LandingPage" element={<LandingPage />} /> 
+              <Route path="Reports" element={<Reports />} />
               
             </Routes>
           </div>

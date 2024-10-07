@@ -160,7 +160,6 @@ function CasesSummary() {
   
     return (
       <div className="">
-   
       <TableComponent dataSource={gridData} screenName="Cases" redirect="/CasesDetails"  />
     </div>
     );

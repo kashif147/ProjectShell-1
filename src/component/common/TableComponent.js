@@ -1,6 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Table, Pagination, Space, Form, Input, Checkbox } from "antd";
-// import { useTableColumns } from '../../context/TableColumnsContext';
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
@@ -29,8 +28,6 @@ const EditableContext = React.createContext(null);
 
 const DraggableHeaderCell = ({ id, style, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
-  // const dragState = useContext(DragIndexContext);
-
   const customStyle = {
     cursor: "move",
     border: `2px solid green`,
@@ -44,7 +41,6 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
       }
       : {}),
   };
-
   return (
     <th
       className="custom-header"
@@ -264,7 +260,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     setCurrentPageData(dataSource.slice(startIndex, endIndex));
-  }, [currentPage, dataSource]); // Runs whenever currentPage or gridData changes
+  }, [currentPage, dataSource]); 
 
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
@@ -344,7 +340,6 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     return <td {...restProps}>{childNode}</td>;
   };
   const handleSave = (row) => {
-    // console.log({ currentPageData });
     const newData = [...dataSource];
     const index = newData.findIndex((item) => row.key === item.key);
     const item = newData[index];

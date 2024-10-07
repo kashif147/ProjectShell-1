@@ -10,16 +10,33 @@
   --btn-hover: #dcdfe4;
   --gray:  rgba(9, 30, 66, 0.04); 
 }
+.bordr-less{
+  border: none;
+  box-shadow: none; 
+  color: var(--mainBlue) !important;
+}
+.bordr-less :hover{
+background: transparent !important;
+}
+.bordr-less .ant-btn:active {
+  box-shadow: none; /* Remove the shadow on click */
+  outline: none; /* Optionally remove outline */
+  background:transparent !important;
+}
 
-
-/* Global focus styles */
+/* Also target the focus state when a button is clicked and focused */
+.bordr-less .ant-btn:focus {
+  box-shadow: none; /* Remove shadow on focus */
+  outline: none;
+  background: transparent !important;
+}
 .ant-input:focus, 
 .ant-textarea:focus, 
 .ant-select:focus
 .ant-btn:focus{
-  background-color: #edf1fd; /* Light blue background on focus */
-  border-color: #c97a2f;     /*Change border color on focus */
-  outline: none;             /*Remove the default outline*/
+  background-color: #edf1fd; 
+  border-color: #c97a2f;     
+  outline: none;             
 }
 
 
@@ -412,10 +429,7 @@ body {
 .ant-input-outlined {
   border-radius: 3px !important;
 }
-.ant-btn:hover {
-  background-color: var(--btn-hover) !important;
-  color: var(--labelColor) !important;
-}
+
 .title {
   /* margin-bottom: 8px !important; */
 }
