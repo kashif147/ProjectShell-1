@@ -217,9 +217,22 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             {text}
           </span>
         ),
-      sorter:
+        sorter:
         col.title === "Full Name"
-          ? (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex])
+          ? {
+              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 3,
+            }
+          : col.title === "Station"
+          ? {
+              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 2,
+            }
+            :col.title === "Duty"?
+            {
+              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 1,
+            }
           : undefined,
       sortDirections: ["ascend", "descend"],
       filters: col.title === "Station" ? [

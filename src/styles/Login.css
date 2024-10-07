@@ -4,15 +4,15 @@
     font-family: Arial, sans-serif;
     background-color: #f5f5f5;
   } */
-   body {
+   /* body {
     margin: 0;
     padding: 0;
     display: flex;
     justify-content: center;
     align-items: center;
     height: 100vh;
-    background-color: #f0f1f1; /* Light gray background */
-} 
+    background-color: #f0f1f1; 
+}  */
 .login-wrapper {
     display: flex;
     flex-direction: column;
