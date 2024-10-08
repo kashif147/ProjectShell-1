@@ -96,7 +96,7 @@ function ProfileHeader() {
                 </div>
             </div>
             <Divider type='horizontal' />
-            <div style={{
+            <div className='justify-content-center' style={{
                 display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',
             }}>
                 <div>Member (01/01/2020 - 11/10/2015)</div>

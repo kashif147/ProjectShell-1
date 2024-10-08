@@ -50,7 +50,7 @@ const Login = () => {
     };
     return (
 
-        <main role="main" className="" >
+        <main role="main" className="login-body" >
 
             <div className="login-wrapper main-container" >
                 <div>
