@@ -17,9 +17,10 @@ function Header() {
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("")
   const navigate = useNavigate();
-  const { filterByRegNo,topSearchData, ProfileDetails, ReportsTitle } = useTableColumns()
+  const { filterByRegNo, topSearchData, ProfileDetails, ReportsTitle } = useTableColumns()
   const location = useLocation();
   const pathname = location?.pathname
+  const profile = Array.isArray(ProfileDetails) && ProfileDetails.length > 0 ? ProfileDetails[0] : null;
   const navLinks = [
     {
       key: "1",
@@ -110,18 +111,18 @@ function Header() {
       ),
     },
   ];
-  let arr =[]
+  let arr = []
   const reportLink = ReportsTitle?.map((i, index) => {
     return {
-        key: index,
-        label: (
-            <Link className="link" to="Reports" state={{ search: "Reports", screen:i }}>
-                {i}
-            </Link>
-        ),
+      key: index,
+      label: (
+        <Link className="link" to="Reports" state={{ search: "Reports", screen: i }}>
+          {i}
+        </Link>
+      ),
     };
-}) || [];
-console.log(reportLink,"reportLink")
+  }) || [];
+
   return (
     <div className="Header-border">
       <div className=" d-flex justify-content-between align-items-baseline">
@@ -174,15 +175,16 @@ console.log(reportLink,"reportLink")
           </div>
         </nav>
         <div className="input-container d-flex">
-          <Input placeholder="Reg No" onChange={(e) => setregNo(e.target.value)} onPressEnter={async()=>{
-           filterByRegNo(regNo)
-           await  navigate("/Details", {
-            state: {
-              name:ProfileDetails[0]?.fullName,
-              code: ProfileDetails[0]?.regNo,
-              search: 'Profile',
-            }})
-            }} className=" top-search" style={{ marginRight: "1rem" }} />
+          <Input placeholder="Reg No" onChange={(e) => setregNo(e.target.value)} onPressEnter={async () => {
+            filterByRegNo(regNo)
+            await navigate("/Details", {
+              state: {
+                name: profile?.fullName,
+                code: profile?.regNo,
+                search: 'Profile',
+              }
+            })
+          }} className=" top-search" style={{ marginRight: "1rem" }} />
           <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />
           <HiMiniQuestionMarkCircle
             style={{ fontSize: "30px", marginRight: "1rem" }}

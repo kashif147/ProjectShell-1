@@ -559,7 +559,9 @@ console.log(ReportsTitle,"report")
       <Modal footer={<><Button onClick={async()=>{
          try {
           await isSaveChng(true); // Wait for this to complete first
-          handleSave(ReportName); // Then call handleSave
+          await handleSave(ReportName);
+          showHidSavModal()
+          // Then call handleSave
       } catch (error) {
           console.error("Error saving changes:", error);
       }

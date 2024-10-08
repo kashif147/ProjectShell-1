@@ -287,14 +287,13 @@ export const TableColumnsProvider = ({ children }) => {
   const isSaveChng = (value) =>{
     setisSave(value)
   }
-const handleSave= (name)=>{
-  if(isSave==true){
-   return setreport((prevReport) => ({
-      ...prevReport, 
-      [name]: searchFilters 
+  const handleSave = (name) => {
+    return setreport((prevReport) => ({
+      ...prevReport,
+      [name]: searchFilters,
     }));
-  }
-}
+  };
+
   const updateCompByTitleColumn = (titleColumn, newComp) => {
     setsearchFilters((prevFilters) =>
       prevFilters.map((filter) => {
@@ -506,6 +505,7 @@ const handleSave= (name)=>{
     setProfileDetails(row)
   }
   const [topSearchData, settopSearchData] = useState()
+  const [ReportsTitle, setReportsTitle] = useState([]);
   async function filterByRegNo(regNo) {
     let data;
     data = gridData?.filter(item => item.regNo === regNo);
@@ -530,7 +530,10 @@ function extractMainKeys() {
   
   return Object.keys(report);
 }
-  const ReportsTitle = extractMainKeys();
+useEffect(() => {
+  setReportsTitle(extractMainKeys());
+}, [report]);
+
   return (
     <TableColumnsContext.Provider
       value={{

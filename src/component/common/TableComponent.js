@@ -389,6 +389,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             columns={editableColumns}
             dataSource={currentPageData}
             pagination={false}
+            style={{ tableLayout: 'fixed' }} 
             bordered
             virtual
             scroll={{ x: "100%", y: 350 }}
