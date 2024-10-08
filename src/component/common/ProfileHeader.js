@@ -7,7 +7,7 @@ import { Repeat } from '@mui/icons-material';
 import '../../styles/ProfileHeader.css'
 function ProfileHeader() {
     const [imageUrl, setImageUrl] = useState("");
-    const {ProfileDetails} = useTableColumns()
+    const { ProfileDetails } = useTableColumns()
     const [loading, setLoading] = useState(false);
     const location = useLocation();
 
@@ -84,20 +84,32 @@ function ProfileHeader() {
                     display: 'flex',
                 }}>
                 </div>
-                <div className='d-flex  justify-content-center flex-column'>
-                    <div className="centered-text-large">{ProfileDetails[0]?.regNo}</div>
-                    <div className="centered-text">{ProfileDetails[0]?.fullName}</div>
-                    <div className="centered-text">20/06/1979 (36 Y)</div>
-                    <div className="centered-text">Married</div>
-                    <div className="centered-text-deceased">11/10/2015 (Deceased)</div>
-                    <div className="centered-text">Cases:</div>
-                    <div className="centered-text">Claims:</div>
+                {
+                    ProfileDetails?.map((i) => (
 
-                </div>
+
+                        <div className='d-flex  justify-content-center flex-column'>
+                            <div className="centered-text-large">{i?.regNo}</div>
+                            <div className="centered-text">{i?.fullName}</div>
+                            <div className="centered-text">20/06/1979 (36 Y)</div>
+                            <div className="centered-text">Married</div>
+                            <div className="centered-text-deceased">11/10/2015 (Deceased)</div>
+                            <div className="centered-text">Cases:</div>
+                            <div className="centered-text">Claims:</div>
+
+                        </div>
+                    ))
+                }
             </div>
             <Divider type='horizontal' />
             <div style={{
-                display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px', color: '#6B7AAB',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center', 
+                textAlign: 'center', 
+                fontWeight: 'bold',
+                fontSize: '14px',
+                color: '#6B7AAB',
             }}>
                 <div>Member (01/01/2020 - 11/10/2015)</div>
                 <div>Graduated on: 01/09/2007</div>
@@ -116,22 +128,22 @@ function ProfileHeader() {
                 <div>Life Assurance (Member):</div>
                 <div>Life Assurance (Partner):</div>
                 {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
-                   <span style={{ marginRight: '45px' }}>Member</span>
-                   <span>Partner</span>
-                </div> */}
+                    <span style={{ marginRight: '45px' }}>Member</span>
+                    <span>Partner</span>
+                    </div> */}
                 <br />
                 <div>Special Illness (Member):</div>
                 {/* <div>Special Illness (Partner):</div> */}
 
                 {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
-                    <span style={{ marginRight: '45px' }}>Member</span>
-                    <span>Partner</span>
-                </div> */}
+                        <span style={{ marginRight: '45px' }}>Member</span>
+                        <span>Partner</span>
+                    </div> */}
                 <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px' }}>
                     <br />
                     {/* <div>Illness & Injury</div>
-                    <div>Legal Assistance</div>
-                    <div>Salary Protection</div> */}
+                        <div>Legal Assistance</div>
+                        <div>Salary Protection</div> */}
                 </div>
             </div>
         </div>

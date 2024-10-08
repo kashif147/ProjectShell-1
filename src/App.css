@@ -38,7 +38,10 @@ background: transparent !important;
   border-color: #c97a2f;     
   outline: none;             
 }
-
+.ant-table-cell-fix-left {
+  background-color: white; /* Ensures fixed column has background */
+  z-index: 2; /* Ensures proper stacking */
+}
 
 input::placeholder,
 textarea::placeholder {
