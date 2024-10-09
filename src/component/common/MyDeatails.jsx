@@ -44,17 +44,15 @@ const beforeUpload = (file) => {
 
 
 function MyDeatails() {
-  const { ProfileDetails, topSearchData } = useTableColumns()
+  const { ProfileDetails, topSearchData,rowIndex, } = useTableColumns()
   const [InfData, setInfData] = useState()
-  console.log(InfData, "88")
-  const location = useLocation();
+  const location = useLocation(); 
   const profileData = location?.state
   const [activeTab, setActiveTab] = useState("1");
   const [isChecked, setIsChecked] = useState(false);
   const [loading, setLoading] = useState(false);
   const [imageUrl, setImageUrl] = useState("");
   const [value, setValue] = useState(1);
-  // console.log(imageUrl, "imageUrl");
   const [isTransfer, setisTransfer] = useState(false);
   const [isRank, setisRank] = useState(false);
   const [isDuty, setisDuty] = useState(false);
@@ -147,7 +145,7 @@ function MyDeatails() {
       };
       setInfData(profils);
     }
-   
+
   }, [ProfileDetails]);
   useEffect(() => {
     return () => {

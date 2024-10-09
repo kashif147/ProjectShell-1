@@ -32,20 +32,15 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     Division: 120,
     Address: 220,
   };
-  // console.log(checkBoxData, "checkBoxData");
+
   const getColumnWidth = (key) => widthMapping[key] || 120;
 
   console.log(columns, "update");
   const searchInFilters = (query) => {
     console.log({columnsForFilter})
     console.log({query}, query.trim().toLowerCase())
-    // Trim and convert the query to lowercase for a case-insensitive search
     const normalizedQuery = query.trim().toLowerCase();
-  
-    // Filter the searchFilters array
-    // const filteredResults = columnsForFilter?.filter((item) =>
-    //   item.title.toLowerCase().includes(normalizedQuery)
-    // );
+
     const filteredResults = columnsForFilter?.map((item) =>
       {
         // Create a new object based on the condition

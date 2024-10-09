@@ -8,6 +8,7 @@ import { useTableColumns } from "../../context/TableColumnsContext "; // Import 
 import ExportCSV from "./ExportCSV";
 import ExportPDF from "./ExportPDF";
 import { MdOutlineLocalPrintshop } from "react-icons/md";
+import { useLocation } from "react-router-dom";
 
 
 
@@ -20,20 +21,21 @@ function SimpleMenu({
   isBtn = false,
   isTable = false,
   categoryKey = "gender",
-   // Key to save checkbox data in context, e.g., 'gender'
 }) {
   const [checkboxes, setCheckboxes] = useState([]);
-
   const [selectedValues, setSelectedValues] = useState({
     checkboxes: {},
     searchValue: "",
   });
-
+  const location = useLocation
+  const screenName = location?.state?.search
   const [ddSearch, setddSearch] = useState("")
-  const { updateState, state, updateSelectedTitles, searchFilters, gridData,  } = useTableColumns();
+  const { updateSelectedTitles, searchFilters, gridData,globleFilters } = useTableColumns();
 
   useEffect(() => {
-    searchInFilters(ddSearch);
+    if(ddSearch!=""){
+      searchInFilters(ddSearch);
+    }
   }, [ddSearch]);
   const updateSelectedTitlesA = (title, isChecked) => {
     setCheckboxes((prevProfile) => {
@@ -45,21 +47,16 @@ function SimpleMenu({
       });
     });
   };
-  console.log(searchFilters, "searchFilters")
+ useEffect(()=>{
+  setCheckboxes(globleFilters)
+ },[globleFilters])
   const searchInFilters = (query) => {
     const normalizedQuery = query.trim().toLowerCase();
-
-    // Filter the searchFilters array
-    const filteredResults = searchFilters.filter((item) =>
+    const filteredResults = searchFilters[screenName]?.filter((item) =>
       item.titleColumn.toLowerCase().includes(normalizedQuery)
     );
-
-    console.log(filteredResults, "//"); // Log filtered results
-
-    // Update the searchFilters state with the filtered results
     setCheckboxes(filteredResults);
   };
-
   const menu = (
     <Menu>
       {isCheckBox && (
@@ -85,7 +82,7 @@ function SimpleMenu({
                   updateSelectedTitles(item?.titleColumn, e.target.checked);
                   updateSelectedTitlesA(item?.titleColumn, e.target.checked)
                 }}
-                checked={item?.isSearch}
+                checked={item?.isCheck}
               >
                 {item?.titleColumn}
               </Checkbox>
@@ -142,7 +139,7 @@ function SimpleMenu({
                   marginRight: "10px",
                   color: "#45669d",
                 }} />
-         Print Label
+                Print Label
               </div>
             ) : key === "Export PDF" ? (
               <div className="d-flex align-items-baseline">
@@ -165,7 +162,7 @@ function SimpleMenu({
       placement="bottomLeft"
       overlayStyle={{ width: 200, padding: "0px" }}
     >
-     <Button className={` ${vertical==true ? "gray-btn butn" : "transparent-bg p-0"}`}>{title}</Button>
+      <Button className={` ${vertical == true ? "gray-btn butn" : "transparent-bg p-0"}`}>{title}</Button>
 
     </Dropdown>
   );

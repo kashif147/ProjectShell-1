@@ -13,6 +13,7 @@ import { DownOutlined } from "@ant-design/icons";
 import MySelect from "./MySelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { emphasize } from "@mui/material";
+import { useLocation } from "react-router-dom";
 
 const JiraLikeMenu = ({ title, data, isSimple = false }) => {
   
@@ -31,6 +32,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
     checkboxes: data || {},
   };
   console.log(menuState, "menuState");
+  const Location = useLocation()
   const [trueKeys, setTrueKeys] = useState([]);
   const [trueKeys1, setTrueKeys1] = useState([]);
 
@@ -65,8 +67,9 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
       )
       .map((filter) => ({ [filter.titleColumn]: true }));
   };
+  const screenName= Location?.state?.search
   const getTrueLookupsArrayByTitle = (titleColumn) => {
-    const item = searchFilters.find((item) => item.titleColumn === titleColumn);
+    const item = searchFilters[screenName]?.find((item) => item.titleColumn === titleColumn);
 
     if (item && item.lookups) {
       return {
@@ -85,38 +88,15 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
     { key: "!=", label: "!= (not equal)" },
     { key: "=", label: "= (equal)" },
   ];
-  // Declare globally
   const [firstTrueLookups1, setFirstTrueLookups1] = useState(null);
-
-  // useEffect(() => {
-  //   // Declare variable to hold the result
-  //   let foundLookup = null;
-
-  //   searchFilters?.forEach((item) => {
-  //     if (item?.titleColumn === title && item?.isCheck) {
-  //       // Find the first true value in lookups
-  //       const firstTrue = Object.keys(item.lookups).find(
-  //         (key) => item.lookups[key] === true
-  //       );
-
-  //       if (firstTrue) {
-  //         foundLookup = firstTrue;
-  //       }
-  //     }
-  //   });
-
-  //   // Update the state once after the loop
-  //   setFirstTrueLookups1(foundLookup);
-  // }, [searchFilters]);
   const handleOnChange = (selectedValue) => {
-    // Now the onChange can pass both firstTrueLookups1 and the selected value
     filterGridDataFtn(title, firstTrueLookups1, selectedValue);
     handleCompChang(firstTrueLookups1, selectedValue);
   };
   const menu = (
     <Menu>
       <Menu.Item key="1">
-        {searchFilters?.map((item) => {
+        {searchFilters[screenName]?.map((item) => {
           return isSimple === false && item?.titleColumn === title ? (
             <>
               <MySelect
@@ -133,30 +113,17 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
           ) : null;
         })}
         <Row>
-          {/* {data &&
-            Object.keys(data).map((key) => (
-              <Col span={24} key={key}>
-                <Checkbox
-                  style={{ marginBottom: "8px" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    checkboxChangeFtn(key, e);
-                  }}
-                  checked={menuState.checkboxes[key]}
-                >
-                  {key}
-                </Checkbox> */}
-          {searchFilters?.find((filter) => filter.titleColumn === title)
+          {searchFilters[screenName]?.find((filter) => filter.titleColumn === title)
             ?.lookups &&
             Object.keys(
-              searchFilters.find((filter) => filter.titleColumn === title)
+              searchFilters[screenName].find((filter) => filter.titleColumn === title)
                 .lookups
             ).map((key) => (
               <Col span={24} key={key}>
                 <Checkbox
                   key={key}
                   checked={
-                    searchFilters.find((filter) => filter.titleColumn === title)
+                    searchFilters[screenName].find((filter) => filter.titleColumn === title)
                       .lookups[key]
                   }
                   onChange={(e) => {
@@ -166,7 +133,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
                       filterGridDataFtn(
                         title,
                         key,
-                        searchFilters.find(
+                        searchFilters[screenName]?.find(
                           (filter) => filter.titleColumn === title
                         )?.comp
                       );
@@ -197,7 +164,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
         {isSimple == false ? (
           <Button
             className={`${
-              searchFilters.some(
+              searchFilters[screenName]?.some(
                 (item) => item.titleColumn === title && item.isCheck
               )
                 ? "active"
@@ -211,7 +178,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
         )}
       </Dropdown>
 
-      {searchFilters
+      {searchFilters[screenName]
   ?.filter((item) => item.titleColumn === title) // Filter items where titleColumn matches the title
   .map((item) => {
     // Check if any of the lookups have a true value
@@ -229,13 +196,10 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
       />
     ) : null;
   })}
-      {searchFilters?.map((item) => {
-  // Check if the titleColumn matches and if any key in lookups is true
+      {searchFilters[screenName]?.map((item) => {
   const hasTrueLookup = Object.keys(item.lookups).some(
     (key) => item.lookups[key] === true
   );
-
-  // If titleColumn matches the title and any lookup has a true value
   if (item?.titleColumn === title && hasTrueLookup) {
     return (
       <Dropdown

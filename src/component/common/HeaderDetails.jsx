@@ -19,6 +19,7 @@ import { FaChevronUp, FaLess } from "react-icons/fa";
 import MyDrowpDown from "./MyDrowpDown";
 import { SerachFitersLookups } from "../../Data";
 import { BsSliders, BsThreeDots } from "react-icons/bs";
+import { FaAngleRight } from "react-icons/fa";
 import {
   SearchOutlined,
   LoadingOutlined,
@@ -34,6 +35,7 @@ import {
   FaArrowRightArrowLeft,
   FaCalendarDays,
   FaClipboardList,
+  FaAngleLeft 
 } from "react-icons/fa6";
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
@@ -60,14 +62,28 @@ function HeaderDetails() {
   };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave,report,isSaveChng, ReportsTitle } = useTableColumns();
-console.log(ReportsTitle,"report")
-  function filterSearchableColumns(data) {
-    settrueFilters(data.filter((column) => column.isSearch === true));
+  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave,report,isSaveChng, ReportsTitle,profilNextBtnFtn,profilPrevBtnFtn, gridData, rowIndex,globleFilters } = useTableColumns();
+
+const screenName= location?.state?.search
+
+function filterSearchableColumns(data) {
+  if (data) {
+    const filteredResults = globleFilters?.reduce((acc, i) => {
+      const filteredColumns = data.filter(
+        (column) => column?.titleColumn === i?.titleColumn && i?.isCheck
+      );
+      return [...acc, ...filteredColumns];
+    }, []);
+    
+    settrueFilters(filteredResults); // Set all filtered columns at once
   }
-  useEffect(() => {
-    filterSearchableColumns(searchFilters);
-  }, [searchFilters]);
+}
+
+useEffect(() => {
+  if (screenName && searchFilters[screenName]) {
+    filterSearchableColumns(searchFilters[screenName]);
+  }
+}, [screenName, searchFilters, globleFilters]);
 
   const genaratePdf = (e) => {
     toPDF();
@@ -376,12 +392,13 @@ console.log(ReportsTitle,"report")
                   <Button onClick={goBack} className="me-1 gray-btn butn">
                     Print
                   </Button>
-                  <Button className="me-1 gray-btn butn" >
-                    <FaChevronDown className="deatil-header-icon" />
+                  <Button disabled={rowIndex==0}  onClick={profilPrevBtnFtn} className="me-1 gray-btn butn" >
+                    <FaAngleLeft  className="deatil-header-icon" />
+               
                   </Button>
-                  <p className="lbl me-1" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>1 of 12</p>
-                  <Button className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
-                    <FaChevronUp className="deatil-header-icon" />
+                  <p className="lbl me-1" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex+1} of {gridData?.length}</p>
+                  <Button disabled={rowIndex==gridData?.length-1}  onClick={profilNextBtnFtn} className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
+                    <FaAngleRight  className="deatil-header-icon" />
                   </Button>
 
                 </div>
@@ -479,11 +496,9 @@ console.log(ReportsTitle,"report")
                             More <PlusOutlined style={{ marginLeft: "-2px" }} />
                           </>
                         }
-                        data={addMore}
                         isSearched={false}
                       />
                     </div>
-
                     <div>
                       <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={()=>resetFilters()}>
                         Reset
@@ -555,13 +570,11 @@ console.log(ReportsTitle,"report")
           </Col>
         </Row>
       </MyDrawer>
-   
       <Modal footer={<><Button onClick={async()=>{
          try {
-          await isSaveChng(true); // Wait for this to complete first
+          await isSaveChng(true); 
           await handleSave(ReportName);
           showHidSavModal()
-          // Then call handleSave
       } catch (error) {
           console.error("Error saving changes:", error);
       }

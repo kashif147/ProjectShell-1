@@ -116,7 +116,7 @@ function Header() {
     return {
       key: index,
       label: (
-        <Link className="link" to="Reports" state={{ search: "Reports", screen: i }}>
+        <Link className="link" to="Reports" state={{ search: i, screen: i }}>
           {i}
         </Link>
       ),

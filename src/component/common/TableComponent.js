@@ -54,7 +54,7 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 };
 
 const TableComponent = ({ dataSource, screenName, redirect }) => {
-  const { columns, gridData, setGridData, getProfile } = useTableColumns();
+  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -176,7 +176,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           {col.title}
         </DraggableHeaderCell>
       ),
-      render: (text, record) =>
+      render: (text, record,index) =>
         col.title === "Full Name" ? (
           <Link
             to="/Details"
@@ -185,7 +185,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               name: record?.fullName,
               code: record?.regNo,
             }}
-            onClick={() => getProfile([record])}
+            onClick={() => getProfile([record],index)}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
