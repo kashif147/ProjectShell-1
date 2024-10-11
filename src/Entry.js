@@ -27,6 +27,7 @@ import AddClaims from "./pages/Claims/AddClaims";
 import Login from "./pages/auth/Login";
 import LandingPage from "./component/msft/LandingPage";
 import Reports from "./pages/repots/Reports";
+import ProtectedRoute from "./Navigation/ProtectedRoute";
 
 function Entry() {
   const location = useLocation();
@@ -74,7 +75,9 @@ function Entry() {
           <div className="main-main">
             <Routes>
 
+              <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
+              {/* <ProtectedRoute> */}
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
               <Route path="CasesDetails" element={< CasesDetails />} />
@@ -89,10 +92,9 @@ function Entry() {
               <Route path="Transfers" element={<TransferSummary />} />
               <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
-              <Route path="/" element={<Login />} />
               <Route path="LandingPage" element={<LandingPage />} /> 
               <Route path="Reports" element={<Reports />} />
-              
+              {/* </ProtectedRoute> */}
             </Routes>
           </div>
         </div>

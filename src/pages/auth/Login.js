@@ -6,11 +6,13 @@ import { Button, Checkbox, Divider, Input } from 'antd';
 import { Link } from 'react-router-dom';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
 import { useNavigate } from 'react-router-dom';
-// import {  } from 'react-router-dom';
 import { useMsal } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
+import { useDispatch, useSelector } from 'react-redux';
+import { loginUser } from '../../features/AuthSlice';
 
 const Login = () => {
+    const dispatch = useDispatch();
     const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
     const navigate = useNavigate(); // Use the useHistory hook
 
@@ -34,19 +36,27 @@ const Login = () => {
             console.error("Error during login:", e);
         });
     };
-
+  
     const handleLogout = () => {
         instance.logoutPopup().catch(e => {
             console.error("Error during logout:", e);
         });
     };
+    const handleInputChange = (target, value) => {
+        // Destructure the name from target
+        setCredentials((prev) => ({ ...prev, [target]: value }));
+    };
 
-// function Login() {
-// function Login() {
+    const [credentials, setCredentials] = useState({ user: '', pwd: '' });
+
     const [showPassword, setShowPassword] = useState(false);
     // const navigate = useNavigate()
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
+    };
+    const handleLoginWithCredentional = (e) => {
+        e.preventDefault();
+        dispatch(loginUser(credentials));
     };
     return (
 
@@ -97,14 +107,19 @@ const Login = () => {
                     <Divider orientation="center" style={{ fontWeight: "400", fontSize: "12px" }}>Or</Divider>
                     <form className="login-form">
                         <div className="form-group">
-                            <label>Email</label>
-                            <Input className='login-form-input' />
+                            <label>Username</label>
+                            <Input className='login-form-input'   
+                            onChange={(e) => handleInputChange("user", e.target.value)} 
+                            value={credentials.user}
+                            />
                         </div>
                         <div className="mb-3 position-relative">
                             <label>Password</label>
                             <div className="d-flex align-items-center">
                                 <Input
-                                    className='login-form-input'
+                                  onChange={(e) => handleInputChange("pwd", e.target.value)}
+                                className='login-form-input'
+                                value={credentials?.pwd}
                                     type={showPassword ? 'text' : 'password'}
                                     suffix={showPassword ? < AiFillEye size={20} onClick={togglePasswordVisibility} /> : <AiFillEyeInvisible size={20} onClick={togglePasswordVisibility} />}
                                 />
@@ -118,12 +133,13 @@ const Login = () => {
 
                         </div>
                         {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
-                        <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => {
+                        <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
                               navigate("/Summary",{
                                 state: {
                                   search: "Profile"
                                 },
                               })
+                            // handleLoginWithCredentional(e)
                             }}>Log in</Button>
                     </form>
                     <p className='font-color-12 text-center'>

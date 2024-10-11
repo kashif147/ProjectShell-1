@@ -75,13 +75,13 @@ function filterSearchableColumns(data) {
       return [...acc, ...filteredColumns];
     }, []);
     
-    settrueFilters(filteredResults); // Set all filtered columns at once
+    settrueFilters(filteredResults); 
   }
 }
 
 useEffect(() => {
   if (screenName && searchFilters[screenName]) {
-    filterSearchableColumns(searchFilters[screenName]);
+  filterSearchableColumns(searchFilters[screenName]);
   }
 }, [screenName, searchFilters, globleFilters]);
 
