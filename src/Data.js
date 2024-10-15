@@ -28,7 +28,7 @@ export const tableData = [
     "dateJoined": "01/02/2045",
     "dateLeft": "N/A",
     "associateMember": "yes",
-    "status": "Member",
+    "status": "GRA Member",
     "attested": "01/01/1988",
     "graduated": "01/09/1987",
     "updated": "12/04/2022 13:29",
