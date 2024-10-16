@@ -7,3 +7,5 @@ fetch('/api/user')
   })
   .then(data => console.log(data))
   .catch(error => console.error('Fetch error:', error));
+
+export const  baseURL = 'https://node-api-app-dxecgpajapacc4gs.northeurope-01.azurewebsites.net'

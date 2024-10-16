@@ -40,6 +40,8 @@ import {
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import '../../styles/HeaderDetails.css'
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchRegions } from "../../features/RegionSlice";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -88,8 +90,13 @@ useEffect(() => {
   const genaratePdf = (e) => {
     toPDF();
   };
-
-  const gender = {
+  const dispatch = useDispatch();
+    const { regions,  } = useSelector((state) => state.regions);
+    useEffect(() => {
+      dispatch(fetchRegions());
+    }, []);
+    console.log(regions,'reg')
+    const gender = {
     Male: false,
     Female: false,
     "Not Specified": false,

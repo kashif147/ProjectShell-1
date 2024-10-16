@@ -1,26 +1,28 @@
 // authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import MyAlert from '../component/common/MyAlert';
 
-const baseURL = "https://node-api-app-dxecgpajapacc4gs.northeurope-01.azurewebsites.net"
+
+const baseURL = "https://node-api-app-dxecgpajapacc4gs.northeurope-01.azurewebsites.net/auth";
+
 export const loginUser = createAsyncThunk(
     'auth/login',
     async (credentials, { rejectWithValue }) => {
         try {
-            const response = await axios.post(`${baseURL}/auth`, credentials, {
+            const response = await axios.post(`${baseURL}`, credentials, {
                 headers: {
                     'Content-Type': 'application/json',
                 },
             });
 
-            return response.data; // Successful login data
+            return response.data; 
         } catch (error) {
-            // If the request was made but the server responded with an error
-            if (error.response) {
-                return rejectWithValue(error.response.data.message || 'Login failed');
+            if (error) {
+                console.log(error,"55")
+                return MyAlert('error','Login failed Please Try Again.')
             }
-            // If the request was made but no response was received
-            return rejectWithValue(error.message); // Handle network errors
+            return rejectWithValue(error.message); 
         }
     }
 );
@@ -32,8 +34,7 @@ const authSlice = createSlice({
         loading: false,
         error: null,
     },
-    reducers: {
-    },
+    reducers: {},
     extraReducers: (builder) => {
         builder
             .addCase(loginUser.pending, (state) => {
@@ -42,7 +43,12 @@ const authSlice = createSlice({
             })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
-                state.user = action.payload; 
+                state.user = action?.payload;
+
+                // Set the accessToken in localStorage
+                if (action.payload?.accessToken) {
+                    localStorage.setItem('token', action.payload.accessToken);
+                }
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;

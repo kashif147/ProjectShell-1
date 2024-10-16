@@ -1,4 +1,4 @@
-import { React, useState } from 'react'
+import { React, useState, useEffect } from 'react'
 import "../../styles/Login.css"
 import loginImg from "../../assets/images/img1.png"
 import { WindowsFilled } from '@ant-design/icons';
@@ -13,9 +13,11 @@ import { loginUser } from '../../features/AuthSlice';
 
 const Login = () => {
     const dispatch = useDispatch();
+    
     const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
     const navigate = useNavigate(); // Use the useHistory hook
-
+    const { loading, error, user } = useSelector((state) => state.auth);
+    console.log(user,"122")
     const handleLogin = () => {
         if (inProgress !== InteractionStatus.None) {
             // If interaction is in progress, prevent new interaction
@@ -50,14 +52,29 @@ const Login = () => {
     const [credentials, setCredentials] = useState({ user: '', pwd: '' });
 
     const [showPassword, setShowPassword] = useState(false);
-    // const navigate = useNavigate()
+    
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
+        
     };
     const handleLoginWithCredentional = (e) => {
         e.preventDefault();
         dispatch(loginUser(credentials));
+        if(user){
+            navigate('/Summary');
+            debugger
+        }
     };
+    useEffect(() => {
+        if (user) {
+            navigate('/Summary',{
+                state:{
+               search:'Profile'
+                }
+            }); 
+        }
+    }, [user]); 
+
     return (
 
         <main role="main" className="login-body" >
@@ -133,13 +150,13 @@ const Login = () => {
 
                         </div>
                         {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
-                        <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
-                              navigate("/Summary",{
-                                state: {
-                                  search: "Profile"
-                                },
-                              })
-                            // handleLoginWithCredentional(e)
+                        <Button loading={loading} style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
+                            //   navigate("/Summary",{
+                            //     state: {
+                            //       search: "Profile"
+                            //     },
+                            //   })
+                            handleLoginWithCredentional(e)
                             }}>Log in</Button>
                     </form>
                     <p className='font-color-12 text-center'>

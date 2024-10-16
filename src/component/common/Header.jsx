@@ -175,7 +175,7 @@ function Header() {
           </div>
         </nav>
         <div className="input-container d-flex">
-          <Input placeholder="Reg No" onChange={(e) => setregNo(e.target.value)} onPressEnter={async () => {
+          <Input  placeholder="Reg No" onChange={(e) => setregNo(e.target.value)} onPressEnter={async () => {
             filterByRegNo(regNo)
             await navigate("/Details", {
               state: {
@@ -184,7 +184,7 @@ function Header() {
                 search: 'Profile',
               }
             })
-          }} className=" top-search" style={{ marginRight: "1rem" }} />
+          }} className=" top-search" style={{ marginRight: "1rem", borderRadius:10 }} />
           <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />
           <HiMiniQuestionMarkCircle
             style={{ fontSize: "30px", marginRight: "1rem" }}
