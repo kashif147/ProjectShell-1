@@ -93,7 +93,7 @@
     flex-direction: row;
     width: 750px; 
     height: 600px; 
-    background-color: #EBF1FD; 
+    background-color: #E6F7FF; /*#EBF1FD;*/ 
     box-shadow: 0 0 10px #9C9DA1; 
     border-radius: 10px;
     align-items: center;
