@@ -111,7 +111,8 @@ function ProfileHeader() {
                 fontSize: '14px',
                 color: '#6B7AAB',
             }}>
-                <div>Member (01/01/2020 - 11/10/2015)</div>
+                <div>Member </div>
+                <div>(01/01/2020 - 11/10/2015)</div>
                 <div>Graduated on: 01/09/2007</div>
                 <div>Attested on: 01/01/2008</div>
                 <div>Statue</div>

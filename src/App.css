@@ -10,15 +10,6 @@
   --btn-hover: #dcdfe4;
   --gray:  rgba(9, 30, 66, 0.04); 
 }
-
-.ant-input:focus {
-  background-color: #edf1fd !important;
-  border-color:blue !important;
-}
-.ant-input:not(:placeholder-shown) {
-  background-color: #edf1fd !important;
-  border-color:blue !important;
-}
 .input-container{
    
 }
@@ -436,8 +427,8 @@ body {
   margin-bottom: 0px !important;
 }
 .main-main {
-  padding-left: 30px;
-  padding-right: 30px;
+  /* padding-left: 30px;
+  padding-right: 30px; */
   overflow: hidden;
 }
 .odd-row {
@@ -554,7 +545,7 @@ tr {
 }
 .icons {
   font-weight: bold !important;
-  font-size: 4rem !important;
+  font-size: 36px !important;
   color: var(--mainBlue) !important;
 }
 .lookups-main-continer {
@@ -756,11 +747,16 @@ tr {
 }
 .transparent-bg {
   background-color: transparent !important;
-
   border: none !important;
   box-shadow: none !important;
   outline: none !important;
 }
+.ant-input:focus {
+  background-color: #f0f8ff; /* Change this to your desired background color */
+  outline: none; /* Optional: Remove the default outline */
+  border-color:2px #40a9ff !important; /* Optional: Change border color on focus */
+}
+
 .transparent-bg:hover,
 .transparent-bg:focus,
 .transparent-bg:active {
@@ -774,18 +770,14 @@ tr {
   border: none !important;
   box-shadow: none !important;
 }
-
-
 .icon-align {
   vertical-align: baseline;
-  
 }
 .deatil-header-icon{
   font-size: 13px !important;
   font-weight: 500;
   margin-left: 4px;
 }
-
 .profile-image {
   background: transparent !important;
   padding: 5px;
@@ -800,7 +792,6 @@ tr {
   position: relative; /* Ensure that child elements can be absolutely positioned */
   cursor: pointer;
 }
-
 .upload-icon {
   position: absolute;
   font-size: 60px; 
@@ -821,18 +812,16 @@ h1 {
 }
 .sid-nav-main{
   background-color: #45669d;
-
 }
 .profil-container-main{
-  width: 23%;
+  width: 19%;
   padding-top: 20px !important;
-  padding: 10px;
+  padding: 5px;
   border: 2px solid #e0e0e0;
   border-top: none;
   margin-inline: 0px;
   background-color: #e6f8ff;
 }
-
 .ant-table-header {
   position: sticky;
   top: 0;
@@ -1059,11 +1048,11 @@ color: red !important;
     border: 1px solid #d9d9d9;
     transition: all 0.3s ease;
   }
-  .form-input:hover, 
+  /* .form-input:hover, 
   .form-input:focus {
-    border-color: #40a9ff; /* Highlight border on focus */
+    border-color: #40a9ff; 
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
-  }
+  } */
   .form-checkbox {
     margin-left: 8px;
     font-size: 14px; /* Consistent font size for the checkbox */

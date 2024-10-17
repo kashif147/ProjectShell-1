@@ -1,0 +1,35 @@
+.details-con-header {
+    background-color: #F5F5F5;
+}
+.details-con-header h2 {
+    font-size: 20px;
+    text-align: center;
+    font-weight: 600;
+    color: #C97A2F;
+    margin-top: 8px;
+    margin-bottom: 8px !important;
+}
+.detail-sub-con {
+    border: 1px solid #e0e0e0;
+    background-color: #F5F5F5;
+    padding: 15px;
+    border-bottom: none;
+}
+.lbl-inpt {
+    display: flex;
+    align-items: flex-start; /* Align label and input */
+    margin-bottom: 10px; /* Add spacing between rows */
+   
+}
+
+.lbl {
+    width: 150px; /* Fixed width for the label */
+    word-wrap: break-word; /* Allow the label to wrap if it's too long */
+    margin-right: 10px; /* Space between label and input */
+font-size: 14px;
+}
+
+.input {
+    flex-grow: 1; /* Make the input take the remaining space */
+    width: 100%; /* Ensure input stretches to fill space */
+}

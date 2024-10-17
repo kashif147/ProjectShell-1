@@ -1,0 +1,21 @@
+.history-main{
+    width: 56px;
+    background-color: var(--primary-color);
+    display: flex; 
+    justify-content: center; 
+    align-items: center; 
+    height: 100vh;
+}
+.rotated-text {
+    display: inline-block; 
+    transform: rotate(90deg); 
+    transform-origin: center; 
+    font-size: 20px; 
+    color: white; 
+    white-space: nowrap; 
+    margin: 0px !important;
+}
+.history-main-wraper{
+    background-color: var(--primary-color);
+    height: auto;
+}

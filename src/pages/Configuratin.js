@@ -3,7 +3,7 @@ import { SiActigraph } from "react-icons/si";
 import { FaRegMap } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
-import { Input, Table, Row, Col, Space, Pagination, Divider} from "antd";
+import { Input, Table, Row, Col, Space, Pagination, Divider } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
@@ -15,16 +15,17 @@ import { tableData } from "../Data";
 import { TiContacts } from "react-icons/ti";
 
 
+
 function Configuratin() {
   const [genderModal, setGenderModal] = useState(false);
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
   const [isAddProfileModal, setisAddProfileModal] = useState(false);
-  const [isRegionTypeModal,setisRegionTypeModal] = useState(false);
-  const [isAddRegionTypeModal,setisAddRegionTypeModal ] = useState(false);
-  const [isContactTypeModal,setisContactTypeModal] = useState(false);
-  const [isAddContactTypeModal,setisAddContactTypeModal ] = useState(false);
+  const [isRegionTypeModal, setisRegionTypeModal] = useState(false);
+  const [isAddRegionTypeModal, setisAddRegionTypeModal] = useState(false);
+  const [isContactTypeModal, setisContactTypeModal] = useState(false);
+  const [isAddContactTypeModal, setisAddContactTypeModal] = useState(false);
   const [partnershipModal, setPartnershipModal] = useState(false);
   const [dummyModal, setDummyModal] = useState(false);
   const [profileData, setprofileData] = useState({
@@ -41,19 +42,19 @@ function Configuratin() {
     alpha: "",
     beta: "",
     giga: "",
-  }); 
+  });
   const [RegionTypeData, setRegionTypeData] = useState({
     ReigonTypeId: "",
     ContactType: "",
-    DisplayName: "", 
-  }); 
+    DisplayName: "",
+  });
 
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
     ReigonType: "",
     DisplayName: "",
-    HasChildren: "", 
-  }); 
+    HasChildren: "",
+  });
 
   const [genderData, setGenderData] = useState({
     ShortName: "",
@@ -79,7 +80,7 @@ function Configuratin() {
     DisplayName: "",
     Alpha: "",
     Beta: ""
-  }); 
+  });
 
   const handleInputChange = (name, value) => {
     setGenderData((prevState) => ({
@@ -128,7 +129,7 @@ function Configuratin() {
       ...prevState7,
       [name7]: value7,
     }));
-  }; 
+  };
 
   const SubscriptionsColumn = [
     {
@@ -138,7 +139,7 @@ function Configuratin() {
       verticalAlign: 'center',
       width: 60,
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Display Name",
@@ -146,7 +147,7 @@ function Configuratin() {
       key: "DisplayName",
       verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Alpha",
@@ -154,7 +155,7 @@ function Configuratin() {
       key: "Alpha",
       verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
     {
       title: "Beta",
@@ -162,24 +163,24 @@ function Configuratin() {
       key: "Beta",
       verticalAlign: 'center',
       align: 'center',  // Horizontally center the content
-    render: (text) => <div style={{display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center'}}>{text}</div>,
+      render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
 
     {
       title: "Action",
       dataIndex: "DisplayName",
       render: (_, record) => (
-        <Space 
-        size="middle" 
-        className="action-buttons"
-        style={{ justifyContent: 'center', display: 'flex' }}
+        <Space
+          size="middle"
+          className="action-buttons"
+          style={{ justifyContent: 'center', display: 'flex' }}
         >
-          <FaEdit 
-          size ={16}
-          style={{ marginRight: '10px' }}
+          <FaEdit
+            size={16}
+            style={{ marginRight: '10px' }}
           />
           <AiFillDelete
-          size ={16} 
+            size={16}
           />
         </Space>
       ),
@@ -197,7 +198,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Name",
       dataIndex: "Name",
@@ -207,7 +208,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Rank",
       dataIndex: "Rank",
@@ -215,11 +216,11 @@ function Configuratin() {
       verticalAlign: 'center',
       width: 60,
       align: 'center',
-      render: (text) => 
-      <div
-       style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+      render: (text) =>
+        <div
+          style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Duty",
       dataIndex: "Duty",
@@ -229,7 +230,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Station",
       dataIndex: "Station",
@@ -239,7 +240,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "District",
       dataIndex: "District",
@@ -249,7 +250,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Division",
       dataIndex: "Division",
@@ -259,7 +260,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Address",
       dataIndex: "Address",
@@ -269,7 +270,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Status",
       dataIndex: "Status",
@@ -279,7 +280,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Updated",
       dataIndex: "Updated",
@@ -289,7 +290,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Alpha",
       dataIndex: "Alpha",
@@ -299,7 +300,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Beta",
       dataIndex: "Beta",
@@ -309,7 +310,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "Giga",
       dataIndex: "Giga",
@@ -323,17 +324,17 @@ function Configuratin() {
       title: "Action",
       dataIndex: "DisplayName",
       render: (_, record) => (
-        <Space 
-        size="middle" 
-        className="action-buttons"
-        style={{ justifyContent: 'center', display: 'flex' }}
+        <Space
+          size="middle"
+          className="action-buttons"
+          style={{ justifyContent: 'center', display: 'flex' }}
         >
-          <FaEdit 
-          size ={16}
-          style={{ marginRight: '10px' }}
+          <FaEdit
+            size={16}
+            style={{ marginRight: '10px' }}
           />
           <AiFillDelete
-          size ={16} 
+            size={16}
           />
         </Space>
       ),
@@ -341,7 +342,7 @@ function Configuratin() {
   ];
 
   const RegionTypeColumnss = [
-    
+
     {
       title: "RegionType",
       dataIndex: "RegionType",
@@ -351,7 +352,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "DisplayName",
       dataIndex: "DisplayName",
@@ -359,11 +360,11 @@ function Configuratin() {
       verticalAlign: 'center',
       width: 60,
       align: 'center',
-      render: (text) => 
-      <div
-       style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+      render: (text) =>
+        <div
+          style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "HasChildren",
       dataIndex: "HasChildren",
@@ -373,22 +374,22 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-       
+
     {
       title: "Action",
       dataIndex: "DisplayName",
       render: (_, record) => (
-        <Space 
-        size="middle" 
-        className="action-buttons"
-        style={{ justifyContent: 'center', display: 'flex' }}
+        <Space
+          size="middle"
+          className="action-buttons"
+          style={{ justifyContent: 'center', display: 'flex' }}
         >
-          <FaEdit 
-          size ={16}
-          style={{ marginRight: '10px' }}
+          <FaEdit
+            size={16}
+            style={{ marginRight: '10px' }}
           />
           <AiFillDelete
-          size ={16} 
+            size={16}
           />
         </Space>
       ),
@@ -396,7 +397,7 @@ function Configuratin() {
   ];
 
   const ContactTypeColumns = [
-    
+
     {
       title: "ContactType",
       dataIndex: "ContactType",
@@ -406,7 +407,7 @@ function Configuratin() {
       align: 'center',
       render: (text) => <div style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-    
+
     {
       title: "DisplayName",
       dataIndex: "DisplayName",
@@ -414,34 +415,34 @@ function Configuratin() {
       verticalAlign: 'center',
       width: 60,
       align: 'center',
-      render: (text) => 
-      <div
-       style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
+      render: (text) =>
+        <div
+          style={{ display: 'flex', alignItems: 'center', height: '100%', justifyContent: 'center', verticalAlign: 'center' }}>{text}</div>,
     },
-     
-       
+
+
     {
       title: "Action",
       dataIndex: "DisplayName",
       render: (_, record) => (
-        <Space 
-        size="middle" 
-        className="action-buttons"
-        style={{ justifyContent: 'center', display: 'flex' }}
+        <Space
+          size="middle"
+          className="action-buttons"
+          style={{ justifyContent: 'center', display: 'flex' }}
         >
-          <FaEdit 
-          size ={16}
-          style={{ marginRight: '10px' }}
+          <FaEdit
+            size={16}
+            style={{ marginRight: '10px' }}
           />
           <AiFillDelete
-          size ={16} 
+            size={16}
           />
         </Space>
       ),
     },
   ];
 
-  
+
 
   const column = [
     {
@@ -478,28 +479,28 @@ function Configuratin() {
       ShortName: "Probation",
       DisplayName: "Single",
       Alpha: "A163",
-      Beta:"B762",
+      Beta: "B762",
     },
     {
       key: "2",
       ShortName: "Trainee",
       DisplayName: "Trainee",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
     {
       key: "3",
       ShortName: "Associate",
       DisplayName: "Associate",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
     {
       key: "4",
       ShortName: "Retired",
       DisplayName: "Retired",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
   ];
 
@@ -509,28 +510,28 @@ function Configuratin() {
       ShortName: "Probation",
       DisplayName: "Single",
       Alpha: "A163",
-      Beta:"B762",
+      Beta: "B762",
     },
     {
       key: "2",
       ShortName: "Trainee",
       DisplayName: "Trainee",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
     {
       key: "3",
       ShortName: "Associate",
       DisplayName: "Associate",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
     {
       key: "4",
       ShortName: "Retired",
       DisplayName: "Retired",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
   ];
 
@@ -540,28 +541,28 @@ function Configuratin() {
       ShortName: "Probation",
       DisplayName: "Single",
       Alpha: "A163",
-      Beta:"B762",
+      Beta: "B762",
     },
     {
       key: "2",
       ShortName: "Trainee",
       DisplayName: "Trainee",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
     {
       key: "3",
       ShortName: "Associate",
       DisplayName: "Associate",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
     {
       key: "4",
       ShortName: "Retired",
       DisplayName: "Retired",
       Alpha: "A165",
-      Beta:"B764",
+      Beta: "B764",
     },
   ];
 
@@ -596,36 +597,36 @@ function Configuratin() {
       RegionTypeId: "1",
       RegionType: 'Province',
       DisplayName: 'Province',
-      HasChildren: "1", 
+      HasChildren: "1",
     },
     {
       key: "2",
       RegionTypeId: "2",
       RegionType: 'County',
       DisplayName: 'County',
-      HasChildren: "1", 
-    }, 
+      HasChildren: "1",
+    },
     {
       key: "3",
       RegionTypeId: "3",
       RegionType: 'Administerative Districts',
       DisplayName: 'District',
-      HasChildren: "1", 
-    }, 
+      HasChildren: "1",
+    },
     {
       key: "4",
       RegionTypeId: "4",
       RegionType: 'City',
       DisplayName: 'City',
-      HasChildren: "1", 
-    }, 
+      HasChildren: "1",
+    },
     {
       key: "5",
       RegionTypeId: "5",
       RegionType: 'PostCode',
       DisplayName: 'PostCode',
-      HasChildren: "0", 
-    }, 
+      HasChildren: "0",
+    },
   ];
 
   const ContactTy = [
@@ -633,20 +634,20 @@ function Configuratin() {
       key: "1",
       ContactTypeId: "1",
       ContactType: 'office',
-      DisplayName: 'office', 
+      DisplayName: 'office',
     },
     {
       key: "2",
       ContactTypeId: "2",
       ContactType: 'office',
-      DisplayName: 'office', 
-    }, 
+      DisplayName: 'office',
+    },
     {
       key: "3",
       ContactTypeId: "3",
       ContactType: 'office',
-      DisplayName: 'office', 
-    },  
+      DisplayName: 'office',
+    },
   ];
 
 
@@ -694,64 +695,269 @@ function Configuratin() {
 
   return (
     <div className="configuration-main">
-     <Divider orientation="left">lookups Configuration</Divider>
-
+      <h1 className="config-heading" style={{ marginLeft: '45px' }}>Configurations</h1>
+      <Divider orientation="left">lookups Configuration</Divider>
       <Row>
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={genderModalOpen}>
             <SiActigraph className="icons" />
-            <p className="lookups-title">Gender</p>
+            <p className="lookups-title">Titles</p>
           </div>
-        </Col>  
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={partnershipModalFtn}>
             <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Partnership</p>
+            <p className="lookups-title">Gender</p>
           </div>
         </Col>
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={subscriptionsModalFtn}>
             <LuCalendarDays className="icons" />
-            <p className="lookups-title">Subscriptions</p>
+            <p className="lookups-title">Marital Status</p>
           </div>
         </Col>
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={membershipModalFtn}>
             <PiUsersFourDuotone className="icons" />
-            <p className="lookups-title">Membership</p>
+            <p className="lookups-title">Counteries</p>
           </div>
 
 
 
 
         </Col>
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Dummy</p>
+            <p className="lookups-title">Provinces</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Counties</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Cities</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Post Codes</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Divisions</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Districts</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Committees</p>
+          </div>
+        </Col>
+
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Councils</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Boards</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Spoken Languages</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Project Types</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Trainings</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Ranks</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Duties</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Duties</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Schemes</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Solicitors</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Roster Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Reasons</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Contact Types</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Payment Types</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Ranks</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Duties</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Schemes</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Roster Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Reasons</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Contact Types</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Correspondence Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Document Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Claim Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Schemes</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Solicitors</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Roster Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Reasons</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Contact Types</p>
           </div>
         </Col>
       </Row>
       <Divider orientation="left">Grid Configuration</Divider>
       <Row>
-      <Col className="hover-col" span={4} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={profileModalOpenCloseFtn}>
-             <UserOutlined className="icons" />
+            <UserOutlined className="icons" />
             <p className="lookups-title">Profile</p>
           </div>
-        </Col>  
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={RegionTypeModalOpenCloseFtn}>
-            <FaRegMap   className="icons" />
+            <FaRegMap className="icons" />
             <p className="lookups-title">Reigon type</p>
           </div>
-        </Col>  
-        <Col className="hover-col" span={4} style={styles.centeredCol}>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-          <TiContacts    className="icons" />
+            <TiContacts className="icons" />
             <p className="lookups-title">Contact Type</p>
           </div>
-        </Col> 
+        </Col>
       </Row>
 
 
@@ -795,7 +1001,7 @@ function Configuratin() {
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
         />
-        
+
         <Table
           columns={column}
           pagination={false}
@@ -803,7 +1009,7 @@ function Configuratin() {
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
-            
+
           }
           footer={() => (
             <div className="d-flex justify-content-between">
@@ -944,8 +1150,8 @@ function Configuratin() {
         add={AddpartnershipFtn}
         title="Partnership"
       >
- 
- <div className="input-group">
+
+        <div className="input-group">
           <p className="inpt-lbl">Short Name</p>
           <Input
             placeholder="Please enter short name"
@@ -1063,7 +1269,7 @@ function Configuratin() {
         add={AddSubscriptionsFtn}
         title="Subscriptions"
       >
-          <div className="input-group">
+        <div className="input-group">
           <p className="inpt-lbl">Short Name</p>
           <Input
             placeholder="Please enter short name"
@@ -1147,7 +1353,7 @@ function Configuratin() {
       </MyDrawer>
       {/* Profile multi drawer*/}
       <MyDrawer
-      width={"1000px"}
+        width={"1000px"}
         open={isProfileModal}
         onClose={profileModalOpenCloseFtn}
         add={addprofileModalOpenCloseFtn}
@@ -1158,111 +1364,111 @@ function Configuratin() {
           open={isAddProfileModal}
           add={AddprofileModalFtn}
           onClose={addprofileModalOpenCloseFtn}
-        >  
-         <div className="input-group">
-  <p className="inpt-lbl">RegNo</p>
-  <Input
-    placeholder="Please enter RegNo"
-    onChange={(e) => handleInputChange7("RegNo", e.target.value)}
-  />
-</div>
+        >
+          <div className="input-group">
+            <p className="inpt-lbl">RegNo</p>
+            <Input
+              placeholder="Please enter RegNo"
+              onChange={(e) => handleInputChange7("RegNo", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Name</p>
-  <Input
-    placeholder="Please enter Name"
-    onChange={(e) => handleInputChange7("Name", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Name</p>
+            <Input
+              placeholder="Please enter Name"
+              onChange={(e) => handleInputChange7("Name", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Rank</p>
-  <Input
-    placeholder="Please enter Rank"
-    onChange={(e) => handleInputChange7("Rank", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Rank</p>
+            <Input
+              placeholder="Please enter Rank"
+              onChange={(e) => handleInputChange7("Rank", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Duty</p>
-  <Input
-    placeholder="Please enter Duty"
-    onChange={(e) => handleInputChange7("Duty", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Duty</p>
+            <Input
+              placeholder="Please enter Duty"
+              onChange={(e) => handleInputChange7("Duty", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Station</p>
-  <Input
-    placeholder="Please enter Station"
-    onChange={(e) => handleInputChange7("Station", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Station</p>
+            <Input
+              placeholder="Please enter Station"
+              onChange={(e) => handleInputChange7("Station", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">District</p>
-  <Input
-    placeholder="Please enter District"
-    onChange={(e) => handleInputChange7("District", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">District</p>
+            <Input
+              placeholder="Please enter District"
+              onChange={(e) => handleInputChange7("District", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Division</p>
-  <Input
-    placeholder="Please enter Division"
-    onChange={(e) => handleInputChange7("Division", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Division</p>
+            <Input
+              placeholder="Please enter Division"
+              onChange={(e) => handleInputChange7("Division", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Address</p>
-  <Input
-    placeholder="Please enter Address"
-    onChange={(e) => handleInputChange7("Address", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Address</p>
+            <Input
+              placeholder="Please enter Address"
+              onChange={(e) => handleInputChange7("Address", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Status</p>
-  <Input
-    placeholder="Please enter Status"
-    onChange={(e) => handleInputChange7("Status", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Status</p>
+            <Input
+              placeholder="Please enter Status"
+              onChange={(e) => handleInputChange7("Status", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Updated</p>
-  <Input
-    placeholder="Please enter Updated"
-    onChange={(e) => handleInputChange7("Updated", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Updated</p>
+            <Input
+              placeholder="Please enter Updated"
+              onChange={(e) => handleInputChange7("Updated", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Alpha</p>
-  <Input
-    placeholder="Please enter Alpha"
-    onChange={(e) => handleInputChange7("alpha", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Alpha</p>
+            <Input
+              placeholder="Please enter Alpha"
+              onChange={(e) => handleInputChange7("alpha", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Beta</p>
-  <Input
-    placeholder="Please enter Beta"
-    onChange={(e) => handleInputChange7("beta", e.target.value)}
-  />
-</div>
+          <div className="input-group">
+            <p className="inpt-lbl">Beta</p>
+            <Input
+              placeholder="Please enter Beta"
+              onChange={(e) => handleInputChange7("beta", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Giga</p>
-  <Input
-    placeholder="Please enter Giga"
-    onChange={(e) => handleInputChange7("giga", e.target.value)}
-  />
-</div>
-         </MyDrawer>
+          <div className="input-group">
+            <p className="inpt-lbl">Giga</p>
+            <Input
+              placeholder="Please enter Giga"
+              onChange={(e) => handleInputChange7("giga", e.target.value)}
+            />
+          </div>
+        </MyDrawer>
 
 
 
@@ -1324,7 +1530,7 @@ function Configuratin() {
       {/*Reigon type Drawer */}
 
       <MyDrawer
-      width={"1000px"}
+        width={"1000px"}
         open={isRegionTypeModal}
         onClose={RegionTypeModalOpenCloseFtn}
         add={addRegionTypeModalOpenCloseFtn}
@@ -1335,23 +1541,23 @@ function Configuratin() {
           open={isAddRegionTypeModal}
           add={AddRegionTypeModalFtn}
           onClose={addRegionTypeModalOpenCloseFtn}
-        >  
-         <div className="input-group">
-  <p className="inpt-lbl">Reigon type</p>
-  <Input
-    placeholder="Please enter RegionType"
-    onChange={(e) => handleInputChange00("RegionType", e.target.value)}
-  />
-</div>
+        >
+          <div className="input-group">
+            <p className="inpt-lbl">Reigon type</p>
+            <Input
+              placeholder="Please enter RegionType"
+              onChange={(e) => handleInputChange00("RegionType", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Display Name</p>
-  <Input
-    placeholder="Please enter DisplayName"
-    onChange={(e) => handleInputChange00("DisplayName", e.target.value)}
-  />
-</div>
-         </MyDrawer>
+          <div className="input-group">
+            <p className="inpt-lbl">Display Name</p>
+            <Input
+              placeholder="Please enter DisplayName"
+              onChange={(e) => handleInputChange00("DisplayName", e.target.value)}
+            />
+          </div>
+        </MyDrawer>
 
 
 
@@ -1412,7 +1618,7 @@ function Configuratin() {
       {/* ContactType Modal */}
 
       <MyDrawer
-      width={"1000px"}
+        width={"1000px"}
         open={isContactTypeModal}
         onClose={ContactTypeModalOpenCloseFtn}
         add={addContactTypeModalOpenCloseFtn}
@@ -1423,23 +1629,23 @@ function Configuratin() {
           open={isAddContactTypeModal}
           add={AddContactTypeModalFtn}
           onClose={addContactTypeModalOpenCloseFtn}
-        >  
-         <div className="input-group">
-  <p className="inpt-lbl">Reigon type</p>
-  <Input
-    placeholder="Please enter ContactType"
-    onChange={(e) => handleInputChange01("ContactType", e.target.value)}
-  />
-</div>
+        >
+          <div className="input-group">
+            <p className="inpt-lbl">Reigon type</p>
+            <Input
+              placeholder="Please enter ContactType"
+              onChange={(e) => handleInputChange01("ContactType", e.target.value)}
+            />
+          </div>
 
-<div className="input-group">
-  <p className="inpt-lbl">Display Name</p>
-  <Input
-    placeholder="Please enter DisplayName"
-    onChange={(e) => handleInputChange01("DisplayName", e.target.value)}
-  />
-</div>
-         </MyDrawer>
+          <div className="input-group">
+            <p className="inpt-lbl">Display Name</p>
+            <Input
+              placeholder="Please enter DisplayName"
+              onChange={(e) => handleInputChange01("DisplayName", e.target.value)}
+            />
+          </div>
+        </MyDrawer>
 
 
 
