@@ -403,7 +403,7 @@ useEffect(() => {
                     <FaAngleLeft  className="deatil-header-icon" />
                
                   </Button>
-                  <p className="lbl me-1" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex+1} of {gridData?.length}</p>
+                  <p className="" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex+1} of {gridData?.length}</p>
                   <Button disabled={rowIndex==gridData?.length-1}  onClick={profilNextBtnFtn} className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
                     <FaAngleRight  className="deatil-header-icon" />
                   </Button>
@@ -478,8 +478,8 @@ useEffect(() => {
                       placeholder="Reg No or Surname"
                       style={{
                         width: "21%",
-                        height: "31px",
-                        border: "1px solid",
+                        // height: "31px",
+                        // border: "1px solid",
                         color: "gray",
                       }}
                       suffix={<SearchOutlined />}

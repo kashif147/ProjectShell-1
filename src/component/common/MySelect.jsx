@@ -11,9 +11,9 @@ function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimp
     style={isMenu 
       ? { width: "100%" } 
       : isSimple 
-        ? { width: "100%", border: '1px solid #333333', borderRadius:"3px" } :
+        ? { width: "100%", border: '0px solid #D9D9D9', borderRadius:"3px" } :
         width?
-        { width: width, border: '1px solid #333333', borderRadius:"3px" } 
+        { width: width, border: '0px solid #D9D9D9', borderRadius:"3px" } 
         : {}}
     onChange={onChange}
     onClick={(e) => e.stopPropagation()}

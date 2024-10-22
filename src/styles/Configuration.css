@@ -4,3 +4,27 @@
     margin-left: 45px !important;
 
 }
+.hover-col {
+    height: 100%; /* Ensure the Col takes the full height */
+  }
+  
+  .center-content {
+          /* Full height of the parent Col */
+  }
+  
+  
+  .lookups-title{
+    align-items: center;
+    text-align: center;
+  }
+  .icons{
+    display: flex;              /* Enable flexbox */
+    justify-content: center;    /* Center the icon horizontally */
+    align-items: center;        /* Center the icon vertically */
+    margin: 0 auto; 
+  }
+  .icon-container{
+    display: flex;
+    justify-content: center;
+
+  }

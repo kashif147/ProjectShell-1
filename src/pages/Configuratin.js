@@ -12,7 +12,12 @@ import { UserOutlined } from "@ant-design/icons";
 import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
 import { tableData } from "../Data";
+import { FaRegCircleQuestion } from "react-icons/fa6";
+import { HiOutlineMinusCircle } from "react-icons/hi";
+import { FiPlusCircle } from "react-icons/fi";
 import { TiContacts } from "react-icons/ti";
+// import '../styles/Configuratin.css'
+import '../styles/Configuration.css'
 
 
 
@@ -699,26 +704,36 @@ function Configuratin() {
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={genderModalOpen}>
+          <div onClick={genderModalOpen} className= "center-content">
+            <div className="icon-container">
             <SiActigraph className="icons" />
-            <p className="lookups-title">Titles</p>
+            </div>
+            <p className="lookups-title">Titles Titles</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={partnershipModalFtn}>
+          <div onClick={partnershipModalFtn} className= "center-content">
+            <div className="icon-container">
             <PiHandshakeDuotone className="icons" />
+            </div>
             <p className="lookups-title">Gender</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={subscriptionsModalFtn}>
+          <div onClick={subscriptionsModalFtn} className= "center-content">
+            <div className="icon-container">
+
             <LuCalendarDays className="icons" />
+            </div>
             <p className="lookups-title">Marital Status</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={membershipModalFtn}>
+          <div onClick={membershipModalFtn} className= "center-content">
+            <div className="icon-container">
+
             <PiUsersFourDuotone className="icons" />
+            </div>
             <p className="lookups-title">Counteries</p>
           </div>
 
@@ -848,9 +863,12 @@ function Configuratin() {
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+          <div onClick={dummyModalFtn} className= "center-content">
+            <div className="icon-container">
+
             <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Payment Types</p>
+            </div>
+            <p className="lookups-title ">Payment Types</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
@@ -959,9 +977,127 @@ function Configuratin() {
           </div>
         </Col>
       </Row>
-
-
-      {/* Gender Drawer */}
+      <Divider  orientation="left">Roles-Based</Divider>
+      <Row>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FaRegCircleQuestion  
+            className="icons" />
+            <p className="lookups-title">Roles</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <HiOutlineMinusCircle   
+            className="icons" />
+            <p className="lookups-title">Permissions</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FiPlusCircle   
+            className="icons" />
+            <p className="lookups-title">Permissions</p>
+          </div>
+        </Col>
+      </Row>
+<Divider orientation="left">Business Rules & Workflows</Divider>
+<Row>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FaRegCircleQuestion  
+            className="icons" />
+            <p className="lookups-title">Member Status</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <HiOutlineMinusCircle   
+            className="icons" />
+            <p className="lookups-title">Priorities</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FiPlusCircle   
+            className="icons" />
+            <p className="lookups-title">pause-circle</p>
+          </div>
+        </Col>
+      </Row>
+      <Divider orientation="left">Application Settings</Divider>
+      <Row>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FaRegCircleQuestion  
+            className="icons" />
+            <p className="lookups-title">Member Status</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <HiOutlineMinusCircle   
+            className="icons" />
+            <p className="lookups-title">Priorities</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FiPlusCircle   
+            className="icons" />
+            <p className="lookups-title">pause-circle</p>
+          </div>
+        </Col>
+      </Row>
+      <Divider orientation="left">Customization and Branding</Divider>
+      <Row>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FaRegCircleQuestion  
+            className="icons" />
+            <p className="lookups-title">Member Status</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <HiOutlineMinusCircle   
+            className="icons" />
+            <p className="lookups-title">Priorities</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FiPlusCircle   
+            className="icons" />
+            <p className="lookups-title">pause-circle</p>
+          </div>
+        </Col>
+      </Row>
+      <Divider orientation="left">UI/UX Display</Divider>
+      <Row>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FaRegCircleQuestion  
+            className="icons" />
+            <p className="lookups-title">Member Status</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <HiOutlineMinusCircle   
+            className="icons" />
+            <p className="lookups-title">Priorities</p>
+          </div>
+        </Col>
+      <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={ContactTypeModalOpenCloseFtn}>
+            <FiPlusCircle   
+            className="icons" />
+            <p className="lookups-title">pause-circle</p>
+          </div>
+        </Col>
+      </Row>
+   
       <MyDrawer
         open={genderModal}
         onClose={genderModalOpen}
@@ -1709,18 +1845,18 @@ function Configuratin() {
 }
 
 const styles = {
-  centeredCol: {
-    paddingTop: "0.5rem",
-    display: "flex",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  centeredCell: {
-    display: "flex",
-    alignItems: "center",
-    justifyContent: "center",
-    height: "100%",
-  },
+  // centeredCol: {
+  //   paddingTop: "0.5rem",
+  //   display: "flex",
+  //   justifyContent: "center",
+  //   alignItems: "center",
+  // },
+  // centeredCell: {
+  //   display: "flex",
+  //   alignItems: "center",
+  //   justifyContent: "center",
+  //   height: "100%",
+  // },
 };
 
 export default Configuratin;

@@ -124,7 +124,7 @@ function Header() {
   }) || [];
 
   return (
-    <div className="Header-border">
+    <div className="Header-border overflow-y-hidden">
       <div className=" d-flex justify-content-between align-items-baseline">
         <nav class="navbar navbar-expand-lg navbar-light ">
           <button

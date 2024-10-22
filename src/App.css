@@ -2,10 +2,9 @@
   --mainBlue: #215e97;
   --second: #c97a2f; /*#ad8135 */
   --FontsColor: #123c63;
-  --borderColor: #c0b9e7;
+  --borderColor: #D9D9D9;
   --fontFamily: "Roboto", sans-serif;
   --labelColor: #393b3d;
-  --borderColor: #9c9da1; 
   --table-row: #fafafa;
   --btn-hover: #dcdfe4;
   --gray:  rgba(9, 30, 66, 0.04); 
@@ -22,14 +21,12 @@
 background: transparent !important;
 }
 .bordr-less .ant-btn:active {
-  box-shadow: none; /* Remove the shadow on click */
-  outline: none; /* Optionally remove outline */
+  box-shadow: none; 
+  outline: none; 
   background:transparent !important;
 }
-
-/* Also target the focus state when a button is clicked and focused */
 .bordr-less .ant-btn:focus {
-  box-shadow: none; /* Remove shadow on focus */
+  box-shadow: none; 
   outline: none;
   background: transparent !important;
 }
@@ -38,8 +35,42 @@ background: transparent !important;
 .ant-select:focus
 .ant-btn:focus{
   background-color: #edf1fd; 
-  border-color: #c97a2f;     
+  border:1.5px solid var(--mainBlue) ;     
   outline: none;             
+}
+.star{
+  color: red;
+  font-weight: 600;
+  margin-left: 5px;
+  margin-right: 5px;
+  font-size: 14px;
+}
+.ant-radio-button-wrapper-checked{
+  background-color: var(--mainBlue) !important;
+  border-radius: 3px !important;
+  font-size: 14px;
+  
+
+}
+.star-white{
+  color: #F5F5F5;
+  font-weight: 600;
+  margin-left: 5px;
+  font-size: 14px;
+  margin-right: 5px;
+}
+.ant-checkbox-wrapper {
+  margin-right:0px !important; /* Change this value to your desired margin */
+}
+.ant-select-selector {
+  border-radius: 3px !important; /* Set your desired border-radius */
+}
+.ant-checkbox-checked .ant-checkbox-inner {
+  background-color: var( --secoundry-color) !important; /* Set your desired color */
+  border-color: var( --secoundry-color)  !important;     /* Match border to background */
+}
+.ant-checkbox-checked .ant-checkbox-inner::after {
+  border-color: white; /* Optional: Change the checkmark color */
 }
 .ant-table-cell-fix-left {
   background-color: white; /* Ensures fixed column has background */
@@ -49,10 +80,10 @@ background: transparent !important;
 input::placeholder,
 textarea::placeholder {
   color: var(--labelColor) !important;
-  opacity: 1;
   font-family: var(--fontFamily) !important;
   font-size: 12px !important;
   font-weight: bold !important;
+  opacity: 0.9;
 }
 .ant- select option:first-child {
   color: var(--labelColor) !important;
@@ -80,7 +111,7 @@ select {
   opacity: 1;
 }
 .ant-input {
-  border-color: 4px solid var(--borderColor) !important;
+  /* border-color: 1px solid var(--borderColor) !important; */
   border-radius: 3px !important;
 }
 .ant-input-focused {
@@ -96,21 +127,24 @@ select {
   font-weight: 500;
   font-size: 14px !important;
 }
+.primary-btn{
+  background-color: var(--mainBlue);
+  color: white;
+  font-weight: 400;
+}
+.secoundry-btn{
+  background-color: var(--gray);
+  color: var(--mainBlue);
+  font-weight: 400;
+}
 .ant-input-search-button {
   border-radius: 0px !important;
   border-left: none !important;
   margin-inline-end: -1px;
 }
+
 body {
   font-family: var(--fontFamily) !important;
-/* adding gobal watermark*/
-   /* background-image: url('/public/img1.png');
-    background-repeat: no-repeat;
-    background-size: 300px;
-    background-position: center center;
-    background-attachment: fixed;
-    opacity: 0.1; 
-    z-index: 0; */
 }
 
 .App-header {
@@ -547,6 +581,7 @@ tr {
   font-weight: bold !important;
   font-size: 36px !important;
   color: var(--mainBlue) !important;
+  text-align: center !important;
 }
 .lookups-main-continer {
   display: flex;
@@ -789,7 +824,7 @@ tr {
   align-items: center;
   text-align: center;
   border: 4px solid var(--mainBlue);
-  position: relative; /* Ensure that child elements can be absolutely positioned */
+  position: relative; 
   cursor: pointer;
 }
 .upload-icon {

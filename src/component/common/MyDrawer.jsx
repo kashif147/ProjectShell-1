@@ -11,10 +11,10 @@ function MyDrawer({ title, open, onClose, children, add,width=520 }) {
       open={open}
       extra={
         <Space>
-          <Button className="butn btn-border" onClick={onClose}>
+          <Button className="butn secoundry-btn" onClick={onClose}>
             Close
           </Button>
-          <Button className="gray-btn butn" onClick={add}>
+          <Button className="butn primary-btn" onClick={add}>
             Add 
           </Button>
         </Space>

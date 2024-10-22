@@ -1,35 +1,120 @@
 .details-con-header {
     background-color: #F5F5F5;
+    padding: 10px;
 }
+
 .details-con-header h2 {
     font-size: 20px;
     text-align: center;
     font-weight: 600;
     color: #C97A2F;
-    margin-top: 8px;
-    margin-bottom: 8px !important;
+    margin: 8px 0;
 }
+
 .detail-sub-con {
-    border: 1px solid #e0e0e0;
+    border-left: 1px solid #e0e0e0;
+    border-top: 1px solid #e0e0e0;
     background-color: #F5F5F5;
     padding: 15px;
-    border-bottom: none;
+    height: 1253px;
 }
+
 .lbl-inpt {
     display: flex;
-    align-items: flex-start; /* Align label and input */
-    margin-bottom: 10px; /* Add spacing between rows */
-   
+    margin-bottom: 10px;
 }
 
 .lbl {
-    width: 150px; /* Fixed width for the label */
-    word-wrap: break-word; /* Allow the label to wrap if it's too long */
-    margin-right: 10px; /* Space between label and input */
-font-size: 14px;
+    width: 160px;
+    margin-right: 10px;
+    font-size: 14px;
+    text-align: right;
+    flex-shrink: 0;
 }
 
 .input {
-    flex-grow: 1; /* Make the input take the remaining space */
-    width: 100%; /* Ensure input stretches to fill space */
+    flex-grow: 1;
 }
+
+.sub-com {
+    text-align: right;
+    font-size: 16px;
+    font-weight: 600px;
+}
+
+.subs-chkbx {
+    margin-bottom: 10px;
+    font-size: 14px !important;
+    font-weight: 400;
+    color: #393b3d;
+}
+
+.lbl-con {
+    width: 20%;
+}
+
+.ag-65 {
+    display: flex;
+    align-items: baseline;
+    height: 32.5px;
+    width: 65px;
+    padding: 0;
+    margin: 0;
+    justify-content: center;
+    align-items: center;
+
+}
+
+.ag-65-title {
+    color: var(--secoundry-color);
+    margin: 0px 5px !important;
+    white-space: nowrap;
+    font-weight: 600;
+    font-size: 14px;
+}
+
+input {
+    height: 32px !important;
+}
+
+.ant-picker {
+    height: 32px !important;
+}
+
+.checkbox-con {
+    display: flex;
+    width: 100%;
+    align-items: center;
+}
+
+.checkbox-sub {
+    background-color: white;
+    margin-right: 5px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 32px;
+    height: 32px;
+}
+.suffix-container {
+    display: flex;
+    align-items: center; 
+    background-color: #fff; 
+    height: 31.5px;
+    border: 0.5px solid #f0efef;
+    padding-left:5px ;
+    padding-right:5px ;
+  }
+  .ant-input-affix-wrapper {
+    padding: 0px;
+  }
+  .input-container-with-sup{
+    width: 100%;
+    display: flex;
+  }
+  .detail-btn{
+  height: 32px;
+  }
+  .date-picker-custom{
+    border-radius: 3px !important;
+  }

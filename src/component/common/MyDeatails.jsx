@@ -9,7 +9,11 @@ import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import '../../styles/MyDetails.css'
+import { BsThreeDots } from "react-icons/bs";
+import { IoSettingsOutline } from "react-icons/io5";
+const { TextArea } = Input;
 
+const CheckboxGroup = Checkbox.Group;
 const getBase64 = (img, callback) => {
   const reader = new FileReader();
   reader.addEventListener("load", () => callback(reader.result));
@@ -282,15 +286,18 @@ function MyDeatails() {
         <div>
           <Row gutter={20}>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Building or House</p>
+              <p className="lbl">Building or House<span className="star">*</span></p>
+              <p className="star">*</p>
               <Input />
             </Col>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Street or Road</p>
+              <p className="lbl">Street or Road<span className="star">*</span></p>
+              <p className="star">*</p>
               <Input />
             </Col>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Area or Town</p>
+              <p className="lbl">Area or Town<span className="star">*</span></p>
+              <p className="star">*</p>
               <MySelect placeholder="Select area" isSimple={true} />
             </Col>
 
@@ -298,11 +305,11 @@ function MyDeatails() {
           <Row gutter={20}>
 
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">City, County or Postcode</p>
+              <p className="lbl">City, County or Postcode<span className="star">*</span></p>
               <MySelect placeholder="Select City" isSimple={true} />
             </Col>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Eircode</p>
+              <p className="lbl">Eircode<span className="star">*</span></p>
               <Input />
             </Col>
 
@@ -321,15 +328,15 @@ function MyDeatails() {
         <div>
           <Row gutter={20}>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Building or House</p>
+              <p className="lbl">Building or House<span className="star">*</span></p>
               <Input />
             </Col>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Street or Road</p>
+              <p className="lbl">Street or Road<span className="star">*</span></p>
               <Input />
             </Col>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Area or Town</p>
+              <p className="lbl">Area or Town<span className="star">*</span></p>
               <MySelect placeholder="Select area" isSimple={true} />
             </Col>
 
@@ -337,11 +344,11 @@ function MyDeatails() {
           <Row gutter={20}>
 
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">City, County or Postcode</p>
+              <p className="lbl">City, County or Postcode<span className="star">*</span></p>
               <MySelect placeholder="Select City" isSimple={true} />
             </Col>
             <Col style={{ width: '33.00%' }}>
-              <p className="lbl">Eircode</p>
+              <p className="lbl">Eircode<span className="star">*</span></p>
               <Input />
             </Col>
 
@@ -365,7 +372,7 @@ function MyDeatails() {
     //         <div className="padding-bottom">
     //           <Row gutter={20}>
     //             <Col style={{ width: '33.00%' }}>
-    //               <p className="lbl">Garda Reg No:</p>
+    //               <p className="lbl">Garda Reg No:<span className="star">*</span></p>
     //               <Input value={InfData?.gardaRegNo} />
     //             </Col>
     //           </Row>
@@ -996,25 +1003,44 @@ function MyDeatails() {
     //   ]}
     // />
     <div className="details-container">
-      <div className="details-con-header">
+      <div className="details-con-header1">
         <Row>
           <Col span={8}>
             <div className="details-con-header"><h2>Personal Information</h2></div>
             <div className="detail-sub-con">
               <div className="lbl-inpt">
                 <p className="lbl">Title :</p>
-                <Input className="input" />
+                <p className="star">*</p>
+                <MySelect isSimple={true} placeholder='Mr.' />
               </div>
               <div className="lbl-inpt">
-                <p className="lbl lbl1">Forename :</p>
+                <p className="lbl">Forename :</p>
+                <p className="star">*</p>
                 <Input className="input" value={InfData?.forename} />
               </div>
               <div className="lbl-inpt">
-                <p className="lbl lbl1">Surname :</p>
+                <p className="lbl">Surname :</p>
+                <p className="star">*</p>
                 <Input className="input" value={InfData?.surname} />
               </div>
               <div className="lbl-inpt">
+                <p className="lbl lbl1 ">Gender :</p>
+                <p className="star-white">*</p>
+                <div className="input">
+                  <Radio.Group
+                    options={optionsWithDisabled}
+                    onChange={onChange4}
+                    value={value4}
+                    optionType="button"
+                    buttonStyle="solid"
+                  />
+
+                </div>
+              </div>
+              {/* <div className="lbl-inpt">
                 <p className="lbl">Gender :</p>
+                <div>
+                <p className="star-white">*</p>
                 <Radio.Group
                   options={optionsWithDisabled}
                   onChange={onChange4}
@@ -1022,61 +1048,105 @@ function MyDeatails() {
                   optionType="button"
                   buttonStyle="solid"
                 />
-              </div>
+                </div>
+               
+              </div> */}
               <div className="lbl-inpt">
                 <p className="lbl">Date of Birth :</p>
+                <p className="star">*</p>
                 <DatePicker
-                  style={{ width: "100%", border: "1px solid", borderRadius: "3px" }}
+                  style={{ width: "100%", borderRadius: "3px" }}
+                  value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                />
+                <div className="ag-65"><p className="ag-65-title" >46 Yrs</p></div>
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Date Aged 65 :</p>
+                <p className="star-white">*</p>
+                <DatePicker
+                  style={{ width: "100%", borderRadius: "3px" }}
                   value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
                 />
               </div>
               <div className="lbl-inpt">
-                <p className="lbl">Date Aged 65 :</p>
-                <Input className="input" value={InfData?.gardaRegNo} />
-              </div>
-              <div className="lbl-inpt">
                 <p className="lbl">Deceased :</p>
-                <Input className="input" value={InfData?.gardaRegNo} />
+                <p className="star">*</p>
+                <div className="checkbox-con">
+                  <div className="checkbox-sub">
+                    <Checkbox
+                      onChange={onCheckboxChange}
+                      checked={InfData?.isPensioner}
+                    />
+
+                  </div>
+                  <DatePicker  className="w-100 date-picker-custom" />
+                </div>
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Partnership :</p>
+                <p className="star-white">*</p>
+
                 <Input className="input" value={InfData?.gardaRegNo} />
+                <Button
+                  onClick={RankOpenCloseFtn}
+                  className="primary-btn butn ms-2 detail-btn"
+                >
+                  +
+                </Button>
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Children :</p>
+                <p className="star-white">*</p>
                 <Input className="input" value={InfData?.gardaRegNo} />
+                <Button
+                  onClick={RankOpenCloseFtn}
+                  className="primary-btn butn ms-2 detail-btn"
+                >
+                  +
+                </Button>
               </div>
               <Divider>Corresondence Details</Divider>
               <div className="lbl-inpt">
                 <p className="lbl">Email :</p>
+                <p className="star">*</p>
                 <Input className="input" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Mobile :</p>
+                <p className="star">*</p>
                 <Input className="input" placeholder="000-000-0000" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Other Contact :</p>
+                <p className="star-white">*</p>
+
                 <Input className="input" placeholder="000-000-0000" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Building or House :</p>
+                <p className="star">*</p>
                 <Input className="input" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Street or Road :</p>
+                <p className="star-white">*</p>
+
                 <Input className="input" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Area or Town :</p>
+                <p className="star-white">*</p>
+
                 <Input className="input" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">County, City or Postcode :</p>
+                <p className="star">*</p>
                 <Input className="input" />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Eircode :</p>
+                <p className="star-white">*</p>
                 <Input className="input" />
               </div>
             </div>
@@ -1085,50 +1155,65 @@ function MyDeatails() {
           <Col span={8} >
             <div className="details-con-header"><h2>Professional Details</h2></div>
             <div className="detail-sub-con">
-              <div className="lbl-inpt">
+              {/* <div className="lbl-inpt">
                 <p className="lbl">Station :</p>
-                <Input value={InfData?.gardaRegNo} />
+                <p className="star">*</p>
+                <Input value={InfData?.gardaRegNo} suffix={<BsThreeDots />} />
+                <Button className="butn primary-btn ">Tr</Button>
+              </div> */}
+               <div className="lbl-inpt">
+                <p className="lbl">Station :</p>
+                <p className="star">*</p>
+                <div style={{ display: 'flex', width: '100%' }}>
+                  <div className="input-container-with-sup">
+                    <Input
+                      placeholder="Enter text"
+                      style={{width:'100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                      suffix={<div className="suffix-container">
+                        <BsThreeDots />
+                      </div>}
+                    />
+                  </div>
+                </div>
+                <Button className="butn primary-btn detail-btn ms-2">
+Tr
+                </Button>
               </div>
               <div className="lbl-inpt">
-                <p className="lbl">Station Phone :</p>
+                <p className="lbl"></p>
+                <p className="star-white">*</p>
+                <TextArea style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Station Phone : </p>
+                <p className="star-white">*</p>
                 <Input value={InfData?.gardaRegNo} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">District :</p>
+                <p className="star">*</p>
                 <MySelect placeholder="0000-AAA-BBB" isSimple={true} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Division :</p>
+                <p className="star">*</p>
                 <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Retired :</p>
-                <div style={{ display: 'flex', width: '100%', alignItems: 'center' }}>
-                  <Checkbox
-                    onChange={onCheckboxChange}
-                    style={{
-                      flex: '1', // Set checkbox width
-                      marginRight: '5px', // Space between checkbox and input
-                      height: '33px', // Set height to match input field
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                    checked={InfData?.isPensioner}
-                  />
+                <p className="star-white">*</p>
+                <div className="checkbox-con">
+                  <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <Checkbox
+                      onChange={onCheckboxChange}
+                      checked={InfData?.isPensioner}
+                    />
+                  </div>
+
                   <Input
                     type="text"
                     placeholder="Enter something..."
-                    disabled={!InfData?.isPensioner} // Disable input when checkbox is not checked
-                    // style={{
-                    //   flex: '3', // 75% width
-                    //   padding: '6px',  // Reduced padding to match checkbox
-                    //   borderRadius: '0 5px 5px 0', // Border radius adjusted for left side
-                    //   border: "1px solid #333333",
-                    //   outline: 'none',
-                    //   height: '33px', // Set height
-                    //   backgroundColor: !InfData?.isPensioner ? 'white' : '#f0f0f0', // Change background if disabled
-                    // }}
+                    disabled={!InfData?.isPensioner}
                     value={InfData?.pensionNo}
                   />
                 </div>
@@ -1136,111 +1221,245 @@ function MyDeatails() {
 
               <div className="lbl-inpt">
                 <p className="lbl">Pension No :</p>
+                <p className="star-white">*</p>
                 <Input
                   type="text"
                   placeholder="Enter something..."
-                  disabled={!InfData?.isPensioner} // Disable input when checkbox is not checked              
+                  disabled={!InfData?.isPensioner}
                   value={InfData?.pensionNo}
                 />
 
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Rank :</p>
+                <p className="star">*</p>
                 <div style={{ display: 'flex', width: '100%' }}>
-                  <Input
-                    type="text"
-                    placeholder="Enter something..."
-                    style={{
-                      flex: '3', // 75% width
-                      padding: '6px',  // Reduced padding to match button
-                      borderRadius: '5px 0 0 5px',
-                      border: "1px solid #333333",
-                      outline: 'none',
-                      height: '33px', // Set a specific height matching the button
-                    }}
-                    value={InfData?.rank}
-                  />
-                  <Button
-                    onClick={RankOpenCloseFtn}
-                    style={{
-                      flex: '1', // 25% width
-                      marginLeft: '5px', // Add some space between input and button
-                      borderRadius: '5px', // Make button fully rounded
-                      border: '1px solid #ccc',
-                      backgroundColor: '#007BFF',
-                      color: 'white',
-                      height: '33px', // Same height as the input field
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    Rank
-                  </Button>
+                  <div className="input-container-with-sup">
+                    <Input
+                      placeholder="Enter text"
+                      style={{width:'100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                      suffix={<div className="suffix-container">
+                        <BsThreeDots />
+                      </div>}
+                    />
+                  </div>
                 </div>
               </div>
 
               <div className="lbl-inpt">
                 <p className="lbl">Duty:</p>
+                <p className="star">*</p>
                 <div style={{ display: 'flex', width: '100%' }}>
-                  <Input
-                    type="text"
-                    placeholder="Enter something..."
-                    style={{
-                      flex: '3', // 75% width
-                      padding: '6px',  // Reduced padding to match buttons
-                      borderRadius: '5px 0 0 5px',
-                      border: "1px solid #333333",
-                      outline: 'none',
-                      height: '33px', // Set a specific height matching the button
-                    }}
-                    value={InfData?.duty}
-                  />
-                  <Button
-                    onClick={DutyOpenCloseFtn}
-                    style={{
-                      flex: '1', // 25% width
-                      marginLeft: '5px', // Add some space between input and button
-                      borderRadius: '5px', // Make button fully rounded
-                      border: '1px solid #ccc',
-                      backgroundColor: '#007BFF',
-                      color: 'white',
-                      height: '33px', // Same height as the input field
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                    }}
-                  >
-                    Duty
-                  </Button>
+                  <div className="input-container-with-sup">
+                    <Input
+                      placeholder="Enter text"
+                      style={{ borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                      suffix={<div className="suffix-container">
+                        <BsThreeDots />
+                      </div>}
+                    />
+                  </div>
+                  
                 </div>
               </div>
               <Divider>Training Details</Divider>
               <div className="lbl-inpt">
                 <p className="lbl">Templemore :</p>
+                <p className="star-white">*</p>
                 <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Class  :</p>
+                <p className="star">*</p>
                 <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Attested :</p>
-                <DatePicker style={{ width: "100%", border: "1px solid", borderRadius: "3px" }} />
+                <p className="star-white">*</p>
+                <DatePicker style={{ width: "100%", borderRadius: "3px" }} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Graduation :</p>
-                <DatePicker style={{ width: "100%", border: "1px solid", borderRadius: "3px" }} />
+                <p className="star-white">*</p>
+                <DatePicker style={{ width: "100%", borderRadius: "3px" }} />
               </div>
               <div className="lbl-inpt">
                 <p className="lbl">Notes :</p>
-                <textarea placeholder="Enter Note" style={{ width: "100%", border: "1px solid", borderRadius: "3px" }} />
+                <p className="star-white">*</p>
+                < TextArea  placeholder="Enter Note" style={{ borderColor: 'D9D9D9', width: "100%", borderRadius: "3px" }} />
               </div>
             </div>
           </Col>
           <Col span={8} >
             <div className="details-con-header"><h2>Membership & Subscriptions</h2></div>
             <div className="detail-sub-con">
+            <div className="lbl-inpt">
+                <p className="lbl">Reg No :</p>
+                <p className="star">*</p>
+                <div style={{ display: 'flex', width: '100%' }}>
+                  <div className="input-container-with-sup">
+                    <Input
+                      placeholder="Enter text"
+                      style={{width:'100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                      suffix={<div className="suffix-container">
+                        <IoSettingsOutline />
+                      </div>}
+                    />
+                  </div>
+                </div>
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Date Joined :</p>
+                <p className="star">*</p>
+                <div className="checkbox-con">
+                  <div className="checkbox-sub">
+                    <Checkbox
+                      onChange={onCheckboxChange}
+                      checked={InfData?.isPensioner}
+                    />
+
+                  </div>
+                  <DatePicker className="w-100 date-picker-custom" />
+                </div>
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Date Left :</p>
+                <p className="star-white">*</p>
+                <div className="checkbox-con">
+                  <div className="checkbox-sub">
+                    <Checkbox
+                      onChange={onCheckboxChange}
+                      checked={InfData?.isPensioner}
+                    />
+
+                  </div>
+                  <DatePicker className="w-100 date-picker-custom" />
+                </div>
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Reason (Left) :</p>
+                <p className="star-white">*</p>
+                <MySelect isSimple={true} />
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Associate Member :</p>
+                <p className="star-white">*</p>
+                <div className="checkbox-con">
+                  <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                    <Checkbox
+                      onChange={onCheckboxChange}
+                      checked={InfData?.isPensioner}
+                    />
+                  </div>
+
+                  <Input
+                    type="text"
+                    placeholder="Enter something..."
+                    disabled={!InfData?.isPensioner}
+                    value={InfData?.pensionNo}
+                  />
+                </div>
+              </div>
+              <div className="lbl-inpt">
+                <p className="lbl">Statue :</p>
+                <p className="star">*</p>
+                <Input value={InfData?.gardaRegNo} />
+              </div>
+              <div className="lbl-inpt">
+                <Checkbox className="lbl">
+                  District Rep
+                </Checkbox>
+                <Checkbox className="lbl">
+                  Division Rep
+                </Checkbox>
+                <Checkbox className="lbl">
+                  C.E.C
+                </Checkbox>
+
+              </div>
+              <div className="lbl-inpt">
+                <Checkbox className="lbl">
+                  District Sec
+                </Checkbox>
+                <Checkbox className="lbl">
+                  Division Sec
+                </Checkbox>
+                <Checkbox className="lbl">
+                  Panel of
+                  Friends
+                </Checkbox>
+              
+
+              </div>
+              <div className="lbl-inpt">
+                <Checkbox className="lbl">
+                Division Chair
+                </Checkbox>
+                <Checkbox className="lbl">
+                  Division Chair
+                </Checkbox>
+               
+              
+
+              </div>
+              <p className="sub-com">Sub Committees :</p>
+              <div className="d-flex justify-content-center">
+              <p className="star">*</p>
+                <Button icon={<UploadOutlined />}>Click to Upload</Button>
+              </div>
+              <Divider>Subscriptions</Divider>
+              <Row>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Life Assurance (Member)
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Life Assurance (Partner)
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Critical Illness (Member)
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Critical Illness (Partner)
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Income Protection
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Finance Application
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Illness / Injury
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Legal Assistance
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Garda Review
+                  </Checkbox>
+                </Col>
+                <Col span={12}>
+                  <Checkbox className="subs-chkbx">
+                    Balloted
+                  </Checkbox>
+                </Col>
+              </Row>
             </div>
           </Col>
         </Row>
