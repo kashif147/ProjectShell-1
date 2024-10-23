@@ -1265,7 +1265,7 @@ function MyDeatails() {
                   </div>
                   <div className="input-cont">
                     <p className="star">*</p>
-                    <Input className="input" />
+                    <MySelect placeholder="Select City" isSimple={true} />
                   </div>
                 </div>
                 <div className="lbl-inpt">
@@ -1548,9 +1548,13 @@ function MyDeatails() {
                   </div>
                 </div>
                 <div className="lbl-inpt">
+                <div className="title-cont">
                   <p className="lbl">Statue :</p>
+                </div>
+                <div className="input-cont">
                   <p className="star">*</p>
                   <Input value={InfData?.gardaRegNo} />
+                  </div>
                 </div>
                 <div className="lbl-inpt">
                   <Checkbox className="lbl">
