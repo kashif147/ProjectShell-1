@@ -169,7 +169,7 @@ input {
 }
 
 .title-cont {
-    width: 27%;
+    width: 30%;
     display: flex;
     text-align: right;
     /* flex-shrink: 0px; */
