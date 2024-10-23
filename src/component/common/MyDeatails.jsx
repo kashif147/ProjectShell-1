@@ -1,9 +1,10 @@
 
 import { React, useEffect, useState } from "react";
+
 import { Tabs, message, Button, DatePicker, Radio, Divider } from "antd";
-import { LoadingOutlined, UploadOutlined } from "@ant-design/icons";
+import { LoadingOutlined, UploadOutlined, DownOutlined, UserOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
-import { Input, Row, Col, Checkbox } from "antd";
+import { Input, Row, Col, Checkbox, Dropdown } from "antd";
 import moment from 'moment';
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
@@ -11,6 +12,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import '../../styles/MyDetails.css'
 import { BsThreeDots } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
+import { useForm } from "react-hook-form";
 const { TextArea } = Input;
 
 const CheckboxGroup = Checkbox.Group;
@@ -50,6 +52,7 @@ const beforeUpload = (file) => {
 
 function MyDeatails() {
   const { ProfileDetails, topSearchData, rowIndex, } = useTableColumns()
+  const { register, handleSubmit, watch, formState: { errors } } = useForm();
   const [InfData, setInfData] = useState()
   const location = useLocation();
   const profileData = location?.state
@@ -83,6 +86,13 @@ function MyDeatails() {
     NewlyAssignedDuty: "",
   });
 
+  const [modalOpenData, setmodalOpenData] = useState({ Partnership: false, Children: false })
+  const openCloseModalsFtn = (key,) => {
+    setmodalOpenData((prevState) => ({
+      ...prevState,
+      [key]: !modalOpenData[key],
+    }));
+  };
 
   const handleInputChange = (name, value) => {
     setTransferData((prevState) => ({
@@ -358,6 +368,45 @@ function MyDeatails() {
       ),
     },
   ];
+  const onSubmit = data => console.log(data);
+  const handleButtonClick = (e) => {
+    message.info('Click on left button.');
+    console.log('click left button', e);
+  };
+  const handleMenuClick = (e) => {
+    message.info('Click on menu item.');
+    console.log('click', e);
+  };
+  const items = [
+    {
+      label: '1st menu item',
+      key: '1',
+      icon: <UserOutlined />,
+    },
+    {
+      label: '2nd menu item',
+      key: '2',
+      icon: <UserOutlined />,
+    },
+    {
+      label: '3rd menu item',
+      key: '3',
+      icon: <UserOutlined />,
+      danger: true,
+    },
+    {
+      label: '4rd menu item',
+      key: '4',
+      icon: <UserOutlined />,
+      danger: true,
+      disabled: true,
+    },
+  ]
+  const menuProps = {
+    items,
+    onClick: handleMenuClick,
+  };
+
   return (
 
     // <Tabs
@@ -1002,42 +1051,68 @@ function MyDeatails() {
     //     },
     //   ]}
     // />
-    <div className="details-container">
-      <div className="details-con-header1">
-        <Row>
-          <Col span={8}>
-            <div className="details-con-header"><h2>Personal Information</h2></div>
-            <div className="detail-sub-con">
-              <div className="lbl-inpt">
-                <p className="lbl">Title :</p>
-                <p className="star">*</p>
-                <MySelect isSimple={true} placeholder='Mr.' />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Forename :</p>
-                <p className="star">*</p>
-                <Input className="input" value={InfData?.forename} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Surname :</p>
-                <p className="star">*</p>
-                <Input className="input" value={InfData?.surname} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl lbl1 ">Gender :</p>
-                <p className="star-white">*</p>
-                <div className="input">
-                  <Radio.Group
-                    options={optionsWithDisabled}
-                    onChange={onChange4}
-                    value={value4}
-                    optionType="button"
-                    buttonStyle="solid"
-                  />
+    <form onSubmit={handleSubmit(onSubmit)}>
 
+
+      <div className="details-container">
+        <div className="details-con-header1">
+          <Row>
+            <Col span={8}>
+              <div className="details-con-header"><h2>Personal Information</h2></div>
+              <div className="detail-sub-con">
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Title :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <div className="input-sub-con">
+                      <MySelect isSimple={true} placeholder='Mr.' />
+                      <p className="error-text">teting</p>
+                    </div>
+
+                  </div>
                 </div>
-              </div>
-              {/* <div className="lbl-inpt">
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Forename :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <div className="input-sub-con">
+                      <Input className="input" value={InfData?.forename} />
+
+                    </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Surname :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Input className="input" value={InfData?.surname} {...register("exampleRequired", { required: true })} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className=" ">Gender :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <div className="input">
+                      <Radio.Group
+                        options={optionsWithDisabled}
+                        onChange={onChange4}
+                        value={value4}
+                        optionType="button"
+                        buttonStyle="solid"
+                      />
+
+                    </div>
+                  </div>
+                </div>
+                {/* <div className="lbl-inpt">
                 <p className="lbl">Gender :</p>
                 <div>
                 <p className="star-white">*</p>
@@ -1051,425 +1126,583 @@ function MyDeatails() {
                 </div>
                
               </div> */}
-              <div className="lbl-inpt">
-                <p className="lbl">Date of Birth :</p>
-                <p className="star">*</p>
-                <DatePicker
-                  style={{ width: "100%", borderRadius: "3px" }}
-                  value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
-                />
-                <div className="ag-65"><p className="ag-65-title" >46 Yrs</p></div>
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Date Aged 65 :</p>
-                <p className="star-white">*</p>
-                <DatePicker
-                  style={{ width: "100%", borderRadius: "3px" }}
-                  value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
-                />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Deceased :</p>
-                <p className="star">*</p>
-                <div className="checkbox-con">
-                  <div className="checkbox-sub">
-                    <Checkbox
-                      onChange={onCheckboxChange}
-                      checked={InfData?.isPensioner}
-                    />
-
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Date of Birth :</p>
                   </div>
-                  <DatePicker  className="w-100 date-picker-custom" />
+
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <DatePicker
+                      style={{ width: "100%", borderRadius: "3px" }}
+                      value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                    />
+                    {/* <div className="ag-65"> */}
+                    <p className="ag-65-title" >46 Yrs</p>
+                    {/* </div> */}
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Date Aged 65 :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <DatePicker
+                      style={{ width: "100%", borderRadius: "3px" }}
+                      value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                    />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Deceased :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <div className="checkbox-con">
+                      <div className="checkbox-sub">
+                        <Checkbox
+                          onChange={onCheckboxChange}
+                          checked={InfData?.isPensioner}
+                        />
+
+                      </div>
+                      <DatePicker className="w-100 date-picker-custom" />
+                    </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Partnership :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+
+                    <Input className="input" value={InfData?.gardaRegNo} />
+                    <Button
+                      onClick={() => openCloseModalsFtn("Partnership")}
+                      className="primary-btn butn ms-2 detail-btn"
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Children :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <Input className="input" value={InfData?.gardaRegNo} />
+                    <Button
+                      onClick={() => openCloseModalsFtn("Children")}
+                      className="primary-btn butn ms-2 detail-btn"
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+                <Divider>Corresondence Details</Divider>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Email :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Input className="input" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Mobile :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Input className="input" placeholder="000-000-0000" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Other Contact :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <Input className="input" placeholder="000-000-0000" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Building or House :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Input className="input" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Street or Road :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <Input className="input" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Area or Town :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+
+                    <Input className="input" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">County, City or Postcode :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Input className="input" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Eircode :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <Input className="input" />
+                  </div>
                 </div>
               </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Partnership :</p>
-                <p className="star-white">*</p>
+            </Col>
 
-                <Input className="input" value={InfData?.gardaRegNo} />
-                <Button
-                  onClick={RankOpenCloseFtn}
-                  className="primary-btn butn ms-2 detail-btn"
-                >
-                  +
-                </Button>
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Children :</p>
-                <p className="star-white">*</p>
-                <Input className="input" value={InfData?.gardaRegNo} />
-                <Button
-                  onClick={RankOpenCloseFtn}
-                  className="primary-btn butn ms-2 detail-btn"
-                >
-                  +
-                </Button>
-              </div>
-              <Divider>Corresondence Details</Divider>
-              <div className="lbl-inpt">
-                <p className="lbl">Email :</p>
-                <p className="star">*</p>
-                <Input className="input" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Mobile :</p>
-                <p className="star">*</p>
-                <Input className="input" placeholder="000-000-0000" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Other Contact :</p>
-                <p className="star-white">*</p>
-
-                <Input className="input" placeholder="000-000-0000" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Building or House :</p>
-                <p className="star">*</p>
-                <Input className="input" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Street or Road :</p>
-                <p className="star-white">*</p>
-
-                <Input className="input" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Area or Town :</p>
-                <p className="star-white">*</p>
-
-                <Input className="input" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">County, City or Postcode :</p>
-                <p className="star">*</p>
-                <Input className="input" />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Eircode :</p>
-                <p className="star-white">*</p>
-                <Input className="input" />
-              </div>
-            </div>
-          </Col>
-
-          <Col span={8} >
-            <div className="details-con-header"><h2>Professional Details</h2></div>
-            <div className="detail-sub-con">
-              {/* <div className="lbl-inpt">
+            <Col span={8} >
+              <div className="details-con-header"><h2>Professional Details</h2></div>
+              <div className="detail-sub-con">
+                {/* <div className="lbl-inpt">
                 <p className="lbl">Station :</p>
                 <p className="star">*</p>
                 <Input value={InfData?.gardaRegNo} suffix={<BsThreeDots />} />
                 <Button className="butn primary-btn ">Tr</Button>
               </div> */}
-               <div className="lbl-inpt">
-                <p className="lbl">Station :</p>
-                <p className="star">*</p>
-                <div style={{ display: 'flex', width: '100%' }}>
-                  <div className="input-container-with-sup">
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Station :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <div style={{ display: 'flex', width: '100%' }}>
+                      {/* <div className="input-container-with-sup"> */}
+                      {/* <Input
+                        placeholder="Enter text"
+                        style={{ width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                        suffix={<div className="suffix-container">
+                          <BsThreeDots />
+                        </div>}
+                      /> */}
+                      <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
+                        Select Station
+                      </Dropdown.Button>
+                    </div>
+                    <Button className="butn primary-btn detail-btn ms-2">
+                      Tr
+                    </Button>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="lbl"></p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <TextArea style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Station Phone : </p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <Input value={InfData?.gardaRegNo} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">District :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <MySelect placeholder="0000-AAA-BBB" isSimple={true} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Division :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Retired :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <div className="checkbox-con">
+                      <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Checkbox
+                          onChange={onCheckboxChange}
+                          checked={InfData?.isPensioner}
+                        />
+                      </div>
+
+                      <Input
+                        type="text"
+                        placeholder="Enter something..."
+                        disabled={!InfData?.isPensioner}
+                        value={InfData?.pensionNo}
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Pension No :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
                     <Input
-                      placeholder="Enter text"
-                      style={{width:'100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                      suffix={<div className="suffix-container">
-                        <BsThreeDots />
-                      </div>}
+                      type="text"
+                      placeholder="Enter something..."
+                      disabled={!InfData?.isPensioner}
+                      value={InfData?.pensionNo}
                     />
                   </div>
                 </div>
-                <Button className="butn primary-btn detail-btn ms-2">
-Tr
-                </Button>
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl"></p>
-                <p className="star-white">*</p>
-                <TextArea style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Station Phone : </p>
-                <p className="star-white">*</p>
-                <Input value={InfData?.gardaRegNo} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">District :</p>
-                <p className="star">*</p>
-                <MySelect placeholder="0000-AAA-BBB" isSimple={true} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Division :</p>
-                <p className="star">*</p>
-                <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Retired :</p>
-                <p className="star-white">*</p>
-                <div className="checkbox-con">
-                  <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Checkbox
-                      onChange={onCheckboxChange}
-                      checked={InfData?.isPensioner}
-                    />
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Rank :</p>
                   </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
+                      Select Rank
+                    </Dropdown.Button>
+                  </div>
+                </div>
 
-                  <Input
-                    type="text"
-                    placeholder="Enter something..."
-                    disabled={!InfData?.isPensioner}
-                    value={InfData?.pensionNo}
-                  />
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="lbl">Duty:</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
+                      Select Duty
+                    </Dropdown.Button>
+                  </div>
+                </div>
+                <Divider>Training Details</Divider>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Templemore :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <DatePicker className="date-picker" isSimple={true} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="lbl">Class  :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <Input />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="lbl">Attested :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <DatePicker style={{ width: "100%", borderRadius: "3px" }} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Graduation :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <DatePicker className="date-picker" />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Notes :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    < TextArea placeholder="Enter Note" style={{ borderColor: 'D9D9D9', width: "100%", borderRadius: "3px" }} />
+                  </div>
                 </div>
               </div>
+            </Col>
+            <Col span={8} >
+              <div className="details-con-header"><h2>Membership & Subscriptions</h2></div>
+              <div className="detail-sub-con">
+                <div className="lbl-inpt">
+                <div className="title-cont">
+                  <p className="">Reg No :</p>
+                  </div>
+                  <div className="input-cont">
+                  <p className="star">*</p>
+                  <div style={{ display: 'flex', width: '100%', alignItems:'baseline' }}>
+                    <div className="input-container-with-sup">
+                      <Input
+                        placeholder="Enter text"
+                        style={{ width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                        suffix={<div className="suffix-container">
+                          <IoSettingsOutline />
+                        </div>}
+                      />
+                    </div>
+                  </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                <div className="title-cont">
+                  <p className="">Date Joined :</p>
+                  </div>
+                  <div className="input-cont">
+                  <p className="star">*</p>
+                  <div className="checkbox-con">
+                    <div className="checkbox-sub">
+                      <Checkbox
+                        onChange={onCheckboxChange}
+                        checked={InfData?.isPensioner}
+                      />
+                    </div>
+                    <DatePicker className="w-100 date-picker-custom" />
+                  </div>
+                 </div>
+                </div>
+                <div className="lbl-inpt">
+                <div className="title-cont">
+                  <p className="lbl">Date Left :</p>
+                  </div>
+                  <div className="input-cont">
+                  <p className="star-white">*</p>
+                  <div className="checkbox-con">
+                    <div className="checkbox-sub">
+                      <Checkbox
+                        onChange={onCheckboxChange}
+                        checked={InfData?.isPensioner}
+                      />
 
-              <div className="lbl-inpt">
-                <p className="lbl">Pension No :</p>
-                <p className="star-white">*</p>
-                <Input
-                  type="text"
-                  placeholder="Enter something..."
-                  disabled={!InfData?.isPensioner}
-                  value={InfData?.pensionNo}
-                />
+                    </div>
+                    <DatePicker className="w-100 date-picker-custom" />
+                  </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                <div className="title-cont">
+                  <p className="lbl">Reason (Left) :</p>
+                  </div>
+                  <div className="input-cont">
+                  <p className="star-white">*</p>
+                  <MySelect isSimple={true} />
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                <div className="title-cont">
+                  <p className="">Associate Member :</p>
+                  </div>
+                  <div className="input-cont">
+                  <p className="star-white">*</p>
+                  <div className="checkbox-con">
+                    <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                      <Checkbox
+                        onChange={onCheckboxChange}
+                        checked={InfData?.isPensioner}
+                      />
+                    </div>
 
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Rank :</p>
-                <p className="star">*</p>
-                <div style={{ display: 'flex', width: '100%' }}>
-                  <div className="input-container-with-sup">
                     <Input
-                      placeholder="Enter text"
-                      style={{width:'100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                      suffix={<div className="suffix-container">
-                        <BsThreeDots />
-                      </div>}
+                      type="text"
+                      placeholder="Enter something..."
+                      disabled={!InfData?.isPensioner}
+                      value={InfData?.pensionNo}
                     />
                   </div>
+                  </div>
                 </div>
-              </div>
+                <div className="lbl-inpt">
+                  <p className="lbl">Statue :</p>
+                  <p className="star">*</p>
+                  <Input value={InfData?.gardaRegNo} />
+                </div>
+                <div className="lbl-inpt">
+                  <Checkbox className="lbl">
+                    District Rep
+                  </Checkbox>
+                  <Checkbox className="lbl">
+                    Division Rep
+                  </Checkbox>
+                  <Checkbox className="lbl">
+                    C.E.C
+                  </Checkbox>
 
-              <div className="lbl-inpt">
-                <p className="lbl">Duty:</p>
-                <p className="star">*</p>
-                <div style={{ display: 'flex', width: '100%' }}>
-                  <div className="input-container-with-sup">
-                    <Input
-                      placeholder="Enter text"
-                      style={{ borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                      suffix={<div className="suffix-container">
-                        <BsThreeDots />
-                      </div>}
-                    />
-                  </div>
-                  
                 </div>
+                <div className="lbl-inpt">
+                  <Checkbox className="lbl">
+                    District Sec
+                  </Checkbox>
+                  <Checkbox className="lbl">
+                    Division Sec
+                  </Checkbox>
+                  <Checkbox className="lbl">
+                    Panel of
+                    Friends
+                  </Checkbox>
+
+
+                </div>
+                <div className="lbl-inpt">
+                  <Checkbox className="lbl">
+                    Division Chair
+                  </Checkbox>
+                  <Checkbox className="lbl">
+                    Division Chair
+                  </Checkbox>
+
+
+
+                </div>
+                <div className="d-flex justify-content-end ms-2">
+                <p className="sub-com">Sub Committees :</p>
+                <Button className="butn primary-btn">+</Button>
+                </div>
+                <div className="d-flex justify-content-center">
+                  <p className="star">*</p>
+                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                </div>
+                <Divider>Subscriptions</Divider>
+                <Row>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Life Assurance (Member)
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Life Assurance (Partner)
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Critical Illness (Member)
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Critical Illness (Partner)
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Income Protection
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Finance Application
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Illness / Injury
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Legal Assistance
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Garda Review
+                    </Checkbox>
+                  </Col>
+                  <Col span={12}>
+                    <Checkbox className="subs-chkbx">
+                      Balloted
+                    </Checkbox>
+                  </Col>
+                </Row>
               </div>
-              <Divider>Training Details</Divider>
-              <div className="lbl-inpt">
-                <p className="lbl">Templemore :</p>
-                <p className="star-white">*</p>
-                <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
+            </Col>
+          </Row>
+          <Row>
+            <Col>
+
+            </Col>
+          </Row>
+        </div>
+        <MyDrawer title='Partnership' open={modalOpenData?.Partnership} onClose={() => openCloseModalsFtn("Partnership")} >
+          <div className="details-drawer mb-4">
+            <p>{InfData?.gardaRegNo}</p>
+            <p>{InfData?.fullname}</p>
+            <p>Garda</p>
+          </div>
+          <div>
+            <div className="inpt-container">
+              <div className="drawer-lbl">
+                <p>Title :</p>
               </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Class  :</p>
-                <p className="star">*</p>
-                <MySelect placeholder="0000-CCC-DDD" isSimple={true} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Attested :</p>
-                <p className="star-white">*</p>
-                <DatePicker style={{ width: "100%", borderRadius: "3px" }} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Graduation :</p>
-                <p className="star-white">*</p>
-                <DatePicker style={{ width: "100%", borderRadius: "3px" }} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Notes :</p>
-                <p className="star-white">*</p>
-                < TextArea  placeholder="Enter Note" style={{ borderColor: 'D9D9D9', width: "100%", borderRadius: "3px" }} />
-              </div>
+              <div className="inpt"><Input /></div>
             </div>
-          </Col>
-          <Col span={8} >
-            <div className="details-con-header"><h2>Membership & Subscriptions</h2></div>
-            <div className="detail-sub-con">
-            <div className="lbl-inpt">
-                <p className="lbl">Reg No :</p>
-                <p className="star">*</p>
-                <div style={{ display: 'flex', width: '100%' }}>
-                  <div className="input-container-with-sup">
-                    <Input
-                      placeholder="Enter text"
-                      style={{width:'100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                      suffix={<div className="suffix-container">
-                        <IoSettingsOutline />
-                      </div>}
-                    />
-                  </div>
-                </div>
+            <div className="inpt-container">
+              <div className="drawer-lbl">
+                <p>Title :</p>
               </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Date Joined :</p>
-                <p className="star">*</p>
-                <div className="checkbox-con">
-                  <div className="checkbox-sub">
-                    <Checkbox
-                      onChange={onCheckboxChange}
-                      checked={InfData?.isPensioner}
-                    />
-
-                  </div>
-                  <DatePicker className="w-100 date-picker-custom" />
-                </div>
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Date Left :</p>
-                <p className="star-white">*</p>
-                <div className="checkbox-con">
-                  <div className="checkbox-sub">
-                    <Checkbox
-                      onChange={onCheckboxChange}
-                      checked={InfData?.isPensioner}
-                    />
-
-                  </div>
-                  <DatePicker className="w-100 date-picker-custom" />
-                </div>
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Reason (Left) :</p>
-                <p className="star-white">*</p>
-                <MySelect isSimple={true} />
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Associate Member :</p>
-                <p className="star-white">*</p>
-                <div className="checkbox-con">
-                  <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                    <Checkbox
-                      onChange={onCheckboxChange}
-                      checked={InfData?.isPensioner}
-                    />
-                  </div>
-
-                  <Input
-                    type="text"
-                    placeholder="Enter something..."
-                    disabled={!InfData?.isPensioner}
-                    value={InfData?.pensionNo}
-                  />
-                </div>
-              </div>
-              <div className="lbl-inpt">
-                <p className="lbl">Statue :</p>
-                <p className="star">*</p>
-                <Input value={InfData?.gardaRegNo} />
-              </div>
-              <div className="lbl-inpt">
-                <Checkbox className="lbl">
-                  District Rep
-                </Checkbox>
-                <Checkbox className="lbl">
-                  Division Rep
-                </Checkbox>
-                <Checkbox className="lbl">
-                  C.E.C
-                </Checkbox>
-
-              </div>
-              <div className="lbl-inpt">
-                <Checkbox className="lbl">
-                  District Sec
-                </Checkbox>
-                <Checkbox className="lbl">
-                  Division Sec
-                </Checkbox>
-                <Checkbox className="lbl">
-                  Panel of
-                  Friends
-                </Checkbox>
-              
-
-              </div>
-              <div className="lbl-inpt">
-                <Checkbox className="lbl">
-                Division Chair
-                </Checkbox>
-                <Checkbox className="lbl">
-                  Division Chair
-                </Checkbox>
-               
-              
-
-              </div>
-              <p className="sub-com">Sub Committees :</p>
-              <div className="d-flex justify-content-center">
-              <p className="star">*</p>
-                <Button icon={<UploadOutlined />}>Click to Upload</Button>
-              </div>
-              <Divider>Subscriptions</Divider>
-              <Row>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Life Assurance (Member)
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Life Assurance (Partner)
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Critical Illness (Member)
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Critical Illness (Partner)
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Income Protection
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Finance Application
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Illness / Injury
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Legal Assistance
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Garda Review
-                  </Checkbox>
-                </Col>
-                <Col span={12}>
-                  <Checkbox className="subs-chkbx">
-                    Balloted
-                  </Checkbox>
-                </Col>
-              </Row>
+              <div className="inpt"><Input /></div>
             </div>
-          </Col>
-        </Row>
-        <Row>
-          <Col>
-
-          </Col>
-        </Row>
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Children' open={modalOpenData?.Children} onClose={() => openCloseModalsFtn("Children")} >
+          <div className="details-drawer mb-4">
+            <p>{InfData?.gardaRegNo}</p>
+            <p>{InfData?.fullname}</p>
+            <p>Garda</p>
+          </div>
+          <div>
+            <div className="inpt-container">
+              <div className="drawer-lbl">
+                <p>Title :</p>
+              </div>
+              <div className="inpt"><Input /></div>
+            </div>
+            <div className="inpt-container">
+              <div className="drawer-lbl">
+                <p>Title :</p>
+              </div>
+              <div className="inpt"><Input /></div>
+            </div>
+          </div>
+        </MyDrawer>
       </div>
-    </div>
+    </form>
   );
 }
 

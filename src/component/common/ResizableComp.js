@@ -2,8 +2,10 @@ import React, { useState } from 'react';
 import { Resizable } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import '../../styles/ResizableComp.css'
+import MyDrawer from './MyDrawer';
 function ResizableComp() {
   const [width, setWidth] = useState(400); // Initial width
+  const [eventHistryDrawer, seteventHistryDrawer] = useState(false)
   const handleMouseDown = (e) => {
     e.preventDefault(); // Prevent default behavior like text selection
     document.body.style.userSelect = 'none'; // Disable text selection
@@ -29,9 +31,12 @@ function ResizableComp() {
   };
   return (
     <div className='history-main-wraper'>
-      <div className='history-main'>
+      <div className='history-main' onClick={()=>seteventHistryDrawer(!eventHistryDrawer)}>
         <h1 className='rotated-text'>Events History</h1>
       </div>
+      <MyDrawer title='Events History' open={eventHistryDrawer} onClose={()=>seteventHistryDrawer(!eventHistryDrawer)}>
+
+      </MyDrawer>
     </div>
     //   <div
     //   style={{

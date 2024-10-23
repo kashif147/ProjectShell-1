@@ -1,6 +1,7 @@
 .details-con-header {
-    background-color: #F5F5F5;
-    padding: 10px;
+    background-color: var(--secoundry-bg-color);
+    padding-top: 10px;
+    padding-bottom: 10px;
 }
 
 .details-con-header h2 {
@@ -21,7 +22,9 @@
 
 .lbl-inpt {
     display: flex;
+    /* justify-content: center; */
     margin-bottom: 10px;
+    align-items: baseline;
 }
 
 .lbl {
@@ -96,25 +99,124 @@ input {
     width: 32px;
     height: 32px;
 }
+
 .suffix-container {
     display: flex;
-    align-items: center; 
-    background-color: #fff; 
+    align-items: center;
+    background-color: #fff;
     height: 31.5px;
     border: 0.5px solid #f0efef;
-    padding-left:5px ;
-    padding-right:5px ;
-  }
-  .ant-input-affix-wrapper {
+    padding-left: 5px;
+    padding-right: 5px;
+}
+
+.ant-input-affix-wrapper {
     padding: 0px;
-  }
-  .input-container-with-sup{
+}
+
+.input-container-with-sup {
     width: 100%;
     display: flex;
-  }
-  .detail-btn{
-  height: 32px;
-  }
-  .date-picker-custom{
+}
+
+.detail-btn {
+    height: 32px;
+}
+
+.date-picker-custom {
     border-radius: 3px !important;
-  }
+}
+
+
+/* drawer */
+.details-drawer {
+    height: 35px;
+    background-color: var(--secoundry-bg-color);
+    color: var(--secoundry-color);
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+}
+
+.details-drawer p {
+    margin: 0px !important;
+    color: var(--secoundry-color);
+    size: 14px;
+    font-weight: 600;
+}
+
+.inpt {
+    margin-right: px;
+}
+
+.drawer-lbl {}
+
+.inpt-container {
+    display: flex;
+    justify-content: center;
+}
+
+.drawer-lbl p {
+    font: 14px;
+    font-weight: 600;
+    color: var(--labelColor);
+}
+
+.input-cont {
+    display: flex;
+    align-items: baseline;
+    width: 65%;
+}
+
+.title-cont {
+    width: 27%;
+    display: flex;
+    text-align: right;
+    /* flex-shrink: 0px; */
+    /* flex: 1; */
+    justify-content: flex-end;
+}
+
+.title-cont, .checkbox-con p {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--labelColor);
+    text-align: right;
+    font-weight: 600;
+}
+
+.error-text {
+    color: red;
+    margin: 2px 0px !important;
+    font-weight: 600;
+}
+
+.input-sub-con {
+    width: 100% !important;
+}
+
+.custom-dropdown-button {
+    width: 100%;
+    /* Ensure full width */
+    border-radius: 3px;
+    /* Set border radius */
+    padding: 0;
+    /* Remove default padding */
+    height: 40px;
+    /* Set desired height */
+    display: flex;
+    /* Use flex to center text */
+    align-items: center;
+    /* Center vertically */
+    justify-content: center;
+    /* Center horizontally */
+}
+
+.custom-dropdown-button button {
+    width: 100%;
+    border-radius: 3px;
+}
+.date-picker{
+    width: 100%;
+    border-radius: 3px!important;
+}
