@@ -1,6 +1,7 @@
 import { React, useState, useEffect } from 'react'
 import "../../styles/Login.css"
-import loginImg from "../../assets/images/img1.png"
+// import loginImg from "../../assets/images/img1.png"
+import loginImg from "../../assets/images/gra_logo.png"
 import { WindowsFilled } from '@ant-design/icons';
 import { Button, Checkbox, Divider, Input } from 'antd';
 import { Link } from 'react-router-dom';
@@ -83,10 +84,11 @@ const Login = () => {
                 <div>
                     
                 </div>
-                <div className="imag-con">
+                <div className="imag-con" style={{opacity: 0.5}}>
                     <img
                         className="login-image"
-                        src={loginImg} alt="Logo" />
+                        src={loginImg} alt="Logo" 
+                        />
                 </div>
                 <div className="login-con" style={{ width: '50%', padding: '20px', display: 'flex', flexDirection: 'column', justifycontent: 'center',}}>
                     {/* <h1 className='login-welcom'>Welcome Back</h1> */}
