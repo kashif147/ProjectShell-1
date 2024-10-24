@@ -1,10 +1,10 @@
 
 import { React, useEffect, useState } from "react";
 
-import { Tabs, message, Button, DatePicker, Radio, Divider } from "antd";
+import { Tabs, message, Button, Radio, Divider } from "antd";
 import { LoadingOutlined, UploadOutlined, DownOutlined, UserOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
-import { Input, Row, Col, Checkbox, Dropdown } from "antd";
+import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
 import moment from 'moment';
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
@@ -13,6 +13,7 @@ import '../../styles/MyDetails.css'
 import { BsThreeDots } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useForm } from "react-hook-form";
+import MyDatePicker from "./MyDatePicker";
 const { TextArea } = Input;
 
 const CheckboxGroup = Checkbox.Group;
@@ -257,7 +258,7 @@ function MyDeatails() {
   const DutyOpenCloseFtn = () => setisDuty(!isDuty);
 
   const AddTransferFtn = () => {
-    // Logic for adding gender
+    // Lgenderogic for adding 
     console.log(TransferData);
   };
 
@@ -406,7 +407,36 @@ function MyDeatails() {
     items,
     onClick: handleMenuClick,
   };
-
+  const props = {
+    action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+    onChange({ file, fileList }) {
+      if (file.status !== 'uploading') {
+        console.log(file, fileList);
+      }
+    },
+    defaultFileList: [
+      {
+        uid: '1',
+        name: 'khan.png',
+        status: 'done',
+        url: 'http://www.bise.com/khan.png',
+        percent: 33,
+      },
+      {
+        uid: '2',
+        name: 'Error',
+        status: 'done',
+        url: 'http://www.bise.com/yyy.png',
+      },
+      {
+        uid: '3',
+        name: 'zzz.png',
+        status: 'uploading',
+        // custom error message to show
+        url: 'http://www.bise.com/zzz.png',
+      },
+    ],
+  };
   return (
 
     // <Tabs
@@ -1068,7 +1098,7 @@ function MyDeatails() {
                     <p className="star">*</p>
                     <div className="input-sub-con">
                       <MySelect isSimple={true} placeholder='Mr.' />
-                      <p className="error-text">teting</p>
+                      <h1 className="error-text">error-text</h1>
                     </div>
 
                   </div>
@@ -1094,8 +1124,8 @@ function MyDeatails() {
                     <Input className="input" value={InfData?.surname} {...register("exampleRequired", { required: true })} />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
+                <div className="lbl-inpt-2">
+                  <div className="title-cont-2">
                     <p className=" ">Gender :</p>
                   </div>
                   <div className="input-cont">
@@ -1133,9 +1163,9 @@ function MyDeatails() {
 
                   <div className="input-cont">
                     <p className="star">*</p>
-                    <DatePicker
+                    <MyDatePicker
                       style={{ width: "100%", borderRadius: "3px" }}
-                      value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                      defaultValue={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
                     />
                     {/* <div className="ag-65"> */}
                     <p className="ag-65-title" >46 Yrs</p>
@@ -1148,9 +1178,9 @@ function MyDeatails() {
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    <DatePicker
-                      style={{ width: "100%", borderRadius: "3px" }}
-                      value={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                    <MyDatePicker
+                      
+                      defaultValue={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
                     />
                   </div>
                 </div>
@@ -1168,7 +1198,7 @@ function MyDeatails() {
                         />
 
                       </div>
-                      <DatePicker className="w-100 date-picker-custom" />
+                      <MyDatePicker className="w-100 date-picker-custom" />
                     </div>
                   </div>
                 </div>
@@ -1261,7 +1291,7 @@ function MyDeatails() {
                 </div>
                 <div className="lbl-inpt">
                   <div className="title-cont">
-                    <p className="">County, City or Postcode :</p>
+                    <p className="">County, City or ZIP :</p>
                   </div>
                   <div className="input-cont">
                     <p className="star">*</p>
@@ -1313,13 +1343,13 @@ function MyDeatails() {
                     </Button>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="lbl"></p>
+                <div className="lbl-txtarea-2">
+                  <div className="title-cont-txtarea">
+                    <p className=""></p>
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    <TextArea style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+                    <TextArea rows={4} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
                   </div>
                 </div>
                 <div className="lbl-inpt">
@@ -1417,12 +1447,12 @@ function MyDeatails() {
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    <DatePicker className="date-picker" isSimple={true} />
+                    <MyDatePicker className="date-picker" isSimple={true} />
                   </div>
                 </div>
                 <div className="lbl-inpt">
                   <div className="title-cont">
-                    <p className="lbl">Class  :</p>
+                    <p className="">Class  :</p>
                   </div>
                   <div className="input-cont">
                     <p className="star">*</p>
@@ -1431,11 +1461,11 @@ function MyDeatails() {
                 </div>
                 <div className="lbl-inpt">
                   <div className="title-cont">
-                    <p className="lbl">Attested :</p>
+                    <p className="">Attested :</p>
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    <DatePicker style={{ width: "100%", borderRadius: "3px" }} />
+                    <MyDatePicker style={{ width: "100%", borderRadius: "3px" }} />
                   </div>
                 </div>
                 <div className="lbl-inpt">
@@ -1444,16 +1474,16 @@ function MyDeatails() {
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    <DatePicker className="date-picker" />
+                    <MyDatePicker className="date-picker" />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Notes :</p>
+                <div className="lbl-txtarea-2">
+                  <div className="title-cont-txtarea">
+                    <p className="">Notes</p>
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    < TextArea placeholder="Enter Note" style={{ borderColor: 'D9D9D9', width: "100%", borderRadius: "3px" }} />
+                    <TextArea rows={4} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
                   </div>
                 </div>
               </div>
@@ -1462,147 +1492,163 @@ function MyDeatails() {
               <div className="details-con-header"><h2>Membership & Subscriptions</h2></div>
               <div className="detail-sub-con">
                 <div className="lbl-inpt">
-                <div className="title-cont">
-                  <p className="">Reg No :</p>
+                  <div className="title-cont">
+                    <p className="">Reg No :</p>
                   </div>
                   <div className="input-cont">
-                  <p className="star">*</p>
-                  <div style={{ display: 'flex', width: '100%', alignItems:'baseline' }}>
-                    <div className="input-container-with-sup">
+                    <p className="star">*</p>
+                    <div style={{ display: 'flex', width: '100%', alignItems: 'baseline' }}>
+                      <div className="input-container-with-sup">
+                        <Input
+                          placeholder="Enter text"
+                          style={{ width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                          suffix={<div className="suffix-container">
+                            <IoSettingsOutline />
+                          </div>}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Date Joined :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star">*</p>
+                    <div className="checkbox-con">
+                      <div className="checkbox-sub">
+                        <Checkbox
+                          onChange={onCheckboxChange}
+                          checked={InfData?.isPensioner}
+                        />
+                      </div>
+                      <MyDatePicker className="w-100 date-picker-custom" />
+                    </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Date Left :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <div className="checkbox-con">
+                      <div className="checkbox-sub">
+                        <Checkbox
+                          onChange={onCheckboxChange}
+                          checked={InfData?.isPensioner}
+                        />
+
+                      </div>
+                      <MyDatePicker className="w-100 date-picker-custom" />
+                    </div>
+                  </div>
+                </div>
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Reason (Left) :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <MySelect isSimple={true} />
+                  </div>
+                </div>
+              
+                <div className="lbl-inpt">
+                  <div className="title-cont">
+                    <p className="">Associate Member :</p>
+                  </div>
+                  <div className="input-cont">
+                    <p className="star-white">*</p>
+                    <div className="checkbox-con">
+                      <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                        <Checkbox
+                          onChange={onCheckboxChange}
+                          checked={InfData?.isPensioner}
+                        />
+                      </div>
+
                       <Input
-                        placeholder="Enter text"
-                        style={{ width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                        suffix={<div className="suffix-container">
-                          <IoSettingsOutline />
-                        </div>}
+                        type="text"
+                        placeholder="Enter something..."
+                        disabled={!InfData?.isPensioner}
+                        value={InfData?.pensionNo}
                       />
                     </div>
                   </div>
-                  </div>
                 </div>
                 <div className="lbl-inpt">
-                <div className="title-cont">
-                  <p className="">Date Joined :</p>
+                  <div className="title-cont">
+                    <p className="">Statue :</p>
                   </div>
                   <div className="input-cont">
-                  <p className="star">*</p>
-                  <div className="checkbox-con">
-                    <div className="checkbox-sub">
-                      <Checkbox
-                        onChange={onCheckboxChange}
-                        checked={InfData?.isPensioner}
-                      />
-                    </div>
-                    <DatePicker className="w-100 date-picker-custom" />
-                  </div>
-                 </div>
-                </div>
-                <div className="lbl-inpt">
-                <div className="title-cont">
-                  <p className="lbl">Date Left :</p>
-                  </div>
-                  <div className="input-cont">
-                  <p className="star-white">*</p>
-                  <div className="checkbox-con">
-                    <div className="checkbox-sub">
-                      <Checkbox
-                        onChange={onCheckboxChange}
-                        checked={InfData?.isPensioner}
-                      />
-
-                    </div>
-                    <DatePicker className="w-100 date-picker-custom" />
-                  </div>
+                    <p className="star">*</p>
+                    <Input value={InfData?.gardaRegNo} />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                <div className="title-cont">
-                  <p className="lbl">Reason (Left) :</p>
-                  </div>
-                  <div className="input-cont">
-                  <p className="star-white">*</p>
-                  <MySelect isSimple={true} />
-                  </div>
-                </div>
-                <div className="lbl-inpt">
-                <div className="title-cont">
-                  <p className="">Associate Member :</p>
-                  </div>
-                  <div className="input-cont">
-                  <p className="star-white">*</p>
-                  <div className="checkbox-con">
-                    <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
-                      <Checkbox
-                        onChange={onCheckboxChange}
-                        checked={InfData?.isPensioner}
-                      />
-                    </div>
-
-                    <Input
-                      type="text"
-                      placeholder="Enter something..."
-                      disabled={!InfData?.isPensioner}
-                      value={InfData?.pensionNo}
-                    />
-                  </div>
-                  </div>
-                </div>
-                <div className="lbl-inpt">
-                <div className="title-cont">
-                  <p className="lbl">Statue :</p>
-                </div>
-                <div className="input-cont">
-                  <p className="star">*</p>
-                  <Input value={InfData?.gardaRegNo} />
-                  </div>
-                </div>
-                <div className="lbl-inpt">
+                <Row style={{paddingLeft:'12px'}}>
+                  <Col span={8}>
                   <Checkbox className="lbl">
                     District Rep
                   </Checkbox>
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
-                    Division Rep
+                  Division Rep
                   </Checkbox>
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
-                    C.E.C
+                  C.E.C
                   </Checkbox>
-
-                </div>
-                <div className="lbl-inpt">
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
                     District Sec
                   </Checkbox>
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
                     Division Sec
                   </Checkbox>
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
                     Panel of
                     Friends
                   </Checkbox>
-
-
-                </div>
-                <div className="lbl-inpt">
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
                     Division Chair
                   </Checkbox>
+                  </Col>
+                  <Col span={8}>
                   <Checkbox className="lbl">
-                    Division Chair
+                  District Chair
                   </Checkbox>
-
-
-
-                </div>
+                  </Col>
+                </Row>
                 <div className="d-flex justify-content-end ms-2">
-                <p className="sub-com">Sub Committees :</p>
-                <Button className="butn primary-btn">+</Button>
+                  <div className="sub-com-cont me-4">
+                  <p className="sub-com">Sub Committees :</p>
+                  </div>
+                  <div className="me-4">
+                  <Button className="butn primary-btn">+</Button>
+                  </div>
                 </div>
-                <div className="d-flex justify-content-center">
+                <div className="d-flex justify-content-center">  {/* Ensure the outer div is a flexbox */}
+                  <Upload {...props}>
+                    <div className="d-flex
+                    ">
                   <p className="star">*</p>
-                  <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                    <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                      </div>
+                  </Upload>
                 </div>
                 <Divider>Subscriptions</Divider>
-                <Row>
+                <Row style={{paddingLeft:'12px'}}>
                   <Col span={12}>
                     <Checkbox className="subs-chkbx">
                       Life Assurance (Member)
@@ -1652,6 +1698,7 @@ function MyDeatails() {
                     <Checkbox className="subs-chkbx">
                       Balloted
                     </Checkbox>
+                    <Input style={{width:'80%'}} />
                   </Col>
                 </Row>
               </div>

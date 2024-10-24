@@ -43,6 +43,7 @@ background: transparent !important;
   font-weight: 600;
   margin-left: 5px;
   margin-right: 5px;
+  margin-bottom: 0px;
   font-size: 14px;
 }
 .ant-radio-button-wrapper-checked{
@@ -58,6 +59,7 @@ background: transparent !important;
   margin-left: 5px;
   font-size: 14px;
   margin-right: 5px;
+  margin-bottom: 0px !important;
 }
 .ant-checkbox-wrapper {
   margin-right:0px !important; /* Change this value to your desired margin */
@@ -204,16 +206,12 @@ body {
   display: flex;
   flex-direction: column;
 }
-
 .ant-table-container {
   overflow: auto;
 }
-
 .ant-table-header {
   flex: 0 0 auto;
 }
-
-
 .ant-table-body {
   flex: 1 1 auto;
   overflow: auto;
@@ -226,11 +224,9 @@ body {
   .ant-input-suffix {
   display: flex;
   flex: none;
-  /* align-items: flex-end; */
   justify-content: flex-end !important;
 }
 .search-fliters {
-  /* padding-top: 7px; */
   padding-bottom: 7px;
 }
 .search-fliters input {
@@ -849,9 +845,9 @@ h1 {
   background-color: #45669d;
 }
 .profil-container-main{
-  width: 19%;
+  width: 16%;
   padding-top: 20px !important;
-  padding: 5px;
+  padding: 5px 0px;
   border: 2px solid #e0e0e0;
   border-top: none;
   margin-inline: 0px;
