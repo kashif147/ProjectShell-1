@@ -7,6 +7,7 @@ import OpenWordButton from "./word/OpenWordButton";
 import CreateWordDocument from "./word/CreateWordDocument";
 import UpdateWordDocument from "./word/UpdateWordDocument";
 import ListFiles from "./onedrive/ListFiles";
+import OpenOutlookButton from "./email/OpenOutlookButton";
 
 const LandingPage = () => (
     <div style={{zIndex:1, position: 'relative', padding: '20px' /* Ensure these elements sit above the watermark */}}> 
@@ -23,6 +24,8 @@ const LandingPage = () => (
 </div>
 <>
     <ReadEmails/>
+
+    <OpenOutlookButton/>
 
     <OpenWordButton/>
 
