@@ -14,6 +14,8 @@ import { BsThreeDots } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useForm } from "react-hook-form";
 import MyDatePicker from "./MyDatePicker";
+
+
 const { TextArea } = Input;
 
 const CheckboxGroup = Checkbox.Group;
@@ -96,6 +98,7 @@ function MyDeatails() {
   };
 
   const handleInputChange = (name, value) => {
+   
     setTransferData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -163,6 +166,13 @@ function MyDeatails() {
     }
 
   }, [ProfileDetails]);
+  const handleInputChangeWhole = (field, value) => {
+    setInfData((prev) => ({
+      ...prev,
+      [field]: value,
+    }));
+  };
+  console.log(InfData, "77")
   useEffect(() => {
     return () => {
       setInfData({});
@@ -271,7 +281,35 @@ function MyDeatails() {
     // Logic for adding gender
     console.log(DutyData);
   };
+  function getNextBirthdayAge(birthDateStr) {
+    // Parse the birth date in DD/MM/YYYY format using Moment.js
+    const birthDate = moment(birthDateStr, 'DD/MM/YYYY');
 
+    // Get today's date
+    const today = moment();
+
+    // Create the next birthday date for the current year
+    let nextBirthday = moment(birthDate).year(today.year());
+
+    // If the birthday has passed this year, move it to next year
+    if (today.isAfter(nextBirthday)) {
+      nextBirthday.add(1, 'years');
+    }
+
+    // Calculate the age on the next birthday
+    const ageNextBirthday = nextBirthday.year() - birthDate.year();
+
+    return ageNextBirthday;
+  }
+  const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
+
+  // let ageOnNextBirthday = getNextBirthdayAge(InfData?.dateOfBirth);
+  useEffect(() => {
+    if (InfData?.dateOfBirth) {
+      const age = getNextBirthdayAge(InfData?.dateOfBirth);
+      setAgeOnNextBirthday(age);
+    }
+  }, [InfData?.dateOfBirth]);
   const customRequest = ({ file, onSuccess, onError }) => {
     setTimeout(() => {
       if (file) {
@@ -1158,17 +1196,19 @@ function MyDeatails() {
               </div> */}
                 <div className="lbl-inpt">
                   <div className="title-cont">
-                    <p className="">Date of Birth :</p>
+                    <p className="">Date of Birth1 :</p>
                   </div>
-
                   <div className="input-cont">
                     <p className="star">*</p>
                     <MyDatePicker
                       style={{ width: "100%", borderRadius: "3px" }}
-                      defaultValue={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                      value={InfData?.dateOfBirth ? moment(InfData.dateOfBirth, 'DD/MM/YYYY') : null} // Convert string to moment
+                      onChange={(date, dateString) => {
+                        handleInputChangeWhole('dateOfBirth', dateString); // Pass the string value
+                      }}
                     />
                     {/* <div className="ag-65"> */}
-                    <p className="ag-65-title" >46 Yrs</p>
+                    <p className="ag-65-title" >{ageOnNextBirthday}</p>
                     {/* </div> */}
                   </div>
                 </div>
@@ -1179,7 +1219,7 @@ function MyDeatails() {
                   <div className="input-cont">
                     <p className="star-white">*</p>
                     <MyDatePicker
-                      
+
                       defaultValue={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
                     />
                   </div>
@@ -1554,7 +1594,7 @@ function MyDeatails() {
                     <MySelect isSimple={true} />
                   </div>
                 </div>
-              
+
                 <div className="lbl-inpt">
                   <div className="title-cont">
                     <p className="">Associate Member :</p>
@@ -1587,68 +1627,68 @@ function MyDeatails() {
                     <Input value={InfData?.gardaRegNo} />
                   </div>
                 </div>
-                <Row style={{paddingLeft:'12px'}}>
+                <Row style={{ paddingLeft: '12px' }}>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                    District Rep
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      District Rep
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                  Division Rep
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      Division Rep
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                  C.E.C
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      C.E.C
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                    District Sec
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      District Sec
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                    Division Sec
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      Division Sec
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                    Panel of
-                    Friends
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      Panel of
+                      Friends
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                    Division Chair
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      Division Chair
+                    </Checkbox>
                   </Col>
                   <Col span={8}>
-                  <Checkbox className="lbl">
-                  District Chair
-                  </Checkbox>
+                    <Checkbox className="lbl">
+                      District Chair
+                    </Checkbox>
                   </Col>
                 </Row>
                 <div className="d-flex justify-content-end ms-2">
                   <div className="sub-com-cont me-4">
-                  <p className="sub-com">Sub Committees :</p>
+                    <p className="sub-com">Sub Committees :</p>
                   </div>
                   <div className="me-4">
-                  <Button className="butn primary-btn">+</Button>
+                    <Button className="butn primary-btn">+</Button>
                   </div>
                 </div>
                 <div className="d-flex justify-content-center">  {/* Ensure the outer div is a flexbox */}
                   <Upload {...props}>
                     <div className="d-flex
                     ">
-                  <p className="star">*</p>
-                    <Button icon={<UploadOutlined />}>Click to Upload</Button>
-                      </div>
+                      <p className="star">*</p>
+                      <Button icon={<UploadOutlined />}>Click to Upload</Button>
+                    </div>
                   </Upload>
                 </div>
                 <Divider>Subscriptions</Divider>
-                <Row style={{paddingLeft:'12px'}}>
+                <Row style={{ paddingLeft: '12px' }}>
                   <Col span={12}>
                     <Checkbox className="subs-chkbx">
                       Life Assurance (Member)
@@ -1698,7 +1738,7 @@ function MyDeatails() {
                     <Checkbox className="subs-chkbx">
                       Balloted
                     </Checkbox>
-                    <Input style={{width:'80%'}} />
+                    <Input style={{ width: '80%' }} />
                   </Col>
                 </Row>
               </div>

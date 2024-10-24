@@ -1,15 +1,18 @@
 import React from 'react'
 import { DatePicker } from 'antd'
+import dayjs from 'dayjs';
+
 const dateFormat = 'DD/MM/YYYY';
 
-function MyDatePicker({onChange,defaultValue }) {
+function MyDatePicker({onChange,value }) {
   return (
     // <DatePicker />
-    <DatePicker 
+    <DatePicker
     style={{ width: "100%", borderRadius: "3px" }}
-    format={dateFormat} 
-    defaultValue={defaultValue}
-    />
+    onChange={onChange} // Handle change event// Apply passed styles
+    format={dateFormat} // Set the date format
+    value={value} // Controlled value from props
+  />
     // <DatePicker defaultValue={dayjs('2015/01/01', dateFormat)} format={dateFormat} />
   )
 }
