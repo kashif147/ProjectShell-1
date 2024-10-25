@@ -18,7 +18,9 @@ import { FiPlusCircle } from "react-icons/fi";
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
-
+import MySelect from "../component/common/MySelect";
+import { insertDataFtn } from "../utils/Utilities";
+import { baseURL } from "../utils/Utilities";
 
 
 function Configuratin() {
@@ -121,7 +123,42 @@ function Configuratin() {
       [name3]: value3,
     }));
   };
+const [drawerOpen, setDrawerOpen] = useState({
+  Counteries:false,
+  Provinces:false,
+  Cities:false,
+})
+let drawerInputsInitalValues = {
+  Counteries:{RegionCode:'',RegionName:'',DisplayName:'',ParentRegion:null},
+  Provinces:{RegionCode:'',RegionName:'',DisplayName:'',ParentRegion:null},
+  Cities:{RegionCode:'',RegionName:'',DisplayName:'',ParentRegion:null},
 
+}
+const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
+const drawrInptChng = (drawer,field, value) =>{
+  setdrawerIpnuts((prevState) => ({
+    ...prevState,
+    [drawer]: {
+      ...prevState[drawer],
+      [field]: value,
+    },
+  }));
+}
+
+// this function will drawer all inputs
+const resetCounteries = (drawer) => {
+  setdrawerIpnuts((prevState) => ({
+    ...prevState,
+    [drawer]: drawerInputsInitalValues[drawer],
+  }));
+};
+
+const openCloseDrawerFtn = (name) =>{
+    setDrawerOpen((prevState)=>({
+      ...prevState,
+      [name]:!prevState[name]
+    }))
+}
   const handleInputChange4 = (name4, value4) => {
     setSubscriptionData((prevState4) => ({
       ...prevState4,
@@ -135,7 +172,37 @@ function Configuratin() {
       [name7]: value7,
     }));
   };
-
+  const dataSource = [
+    {
+      key: '1',
+      name: 'Mike',
+      age: 32,
+      address: '10 Downing Street',
+    },
+    {
+      key: '2',
+      name: 'John',
+      age: 42,
+      address: '10 Downing Street',
+    },
+  ];
+  const columns = [
+    {
+      title: 'RegionCode',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'RegionName',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'DisplayName',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+  ];
   const SubscriptionsColumn = [
     {
       title: "Short Name",
@@ -655,7 +722,17 @@ function Configuratin() {
     },
   ];
 
-
+  const [selectionType, setSelectionType] = useState('checkbox');
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+    },
+    getCheckboxProps: (record) => ({
+      disabled: record.name === 'Disabled User',
+      // Column configuration not to be checked
+      name: record.name,
+    }),
+  };
   // Toggling Modal Functions
   const genderModalOpen = () => setGenderModal(!genderModal);
   const membershipModalFtn = () => setMembershipModal(!membershipModal);
@@ -729,20 +806,16 @@ function Configuratin() {
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={membershipModalFtn} className= "center-content">
+          <div onClick={()=>openCloseDrawerFtn('Counteries')} className= "center-content">
             <div className="icon-container">
 
-            <PiUsersFourDuotone className="icons" />
+            <PiUsersFourDuotone className="icons"  />
             </div>
             <p className="lookups-title">Counteries</p>
           </div>
-
-
-
-
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+          <div onClick={()=>openCloseDrawerFtn('Provinces')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Provinces</p>
           </div>
@@ -754,7 +827,7 @@ function Configuratin() {
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <div onClick={()=>openCloseDrawerFtn('Cities')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Cities</p>
           </div>
@@ -1753,6 +1826,7 @@ function Configuratin() {
       </MyDrawer>
       {/* ContactType Modal */}
 
+      {/* ContactType Modal */}
       <MyDrawer
         width={"1000px"}
         open={isContactTypeModal}
@@ -1838,6 +1912,219 @@ function Configuratin() {
             </div>
           )}
         />
+      </MyDrawer>
+      <MyDrawer title='Counteries' open={drawerOpen?.Counteries} onClose={()=>openCloseDrawerFtn('Counteries')} add={()=>{
+        console.log(drawerIpnuts?.Counteries)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:',resetCounteries('Counteries') )
+        
+      }} >
+          <div className="drawer-main-cntainer">
+            <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Province :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+               <MySelect placeholder='Select Province' isSimple={true} />
+               <h1 className="error-text">error-text</h1>
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Code :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp"  onChange={(e)=>drawrInptChng('Counteries','RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode}/>
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Name :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
+                </div> 
+              <p className="error"></p>
+              </div>
+              </div>
+            </div>
+            <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columns} 
+             className="drawer-tbl"
+             rowClassName={(record, index) =>
+               index % 2 !== 0 ? "odd-row" : "even-row"
+             }
+             rowSelection={{
+              type: selectionType,
+              ...rowSelection,
+            }}
+             bordered
+            />;
+            </div>
+          </div>
+      </MyDrawer>
+      <MyDrawer title='Provinces' open={drawerOpen?.Provinces} onClose={()=>openCloseDrawerFtn('Provinces')} add={()=>{
+        console.log(drawerIpnuts?.Provinces)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Provinces, 'Data inserted successfully:', 'Data did not insert:',resetCounteries('Provinces') )
+      }} >
+          <div className="drawer-main-cntainer">
+            <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Province :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+               <MySelect placeholder='Select Province' isSimple={true} />
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Code :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp"  onChange={(e)=>drawrInptChng('Counteries','RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode}/>
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Name :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
+                </div> 
+              <p className="error"></p>
+              </div>
+              </div>
+            </div>
+            <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columns} 
+             className="drawer-tbl"
+             rowClassName={(record, index) =>
+               index % 2 !== 0 ? "odd-row" : "even-row"
+             }
+             rowSelection={{
+              type: selectionType,
+              ...rowSelection,
+            }}
+             bordered
+            />;
+            </div>
+          </div>
+      </MyDrawer>
+      <MyDrawer title='Cities' open={drawerOpen?.Cities} onClose={()=>openCloseDrawerFtn('Cities')} add={()=>{
+        console.log(drawerIpnuts?.Cities)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Cities, 'Data inserted successfully:', 'Data did not insert:',resetCounteries('Cities') )
+      }} >
+          <div className="drawer-main-cntainer">
+            <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Province :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+               <MySelect placeholder='Select Province' isSimple={true} />
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Code :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp"  onChange={(e)=>drawrInptChng('Counteries','RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode}/>
+                <h1 className="error-text">error-text</h1>
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Name :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                </div> 
+              <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
+                </div> 
+              <p className="error"></p>
+              </div>
+              </div>
+            </div>
+            <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columns} 
+             className="drawer-tbl"
+             rowClassName={(record, index) =>
+               index % 2 !== 0 ? "odd-row" : "even-row"
+             }
+             rowSelection={{
+              type: selectionType,
+              ...rowSelection,
+            }}
+             bordered
+            />;
+            </div>
+          </div>
       </MyDrawer>
 
     </div>

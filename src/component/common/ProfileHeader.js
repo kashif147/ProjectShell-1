@@ -54,15 +54,15 @@ function ProfileHeader() {
                                     src={imageUrl}
                                     alt="Uploaded"
                                     style={{
-                                        width: "100px",
-                                        height: "100px",
+                                        width: "80px",
+                                        height: "80px",
                                         borderRadius: "50%",
                                     }}
                                 />
                             ) : (
                                 <div className="profile-image" style={{
-                                    width: "100px",
-                                    height: "100px",
+                                    width: "80px",
+                                    height: "80px",
                                     display: "flex",
                                     justifyContent: "center",
                                     alignItems: "center",

@@ -28,6 +28,7 @@ import Login from "./pages/auth/Login";
 import LandingPage from "./component/msft/LandingPage";
 import Reports from "./pages/repots/Reports";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
+import MyFooter from "./component/common/MyFooter";
 
 function Entry() {
   const location = useLocation();
@@ -109,6 +110,11 @@ function Entry() {
             <ResizableComp />
           )}
       </div>
+      {(location?.pathname == "/Details" && (
+      <div style={{width:'100%',height:'50px'}} className="footer">
+      <MyFooter />
+      </div>
+      ))}
     </div>
   );
 }

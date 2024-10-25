@@ -12,6 +12,7 @@
 .input-container{
    
 }
+
 .bordr-less{
   border: none;
   box-shadow: none; 
@@ -355,7 +356,7 @@ body {
 }
 
 .ant-menu {
-  background-color: #45669d !important;
+  background-color: var(--mainBlue) !important;
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
   .ant-menu-item-selected,
@@ -842,14 +843,15 @@ h1 {
   float: right;
 }
 .sid-nav-main{
-  background-color: #45669d;
+  background-color: var(--mainBlue);
 }
 .profil-container-main{
   width: 16%;
-  padding-top: 20px !important;
+  padding-top: 40px !important;
   padding: 5px 0px;
-  border: 2px solid #e0e0e0;
+  border: 0.5px solid #e0e0e0;
   border-top: none;
+  border-right: none;
   margin-inline: 0px;
   background-color: #e6f8ff;
 }
@@ -1117,3 +1119,9 @@ color: red !important;
   position: relative; /* Ensure these elements sit above the watermark */
   padding: 20px;
 }
+/* .footer{
+  position:absolute;
+  bottom:0;
+  width:100%;
+  height:60px
+} */

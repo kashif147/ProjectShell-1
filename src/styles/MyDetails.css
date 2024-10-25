@@ -2,15 +2,18 @@
     background-color: var(--secoundry-bg-color);
     padding-top: 7px;
     padding-bottom: 9px;
+    /* border-radius: 10px; */
 }
 
 p {
 
     /* margin: 0px !important; */
 }
+
 .title-cont p {
     margin: 0px !important;
 }
+
 .details-con-header h2 {
     font-size: 23px;
     text-align: center;
@@ -25,6 +28,12 @@ p {
     background-color: #F5F5F5;
     padding: 7px 0px;
     height: 870px;
+    border-bottom: 1px solid #e0e0e0;
+}
+
+.detail-sub-con-ist {
+    border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px;
 }
 
 .lbl-inpt {
@@ -33,6 +42,7 @@ p {
     width: 100%;
     height: 46px;
 }
+
 .lbl {
     width: 160px;
     margin-right: 10px;
@@ -81,18 +91,22 @@ p {
     font-weight: 600;
     font-size: 14px;
 }
+
 input {
     height: 32px !important;
     margin: 0px;
 }
+
 .ant-picker {
     height: 32px !important;
 }
+
 .checkbox-con {
     display: flex;
     width: 100%;
     align-items: center;
 }
+
 .checkbox-sub {
     background-color: white;
     margin-right: 5px;
@@ -102,6 +116,7 @@ input {
     width: 32px;
     height: 32px;
 }
+
 .suffix-container {
     display: flex;
     align-items: center;
@@ -111,16 +126,20 @@ input {
     padding-left: 5px;
     padding-right: 5px;
 }
+
 .ant-input-affix-wrapper {
     padding: 0px;
 }
+
 .input-container-with-sup {
     width: 100%;
     display: flex;
 }
+
 .detail-btn {
     height: 32px;
 }
+
 .date-picker-custom {
     border-radius: 3px !important;
 }
@@ -148,10 +167,7 @@ input {
 
 .drawer-lbl {}
 
-.inpt-container {
-    display: flex;
-    justify-content: center;
-}
+
 
 .drawer-lbl p {
     font: 14px;
@@ -186,34 +202,41 @@ input {
     text-align: right;
     margin-bottom: 0px !important;
 }
-.error-text  {
+
+.error-text {
     color: red;
     font-weight: 600;
-    font-size: 13px;
+    font-size: 11px;
     margin-bottom: 8px !important;
 }
+
 .input-sub-con {
     width: 100% !important;
     margin-bottom: 4px;
 }
+
 .custom-dropdown-button {
     width: 100%;
     border-radius: 3px;
     padding: 0;
     display: flex;
 }
+
 .custom-dropdown-button button {
     width: 100%;
     border-radius: 3px;
 }
+
 .date-picker {
     width: 100%;
     border-radius: 3px !important;
 }
+
 .lbl-inpt-2 {
     display: flex;
     height: 76px;
 }
+
 .title-cont-2 {
     height: 76px;
     display: flex;
@@ -221,19 +244,26 @@ input {
     align-items: center;
     width: 28%;
 }
-.txtarea-cont{
-    height: 125px;
+
+.txtarea-cont {
+    height: 90px;
     display: flex;
     width: 100%;
 }
+
 .title-cont-txtarea {
-    height: 125px;
+    height: 90px;
     display: flex;
     justify-content: flex-end;
     width: 28%;
 }
+
 .lbl-txtarea-2 {
     display: flex;
     width: 100%;
-    height: 125px;
+    height: 90px;
+}
+
+.upload-container {
+    height: 100px;
 }
