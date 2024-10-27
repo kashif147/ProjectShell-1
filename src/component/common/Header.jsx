@@ -125,7 +125,7 @@ function Header() {
 
   return (
     <div className="Header-border overflow-y-hidden">
-      <div className=" d-flex justify-content-between align-items-baseline">
+      <div className=" d-flex justify-content-between align-items-baseline" style={{paddingTop:"8px", paddingBottom:"5px"}}>
         <nav class="navbar navbar-expand-lg navbar-light ">
           <button
             class="navbar-toggler"
