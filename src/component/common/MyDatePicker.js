@@ -4,14 +4,16 @@ import dayjs from 'dayjs';
 
 const dateFormat = 'DD/MM/YYYY';
 
-function MyDatePicker({onChange,value }) {
+function MyDatePicker({onChange,value,disabled }) {
   return (
     // <DatePicker />
     <DatePicker
     style={{ width: "100%", borderRadius: "3px" }}
-    onChange={onChange} // Handle change event// Apply passed styles
-    format={dateFormat} // Set the date format
-    value={value} // Controlled value from props
+    onChange={onChange} 
+    format={dateFormat} 
+    value={value}
+    defaultValue={value}
+    disabled={disabled}
   />
     // <DatePicker defaultValue={dayjs('2015/01/01', dateFormat)} format={dateFormat} />
   )

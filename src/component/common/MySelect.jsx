@@ -1,6 +1,6 @@
 import React from 'react'
 import { Select } from 'antd'
-function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimple,width}) {
+function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimple,width,disabled,}) {
   const { Option } = Select;
   return (
     <Select
@@ -17,6 +17,7 @@ function MySelect({placeholder,options,defaultValue,value,onChange,isMenu,isSimp
         : {}}
     onChange={onChange}
     onClick={(e) => e.stopPropagation()}
+    disabled={disabled}
   >
     {options?.map(option => (
       <Option key={option.key} value={option.key}>

@@ -1,10 +1,10 @@
 import axios from "axios";
 export const token = localStorage.getItem('token');
-export const  baseURL = 'https://node-api-app-dxecgpajapacc4gs.northeurope-01.azurewebsites.net'
+export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 
 
 export const insertDataFtn = async (url, data, successNotification, faliearNotification, resetCounteries) => {
- debugger
+
   try {
     const response = await axios.post(url, data, {
       headers: {
@@ -14,9 +14,9 @@ export const insertDataFtn = async (url, data, successNotification, faliearNotif
     });
     console.log({successNotification}, response.data);
     resetCounteries()
-    return response.data; 
+    return
   } catch (error) {
-    console.error({faliearNotification}, error);
-    throw error;
+   return console.error({faliearNotification}, error);
+
   }
 };

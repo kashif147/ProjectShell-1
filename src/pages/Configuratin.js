@@ -3,7 +3,7 @@ import { SiActigraph } from "react-icons/si";
 import { FaRegMap } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
-import { Input, Table, Row, Col, Space, Pagination, Divider } from "antd";
+import { Input, Table, Row, Col, Space, Pagination, Divider, Checkbox, Button, } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
@@ -15,12 +15,14 @@ import { tableData } from "../Data";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
 import { FiPlusCircle } from "react-icons/fi";
+
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
 import MySelect from "../component/common/MySelect";
 import { insertDataFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
+import { render } from "@testing-library/react";
 
 
 function Configuratin() {
@@ -123,42 +125,45 @@ function Configuratin() {
       [name3]: value3,
     }));
   };
-const [drawerOpen, setDrawerOpen] = useState({
-  Counteries:false,
-  Provinces:false,
-  Cities:false,
-})
-let drawerInputsInitalValues = {
-  Counteries:{RegionCode:'',RegionName:'',DisplayName:'',ParentRegion:null},
-  Provinces:{RegionCode:'',RegionName:'',DisplayName:'',ParentRegion:null},
-  Cities:{RegionCode:'',RegionName:'',DisplayName:'',ParentRegion:null},
-
-}
-const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
-const drawrInptChng = (drawer,field, value) =>{
-  setdrawerIpnuts((prevState) => ({
-    ...prevState,
-    [drawer]: {
-      ...prevState[drawer],
-      [field]: value,
-    },
-  }));
-}
-
-// this function will drawer all inputs
-const resetCounteries = (drawer) => {
-  setdrawerIpnuts((prevState) => ({
-    ...prevState,
-    [drawer]: drawerInputsInitalValues[drawer],
-  }));
-};
-
-const openCloseDrawerFtn = (name) =>{
-    setDrawerOpen((prevState)=>({
+  const [drawerOpen, setDrawerOpen] = useState({
+    Counteries: false,
+    Provinces: false,
+    Cities: false,
+    PostCode: false,
+    Districts:false,
+    Divisions:false,
+    Station:false
+  })
+  let drawerInputsInitalValues = {
+    Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
+    Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
+    Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
+  }
+  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
+  const drawrInptChng = (drawer, field, value) => {
+    setdrawerIpnuts((prevState) => ({
       ...prevState,
-      [name]:!prevState[name]
+      [drawer]: {
+        ...prevState[drawer],
+        [field]: value,
+      },
+    }));
+  }
+
+  // this function will drawer all inputs
+  const resetCounteries = (drawer) => {
+    setdrawerIpnuts((prevState) => ({
+      ...prevState,
+      [drawer]: drawerInputsInitalValues[drawer],
+    }));
+  };
+
+  const openCloseDrawerFtn = (name) => {
+    setDrawerOpen((prevState) => ({
+      ...prevState,
+      [name]: !prevState[name]
     }))
-}
+  }
   const handleInputChange4 = (name4, value4) => {
     setSubscriptionData((prevState4) => ({
       ...prevState4,
@@ -172,6 +177,7 @@ const openCloseDrawerFtn = (name) =>{
       [name7]: value7,
     }));
   };
+
   const dataSource = [
     {
       key: '1',
@@ -186,21 +192,286 @@ const openCloseDrawerFtn = (name) =>{
       address: '10 Downing Street',
     },
   ];
-  const columns = [
+  const columnProvince = [
     {
-      title: 'RegionCode',
+      title: 'Code',
       dataIndex: 'RegionCode',
       key: 'RegionCode',
     },
     {
-      title: 'RegionName',
+      title: 'Province',
       dataIndex: 'RegionName',
       key: 'RegionName',
     },
     {
-      title: 'DisplayName',
+      title: 'Display Name',
       dataIndex: 'DisplayName',
       key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'Active',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox></Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+
+        </Space>
+      ),
+    },
+  ];
+  const columnCountry = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'County',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Province',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  const columnPostCode = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Post Code',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'City',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  const columnDistricts = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Districts',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Division',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  const columnDivisions = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Districts',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Division',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  const columnCity = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Districts',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Division',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
     },
   ];
   const SubscriptionsColumn = [
@@ -258,8 +529,6 @@ const openCloseDrawerFtn = (name) =>{
       ),
     },
   ];
-
-
   const ProfileColumns = [
     {
       title: "RegNo",
@@ -412,7 +681,6 @@ const openCloseDrawerFtn = (name) =>{
       ),
     },
   ];
-
   const RegionTypeColumnss = [
 
     {
@@ -467,7 +735,6 @@ const openCloseDrawerFtn = (name) =>{
       ),
     },
   ];
-
   const ContactTypeColumns = [
 
     {
@@ -513,9 +780,6 @@ const openCloseDrawerFtn = (name) =>{
       ),
     },
   ];
-
-
-
   const column = [
     {
       title: "Short Name",
@@ -544,7 +808,34 @@ const openCloseDrawerFtn = (name) =>{
       ),
     },
   ];
-
+  const columns = [
+    {
+      title: "Short Name",
+      dataIndex: "ShortName",
+      key: "ShortName",
+      width: 60,
+      align: "center",
+      render: (text) => <div style={styles.centeredCell}>{text}</div>,
+    },
+    {
+      title: "Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+      align: "center",
+      render: (text) => <div style={styles.centeredCell}>{text}</div>,
+    },
+    {
+      title: "Action",
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
   const membership = [
     {
       key: "1",
@@ -575,7 +866,6 @@ const openCloseDrawerFtn = (name) =>{
       Beta: "B764",
     },
   ];
-
   const partnership = [
     {
       key: "1",
@@ -606,7 +896,6 @@ const openCloseDrawerFtn = (name) =>{
       Beta: "B764",
     },
   ];
-
   const subscription = [
     {
       key: "1",
@@ -637,8 +926,6 @@ const openCloseDrawerFtn = (name) =>{
       Beta: "B764",
     },
   ];
-
-
   const gender = [
     {
       key: "1",
@@ -662,7 +949,6 @@ const openCloseDrawerFtn = (name) =>{
       Beta: "B764",
     },
   ];
-
   const RegionTy = [
     {
       key: "1",
@@ -700,7 +986,6 @@ const openCloseDrawerFtn = (name) =>{
       HasChildren: "0",
     },
   ];
-
   const ContactTy = [
     {
       key: "1",
@@ -781,73 +1066,80 @@ const openCloseDrawerFtn = (name) =>{
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={genderModalOpen} className= "center-content">
+          <div onClick={genderModalOpen} className="center-content">
             <div className="icon-container">
-            <SiActigraph className="icons" />
+              <SiActigraph className="icons" />
             </div>
             <p className="lookups-title">Titles Titles</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={partnershipModalFtn} className= "center-content">
+          <div onClick={partnershipModalFtn} className="center-content">
             <div className="icon-container">
-            <PiHandshakeDuotone className="icons" />
+              <PiHandshakeDuotone className="icons" />
             </div>
             <p className="lookups-title">Gender</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={subscriptionsModalFtn} className= "center-content">
+          <div onClick={subscriptionsModalFtn} className="center-content">
             <div className="icon-container">
 
-            <LuCalendarDays className="icons" />
+              <LuCalendarDays className="icons" />
             </div>
             <p className="lookups-title">Marital Status</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={()=>openCloseDrawerFtn('Counteries')} className= "center-content">
-            <div className="icon-container">
-
-            <PiUsersFourDuotone className="icons"  />
-            </div>
-            <p className="lookups-title">Counteries</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={()=>openCloseDrawerFtn('Provinces')}>
+          <div onClick={() => openCloseDrawerFtn('Provinces')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Provinces</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Counties</p>
+          <div onClick={() => openCloseDrawerFtn('Counteries')} className="center-content">
+            <div className="icon-container">
+
+              <PiUsersFourDuotone className="icons" />
+            </div>
+            <p className="lookups-title">Counteries</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-        <div onClick={()=>openCloseDrawerFtn('Cities')}>
+          <div onClick={() => openCloseDrawerFtn('Cities')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Cities</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Counties1</p>
+          </div>
+        </Col> */}
+
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={() => openCloseDrawerFtn('PostCode')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Post Codes</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+          <div onClick={() => openCloseDrawerFtn('Divisions')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Divisions</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+          <div onClick={() => openCloseDrawerFtn('Districts')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Districts</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={() => openCloseDrawerFtn('Station')}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Station</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
@@ -936,10 +1228,10 @@ const openCloseDrawerFtn = (name) =>{
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn} className= "center-content">
+          <div onClick={dummyModalFtn} className="center-content">
             <div className="icon-container">
 
-            <PiHandshakeDuotone className="icons" />
+              <PiHandshakeDuotone className="icons" />
             </div>
             <p className="lookups-title ">Payment Types</p>
           </div>
@@ -1050,127 +1342,127 @@ const openCloseDrawerFtn = (name) =>{
           </div>
         </Col>
       </Row>
-      <Divider  orientation="left">Roles-Based</Divider>
+      <Divider orientation="left">Roles-Based</Divider>
       <Row>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion  
-            className="icons" />
+            <FaRegCircleQuestion
+              className="icons" />
             <p className="lookups-title">Roles</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle   
-            className="icons" />
+            <HiOutlineMinusCircle
+              className="icons" />
             <p className="lookups-title">Permissions</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle   
-            className="icons" />
+            <FiPlusCircle
+              className="icons" />
             <p className="lookups-title">Permissions</p>
           </div>
         </Col>
       </Row>
-<Divider orientation="left">Business Rules & Workflows</Divider>
-<Row>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+      <Divider orientation="left">Business Rules & Workflows</Divider>
+      <Row>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion  
-            className="icons" />
+            <FaRegCircleQuestion
+              className="icons" />
             <p className="lookups-title">Member Status</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle   
-            className="icons" />
+            <HiOutlineMinusCircle
+              className="icons" />
             <p className="lookups-title">Priorities</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle   
-            className="icons" />
+            <FiPlusCircle
+              className="icons" />
             <p className="lookups-title">pause-circle</p>
           </div>
         </Col>
       </Row>
       <Divider orientation="left">Application Settings</Divider>
       <Row>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion  
-            className="icons" />
+            <FaRegCircleQuestion
+              className="icons" />
             <p className="lookups-title">Member Status</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle   
-            className="icons" />
+            <HiOutlineMinusCircle
+              className="icons" />
             <p className="lookups-title">Priorities</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle   
-            className="icons" />
+            <FiPlusCircle
+              className="icons" />
             <p className="lookups-title">pause-circle</p>
           </div>
         </Col>
       </Row>
       <Divider orientation="left">Customization and Branding</Divider>
       <Row>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion  
-            className="icons" />
+            <FaRegCircleQuestion
+              className="icons" />
             <p className="lookups-title">Member Status</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle   
-            className="icons" />
+            <HiOutlineMinusCircle
+              className="icons" />
             <p className="lookups-title">Priorities</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle   
-            className="icons" />
+            <FiPlusCircle
+              className="icons" />
             <p className="lookups-title">pause-circle</p>
           </div>
         </Col>
       </Row>
       <Divider orientation="left">UI/UX Display</Divider>
       <Row>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion  
-            className="icons" />
+            <FaRegCircleQuestion
+              className="icons" />
             <p className="lookups-title">Member Status</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle   
-            className="icons" />
+            <HiOutlineMinusCircle
+              className="icons" />
             <p className="lookups-title">Priorities</p>
           </div>
         </Col>
-      <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle   
-            className="icons" />
+            <FiPlusCircle
+              className="icons" />
             <p className="lookups-title">pause-circle</p>
           </div>
         </Col>
       </Row>
-   
+
       <MyDrawer
         open={genderModal}
         onClose={genderModalOpen}
@@ -1212,7 +1504,7 @@ const openCloseDrawerFtn = (name) =>{
         />
 
         <Table
-          columns={column}
+          columns={columnCountry}
           pagination={false}
           dataSource={gender}
           className="drawer-tbl"
@@ -1913,48 +2205,48 @@ const openCloseDrawerFtn = (name) =>{
           )}
         />
       </MyDrawer>
-      <MyDrawer title='Counteries' open={drawerOpen?.Counteries} onClose={()=>openCloseDrawerFtn('Counteries')} add={()=>{
+      <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries} onClose={() => openCloseDrawerFtn('Counteries')} add={() => {
+      
         console.log(drawerIpnuts?.Counteries)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:',resetCounteries('Counteries') )
-        
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Counteries'))
       }} >
-          <div className="drawer-main-cntainer">
-            <div className="mb-4 pb-4">
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Province :</p>
+                <p>Type :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-               <MySelect placeholder='Select Province' isSimple={true} />
-               <h1 className="error-text">error-text</h1>
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Province' isSimple={true} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Region Code :</p>
+                <p>Code :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp"  onChange={(e)=>drawrInptChng('Counteries','RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode}/>
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Region Name :</p>
+                <p>County Name :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -1962,69 +2254,94 @@ const openCloseDrawerFtn = (name) =>{
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
-                </div> 
-              <p className="error"></p>
-              </div>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
-            <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columns} 
-             className="drawer-tbl"
-             rowClassName={(record, index) =>
-               index % 2 !== 0 ? "odd-row" : "even-row"
-             }
-             rowSelection={{
-              type: selectionType,
-              ...rowSelection,
-            }}
-             bordered
-            />;
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Province :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
             </div>
           </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columnCountry}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
       </MyDrawer>
-      <MyDrawer title='Provinces' open={drawerOpen?.Provinces} onClose={()=>openCloseDrawerFtn('Provinces')} add={()=>{
+      <MyDrawer title='Provinces' open={drawerOpen?.Provinces} isPagination={true}  onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
         console.log(drawerIpnuts?.Provinces)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Provinces, 'Data inserted successfully:', 'Data did not insert:',resetCounteries('Provinces') )
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Provinces, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Provinces'))
       }} >
-          <div className="drawer-main-cntainer">
-            <div className="mb-4 pb-4">
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Province' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Province :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-               <MySelect placeholder='Select Province' isSimple={true} />
-                </div> 
-              <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Region Code :</p>
-              </div>
-              <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp"  onChange={(e)=>drawrInptChng('Counteries','RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode}/>
-                </div> 
-              <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Region Name :</p>
-              </div>
-              <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -2032,70 +2349,84 @@ const openCloseDrawerFtn = (name) =>{
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
-                </div> 
-              <p className="error"></p>
-              </div>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
-            <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columns} 
-             className="drawer-tbl"
-             rowClassName={(record, index) =>
-               index % 2 !== 0 ? "odd-row" : "even-row"
-             }
-             rowSelection={{
-              type: selectionType,
-              ...rowSelection,
-            }}
-             bordered
-            />;
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
             </div>
           </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columnProvince}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
       </MyDrawer>
-      <MyDrawer title='Cities' open={drawerOpen?.Cities} onClose={()=>openCloseDrawerFtn('Cities')} add={()=>{
+      <MyDrawer title='Cities' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
         console.log(drawerIpnuts?.Cities)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Cities, 'Data inserted successfully:', 'Data did not insert:',resetCounteries('Cities') )
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Cities, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Cities'))
       }} >
-          <div className="drawer-main-cntainer">
-            <div className="mb-4 pb-4">
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Province :</p>
+                <p>Type :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-               <MySelect placeholder='Select Province' isSimple={true} />
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='City' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Region Code :</p>
+                <p>Code :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp"  onChange={(e)=>drawrInptChng('Counteries','RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode}/>
-                <h1 className="error-text">error-text</h1>
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
               </div>
             </div>
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Region Name :</p>
+                <p>County Name :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
-                </div> 
-              <p className="error"></p>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} />
+                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                </div>
+                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -2103,28 +2434,438 @@ const openCloseDrawerFtn = (name) =>{
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
-                </div> 
-              <p className="error"></p>
-              </div>
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
               </div>
             </div>
-            <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columns} 
-             className="drawer-tbl"
-             rowClassName={(record, index) =>
-               index % 2 !== 0 ? "odd-row" : "even-row"
-             }
-             rowSelection={{
-              type: selectionType,
-              ...rowSelection,
-            }}
-             bordered
-            />;
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Province :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select Province' isSimple={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
             </div>
           </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columns}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true}  onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
+        console.log(drawerIpnuts?.PostCode)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
+      }} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Postcode' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>County Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} />
+                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>City  :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select City' isSimple={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columnPostCode}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true}  onClose={() => openCloseDrawerFtn('Districts')} add={() => {
+        console.log(drawerIpnuts?.Districts)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Districts, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Districts'))
+      }} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Districts' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>County Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} />
+                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Division :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Select Division' />
+                  {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
+                <p className="error"></p>
+                </div>
+                <Button className="butn primary-btn detail-btn ms-2">
+                      +
+                    </Button>
+              </div>
+            </div>
+           
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columnDistricts}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true}  onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
+        console.log(drawerIpnuts?.Divisions)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Divisions'))
+      }} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Districts' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>County Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} />
+                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columnDistricts}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Station' open={drawerOpen?.Station} isPagination={true}  onClose={() => openCloseDrawerFtn('Station')} add={() => {
+        console.log(drawerIpnuts?.Station)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Station, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Districts'))
+      }} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Districts' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>County Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} />
+                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Division :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Select Division' />
+                  {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
+                <p className="error"></p>
+                </div>
+                <Button className="butn primary-btn detail-btn ms-2">
+                      +
+                    </Button>
+              </div>
+            </div>
+           
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table dataSource={dataSource} columns={columnDistricts}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
       </MyDrawer>
 
     </div>

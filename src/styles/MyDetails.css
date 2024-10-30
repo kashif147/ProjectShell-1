@@ -267,3 +267,74 @@ input {
 .upload-container {
     height: 100px;
 }
+
+@media (max-width: 1790px) {
+    .gender-container {
+        height: 80px !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .gender-inpt {
+        height: 80px;
+    }
+}
+
+/* transfer drawer */
+.body-container {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+.transfer-main-inpts {
+    height: 46px;
+    width: 100%;
+}
+.transfer-main-inpts {
+    display: flex;
+    height: 46px;
+    align-items: center;
+}
+.transfer-main-inpts-p {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--labelColor);
+}
+.transfer-inpts-title {
+    height: 46px;
+    width: 35%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.transfer-inputs {
+    height: 46px;
+    width: 70%;
+}
+
+
+.transfer-main-inpts1 {
+    height: 88px;
+    width: 100%;
+}
+.transfer-main-inpts1 {
+    display: flex;
+    height: 88px;
+}
+.transfer-main-inpts-p {
+    font-size: 14px;
+    font-weight: 600;
+    color: var(--labelColor);
+}
+.transfer-inpts-title1 {
+    height: 88px;
+    width: 35%;
+    display: flex;
+    justify-content: flex-end;
+    align-items: center;
+}
+
+.transfer-inputs1 {
+    height: 88px;
+    width: 70%;
+}

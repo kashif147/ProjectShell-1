@@ -1,7 +1,7 @@
 
 import { React, useEffect, useState } from "react";
 
-import { Tabs, message, Button, Radio, Divider } from "antd";
+import { Tabs, message, Button, Radio, Divider, DatePicker, Table, Space } from "antd";
 import { LoadingOutlined, UploadOutlined, DownOutlined, UserOutlined } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
 import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
@@ -14,6 +14,10 @@ import { BsThreeDots } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useForm } from "react-hook-form";
 import MyDatePicker from "./MyDatePicker";
+import { FaRegCircleQuestion } from "react-icons/fa6";
+import { FaEdit } from "react-icons/fa";
+import { AiFillDelete } from "react-icons/ai";
+
 
 
 const { TextArea } = Input;
@@ -87,7 +91,7 @@ function MyDeatails() {
     NewlyAssignedDuty: "",
   });
 
-  const [modalOpenData, setmodalOpenData] = useState({ Partnership: false, Children: false })
+  const [modalOpenData, setmodalOpenData] = useState({ Partnership: false, Children: false, TransferScreen: false })
   const openCloseModalsFtn = (key,) => {
     setmodalOpenData((prevState) => ({
       ...prevState,
@@ -96,7 +100,7 @@ function MyDeatails() {
   };
 
   const handleInputChange = (name, value) => {
-   
+
     setTransferData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -141,10 +145,10 @@ function MyDeatails() {
         forename: ProfileDetails[0]?.forename,
         surname: ProfileDetails[0]?.surname,
         dateOfBirth: ProfileDetails[0]?.dateOfBirth,
-        dateRetired: ProfileDetails[0]?.dateRetired,
+        dateRetired: ProfileDetails[0]?.dateRetired == 'N/A' ? null : ProfileDetails[0]?.dateRetired,
         dateAged65: ProfileDetails[0]?.dateAged65,
-        isDeceased: ProfileDetails[0]?.dateOfDeath !== "N/A",
-        dateOfDeath: ProfileDetails[0]?.dateOfDeath,
+        isDeceased: ProfileDetails[0]?.dateOfDeath == "N/A" ? false : true,
+        dateOfDeath: ProfileDetails[0]?.dateOfDeath == 'N/A' ? null : ProfileDetails[0]?.dateOfDeath,
         Partnership: ProfileDetails[0]?.Partnership,
         stationPh: ProfileDetails[0]?.stationPhone,
         District: ProfileDetails[0]?.district,
@@ -156,8 +160,10 @@ function MyDeatails() {
         graduated: ProfileDetails[0]?.graduated,
         isGRAMember: ProfileDetails[0]?.graMember ? true : false,
         dateJoined: ProfileDetails[0]?.dateJoined,
+        isJoined: true,
         attested: ProfileDetails[0]?.attested,
         DateLeft: ProfileDetails[0]?.dateLeft,
+        isLeft: true,
         isAssociateMember: ProfileDetails[0]?.associateMember === "yes" ? true : false,
       };
       setInfData(profils);
@@ -194,7 +200,7 @@ function MyDeatails() {
   const handleMembershipInfoChange = (event) => {
     setMembershipInfoChecked(event.target.checked);
   };
- 
+
   const options = [
     {
       label: 'Male',
@@ -253,9 +259,9 @@ function MyDeatails() {
     console.log("radio checked", e.target.value);
     setValue(e.target.value);
   };
-const inputsChangeFtn = ()=>{
+  const inputsChangeFtn = () => {
 
-}
+  }
   const onCheckboxChange = (e) => {
     setIsChecked(e.target.checked);
   };
@@ -302,6 +308,7 @@ const inputsChangeFtn = ()=>{
 
     return ageNextBirthday;
   }
+
   const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
 
   // let ageOnNextBirthday = getNextBirthdayAge(InfData?.dateOfBirth);
@@ -320,7 +327,82 @@ const inputsChangeFtn = ()=>{
       }
     }, 1000);
   };
- 
+  const childrencolumns = [
+    {
+      title: 'Title',
+      dataIndex: 'title',
+      key: 'title'
+    },
+    {
+      title: 'Forename',
+      dataIndex: 'forename',
+      key: 'forename'
+    },
+    {
+      title: 'Surname',
+      dataIndex: 'surname',
+      key: 'surname'
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+
+        </Space>
+      ),
+    },
+  ];
+  const partnershipColumns = [
+    {
+      title: 'Name',
+      dataIndex: 'gardaRegNo',
+      key: 'gardaRegNo',
+    },
+    {
+      title: 'Date of Birth',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: 'Date Marriage',
+      dataIndex: 'dateMarriage',
+      key: 'dateMarriage',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: 'Date of Death',
+      dataIndex: 'dateMarriage',
+      key: 'dateMarriage',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+
+        </Space>
+      ),
+    },
+  ]
   const onSubmit = data => console.log(data);
   const handleButtonClick = (e) => {
     message.info('Click on left button.');
@@ -389,9 +471,14 @@ const inputsChangeFtn = ()=>{
       },
     ],
   };
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const rowSelection = {
+    selectedRowKeys,
+    onChange: (selectedKeys) => {
+      setSelectedRowKeys(selectedKeys);
+    }
+  };
   return (
-
- 
     <form onSubmit={handleSubmit(onSubmit)}>
       <div className="details-container">
         <div className="details-con-header1">
@@ -433,11 +520,11 @@ const inputsChangeFtn = ()=>{
                     <Input className="input" value={InfData?.surname} {...register("exampleRequired", { required: true })} />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
+                <div className="lbl-inpt gender-container">
+                  <div className="title-cont gender-title-con">
                     <p className=" ">Gender :</p>
                   </div>
-                  <div className="input-cont">
+                  <div className="input-cont gender-inpt">
                     <p className="star-white">*</p>
                     <div className="input">
                       <Radio.Group
@@ -471,12 +558,13 @@ const inputsChangeFtn = ()=>{
                   </div>
                   <div className="input-cont">
                     <p className="star">*</p>
-                    <MyDatePicker
+                    <DatePicker
                       style={{ width: "100%", borderRadius: "3px" }}
                       value={InfData?.dateOfBirth ? moment(InfData.dateOfBirth, 'DD/MM/YYYY') : null} // Convert string to moment
                       onChange={(date, dateString) => {
-                        handleInputChangeWhole('dateOfBirth', dateString); // Pass the string value
+                        handleInputChangeWhole('dateOfBirth', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
                       }}
+                      format='DD/MM/YYYY'
                     />
                     {/* <div className="ag-65"> */}
                     <p className="ag-65-title" >{`${ageOnNextBirthday} Yrs`}</p>
@@ -490,8 +578,8 @@ const inputsChangeFtn = ()=>{
                   <div className="input-cont">
                     <p className="star-white">*</p>
                     <MyDatePicker
-
-                      defaultValue={InfData?.dateOfBirth ? moment(InfData?.dateOfBirth, 'DD/MM/YYYY') : null}
+                      value={InfData?.dateAged65 ? moment(InfData?.dateAged65, 'DD/MM/YYYY') : null}
+                      disabled={true}
                     />
                   </div>
                 </div>
@@ -504,12 +592,19 @@ const inputsChangeFtn = ()=>{
                     <div className="checkbox-con">
                       <div className="checkbox-sub">
                         <Checkbox
-                          onChange={onCheckboxChange}
-                          checked={InfData?.isPensioner}
+                          checked={InfData?.isDeceased}
+                          onChange={(e) => {
+                            handleInputChangeWhole('isDeceased', e.target.checked)
+                            // if (e.target.checked == false) {
+                            //   handleInputChangeWhole('dateOfDeath', null);
+                            // }
+                          }}
                         />
-
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom" />
+                      <MyDatePicker className="w-100 date-picker-custom"
+                        value={InfData?.dateOfDeath ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
+                        disabled={!InfData?.isDeceased}
+                      />
                     </div>
                   </div>
                 </div>
@@ -519,8 +614,7 @@ const inputsChangeFtn = ()=>{
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-
-                    <Input className="input" value={InfData?.gardaRegNo} />
+                    <Input className="input" value={InfData?.Partnership} />
                     <Button
                       onClick={() => openCloseModalsFtn("Partnership")}
                       className="primary-btn butn ms-2 detail-btn"
@@ -648,9 +742,9 @@ const inputsChangeFtn = ()=>{
                       {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
                         Select Station
                       </Dropdown.Button> */}
-                      <MySelect placeholder='Select Station'  isSimple={true} />
+                      <MySelect placeholder='Select Station' isSimple={true} />
                     </div>
-                    <Button className="butn primary-btn detail-btn ms-2">
+                    <Button className="butn primary-btn detail-btn ms-2" onClick={() => openCloseModalsFtn("TransferScreen")}>
                       Tr
                     </Button>
                   </div>
@@ -700,16 +794,15 @@ const inputsChangeFtn = ()=>{
                     <div className="checkbox-con">
                       <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
                         <Checkbox
-                          onChange={onCheckboxChange}
+                          onChange={(e) => { handleInputChangeWhole('isPensioner', e.target.checked) }}
                           checked={InfData?.isPensioner}
                         />
                       </div>
-                      <Input
-                        type="text"
-                        placeholder="Enter something..."
-                        disabled={!InfData?.isPensioner}
-                        value={InfData?.pensionNo}
-                      />
+                      <MyDatePicker disabled={!InfData?.isPensioner}
+                        onChange={(date, dateString) => {
+                          handleInputChangeWhole('dateRetired', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                        }}
+                        value={InfData?.dateRetired ? moment(InfData?.dateRetired, 'DD/MM/YYYY') : null} />
                     </div>
                   </div>
                 </div>
@@ -814,7 +907,7 @@ const inputsChangeFtn = ()=>{
                       <div className="input-container-with-sup">
                         <Input
                           placeholder="Enter text"
-                          style={{padding:'0px' ,width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
+                          style={{ padding: '0px', width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
                           suffix={<div className="suffix-container">
                             <IoSettingsOutline />
                           </div>}
@@ -832,11 +925,17 @@ const inputsChangeFtn = ()=>{
                     <div className="checkbox-con">
                       <div className="checkbox-sub">
                         <Checkbox
-                          onChange={onCheckboxChange}
-                          checked={InfData?.isPensioner}
+                          onChange={(e) => handleInputChangeWhole('isJoined', e.target.checked)}
+                          checked={InfData?.isJoined}
                         />
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom" />
+                      <MyDatePicker className="w-100 date-picker-custom"
+                        onChange={(date, dateString) => {
+                          handleInputChangeWhole('dateJoined', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                        }}
+                        value={InfData?.dateJoined ? moment(InfData?.dateJoined, 'DD/MM/YYYY') : null}
+                        disabled={!InfData?.isJoined}
+                      />
                     </div>
                   </div>
                 </div>
@@ -849,12 +948,17 @@ const inputsChangeFtn = ()=>{
                     <div className="checkbox-con">
                       <div className="checkbox-sub">
                         <Checkbox
-                          onChange={onCheckboxChange}
-                          checked={InfData?.isPensioner}
+                          onChange={(e) => handleInputChangeWhole('isLeft', e.target.checked)}
+                          checked={InfData?.isLeft}
                         />
 
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom" />
+                      <MyDatePicker className="w-100 date-picker-custom" disabled={!InfData?.isLeft}
+                        onChange={(date, dateString) => {
+                          handleInputChangeWhole('isLeft', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                        }}
+                        value={InfData?.dateAged65 ? moment(InfData?.dateAged65, 'DD/MM/YYYY') : null}
+                      />
                     </div>
                   </div>
                 </div>
@@ -864,7 +968,8 @@ const inputsChangeFtn = ()=>{
                   </div>
                   <div className="input-cont">
                     <p className="star-white">*</p>
-                    <MySelect isSimple={true} />
+                    {/* <MySelect isSimple={true} /> */}
+                    <Input disabled={!InfData?.isLeft} />
                   </div>
                 </div>
 
@@ -1024,44 +1129,429 @@ const inputsChangeFtn = ()=>{
           </Row>
         </div>
         <MyDrawer title='Partnership' open={modalOpenData?.Partnership} onClose={() => openCloseModalsFtn("Partnership")} >
-          <div className="details-drawer mb-4">
-            <p>{InfData?.gardaRegNo}</p>
-            <p>{InfData?.fullname}</p>
-            <p>Garda</p>
-          </div>
-          <div>
-            <div className="inpt-container">
-              <div className="drawer-lbl">
-                <p>Title :</p>
-              </div>
-              <div className="inpt"><Input /></div>
+          <div className="drawer-main-cntainer">
+            <div className="details-drawer mb-4">
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
             </div>
-            <div className="inpt-container">
-              <div className="drawer-lbl">
-                <p>Title :</p>
+            <div className="mb-4 pb-4">
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Title :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input />
+                  </div>
+                  <p className="error"></p>
+                </div>
               </div>
-              <div className="inpt"><Input /></div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Forename :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Surname :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Maiden Name :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Date of Birth :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <MyDatePicker className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Date Marriage :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <MyDatePicker className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Deceased :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+
+
+                    <div className="checkbox-con">
+                      <div className="checkbox-sub">
+                        <Checkbox
+                          checked={InfData?.isDeceased}
+                          onChange={(e) => {
+                            handleInputChangeWhole('isDeceased', e.target.checked)
+                            // if (e.target.checked == false) {
+                            //   handleInputChangeWhole('dateOfDeath', null);
+                            // }
+                          }}
+                        />
+                      </div>
+                      <MyDatePicker className="w-100 date-picker-custom"
+                        value={InfData?.dateOfDeath ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
+                        disabled={!InfData?.isDeceased}
+                      />
+                    </div>
+
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+
+
+
+
             </div>
+            <h3>History</h3>
+            <Table
+              rowSelection={rowSelection} // Enables row selection with checkboxes
+              columns={partnershipColumns}
+              pagination={false}
+              bordered
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+            />
           </div>
         </MyDrawer>
         <MyDrawer title='Children' open={modalOpenData?.Children} onClose={() => openCloseModalsFtn("Children")} >
-          <div className="details-drawer mb-4">
-            <p>{InfData?.gardaRegNo}</p>
-            <p>{InfData?.fullname}</p>
-            <p>Garda</p>
-          </div>
-          <div>
-            <div className="inpt-container">
-              <div className="drawer-lbl">
-                <p>Title :</p>
-              </div>
-              <div className="inpt"><Input /></div>
+          <div className="drawer-main-cntainer">
+            <div className="details-drawer mb-4">
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
             </div>
-            <div className="inpt-container">
-              <div className="drawer-lbl">
-                <p>Title :</p>
+            <div className="mb-4 pb-4">
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Title :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input />
+                  </div>
+                  <p className="error"></p>
+                </div>
               </div>
-              <div className="inpt"><Input /></div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Forename :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Surname :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+            </div>
+            <h3>History</h3>
+            <Table
+              rowSelection={rowSelection} // Enables row selection with checkboxes
+              columns={childrencolumns}
+              pagination={false}
+
+              bordered
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+            />
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Children' open={modalOpenData?.Children} onClose={() => openCloseModalsFtn("Children")} >
+          <div className="drawer-main-cntainer">
+            <div className="details-drawer mb-4">
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
+            </div>
+            <div className="mb-4 pb-4">
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Title :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Forename :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Surname :</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" />
+                    <h1 className="error-text">error-text</h1>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+            </div>
+            <h3>History</h3>
+            <Table
+              rowSelection={rowSelection} // Enables row selection with checkboxes
+              columns={childrencolumns}
+              pagination={false}
+
+              bordered
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+            />
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Transfer Screen' open={modalOpenData?.TransferScreen} onClose={() => openCloseModalsFtn("TransferScreen")} >
+          <div className="drawer-main-cntainer">
+            <div className="d-flex">
+              <div className="w-50  ">
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '44px', backgroundColor: "#215E97", color: 'white' }}><h3 className="text-center" >Current</h3></div>
+                <div className="body-container">
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Station Code :</p>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                        <MySelect placeholder='Select Station Code' isSimple={true} />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Station Name :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                       <Input />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts1">
+                    <div className="transfer-inpts-title1">
+                      <p className="transfer-main-inpts-p"></p>
+                    </div>
+                   
+                    <div className="transfer-inputs1">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                       <TextArea  rows={3}/>
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">District :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                      <MySelect  isSimple={true} placeholder='Select District'/>
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Division :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                      <MySelect  isSimple={true} placeholder='Select District'/>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="w-50 ms-4 ">
+                <div className="d-flex align-items-center justify-content-center" style={{ height: '44px', backgroundColor: "#215E97", color: 'white' }}><h3 className="text-center" >New</h3></div>
+                <div className="body-container">
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Station Code :</p>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                        <MySelect placeholder='Select Station Code' isSimple={true} />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Station Name :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                       <Input />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts1">
+                    <div className="transfer-inpts-title1">
+                      <p className="transfer-main-inpts-p"></p>
+                    </div>
+                   
+                    <div className="transfer-inputs1">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                       <TextArea  rows={3}/>
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">District :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                      <MySelect  isSimple={true} placeholder='Select District'/>
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Division :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                      <MySelect  isSimple={true} placeholder='Select District'/>
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Transfer Date :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                      <DatePicker  className="w-100" />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts1">
+                    <div className="transfer-inpts-title1">
+                      <p className="transfer-main-inpts-p">Memo :</p>
+                    </div>
+                   
+                    <div className="transfer-inputs1">
+                      <div className="d-flex ">
+                      <p className="star-white ">*</p>
+                       <TextArea  rows={3}/>
+                      </div>
+
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </MyDrawer>
