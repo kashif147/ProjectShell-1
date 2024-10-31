@@ -20,6 +20,7 @@ const CreateWordDocument = () => {
       file: {}, // An empty file object
     };
 
+    console.log('Drove Item', driveItem)
     try {
       const userDetails = await graphClient.api('/me').get();
       console.log(userDetails);

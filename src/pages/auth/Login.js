@@ -2,7 +2,7 @@ import { React, useState, useEffect } from 'react'
 import "../../styles/Login.css"
 // import loginImg from "../../assets/images/img1.png"
 import loginImg from "../../assets/images/gra_logo.png"
-import { WindowsFilled } from '@ant-design/icons';
+// import { WindowsFilled } from '@ant-design/icons';
 import { Button, Checkbox, Divider, Input } from 'antd';
 import { Link } from 'react-router-dom';
 import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
@@ -34,7 +34,8 @@ const Login = () => {
         instance.loginPopup({
             scopes: ["openid", "profile", "User.Read", "Mail.Read"], // Scopes you need
         }).then((response) => {
-            console.log("Login response: ", response);
+            // console.log("Login response: ", response);
+            localStorage.setItem('token',response?.accessToken)
             navigate('/LandingPage')
         }).catch(e => {
             console.error("Error during login:", e);
