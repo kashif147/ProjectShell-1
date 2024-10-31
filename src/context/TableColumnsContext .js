@@ -903,13 +903,12 @@ export const TableColumnsProvider = ({ children }) => {
     setGridData(result);
   }, [searchFilters, location?.pathname]); // Re-run when gridData or filters change
 
-  const [ProfileDetails, setProfileDetails] = useState()
+  const [ProfileDetails, setProfileDetails] = useState([])
   const [rowIndex, setrowIndex] = useState(0)
 
   const getProfile = (row, index) => {
     setProfileDetails(row)
-    setrowIndex(index)
-    debugger
+    setrowIndex(index) 
   }
 
   const profilNextBtnFtn = () => {

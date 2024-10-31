@@ -8,7 +8,7 @@ const ProtectedRoute = ({ children }) => {
     return <Navigate to="/" replace />; 
   }
 
-  return <Outlet />; // Render the child routes (protected content)
+  return <Outlet />; 
 };
   
   export default ProtectedRoute;

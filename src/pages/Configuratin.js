@@ -132,7 +132,8 @@ function Configuratin() {
     PostCode: false,
     Districts:false,
     Divisions:false,
-    Station:false
+    Station:false,
+    ContactTypes:false,
   })
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
@@ -385,17 +386,12 @@ function Configuratin() {
       key: 'RegionCode',
     },
     {
-      title: 'Districts',
+      title: 'Division',
       dataIndex: 'RegionName',
       key: 'RegionName',
     },
     {
       title: 'Display Name',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
-    },
-    {
-      title: 'Division',
       dataIndex: 'DisplayName',
       key: 'DisplayName',
     },
@@ -433,7 +429,7 @@ function Configuratin() {
       key: 'RegionCode',
     },
     {
-      title: 'Districts',
+      title: 'City',
       dataIndex: 'RegionName',
       key: 'RegionName',
     },
@@ -443,7 +439,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'Division',
+      title: 'County',
       dataIndex: 'DisplayName',
       key: 'DisplayName',
     },
@@ -1221,8 +1217,8 @@ function Configuratin() {
             <p className="lookups-title">Reasons</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('ContactTypes')}>
+          <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Contact Types</p>
           </div>
@@ -1506,7 +1502,7 @@ function Configuratin() {
         <Table
           columns={columnCountry}
           pagination={false}
-          dataSource={gender}
+
           className="drawer-tbl"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
@@ -1754,7 +1750,7 @@ function Configuratin() {
         />
         <Table
           columns={column} // Assuming columns are the same
-          pagination={true}
+          pagination={false}
           dataSource={gender} // Replace with appropriate data
           className="drawer-tbl"
           rowClassName={(record, index) =>
@@ -2219,7 +2215,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Province' isSimple={true} />
+                  <MySelect placeholder='County' isSimple={true} disabled={true} />
                   <h1 className="error-text">error-text</h1>
                 </div>
                 <p className="error"></p>
@@ -2288,7 +2284,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columnCountry}
+            <Table 
+            pagination={false}
+            columns={columnCountry}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2370,7 +2368,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columnProvince}
+            <Table 
+            pagination={false}
+            columns={columnProvince}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2384,7 +2384,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Cities' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
+      <MyDrawer title='City' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
         console.log(drawerIpnuts?.Cities)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Cities, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Cities'))
       }} >
@@ -2418,7 +2418,7 @@ function Configuratin() {
 
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>County Name :</p>
+                <p>City Name :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
@@ -2443,12 +2443,13 @@ function Configuratin() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Province :</p>
+                <p>County :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select Province' isSimple={true} />
+                  <MySelect placeholder='Select County' isSimple={true} disabled={true} />
+
                 </div>
                 <p className="error"></p>
               </div>
@@ -2467,7 +2468,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columns}
+            <Table 
+            pagination={false}
+            columns={columnCity}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2545,7 +2548,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select City' isSimple={true} />
+                  <MySelect placeholder='Dublin' isSimple={true} disabled={true} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2564,7 +2567,8 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columnPostCode}
+            <Table  columns={columnPostCode}
+              pagination={false}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2617,7 +2621,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} />
+                  <Input    />
                   {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
                 </div>
                 <p className="error"></p>
@@ -2666,7 +2670,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columnDistricts}
+            <Table 
+            pagination={false}
+             columns={columnDistricts}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2678,7 +2684,9 @@ function Configuratin() {
               bordered
             />;
           </div>
+      
         </div>
+      
       </MyDrawer>
       <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true}  onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
         console.log(drawerIpnuts?.Divisions)
@@ -2693,7 +2701,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Districts' isSimple={true} disabled={true} />
+                  <MySelect placeholder='Divisions' isSimple={true} disabled={true} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2751,7 +2759,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columnDistricts}
+            <Table 
+            pagination={false}
+            columns={columnDivisions}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2853,7 +2863,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table dataSource={dataSource} columns={columnDistricts}
+            <Table 
+            pagination={false}
+            columns={columnDistricts}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2867,7 +2879,106 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+      <MyDrawer title='Contact Types' open={drawerOpen?.ContactTypes} isPagination={true} onClose={() => openCloseDrawerFtn('ContactTypes')} add={() => {
+        console.log(drawerIpnuts?.ContactTypes)
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.ContactTypes, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('ContactTypes'))
+      }} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='City' isSimple={true} disabled={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
 
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>City Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} />
+                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>County :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} disabled={true} />
+
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox>Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table 
+            pagination={false}
+            columns={columnCity}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
     </div>
   );
 }

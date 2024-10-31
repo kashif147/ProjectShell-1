@@ -174,23 +174,33 @@ function Header() {
             </ul>
           </div>
         </nav>
+        <div>
+          <Button className="butn primary-btn" onClick={()=>{localStorage.removeItem('token')
+            navigate('/');
+          }}>Logout</Button>
+        </div>
         <div className="input-container d-flex">
-          <Input  placeholder="Reg No" onChange={(e) => setregNo(e.target.value)} onPressEnter={async () => {
-            filterByRegNo(regNo)
-            await navigate("/Details", {
-              state: {
-                name: profile?.fullName,
-                code: profile?.regNo,
-                search: 'Profile',
-              }
-            })
-          }} className=" top-search" style={{ marginRight: "1rem", borderRadius:10 }} />
-          <IoNotifications style={{ fontSize: "30px", marginRight: "1rem" }} />
+          <input  placeholder="Reg No" 
+          onChange={(e) => setregNo(e.target.value)}
+          onKeyDown={async (e) => {
+            if (e.key === 'Enter') {
+              filterByRegNo(regNo);
+              await navigate("/Details", {
+                state: {
+                  name: profile?.fullName,
+                  code: profile?.regNo,
+                  search: 'Profile',
+                }
+              });
+            }
+          }}
+           className=" top-search" style={{ marginRight: "1rem", borderRadius:10 }} />
+          <IoNotifications className="top-icon" />
           <HiMiniQuestionMarkCircle
-            style={{ fontSize: "30px", marginRight: "1rem" }}
+            className="top-icon"
           />
-          <IoMdSettings style={{ fontSize: "30px", marginRight: "1rem" }} />
-          <FaUserCircle style={{ fontSize: "30px", marginRight: "1rem" }} />
+          <IoMdSettings className="top-icon" />
+          <FaUserCircle className="top-icon" />
 
         </div>
       </div>

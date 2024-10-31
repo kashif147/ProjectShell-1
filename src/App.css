@@ -184,17 +184,15 @@ body {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
-
 .Header-border {
   border-bottom: 2px solid #e0e0e0;
-  /* background-color: #f6f7f8; */
 }
-.Header-padding {
-  /* padding: 0.1rem 0.4rem; */
-}
+
 .top-search {
-  height: 80%;
+  height: 32px;
   border-radius: 10px !important;
+  padding-left: 5px;
+
 }
 .details-header {
   padding-top: 10px;
@@ -1119,9 +1117,12 @@ color: red !important;
   position: relative; /* Ensure these elements sit above the watermark */
   padding: 20px;
 }
-/* .footer{
-  position:absolute;
-  bottom:0;
-  width:100%;
-  height:60px
-} */
+/* header */
+.top-icon {
+  font-size: 30px;
+  margin-right: 1rem;
+  color: var(--labelColor);
+}
+.input-border-active {
+  border: 2px solid #007bff !important;
+}
