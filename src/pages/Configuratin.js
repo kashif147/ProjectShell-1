@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import { SiActigraph } from "react-icons/si";
 import { FaRegMap } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
@@ -15,15 +15,18 @@ import { tableData } from "../Data";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
 import { FiPlusCircle } from "react-icons/fi";
+import { getAllLookupsType } from '../features/LookupTypeSlice';
+import { useDispatch, useSelector } from 'react-redux';
+import MyConfirm from "../component/common/MyConfirm";
 
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
 import MySelect from "../component/common/MySelect";
-import { insertDataFtn } from "../utils/Utilities";
+import { deleteFtn, insertDataFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
-
+import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 
 function Configuratin() {
   const [genderModal, setGenderModal] = useState(false);
@@ -57,7 +60,12 @@ function Configuratin() {
     ContactType: "",
     DisplayName: "",
   });
-
+  const dispatch = useDispatch()
+  const { regions, loading } = useSelector((state) => state.regions);
+  useEffect(() => {
+    dispatch(fetchRegions());
+  }, []);
+  console.log(regions, 'reg')
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
     ReigonType: "",
@@ -130,15 +138,18 @@ function Configuratin() {
     Provinces: false,
     Cities: false,
     PostCode: false,
-    Districts:false,
-    Divisions:false,
-    Station:false,
-    ContactTypes:false,
+    Districts: false,
+    Divisions: false,
+    Station: false,
+    ContactTypes: false,
+    LookupType: false,
+    Lookup: false,
   })
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
+    LookupType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false }
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
@@ -150,13 +161,17 @@ function Configuratin() {
       },
     }));
   }
+  const [errors, seterrors] = useState()
 
-  // this function will drawer all inputs
-  const resetCounteries = (drawer) => {
+  const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
     }));
+    console.log(drawerIpnuts,"test")
+    if (callback & typeof callback === 'function') {
+      callback()
+    }
   };
 
   const openCloseDrawerFtn = (name) => {
@@ -466,6 +481,112 @@ function Configuratin() {
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  const columnLookupType = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Lookup Type ',
+      dataIndex: 'RegionType',
+      key: 'RegionType',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/regiontype`, record?._id, );
+                  dispatch(fetchRegions())
+                },
+              })
+            }
+            style={{ cursor: 'pointer' }} // Change the cursor to pointer for better UX
+          />
+        </Space>
+      ),
+    },
+  ];
+  const columnLookup = [
+    {
+      title: ' Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: ' Parent Lookup',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} onClick={() => deleteFtn(`${baseURL}/regiontype`, record?._id)} />
         </Space>
       ),
     },
@@ -1217,10 +1338,22 @@ function Configuratin() {
             <p className="lookups-title">Reasons</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('ContactTypes')}>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('ContactTypes')}>
           <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Contact Types</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('LookupType')}>
+          <div>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Lookup Type</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Lookup')}>
+          <div>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Lookup</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
@@ -2202,7 +2335,7 @@ function Configuratin() {
         />
       </MyDrawer>
       <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries} onClose={() => openCloseDrawerFtn('Counteries')} add={() => {
-      
+
         console.log(drawerIpnuts?.Counteries)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Counteries'))
       }} >
@@ -2284,9 +2417,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-            columns={columnCountry}
+            <Table
+              pagination={false}
+              columns={columnCountry}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2300,7 +2433,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Provinces' open={drawerOpen?.Provinces} isPagination={true}  onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
+      <MyDrawer title='Provinces' open={drawerOpen?.Provinces} isPagination={true} onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
         console.log(drawerIpnuts?.Provinces)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Provinces, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Provinces'))
       }} >
@@ -2368,9 +2501,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-            columns={columnProvince}
+            <Table
+              pagination={false}
+              columns={columnProvince}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2468,9 +2601,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-            columns={columnCity}
+            <Table
+              pagination={false}
+              columns={columnCity}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2484,7 +2617,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true}  onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
+      <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true} onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
         console.log(drawerIpnuts?.PostCode)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
       }} >
@@ -2567,7 +2700,7 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table  columns={columnPostCode}
+            <Table columns={columnPostCode}
               pagination={false}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -2582,7 +2715,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true}  onClose={() => openCloseDrawerFtn('Districts')} add={() => {
+      <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true} onClose={() => openCloseDrawerFtn('Districts')} add={() => {
         console.log(drawerIpnuts?.Districts)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Districts, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Districts'))
       }} >
@@ -2621,7 +2754,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input    />
+                  <Input />
                   {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
                 </div>
                 <p className="error"></p>
@@ -2648,14 +2781,14 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} placeholder='Select Division' />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
-                <p className="error"></p>
+                  <p className="error"></p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2">
-                      +
-                    </Button>
+                  +
+                </Button>
               </div>
             </div>
-           
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -2670,9 +2803,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-             columns={columnDistricts}
+            <Table
+              pagination={false}
+              columns={columnDistricts}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2684,11 +2817,11 @@ function Configuratin() {
               bordered
             />;
           </div>
-      
+
         </div>
-      
+
       </MyDrawer>
-      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true}  onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
+      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
         console.log(drawerIpnuts?.Divisions)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Divisions'))
       }} >
@@ -2759,9 +2892,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-            columns={columnDivisions}
+            <Table
+              pagination={false}
+              columns={columnDivisions}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2775,7 +2908,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Station' open={drawerOpen?.Station} isPagination={true}  onClose={() => openCloseDrawerFtn('Station')} add={() => {
+      <MyDrawer title='Station' open={drawerOpen?.Station} isPagination={true} onClose={() => openCloseDrawerFtn('Station')} add={() => {
         console.log(drawerIpnuts?.Station)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Station, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Districts'))
       }} >
@@ -2841,14 +2974,14 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} placeholder='Select Division' />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
-                <p className="error"></p>
+                  <p className="error"></p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2">
-                      +
-                    </Button>
+                  +
+                </Button>
               </div>
             </div>
-           
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -2863,9 +2996,9 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-            columns={columnDistricts}
+            <Table
+              pagination={false}
+              columns={columnDistricts}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2963,9 +3096,207 @@ function Configuratin() {
             </div>
           </div>
           <div className="mt-4 config-tbl-container">
-            <Table 
-            pagination={false}
-            columns={columnCity}
+            <Table
+              pagination={false}
+              columns={columnCity}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => openCloseDrawerFtn('LookupType')} add={() => {
+     let LookupType = []
+      if(drawerIpnuts?.LookupType?.RegionType==''||drawerIpnuts?.LookupType?.RegionType=='undefined'){
+        LookupType.push({LookupType:'Required'})
+      }
+      if(drawerIpnuts?.LookupType?.DisplayName==''||drawerIpnuts?.LookupType?.DisplayName=='undefined'){
+        LookupType.push({DisplayName:'Required'})
+      }
+      if(LookupType?.length>0){
+       return seterrors(LookupType)
+      }
+        insertDataFtn(`${baseURL}/regiontype`, drawerIpnuts?.LookupType, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('LookupType',  dispatch(fetchRegions())))
+      }}
+        total={regions?.length} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType :', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('LookupType', 'RegionType', e.target.value)}
+                    value={drawerIpnuts?.LookupType?.RegionType} />
+                </div>
+                <p className="error">{errors?.LookupType?.LookupType}</p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.LookupType?.DisplayName} />
+                </div>
+                <p className="error">{errors?.LookupType?.DisplayName}</p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.LookupType?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnLookupType}
+              dataSource={regions}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+              scroll={{ y: 240 }}
+              loading={loading}
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Lookup' open={drawerOpen?.Lookup} isPagination={true} onClose={() => openCloseDrawerFtn('Lookup')} add={() => {
+        console.log(drawerIpnuts?.Lookup)
+        insertDataFtn(`${baseURL}/regiontype`, drawerIpnuts?.Lookup, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Lookup'))
+      }} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  {/* <Input className="inp" onChange={(e) => drawrInptChng('LookupType :', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} /> */}
+                  <MySelect isSimple={true} placeholder='Select Lookup' />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Parent Lookup :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.LookupType?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnLookup}
+              // dataSource={lookupsType}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"

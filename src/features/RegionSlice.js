@@ -3,12 +3,15 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { baseURL } from '../utils/Utilities';
 
-const token = localStorage.getItem('token')
+let token; 
+ 
 
 export const fetchRegions = createAsyncThunk(
     'regions/fetchRegions',
     async (_, { rejectWithValue }) => {
         try {
+            debugger
+            token = localStorage.getItem('token')
             const response = await axios.get(`${baseURL}/regiontype`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Include token in headers
@@ -38,7 +41,6 @@ export const addRegion = createAsyncThunk(
     }
 );
 
-// Async thunk for updating an existing region
 export const updateRegion = createAsyncThunk(
     'regions/updateRegion',
     async ({ id, updatedRegion }, { rejectWithValue }) => {
@@ -55,16 +57,20 @@ export const updateRegion = createAsyncThunk(
     }
 );
 
-// Async thunk for deleting a region
 export const deleteRegion = createAsyncThunk(
     'regions/deleteRegion',
-    async (id, { rejectWithValue }) => {
+    async (id, { dispatch, rejectWithValue }) => {
         try {
+            // Make DELETE request to delete the region
             await axios.delete(`${baseURL}/${id}`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Include token in headers
                 },
             });
+            
+            // Dispatch the action to fetch all regions after deletion
+            dispatch(fetchRegions()); // Ensure you call the correct function to refresh regions
+            
             return id; // Return the id of the deleted region
         } catch (error) {
             return rejectWithValue(error.response.data.message || 'Failed to delete region');
@@ -72,7 +78,7 @@ export const deleteRegion = createAsyncThunk(
     }
 );
 
-// Create the slice
+
 const regionSlice = createSlice({
     name: 'regions',
     initialState: {

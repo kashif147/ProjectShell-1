@@ -1,7 +1,7 @@
 import React from "react";
 import { Button, Drawer, Space, Pagination } from "antd";
 
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false,total }) {
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
@@ -29,7 +29,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
           isPagination &&
           (
             <div className="d-flex justify-content-center align-items-baseline">
-              Total Items: <Pagination showQuickJumper defaultCurrent={2} total={500} onChange={onChange} />
+              Total Items: <Pagination showQuickJumper defaultCurrent={1} total={total} onChange={onChange} />
             </div>
           )
         }

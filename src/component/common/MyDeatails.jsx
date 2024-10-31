@@ -638,7 +638,7 @@ function MyDeatails() {
                     </Button>
                   </div>
                 </div>
-                <Divider>Corresondence Details</Divider>
+                <Divider>Correspondence Details</Divider>
                 <div className="lbl-inpt">
                   <div className="title-cont">
                     <p className="">Email :</p>

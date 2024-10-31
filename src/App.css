@@ -283,10 +283,10 @@ body {
   color: #fff;
 }
 .label-nav {
-  background-color: white !important;
+  /* background-color:  !important; */
   padding: 0.3rem;
   border-radius: 5%;
-  color: var(--second) !important;
+  color: white !important;
 }
 .label-nav .ant-menu-item-icon {
 }
@@ -307,10 +307,10 @@ body {
   display: flex;
   justify-content: center !important;
   align-items: center !important;
-  background-color: #fff;
+  background-color: #E6F7FF;
   color: var(--second) !important;
-  padding: 0.4rem;
-  border-radius: 5%;
+  padding: 0.6rem;
+  border-radius: 7%;
 }
 .label-nav-collaps1 {
   display: flex;
@@ -361,7 +361,7 @@ body {
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
   > .ant-menu
   .ant-menu-item-selected {
-  background-color: var(--second);
+  background-color: rebeccapurple !important;
 }
 .ant-table-thead > tr > th {
   /* padding: 6px 10px !important;  Adjust the value as needed */ 
@@ -731,7 +731,7 @@ tr {
   :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
   > .ant-menu
   .ant-menu-item-selected {
-  background-color: #1677ff;
+  background-color: red !important;
 }
 
 :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed

@@ -11,6 +11,7 @@ import { useMsal } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../../features/AuthSlice';
+import { BatchResponseContent } from '@microsoft/microsoft-graph-client';
 
 const Login = () => {
     const dispatch = useDispatch();
