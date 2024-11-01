@@ -49,7 +49,6 @@
     "web-vitals": "^2.1.4",
     "yarn": "^1.22.22"
   },
-  "proxy": "https://node-api-app-dxecgpajapacc4gs.northeurope-01.azurewebsites.net:3500",
   "scripts": {
     "start": "react-scripts start",
     "build": "react-scripts build",
