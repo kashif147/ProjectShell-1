@@ -4,8 +4,8 @@ let token;
 export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 
 
-export const insertDataFtn = async (url, data, successNotification, faliearNotification, resetCounteries) => {
- token= localStorage.getItem('token');
+export const insertDataFtn = async (url, data, successNotification, failureNotification) => {
+  const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
     const response = await axios.post(url, data, {
       headers: {
@@ -13,17 +13,24 @@ export const insertDataFtn = async (url, data, successNotification, faliearNotif
         Authorization: `Bearer ${token}`, 
       },
     });
-    console.log({successNotification}, response.data);
-    MyAlert('success',successNotification)
-    resetCounteries()
-    return
-  } catch (error) {
-    console.error({faliearNotification}, error);
-    MyAlert('error',faliearNotification)
-    return 
 
+    console.log({ successNotification }, response?.status);
+
+    if (response.status === 201) { // Strict equality check
+      // resetCountries(); // Call the reset function
+      MyAlert('success', successNotification);
+      // if (callback && typeof callback === 'function' && response?.data) {
+      //   callback(); 
+      // }
+    } else {
+      return MyAlert('error', failureNotification);
+    }
+  } catch (error) {
+    console.error(error);
+    MyAlert('error', failureNotification); // Display failure notification on error
   }
 };
+
 export const deleteFtn = async (url,id, callback)=>{
   token = localStorage.getItem('token')
   const data = JSON.stringify({ id });

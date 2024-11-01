@@ -1067,6 +1067,11 @@ export const claimsData = [
     description: 'Outpatient claim',
   },
 ];
+export const notificationsMsg = {
+ delete:{deleteSuccess:'You have successfully deleted.', falier:'Failed to delete. Please try again later.'},
+ insertion:{Success:'Data inserted successfully', falier:'Failed to insert. Please try again later.'},
+ updating:{sucess:'', falier:''}
+}
 
 
 

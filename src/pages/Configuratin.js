@@ -62,9 +62,23 @@ function Configuratin() {
   });
   const dispatch = useDispatch()
   const { regions, loading } = useSelector((state) => state.regions);
+  const [drawerOpen, setDrawerOpen] = useState({
+    Counteries: false,
+    Provinces: false,
+    Cities: false,
+    PostCode: false,
+    Districts: false,
+    Divisions: false,
+    Station: false,
+    ContactTypes: false,
+    LookupType: false,
+    Lookup: false,
+  })
   useEffect(() => {
-    dispatch(fetchRegions());
-  }, []);
+    if (drawerOpen?.LookupType === true) {
+        dispatch(fetchRegions());
+    }
+}, [drawerOpen?.LookupType, dispatch]);
   console.log(regions, 'reg')
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
@@ -133,18 +147,7 @@ function Configuratin() {
       [name3]: value3,
     }));
   };
-  const [drawerOpen, setDrawerOpen] = useState({
-    Counteries: false,
-    Provinces: false,
-    Cities: false,
-    PostCode: false,
-    Districts: false,
-    Divisions: false,
-    Station: false,
-    ContactTypes: false,
-    LookupType: false,
-    Lookup: false,
-  })
+ 
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
@@ -3112,7 +3115,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => openCloseDrawerFtn('LookupType')} add={() => {
+      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => openCloseDrawerFtn('LookupType')} add={async()=> {
      let LookupType = []
       if(drawerIpnuts?.LookupType?.RegionType==''||drawerIpnuts?.LookupType?.RegionType=='undefined'){
         LookupType.push({LookupType:'Required'})
@@ -3123,7 +3126,14 @@ function Configuratin() {
       if(LookupType?.length>0){
        return seterrors(LookupType)
       }
-        insertDataFtn(`${baseURL}/regiontype`, drawerIpnuts?.LookupType, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('LookupType',  dispatch(fetchRegions())))
+
+      await  insertDataFtn(
+          `${baseURL}/regiontype`,
+          drawerIpnuts?.LookupType,
+          'Data inserted successfully',
+          'Data did not insert',
+          () => resetCounteries('LookupType', () => dispatch(fetchRegions())) // Pass a function reference
+        );
       }}
         total={regions?.length} >
         <div className="drawer-main-cntainer">
@@ -3158,7 +3168,7 @@ function Configuratin() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Display Name :</p>
+                <p>Display Name  :</p>
               </div>
               <div className="inpt-con">
                 <p className="star-white">*</p>
