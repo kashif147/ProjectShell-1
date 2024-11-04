@@ -52,20 +52,19 @@ const Login = () => {
         setCredentials((prev) => ({ ...prev, [target]: value }));
     };
 
-    const [credentials, setCredentials] = useState({ user: '', pwd: '' });
+    const [credentials, setCredentials] = useState({ user: 'walt1', pwd: 'Aa$12345' });
 
     const [showPassword, setShowPassword] = useState(false);
     
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
-        
     };
+    
     const handleLoginWithCredentional = (e) => {
         e.preventDefault();
         dispatch(loginUser(credentials));
         if(user){
             navigate('/Summary');
-            debugger
         }
     };
     useEffect(() => {
@@ -97,7 +96,7 @@ const Login = () => {
                     <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
                     <div style={{paddingTop:"10px", paddingBottom:"10px"}}>
                     <Button  size="large" style={{background:"#caccce",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'
-                    
+
                     onClick={handleLogin} 
                             disabled={inProgress !== InteractionStatus.None} // Disable button if login is in progress
                             >

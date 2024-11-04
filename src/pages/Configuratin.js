@@ -16,6 +16,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
 import { FiPlusCircle } from "react-icons/fi";
 import { getAllLookupsType } from '../features/LookupTypeSlice';
+import {getAllLookups} from '../features/LookupsSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import MyConfirm from "../component/common/MyConfirm";
 
@@ -62,6 +63,8 @@ function Configuratin() {
   });
   const dispatch = useDispatch()
   const { regions, loading } = useSelector((state) => state.regions);
+  const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+  console.log(lookups,"77")
   const [drawerOpen, setDrawerOpen] = useState({
     Counteries: false,
     Provinces: false,
@@ -74,12 +77,25 @@ function Configuratin() {
     LookupType: false,
     Lookup: false,
   })
+  // const [lookups, setlookups] = useState()
   useEffect(() => {
     if (drawerOpen?.LookupType === true) {
-        dispatch(fetchRegions());
+      dispatch(fetchRegions());
     }
-}, [drawerOpen?.LookupType, dispatch]);
-  console.log(regions, 'reg')
+  }, [drawerOpen?.LookupType, dispatch]);
+  useEffect(() => {
+    if (drawerOpen?.Lookup === true) {
+      dispatch(getAllLookups());
+    }
+  }, [drawerOpen?.Lookup, dispatch]);
+
+
+
+  const lookupsType = regions?.map(item => ({
+    key: item._id,
+    label: item.DisplayName
+  }));
+
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
     ReigonType: "",
@@ -147,15 +163,18 @@ function Configuratin() {
       [name3]: value3,
     }));
   };
- 
+
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
-    LookupType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false }
+    LookupType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
+    Lookup: { RegionTypeID: '', RegionName: '',ParentRegion:null,RegionCode:'',DisplayName:'',  isDeleted: false, },
   }
-  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
-  const drawrInptChng = (drawer, field, value) => {
+const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
+
+
+const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: {
@@ -164,14 +183,15 @@ function Configuratin() {
       },
     }));
   }
-  const [errors, seterrors] = useState()
+  console.log(drawerIpnuts,'88')
+const [errors, seterrors] = useState()
 
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
     }));
-    console.log(drawerIpnuts,"test")
+    console.log(drawerIpnuts, "test")
     if (callback & typeof callback === 'function') {
       callback()
     }
@@ -183,6 +203,7 @@ function Configuratin() {
       [name]: !prevState[name]
     }))
   }
+
   const handleInputChange4 = (name4, value4) => {
     setSubscriptionData((prevState4) => ({
       ...prevState4,
@@ -534,7 +555,7 @@ function Configuratin() {
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/regiontype`, record?._id, );
+                  await deleteFtn(`${baseURL}/regiontype`, record?._id,);
                   dispatch(fetchRegions())
                 },
               })
@@ -563,17 +584,16 @@ function Configuratin() {
     },
     {
       title: ' Parent Lookup',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: 'ParentRegion',
+      key: 'ParentRegion',
     },
 
     {
       title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (index, record) => (
-        <Checkbox>
-
+        <Checkbox checked={record?.isActive}>
         </Checkbox>
       )
     },
@@ -589,7 +609,16 @@ function Configuratin() {
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} onClick={() => deleteFtn(`${baseURL}/regiontype`, record?._id)} />
+          <AiFillDelete size={16}  onClick={() =>
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  dispatch(getAllLookups())
+                },
+              })
+            } />
         </Space>
       ),
     },
@@ -1134,11 +1163,10 @@ function Configuratin() {
     },
     getCheckboxProps: (record) => ({
       disabled: record.name === 'Disabled User',
-      // Column configuration not to be checked
       name: record.name,
     }),
   };
-  // Toggling Modal Functions
+
   const genderModalOpen = () => setGenderModal(!genderModal);
   const membershipModalFtn = () => setMembershipModal(!membershipModal);
   const partnershipModalFtn = () => setPartnershipModal(!partnershipModal);
@@ -1231,12 +1259,6 @@ function Configuratin() {
             <p className="lookups-title">Cities</p>
           </div>
         </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Counties1</p>
-          </div>
-        </Col> */}
 
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('PostCode')}>
@@ -3115,19 +3137,19 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => openCloseDrawerFtn('LookupType')} add={async()=> {
-     let LookupType = []
-      if(drawerIpnuts?.LookupType?.RegionType==''||drawerIpnuts?.LookupType?.RegionType=='undefined'){
-        LookupType.push({LookupType:'Required'})
-      }
-      if(drawerIpnuts?.LookupType?.DisplayName==''||drawerIpnuts?.LookupType?.DisplayName=='undefined'){
-        LookupType.push({DisplayName:'Required'})
-      }
-      if(LookupType?.length>0){
-       return seterrors(LookupType)
-      }
-
-      await  insertDataFtn(
+      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => openCloseDrawerFtn('LookupType')} 
+      add={async () => {
+        let LookupType = []
+        if (drawerIpnuts?.LookupType?.RegionType == '' || drawerIpnuts?.LookupType?.RegionType == 'undefined') {
+          LookupType.push({ LookupType: 'Required' })
+        }
+        if (drawerIpnuts?.LookupType?.DisplayName == '' || drawerIpnuts?.LookupType?.DisplayName == 'undefined') {
+          LookupType.push({ DisplayName: 'Required' })
+        }
+        if (LookupType?.length > 0) {
+          return seterrors(LookupType)
+        }
+        await insertDataFtn(
           `${baseURL}/regiontype`,
           drawerIpnuts?.LookupType,
           'Data inserted successfully',
@@ -3154,14 +3176,17 @@ function Configuratin() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Lookup Type :</p>
+                <p>Lookup Type</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
-                    onChange={(e) => drawrInptChng('LookupType', 'RegionType', e.target.value)}
-                    value={drawerIpnuts?.LookupType?.RegionType} />
+                  <Input
+                    isSimple={true}
+                    placeholder=''
+                    options={lookupsType}
+                    onChange={(value) => drawrInptChng('LookupType :', 'LookupType', value.target.value)}
+                  />
                 </div>
                 <p className="error">{errors?.LookupType?.LookupType}</p>
               </div>
@@ -3215,13 +3240,20 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Lookup' open={drawerOpen?.Lookup} isPagination={true} onClose={() => openCloseDrawerFtn('Lookup')} add={() => {
-        console.log(drawerIpnuts?.Lookup)
-        insertDataFtn(`${baseURL}/regiontype`, drawerIpnuts?.Lookup, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Lookup'))
-      }} >
+      <MyDrawer title='Lookup' open={drawerOpen?.Lookup} isPagination={true} onClose={() => openCloseDrawerFtn('Lookup')} 
+      add={async () => {
+        
+        await insertDataFtn(
+          `${baseURL}/region`,
+          drawerIpnuts?.Lookup,
+          'Data inserted successfully',
+          'Data did not insert',
+          () => resetCounteries('Lookup', () => dispatch(fetchRegions())) 
+        );
+      }}
+      >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Lookup Type :</p>
@@ -3230,13 +3262,15 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('LookupType :', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} /> */}
-                  <MySelect isSimple={true} placeholder='Select Lookup' />
+                  <MySelect isSimple={true} placeholder='Select Lookup type' options={lookupsType} onChange={(value) => {drawrInptChng('Lookup', 'RegionTypeID',String(value))
+
+                  }} 
+                  value={drawerIpnuts?.Lookup?.RegionTypeID} />
                   <h1 className="error-text">error-text</h1>
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Code:</p>
@@ -3244,7 +3278,10 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                  <Input
+                   className="inp" onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)} 
+                   value={drawerIpnuts?.Lookup?.RegionCode} 
+                   />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3256,7 +3293,10 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)} 
+                  value={drawerIpnuts?.Lookup?.RegionName} 
+                  />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3268,7 +3308,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Lookup', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3280,7 +3320,10 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.LookupType} />
+                  <Input className="inp" 
+                  // onChange={(e) => drawrInptChng('Lookup', 'ParentRegion', e.target.value)} 
+                  // value={drawerIpnuts?.Counteries?.LookupType}
+                   />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3306,7 +3349,8 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnLookup}
-              // dataSource={lookupsType}
+              dataSource={lookups}
+              loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"

@@ -5,6 +5,7 @@ export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 
 
 export const insertDataFtn = async (url, data, successNotification, failureNotification) => {
+  
   const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
     const response = await axios.post(url, data, {
@@ -17,17 +18,15 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
     console.log({ successNotification }, response?.status);
 
     if (response.status === 201) { // Strict equality check
-      // resetCountries(); // Call the reset function
+
       MyAlert('success', successNotification);
-      // if (callback && typeof callback === 'function' && response?.data) {
-      //   callback(); 
-      // }
+
     } else {
       return MyAlert('error', failureNotification);
     }
   } catch (error) {
     console.error(error);
-    MyAlert('error', failureNotification); // Display failure notification on error
+    MyAlert('error', failureNotification); 
   }
 };
 
