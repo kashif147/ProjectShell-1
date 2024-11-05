@@ -3266,6 +3266,7 @@ const [errors, seterrors] = useState()
           'Data did not insert',
           () => resetCounteries('Lookup', () => dispatch(getAllLookups())) 
         );
+        dispatch(getAllLookups())
       }}
       >
         <div className="drawer-main-cntainer">
@@ -3556,7 +3557,7 @@ const [errors, seterrors] = useState()
                 ...rowSelection,
               }}
               bordered
-            />;
+            />
           </div>
         </div>
       </MyDrawer>
