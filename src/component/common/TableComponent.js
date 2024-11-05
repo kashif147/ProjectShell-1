@@ -161,10 +161,11 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
           <SimpleMenu
             title={<BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />}
-            data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false" }}
+            data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false, 'Career Break': false }}
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
+            actions={() => { }}
           />
         </Space>
       ),
@@ -176,7 +177,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           {col.title}
         </DraggableHeaderCell>
       ),
-      render: (text, record,index) =>
+      render: (text, record, index) =>
         col.title === "Full Name" ? (
           <Link
             to="/Details"
@@ -185,7 +186,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               name: record?.fullName,
               code: record?.regNo,
             }}
-            onClick={() => getProfile([record],index)}
+            onClick={() => getProfile([record], index)}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
@@ -202,7 +203,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               Fullname: record?.surname,
               DateOfBirth: record?.dateOfBirth,
             }}
-            onClick={() => getProfile([record],index)}
+            onClick={() => getProfile([record], index)}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
@@ -213,23 +214,23 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             {text}
           </span>
         ),
-        sorter:
+      sorter:
         col.title === "Full Name"
           ? {
-              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 3,
-            }
+            compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+            multiple: 3,
+          }
           : col.title === "Station"
-          ? {
+            ? {
               compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
               multiple: 2,
             }
-            :col.title === "Duty"?
-            {
-              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : undefined,
+            : col.title === "Duty" ?
+              {
+                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
+              : undefined,
       sortDirections: ["ascend", "descend"],
       filters: col.title === "Station" ? [
         { text: 'GALC', value: 'GALC' },
@@ -260,7 +261,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     setCurrentPageData(dataSource.slice(startIndex, endIndex));
-  }, [currentPage, dataSource]); 
+  }, [currentPage, dataSource]);
 
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
@@ -389,7 +390,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             columns={editableColumns}
             dataSource={currentPageData}
             pagination={false}
-            style={{ tableLayout: 'fixed' }} 
+            style={{ tableLayout: 'fixed' }}
             bordered
             virtual
             scroll={{ x: "100%", y: 350 }}

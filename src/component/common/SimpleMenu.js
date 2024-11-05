@@ -9,7 +9,8 @@ import ExportCSV from "./ExportCSV";
 import ExportPDF from "./ExportPDF";
 import { MdOutlineLocalPrintshop } from "react-icons/md";
 import { useLocation } from "react-router-dom";
-
+import TransferRequests from "../TransferRequests";
+import CareerBreakDrawer from "../CareerBreakDrawer";
 
 
 function SimpleMenu({
@@ -23,6 +24,8 @@ function SimpleMenu({
   categoryKey = "gender",
 }) {
   const [checkboxes, setCheckboxes] = useState([]);
+  const [transferreq, settransferreq] = useState(false)
+  const [careerBreak, setcareerBreak] = useState(false)
   const [selectedValues, setSelectedValues] = useState({
     checkboxes: {},
     searchValue: "",
@@ -147,7 +150,19 @@ function SimpleMenu({
                 <ExportPDF data={gridData} filename="my-data.pdf" />
 
               </div>
-            ) : (
+            ) : 
+
+            key==='Transfer Requests'?(
+              <div className="d-flex align-items-baseline" onClick={()=>settransferreq(true )}>
+              Transfer Requests
+            </div>
+            ):
+            key==='Career Break'?(
+              <div className="d-flex align-items-baseline" onClick={()=>setcareerBreak(!careerBreak)}>
+              Career Break
+            </div>
+            ):
+            (
               key
             )}
           </Menu.Item>
@@ -156,6 +171,8 @@ function SimpleMenu({
   );
 
   return (
+    <>
+  
     <Dropdown
       overlay={menu}
       trigger={["click"]}
@@ -165,6 +182,11 @@ function SimpleMenu({
       <Button className={` ${vertical == true ? "gray-btn butn" : "transparent-bg p-0"}`}>{title}</Button>
 
     </Dropdown>
+    <TransferRequests open={transferreq} 
+    onClose={()=>settransferreq(!transferreq)}
+    />
+    <CareerBreakDrawer open={careerBreak} onClose={()=>setcareerBreak(!careerBreak)} />
+      </>
   );
 }
 

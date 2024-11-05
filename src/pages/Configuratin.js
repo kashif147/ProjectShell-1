@@ -76,6 +76,8 @@ function Configuratin() {
     ContactTypes: false,
     LookupType: false,
     Lookup: false,
+    Solicitors:false
+  
   })
   // const [lookups, setlookups] = useState()
   useEffect(() => {
@@ -462,6 +464,45 @@ const [errors, seterrors] = useState()
     },
   ];
   const columnCity = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Contact Type',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+  
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  const contactType = [
     {
       title: 'Code',
       dataIndex: 'RegionCode',
@@ -1345,8 +1386,8 @@ const [errors, seterrors] = useState()
             <p className="lookups-title">Schemes</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('Solicitors')} >
+          <div >
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Solicitors</p>
           </div>
@@ -2367,7 +2408,7 @@ const [errors, seterrors] = useState()
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
+              <div className="drawer-lbl-container" style={{width:"25%"}}>
                 <p>Type :</p>
               </div>
               <div className="inpt-con">
@@ -2638,7 +2679,7 @@ const [errors, seterrors] = useState()
                 ...rowSelection,
               }}
               bordered
-            />;
+            />
           </div>
         </div>
       </MyDrawer>
@@ -2846,7 +2887,7 @@ const [errors, seterrors] = useState()
         </div>
 
       </MyDrawer>
-      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
+      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
         console.log(drawerIpnuts?.Divisions)
         insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Divisions'))
       }} >
@@ -3043,18 +3084,7 @@ const [errors, seterrors] = useState()
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Type :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect placeholder='City' isSimple={true} disabled={true} />
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
+           
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Code :</p>
@@ -3071,13 +3101,13 @@ const [errors, seterrors] = useState()
 
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>City Name :</p>
+                <p>Contact Type :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} />
-                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                  
+                  <Input className="inp"  />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3094,19 +3124,7 @@ const [errors, seterrors] = useState()
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>County :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} disabled={true} />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
+            
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -3139,16 +3157,16 @@ const [errors, seterrors] = useState()
       </MyDrawer>
       <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => openCloseDrawerFtn('LookupType')} 
       add={async () => {
-        let LookupType = []
-        if (drawerIpnuts?.LookupType?.RegionType == '' || drawerIpnuts?.LookupType?.RegionType == 'undefined') {
-          LookupType.push({ LookupType: 'Required' })
-        }
-        if (drawerIpnuts?.LookupType?.DisplayName == '' || drawerIpnuts?.LookupType?.DisplayName == 'undefined') {
-          LookupType.push({ DisplayName: 'Required' })
-        }
-        if (LookupType?.length > 0) {
-          return seterrors(LookupType)
-        }
+        // let LookupType = []
+        // if (drawerIpnuts?.LookupType?.RegionType == '' || drawerIpnuts?.LookupType?.RegionType == 'undefined') {
+        //   LookupType.push({ LookupType: 'Required' })
+        // }
+        // if (drawerIpnuts?.LookupType?.DisplayName == '' || drawerIpnuts?.LookupType?.DisplayName == 'undefined') {
+        //   LookupType.push({ DisplayName: 'Required' })
+        // }
+        // if (LookupType?.length > 0) {
+        //   return seterrors(LookupType)
+        // }
         await insertDataFtn(
           `${baseURL}/regiontype`,
           drawerIpnuts?.LookupType,
@@ -3168,7 +3186,7 @@ const [errors, seterrors] = useState()
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType :', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp" />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -3185,7 +3203,7 @@ const [errors, seterrors] = useState()
                     isSimple={true}
                     placeholder=''
                     options={lookupsType}
-                    onChange={(value) => drawrInptChng('LookupType :', 'LookupType', value.target.value)}
+                    onChange={(value) => drawrInptChng('LookupType', 'LookupType', value.target.value)}
                   />
                 </div>
                 <p className="error">{errors?.LookupType?.LookupType}</p>
@@ -3203,7 +3221,6 @@ const [errors, seterrors] = useState()
                 <p className="error">{errors?.LookupType?.DisplayName}</p>
               </div>
             </div>
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -3242,13 +3259,12 @@ const [errors, seterrors] = useState()
       </MyDrawer>
       <MyDrawer title='Lookup' open={drawerOpen?.Lookup} isPagination={true} onClose={() => openCloseDrawerFtn('Lookup')} 
       add={async () => {
-        
         await insertDataFtn(
           `${baseURL}/region`,
-          drawerIpnuts?.Lookup,
+          {'region':drawerIpnuts?.Lookup},
           'Data inserted successfully',
           'Data did not insert',
-          () => resetCounteries('Lookup', () => dispatch(fetchRegions())) 
+          () => resetCounteries('Lookup', () => dispatch(getAllLookups())) 
         );
       }}
       >
@@ -3364,6 +3380,187 @@ const [errors, seterrors] = useState()
           </div>
         </div>
       </MyDrawer>
+      <MyDrawer title='Solicitors' open={drawerOpen?.Solicitors} isPagination={true} onClose={() => openCloseDrawerFtn('Solicitors')} 
+      add={async () => {
+        await insertDataFtn(
+          `${baseURL}/region`,
+          {'region':drawerIpnuts?.Lookup},
+          'Data inserted successfully',
+          'Data did not insert',
+          () => resetCounteries('Lookup', () => dispatch(getAllLookups())) 
+        );
+      }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{width:"25%"}}>
+                <p>Contact Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  {/* <Input className="inp" onChange={(e) => drawrInptChng('LookupType :', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} /> */}
+                  <MySelect isSimple={true} placeholder='Select Contact type' 
+                disabled={true}
+                />
+                  <h1 className="error-text">error-text</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{width:"25%"}}>
+                <p>Title :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                 <MySelect isSimple={true} placeholder='Mr.' />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{width:"25%"}}>
+                <p>Forename :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Surname :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Email :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Mobile :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Building or House :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Street or Road :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Area or Town :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>County, City or Postcode :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container ">
+              <div className="drawer-lbl-container" style={{width:"25%"}} >
+                <p>Eircode :</p>
+              </div>
+              <div className="inpt-con" >
+                <p className="star">*</p>
+                <div className="inpt-sub-con" >
+                  <Input  />
+                  
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnLookup}
+              dataSource={lookups}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+    
     </div>
   );
 }
