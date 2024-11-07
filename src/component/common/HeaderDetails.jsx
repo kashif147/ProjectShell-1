@@ -42,6 +42,7 @@ import DateRang from "./DateRang";
 import '../../styles/HeaderDetails.css'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegions } from "../../features/RegionSlice";
+import AddNewGarda from "../details/AddNewGarda";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -231,7 +232,7 @@ useEffect(() => {
     },
   ];
   const exportbtn = { "Export PDF": true, "Export CSV": true };
-
+  const [isGardaDrwer, setisGardaDrwer] = useState(false)
   const topThreeDots = {
     BulkChnages: "false",
   };
@@ -430,8 +431,8 @@ useEffect(() => {
                   <div className="d-flex">
                     <Button onClick={() => {
                       if (nav == "/Details" || nav == "/Summary") {
-
-                        navigate("/AddNewProfile")
+                        setisGardaDrwer(!isGardaDrwer)
+                      
                       } else if (nav == "/ClaimSummary") {
                         handlClaimDrawerChng()
                       }
@@ -482,7 +483,7 @@ useEffect(() => {
                         // border: "1px solid",
                         color: "gray",
                       }}
-                      suffix={<SearchOutlined />}
+                      // suffix={<SearchOutlined />}
                     />
                     {trueFilters?.map((item, index) =>
                       item?.titleColumn === "Date Of Birth" ? (
@@ -588,6 +589,10 @@ useEffect(() => {
         }}>Save</Button ><Button onClick={showHidSavModal}>Close</Button></>} title="Report" open={isSaveModalOpen} onOk={showHidSavModal} onCancel={showHidSavModal}>
         <Input onChange={(e)=>setReportName(e.target.value)} value={ReportName} placeholder="Enter Name For Report" />
       </Modal>
+
+      <AddNewGarda open={isGardaDrwer} onClose={()=>setisGardaDrwer(!isGardaDrwer)} />
+
+
     </div>
   );
 }

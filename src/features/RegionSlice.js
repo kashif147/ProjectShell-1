@@ -9,8 +9,7 @@ let token;
 export const fetchRegions = createAsyncThunk(
     'regions/fetchRegions',
     async (_, { rejectWithValue }) => {
-        try {
-            debugger
+        try { 
             token = localStorage.getItem('token')
             const response = await axios.get(`${baseURL}/regiontype`, {
                 headers: {

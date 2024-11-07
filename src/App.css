@@ -12,12 +12,16 @@
 .input-container{
    
 }
-
+.ant-modal-confirm .ant-btn-primary.custom-confirm-ok-button {
+  background-color: var(--FontsColor) !important;
+}
 .bordr-less{
   border: none;
   box-shadow: none; 
   color: var(--mainBlue) !important;
 }
+/* Center the tick in the Ant Design checkbox */
+
 .bordr-less :hover{
 background: transparent !important;
 }

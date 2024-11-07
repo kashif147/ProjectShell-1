@@ -1,10 +1,11 @@
 import axios from "axios";
 import MyAlert from "../component/common/MyAlert";
+import { notificationsMsg } from "../Data";
 let token;
 export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 
 
-export const insertDataFtn = async (url, data, successNotification, failureNotification) => {
+export const insertDataFtn = async (url, data, successNotification, failureNotification,callback) => {
   
   const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
@@ -20,6 +21,7 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
     if (response.status === 201) { // Strict equality check
 
       MyAlert('success', successNotification);
+      callback()
 
     } else {
       return MyAlert('error', failureNotification);
@@ -56,3 +58,21 @@ try {
 }
 
 }
+
+export const updateFtn = async (endPoint, data, callback) => {
+  try {
+    token=   localStorage.getItem('token');
+    const response = await axios.put(`${baseURL}${endPoint}`, data, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    MyAlert('success', notificationsMsg?.updating?.sucess)
+    callback()
+    return response.data;
+  } catch (error) {
+    MyAlert('error', notificationsMsg?.updating?.falier)
+  
+  }
+};
+

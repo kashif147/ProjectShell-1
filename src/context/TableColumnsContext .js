@@ -926,7 +926,7 @@ export const TableColumnsProvider = ({ children }) => {
       const newIndex= prev-1;
       const filteredData = gridData?.filter((_,index)=>index==newIndex);
       setProfileDetails(filteredData)
-      debugger
+      
       return newIndex
     })
 

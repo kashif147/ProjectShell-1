@@ -51,7 +51,7 @@
   display: flex;
   justify-content: flex-end;
   /* background-color: aqua; */
-  width: 13%;
+  width: 15%;
 }
 .drawer-lbl-container p {
   font: 14px;

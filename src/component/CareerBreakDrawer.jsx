@@ -101,20 +101,20 @@ function CareerBreakDrawer({ open, onClose }) {
 
 
                 </div>
-                <div className="drawer-inpts-container " style={{height:'110px'}}>
-                    <div className="drawer-lbl-container" style={{ width: "10%" }}>
+                <div className="drawer-inpts-container " style={{ height: '110px', width:'100%', backgroundColor:'red' }}>
+                    <div className="drawer-lbl-container" style={{ width: "10%", backgroundColor:'yellow' }}>
                         <p>Memo :</p>
                     </div>
-                    <div className="inpt-con w-80" >
+                    <div className="inpt-con " style={{width:"45%"}} >
                         <p className="star">*</p>
                         <div className="inpt-sub-con" >
-                        <TextArea placeholder='Autosize height based on content lines
+                            <TextArea placeholder='Autosize height based on content lines
 ' rows={4} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
                         </div>
                         <p className="error"></p>
                     </div>
                 </div>
-               
+
                 <div>
                     <h5>History</h5>
                     <Table

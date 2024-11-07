@@ -8,6 +8,8 @@ import { useTableColumns } from "../../context/TableColumnsContext "; // Import 
 import ExportCSV from "./ExportCSV";
 import ExportPDF from "./ExportPDF";
 import { MdOutlineLocalPrintshop } from "react-icons/md";
+import { FaRegArrowAltCircleRight } from "react-icons/fa";
+import { FaUserAltSlash } from "react-icons/fa";
 import { useLocation } from "react-router-dom";
 import TransferRequests from "../TransferRequests";
 import CareerBreakDrawer from "../CareerBreakDrawer";
@@ -154,11 +156,23 @@ function SimpleMenu({
 
             key==='Transfer Requests'?(
               <div className="d-flex align-items-baseline" onClick={()=>settransferreq(true )}>
+              <FaRegArrowAltCircleRight style={{
+                  fontSize: "12px",
+                  marginRight: "10px",
+                  color: "#45669d",
+                }} />
               Transfer Requests
             </div>
             ):
             key==='Career Break'?(
               <div className="d-flex align-items-baseline" onClick={()=>setcareerBreak(!careerBreak)}>
+              <FaUserAltSlash
+              style={{
+                fontSize: "12px",
+                marginRight: "10px",
+                color: "#45669d",
+              }}
+              />
               Career Break
             </div>
             ):

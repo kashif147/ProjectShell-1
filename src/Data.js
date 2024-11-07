@@ -1070,12 +1070,5 @@ export const claimsData = [
 export const notificationsMsg = {
  delete:{deleteSuccess:'You have successfully deleted.', falier:'Failed to delete. Please try again later.'},
  insertion:{Success:'Data inserted successfully', falier:'Failed to insert. Please try again later.'},
- updating:{sucess:'', falier:''}
+ updating:{sucess:'You have successfully Updated.', falier:'Failed to update. Please try again later.'}
 }
-
-
-
-//   const filterByGender = (data, gender) => {
-//     return data?.filter(item => item.Gender.toLowerCase() === gender.toLowerCase());
-//   };
-//  export const maleTblData = filterByGender(tableData, "male");

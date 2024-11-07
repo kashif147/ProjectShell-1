@@ -5,7 +5,8 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update }) {
+  console.log(isEdit,'999')
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
@@ -83,8 +84,8 @@ const rowSelection = {
             <Button className="butn secoundry-btn" onClick={onClose}>
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={add}>
-              Add
+            <Button className="butn primary-btn" onClick={isEdit==true?update: add}>
+            {isEdit== true? "Save":'Add'}
             </Button>
           </Space>
 
