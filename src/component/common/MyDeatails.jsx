@@ -17,6 +17,7 @@ import MyDatePicker from "./MyDatePicker";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
+import MyTransfer from "./MyTransfer";
 
 
 
@@ -91,7 +92,12 @@ function MyDeatails() {
     NewlyAssignedDuty: "",
   });
 
-  const [modalOpenData, setmodalOpenData] = useState({ Partnership: false, Children: false, TransferScreen: false })
+  const [modalOpenData, setmodalOpenData] = useState({
+    Partnership: false, Children: false,
+    TransferScreen: false, criticalIllnessScheme: false, GardaReviews: false,
+    Committees: false,
+    PartnerLifeAssuranceClaim:false,
+  })
   const openCloseModalsFtn = (key,) => {
     setmodalOpenData((prevState) => ({
       ...prevState,
@@ -403,6 +409,126 @@ function MyDeatails() {
       ),
     },
   ]
+  const GardaReviewColumns = [
+    {
+      title: 'Start Date',
+      dataIndex: 'gardaRegNo',
+      key: 'gardaRegNo',
+    },
+    {
+      title: 'End Date',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: 'Notese',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+
+  ]
+  const criticalIllnessSchemeClm = [
+    {
+      title: 'Claim Type',
+      dataIndex: 'gardaRegNo',
+      key: 'gardaRegNo',
+    },
+    {
+      title: 'Claim Reason',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: 'Claim Date',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: 'Beneficiary',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: 'Child Name',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: 'Partner Name',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+
+  ]
+  const CommitteesColumns = [
+    {
+      title: 'Committee',
+      dataIndex: 'gardaRegNo',
+      key: 'gardaRegNo',
+    },
+    {
+      title: 'Start Date',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: 'End Date',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          Action
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+
+  ]
   const onSubmit = data => console.log(data);
   const handleButtonClick = (e) => {
     message.info('Click on left button.');
@@ -496,7 +622,6 @@ function MyDeatails() {
                       <MySelect isSimple={true} placeholder='Mr.' />
                       <h1 className="error-text">error-text</h1>
                     </div>
-
                   </div>
                 </div>
                 <div className="lbl-inpt">
@@ -538,20 +663,7 @@ function MyDeatails() {
                     </div>
                   </div>
                 </div>
-                {/* <div className="lbl-inpt">
-                <p className="lbl">Gender :</p>
-                <div>
-                <p className="star-white">*</p>
-                <Radio.Group
-                  options={optionsWithDisabled}
-                  onChange={onChange4}
-                  value={value4}
-                  optionType="button"
-                  buttonStyle="solid"
-                />
-                </div>
-               
-              </div> */}
+
                 <div className="lbl-inpt">
                   <div className="title-cont">
                     <p className="">Date of Birth :</p>
@@ -566,9 +678,7 @@ function MyDeatails() {
                       }}
                       format='DD/MM/YYYY'
                     />
-                    {/* <div className="ag-65"> */}
                     <p className="ag-65-title" >{`${ageOnNextBirthday} Yrs`}</p>
-                    {/* </div> */}
                   </div>
                 </div>
                 <div className="lbl-inpt">
@@ -986,7 +1096,6 @@ function MyDeatails() {
                           checked={InfData?.isPensioner}
                         />
                       </div>
-
                       <Input
                         type="text"
                         placeholder="Enter something..."
@@ -1053,10 +1162,10 @@ function MyDeatails() {
                     <p className="sub-com">Sub Committees :</p>
                   </div>
                   <div className="me-4">
-                    <Button className="butn primary-btn">+</Button>
+                    <Button className="butn primary-btn" onClick={() => openCloseModalsFtn("Committees")}>+</Button>
                   </div>
                 </div>
-                <div className="d-flex justify-content-center upload-container">  {/* Ensure the outer div is a flexbox */}
+                <div className="d-flex justify-content-center upload-container">
                   <Upload {...props}>
                     <div className="d-flex
                     ">
@@ -1068,7 +1177,7 @@ function MyDeatails() {
                 <Divider>Subscriptions</Divider>
                 <Row style={{ paddingLeft: '12px' }}>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox className="subs-chkbx" onChange={()=>openCloseModalsFtn("PartnerLifeAssuranceClaim")} >
                       Life Assurance (Member)
                     </Checkbox>
                   </Col>
@@ -1078,7 +1187,7 @@ function MyDeatails() {
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn("criticalIllnessScheme")}>
                       Critical Illness (Member)
                     </Checkbox>
                   </Col>
@@ -1108,7 +1217,7 @@ function MyDeatails() {
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaReviews')}>
                       Garda Review
                     </Checkbox>
                   </Col>
@@ -1376,7 +1485,6 @@ function MyDeatails() {
               rowSelection={rowSelection} // Enables row selection with checkboxes
               columns={childrencolumns}
               pagination={false}
-
               bordered
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -1397,7 +1505,7 @@ function MyDeatails() {
                     </div>
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
+                        <p className="star-white ">*</p>
                         <MySelect placeholder='Select Station Code' isSimple={true} />
                       </div>
 
@@ -1407,11 +1515,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">Station Name :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                       <Input />
+                        <p className="star-white ">*</p>
+                        <Input />
                       </div>
 
                     </div>
@@ -1420,11 +1528,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title1">
                       <p className="transfer-main-inpts-p"></p>
                     </div>
-                   
+
                     <div className="transfer-inputs1">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                       <TextArea  rows={3}/>
+                        <p className="star-white ">*</p>
+                        <TextArea rows={3} />
                       </div>
 
                     </div>
@@ -1433,11 +1541,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">District :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                      <MySelect  isSimple={true} placeholder='Select District'/>
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='Select District' />
                       </div>
 
                     </div>
@@ -1446,11 +1554,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">Division :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                      <MySelect  isSimple={true} placeholder='Select District'/>
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='Select District' />
                       </div>
 
                     </div>
@@ -1466,7 +1574,7 @@ function MyDeatails() {
                     </div>
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
+                        <p className="star-white ">*</p>
                         <MySelect placeholder='Select Station Code' isSimple={true} />
                       </div>
 
@@ -1476,11 +1584,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">Station Name :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                       <Input />
+                        <p className="star-white ">*</p>
+                        <Input />
                       </div>
 
                     </div>
@@ -1489,11 +1597,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title1">
                       <p className="transfer-main-inpts-p"></p>
                     </div>
-                   
+
                     <div className="transfer-inputs1">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                       <TextArea  rows={3}/>
+                        <p className="star-white ">*</p>
+                        <TextArea rows={3} />
                       </div>
 
                     </div>
@@ -1502,11 +1610,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">District :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                      <MySelect  isSimple={true} placeholder='Select District'/>
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='Select District' />
                       </div>
 
                     </div>
@@ -1515,11 +1623,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">Division :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                      <MySelect  isSimple={true} placeholder='Select District'/>
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='Select District' />
                       </div>
 
                     </div>
@@ -1528,11 +1636,11 @@ function MyDeatails() {
                     <div className="transfer-inpts-title">
                       <p className="transfer-main-inpts-p">Transfer Date :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                      <DatePicker  className="w-100" />
+                        <p className="star-white ">*</p>
+                        <DatePicker className="w-100" />
                       </div>
 
                     </div>
@@ -1541,17 +1649,260 @@ function MyDeatails() {
                     <div className="transfer-inpts-title1">
                       <p className="transfer-main-inpts-p">Memo :</p>
                     </div>
-                   
+
                     <div className="transfer-inputs1">
                       <div className="d-flex ">
-                      <p className="star-white ">*</p>
-                       <TextArea  rows={3}/>
+                        <p className="star-white ">*</p>
+                        <TextArea rows={3} />
                       </div>
 
                     </div>
                   </div>
                 </div>
               </div>
+            </div>
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Critical Illness Scheme'
+          open={modalOpenData?.criticalIllnessScheme} onClose={() => openCloseModalsFtn("criticalIllnessScheme")}
+          isPyment={true}
+          width='785px' >
+          <div className="drawer-main-cntainer">
+            <div className="details-drawer mb-4">
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
+            </div>
+            <div className="d-flex">
+              <div className="w-50  ">
+                <div className="body-container">
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Joining Date :</p>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <MyDatePicker />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Claim Type : </p>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='Claim Type' />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Claim Date :</p>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <MyDatePicker />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Child Name :</p>
+                    </div>
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='Select Child Name' />
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div className="w-50 ms-4">
+                <div className="body-container">
+                  <div className="d-flex ">
+                    <div className="transfer-main-inpts">
+
+                      <div className="transfer-inputs">
+                        <div className="d-flex ">
+                          <p className="star-white ">*</p>
+                          <Checkbox>
+                            Member Cover
+                          </Checkbox>
+                        </div>
+
+                      </div>
+                      <div className="transfer-inputs">
+                        <div className="d-flex ">
+                          <p className="star-white ">*</p>
+                          <Checkbox>
+                            Partner Cover
+                          </Checkbox>
+                        </div>
+
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Claim Reason :</p>
+                    </div>
+
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Beneficiary :</p>
+                    </div>
+
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <Input />
+                      </div>
+
+                    </div>
+                  </div>
+                  <div className="transfer-main-inpts">
+                    <div className="transfer-inpts-title">
+                      <p className="transfer-main-inpts-p">Partner Name :</p>
+                    </div>
+
+                    <div className="transfer-inputs">
+                      <div className="d-flex ">
+                        <p className="star-white ">*</p>
+                        <MySelect isSimple={true} placeholder='N/A' />
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+            </div>
+            <div>
+              <Table
+                pagination={false}
+                columns={criticalIllnessSchemeClm}
+                className="drawer-tbl"
+                rowClassName={(record, index) =>
+                  index % 2 !== 0 ? "odd-row" : "even-row"
+                }
+                rowSelection={rowSelection}
+                bordered
+              />
+            </div>
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Garda Reviews'
+          open={modalOpenData?.GardaReviews} onClose={() => openCloseModalsFtn("GardaReviews")}
+          width='725px' >
+          <div className="drawer-main-cntainer">
+            <div className="details-drawer mb-4">
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: '20%' }}>
+                <p>Review Start date :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MyDatePicker />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container" >
+              <div className="drawer-lbl-container" style={{ width: '20%' }}>
+                <p>Review End date :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <MyDatePicker />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container" style={{ height: '200px' }}>
+
+              <div className="inpt-con" style={{ width: '80%', }}>
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <TextArea rows={6} placeholder="Autosize height based on content lines" />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="mt-4 pt-4">
+              <h5>History</h5>
+              <Table
+                pagination={false}
+                columns={GardaReviewColumns}
+                className="drawer-tbl"
+                rowClassName={(record, index) =>
+                  index % 2 !== 0 ? "odd-row" : "even-row"
+                }
+                rowSelection={rowSelection}
+                bordered
+              />
+            </div>
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Committees'
+          open={modalOpenData?.Committees} onClose={() => openCloseModalsFtn("Committees")}
+          width='576px' >
+          <div className="drawer-main-cntainer">
+            <MyTransfer />
+            <div className="">
+              <h5>History</h5>
+              <Table
+                pagination={false}
+                columns={CommitteesColumns}
+                className="drawer-tbl"
+                rowClassName={(record, index) =>
+                  index % 2 !== 0 ? "odd-row" : "even-row"
+                }
+                rowSelection={rowSelection}
+                bordered
+              />
+            </div>
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Partner Life Assurance Claim'
+          open={modalOpenData?.PartnerLifeAssuranceClaim} onClose={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}
+          width='800px' >
+          <div className="drawer-main-cntainer">
+          
+            <div className="">
+              <h5>History</h5>
+              <Table
+                pagination={false}
+                columns={CommitteesColumns}
+                className="drawer-tbl"
+                rowClassName={(record, index) =>
+                  index % 2 !== 0 ? "odd-row" : "even-row"
+                }
+                rowSelection={rowSelection}
+                bordered
+              />
             </div>
           </div>
         </MyDrawer>

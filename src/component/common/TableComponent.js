@@ -393,7 +393,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             style={{ tableLayout: 'fixed' }}
             bordered
             virtual
-            scroll={{ x: "100%", y: 350 }}
+            scroll={{ x: "100%", y: 500 }}
             sticky
           />
           <div

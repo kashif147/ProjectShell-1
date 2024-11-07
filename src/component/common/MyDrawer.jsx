@@ -5,7 +5,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment }) {
   console.log(isEdit,'999')
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
@@ -80,6 +80,17 @@ const rowSelection = {
               </div>
             )
           }
+          {
+            isPyment && (
+              <div className="mx-auto" style={{ marginRight: '80%' }}>
+                <Button onClick={() => setcontactDrawer(!contactDrawer)}
+                  className="butn secondary" style={{ color: 'blue', marginRight: '250px' }}>
+                  Add Payment
+                </Button>
+              </div>
+            )
+          }
+          
           <Space>
             <Button className="butn secoundry-btn" onClick={onClose}>
               Close
