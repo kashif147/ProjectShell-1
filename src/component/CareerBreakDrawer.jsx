@@ -1,7 +1,7 @@
 import React, { useState } from 'react'
 import MyDrawer from './common/MyDrawer'
 import MyDatePicker from './common/MyDatePicker'
-import { Input, Table, Space } from 'antd'
+import { Input, Table, Space, Checkbox } from 'antd'
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
@@ -54,25 +54,17 @@ function CareerBreakDrawer({ open, onClose }) {
     return (
         <MyDrawer title="Career Break" open={open} onClose={onClose} width='578px'>
             <div>
-                <Input
-                    placeholder="Search by Reg No or Surname"
-                    allowClear
-                    // onSearch={onSearch}
-                    style={{
-                        width: "100%",
-                        marginTop: '10px'
-                    }}
-                />
+                
                 <div className="details-drawer mb-4 mt-4">
                     <p>Garda Reg No</p>
                     <p>Fullname</p>
                     <p>Garda</p>
                 </div>
 
-                <div className='transfer-main-cont d-flex'>
+                <div className='transfer-main-cont'>
 
                     <div className="drawer-inpts-container ">
-                        <div className="drawer-lbl-container" style={{ width: "35%" }}>
+                        <div className="drawer-lbl-container" style={{ width: "15%" }}>
                             <p>Start date :</p>
                         </div>
                         <div className="inpt-con" >
@@ -85,7 +77,7 @@ function CareerBreakDrawer({ open, onClose }) {
                         </div>
                     </div>
                     <div className="drawer-inpts-container ">
-                        <div className="drawer-lbl-container" style={{ width: "35%" }}>
+                        <div className="drawer-lbl-container" style={{ width: "15%" }}>
                             <p>End date :</p>
                         </div>
                         <div className="inpt-con" >
@@ -101,22 +93,26 @@ function CareerBreakDrawer({ open, onClose }) {
 
 
                 </div>
-                <div className="drawer-inpts-container " style={{ height: '110px', width:'100%', backgroundColor:'red' }}>
-                    <div className="drawer-lbl-container" style={{ width: "10%", backgroundColor:'yellow' }}>
+                <div className='d-flex justify-content-center pb-4'>
+<Checkbox checked={true}>
+Archived
+</Checkbox>
+                </div>
+                <div className="drawer-inpts-container " style={{ height: '110px', width: '', }}>
+                    <div className="drawer-lbl-container" style={{ width: "", }}>
                         <p>Memo :</p>
                     </div>
-                    <div className="inpt-con " style={{width:"45%"}} >
+                    <div className="inpt-con " style={{ width: "" }} >
                         <p className="star">*</p>
                         <div className="inpt-sub-con" >
                             <TextArea placeholder='Autosize height based on content lines
-' rows={4} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+' rows={4} style={{ width: "", borderRadius: "3px", borderColor: 'D9D9D9', }} />
                         </div>
                         <p className="error"></p>
                     </div>
                 </div>
-
-                <div>
-                    <h5>History</h5>
+                <div style={{ marginTop: '10vh' }}>
+                    <h5 className=''>History</h5>
                     <Table
                         pagination={false}
                         columns={columnCountry}

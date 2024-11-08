@@ -96,7 +96,8 @@ function MyDeatails() {
     Partnership: false, Children: false,
     TransferScreen: false, criticalIllnessScheme: false, GardaReviews: false,
     Committees: false,
-    PartnerLifeAssuranceClaim:false,
+    PartnerLifeAssuranceClaim: false,
+    GardaLifeAssuranceClaim:false,
   })
   const openCloseModalsFtn = (key,) => {
     setmodalOpenData((prevState) => ({
@@ -508,6 +509,46 @@ function MyDeatails() {
     },
     {
       title: 'End Date',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          Action
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+
+  ]
+  const PartnerLifeAssuranceClaimClm = [
+    {
+      title: 'Transfer Date',
+      dataIndex: 'gardaRegNo',
+      key: 'gardaRegNo',
+    },
+    {
+      title: 'Station From',
+      dataIndex: 'dateOfBirth',
+      key: 'dateOfBirth',
+      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+    },
+    {
+      title: 'Station To',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: 'Notes',
       dataIndex: 'Notes',
       key: 'Notes',
     },
@@ -1177,12 +1218,12 @@ function MyDeatails() {
                 <Divider>Subscriptions</Divider>
                 <Row style={{ paddingLeft: '12px' }}>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx" onChange={()=>openCloseModalsFtn("PartnerLifeAssuranceClaim")} >
+                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn("GardaLifeAssuranceClaim")} >
                       Life Assurance (Member)
                     </Checkbox>
                   </Col>
-                  <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                  <Col span={12} >
+                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}>
                       Life Assurance (Partner)
                     </Checkbox>
                   </Col>
@@ -1666,6 +1707,7 @@ function MyDeatails() {
         <MyDrawer title='Critical Illness Scheme'
           open={modalOpenData?.criticalIllnessScheme} onClose={() => openCloseModalsFtn("criticalIllnessScheme")}
           isPyment={true}
+          InfData={InfData}
           width='785px' >
           <div className="drawer-main-cntainer">
             <div className="details-drawer mb-4">
@@ -1888,14 +1930,437 @@ function MyDeatails() {
         </MyDrawer>
         <MyDrawer title='Partner Life Assurance Claim'
           open={modalOpenData?.PartnerLifeAssuranceClaim} onClose={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}
-          width='800px' >
+          width='837px' >
           <div className="drawer-main-cntainer">
-          
             <div className="">
+              <div className="row">
+                <div className="col-md-6">
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Partner Name :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <MySelect isSimple={true} disabled={true} placeholder="Jane Doe" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Assured From :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con">
+                       <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                 
+                </div>
+                <div className="col-md-6">
+                <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                    <p>Deceased :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+              <div className="row">
+              <div className="col-md-12">
+                <div className="drawer-inpts-container" style={{height:'64px'}}>
+                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+                    <p>Contact Address :</p>
+                    </div>
+                    <div className="inpt-con" style={{ width:'81%'}}>
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                <div className="row">
+                  <div className="col-md-6">
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Fire Reference :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con d-flex">
+                      <Input />
+                      <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Advance Amount :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                      <Input />
+                      <Button className="butn primery-btn">+</Button>
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Advance Date :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <MyDatePicker />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Advance Cheque # :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  </div>
+                  <div className="col-md-6">
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Cover Level :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input placeholder="0.00" />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Balance Amount :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input placeholder="0.00" />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Balance Date :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <MyDatePicker />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Balance Cheque # :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input placeholder="" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  </div>
+
+                </div>
+                <div className="row">
+              <div className="col-md-12">
+                <div className="drawer-inpts-container" style={{height:'64px'}}>
+                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+                    <p>Memo :</p>
+                    </div>
+                    <div className="inpt-con" style={{ width:'81%'}}>
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 pt-2">
               <h5>History</h5>
               <Table
                 pagination={false}
-                columns={CommitteesColumns}
+                columns={PartnerLifeAssuranceClaimClm}
+                className="drawer-tbl"
+                rowClassName={(record, index) =>
+                  index % 2 !== 0 ? "odd-row" : "even-row"
+                }
+                rowSelection={rowSelection}
+                bordered
+              />
+            </div>
+          </div>
+        </MyDrawer>
+        <MyDrawer title='Garda Life Assurance Claim'
+          open={modalOpenData?.GardaLifeAssuranceClaim} 
+          isAss={true}
+          onClose={() => openCloseModalsFtn("GardaLifeAssuranceClaim")}
+          width='837px' >
+          <div className="drawer-main-cntainer">
+            <div className="">
+              <div className="row">
+                <div className="col-md-6">
+                 
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Assured From :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                       <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Contact Name :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con">
+                       <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                 
+                </div>
+                <div className="col-md-6">
+                <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                    </div>
+                    
+                  </div>
+                <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                    <p>Deceased :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                    <p>Contact Phone :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <Input />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                </div>
+                
+              </div>
+              <div className="row">
+              <div className="col-md-12">
+                <div className="drawer-inpts-container" style={{height:'64px'}}>
+                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+                    <p>Contact Address :</p>
+                    </div>
+                    <div className="inpt-con" style={{ width:'81%'}}>
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+                <div className="row">
+                  <div className="col-md-6">
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Fire Reference :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con d-flex">
+                      <Input />
+                      <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Advance Amount :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                      <Input />
+                      <Button className="butn primery-btn">+</Button>
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Advance Date :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <MyDatePicker />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Advance Cheque # :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  </div>
+                  <div className="col-md-6">
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Cover Level :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input placeholder="0.00" />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Balance Amount :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input placeholder="0.00" />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Balance Date :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <MyDatePicker />
+                    
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                      <p>Balance Cheque # :</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con ">
+                      <Input placeholder="" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  </div>
+
+                </div>
+                <div className="row">
+              <div className="col-md-12">
+                <div className="drawer-inpts-container" style={{height:'64px'}}>
+                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+                    <p>Memo :</p>
+                    </div>
+                    <div className="inpt-con" style={{ width:'81%'}}>
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con">
+                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="mt-4 pt-2">
+              <h5>History</h5>
+              <Table
+                pagination={false}
+                columns={PartnerLifeAssuranceClaimClm}
                 className="drawer-tbl"
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
@@ -1908,7 +2373,7 @@ function MyDeatails() {
         </MyDrawer>
       </div>
     </form>
-  );
+  )
 }
 
 export default MyDeatails;
