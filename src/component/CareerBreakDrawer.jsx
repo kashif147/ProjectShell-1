@@ -54,7 +54,7 @@ function CareerBreakDrawer({ open, onClose }) {
     return (
         <MyDrawer title="Career Break" open={open} onClose={onClose} width='578px'>
             <div>
-                
+
                 <div className="details-drawer mb-4 mt-4">
                     <p>Garda Reg No</p>
                     <p>Fullname</p>
@@ -84,19 +84,16 @@ function CareerBreakDrawer({ open, onClose }) {
                             <p className="star">*</p>
                             <div className="inpt-sub-con" >
                                 <MyDatePicker
-
                                 />
                             </div>
                             <p className="error"></p>
                         </div>
                     </div>
-
-
                 </div>
                 <div className='d-flex justify-content-center pb-4'>
-<Checkbox checked={true}>
-Archived
-</Checkbox>
+                    <Checkbox checked={true}>
+                        Archived
+                    </Checkbox>
                 </div>
                 <div className="drawer-inpts-container " style={{ height: '110px', width: '', }}>
                     <div className="drawer-lbl-container" style={{ width: "", }}>

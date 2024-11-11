@@ -1,0 +1,46 @@
+.chat-main:hover,
+.chat-main:active
+{
+    border: 1px solid var(--secoundry-color);
+}
+.border1{
+    border: 1px solid var(--secoundry-color);
+}
+.corespndence-main .ant-tabs-nav-wrap{
+   height: 57px !important;
+   background-color: #f0eef7 !important;
+}
+.corespndence-main .ant-tabs-tab{
+    margin-left: 30px !important;
+    color: #215E97 !important;
+    font-weight: 400 !important;
+    font-size: 16px !important;
+}
+.corespndence-main{
+    background-color: #f0eef7;
+    height: 100vh;
+}
+.chat-container{
+    /* width: 515px; */
+    width: 40%;
+    background-color: white ;
+    border-radius: 4px;
+    height: 800px;
+    margin-left: 15px;
+}
+.chat-detail-container{
+    padding: 16px;
+    margin-left: 15px;
+    margin-right: 15px;
+    background-color: white ;
+    border-radius: 4px;
+    height: 800px;
+    width: 60%;
+}
+.top-des h4{
+font-size: 14px;
+font-weight: 400;
+margin-bottom: 15px;
+margin-top: 15px;
+
+}

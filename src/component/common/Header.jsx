@@ -96,7 +96,7 @@ function Header() {
     {
       key: "1",
       label: (
-        <Link to="/CorrespondencesSummary" state={{ search: "Reports" }} className="link" style={{ textDecoration: "none" }}>
+        <Link to="/CorspndncDetail" state={{ search: "Reports" }} className="link" style={{ textDecoration: "none" }}>
           Summary
         </Link>
       ),
