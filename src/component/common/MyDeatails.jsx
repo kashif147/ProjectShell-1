@@ -97,7 +97,8 @@ function MyDeatails() {
     TransferScreen: false, criticalIllnessScheme: false, GardaReviews: false,
     Committees: false,
     PartnerLifeAssuranceClaim: false,
-    GardaLifeAssuranceClaim:false,
+    GardaLifeAssuranceClaim: false,
+    GardaLegalAidScheme: false
   })
   const openCloseModalsFtn = (key,) => {
     setmodalOpenData((prevState) => ({
@@ -1253,8 +1254,8 @@ function MyDeatails() {
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
-                      Legal Assistance
+                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaLegalAidScheme')}>
+                      Legal Assistance1
                     </Checkbox>
                   </Col>
                   <Col span={12}>
@@ -1954,28 +1955,28 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star">*</p>
                       <div className="inpt-sub-con">
-                       <MyDatePicker />
+                        <MyDatePicker />
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                 
+
                 </div>
                 <div className="col-md-6">
-                <div className="drawer-inpts-container">
+                  <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                     </div>
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
-                        
+
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                <div className="drawer-inpts-container">
+                  <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
-                    <p>Deceased :</p>
+                      <p>Deceased :</p>
                     </div>
                     <div className="inpt-con">
                       <p className="star-white">*</p>
@@ -1986,15 +1987,15 @@ function MyDeatails() {
                     </div>
                   </div>
                 </div>
-                
+
               </div>
               <div className="row">
-              <div className="col-md-12">
-                <div className="drawer-inpts-container" style={{height:'64px'}}>
+                <div className="col-md-12">
+                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
                     <div className="drawer-lbl-container" style={{ width: '16%' }}>
-                    <p>Contact Address :</p>
+                      <p>Contact Address :</p>
                     </div>
-                    <div className="inpt-con" style={{ width:'81%'}}>
+                    <div className="inpt-con" style={{ width: '81%' }}>
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
                         <TextArea rows={2} placeholder="Autosize height based on content lines" />
@@ -2004,8 +2005,8 @@ function MyDeatails() {
                   </div>
                 </div>
               </div>
-                <div className="row">
-                  <div className="col-md-6">
+              <div className="row">
+                <div className="col-md-6">
                   <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                       <p>Fire Reference :</p>
@@ -2013,8 +2014,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star">*</p>
                       <div className="inpt-sub-con d-flex">
-                      <Input />
-                      <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                        <Input />
+                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2026,8 +2027,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
-                      <Input />
-                      <Button className="butn primery-btn">+</Button>
+                        <Input />
+                        <Button className="butn primery-btn">+</Button>
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2039,8 +2040,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <MyDatePicker />
-                    
+                        <MyDatePicker />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2052,13 +2053,13 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input />
+                        <Input />
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                  </div>
-                  <div className="col-md-6">
+                </div>
+                <div className="col-md-6">
                   <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                       <p>Cover Level :</p>
@@ -2066,8 +2067,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input placeholder="0.00" />
-                    
+                        <Input placeholder="0.00" />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2079,8 +2080,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input placeholder="0.00" />
-                    
+                        <Input placeholder="0.00" />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2092,8 +2093,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <MyDatePicker />
-                    
+                        <MyDatePicker />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2105,21 +2106,21 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input placeholder="" />
+                        <Input placeholder="" />
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                  </div>
-
                 </div>
-                <div className="row">
-              <div className="col-md-12">
-                <div className="drawer-inpts-container" style={{height:'64px'}}>
+
+              </div>
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
                     <div className="drawer-lbl-container" style={{ width: '16%' }}>
-                    <p>Memo :</p>
+                      <p>Memo :</p>
                     </div>
-                    <div className="inpt-con" style={{ width:'81%'}}>
+                    <div className="inpt-con" style={{ width: '81%' }}>
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
                         <TextArea rows={2} placeholder="Autosize height based on content lines" />
@@ -2146,7 +2147,7 @@ function MyDeatails() {
           </div>
         </MyDrawer>
         <MyDrawer title='Garda Life Assurance Claim'
-          open={modalOpenData?.GardaLifeAssuranceClaim} 
+          open={modalOpenData?.GardaLifeAssuranceClaim}
           isAss={true}
           onClose={() => openCloseModalsFtn("GardaLifeAssuranceClaim")}
           width='837px' >
@@ -2154,7 +2155,7 @@ function MyDeatails() {
             <div className="">
               <div className="row">
                 <div className="col-md-6">
-                 
+
                   <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                       <p>Assured From :</p>
@@ -2162,7 +2163,7 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
-                       <MyDatePicker />
+                        <MyDatePicker />
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2174,22 +2175,22 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star">*</p>
                       <div className="inpt-sub-con">
-                       <MyDatePicker />
+                        <MyDatePicker />
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                 
+
                 </div>
                 <div className="col-md-6">
-                <div className="drawer-inpts-container">
+                  <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                     </div>
-                    
+
                   </div>
-                <div className="drawer-inpts-container">
+                  <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
-                    <p>Deceased :</p>
+                      <p>Deceased :</p>
                     </div>
                     <div className="inpt-con">
                       <p className="star-white">*</p>
@@ -2199,9 +2200,9 @@ function MyDeatails() {
                       <p className="error"></p>
                     </div>
                   </div>
-                <div className="drawer-inpts-container">
+                  <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
-                    <p>Contact Phone :</p>
+                      <p>Contact Phone :</p>
                     </div>
                     <div className="inpt-con">
                       <p className="star-white">*</p>
@@ -2212,15 +2213,15 @@ function MyDeatails() {
                     </div>
                   </div>
                 </div>
-                
+
               </div>
               <div className="row">
-              <div className="col-md-12">
-                <div className="drawer-inpts-container" style={{height:'64px'}}>
+                <div className="col-md-12">
+                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
                     <div className="drawer-lbl-container" style={{ width: '16%' }}>
-                    <p>Contact Address :</p>
+                      <p>Contact Address :</p>
                     </div>
-                    <div className="inpt-con" style={{ width:'81%'}}>
+                    <div className="inpt-con" style={{ width: '81%' }}>
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
                         <TextArea rows={2} placeholder="Autosize height based on content lines" />
@@ -2230,8 +2231,8 @@ function MyDeatails() {
                   </div>
                 </div>
               </div>
-                <div className="row">
-                  <div className="col-md-6">
+              <div className="row">
+                <div className="col-md-6">
                   <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                       <p>Fire Reference :</p>
@@ -2239,8 +2240,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star">*</p>
                       <div className="inpt-sub-con d-flex">
-                      <Input />
-                      <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                        <Input />
+                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2252,8 +2253,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
-                      <Input />
-                      <Button className="butn primery-btn">+</Button>
+                        <Input />
+                        <Button className="butn primery-btn">+</Button>
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2265,8 +2266,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <MyDatePicker />
-                    
+                        <MyDatePicker />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2278,13 +2279,13 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input />
+                        <Input />
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                  </div>
-                  <div className="col-md-6">
+                </div>
+                <div className="col-md-6">
                   <div className="drawer-inpts-container">
                     <div className="drawer-lbl-container" style={{ width: '33%' }}>
                       <p>Cover Level :</p>
@@ -2292,8 +2293,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input placeholder="0.00" />
-                    
+                        <Input placeholder="0.00" />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2305,8 +2306,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input placeholder="0.00" />
-                    
+                        <Input placeholder="0.00" />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2318,8 +2319,8 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <MyDatePicker />
-                    
+                        <MyDatePicker />
+
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2331,21 +2332,21 @@ function MyDeatails() {
                     <div className="inpt-con">
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
-                      <Input placeholder="" />
+                        <Input placeholder="" />
                       </div>
                       <p className="error"></p>
                     </div>
                   </div>
-                  </div>
-
                 </div>
-                <div className="row">
-              <div className="col-md-12">
-                <div className="drawer-inpts-container" style={{height:'64px'}}>
+
+              </div>
+              <div className="row">
+                <div className="col-md-12">
+                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
                     <div className="drawer-lbl-container" style={{ width: '16%' }}>
-                    <p>Memo :</p>
+                      <p>Memo :</p>
                     </div>
-                    <div className="inpt-con" style={{ width:'81%'}}>
+                    <div className="inpt-con" style={{ width: '81%' }}>
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con">
                         <TextArea rows={2} placeholder="Autosize height based on content lines" />
@@ -2368,6 +2369,99 @@ function MyDeatails() {
                 rowSelection={rowSelection}
                 bordered
               />
+            </div>
+          </div>
+        </MyDrawer>
+        <MyDrawer title="Garda Legal Aid Scheme" open={modalOpenData?.GardaLegalAidScheme}
+          onClose={() => openCloseModalsFtn("GardaLegalAidScheme")
+          }
+          isAprov={true}
+          isPyment={true}
+          width='800px'
+        >
+          <div>
+            <div className="details-drawer mb-4">
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
+            </div>
+            <div className="row">
+              <div className="col-md-6">
+                <div className="drawer-inpts-container" >
+                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
+                    <p>Claim Type : </p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con">
+                      <MyDatePicker />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="drawer-inpts-container" >
+                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
+                    <p>Date of Incident  :</p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con">
+                      <MyDatePicker />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+              </div>
+            </div>
+            <div className="">
+
+              <div className="drawer-inpts-container" style={{height:'130px'}} >
+              <div className="drawer-lbl-container" style={{ width: '21.7%' }}>
+                <p>Notes :</p>
+              </div>
+              <div className="inpt-con" style={{width:'80%'}}>
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                <TextArea 
+                rows={5}
+                />
+                </div>
+                <p className="error"></p>
+              </div>
+              </div>
+
+            </div>
+            <div className="row">
+              <div className="col-md-6">
+                <div className="drawer-inpts-container" >
+                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
+                    <p>Date Proc Commenced  :</p>
+                  </div>
+                  <div className="inpt-con" style={{}}>
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con">
+                      <MyDatePicker />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="drawer-inpts-container" >
+                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
+                    <p>Solicitor’s  :</p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con">
+                      <MySelect placeholder="NA" isSimple={true}/>
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
         </MyDrawer>

@@ -7,13 +7,15 @@ import { FaEdit } from "react-icons/fa";
 import { FaFile } from "react-icons/fa";
 import MyDatePicker from "./MyDatePicker";
 import TextArea from "antd/es/input/TextArea";
+import { FaUserAlt } from "react-icons/fa";
 
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment=false, isAss = false, InfData, pymntAddFtn,pymentCloseFtn }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false }) {
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
   const [contactDrawer, setcontactDrawer] = useState(false)
   const [isPayment, setisPayment] = useState(false)
+  const [isAproved, setisAproved] = useState(false)
   const [selectionType, setSelectionType] = useState('checkbox');
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
@@ -102,8 +104,56 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       ),
     },
   ];
-  return (
+  const Clm = [
+    {
+      title: 'Meeting Type',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Meeting',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Meeting Date',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Meeting APL',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'APL Date',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Status',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
 
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
+  return (
     <Drawer
       width={width}
       title={title}
@@ -123,11 +173,33 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             )
           }
           {
+            isAddMemeber && (
+              <div className="mx-auto" style={{}}>
+                <Button onClick={() => setcontactDrawer(!contactDrawer)}
+                  className="butn" style={{ color: 'blue', marginLeft: '-80%' }}>
+                  <FaUserAlt />
+                  Add Member
+                </Button>
+              </div>
+            )
+          }
+          {
             isPyment && (
-              <div className="mx-auto" style={{ marginRight: '80%' }}>
+              <div className="" style={{ marginRight: '' }}>
                 <Button onClick={() => setisPayment(!isPayment)}
-                  className="butn secondary" style={{ color: 'blue', marginRight: '250px' }}>
+                  className="butn secondary me-2" style={{ color: 'blue', marginRight: '' }}>
                   Add Payment
+                </Button>
+              </div>
+            )
+          }
+          {
+            isAprov && (
+              <div className="mx-auto" style={{ marginRight: '' }}>
+                <Button onClick={() => setisAproved(!isAproved)} className="butn secondary me-2" style={{ color: 'blue', }}
+
+                >
+                  Approvals
                 </Button>
               </div>
             )
@@ -353,7 +425,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
 
           </Space>
         }
-        
+
       >
         <div className='transfer-main-cont'>
           <div className="details-drawer mb-4">
@@ -362,7 +434,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             <p>Garda</p>
           </div>
           <div className='w-100'>
-          
+
             <div className="drawer-inpts-container ">
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>File Reference :</p>
@@ -383,7 +455,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               <div className="inpt-con" >
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con" >
-                  <Input placeholder="0.00"  type="number"/>
+                  <Input placeholder="0.00" type="number" />
 
                 </div>
                 <p className="error"></p>
@@ -396,7 +468,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               <div className="inpt-con" >
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con" >
-                <MyDatePicker />
+                  <MyDatePicker />
                 </div>
                 <p className="error"></p>
               </div>
@@ -434,31 +506,204 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               <div className="inpt-con" >
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con" >
-                 <MyDatePicker />
+                  <MyDatePicker />
 
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container " style={{height:'100px'}}>
+            <div className="drawer-inpts-container " style={{ height: '100px' }}>
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Memo :</p>
               </div>
               <div className="inpt-con" >
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con" >
-                 <TextArea rows={4}  placeholder="Autosize height based on content lines"/>
+                  <TextArea rows={4} placeholder="Autosize height based on content lines" />
 
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-           
+
           </div>
           <h5>History</h5>
           <Table
             pagination={false}
             columns={CriticalIllnessSchemePaymentsClm}
+            className="drawer-tbl"
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            rowSelection={{
+              type: selectionType,
+              ...rowSelection,
+            }}
+            bordered
+          />
+        </div>
+
+      </Drawer>
+      <Drawer open={isAproved}
+        onClose={() => setisAproved(!isAproved)}
+        width="867px"
+        title="Approvals"
+        extra={
+          <Space>
+            <Button className="butn secoundry-btn" onClick={() => setisAproved(!isAproved)}>
+              Close
+            </Button>
+            <Button className="butn primary-btn" onClick={() => { }}>
+              Add
+            </Button>
+
+          </Space>
+        }
+
+      >
+        <div className='transfer-main-cont'>
+          <div className="details-drawer mb-4">
+            <p>{InfData?.gardaRegNo}</p>
+            <p>{InfData?.fullname}</p>
+            <p>Garda</p>
+          </div>
+          <div className='w-100'>
+            <div className="row">
+                <div className="col-md-6">
+                  <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Meeting Type :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con" >
+                      <MySelect placeholder="Select Meeting Type" isSimple={true} />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+              </div>
+                <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p></p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con" >
+                     
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+              </div>
+
+            </div>
+            <div className="row">
+                <div className="col-md-6">
+                  <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Meeting Date :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con" >
+                      <MySelect placeholder="Select Meeting Type" isSimple={true} />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+              </div>
+                <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Meeting Date APL :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con" >
+                     <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                
+              </div>
+
+            </div>
+           
+            <div className="row">
+                <div className="col-md-6">
+                  <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Meeting Outcome :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con" >
+                      <Input />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+              </div>
+                <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Meeting APL Outcome :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con" >
+                     <MyDatePicker />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                
+              </div>
+
+            </div>
+            <div className="row">
+                <div className="col-md-6">
+                  <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Meeting Status :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con" >
+                      <Input />
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+              </div>
+                <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
+                      <p>Authorised Amount :</p>
+                    </div>
+                    <div className="inpt-con" style={{width:'60%',}} >
+                      <p className="star-white">*</p>
+                      <div className="inpt-sub-con" >
+                     <Input  placeholder="0.00" disabled={true}/>
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                
+              </div>
+
+            </div>
+           
+
+
+          </div>
+          <h5>History</h5>
+          <Table
+            pagination={false}
+            columns={Clm}
             className="drawer-tbl"
             rowClassName={(record, index) =>
               index % 2 !== 0 ? "odd-row" : "even-row"

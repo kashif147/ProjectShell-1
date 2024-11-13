@@ -19,6 +19,7 @@ import { getAllLookupsType } from '../features/LookupTypeSlice';
 import { getAllLookups } from '../features/LookupsSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import MyConfirm from "../component/common/MyConfirm";
+import {county, Province_flat,Provinec_Outlined,District_Outlined, Marital_Status_Outlined} from '../utils/Icons'
 
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
@@ -76,7 +77,8 @@ function Configuratin() {
     ContactTypes: false,
     LookupType: false,
     Lookup: false,
-    Solicitors: false
+    Solicitors: false,
+    Committees:false
 
   })
   const [isUpdateRec, setisUpdateRec] = useState({
@@ -736,6 +738,75 @@ function Configuratin() {
       ),
     },
   ];
+  const Committeescolumns = [
+    {
+      title: 'Type',
+      dataIndex: 'type',
+      key: 'type',
+      render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'Committee Name',
+      dataIndex: 'committeeName',
+      key: 'committeeName',
+      render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'displayName',
+      key: 'displayName',
+      render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'Parent',
+      dataIndex: 'parent',
+      key: 'parent',
+      render: (text) => <span>{text}</span>
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (isActive) => (
+        <Checkbox checked={isActive}>Active</Checkbox>
+      ),
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
+             addIdKeyToLookup(record?._id,"Lookup")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/region`, record?._id,);
+                dispatch(getAllLookups())
+                resetCounteries('Lookup')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  
   const SubscriptionsColumn = [
     {
       title: "Short Name",
@@ -1345,15 +1416,14 @@ function Configuratin() {
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={subscriptionsModalFtn} className="center-content">
             <div className="icon-container">
-
-              <LuCalendarDays className="icons" />
+              <img src={Marital_Status_Outlined} className="icons custom-icon" />
             </div>
             <p className="lookups-title">Marital Status</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('Provinces')}>
-            <PiHandshakeDuotone className="icons" />
+        <Col  onClick={() => openCloseDrawerFtn('Provinces')} className="hover-col" span={3} style={styles.centeredCol}>
+          <div>
+            <img className="custom-icon icons" src={Provinec_Outlined}  />
             <p className="lookups-title">Provinces</p>
           </div>
         </Col>
@@ -1361,12 +1431,12 @@ function Configuratin() {
           <div onClick={() => openCloseDrawerFtn('Counteries')} className="center-content">
             <div className="icon-container">
 
-              <PiUsersFourDuotone className="icons" />
+              <img src={county} className="custom-icon" />
             </div>
             <p className="lookups-title">Counteries</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3}>
           <div onClick={() => openCloseDrawerFtn('Cities')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Cities</p>
@@ -1387,7 +1457,7 @@ function Configuratin() {
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('Districts')}>
-            <PiHandshakeDuotone className="icons" />
+            <img src={District_Outlined} className="icons custom-icon" />
             <p className="lookups-title">Districts</p>
           </div>
         </Col>
@@ -1397,8 +1467,8 @@ function Configuratin() {
             <p className="lookups-title">Station</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} >
+          <div onClick={()=>openCloseDrawerFtn('Committees')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Committees</p>
           </div>
@@ -3634,6 +3704,140 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnLookup}
+              dataSource={lookups}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Committees' open={drawerOpen?.Committees} isPagination={true} onClose={() => {openCloseDrawerFtn('Committees')
+        IsUpdateFtn('Committees', false, )
+      }}
+      isAddMemeber={true}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/region`,
+            { 'region': drawerIpnuts?.Committees },
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Lookup}
+        update={
+          async () => {
+           await updateFtn('/region', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('Lookup', false, )
+          }}
+          width="680"
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Committee' disabled={true} options={lookupsType} onChange={(value) => {
+                    // drawrInptChng('Lookup', 'RegionTypeID', String(value))
+                  }}
+                    value={drawerIpnuts?.Lookup?.RegionTypeID} />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
+                    // value={drawerIpnuts?.Lookup?.RegionCode}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Committee Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
+                    // value={drawerIpnuts?.Lookup?.RegionName}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Lookup', 'DisplayName', e.target.value)} value={drawerIpnuts?.Lookup?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Parent :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con d-flex ">
+                  <Input className="inp"
+                  />
+                  <Button className="butn primary-btn detail-btn ms-2">+</Button>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.LookupType?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={Committeescolumns}
               dataSource={lookups}
               loading={lookupsloading}
               className="drawer-tbl"
