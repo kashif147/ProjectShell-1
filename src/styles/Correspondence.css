@@ -8,7 +8,7 @@
 }
 .corespndence-main .ant-tabs-nav-wrap{
    height: 57px !important;
-   background-color: #f0eef7 !important;
+   background-color: #F5F5F5   !important;
 }
 .corespndence-main .ant-tabs-tab{
     margin-left: 30px !important;
@@ -17,8 +17,8 @@
     font-size: 16px !important;
 }
 .corespndence-main{
-    background-color: #f0eef7;
-    height: 100vh;
+    background-color:#F5F5F5;
+    height: 100vh; 
 }
 .chat-container{
     /* width: 515px; */
@@ -42,5 +42,7 @@ font-size: 14px;
 font-weight: 400;
 margin-bottom: 15px;
 margin-top: 15px;
-
+}
+.call-container{
+    background-color: white;
 }

@@ -45,13 +45,13 @@
   display: flex;
   justify-content: center;
   height: 46px;
-  align-items: baseline;
+  align-items: center;
 }
 .drawer-lbl-container {
   display: flex;
   justify-content: flex-end;
   /* background-color: aqua; */
-  width: 17%;
+  width: 19%;
 }
 .drawer-lbl-container p {
   font: 14px;
