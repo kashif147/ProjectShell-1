@@ -2,15 +2,17 @@ import { React, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MyDrowpDown from "./MyDrowpDown";
 import { SettingOutlined } from "@ant-design/icons";
-import Input from "antd/es/input/Input";
+// import Input from "antd/es/input/Input";
 import { FaUserCircle } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
 import { IoMdSettings } from "react-icons/io";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
-import { Button } from "antd";
+import { Button,Input } from "antd";
+import { PiPhoneCallBold } from "react-icons/pi";
 
+const Search = Input;
 function Header() {
 
   const [token, settoken] = useState(null);
@@ -96,7 +98,7 @@ function Header() {
     {
       key: "1",
       label: (
-        <Link to="/CorspndncDetail" state={{ search: "Reports" }} className="link" style={{ textDecoration: "none" }}>
+        <Link to="/CorrespondencesSummary" state={{ search: "Correspondences" }} className="link" style={{ textDecoration: "none" }}>
           Summary
         </Link>
       ),
@@ -178,8 +180,8 @@ function Header() {
             navigate('/');
           }}>Logout</Button>
         </div>
-        <div className="input-container d-flex">
-          <input  placeholder="Reg No" 
+        <div className="input-container d-flex align-items-center">
+          <Search  placeholder="Reg No" 
           onChange={(e) => setregNo(e.target.value)}
           onKeyDown={async (e) => {
             if (e.key === 'Enter') {
@@ -193,7 +195,8 @@ function Header() {
               });
             }
           }}
-           className=" top-search" style={{ marginRight: "1rem", borderRadius:10 }} />
+           className=" top-search" style={{ marginRight: "1rem", borderRadius:50 }} />
+          <PiPhoneCallBold className="top-icon" />
           <IoNotifications className="top-icon" />
           <HiMiniQuestionMarkCircle
             className="top-icon"

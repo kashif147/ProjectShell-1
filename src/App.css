@@ -475,7 +475,7 @@ body {
   background-color: var(--table-row) !important;
 }
 .ant-input-outlined {
-  border-radius: 3px !important;
+  border-radius: 3px;
 }
 
 .title {
@@ -694,7 +694,7 @@ tr {
 }
 
 .hover-col:hover {
-  background-color: #f0f0f0;
+  background-color: var(--secoundry-bg-color);
   cursor: pointer;
 }
 .drawer-tbl .ant-table-thead > tr > th {
@@ -1130,9 +1130,10 @@ color: red !important;
 }
 /* header */
 .top-icon {
-  font-size: 30px;
+  font-size: 40px !important;
   margin-right: 1rem;
-  color: var(--labelColor);
+  color: #215E97 !important ;
+  /* color: red !important; */
 }
 .input-border-active {
   border: 2px solid #007bff !important;

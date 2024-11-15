@@ -176,7 +176,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             isAddMemeber && (
               <div className="mx-auto" style={{}}>
                 <Button onClick={() => setcontactDrawer(!contactDrawer)}
-                  className="butn" style={{ color: 'blue', marginLeft: '-80%' }}>
+                  className="butn" style={{ color: '#215E97', marginLeft: '-80%' }}>
                   <FaUserAlt />
                   Add Member
                 </Button>

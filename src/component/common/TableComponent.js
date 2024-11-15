@@ -209,6 +209,23 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               {text}
             </span>
           </Link>
+        ):col.title === "Correspondence ID" ? (
+          <Link
+            to="/CorspndncDetail"
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              code: record?.regNo,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth: record?.dateOfBirth,
+            }}
+            onClick={() => getProfile([record], index)}
+          >
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
+            </span>
+          </Link>
         ) : (
           <span style={{ textOverflow: "ellipsis" }}>
             {text}
@@ -232,7 +249,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               }
               : undefined,
       sortDirections: ["ascend", "descend"],
-      filters: col.title === "Station" ? [
+      filters: col.title === "Station" || col.title === "Current Station" ? [
         { text: 'GALC', value: 'GALC' },
         { text: 'DUBC', value: 'DUBC' },
         { text: 'STOC', value: 'STOC' },
@@ -240,13 +257,24 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         { text: '0026', value: '0026' },
         { text: '0031', value: '0031' },
         { text: '0045', value: '0045' },
-      ] : undefined,
+      ] : col.title === "Approval Status" ? [
+        { text: 'Approved', value: 'Approved' },
+        { text: 'Pending', value: 'Pending' },
+        { text: 'Rejected', value: 'Rejected' },
+      ]: col.title === "Current Station" ? [
+        { text: '0026', value: '0026' },
+        { text: '0031', value: '0031' },
+        { text: '0045', value: '0045' },
+      ]: undefined,
       onFilter: (value, record) => {
-        if (col.title === "Station") {
+        if (col.title === "Station" || col.title==="Current Station") {
           return record[col.dataIndex] === value;
         } else if (col.title === "Division") {
           return record[col.dataIndex] === value;
+        } else if (col.title==="Approval Status"){
+          return record[col.dataIndex] === value;
         }
+        
         return true;
       },
     })),
@@ -383,7 +411,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         items={columnsDragbe.map((column) => column.key)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="common-table">
+        <div className="common-table " style={{paddingLeft:'34px', paddingRight:'34px'}}>
           <Table
             rowClassName={() => ""}
             components={components}

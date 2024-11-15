@@ -8,9 +8,10 @@ import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 
 const { TextArea } = Input;
+const { Search } = Input;
 
 
-function TransferRequests({ open, onClose }) {
+function TransferRequests({ open, onClose, isSearch }) {
     const onSearch = (value, _e, info) => console.log(info?.source, value);
     const [selectionType, setSelectionType] = useState('checkbox');
     const rowSelection = {
@@ -69,15 +70,15 @@ function TransferRequests({ open, onClose }) {
     return (
         <MyDrawer title="Transfer Requests" open={open} onClose={onClose}>
             <div>
-                <Input
-                    placeholder="Search by Reg No or Surname"
-                    allowClear
-                    onSearch={onSearch}
-                    style={{
-                        width: "100%",
-                        marginTop: '10px'
-                    }}
-                />
+                {
+                    isSearch && (
+                        <Search
+                        placeholder="input search text"
+                        onSearch={onSearch}
+                        style={{                       }}
+                      />
+                    )
+                }
                 <div className="details-drawer mb-4 mt-4">
                     <p>InfData?.gardaRegNo</p>
                     <p>InfData?.fullname</p>

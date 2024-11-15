@@ -102,20 +102,18 @@ function CorspndncDetail() {
 
 
             </div>,
-            children: <div className='me-4'>
+            children: <div className='me-4 call-container pt-4'>
                 <div className='row'>
-                    <div className='col-md-4'>
-
+                    <div className='col-md-4 '>
                     </div>
                     <div className='col-md-4'>
-                        <Search style={{ width: "75%", height: '36px' }} />
-                    </div>
-                    <div className="col-md-4 d-flex justify-content-end">
+                        <Search style={{ width: "75%", height: '36px', marginRight:'10px' }} />
                         <CiMenuBurger fontSize={24} />
                     </div>
+                    
 
                 </div>
-                <div className='d-flex justify-content-around top-des'>
+                <div className='d-flex justify-content-around top-des call-container'>
                     <h4 style={{ fontSize: '14px', fontWeight: '600' }}>
                         Subject matter: <span style={{ fontSize: '14px', fontWeight: '400' }}> [Message]:</span>
                     </h4>
@@ -138,12 +136,14 @@ function CorspndncDetail() {
                         Callback No :
                     </h4>
                 </div>
+<div className='call-container'>
 
                 <ChatComponent isSimple={false} isborder={true} />
                 <ChatComponent isSimple={false} />
                 <ChatComponent isSimple={false} />
                 <ChatComponent isSimple={false} />
                 <ChatComponent isSimple={false} />
+</div>
             </div>,
         },
         {

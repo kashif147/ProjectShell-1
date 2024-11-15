@@ -1,44 +1,42 @@
-import React, { useEffect, useState } from 'react';
-import { Transfer } from 'antd';
-const MyTransfer = () => {
-  const [mockData, setMockData] = useState([]);
-  const [targetKeys, setTargetKeys] = useState([]);
-  const getMock = () => {
-    const tempTargetKeys = [];
-   
-  
-  const  tempMockData = [
-        { key: "0", title: "Accommodations", description: "description of content1", chosen: true },
-        { key: "1", title: "Allowance", description: "Allowance", chosen: false },
-        { key: "2", title: "Legal Aid", description: "Community Police", chosen: true },
-        { key: "3", title: "Garda Review", description: "Garda Review", chosen: false },
-        { key: "4", title: "Legal Aid", description: "description of content5", chosen: true },
+import React, { useState } from 'react';
+import { Transfer, Button } from 'antd';
 
-    ]
-      
-    setMockData(tempMockData);
-    setTargetKeys(tempTargetKeys);
+const MyTransfer = () => {
+  const [targetKeys, setTargetKeys] = useState([]);
+  const [selectedKeys, setSelectedKeys] = useState([]);
+
+  const mockData = [
+    { key: '1', title: 'Accommodations', description: 'Description of item 1' },
+    { key: '2', title: 'Allowance', description: 'Description of item 2' },
+    { key: '2', title: 'Community Police', description: 'Description of item 2' },
+    { key: '2', title: 'Garda Review', description: 'Description of item 2' },
+    { key: '2', title: 'Legal Aid', description: 'Description of item 2' },
+  ];
+
+  const handleChange = (nextTargetKeys, direction, moveKeys) => {
+    setTargetKeys(nextTargetKeys);
   };
-  useEffect(() => {
-    getMock();
-  }, []);
-  const filterOption = (inputValue, option) => option.description.indexOf(inputValue) > -1;
-  const handleChange = (newTargetKeys) => {
-    setTargetKeys(newTargetKeys);
+
+  const handleSelectChange = (sourceSelectedKeys, targetSelectedKeys) => {
+    setSelectedKeys([...sourceSelectedKeys, ...targetSelectedKeys]);
   };
-  const handleSearch = (dir, value) => {
-    console.log('search:', dir, value);
-  };
+
   return (
-    <Transfer
-      dataSource={mockData}
-      showSearch
-      filterOption={filterOption}
-      targetKeys={targetKeys}
-      onChange={handleChange}
-      onSearch={handleSearch}
-      render={(item) => item.title}
-    />
+    <div>
+      <Transfer
+        dataSource={mockData}
+        titles={['Committees', 'Members']}
+        targetKeys={targetKeys}
+        selectedKeys={selectedKeys}
+        onChange={handleChange}
+        onSelectChange={handleSelectChange}
+        render={item => item.title}
+        showSearch // Enable search functionality
+        filterOption={(inputValue, item) => item.title.toLowerCase().includes(inputValue.toLowerCase())} // Search filtering
+      />
+      
+    </div>
   );
 };
+
 export default MyTransfer;

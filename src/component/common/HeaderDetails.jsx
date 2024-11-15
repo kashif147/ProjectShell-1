@@ -43,6 +43,7 @@ import '../../styles/HeaderDetails.css'
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegions } from "../../features/RegionSlice";
 import AddNewGarda from "../details/AddNewGarda";
+import TransferRequests from "../TransferRequests";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -60,6 +61,7 @@ function HeaderDetails() {
   const [trueFilters, settrueFilters] = useState();
   const [create, setCreate] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
+const [TransferDrawer, setTransferDrawer] = useState(false)
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
   };
@@ -391,6 +393,7 @@ useEffect(() => {
                   <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
                     if (nav == "/ClaimsById")
                       handlClaimDrawerChng()
+                    
                   }}>
                     Create
                   </Button>
@@ -436,6 +439,8 @@ useEffect(() => {
                       } else if (nav == "/ClaimSummary") {
                         handlClaimDrawerChng()
                       }
+                      else if (nav=="/Transfers")
+                        setTransferDrawer(!TransferDrawer)
                     }}
                       style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
                       Create
@@ -591,7 +596,7 @@ useEffect(() => {
       </Modal>
 
       <AddNewGarda open={isGardaDrwer} onClose={()=>setisGardaDrwer(!isGardaDrwer)} />
-
+      <TransferRequests open={TransferDrawer} onClose={()=>setTransferDrawer(!TransferDrawer)} isSearch={true} />
 
     </div>
   );

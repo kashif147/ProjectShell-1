@@ -19,8 +19,8 @@ import { getAllLookupsType } from '../features/LookupTypeSlice';
 import { getAllLookups } from '../features/LookupsSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import MyConfirm from "../component/common/MyConfirm";
-import {county, Province_flat,Provinec_Outlined,District_Outlined, Marital_Status_Outlined} from '../utils/Icons'
-
+// import {county, Province_flat,Provinec_Outlined,District_Outlined, Marital_Status_Outlined} from '../utils/Icons'
+import { ProvinceOutlined, CountyOutlined, MaritalStatusOutlined, DistrictOutlined } from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
@@ -1416,14 +1416,15 @@ function Configuratin() {
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={subscriptionsModalFtn} className="center-content">
             <div className="icon-container">
-              <img src={Marital_Status_Outlined} className="icons custom-icon" />
+              {/* <img src={Marital_Status_Outlined} className="icons custom-icon" /> */}
+              <MaritalStatusOutlined className="icons custom-icon" />
             </div>
             <p className="lookups-title">Marital Status</p>
           </div>
         </Col>
         <Col  onClick={() => openCloseDrawerFtn('Provinces')} className="hover-col" span={3} style={styles.centeredCol}>
           <div>
-            <img className="custom-icon icons" src={Provinec_Outlined}  />
+            <ProvinceOutlined  className="custom-icon icons"   />
             <p className="lookups-title">Provinces</p>
           </div>
         </Col>
@@ -1431,7 +1432,7 @@ function Configuratin() {
           <div onClick={() => openCloseDrawerFtn('Counteries')} className="center-content">
             <div className="icon-container">
 
-              <img src={county} className="custom-icon" />
+              <CountyOutlined className="custom-icon icons" />
             </div>
             <p className="lookups-title">Counteries</p>
           </div>
@@ -1457,7 +1458,7 @@ function Configuratin() {
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('Districts')}>
-            <img src={District_Outlined} className="icons custom-icon" />
+            <DistrictOutlined className="icons custom-icon" />
             <p className="lookups-title">Districts</p>
           </div>
         </Col>

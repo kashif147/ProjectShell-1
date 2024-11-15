@@ -1913,7 +1913,9 @@ function MyDeatails() {
           open={modalOpenData?.Committees} onClose={() => openCloseModalsFtn("Committees")}
           width='576px' >
           <div className="drawer-main-cntainer">
+           <div className="d-flex justify-content-center">
             <MyTransfer />
+           </div>
             <div className="">
               <h5>History</h5>
               <Table
