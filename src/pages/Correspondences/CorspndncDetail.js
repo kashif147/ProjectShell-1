@@ -1,8 +1,8 @@
-import React from 'react'
+import { useState } from 'react'
 import ChatComponent from '../../component/corespondence/ChatComponent'
 import '../../styles/Correspondence.css'
 import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
-import { Flex, Radio, Tabs, Input } from 'antd';
+import { Flex, Radio, Tabs, Input, Button, Menu, Dropdown, Select } from 'antd';
 import { FiRefreshCcw } from "react-icons/fi";
 import { CiMenuBurger } from "react-icons/ci";
 import icon from '../../assets/images/Vector.png'
@@ -14,8 +14,51 @@ import { BiSolidPrinter } from "react-icons/bi";
 
 
 function CorspndncDetail() {
+    const [key, setKey] = useState();
+    
+      
     const { Search } = Input;
+    const handleMenuClick = ({ key }) => {
+        // setSelectedValue(getDefaultValue(Number(key))); // Update selected value
+
+        // Execute corresponding function
+        // switch (Number(key)) {
+        //   case 1:
+        //     handleNewEmail();
+        //     break;
+        //   case 2:
+        //     handleNewCall();
+        //     break;
+        //   case 3:
+        //     handleNewLetter();
+        //     break;
+        //   case 4:
+        //     handleNewSMS();
+        //     break;
+        //   default:
+        //     break;
+        // }
+    };
     const options = [
+        {
+            label: 'New Email',
+            value: 'New Email',
+        },
+        {
+            label: 'New Call',
+            value: 'New Call',
+        },
+        {
+            label: 'New Latter',
+            value: 'New Latter',
+        },
+        {
+            label: 'New SMS',
+            value: 'New SMS',
+        },
+
+    ];
+    const bondOptions = [
         {
             label: 'In bound',
             value: 'In bound',
@@ -45,7 +88,7 @@ function CorspndncDetail() {
                     <div className='d-flex justify-content-evenly align-items-center' style={{ height: '70px' }}>
                         <Radio.Group
                             block
-                            options={options}
+                            options={bondOptions}
                             defaultValue="In bound"
                             optionType="button"
                             buttonStyle="solid"
@@ -99,19 +142,15 @@ function CorspndncDetail() {
                 <div className='d-flex justify-content-center align-items-center' style={{ width: "31px", height: '20px', backgroundColor: '#E6F7FF', borderRadius: '100px', margin: '0px' }}>
                     <h4 className='' style={{ color: "#215E97", fontSize: '10px', fontWeight: '400', margin: '0px' }}>5</h4>
                 </div>
-
-
             </div>,
             children: <div className='me-4 call-container pt-4'>
                 <div className='row'>
-                    <div className='col-md-4 '>
+                    <div className='col-md-4'>
                     </div>
                     <div className='col-md-4'>
-                        <Search style={{ width: "75%", height: '36px', marginRight:'10px' }} />
+                        <Search style={{ width: "75%", height: '36px', marginRight: '10px' }} />
                         <CiMenuBurger fontSize={24} />
                     </div>
-                    
-
                 </div>
                 <div className='d-flex justify-content-around top-des call-container'>
                     <h4 style={{ fontSize: '14px', fontWeight: '600' }}>
@@ -136,14 +175,14 @@ function CorspndncDetail() {
                         Callback No :
                     </h4>
                 </div>
-<div className='call-container'>
+                <div className='call-container'>
 
-                <ChatComponent isSimple={false} isborder={true} />
-                <ChatComponent isSimple={false} />
-                <ChatComponent isSimple={false} />
-                <ChatComponent isSimple={false} />
-                <ChatComponent isSimple={false} />
-</div>
+                    <ChatComponent isSimple={false} isborder={true} />
+                    <ChatComponent isSimple={false} />
+                    <ChatComponent isSimple={false} />
+                    <ChatComponent isSimple={false} />
+                    <ChatComponent isSimple={false} />
+                </div>
             </div>,
         },
         {
@@ -234,10 +273,86 @@ function CorspndncDetail() {
                 </div>
             </div>
             ,
-            children: "tab 4",
+            children: <div className='me-4 call-container pt-4'>
+                <div className='row'>
+                    <div className='col-md-4'>
+                    </div>
+                    <div className='col-md-4'>
+                        <Search style={{ width: "75%", height: '36px', marginRight: '10px' }} />
+                        <CiMenuBurger fontSize={24} />
+                    </div>
+                </div>
+                <div className='d-flex justify-content-around top-des call-container'>
+                    <h4 style={{ fontSize: '14px', fontWeight: '600' }}>
+                        Subject matter: <span style={{ fontSize: '14px', fontWeight: '400' }}> [Message]:</span>
+                    </h4>
+                    <h4>
+                        Message For :
+                    </h4>
+                    <h4>
+                        Source Division :
+                    </h4>
+                    <h4>
+                        Reg No :
+                    </h4>
+                    <h4>
+                        Name :
+                    </h4>
+                    <h4>
+                        Callback No :
+                    </h4>
+                    <h4>
+                        Callback No :
+                    </h4>
+                </div>
+                <div className='call-container'>
+
+                    <ChatComponent isSimple={false} isborder={true} />
+                    <ChatComponent isSimple={false} />
+                    <ChatComponent isSimple={false} />
+                    <ChatComponent isSimple={false} />
+                    <ChatComponent isSimple={false} />
+                </div>
+            </div>,
         },
     ];
 
+    const menu = (
+        <Menu onClick={handleMenuClick}>
+            <Menu.Item key="1">New Email</Menu.Item>
+            <Menu.Item key="2">New Call</Menu.Item>
+            <Menu.Item key="3">New Letter</Menu.Item>
+            <Menu.Item key="4">New SMS</Menu.Item>
+        </Menu>
+    );
+    const [activeKey, setactiveKey] = useState("1")
+    const handleOptionSelect = (value) => {
+        debugger
+        switch (value) {
+          case "New Email":
+            setactiveKey("1");
+            break;
+          case "New Call":
+            setactiveKey("2");
+            break;
+          case "New Latter":
+            setactiveKey("3");
+            break;
+          case "New SMS":
+            setactiveKey("4");
+            break;
+          default:
+            console.error("Invalid value provided");
+        }
+      };
+      const handleNewFtn = () =>{
+        if(activeKey==="1"){
+            window.open('https://outlook.office.com/mail/deeplink/compose', '_blank');
+        }
+        else if (activeKey==="2"){
+        
+        }
+      }
     return (
         <div className='corespndence-main'>
             <div style={{ height: '25px', backgroundColor: '#e6f8ff' }}
@@ -246,6 +361,28 @@ function CorspndncDetail() {
             <Tabs
                 defaultActiveKey="1"
                 items={items}
+                onChange={(e) => setactiveKey(e)}
+                tabBarExtraContent={
+                    <>
+                    <Button className='new-btn' onClick={handleNewFtn}>
+                        {activeKey==="1"?"New Email": activeKey==="2"?"New Call":activeKey==="3"?"New Latter":activeKey==="4"?"New SMS":null}
+                    </Button>
+                    <Select
+                        key={key} // Force reset on each selection
+                        onChange={handleOptionSelect} // Trigger internal function
+                        style={{ borderLeft:'none', borderColor:'red',backgroundColor:"#215E97" }} 
+                        // Set dropdown button width
+                        value={null}
+                        dropdownStyle={{ width: '10%' }}
+                    >
+                        {options.map((option) => (
+                            <Select.Option  key={option.key} value={option.label}>
+                          
+                            </Select.Option>
+                        ))}
+                    </Select>
+                    </>
+                }
             />
         </div>
     )
