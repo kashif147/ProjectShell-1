@@ -2,22 +2,35 @@ import { useState } from 'react'
 import ChatComponent from '../../component/corespondence/ChatComponent'
 import '../../styles/Correspondence.css'
 import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
-import { Flex, Radio, Tabs, Input, Button, Menu, Dropdown, Select } from 'antd';
+import { Flex, Radio, Tabs, Input, Button, Menu, Dropdown, Select, Table, Checkbox, Space } from 'antd';
 import { FiRefreshCcw } from "react-icons/fi";
 import { CiMenuBurger } from "react-icons/ci";
 import icon from '../../assets/images/Vector.png'
 import { FiCornerUpLeft } from "react-icons/fi";
 import { RiCornerUpLeftDoubleLine } from "react-icons/ri";
+import { IoReturnUpForwardSharp } from "react-icons/io5";
 import { FiCornerUpRight } from "react-icons/fi";
 import { PiArrowSquareIn } from "react-icons/pi";
 import { BiSolidPrinter } from "react-icons/bi";
-
-
+import MyDrawer from '../../component/common/MyDrawer';
+import MySelect from '../../component/common/MySelect';
+import { FaRegCircleQuestion } from "react-icons/fa6";
+import { FaEdit } from "react-icons/fa";
+import { AiFillDelete } from "react-icons/ai";
 function CorspndncDetail() {
-    const [key, setKey] = useState();
-    
-      
+    const {TextArea} = Input;
     const { Search } = Input;
+    const [key, setKey] = useState();
+    const openCloseDrawerFtn = (name) => {
+        setDrawerOpen((prevState) => ({
+          ...prevState,
+          [name]: !prevState[name]
+        }))
+      }
+    const [drawerOpen, setDrawerOpen] = useState({
+        NewCall:false
+    })
+      
     const handleMenuClick = ({ key }) => {
         // setSelectedValue(getDefaultValue(Number(key))); // Update selected value
 
@@ -82,7 +95,6 @@ function CorspndncDetail() {
                 </div>
             </div>
             ,
-
             children: <div className='d-flex '>
                 <div className='chat-container pe-4'>
                     <div className='d-flex justify-content-evenly align-items-center' style={{ height: '70px' }}>
@@ -116,9 +128,11 @@ function CorspndncDetail() {
                     <div className='d-flex align-items-baseline justify-content-between'>
                         <h2 style={{ fontSize: '24px', fontWeight: '700' }}>Ant Design Part 01</h2>
                         <div >
-                            <FiCornerUpLeft style={{ fontSize: '26px' }} />
-                            <RiCornerUpLeftDoubleLine style={{ fontSize: '26px' }} />
-                            <PiArrowSquareIn style={{ fontSize: '26px' }} />
+                            <FiCornerUpLeft style={{ color:'#215E97',fontSize: '26px' }} />
+                            <RiCornerUpLeftDoubleLine style={{color:'#215E97', fontSize: '26px' }} />
+                            <FiCornerUpRight style={{ color:'#215E97',fontSize: '26px' }} />
+                            {/* <IoReturnUpForwardSharp style={{color:'#215E97', fontSize: '26px' }} /> */}
+                            <PiArrowSquareIn style={{ color:'#215E97',fontSize: '26px' }} />
                         </div>
                     </div>
                     <h2 style={{ fontSize: '16px', fontWeight: '600', marginLeft: '25px', marginTop: '15px' }}>  John Doe &lt;john.doe@gra.ie&gt;</h2>
@@ -224,7 +238,7 @@ function CorspndncDetail() {
                 <div className='chat-detail-container'>
                     <div className='d-flex align-items-baseline justify-content-end'>
                         <div >
-                            <BiSolidPrinter fontSize={'27px'} />
+                            <BiSolidPrinter fontSize={'27px'} color='#215E97' />
                         </div>
                     </div>
 
@@ -350,9 +364,112 @@ function CorspndncDetail() {
             window.open('https://outlook.office.com/mail/deeplink/compose', '_blank');
         }
         else if (activeKey==="2"){
-        
+            openCloseDrawerFtn('NewCall')
+        }
+        else if (activeKey=="3"){
+
         }
       }
+      const [selectionType, setSelectionType] = useState('checkbox');
+      const rowSelection = {
+          onChange: (selectedRowKeys, selectedRows) => {
+              console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+          },
+          getCheckboxProps: (record) => ({
+              disabled: record.name === 'Disabled User',
+              name: record.name,
+          }),
+      };
+
+const contactClm = [
+  {
+    title: "Message For",
+    dataIndex: "messageFor",
+    key: "messageFor",
+  },
+  {
+    title: "Source Division",
+    dataIndex: "sourceDivision",
+    key: "sourceDivision",
+  },
+  {
+    title: "Subject Matter",
+    dataIndex: "subjectMatter",
+    key: "subjectMatter",
+  },
+  {
+    title: "Reg No",
+    dataIndex: "regNo",
+    key: "regNo",
+  },
+  {
+    title: "Name",
+    dataIndex: "name",
+    key: "name",
+  },
+  {
+    title: "Callback No",
+    dataIndex: "callbackNo",
+    key: "callbackNo",
+  },
+  {
+    title: "Message",
+    dataIndex: "message",
+    key: "message",
+  },
+  {
+    title: "Active",
+    dataIndex: "callResolved",
+    key: "callResolved",
+    render: (index, record) => (
+      <Checkbox checked={record?.callResolved}>
+      </Checkbox>
+    ),
+  },
+  {
+    title: (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+        }}
+      >
+        <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        Action
+      </div>
+    ),
+    key: "action",
+    align: "center",
+    render: (_, record) => (
+      <Space size="middle">
+        <FaEdit
+          size={16}
+          style={{ marginRight: "10px" }}
+        //   onClick={() => {
+        //     IsUpdateFtn("Lookup", !IsUpdateFtn?.Lookup, record);
+        //     addIdKeyToLookup(record?._id, "Lookup");
+        //   }}
+        />
+        <AiFillDelete
+          size={16}
+        //   onClick={() =>
+        //     MyConfirm({
+        //       title: "Confirm Deletion",
+        //       message: "Do You Want To Delete This Item?",
+        //       onConfirm: async () => {
+        //         await deleteFtn(`${baseURL}/region`, record?._id);
+        //         dispatch(getAllLookups());
+        //         resetCounteries("Lookup");
+        //       },
+        //     })
+        //   }
+        />
+      </Space>
+    ),
+  },
+];
+
     return (
         <div className='corespndence-main'>
             <div style={{ height: '25px', backgroundColor: '#e6f8ff' }}
@@ -384,6 +501,157 @@ function CorspndncDetail() {
                     </>
                 }
             />
+
+
+
+
+<MyDrawer title='New Call' open={drawerOpen?.NewCall} isPagination={true} 
+onClose={() => {openCloseDrawerFtn('NewCall')}}
+//         IsUpdateFtn('Lookup', false, )
+//       }}
+        // add={async () => {
+        //   await insertDataFtn(
+        //     `${baseURL}/region`,
+        //     { 'region': drawerIpnuts?.Lookup },
+        //     'Data inserted successfully',
+        //     'Data did not insert',
+        //     () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
+        //   );
+        //   dispatch(getAllLookups())
+        // }}
+        // isEdit={isUpdateRec?.Lookup}
+        // update={
+        //   async () => {
+        //    await updateFtn('/region', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+        //    dispatch(getAllLookups())
+        //    IsUpdateFtn('Lookup', false, )
+        //   }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Message For :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                <Input />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Source Division :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+               <MySelect isSimple={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Subject matter :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+               <MySelect isSimple={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Reg No :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Callback No :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container" style={{height:'150px'}}>
+              <div className="drawer-lbl-container">
+                <p>Message :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <TextArea rows={5} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    // onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
+                    checked={true}
+                  >Call resolved at Reception</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={contactClm}
+            //   dataSource={lookups}
+            //   loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
         </div>
     )
 }
