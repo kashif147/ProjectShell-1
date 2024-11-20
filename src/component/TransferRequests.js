@@ -6,7 +6,7 @@ import MySelect from './common/MySelect';
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
-
+import { useTableColumns } from '../context/TableColumnsContext ';
 const { TextArea } = Input;
 const { Search } = Input;
 
@@ -23,6 +23,7 @@ function TransferRequests({ open, onClose, isSearch }) {
             name: record.name,
         }),
     };
+    const{getProfile} = useTableColumns();
     const columnCountry = [
         {
             title: 'Transfer Date',
@@ -80,8 +81,8 @@ function TransferRequests({ open, onClose, isSearch }) {
                     )
                 }
                 <div className="details-drawer mb-4 mt-4">
-                    <p>InfData?.gardaRegNo</p>
-                    <p>InfData?.fullname</p>
+                    <p>23458</p>
+                    <p>Jack Smith</p>
                     <p>Garda</p>
                 </div>
 

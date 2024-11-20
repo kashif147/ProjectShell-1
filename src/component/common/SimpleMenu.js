@@ -24,6 +24,8 @@ function SimpleMenu({
   isBtn = false,
   isTable = false,
   categoryKey = "gender",
+  record,
+  index
 }) {
   const [checkboxes, setCheckboxes] = useState([]);
   const [transferreq, settransferreq] = useState(false)
@@ -35,7 +37,7 @@ function SimpleMenu({
   const location = useLocation
   const screenName = location?.state?.search
   const [ddSearch, setddSearch] = useState("")
-  const { updateSelectedTitles, searchFilters, gridData,globleFilters } = useTableColumns();
+  const { updateSelectedTitles, searchFilters, gridData,globleFilters, getProfile } = useTableColumns();
 
   useEffect(() => {
     if(ddSearch!=""){
@@ -155,7 +157,10 @@ function SimpleMenu({
             ) : 
 
             key==='Transfer Requests'?(
-              <div className="d-flex align-items-baseline" onClick={()=>settransferreq(true )}>
+              <div className="d-flex align-items-baseline" onClick={()=>{settransferreq(true )
+                // getProfile(record,index)
+
+              }}>
               <FaRegArrowAltCircleRight style={{
                   fontSize: "12px",
                   marginRight: "10px",

@@ -22,7 +22,6 @@ const Login = () => {
     console.log(user,"122")
     const handleLogin = () => {
         if (inProgress !== InteractionStatus.None) {
-            // If interaction is in progress, prevent new interaction
             console.log("Interaction is in progress, please wait...");
             return;
         }
@@ -36,7 +35,11 @@ const Login = () => {
         }).then((response) => {
             // console.log("Login response: ", response);
             localStorage.setItem('token',response?.accessToken)
-            navigate('/LandingPage')
+            navigate("/Summary",{
+                state: {
+                  search: "Correspondences"
+                },
+              })
         }).catch(e => {
             console.error("Error during login:", e);
         });
@@ -145,11 +148,11 @@ const Login = () => {
                         </div>
                         {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
                         <Button loading={loading} style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
-                            //   navigate("/Summary",{
-                            //     state: {
-                            //       search: "Profile"
-                            //     },
-                            //   })
+                              navigate("/Summary",{
+                                state: {
+                                  search: "Profile"
+                                },
+                              })
                             handleLoginWithCredentional(e)
                             }}>Log in</Button>
                     </form>

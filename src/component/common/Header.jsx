@@ -198,7 +198,14 @@ function Header() {
            className=" top-search" style={{ marginRight: "1rem" }}
            
            />
-          <PiPhoneCallBold className="top-icon" />
+           {/* <Link to="/CorrespondencesSummary" state={{ search: "Correspondences" }} */}
+          <PiPhoneCallBold className="top-icon" onClick={()=>{
+            navigate("/CorrespondencesSummary",{
+              state: {
+                search: "Correspondences"
+              },
+            })
+          }}/>
           <IoNotifications className="top-icon" />
           <HiMiniQuestionMarkCircle
             className="top-icon"

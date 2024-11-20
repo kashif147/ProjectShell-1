@@ -10,6 +10,8 @@ import { FiCornerUpLeft } from "react-icons/fi";
 import { RiCornerUpLeftDoubleLine } from "react-icons/ri";
 import { IoReturnUpForwardSharp } from "react-icons/io5";
 import { FiCornerUpRight } from "react-icons/fi";
+import { useMsal } from '@azure/msal-react';
+import { getGraphClient } from '../graphClient';
 import { PiArrowSquareIn } from "react-icons/pi";
 import { BiSolidPrinter } from "react-icons/bi";
 import MyDrawer from '../../component/common/MyDrawer';
@@ -21,6 +23,8 @@ function CorspndncDetail() {
     const {TextArea} = Input;
     const { Search } = Input;
     const [key, setKey] = useState();
+    const { instance, accounts } = useMsal();
+    const [fileUrl, setFileUrl] = useState(null);
     const openCloseDrawerFtn = (name) => {
         setDrawerOpen((prevState) => ({
           ...prevState,
@@ -51,6 +55,33 @@ function CorspndncDetail() {
         //   default:
         //     break;
         // }
+    };
+    const createDocument = async (currentPath, refreshFileList) => {
+      const graphClient = getGraphClient(instance, accounts);
+      const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
+      const documentName = `NewDocument_${timestamp}.docx`;
+  
+      const driveItem = {
+        name: documentName,
+        file: {},
+      };
+  
+      try {
+        // Use currentPath instead of hardcoded '/projectShell'
+        const response = await graphClient.api(`/me/drive/root:${currentPath}:/children`).post(driveItem);
+        if (response && response.webUrl) {
+          setFileUrl(response.webUrl);
+          // alert('Document Created. Please rename and save it in Word Online.');
+          window.open(response.webUrl, '_blank');
+          refreshFileList(); // Refresh the file list after creating the document
+        } else {
+          // alert('Error: Failed to create document.');
+          console.log('Error: Failed to create document.')
+        }
+      } catch (error) {
+        console.error('Error creating document:', error.message);
+        // alert('Error: Failed to create document.');
+      }
     };
     const options = [
         {

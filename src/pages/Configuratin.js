@@ -3331,7 +3331,6 @@ const [drawer, setdrawer] = useState(false)
         total={regions?.length} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Code :</p>

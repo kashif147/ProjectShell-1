@@ -156,7 +156,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       key: "gridmenu",
       width: 75,
       fixed: "left",
-      render: () => (
+      render: (record, index) => (
         <Space size="small" className="action-buttons">
           <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
           <SimpleMenu
@@ -166,6 +166,8 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             isSearched={false}
             isTransparent={true}
             actions={() => { }}
+            record={record}
+            index={index}
           />
         </Space>
       ),
@@ -247,6 +249,16 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
                 compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                 multiple: 1,
               }
+            : col.title === "Reg No" ?
+              {
+                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
+            : col.title === "Correspondence ID" ?
+              {
+                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
               : undefined,
       sortDirections: ["ascend", "descend"],
       filters: col.title === "Station" || col.title === "Current Station" ? [
@@ -261,10 +273,16 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
         { text: 'Approved', value: 'Approved' },
         { text: 'Pending', value: 'Pending' },
         { text: 'Rejected', value: 'Rejected' },
-      ]: col.title === "Current Station" ? [
+      ]
+      : col.title === "Current Station" ? [
         { text: '0026', value: '0026' },
         { text: '0031', value: '0031' },
         { text: '0045', value: '0045' },
+      ]: col.title === "Method of Contact" ? [
+        { text: 'Call', value: 'Call' },
+        { text: 'Email', value: 'Email' },
+        { text: 'Latter', value: 'Latter' },
+        { text: 'Latter', value: 'Latter' },
       ]: undefined,
       onFilter: (value, record) => {
         if (col.title === "Station" || col.title==="Current Station") {
@@ -273,8 +291,12 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
           return record[col.dataIndex] === value;
         } else if (col.title==="Approval Status"){
           return record[col.dataIndex] === value;
+        }else if (col.title=="Method of Contact"){
+          return record[col.dataIndex]===value;
         }
-        
+        // else if (col.title=="Method of Contact"){
+        //   return record[col.dataIndex]===value;
+        // }
         return true;
       },
     })),
