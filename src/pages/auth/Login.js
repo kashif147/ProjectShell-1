@@ -60,22 +60,13 @@ const Login = () => {
         setShowPassword(!showPassword);
     };
     
-    const handleLoginWithCredentional = (e) => {
-        e.preventDefault();
-        dispatch(loginUser(credentials));
-        if(user){
+    const handleLoginWithCredentional = async(e) => {
+        // e.preventDefault();
+     await  dispatch(loginUser(credentials));
+        if(user ){
             navigate('/Summary');
         }
-    };
-    useEffect(() => {
-        if (user) {
-            navigate('/Summary',{
-                state:{
-               search:'Profile'
-                }
-            }); 
-        }
-    }, [user]); 
+    }; 
 
     return (
 

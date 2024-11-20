@@ -81,7 +81,7 @@ function Entry() {
               <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
               <Route element={<ProtectedRoute />}>
-              {/* <ProtectedRoute> */}
+              
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
               <Route path="CasesDetails" element={< CasesDetails />} />
@@ -100,8 +100,7 @@ function Entry() {
               <Route path="Reports" element={<Reports />} />
               <Route path="CorspndncDetail" element={<CorspndncDetail />} />
               </Route>
-              {/* </ProtectedRoute> */}
-            </Routes>
+                          </Routes>
           </div>
         </div>
         {(location?.pathname == "/Details"

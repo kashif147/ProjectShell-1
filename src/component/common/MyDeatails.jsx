@@ -444,8 +444,8 @@ function MyDeatails() {
         </Space>
       ),
     },
-
   ]
+  const [drawer, setdrawer] = useState(false)
   const criticalIllnessSchemeClm = [
     {
       title: 'Claim Type',
@@ -662,7 +662,7 @@ function MyDeatails() {
                     <p className="star">*</p>
                     <div className="input-sub-con">
                       <MySelect isSimple={true} placeholder='Mr.' />
-                      <h1 className="error-text">error-text</h1>
+                      <h1 className="error-text"></h1>
                     </div>
                   </div>
                 </div>
@@ -674,7 +674,7 @@ function MyDeatails() {
                     <p className="star">*</p>
                     <div className="input-sub-con">
                       <Input className="input" value={InfData?.forename} />
-                      <h1 className="error-text">error-text</h1>
+                      <h1 className="error-text"></h1>
                     </div>
                   </div>
                 </div>
@@ -1219,52 +1219,52 @@ function MyDeatails() {
                 <Divider>Subscriptions</Divider>
                 <Row style={{ paddingLeft: '12px' }}>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn("GardaLifeAssuranceClaim")} >
+                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn("GardaLifeAssuranceClaim")} >
                       Life Assurance (Member)
                     </Checkbox>
                   </Col>
                   <Col span={12} >
-                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}>
+                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}>
                       Life Assurance (Partner)
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn("criticalIllnessScheme")}>
+                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn("criticalIllnessScheme")}>
                       Critical Illness (Member)
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox checked={drawer} className="subs-chkbx">
                       Critical Illness (Partner)
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox checked={drawer} className="subs-chkbx">
                       Income Protection
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox checked={drawer} className="subs-chkbx">
                       Finance Application
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox checked={drawer} className="subs-chkbx">
                       Illness / Injury
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaLegalAidScheme')}>
-                      Legal Assistance1
+                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaLegalAidScheme')}>
+                      Legal Assistance
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaReviews')}>
+                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaReviews')}>
                       Garda Review
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox className="subs-chkbx">
+                    <Checkbox checked={drawer} className="subs-chkbx">
                       Balloted
                     </Checkbox>
                     <Input style={{ width: '80%' }} />
@@ -1307,7 +1307,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1320,7 +1320,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1333,7 +1333,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1346,7 +1346,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <MyDatePicker className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1359,7 +1359,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <MyDatePicker className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1442,7 +1442,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1455,7 +1455,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1503,7 +1503,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1516,7 +1516,7 @@ function MyDeatails() {
                   <p className="star">*</p>
                   <div className="inpt-sub-con">
                     <Input className="inp" />
-                    <h1 className="error-text">error-text</h1>
+                    <h1 className="error-text"></h1>
                   </div>
                   <p className="error"></p>
                 </div>
@@ -1616,7 +1616,7 @@ function MyDeatails() {
                     </div>
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                        <p className="star">*</p>
                         <MySelect placeholder='Select Station Code' isSimple={true} />
                       </div>
 
@@ -1655,7 +1655,7 @@ function MyDeatails() {
 
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                        <p className="star">*</p>
                         <MySelect isSimple={true} placeholder='Select District' />
                       </div>
 
@@ -1668,7 +1668,7 @@ function MyDeatails() {
 
                     <div className="transfer-inputs">
                       <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                        <p className="star">*</p>
                         <MySelect isSimple={true} placeholder='Select District' />
                       </div>
 
@@ -2028,9 +2028,9 @@ function MyDeatails() {
                     </div>
                     <div className="inpt-con">
                       <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
+                      <div className="inpt-sub-con d-flex">
                         <Input />
-                        <Button className="butn primery-btn">+</Button>
+                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2043,7 +2043,6 @@ function MyDeatails() {
                       <p className="star-white">*</p>
                       <div className="inpt-sub-con ">
                         <MyDatePicker />
-
                       </div>
                       <p className="error"></p>
                     </div>
@@ -2254,9 +2253,9 @@ function MyDeatails() {
                     </div>
                     <div className="inpt-con">
                       <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
+                      <div className="inpt-sub-con d-flex">
                         <Input />
-                        <Button className="butn primery-btn">+</Button>
+                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                       </div>
                       <p className="error"></p>
                     </div>

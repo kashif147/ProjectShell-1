@@ -128,7 +128,7 @@ function AddNewGarda({ open, onClose, }) {
                                     <p className="star-white">*</p>
                                     <div className="input-sub-con">
                                         <MySelect isSimple={true} placeholder='Mr.' />
-                                        <h1 className="error-text">error-text</h1>
+                                        <h1 className="error-text"></h1>
                                     </div>
 
                                 </div>
@@ -141,7 +141,7 @@ function AddNewGarda({ open, onClose, }) {
                                     <p className="star">*</p>
                                     <div className="input-sub-con">
                                         <Input className="input" value={InfData?.forename} />
-                                        <h1 className="error-text">error-text</h1>
+                                        <h1 className="error-text"></h1>
                                     </div>
                                 </div>
                             </div>

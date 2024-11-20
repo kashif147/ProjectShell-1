@@ -7,10 +7,10 @@ const MyTransfer = () => {
 
   const mockData = [
     { key: '1', title: 'Accommodations', description: 'Description of item 1' },
-    { key: '2', title: 'Allowance', description: 'Description of item 2' },
-    { key: '2', title: 'Community Police', description: 'Description of item 2' },
-    { key: '2', title: 'Garda Review', description: 'Description of item 2' },
-    { key: '2', title: 'Legal Aid', description: 'Description of item 2' },
+    { key: '3', title: 'Allowance', description: 'Description of item 2' },
+    { key: '4', title: 'Community Police', description: 'Description of item 2' },
+    { key: '5', title: 'Garda Review', description: 'Description of item 2' },
+    { key: '6', title: 'Legal Aid', description: 'Description of item 2' },
   ];
 
   const handleChange = (nextTargetKeys, direction, moveKeys) => {

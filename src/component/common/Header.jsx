@@ -12,7 +12,7 @@ import { Link, useLocation } from "react-router-dom";
 import { Button,Input } from "antd";
 import { PiPhoneCallBold } from "react-icons/pi";
 
-const Search = Input;
+const {Search} = Input;
 function Header() {
 
   const [token, settoken] = useState(null);
@@ -195,7 +195,9 @@ function Header() {
               });
             }
           }}
-           className=" top-search" style={{ marginRight: "1rem", borderRadius:50 }} />
+           className=" top-search" style={{ marginRight: "1rem" }}
+           
+           />
           <PiPhoneCallBold className="top-icon" />
           <IoNotifications className="top-icon" />
           <HiMiniQuestionMarkCircle

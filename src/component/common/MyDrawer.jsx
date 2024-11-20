@@ -166,7 +166,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             isContact && (
               <div className="mx-auto" style={{ marginRight: '80%' }}>
                 <Button onClick={() => setcontactDrawer(!contactDrawer)}
-                  className="butn" style={{ color: 'blue', marginRight: '250px' }}>
+                  className="butn" style={{ color: '#215E97', marginRight: '250px' }}>
                   Add Contact
                 </Button>
               </div>
@@ -187,7 +187,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             isPyment && (
               <div className="" style={{ marginRight: '' }}>
                 <Button onClick={() => setisPayment(!isPayment)}
-                  className="butn secondary me-2" style={{ color: 'blue', marginRight: '' }}>
+                  className="butn secondary me-2" style={{ color: '#215E97', marginRight: '' }}>
                   Add Payment
                 </Button>
               </div>
@@ -195,8 +195,8 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
           }
           {
             isAprov && (
-              <div className="mx-auto" style={{ marginRight: '' }}>
-                <Button onClick={() => setisAproved(!isAproved)} className="butn secondary me-2" style={{ color: 'blue', }}
+              <div className="mx-auto" style={{ marginRight: '',color: '#215E97', }}>
+                <Button onClick={() => setisAproved(!isAproved)} className="butn secondary me-2" style={{ color: '#215E97', }}
 
                 >
                   Approvals

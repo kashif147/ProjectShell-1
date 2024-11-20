@@ -96,8 +96,8 @@ textarea::placeholder {
   color: var(--labelColor) !important;
   font-family: var(--fontFamily) !important;
   font-size: 12px !important;
-  font-weight: bold !important;
-  opacity: 0.9;
+  /* font-weight: bo !important; */
+  opacity: 0.7 !important;
 }
 .ant- select option:first-child {
   color: var(--labelColor) !important;
@@ -151,8 +151,9 @@ select {
   color: var(--mainBlue);
   font-weight: 400;
 }
-.ant-input-search-button {
-  border-radius: 0px !important;
+.top-search .ant-input-search-button {
+  border-top-right-radius: 30px !important;
+  border-bottom-right-radius: 30px !important;
   border-left: none !important;
   margin-inline-end: -1px;
 }
@@ -199,12 +200,15 @@ body {
   border-bottom: 2px solid #e0e0e0;
 }
 
-.top-search {
+.top-search  input{
   height: 32px;
-  border-radius: 10px !important;
-  padding-left: 5px;
-
+  /* border-radius: 50px !important; */
+  border-top-left-radius: 30px !important;
+  border-bottom-left-radius: 30px !important;
+  padding-left: 15px;
 }
+
+
 .details-header {
   padding-top: 10px;
   padding-left: 30px;
@@ -376,7 +380,7 @@ body {
 }
 .ant-table-thead > tr > th {
   /* padding: 6px 10px !important;  Adjust the value as needed */ 
-  padding: 6px 2px !important;
+  padding: 6px 10px !important;
   white-space: nowrap; /* Prevent text from wrapping */
   overflow: hidden; /* Hide overflow text */
   text-overflow: ellipsis;
@@ -1128,12 +1132,10 @@ color: red !important;
   position: relative; /* Ensure these elements sit above the watermark */
   padding: 20px;
 }
-/* header */
 .top-icon {
   font-size: 40px !important;
   margin-right: 1rem;
-  color: #215E97 !important ;
-  /* color: red !important; */
+  color: var(--second) !important ;
 }
 .input-border-active {
   border: 2px solid #007bff !important;

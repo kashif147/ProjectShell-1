@@ -80,9 +80,10 @@ function SideNav() {
     {
       key: 'Correspondences',
       icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaArrowRightArrowLeft style={{ fontSize: '24px' }} /> 
+      <FaArrowRightArrowLeft  style={{ fontSize: '24px' }} /> 
       </div>,
       label: 'Correspondences',
+      onclick:()=>navigate("/Correspondences")
     },
     {
       key: 'Documents',

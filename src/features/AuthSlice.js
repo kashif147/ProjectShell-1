@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import MyAlert from '../component/common/MyAlert';
-
+// import { useNavigate } from 'react-router-dom';
 
 const baseURL = "https://node-api-app-dxecgpajapacc4gs.northeurope-01.azurewebsites.net/auth";
 
@@ -48,6 +48,7 @@ const authSlice = createSlice({
                 // Set the accessToken in localStorage
                 if (action.payload?.accessToken) {
                     localStorage.setItem('token', action.payload.accessToken);
+
                 }
             })
             .addCase(loginUser.rejected, (state, action) => {

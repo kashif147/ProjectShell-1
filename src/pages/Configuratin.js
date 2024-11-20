@@ -85,7 +85,7 @@ function Configuratin() {
     Lookup: false,
     LookupType:false,
   })
-
+const [drawer, setdrawer] = useState(false)
   useEffect(() => {
     if (drawerOpen?.LookupType === true) {
       dispatch(fetchRegions());
@@ -2558,7 +2558,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='County' isSimple={true} disabled={true} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -2752,7 +2752,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -2852,7 +2852,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -2950,7 +2950,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3056,7 +3056,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3143,7 +3143,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3236,7 +3236,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3444,7 +3444,7 @@ function Configuratin() {
                     drawrInptChng('Lookup', 'RegionTypeID', String(value))
                   }}
                     value={drawerIpnuts?.Lookup?.RegionTypeID} />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3564,7 +3564,7 @@ function Configuratin() {
                   <MySelect isSimple={true} placeholder='Select Contact type'
                     disabled={true}
                   />
-                  <h1 className="error-text">error-text</h1>
+                  <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
