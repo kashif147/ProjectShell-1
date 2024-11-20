@@ -1511,12 +1511,12 @@ const [drawer, setdrawer] = useState(false)
             <p className="lookups-title">Ranks</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Duties</p>
           </div>
-        </Col>
+        </Col> */}
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
@@ -1541,12 +1541,12 @@ const [drawer, setdrawer] = useState(false)
             <p className="lookups-title">Roster Type</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Reasons</p>
           </div>
-        </Col>
+        </Col> */}
         <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('ContactTypes')}>
           <div>
             <PiHandshakeDuotone className="icons" />
@@ -1574,42 +1574,42 @@ const [drawer, setdrawer] = useState(false)
             <p className="lookups-title ">Payment Types</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}> */}
+          {/* <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Ranks</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          </div> */}
+        {/* </Col> */}
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Duties</p>
           </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        </Col> */}
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Schemes</p>
           </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        </Col> */}
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Roster Type</p>
           </div>
-        </Col>
+        </Col> */}
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Reasons</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Contact Types</p>
           </div>
-        </Col>
+        </Col> */}
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
@@ -1640,24 +1640,24 @@ const [drawer, setdrawer] = useState(false)
             <p className="lookups-title">Solicitors</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Roster Type</p>
           </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        </Col> */}
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Reasons</p>
           </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        </Col> */}
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Contact Types</p>
           </div>
-        </Col>
+        </Col> */}
       </Row>
       <Divider orientation="left">Grid Configuration</Divider>
       <Row>
