@@ -24,6 +24,16 @@ function CorspndncDetail() {
     const {TextArea} = Input;
     const { Search } = Input;
     const [key, setKey] = useState();
+    const [path, setPath] = useState('/projectShell');
+
+    const handleFolderClick = (newPath) => {
+      setPath(newPath);
+    };
+  
+    const refreshFileList = () => {
+      // This will trigger the useEffect in FileList
+      setPath((prevPath) => prevPath);
+    };
     const { instance, accounts } = useMsal();
     const [fileUrl, setFileUrl] = useState(null);
     const openCloseDrawerFtn = (name) => {
@@ -57,7 +67,8 @@ function CorspndncDetail() {
         //     break;
         // }
     };
-    const createDocument = async (currentPath, refreshFileList) => {
+    const createDocument = async ( ) => {
+      debugger
       const graphClient = getGraphClient(instance, accounts);
       const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
       const documentName = `NewDocument_${timestamp}.docx`;
@@ -69,7 +80,7 @@ function CorspndncDetail() {
   
       try {
         // Use currentPath instead of hardcoded '/projectShell'
-        const response = await graphClient.api(`/me/drive/root:${currentPath}:/children`).post(driveItem);
+        const response = await graphClient.api(`/me/drive/root:${path}:/children`).post(driveItem);
         if (response && response.webUrl) {
           setFileUrl(response.webUrl);
           // alert('Document Created. Please rename and save it in Word Online.');
@@ -94,8 +105,8 @@ function CorspndncDetail() {
             value: 'New Call',
         },
         {
-            label: 'New Latter',
-            value: 'New Latter',
+            label: 'New Letter',
+            value: 'New Letter',
         },
         {
             label: 'New SMS',
@@ -373,7 +384,6 @@ function CorspndncDetail() {
     );
     const [activeKey, setactiveKey] = useState("1")
     const handleOptionSelect = (value) => {
-        debugger
         switch (value) {
           case "New Email":
             setactiveKey("1");
@@ -381,7 +391,7 @@ function CorspndncDetail() {
           case "New Call":
             setactiveKey("2");
             break;
-          case "New Latter":
+          case "New Letter":
             setactiveKey("3");
             break;
           case "New SMS":
@@ -399,7 +409,7 @@ function CorspndncDetail() {
             openCloseDrawerFtn('NewCall')
         }
         else if (activeKey=="3"){
-
+          createDocument()
         }
       }
       const [selectionType, setSelectionType] = useState('checkbox');
@@ -514,7 +524,7 @@ const contactClm = [
                 tabBarExtraContent={
                     <>
                     <Button className='new-btn' onClick={handleNewFtn}>
-                        {activeKey==="1"?"New Email": activeKey==="2"?"New Call":activeKey==="3"?"New Latter":activeKey==="4"?"New SMS":null}
+                        {activeKey==="1"?"New Email": activeKey==="2"?"New Call":activeKey==="3"?"New Letter":activeKey==="4"?"New SMS":null}
                     </Button>
                     <Select
                         key={key} // Force reset on each selection

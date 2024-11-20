@@ -281,8 +281,8 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       ]: col.title === "Method of Contact" ? [
         { text: 'Call', value: 'Call' },
         { text: 'Email', value: 'Email' },
-        { text: 'Latter', value: 'Latter' },
-        { text: 'Latter', value: 'Latter' },
+        { text: 'Letter', value: 'Letter' },
+        { text: 'Letter', value: 'Letter' },
       ]: undefined,
       onFilter: (value, record) => {
         if (col.title === "Station" || col.title==="Current Station") {

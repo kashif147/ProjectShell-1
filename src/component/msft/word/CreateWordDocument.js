@@ -10,7 +10,6 @@ const CreateWordDocument = ({ currentPath, refreshFileList }) => {
     const graphClient = getGraphClient(instance, accounts);
     const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
     const documentName = `NewDocument_${timestamp}.docx`;
-
     const driveItem = {
       name: documentName,
       file: {},
