@@ -35,7 +35,8 @@ import {
   FaArrowRightArrowLeft,
   FaCalendarDays,
   FaClipboardList,
-  FaAngleLeft 
+  FaAngleLeft,
+  FaEnvelopesBulk
 } from "react-icons/fa6";
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
@@ -44,6 +45,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegions } from "../../features/RegionSlice";
 import AddNewGarda from "../details/AddNewGarda";
 import TransferRequests from "../TransferRequests";
+import MyDatePicker from "./MyDatePicker";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -61,45 +63,45 @@ function HeaderDetails() {
   const [trueFilters, settrueFilters] = useState();
   const [create, setCreate] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-const [TransferDrawer, setTransferDrawer] = useState(false)
+  const [TransferDrawer, setTransferDrawer] = useState(false)
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
   };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave,report,isSaveChng, ReportsTitle,profilNextBtnFtn,profilPrevBtnFtn, gridData, rowIndex,globleFilters } = useTableColumns();
+  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, globleFilters } = useTableColumns();
 
-const screenName= location?.state?.search
+  const screenName = location?.state?.search
 
-function filterSearchableColumns(data) {
-  if (data) {
-    const filteredResults = globleFilters?.reduce((acc, i) => {
-      const filteredColumns = data.filter(
-        (column) => column?.titleColumn === i?.titleColumn && i?.isCheck
-      );
-      return [...acc, ...filteredColumns];
-    }, []);
-    
-    settrueFilters(filteredResults); 
+  function filterSearchableColumns(data) {
+    if (data) {
+      const filteredResults = globleFilters?.reduce((acc, i) => {
+        const filteredColumns = data.filter(
+          (column) => column?.titleColumn === i?.titleColumn && i?.isCheck
+        );
+        return [...acc, ...filteredColumns];
+      }, []);
+
+      settrueFilters(filteredResults);
+    }
   }
-}
 
-useEffect(() => {
-  if (screenName && searchFilters[screenName]) {
-  filterSearchableColumns(searchFilters[screenName]);
-  }
-}, [screenName, searchFilters, globleFilters]);
+  useEffect(() => {
+    if (screenName && searchFilters[screenName]) {
+      filterSearchableColumns(searchFilters[screenName]);
+    }
+  }, [screenName, searchFilters, globleFilters]);
 
   const genaratePdf = (e) => {
     toPDF();
   };
   const dispatch = useDispatch();
-    const { regions,  } = useSelector((state) => state.regions);
-    useEffect(() => {
-      dispatch(fetchRegions());
-    }, []);
-    console.log(regions,'reg')
-    const gender = {
+  const { regions, } = useSelector((state) => state.regions);
+  useEffect(() => {
+    dispatch(fetchRegions());
+  }, []);
+  console.log(regions, 'reg')
+  const gender = {
     Male: false,
     Female: false,
     "Not Specified": false,
@@ -287,6 +289,7 @@ useEffect(() => {
       <>
         {(location?.pathname === "/ClaimSummary" ||
           location?.pathname === "/Summary" ||
+          location?.pathname === "/CorrespondencesSummary" ||
           location?.pathname === "/CasesSummary") && (
             <FaClipboardList
               style={{
@@ -336,6 +339,17 @@ useEffect(() => {
                     }}
                   />
                 )}
+                {location?.state?.search === "Correspondence" && (
+                  <FaEnvelopesBulk 
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                )}
                 <p>{location?.state?.search}</p>
                 <p>&nbsp;/&nbsp;{iconFtn()}&nbsp;</p>
 
@@ -372,8 +386,12 @@ useEffect(() => {
                     }}
                   />
                 )}
-
-                <p>{formattedNav}</p>
+               
+                {
+                  nav === '/CorrespondencesSummary' ?
+                    <p>Summary</p> :
+                    <p>{formattedNav}</p>
+                }
 
                 {location?.state?.code && (
                   <>
@@ -393,7 +411,7 @@ useEffect(() => {
                   <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
                     if (nav == "/ClaimsById")
                       handlClaimDrawerChng()
-                    
+
                   }}>
                     Create
                   </Button>
@@ -403,13 +421,13 @@ useEffect(() => {
                   <Button onClick={goBack} className="me-1 gray-btn butn">
                     Print
                   </Button>
-                  <Button disabled={rowIndex==0}  onClick={profilPrevBtnFtn} className="me-1 gray-btn butn" >
-                    <FaAngleLeft  className="deatil-header-icon" />
-               
+                  <Button disabled={rowIndex == 0} onClick={profilPrevBtnFtn} className="me-1 gray-btn butn" >
+                    <FaAngleLeft className="deatil-header-icon" />
+
                   </Button>
-                  <p className="" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex+1} of {gridData?.length}</p>
-                  <Button disabled={rowIndex==gridData?.length-1}  onClick={profilNextBtnFtn} className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
-                    <FaAngleRight  className="deatil-header-icon" />
+                  <p className="" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex + 1} of {gridData?.length}</p>
+                  <Button disabled={rowIndex == gridData?.length - 1} onClick={profilNextBtnFtn} className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
+                    <FaAngleRight className="deatil-header-icon" />
                   </Button>
 
                 </div>
@@ -435,11 +453,11 @@ useEffect(() => {
                     <Button onClick={() => {
                       if (nav == "/Details" || nav == "/Summary") {
                         setisGardaDrwer(!isGardaDrwer)
-                      
+
                       } else if (nav == "/ClaimSummary") {
                         handlClaimDrawerChng()
                       }
-                      else if (nav=="/Transfers")
+                      else if (nav == "/Transfers")
                         setTransferDrawer(!TransferDrawer)
                     }}
                       style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
@@ -465,7 +483,6 @@ useEffect(() => {
                       title={
                         <BsThreeDots
                           style={{ fontSize: "15px", fontWeight: 500 }}
-
                         />
                       }
                       data={{ "Bulk Changes": "false", "Print Labels": "false" }}
@@ -479,7 +496,6 @@ useEffect(() => {
                 </div>
                 <div className="d-flex search-fliters align-items-baseline">
                   <Row className="align-items-baseline">
-
                     <Input
                       placeholder="Reg No or Surname"
                       style={{
@@ -488,7 +504,7 @@ useEffect(() => {
                         // border: "1px solid",
                         color: "gray",
                       }}
-                      // suffix={<SearchOutlined />}
+                    // suffix={<SearchOutlined />}
                     />
                     {trueFilters?.map((item, index) =>
                       item?.titleColumn === "Date Of Birth" ? (
@@ -513,7 +529,7 @@ useEffect(() => {
                       />
                     </div>
                     <div>
-                      <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={()=>resetFilters()}>
+                      <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFilters()}>
                         Reset
                       </Button>
                       <Button className="transparent bordr-less" onClick={showHidSavModal} >Save fliter</Button>
@@ -535,68 +551,146 @@ useEffect(() => {
         open={claimsDrawer} onClose={() => handlClaimDrawerChng()} width={600} >
         {
           nav == "/ClaimSummary" && (
-            <Row style={{ marginBottom: "20px" }} gutter={24}>
-              <Col span={12}>
-                <Input placeholder="Search By Reg #" />
-              </Col>
-              <Col span={12}>
-                <MySelect placeholder="Select Profile" isSimple={true} />
-              </Col>
-            </Row>
+            <div className="mb-4 pb-4">
+              {/* Claim Date */}
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Claim Date:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <MyDatePicker className="inp" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+              {/* Claim Type */}
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Claim Type:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star">*</p>
+                  <div className="inpt-sub-con">
+                    <MySelect isSimple={true} />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+              {/* Start Date */}
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Start Date:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <MyDatePicker className="inp" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+              {/* End Date */}
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>End Date:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <MyDatePicker className="inp" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+              {/* Is Approved */}
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Is Approved:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <Checkbox className="inp"></Checkbox>
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+              {/* Number of Days */}
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Number of Days:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" type="number" placeholder="Enter number of days" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Pay Amount:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" type="number" placeholder="Enter pay amount" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+              <div className="drawer-inpts-container">
+                <div className="drawer-lbl-container">
+                  <p>Cheque No:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <Input className="inp" placeholder="Enter cheque number" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+
+              <div className="drawer-inpts-container" style={{ height: '120px' }}>
+                <div className="drawer-lbl-container">
+                  <p>Description:</p>
+                </div>
+                <div className="inpt-con">
+                  <p className="star-white">*</p>
+                  <div className="inpt-sub-con">
+                    <TextArea className="inp" rows={4} placeholder="Enter description" />
+                  </div>
+                  <p className="error"></p>
+                </div>
+              </div>
+            </div>
           )
         }
 
-        <Row gutter={24} style={{}}>
-          <Col span={12}>
-            <div className="form-section">
-              <label className="form-label">Claim Date</label>
-              <DatePicker className="form-input" />
-
-              <label className="form-label">Claim Type</label>
-              <Input className="form-input" placeholder="Enter claim type" />
-
-              <label className="form-label">Start Date</label>
-              <DatePicker className="form-input" />
-
-              <label className="form-label">End Date</label>
-              <DatePicker className="form-input" />
-              <Checkbox className="form-checkbox">Is Approved</Checkbox>
-            </div>
-          </Col>
-          <Col span={12}>
-            <div className="form-section">
-              <label className="form-label">Number of Days</label>
-              <Input className="form-input" type="number" placeholder="Enter number of days" />
-              <label className="form-label">Pay Amount</label>
-              <Input className="form-input" type="number" placeholder="Enter pay amount" />
-
-              <label className="form-label">Cheque No</label>
-              <Input className="form-input" placeholder="Enter cheque number" />
-
-              <label className="form-label">Description</label>
-              <TextArea className="form-input" rows={2} placeholder="Enter description" />
-            </div>
-          </Col>
-        </Row>
-        <Row style={{ marginBottom: "20px" }} >
-          <Col span={24}>
-          </Col>
-        </Row>
       </MyDrawer>
-      <Modal footer={<><Button onClick={async()=>{
-         try {
-          await isSaveChng(true); 
+      <Modal footer={<><Button onClick={async () => {
+        try {
+          await isSaveChng(true);
           await handleSave(ReportName);
           showHidSavModal()
-      } catch (error) {
+        } catch (error) {
           console.error("Error saving changes:", error);
-      }
-        }}>Save</Button ><Button onClick={showHidSavModal}>Close</Button></>} title="Report" open={isSaveModalOpen} onOk={showHidSavModal} onCancel={showHidSavModal}>
-        <Input onChange={(e)=>setReportName(e.target.value)} value={ReportName} placeholder="Enter Name For Report" />
+        }
+      }}>Save</Button ><Button onClick={showHidSavModal}>Close</Button></>} title="Report" open={isSaveModalOpen} onOk={showHidSavModal} onCancel={showHidSavModal}>
+        <Input onChange={(e) => setReportName(e.target.value)} value={ReportName} placeholder="Enter Name For Report" />
       </Modal>
 
-      <AddNewGarda open={isGardaDrwer} onClose={()=>setisGardaDrwer(!isGardaDrwer)} />
-      <TransferRequests open={TransferDrawer} onClose={()=>setTransferDrawer(!TransferDrawer)} isSearch={true} />
+      <AddNewGarda open={isGardaDrwer} onClose={() => setisGardaDrwer(!isGardaDrwer)} />
+      <TransferRequests open={TransferDrawer} onClose={() => setTransferDrawer(!TransferDrawer)} isSearch={true} />
 
     </div>
   );

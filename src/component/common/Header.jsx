@@ -98,7 +98,7 @@ function Header() {
     {
       key: "1",
       label: (
-        <Link to="/CorrespondencesSummary" state={{ search: "Correspondences" }} className="link" style={{ textDecoration: "none" }}>
+        <Link to="/CorrespondencesSummary" state={{ search: "Correspondence" }} className="link" style={{ textDecoration: "none" }}>
           Summary
         </Link>
       ),
@@ -202,7 +202,7 @@ function Header() {
           <PiPhoneCallBold className="top-icon" onClick={()=>{
             navigate("/CorrespondencesSummary",{
               state: {
-                search: "Correspondences"
+                search: "Correspondence"
               },
             })
           }}/>

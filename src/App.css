@@ -678,7 +678,8 @@ tr {
   background-color: transparent;
 }
 .sid-nav-main .ant-menu-title-content {
-  color: #fff;
+  /* color: #fff; */
+
   font-family: var(--fontFamily);
 }
 .navbar {
@@ -688,6 +689,7 @@ tr {
 .ant-menu .ant-menu-item {
   border-radius: 3px !important;
   width: auto;
+  background:none;
   margin: 12px 0px !important;
 }
 .hover-col {
@@ -893,6 +895,7 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last{
     text-align: center;
     padding-inline: 0; /* Optional: remove padding if needed */
     text-overflow: clip;
+    /* background: none; */
 }
 .ant-menu-item {
   display: flex;

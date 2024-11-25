@@ -40,7 +40,10 @@
 .drawer-main-cntainer{
   
 }
-
+.search-inpt{
+  padding-left: 45px;
+  padding-right: 45px;
+}
 .drawer-inpts-container {
   display: flex;
   justify-content: center;

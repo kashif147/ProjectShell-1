@@ -680,14 +680,23 @@ const [drawer, setdrawer] = useState(false)
   ];
   const columnLookup = [
     {
-      title: ' Code',
+      title: 'Code',
       dataIndex: 'RegionCode',
       key: 'RegionCode',
+      sorter: (a, b) => a.RegionCode.localeCompare(b.RegionCode), // Assumes RegionCode is a string
+      sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
     },
     {
       title: ' Lookup Type ',
       dataIndex: 'RegionName',
       key: 'RegionName',
+      filters: [
+        { text: 'A01', value: 'A01' },
+        { text: 'B02', value: 'B02' },
+        { text: 'C03', value: 'C03' },
+        // Add more filter options as needed
+      ],
+      onFilter: (value, record) => record.RegionCode === value,
     },
     {
       title: ' Display Name',
@@ -1391,10 +1400,14 @@ const [drawer, setdrawer] = useState(false)
   const AddSubscriptionsFtn = () => {
     console.log(SubscriptionData);
   }
-
+  const {Search} = Input;
   return (
     <div className="configuration-main">
       <h1 className="config-heading" style={{ marginLeft: '45px' }}>Configurations</h1>
+    <div className="search-inpt">
+    <Search style={{borderRadius:"3px", height:'62px' }}  />
+
+    </div>
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
@@ -1523,12 +1536,12 @@ const [drawer, setdrawer] = useState(false)
             <p className="lookups-title">Duties</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Schemes</p>
           </div>
-        </Col>
+        </Col> */}
         <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Solicitors')} >
           <div >
             <PiHandshakeDuotone className="icons" />

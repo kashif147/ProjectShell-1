@@ -22,171 +22,145 @@ import { IoDocumentsSharp } from "react-icons/io5";
 import { MdWbSunny } from "react-icons/md";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { ClassNames } from '@emotion/react';
-
-
-
+import '../../styles/SideNav.css'
 // import 'bootstrap/dist/css/bootstrap.min.css';
 
 function SideNav() {
   const location = useLocation();
-  console.log(location,"location45")
+const nav = location?.pathname
+console.log(nav,'156')
   const navigate = useNavigate();
-  
-  const [isSideNav, setisSideNav] = useState(true)
-  const toggleCollapsedFtn = ()=>{
-      setisSideNav(!isSideNav)
-  }
-  const [isCollapsed, setIsCollapsed] = useState(true);
 
-  const toggleMenu = () => {
-    setIsCollapsed(!isCollapsed);
-  };
-  const toggleCollapsed = () => {
-    toggleCollapsedFtn()
-  };
+  const [isSideNav, setisSideNav] = useState(true);
+  const toggleCollapsed = () => setisSideNav(!isSideNav);
 
   const items = [
     {
       key: '1',
-      icon:
-      <div className={`${isSideNav==false? "label-nav1": "label-nav-collaps1"}`}>
-        <TfiMenu   className=''style={{ color: 'white', fontSize: '25px' }} onClick={toggleCollapsed} />
-      </div>
-    }, 
+      icon: (
+        <div className='icon' >
+          <TfiMenu
+                       onClick={toggleCollapsed}
+          />
+        </div>
+      )
+    },
     {
       key: 'Profile',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-         <FaUser  style={{ fontSize: '24px',  }} />
-        </div>,
+      icon: (
+        <div className={`${isSideNav && nav==='/Details'  ? "icon-collapsed" :  "icon"}`}>
+          <FaUser />
+        </div>
+      ),
       label: 'Profile',
-      className: location?.state=="/Details" ? 'custom-highlight' : '',
-      onclick:()=>navigate("/ClaimsById")
+      className:`${nav==='/Details' && isSideNav===false? 'selected-dev':''}`
+    
     },
     {
       key: 'Cases',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-        <FaListCheck   style={{ fontSize: '24px' }} /> 
-        </div>,
+      icon: (
+        <div className={`${isSideNav && nav==='/CasesById'  ? "icon-collapsed": "icon"}`}>
+          <FaListCheck />
+        </div>
+      ),
       label: 'Cases',
+      className:`${nav==='/CasesById' && isSideNav===false? 'selected-dev':''}`
     },
-    
     {
       key: 'Claims',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaMoneyCheckAlt style={{ fontSize: '24px' }} /> 
-      </div>,
+      icon: (
+        <div className={`${isSideNav && nav==='/ClaimsById'  ? "icon-collapsed": "icon"}`}>
+          <FaMoneyCheckAlt />
+        </div>
+      ),
       label: 'Claims',
+      className:`${nav==='/ClaimsById' && isSideNav===false? 'selected-dev':''}`
     },
     {
       key: 'Correspondences',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      <FaArrowRightArrowLeft  style={{ fontSize: '24px' }} /> 
-      </div>,
+      icon: (
+        <div className={`${isSideNav && nav==='/CorspndncDetail'  ? "icon-collapsed": "icon"}`}>
+          <FaArrowRightArrowLeft />
+        </div>
+      ),
       label: 'Correspondences',
-      onclick:()=>navigate("/Correspondences")
-    },
-    {
-      key: 'Documents',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      
-      <IoDocumentsSharp  style={{ fontSize: '24px' }} /> 
-      </div>,
+       className:`${nav==='/CorspndncDetail' && isSideNav===false? 'selected-dev':''}`
+      },
+      {
+        key: 'Documents',
+        icon: (
+          <div className='icon'>
+          <IoDocumentsSharp />
+        </div>
+      ),
       label: 'Documents',
+      // className:`${nav==='' && isSideNav===false? 'selected-dev':''}`
+      
     },
     {
       key: 'Projects',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      
-      <FaDiagramProject  style={{ fontSize: '24px' }} /> 
-      </div>,
+      icon: (
+        <div className={`icon`}>
+          <FaDiagramProject />
+        </div>
+      ),
       label: 'Projects',
     },
     {
       key: 'Roster',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      
-      <FaCalendarDays style={{ fontSize: '24px' }} /> 
-      </div>,
+      icon: (
+        <div className='icon'>
+          <FaCalendarDays  />
+        </div>
+      ),
       label: 'Roster',
     },
     {
       key: 'Tranings',
-      icon: <div className={`${isSideNav==false? "label-nav": "label-nav-collaps"}`}>
-      
-      <FaSun style={{ fontSize: '24px' }} /> 
-      </div>,
+      icon: (
+        <div className='icon'>
+          <FaSun  />
+        </div>
+      ),
       label: 'Tranings',
     },
-   
   ];
-  
+
   const handleClick = ({ key }) => {
     switch (key) {
       case 'Profile':
-        navigate("/Details",{
-          state: {
-            name: location?.state?.name,
-            code: location?.state?.code,
-            search: location?.state?.search
-          },
-        })
+        navigate("/Details");
         break;
-        case 'Cases':
-          navigate("/CasesById", {
-            state: {
-              name: location?.state?.name,
-              code: location?.state?.code,
-              search: location?.state?.search
-            },
-          });
+      case 'Cases':
+        navigate("/CasesById");
         break;
       case 'Claims':
-        navigate("/ClaimsById", {
-          state: {
-            name: location?.state?.name,
-            code: location?.state?.code,
-            search: location?.state?.search
-          },
-        });
+        navigate("/ClaimsById");
         break;
-      case '5':
-        console.log("Navigate to Correspondences");
-        break;
-      case '6':
-        console.log("Navigate to Documents");
-        break;
-      case '7':
-        console.log("Navigate to Projects");
-        break;
-      case '8':
-        console.log("Navigate to Roster");
-        break;
-      case '9':
-        console.log("Navigate to Trainings");
+      case 'Correspondences':
+        navigate("/CorspndncDetail");
         break;
       default:
-        console.log("Toggle Menu");
+        console.log("Menu item clicked:", key);
     }
   };
-  const defaultSelectedKey = location.pathname === '/CasesById' ? 'Cases' : location.pathname === '/ClaimsById' ? 'Claims' : '';
+
   return (
-    <div className='sid-nav-main'
-      style={{
-        height:"100%",
-       
-      }}
-    >
+    <div className="sid-nav-main">
       <Menu
-        defaultSelectedKeys={[defaultSelectedKey]}
-        defaultOpenKeys={['sub1']}
         mode="inline"
         theme="dark"
-        style={{ width: isSideNav ? '60px' : '200px' }}
+        style={{
+          width: isSideNav ? '60px' : '200px',
+          transition: 'width 0.3s',
+        }}
         inlineCollapsed={isSideNav}
         items={items}
         onClick={handleClick}
+        className={`${isSideNav ? "menu-collapsed" : "menu-expanded"}`}
       />
     </div>
+
   )
 }
 

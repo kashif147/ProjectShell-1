@@ -46,29 +46,10 @@ function CorspndncDetail() {
         NewCall:false
     })
       
-    const handleMenuClick = ({ key }) => {
-        // setSelectedValue(getDefaultValue(Number(key))); // Update selected value
-
-        // Execute corresponding function
-        // switch (Number(key)) {
-        //   case 1:
-        //     handleNewEmail();
-        //     break;
-        //   case 2:
-        //     handleNewCall();
-        //     break;
-        //   case 3:
-        //     handleNewLetter();
-        //     break;
-        //   case 4:
-        //     handleNewSMS();
-        //     break;
-        //   default:
-        //     break;
-        // }
+    const handleMenuClick = (key ) => {
+     debugger
     };
     const createDocument = async ( ) => {
-      debugger
       const graphClient = getGraphClient(instance, accounts);
       const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
       const documentName = `NewDocument_${timestamp}.docx`;
@@ -375,7 +356,7 @@ function CorspndncDetail() {
     ];
 
     const menu = (
-        <Menu onClick={handleMenuClick}>
+        <Menu onClick={(e)=>{handleMenuClick(e)}}>
             <Menu.Item key="1">New Email</Menu.Item>
             <Menu.Item key="2">New Call</Menu.Item>
             <Menu.Item key="3">New Letter</Menu.Item>
@@ -387,12 +368,15 @@ function CorspndncDetail() {
         switch (value) {
           case "New Email":
             setactiveKey("1");
+            window.open('https://outlook.office.com/mail/deeplink/compose', '_blank');
             break;
           case "New Call":
             setactiveKey("2");
+            openCloseDrawerFtn('NewCall')
             break;
           case "New Letter":
             setactiveKey("3");
+            createDocument()
             break;
           case "New SMS":
             setactiveKey("4");

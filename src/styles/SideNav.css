@@ -1,0 +1,18 @@
+.selected-dev{
+border-radius: 5px !important;
+background-color: var(--secoundry-bg-color) !important;
+color:  #C97A2F !important;
+}
+.icon-collapsed{
+background-color: var(--secoundry-bg-color) !important;
+color: #C97A2F !important;
+padding: 7px;
+border-radius: 5px;
+font-size: 26px !important;
+}
+.icon{
+color: white ;
+padding: 7px;
+font-size: 26px !important;
+opacity: 1 !important;
+}
