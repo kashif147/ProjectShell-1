@@ -1,8 +1,6 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState } from 'react';
 import { useMsal } from '@azure/msal-react';
 import { getGraphClient } from '../graphClient';
-
-/* global Office, Word */
 
 const OpenPrePopulatedDocument = () => {
   const { instance, accounts } = useMsal();
@@ -20,7 +18,7 @@ const OpenPrePopulatedDocument = () => {
         .api(`${templatePath}:/copy`)
         .post({
           name: newDocumentName,
-          parentReference: { path: destinationPath }
+          parentReference: { path: destinationPath },
         });
 
       console.log('Template copied:', copyResponse);
@@ -29,16 +27,12 @@ const OpenPrePopulatedDocument = () => {
 
       if (documentWebUrl) {
         setFileUrl(documentWebUrl);
-        window.open(documentWebUrl, '_blank');
-        console.log('Document opened successfully');
-
+        await fetchDocumentContent(documentWebUrl); // Fetch content using proxy
       } else {
         console.error('Error: Unable to retrieve webUrl');
-        // alert('Error: Failed to copy template.');
       }
     } catch (error) {
       console.error('Error copying template document:', error.message, error);
-    //   alert('Error: Failed to copy template.');
     }
   };
 
@@ -51,6 +45,35 @@ const OpenPrePopulatedDocument = () => {
     } catch (error) {
       console.error('Error retrieving file ID:', error);
       return null;
+    }
+  };
+
+  const fetchDocumentContent = async (documentWebUrl) => {
+    try {
+      const account = accounts[0];
+      const accessTokenResponse = await instance.acquireTokenSilent({
+        scopes: ['User.Read', 'Files.Read.All'],
+        account,
+      });
+      const accessToken = accessTokenResponse.accessToken;
+
+      const proxyUrl = `http://localhost:5001/getDocument?url=${encodeURIComponent(documentWebUrl)}`;
+      const response = await fetch(proxyUrl, {
+        headers: {
+          Authorization: `Bearer ${accessToken}`, // Pass access token in Authorization header
+        },
+      });
+
+      if (response.ok) {
+        console.log('Document fetched successfully through proxy');
+        const blob = await response.blob();
+        const url = URL.createObjectURL(blob);
+        window.open(url, '_blank'); // Open document in a new tab
+      } else {
+        console.error('Failed to fetch document through proxy');
+      }
+    } catch (error) {
+      console.error('Error fetching document content:', error);
     }
   };
 

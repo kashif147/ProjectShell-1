@@ -35,11 +35,15 @@ const Login = () => {
         }).then((response) => {
             // console.log("Login response: ", response);
             localStorage.setItem('token',response?.accessToken)
+<<<<<<< Updated upstream
             navigate("/Summary",{
                 state: {
                   search: "Correspondences"
                 },
               })
+=======
+            navigate('/Summary')
+>>>>>>> Stashed changes
         }).catch(e => {
             console.error("Error during login:", e);
         });
