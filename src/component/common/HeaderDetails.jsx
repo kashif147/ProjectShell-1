@@ -46,6 +46,8 @@ import { fetchRegions } from "../../features/RegionSlice";
 import AddNewGarda from "../details/AddNewGarda";
 import TransferRequests from "../TransferRequests";
 import MyDatePicker from "./MyDatePicker";
+import New from "../corespondence/New";
+import CreateClaim from "../claim/CreateClaim";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -340,7 +342,7 @@ function HeaderDetails() {
                   />
                 )}
                 {location?.state?.search === "Correspondence" && (
-                  <FaEnvelopesBulk 
+                  <FaEnvelopesBulk
                     style={{
                       fontSize: "16px",
                       marginRight: "5px",
@@ -386,7 +388,7 @@ function HeaderDetails() {
                     }}
                   />
                 )}
-               
+
                 {
                   nav === '/CorrespondencesSummary' ?
                     <p>Summary</p> :
@@ -449,20 +451,29 @@ function HeaderDetails() {
                       ? `Profile`
                       : ` ${location?.state?.search}`}
                   </h2>
-                  <div className="d-flex">
-                    <Button onClick={() => {
-                      if (nav == "/Details" || nav == "/Summary") {
-                        setisGardaDrwer(!isGardaDrwer)
+                  <div className="d-flex">{
+                    nav === '/CorrespondencesSummary' ?
+                      <div style={{ marginRight: '50px' }}>
+                        <New />
+                      </div>
+                      :
+                      nav === '/ClaimSummary' ?
+                      <CreateClaim />
+                      :
+                        <Button onClick={() => {
+                          if (nav == "/Details" || nav == "/Summary") {
+                            setisGardaDrwer(!isGardaDrwer)
 
-                      } else if (nav == "/ClaimSummary") {
-                        handlClaimDrawerChng()
-                      }
-                      else if (nav == "/Transfers")
-                        setTransferDrawer(!TransferDrawer)
-                    }}
-                      style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
-                      Create
-                    </Button>
+                          } else if (nav == "/ClaimSummary") {
+                            handlClaimDrawerChng()
+                          }
+                          else if (nav == "/Transfers")
+                            setTransferDrawer(!TransferDrawer)
+                        }}
+                          style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
+                          Create
+                        </Button>
+                    }
                     <SimpleMenu
                       title={
                         <>

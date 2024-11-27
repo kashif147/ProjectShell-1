@@ -698,6 +698,10 @@ tr {
   align-items: center;
   transition: background-color 0.3s ease;
 }
+.custom-select{
+  background-color: #215E97 !important;
+}
+
 
 .hover-col:hover {
   background-color: var(--secoundry-bg-color);

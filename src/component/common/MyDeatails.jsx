@@ -496,20 +496,26 @@ function MyDeatails() {
     },
 
   ]
-  const CommitteesColumns = [
+ 
+  const PartnerLifeAssuranceClaimClm = [
     {
-      title: 'Committee',
+      title: 'Transfer Date',
       dataIndex: 'gardaRegNo',
       key: 'gardaRegNo',
     },
     {
-      title: 'Start Date',
+      title: 'Station From',
       dataIndex: 'dateOfBirth',
       key: 'dateOfBirth',
       render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
     },
     {
-      title: 'End Date',
+      title: 'Station To',
+      dataIndex: 'Notes',
+      key: 'Notes',
+    },
+    {
+      title: 'Notes',
       dataIndex: 'Notes',
       key: 'Notes',
     },
@@ -531,25 +537,20 @@ function MyDeatails() {
     },
 
   ]
-  const PartnerLifeAssuranceClaimClm = [
+  const CommitteesColumns = [
     {
-      title: 'Transfer Date',
+      title: 'Committee',
       dataIndex: 'gardaRegNo',
       key: 'gardaRegNo',
     },
     {
-      title: 'Station From',
+      title: 'Start Date',
       dataIndex: 'dateOfBirth',
       key: 'dateOfBirth',
       render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
     },
     {
-      title: 'Station To',
-      dataIndex: 'Notes',
-      key: 'Notes',
-    },
-    {
-      title: 'Notes',
+      title: 'End Date',
       dataIndex: 'Notes',
       key: 'Notes',
     },
