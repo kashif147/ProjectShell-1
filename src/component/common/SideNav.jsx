@@ -28,7 +28,7 @@ import '../../styles/SideNav.css'
 function SideNav() {
   const location = useLocation();
 const nav = location?.pathname
-console.log(nav,'156')
+
   const navigate = useNavigate();
 
   const [isSideNav, setisSideNav] = useState(true);
@@ -89,12 +89,13 @@ console.log(nav,'156')
       {
         key: 'Documents',
         icon: (
-          <div className='icon'>
+          <div className={`${isSideNav && nav==='/Doucmnets'  ? "icon-collapsed": "icon"}`}>
           <IoDocumentsSharp />
         </div>
       ),
       label: 'Documents',
       // className:`${nav==='' && isSideNav===false? 'selected-dev':''}`
+      className:`${nav==='/Doucmnets' && isSideNav===false? 'selected-dev':''}`
       
     },
     {
@@ -139,6 +140,9 @@ console.log(nav,'156')
         break;
       case 'Correspondences':
         navigate("/CorspndncDetail");
+        break;
+      case 'Documents':
+        navigate("/Doucmnets");
         break;
       default:
         console.log("Menu item clicked:", key);

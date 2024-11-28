@@ -176,12 +176,18 @@ const [drawer, setdrawer] = useState(false)
       [name3]: value3,
     }));
   };
-
+//   {
+//     "code": "345",
+//     "lookuptype": "Post2",
+//     "isdeleted": false,
+//     "isactive": true,
+ 
+// }
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
-    LookupType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
+    LookupType: { lookuptype: '', code: '',DisplayName:'', isActive: true, isDeleted: false },
     Lookup: { RegionTypeID: '', RegionName: '', ParentRegion: null, RegionCode: '', DisplayName: '', isDeleted: false, },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
@@ -3333,8 +3339,12 @@ const [drawer, setdrawer] = useState(false)
           //   return seterrors(LookupType)
           // }
           await insertDataFtn(
-            `${baseURL}/regiontype`,
-            drawerIpnuts?.LookupType,
+            `${baseURL}/lookuptype`,
+            {...drawerIpnuts?.LookupType,   "userid": "67117bea87c907f6cdda0ad9",
+              "_id": "67475c6f0b81dadb94223106",
+              "createdAt": "2024-11-27T17:52:47.339Z",
+              "updatedAt": "2024-11-27T17:52:47.339Z",
+              "__v": 0},
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('LookupType', () => dispatch(fetchRegions())) // Pass a function reference
@@ -3351,7 +3361,10 @@ const [drawer, setdrawer] = useState(false)
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" />
+                  <Input className="inp"
+                    onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                    value={drawerIpnuts?.LookupType?.code}  
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -3367,8 +3380,8 @@ const [drawer, setdrawer] = useState(false)
                   <Input
                     isSimple={true}
                     placeholder=''
-                    onChange={(value) => drawrInptChng('LookupType', 'RegionType', value.target.value)}
-                   value={drawerIpnuts?.LookupType?.RegionType}                
+                    onChange={(value) => drawrInptChng('LookupType', 'lookuptype', value.target.value)}
+                   value={drawerIpnuts?.LookupType?.lookuptype}                
                  />
                 </div>
                 <p className="error">{errors?.LookupType?.RegionType}</p>
@@ -3376,14 +3389,19 @@ const [drawer, setdrawer] = useState(false)
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Display Name  :</p>
+                <p>DisplayName</p>
               </div>
               <div className="inpt-con">
-                <p className="star-white">*</p>
+                <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('LookupType', 'DisplayName', e.target.value)} value={drawerIpnuts?.LookupType?.DisplayName} />
+                  <Input
+                    isSimple={true}
+                    placeholder=''
+                    onChange={(value) => drawrInptChng('LookupType', 'DisplayName', value.target.value)}
+                   value={drawerIpnuts?.LookupType?.DisplayName}                
+                 />
                 </div>
-                <p className="error">{errors?.LookupType?.DisplayName}</p>
+                <p className="error">{errors?.LookupType?.RegionType}</p>
               </div>
             </div>
             <div className="drawer-inpts-container">

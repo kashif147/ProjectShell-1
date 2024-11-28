@@ -311,6 +311,7 @@ function HeaderDetails() {
           || location?.pathname == "/AddNewProfile"
           || location?.pathname == "/ClaimsById"
           || location?.pathname == "/AddClaims"
+          || location?.pathname == "/Doucmnets"
         ) ? "Header-border" : ""
           }`}
       >
@@ -408,6 +409,7 @@ function HeaderDetails() {
               || location?.pathname == "/AddNewProfile"
               || location?.pathname == "/ClaimsById"
               || location?.pathname == "/AddClaims"
+              || location?.pathname == "/Doucmnets"
             ) && (
                 <div className="d-flex align-items-baseline">
                   <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {

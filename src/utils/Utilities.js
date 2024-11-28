@@ -6,7 +6,7 @@ export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 
 
 export const insertDataFtn = async (url, data, successNotification, failureNotification,callback) => {
-  
+  debugger
   const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
     const response = await axios.post(url, data, {

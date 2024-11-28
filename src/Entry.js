@@ -30,6 +30,7 @@ import Reports from "./pages/repots/Reports";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
 import MyFooter from "./component/common/MyFooter";
 import CorspndncDetail from "./pages/Correspondences/CorspndncDetail";
+import Doucmnets from "./pages/Doucmnets";
 
 function Entry() {
   const location = useLocation();
@@ -42,9 +43,7 @@ function Entry() {
       {
       location?.pathname != "/" && 
       <HeaderDetails />
-    }
-      
-
+      }
       </div>
       <div className="main-route d-flex ">
         {(location?.pathname == "/Details"
@@ -55,6 +54,7 @@ function Entry() {
           || location?.pathname == "/AddNewProfile"
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/CorspndncDetail"
+          || location?.pathname == "/Doucmnets"
         ) && (
             <div>
               <SideNav />
@@ -68,6 +68,7 @@ function Entry() {
           || location?.pathname == "/AddNewProfile"
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/CorspndncDetail"
+          || location?.pathname == "/Doucmnets"
 
         ) && (
 
@@ -80,8 +81,7 @@ function Entry() {
             <Routes>
               <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
-              <Route element={<ProtectedRoute />}>
-              
+              <Route element={<ProtectedRoute />}>              
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
               <Route path="CasesDetails" element={< CasesDetails />} />
@@ -99,6 +99,7 @@ function Entry() {
               <Route path="LandingPage" element={<LandingPage />} /> 
               <Route path="Reports" element={<Reports />} />
               <Route path="CorspndncDetail" element={<CorspndncDetail />} />
+              <Route path="Doucmnets" element={<Doucmnets />} />
               </Route>
                           </Routes>
           </div>
@@ -109,11 +110,12 @@ function Entry() {
           || location?.pathname == "/AddNewProfile" 
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/ClaimsById"
+          || location?.pathname == "/Doucmnets"
         ) && (
             <ResizableComp />
           )}
       </div>
-      {((location?.pathname == "/Details" ||location?.pathname == "/CorspndncDetail" ) && (
+      {((location?.pathname == "/Details" ||location?.pathname == "/CorspndncDetail"||location?.pathname == "/Doucmnets" ) && (
       <div style={{width:'100%',height:'50px'}} className="footer">
       <MyFooter />
       </div>
