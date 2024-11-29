@@ -2,14 +2,17 @@
 import { configureStore } from '@reduxjs/toolkit';
 import authReducer from '../features/AuthSlice'; // Auth slice
 import regionReducer from '../features/RegionSlice'; // Region slice
-import lookupsTypeReducer from '../features/RegionSlice'; // This should be the correct path for lookups type
+// import lookupsTypeReducer from '../features/RegionSlice'; 
+import lookupsTypeReducer from '../features/LookupTypeSlice'
 import lookupsReducer from '../features/LookupsSlice'
 const store = configureStore({
     reducer: {
         auth: authReducer,          // Authentication state
         regions: regionReducer,      // Regions state
-        lookupsTypes: lookupsTypeReducer, // Ensure this is the correct lookups type reducer
+        // lookupsTypes: lookupsTypeReducer, 
         lookups: lookupsReducer, 
+        lookupsTypes: lookupsTypeReducer
+
     },
 });
 

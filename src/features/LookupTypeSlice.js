@@ -1,143 +1,50 @@
-// regionSlice.js
+// lookupsTypeSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { baseURL } from '../utils/Utilities';
 
-// Fetch all lookups type
-export const getAllLookupsType = createAsyncThunk(
-    'lookupsType/getAllLookupsType',
+// Fetch all lookup types
+export const getLookupTypes = createAsyncThunk(
+    'lookupsType/fetchLookupTypes',
     async (_, { rejectWithValue }) => {
         try {
-            const token = localStorage.getItem('token'); // Moved token initialization here
-            const response = await axios.get(`${baseURL}/regiontype`, {
+            const token = localStorage.getItem('token'); // Retrieve token
+            const response = await axios.get(`${baseURL}/lookuptype`, {
                 headers: {
-                    Authorization: `Bearer ${token}`,
+                    Authorization: `Bearer ${token}`, // Include token in headers
                     'Content-Type': 'application/json',
                 },
             });
-            console.log('API response:', response.data);
-            return response.data;
+            return response.data; // Assuming the API returns an array of lookup types
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookups');
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookup types');
         }
     }
 );
 
-// Add new lookups type
-export const addLookupsType = createAsyncThunk(
-    'lookupsType/addLookupsType',
-    async (newLookupsType, { rejectWithValue }) => {
-        try {
-            const token = localStorage.getItem('token'); // Moved token initialization here
-            const response = await axios.post(`${baseURL}/regiontype`, newLookupsType, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to add lookups type');
-        }
-    }
-);
-
-// Update existing lookups type
-export const updateLookupsType = createAsyncThunk(
-    'lookupsType/updateLookupsType',
-    async ({ id, updatedLookupsType }, { rejectWithValue }) => {
-        try {
-            const token = localStorage.getItem('token'); // Moved token initialization here
-            const response = await axios.put(`${baseURL}/regiontype/${id}`, updatedLookupsType, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return response.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to update lookups type');
-        }
-    }
-);
-
-// Delete lookups type
-export const deleteLookupsType = createAsyncThunk(
-    'lookupsType/deleteLookupsType',
-    async (id, { rejectWithValue }) => {
-        try {
-            const token = localStorage.getItem('token'); // Moved token initialization here
-            await axios.delete(`${baseURL}/regiontype/${id}`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                },
-            });
-            return id; // returning the id for filtering in the reducer
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to delete lookups type');
-        }
-    }
-);
-
+// Create the slice
 const lookupsTypeSlice = createSlice({
-    name: 'lookupsTypes',
+    name: 'lookupsType',
     initialState: {
-        lookupsType: [],
-        loading: false,
-        error: null,
+        lookupsTypes: [],
+        lookupsTypesloading: false,
+        lookupsTypeerror: null,
     },
-    reducers: {},
+    reducers: {}, // Synchronous actions can be defined here if needed
     extraReducers: (builder) => {
         builder
-            .addCase(getAllLookupsType.pending, (state) => {
-                state.loading = true;
-                state.error = null;
+            .addCase(getLookupTypes.pending, (state) => {
+                state.lookupsTypesloading = true;
+                state.lookupsTypeerror = null;
             })
-            .addCase(getAllLookupsType.fulfilled, (state, action) => {
+            .addCase(getLookupTypes.fulfilled, (state, action) => {
+                state.lookupsTypeerror = false;
+                state.lookupsTypesloading = false;
+                state.lookupsTypes = action.payload; // Set the fetched lookup types
+            })
+            .addCase(getLookupTypes.rejected, (state, action) => {
                 state.loading = false;
-                state.lookupsType = action.payload;
-                console.log('Lookups type updated:', action.payload);
-            })
-            .addCase(getAllLookupsType.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-            .addCase(addLookupsType.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(addLookupsType.fulfilled, (state, action) => {
-                state.loading = false;
-                state.lookupsType.push(action.payload);
-            })
-            .addCase(addLookupsType.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-            .addCase(updateLookupsType.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(updateLookupsType.fulfilled, (state, action) => {
-                state.loading = false;
-                const index = state.lookupsType.findIndex(item => item._id === action.payload._id); // Use _id here
-                if (index !== -1) {
-                    state.lookupsType[index] = action.payload;
-                }
-            })
-            .addCase(updateLookupsType.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
-            })
-            .addCase(deleteLookupsType.pending, (state) => {
-                state.loading = true;
-                state.error = null;
-            })
-            .addCase(deleteLookupsType.fulfilled, (state, action) => {
-                state.loading = false;
-                state.lookupsType = state.lookupsType.filter(item => item._id !== action.payload); // Use _id here
-            })
-            .addCase(deleteLookupsType.rejected, (state, action) => {
-                state.loading = false;
-                state.error = action.payload;
+                state.error = action.payload; // Set the error message
             });
     },
 });

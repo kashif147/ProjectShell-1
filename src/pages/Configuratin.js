@@ -29,6 +29,7 @@ import { deleteFtn, insertDataFtn, updateFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
+import { getLookupTypes } from "../features/LookupTypeSlice";
 
 function Configuratin() {
   const [genderModal, setGenderModal] = useState(false);
@@ -65,7 +66,8 @@ function Configuratin() {
   const dispatch = useDispatch()
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
-  console.log(lookups, "77")
+  const {  lookupsTypes,lookupsTypesloading } = useSelector((state) => state.lookupsTypes);
+  
   const [drawerOpen, setDrawerOpen] = useState({
     Counteries: false,
     Provinces: false,
@@ -100,15 +102,16 @@ const [drawer, setdrawer] = useState(false)
 
 
   useEffect(() => {
-
-    const updatedLookupsType = regions?.map(item => ({
+    const updatedLookupsType = lookupsTypes?.map(item => ({
       key: item._id,
-      label: item.RegionType
+      label: item.lookuptype
     }));
     
     setLookupsType(updatedLookupsType);
-  }, [regions]);
-
+  }, [lookupsTypes]);
+useEffect(()=>{
+  dispatch(getLookupTypes())
+},[])
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
     ReigonType: "",
@@ -188,11 +191,9 @@ const [drawer, setdrawer] = useState(false)
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     LookupType: { lookuptype: '', code: '',DisplayName:'', isActive: true, isDeleted: false },
-    Lookup: { RegionTypeID: '', RegionName: '', ParentRegion: null, RegionCode: '', DisplayName: '', isDeleted: false, },
+    Lookup: { lookuptypeId: '',DisplayName:'', lookupname: '',  code: '', Parentlookup: '',"userid": "67117bea87c907f6cdda0ad9" },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
-
-
   const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
@@ -238,7 +239,6 @@ const [drawer, setdrawer] = useState(false)
     }));
   };
 
-  console.log(drawerIpnuts, '88')
   const [errors, seterrors] = useState()
 
   const resetCounteries = (drawer, callback) => {
@@ -628,13 +628,13 @@ const [drawer, setdrawer] = useState(false)
   const columnLookupType = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Lookup Type ',
-      dataIndex: 'RegionType',
-      key: 'RegionType',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
     },
     {
       title: 'Display Name',
@@ -644,10 +644,10 @@ const [drawer, setdrawer] = useState(false)
 
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -673,8 +673,8 @@ const [drawer, setdrawer] = useState(false)
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/regiontype`, record?._id,);
-                  dispatch(fetchRegions())
+                  await deleteFtn(`${baseURL}/lookuptype`, record?._id,);
+                  dispatch(getLookupTypes())
                 },
               })
             }
@@ -686,35 +686,34 @@ const [drawer, setdrawer] = useState(false)
   ];
   const columnLookup = [
     {
-      title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
-      sorter: (a, b) => a.RegionCode.localeCompare(b.RegionCode), // Assumes RegionCode is a string
+      title: 'code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
       sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
     },
     {
       title: ' Lookup Type ',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookuptypeId',
+      key: 'lookuptypeId',
       filters: [
         { text: 'A01', value: 'A01' },
         { text: 'B02', value: 'B02' },
         { text: 'C03', value: 'C03' },
         // Add more filter options as needed
       ],
-      onFilter: (value, record) => record.RegionCode === value,
+      // onFilter: (value, record) => record.RegionCode === value,
     },
     {
       title: ' Display Name',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: '',
+      key: '',
     },
     {
-      title: ' Parent Lookup',
-      dataIndex: 'ParentRegion',
-      key: 'ParentRegion',
+      title: 'lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
-
     {
       title: 'Active',
       dataIndex: 'isActive',
@@ -3323,33 +3322,20 @@ const [drawer, setdrawer] = useState(false)
        isEdit={isUpdateRec?.LookupType}
        update={
         async () => {
-         await updateFtn('/regiontype', drawerIpnuts?.LookupType,() => resetCounteries('LookupType'))
-         dispatch(fetchRegions())
+         await updateFtn('/lookuptype', drawerIpnuts?.LookupType,() => resetCounteries('LookupType'))
+         dispatch(getLookupTypes())
          IsUpdateFtn('LookupType', false, )
         }}
        add={async () => {
-          // let LookupType = []
-          // if (drawerIpnuts?.LookupType?.RegionType == '' || drawerIpnuts?.LookupType?.RegionType == 'undefined') {
-          //   LookupType.push({ LookupType: 'Required' })
-          // }
-          // if (drawerIpnuts?.LookupType?.DisplayName == '' || drawerIpnuts?.LookupType?.DisplayName == 'undefined') {
-          //   LookupType.push({ DisplayName: 'Required' })
-          // }
-          // if (LookupType?.length > 0) {
-          //   return seterrors(LookupType)
-          // }
           await insertDataFtn(
             `${baseURL}/lookuptype`,
             {...drawerIpnuts?.LookupType,   "userid": "67117bea87c907f6cdda0ad9",
-              "_id": "67475c6f0b81dadb94223106",
-              "createdAt": "2024-11-27T17:52:47.339Z",
-              "updatedAt": "2024-11-27T17:52:47.339Z",
-              "__v": 0},
-            'Data inserted successfully',
+            },
+            'Data insert ed successfully',
             'Data did not insert',
-            () => resetCounteries('LookupType', () => dispatch(fetchRegions())) // Pass a function reference
+            () => resetCounteries('LookupType', () => dispatch(getLookupTypes())) // Pass a function reference
           );
-          dispatch(fetchRegions())
+          dispatch(getLookupTypes())
         }}
         total={regions?.length} >
         <div className="drawer-main-cntainer">
@@ -3359,7 +3345,7 @@ const [drawer, setdrawer] = useState(false)
                 <p>Code :</p>
               </div>
               <div className="inpt-con">
-                <p className="star-white">*</p>
+                <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
                     onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
@@ -3424,7 +3410,7 @@ const [drawer, setdrawer] = useState(false)
             <Table
               pagination={false}
               columns={columnLookupType}
-              dataSource={regions}
+              dataSource={lookupsTypes}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -3435,7 +3421,7 @@ const [drawer, setdrawer] = useState(false)
               }}
               bordered
               scroll={{ y: 240 }}
-              loading={loading}
+              loading={lookupsTypesloading}
             />;
           </div>
         </div>
@@ -3445,8 +3431,8 @@ const [drawer, setdrawer] = useState(false)
       }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/region`,
-            { 'region': drawerIpnuts?.Lookup },
+            `${baseURL}/lookup`,
+            drawerIpnuts?.Lookup ,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
@@ -3456,7 +3442,7 @@ const [drawer, setdrawer] = useState(false)
         isEdit={isUpdateRec?.Lookup}
         update={
           async () => {
-           await updateFtn('/region', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+           await updateFtn('/lookup', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
            dispatch(getAllLookups())
            IsUpdateFtn('Lookup', false, )
           }}
@@ -3470,8 +3456,10 @@ const [drawer, setdrawer] = useState(false)
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect isSimple={true} placeholder='Select Lookup type' options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'RegionTypeID', String(value))
+                  <MySelect  isSimple={true} placeholder='Select Lookup type'
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
                   }}
                     value={drawerIpnuts?.Lookup?.RegionTypeID} />
                   <h1 className="error-text"></h1>
@@ -3487,8 +3475,8 @@ const [drawer, setdrawer] = useState(false)
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
-                    className="inp" onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
-                    value={drawerIpnuts?.Lookup?.RegionCode}
+                    className="inp" onChange={(e) => drawrInptChng('Lookup', 'code', e.target.value)}
+                    value={drawerIpnuts?.Lookup?.code}
                   />
                 </div>
                 <p className="error"></p>
@@ -3496,14 +3484,14 @@ const [drawer, setdrawer] = useState(false)
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Lookup Name :</p>
+                <p>lookup Name</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
-                    onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
-                    value={drawerIpnuts?.Lookup?.RegionName}
+                    onChange={(e) => drawrInptChng('Lookup', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Lookup?.lookupname}
                   />
                 </div>
                 <p className="error"></p>
@@ -3529,6 +3517,7 @@ const [drawer, setdrawer] = useState(false)
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
+                  disabled={true}
                   />
                 </div>
                 <p className="error"></p>
