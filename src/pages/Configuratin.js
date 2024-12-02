@@ -20,7 +20,15 @@ import { getAllLookups } from '../features/LookupsSlice'
 import { useDispatch, useSelector } from 'react-redux';
 import MyConfirm from "../component/common/MyConfirm";
 // import {county, Province_flat,Provinec_Outlined,District_Outlined, Marital_Status_Outlined} from '../utils/Icons'
-import { ProvinceOutlined, CountyOutlined, MaritalStatusOutlined, DistrictOutlined } from "../utils/Icons";
+import { ProvinceOutlined, CountyOutlined, MaritalStatusOutlined,
+   StationOutlined,Gender,PostCodeOutlined,DistrictsOutlined,
+   DivisionsOutlined,
+   BoardOutlined,
+   CouncilOutlined,
+   CitiesOutlined,
+   LanguageOutlined
+
+  } from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
@@ -195,6 +203,7 @@ useEffect(()=>{
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
+  
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: {
@@ -720,7 +729,7 @@ useEffect(()=>{
       key: 'isActive',
       render: (index, record) => (
         <Checkbox checked={record?.isActive}>
-        </Checkbox>
+        </Checkbox> 
       )
     },
     {
@@ -742,7 +751,7 @@ useEffect(()=>{
               title: 'Confirm Deletion',
               message: 'Do You Want To Delete This Item?',
               onConfirm: async () => {
-                await deleteFtn(`${baseURL}/region`, record?._id,);
+                await deleteFtn(`${baseURL}/Lookup`, record?._id,);
                 dispatch(getAllLookups())
                 resetCounteries('Lookup')
               },
@@ -1426,7 +1435,7 @@ useEffect(()=>{
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={partnershipModalFtn} className="center-content">
             <div className="icon-container">
-              <PiHandshakeDuotone className="icons" />
+              <Gender className="custom-icon" />
             </div>
             <p className="lookups-title">Gender</p>
           </div>
@@ -1457,32 +1466,32 @@ useEffect(()=>{
         </Col>
         <Col className="hover-col" span={3}>
           <div onClick={() => openCloseDrawerFtn('Cities')}>
-            <PiHandshakeDuotone className="icons" />
+            <CitiesOutlined className="custom-icon icons" />
             <p className="lookups-title">Cities</p>
           </div>
         </Col>
 
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('PostCode')}>
-            <PiHandshakeDuotone className="icons" />
+            <PostCodeOutlined className="icons custom-icon" />
             <p className="lookups-title">Post Codes</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('Divisions')}>
-            <PiHandshakeDuotone className="icons" />
+            <DivisionsOutlined className="icons custom-icon" />
             <p className="lookups-title">Divisions</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('Districts')}>
-            <DistrictOutlined className="icons custom-icon" />
+            <DistrictsOutlined className="icons custom-icon" />
             <p className="lookups-title">Districts</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} >
           <div onClick={() => openCloseDrawerFtn('Station')}>
-            <PiHandshakeDuotone className="icons" />
+            <StationOutlined className="icons custom-icon" />
             <p className="lookups-title">Station</p>
           </div>
         </Col>
@@ -1495,19 +1504,19 @@ useEffect(()=>{
 
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
+            <CouncilOutlined className="icons custom-icon" />
             <p className="lookups-title">Councils</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} >
           <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
+            <BoardOutlined className="icons custom-icon" />
             <p className="lookups-title">Boards</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
+            <LanguageOutlined className="icons custom-icon" />
             <p className="lookups-title">Spoken Languages</p>
           </div>
         </Col>
@@ -3461,7 +3470,7 @@ useEffect(()=>{
                     drawrInptChng('Lookup', 'Parentlookup', String(value))
                     drawrInptChng('Lookup', 'lookuptypeId', String(value))
                   }}
-                    value={drawerIpnuts?.Lookup?.RegionTypeID} />
+                    value={drawerIpnuts?.Lookup?.lookuptypeId} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
