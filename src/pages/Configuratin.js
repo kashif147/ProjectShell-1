@@ -26,7 +26,8 @@ import { ProvinceOutlined, CountyOutlined, MaritalStatusOutlined,
    BoardOutlined,
    CouncilOutlined,
    CitiesOutlined,
-   LanguageOutlined
+   LanguageOutlined,
+   Title
 
   } from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
@@ -187,13 +188,7 @@ useEffect(()=>{
       [name3]: value3,
     }));
   };
-//   {
-//     "code": "345",
-//     "lookuptype": "Post2",
-//     "isdeleted": false,
-//     "isactive": true,
- 
-// }
+
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
@@ -1427,9 +1422,9 @@ useEffect(()=>{
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={genderModalOpen} className="center-content">
             <div className="icon-container">
-              <SiActigraph className="icons" />
+              <Title className="icons custom-icon" />
             </div>
-            <p className="lookups-title">Titles Titles</p>
+            <p className="lookups-title">Titles</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} style={styles.centeredCol}>

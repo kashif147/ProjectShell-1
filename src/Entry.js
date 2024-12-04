@@ -31,6 +31,7 @@ import ProtectedRoute from "./Navigation/ProtectedRoute";
 import MyFooter from "./component/common/MyFooter";
 import CorspndncDetail from "./pages/Correspondences/CorspndncDetail";
 import Doucmnets from "./pages/Doucmnets";
+// import RousterDetails from "./pages/rouster/RousterDetails";
 
 function Entry() {
   const location = useLocation();
@@ -55,6 +56,7 @@ function Entry() {
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/CorspndncDetail"
           || location?.pathname == "/Doucmnets"
+          || location?.pathname == "/Roster"
         ) && (
             <div>
               <SideNav />
@@ -69,6 +71,7 @@ function Entry() {
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/CorspndncDetail"
           || location?.pathname == "/Doucmnets"
+          || location?.pathname == "/Roster"
 
         ) && (
 
@@ -100,6 +103,7 @@ function Entry() {
               <Route path="Reports" element={<Reports />} />
               <Route path="CorspndncDetail" element={<CorspndncDetail />} />
               <Route path="Doucmnets" element={<Doucmnets />} />
+              {/* <Route path="Roster" element={<RousterDetails />} /> */}
               </Route>
                           </Routes>
           </div>

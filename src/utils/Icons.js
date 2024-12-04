@@ -13,6 +13,7 @@ import {ReactComponent as BoardOutlined} from '../assets/images/icon/Board_outli
 import {ReactComponent as CouncilOutlined} from '../assets/images/icon/Council.svg'
 import {ReactComponent as CitiesOutlined} from '../assets/images/icon/Cities.svg'
 import {ReactComponent as LanguageOutlined } from '../assets/images/icon/Language_outlined.svg'
+import {ReactComponent as Title } from '../assets/images/icon/Title_Outlined.svg'
 
 export { 
     ProvinceOutlined, 
@@ -26,5 +27,6 @@ export {
     BoardOutlined,
     CouncilOutlined,
     CitiesOutlined,
-    LanguageOutlined
+    LanguageOutlined,
+    Title
 };

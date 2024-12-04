@@ -144,6 +144,9 @@ const nav = location?.pathname
       case 'Documents':
         navigate("/Doucmnets");
         break;
+      case 'Roster':
+        navigate("/Roster");
+        break;
       default:
         console.log("Menu item clicked:", key);
     }
