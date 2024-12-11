@@ -1,3 +1,14 @@
 .body-container{
 
 }
+.day-con{
+    width: 40px;
+    height: 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background-color: var(--primary-color);
+    color: white;
+    margin-right: 4px;
+    font-size: 22;
+}

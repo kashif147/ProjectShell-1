@@ -8,14 +8,17 @@ import { FaFile } from "react-icons/fa";
 import MyDatePicker from "./MyDatePicker";
 import TextArea from "antd/es/input/TextArea";
 import { FaUserAlt } from "react-icons/fa";
+import { BiRefresh } from "react-icons/bi";
+import '../../styles/MyDrawer.css'
 
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
   const [contactDrawer, setcontactDrawer] = useState(false)
   const [isPayment, setisPayment] = useState(false)
   const [isAproved, setisAproved] = useState(false)
+  const [isRecursion, setisRecursion] = useState(false)
   const [selectionType, setSelectionType] = useState('checkbox');
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
@@ -153,6 +156,114 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       ),
     },
   ];
+
+  const optionForSelect = [
+    { key: "1", label: "1" },
+    { key: "2", label: "2" },
+    { key: "3", label: "3" },
+    { key: "4", label: "4" },
+    { key: "5", label: "5" },
+    { key: "6", label: "6" },
+    { key: "7", label: "7" },
+    { key: "8", label: "8" },
+    { key: "9", label: "9" },
+    { key: "10", label: "10" },
+    { key: "11", label: "11" },
+    { key: "12", label: "12" },
+    { key: "13", label: "13" },
+    { key: "14", label: "14" },
+    { key: "15", label: "15" },
+    { key: "16", label: "16" },
+    { key: "17", label: "17" },
+    { key: "18", label: "18" },
+    { key: "19", label: "19" },
+    { key: "20", label: "20" },
+    { key: "21", label: "21" },
+    { key: "22", label: "22" },
+    { key: "23", label: "23" },
+    { key: "24", label: "24" },
+    { key: "25", label: "25" },
+    { key: "26", label: "26" },
+    { key: "27", label: "27" },
+    { key: "28", label: "28" },
+    { key: "29", label: "29" },
+    { key: "30", label: "30" },
+    { key: "31", label: "31" },
+    { key: "32", label: "32" },
+    { key: "33", label: "33" },
+    { key: "34", label: "34" },
+    { key: "35", label: "35" },
+    { key: "36", label: "36" },
+    { key: "37", label: "37" },
+    { key: "38", label: "38" },
+    { key: "39", label: "39" },
+    { key: "40", label: "40" },
+    { key: "41", label: "41" },
+    { key: "42", label: "42" },
+    { key: "43", label: "43" },
+    { key: "44", label: "44" },
+    { key: "45", label: "45" },
+    { key: "46", label: "46" },
+    { key: "47", label: "47" },
+    { key: "48", label: "48" },
+    { key: "49", label: "49" },
+    { key: "50", label: "50" },
+    { key: "51", label: "51" },
+    { key: "52", label: "52" },
+    { key: "53", label: "53" },
+    { key: "54", label: "54" },
+    { key: "55", label: "55" },
+    { key: "56", label: "56" },
+    { key: "57", label: "57" },
+    { key: "58", label: "58" },
+    { key: "59", label: "59" },
+    { key: "60", label: "60" },
+    { key: "61", label: "61" },
+    { key: "62", label: "62" },
+    { key: "63", label: "63" },
+    { key: "64", label: "64" },
+    { key: "65", label: "65" },
+    { key: "66", label: "66" },
+    { key: "67", label: "67" },
+    { key: "68", label: "68" },
+    { key: "69", label: "69" },
+    { key: "70", label: "70" },
+    { key: "71", label: "71" },
+    { key: "72", label: "72" },
+    { key: "73", label: "73" },
+    { key: "74", label: "74" },
+    { key: "75", label: "75" },
+    { key: "76", label: "76" },
+    { key: "77", label: "77" },
+    { key: "78", label: "78" },
+    { key: "79", label: "79" },
+    { key: "80", label: "80" },
+    { key: "81", label: "81" },
+    { key: "82", label: "82" },
+    { key: "83", label: "83" },
+    { key: "84", label: "84" },
+    { key: "85", label: "85" },
+    { key: "86", label: "86" },
+    { key: "87", label: "87" },
+    { key: "88", label: "88" },
+    { key: "89", label: "89" },
+    { key: "90", label: "90" },
+    { key: "91", label: "91" },
+    { key: "92", label: "92" },
+    { key: "93", label: "93" },
+    { key: "94", label: "94" },
+    { key: "95", label: "95" },
+    { key: "96", label: "96" },
+    { key: "97", label: "97" },
+    { key: "98", label: "98" },
+    { key: "99", label: "99" },
+  ];
+  const optionForyearorday = [
+    { key: "Day", label: "Day" },
+    { key: "Week", label: "Week" },
+    { key: "Month", label: "Month" },
+    { key: "Year", label: "Year" }
+  ]
   return (
     <Drawer
       width={width}
@@ -195,11 +306,23 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
           }
           {
             isAprov && (
-              <div className="mx-auto" style={{ marginRight: '',color: '#215E97', }}>
+              <div className="mx-auto" style={{ marginRight: '', color: '#215E97', }}>
                 <Button onClick={() => setisAproved(!isAproved)} className="butn secondary me-2" style={{ color: '#215E97', }}
 
                 >
                   Approvals
+
+                </Button>
+              </div>
+            )
+          }
+          {
+            isrecursion && (
+              <div className="mx-auto" style={{ marginRight: '', color: '#215E97', }}>
+                <Button onClick={() => setisRecursion(!isRecursion)} className="butn secondary me-2" style={{ color: '#215E97', }}
+                >
+                  Recursion
+                  <BiRefresh style={{ fontSize: "24px" }} />
                 </Button>
               </div>
             )
@@ -410,6 +533,82 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
         </div>
 
       </Drawer>
+      <Drawer open={isRecursion}
+        onClose={() => setisRecursion(!isRecursion)}
+        width="526px"
+        title="Repeat"
+        extra={
+          <Space>
+            <Button className="butn secoundry-btn" onClick={() => setisRecursion(!isRecursion)}>
+              Close
+            </Button>
+            <Button className="butn primary-btn" onClick={() => setisRecursion(!isRecursion)}>
+              Add
+            </Button>
+
+          </Space>
+        }
+
+      >
+        <div className='transfer-main-cont'>
+          <div className="details-drawer mb-4">
+            <p>{InfData?.gardaRegNo}45217A</p>
+            <p>{InfData?.fullname}Jack Smith</p>
+            <p>Garda</p>
+          </div>
+          <div className="row">
+            <div className="col-md-2">
+              Start
+            </div>
+            <div className="col-md-10">
+              <MyDatePicker />
+            </div>
+          </div>
+          <div className="row mt-4">
+            <div className="col-md-2">
+              <BiRefresh style={{ fontSize: '24px' }} />
+            </div>
+            <div className="col-md-10">
+              <div className="d-flex align-items-baseline">
+                <div className="w-25 me-2" >
+                  Repeat Every
+                </div>
+                <div className="w-10 me-2" >
+                  <MySelect options={optionForSelect} />
+                </div>
+                <div className="w-25 me-2" >
+                  <MySelect options={optionForyearorday} />
+                </div>
+
+              </div>
+              <div className="d-flex mt-4">
+                <div className="day-con ">
+                  M
+                </div>
+                <div className="day-con">
+                  T
+                </div>
+                <div className="day-con">
+                  W
+                </div>
+                <div className="day-con">
+                  T
+                </div>
+                <div className="day-con">
+                  F
+                </div>
+                <div className="day-con">
+                  S
+                </div>
+                <div className="day-con">
+                  S
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </Drawer>
       <Drawer open={isPayment}
         onClose={() => setisPayment(!isPayment)}
         width="526px"
@@ -569,134 +768,134 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
           </div>
           <div className='w-100'>
             <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Meeting Type :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con" >
+              <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Meeting Type :</p>
+                  </div>
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con" >
                       <MySelect placeholder="Select Meeting Type" isSimple={true} />
-                      </div>
-                      <p className="error"></p>
                     </div>
+                    <p className="error"></p>
                   </div>
+                </div>
               </div>
-                <div className="col-md-6">
+              <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p></p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con" >
-                     
-                      </div>
-                      <p className="error"></p>
-                    </div>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p></p>
                   </div>
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con" >
+
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
               </div>
 
             </div>
             <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Meeting Date :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con" >
+              <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Meeting Date :</p>
+                  </div>
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con" >
                       <MySelect placeholder="Select Meeting Type" isSimple={true} />
-                      </div>
-                      <p className="error"></p>
                     </div>
+                    <p className="error"></p>
                   </div>
+                </div>
               </div>
-                <div className="col-md-6">
+              <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Meeting Date APL :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con" >
-                     <MyDatePicker />
-                      </div>
-                      <p className="error"></p>
-                    </div>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Meeting Date APL :</p>
                   </div>
-                
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con" >
+                      <MyDatePicker />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+
               </div>
 
             </div>
-           
+
             <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Meeting Outcome :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con" >
-                      <Input />
-                      </div>
-                      <p className="error"></p>
-                    </div>
-                  </div>
-              </div>
-                <div className="col-md-6">
+              <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Meeting APL Outcome :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con" >
-                     <MyDatePicker />
-                      </div>
-                      <p className="error"></p>
-                    </div>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Meeting Outcome :</p>
                   </div>
-                
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con" >
+                      <Input />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Meeting APL Outcome :</p>
+                  </div>
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con" >
+                      <MyDatePicker />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+
               </div>
 
             </div>
             <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Meeting Status :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con" >
-                      <Input />
-                      </div>
-                      <p className="error"></p>
-                    </div>
-                  </div>
-              </div>
-                <div className="col-md-6">
+              <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                    <div className="drawer-lbl-container" style={{ width: "40%",  }}>
-                      <p>Authorised Amount :</p>
-                    </div>
-                    <div className="inpt-con" style={{width:'60%',}} >
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con" >
-                     <Input  placeholder="0.00" disabled={true}/>
-                      </div>
-                      <p className="error"></p>
-                    </div>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Meeting Status :</p>
                   </div>
-                
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con" >
+                      <Input />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+              </div>
+              <div className="col-md-6">
+                <div className="drawer-inpts-container " style={{}}>
+                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                    <p>Authorised Amount :</p>
+                  </div>
+                  <div className="inpt-con" style={{ width: '60%', }} >
+                    <p className="star-white">*</p>
+                    <div className="inpt-sub-con" >
+                      <Input placeholder="0.00" disabled={true} />
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+
               </div>
 
             </div>
-           
+
 
 
           </div>

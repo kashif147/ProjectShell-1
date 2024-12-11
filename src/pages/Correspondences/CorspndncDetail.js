@@ -25,6 +25,7 @@ function CorspndncDetail() {
     const { Search } = Input;
     const [key, setKey] = useState();
     const [path, setPath] = useState('/projectShell');
+    
 
     const handleFolderClick = (newPath) => {
       setPath(newPath);

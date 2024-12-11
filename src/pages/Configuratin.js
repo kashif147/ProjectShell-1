@@ -39,9 +39,13 @@ import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
+import { set } from "react-hook-form";
 
 function Configuratin() {
-  const [genderModal, setGenderModal] = useState(false);
+const [data, setdata] = useState({
+  gender:[],
+  SpokenLanguages:[],
+})
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
@@ -89,13 +93,34 @@ function Configuratin() {
     LookupType: false,
     Lookup: false,
     Solicitors: false,
-    Committees:false
+    Committees:false,
+    SpokenLanguages:false,
+    Gender:false
 
   })
   const [isUpdateRec, setisUpdateRec] = useState({
     Lookup: false,
     LookupType:false,
   })
+  useEffect(()=>{
+if(lookups && Array.isArray(lookups)){
+  const filteredGender = lookups?.filter((item)=>item?.Parentlookup==='674a1977cc0986f64ca36fc6')
+  setdata((prevState) => ({
+    ...prevState,
+    gender: filteredGender,
+  }));
+}
+  },[lookups]) 
+  useEffect(()=>{
+if(lookups && Array.isArray(lookups)){
+  const filteredGender = lookups?.filter((item)=>item?.Parentlookup==='674a195dcc0986f64ca36fc2')
+  setdata((prevState) => ({
+    ...prevState,
+    SpokenLanguages: filteredGender,
+  }));
+}
+  },[lookups]) 
+
 const [drawer, setdrawer] = useState(false)
   useEffect(() => {
     if (drawerOpen?.LookupType === true) {
@@ -104,11 +129,8 @@ const [drawer, setdrawer] = useState(false)
   }, [drawerOpen?.LookupType, dispatch]);
   const [lookupsType, setLookupsType] = useState([]);
   useEffect(() => {
-    if (drawerOpen?.Lookup === true) {
-      dispatch(getAllLookups());
-    }
-  }, [drawerOpen?.Lookup, dispatch]);
-
+    dispatch(getAllLookups());
+  }, []);
 
   useEffect(() => {
     const updatedLookupsType = lookupsTypes?.map(item => ({
@@ -195,10 +217,12 @@ useEffect(()=>{
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     LookupType: { lookuptype: '', code: '',DisplayName:'', isActive: true, isDeleted: false },
     Lookup: { lookuptypeId: '',DisplayName:'', lookupname: '',  code: '', Parentlookup: '',"userid": "67117bea87c907f6cdda0ad9" },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a1977cc0986f64ca36fc6',"userid": "67117bea87c907f6cdda0ad9" },
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9" },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
-  
+
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: {
@@ -749,6 +773,74 @@ useEffect(()=>{
                 await deleteFtn(`${baseURL}/Lookup`, record?._id,);
                 dispatch(getAllLookups())
                 resetCounteries('Lookup')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnGender = [
+    {
+      title: 'code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
+      sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'lookuptypeId',
+      key: 'lookuptypeId',
+      filters: [
+        { text: 'A01', value: 'A01' },
+        { text: 'B02', value: 'B02' },
+        { text: 'C03', value: 'C03' },
+        // Add more filter options as needed
+      ],
+      // onFilter: (value, record) => record.RegionCode === value,
+    },
+    {
+      title: ' Display Name',
+      dataIndex: '',
+      key: '',
+    },
+    {
+      title: 'lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (index, record) => (
+        <Checkbox checked={record?.isActive}>
+        </Checkbox> 
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {IsUpdateFtn('Gender', !IsUpdateFtn?.Gender, record)
+             addIdKeyToLookup(record?._id,"Gender")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id,);
+                dispatch(getAllLookups())
+                resetCounteries('Gender')
               },
             })
           } />
@@ -1369,7 +1461,6 @@ useEffect(()=>{
     }),
   };
 
-  const genderModalOpen = () => setGenderModal(!genderModal);
   const membershipModalFtn = () => setMembershipModal(!membershipModal);
   const partnershipModalFtn = () => setPartnershipModal(!partnershipModal);
   const dummyModalFtn = () => setDummyModal(!dummyModal);
@@ -1420,23 +1511,23 @@ useEffect(()=>{
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
         <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={genderModalOpen} className="center-content">
+          <div  className="center-content">
             <div className="icon-container">
               <Title className="icons custom-icon" />
             </div>
             <p className="lookups-title">Titles</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={partnershipModalFtn} className="center-content">
+        <Col className="hover-col" span={3} onClick={()=>{openCloseDrawerFtn('Gender')}}>
+          <div  className="center-content">
             <div className="icon-container">
               <Gender className="custom-icon" />
             </div>
             <p className="lookups-title">Gender</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={subscriptionsModalFtn} className="center-content">
+        <Col className="hover-col" span={3} >
+          <div className="center-content">
             <div className="icon-container">
               {/* <img src={Marital_Status_Outlined} className="icons custom-icon" /> */}
               <MaritalStatusOutlined className="icons custom-icon" />
@@ -1509,8 +1600,8 @@ useEffect(()=>{
             <p className="lookups-title">Boards</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('SpokenLanguages')}>
+          <div>
             <LanguageOutlined className="icons custom-icon" />
             <p className="lookups-title">Spoken Languages</p>
           </div>
@@ -1823,96 +1914,7 @@ useEffect(()=>{
         </Col>
       </Row>
 
-      <MyDrawer
-        open={genderModal}
-        onClose={genderModalOpen}
-        add={addGenderFtn}
-        title="Gender"
-      >
-        <div className="input-group">
-          <p className="inpt-lbl">Short Name</p>
-          <Input
-            placeholder="Please enter short name"
-            onChange={(e) => handleInputChange("ShortName", e.target.value)}
-          />
-        </div>
-        <div className="input-group">
-          <p className="inpt-lbl">Display Name</p>
-          <Input
-            placeholder="Please enter display name"
-            onChange={(e) => handleInputChange("DisplayName", e.target.value)}
-          />
-        </div>
-        <div className="input-group">
-          <p className="inpt-lbl">Alpha</p>
-          <Input
-            placeholder="Please enter alpha"
-            onChange={(e) => handleInputChange("Alpha", e.target.value)}
-          />
-        </div>
-        <div className="input-group">
-          <p className="inpt-lbl">Beta</p>
-          <Input
-            placeholder="Please enter Beta"
-            onChange={(e) => handleInputChange("Beta", e.target.value)}
-          />
-        </div>
-        <Input
-          placeholder="Search..."
-          style={{ marginBottom: "5px" }}
-          suffix={<SearchOutlined />}
-        />
-
-        <Table
-          columns={columnCountry}
-          pagination={false}
-
-          className="drawer-tbl"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-
-          }
-          footer={() => (
-            <div className="d-flex justify-content-between">
-              <div
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  width: "100%",
-                }}
-              >
-                <span
-                  style={{
-                    marginRight: "4px",
-                    fontSize: "12px",
-                    fontWeight: "500",
-                  }}
-                >
-                  1-{gender.length}
-                </span>
-                <span
-                  style={{
-                    marginRight: "4px",
-                    fontSize: "12px",
-                    fontWeight: "500",
-                  }}
-                >
-                  {" "}
-                  of {`${gender.length}`}
-                </span>
-                <LuRefreshCw />
-              </div>
-              <Pagination
-                defaultCurrent={1}
-                total={gender.length}
-                pageSize={10}
-              />
-            </div>
-          )}
-
-        />
-      </MyDrawer>
+  
 
       {/* Membership Drawer */}
       <MyDrawer
@@ -3549,6 +3551,378 @@ useEffect(()=>{
               pagination={false}
               columns={columnLookup}
               dataSource={lookups}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Gender' open={drawerOpen?.Gender} isPagination={true} onClose={() => {openCloseDrawerFtn('Gender')
+        IsUpdateFtn('Gender', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.Gender ,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Gender', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Gender}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.Gender,() => resetCounteries('Gender', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('Gender', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Gender'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Gender', 'code', e.target.value)}
+                    value={drawerIpnuts?.Gender?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Gender Name</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Gender', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Gender?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.Gender?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.Gender?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Marital Status' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {openCloseDrawerFtn('MaritalStatus')
+        IsUpdateFtn('MaritalStatus', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.MaritalStatus ,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.MaritalStatus}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.MaritalStatus,() => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('MaritalStatus', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Marital Status'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
+                    value={drawerIpnuts?.lookupname?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Marital Status</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Marital Status', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.MaritalStatus?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.MaritalStatus?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('MaritalStatus', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.Gender?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Spoken Languages' open={drawerOpen?.SpokenLanguages} isPagination={true} onClose={() => {openCloseDrawerFtn('SpokenLanguages')
+        IsUpdateFtn('Spoken Languages', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.SpokenLanguages,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('SpokenLanguages', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.SpokenLanguages}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.SpokenLanguages,() => resetCounteries('SpokenLanguages', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('SpokenLanguages', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Spoken Languages'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('SpokenLanguages', 'code', e.target.value)}
+                    value={drawerIpnuts?.SpokenLanguages?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Spoken Languages</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('SpokenLanguages', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.SpokenLanguages?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('SpokenLanguages', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.SpokenLanguages?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('SpokenLanguages', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.SpokenLanguages?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnLookup}
+              dataSource={data?.SpokenLanguages}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
