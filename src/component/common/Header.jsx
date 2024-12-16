@@ -11,6 +11,7 @@ import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 import { Button,Input } from "antd";
 import { PiPhoneCallBold } from "react-icons/pi";
+import { BiLogOutCircle } from "react-icons/bi";
 
 const {Search} = Input;
 function Header() {
@@ -175,11 +176,6 @@ function Header() {
             </ul>
           </div>
         </nav>
-        <div>
-          <Button className="butn primary-btn" onClick={()=>{localStorage.removeItem('token')
-            navigate('/');
-          }}>Logout</Button>
-        </div>
         <div className="input-container d-flex align-items-center">
           <Search  placeholder="Reg No" 
           onChange={(e) => setregNo(e.target.value)}
@@ -213,6 +209,9 @@ function Header() {
           <IoMdSettings className="top-icon" />
           <FaUserCircle className="top-icon" />
 
+          <BiLogOutCircle className="top-icon"  onClick={()=>{localStorage.removeItem('token')
+            navigate('/');
+          }} />
         </div>
       </div>
     </div>

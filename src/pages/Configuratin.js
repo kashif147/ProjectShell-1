@@ -95,8 +95,12 @@ const [data, setdata] = useState({
     Solicitors: false,
     Committees:false,
     SpokenLanguages:false,
-    Gender:false
-
+    Gender:false,
+    Title:false,
+    ProjectTypes:false,
+    Trainings:false,
+    Ranks:false,
+    Duties:false,
   })
   const [isUpdateRec, setisUpdateRec] = useState({
     Lookup: false,
@@ -216,13 +220,18 @@ useEffect(()=>{
     Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
     LookupType: { lookuptype: '', code: '',DisplayName:'', isActive: true, isDeleted: false },
-    Lookup: { lookuptypeId: '',DisplayName:'', lookupname: '',  code: '', Parentlookup: '',"userid": "67117bea87c907f6cdda0ad9" },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a1977cc0986f64ca36fc6',"userid": "67117bea87c907f6cdda0ad9" },
-    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9" },
+    Lookup: { lookuptypeId: '',DisplayName:'', lookupname: '',  code: '', Parentlookup: '',"userid": "67117bea87c907f6cdda0ad9",isActive:true },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a1977cc0986f64ca36fc6',"userid": "67117bea87c907f6cdda0ad9",isActive:true },
+    Title: { lookuptypeId: '675fc362e9640143bfc38d28',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a1977cc0986f64ca36fc6',"userid": "67117bea87c907f6cdda0ad9",isActive:true },
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
+    MaritalStatus: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
+    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
+    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
+    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
+    Duties: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
-
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: {
@@ -1510,7 +1519,7 @@ useEffect(()=>{
     </div>
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} onClick={()=>{openCloseDrawerFtn('Title')}}>
           <div  className="center-content">
             <div className="icon-container">
               <Title className="icons custom-icon" />
@@ -1526,7 +1535,7 @@ useEffect(()=>{
             <p className="lookups-title">Gender</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} >
+        <Col className="hover-col" span={3} onClick={()=>{openCloseDrawerFtn('MaritalStatus')}}>
           <div className="center-content">
             <div className="icon-container">
               {/* <img src={Marital_Status_Outlined} className="icons custom-icon" /> */}
@@ -1606,20 +1615,20 @@ useEffect(()=>{
             <p className="lookups-title">Spoken Languages</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('ProjectTypes')}>
+          <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Project Types</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('Trainings')}>
+          <div >
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Trainings</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
+        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('Ranks')}>
+          <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Ranks</p>
           </div>
@@ -1630,7 +1639,7 @@ useEffect(()=>{
             <p className="lookups-title">Duties</p>
           </div>
         </Col> */}
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Duties')} >
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Duties</p>
@@ -3675,6 +3684,898 @@ useEffect(()=>{
               pagination={false}
               columns={columnGender}
               dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='' open={drawerOpen?.Gender} isPagination={true} onClose={() => {openCloseDrawerFtn('Gender')
+        IsUpdateFtn('Gender', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.Gender ,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Gender', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Gender}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.Gender,() => resetCounteries('Gender', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('Gender', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Gender'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Gender', 'code', e.target.value)}
+                    value={drawerIpnuts?.Gender?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Gender Name</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Gender', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Gender?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.Gender?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.Gender?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Title' open={drawerOpen?.Title} isPagination={true} onClose={() => {openCloseDrawerFtn('Title')
+        IsUpdateFtn('Title', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.Title,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Title', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Title}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.Title,() => resetCounteries('Title', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('Title', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Title'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Title', 'code', e.target.value)}
+                    value={drawerIpnuts?.Title?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Title Name</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Title', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Title?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Title', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.Title?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Title', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.Title?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              // dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='MaritalStatus' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {openCloseDrawerFtn('MaritalStatus')
+        IsUpdateFtn('MaritalStatus', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.Title,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.MaritalStatus}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.MaritalStatus,() => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('MaritalStatus', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='MaritalStatus'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
+                    value={drawerIpnuts?.MaritalStatus?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Marital Status</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('MaritalStatus', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.MaritalStatus?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.MaritalStatus?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Title', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              // dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Project Types' open={drawerOpen?.ProjectTypes} isPagination={true} onClose={() => {openCloseDrawerFtn('ProjectTypes')
+        IsUpdateFtn('ProjectTypes', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.ProjectTypes,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('ProjectTypes', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.ProjectTypes}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.ProjectTypes,() => resetCounteries('ProjectTypes', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('ProjectTypes', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='ProjectTypes'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('ProjectTypes', 'code', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Project Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.ProjectTypes?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              // dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Trainings' open={drawerOpen?.Trainings} isPagination={true} onClose={() => {openCloseDrawerFtn('Trainings')
+        IsUpdateFtn('Trainings', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.ProjectTypes,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Trainings', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Trainings}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.Trainings,() => resetCounteries('Trainings', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('Trainings', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Trainings'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('ProjectTypes', 'code', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Trainings</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.ProjectTypes?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              // dataSource={data?.gender}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer
+  title="Duties"
+  open={drawerOpen?.Duties}
+  isPagination={true}
+  onClose={() => {
+    openCloseDrawerFtn("Duties");
+    IsUpdateFtn("Duties", false);
+  }}
+  add={async () => {
+    await insertDataFtn(
+      `${baseURL}/lookup`,
+      drawerIpnuts?.Duties,
+      "Data inserted successfully",
+      "Data did not insert",
+      () =>
+        resetCounteries("Duties", () => dispatch(getAllLookups()))
+    );
+    dispatch(getAllLookups());
+  }}
+  isEdit={isUpdateRec?.Duties}
+  update={async () => {
+    await updateFtn(
+      "/lookup",
+      drawerIpnuts?.Duties,
+      () => resetCounteries("Duties", () => dispatch(getAllLookups()))
+    );
+    dispatch(getAllLookups());
+    IsUpdateFtn("Duties", false);
+  }}
+>
+  <div className="drawer-main-cntainer">
+    <div className="mb-4 pb-4">
+      <div className="drawer-inpts-container">
+        <div className="drawer-lbl-container">
+          <p>Lookup Type :</p>
+        </div>
+        <div className="inpt-con">
+          <p className="star">*</p>
+          <div className="inpt-sub-con">
+            <MySelect
+              isSimple={true}
+              placeholder="Duties"
+              disabled={true}
+              options={lookupsType}
+              onChange={(value) => {
+                drawrInptChng("Lookup", "Parentlookup", String(value));
+                drawrInptChng("Lookup", "lookuptypeId", String(value));
+              }}
+            />
+            <h1 className="error-text"></h1>
+          </div>
+          <p className="error"></p>
+        </div>
+      </div>
+      <div className="drawer-inpts-container">
+        <div className="drawer-lbl-container">
+          <p>Code:</p>
+        </div>
+        <div className="inpt-con">
+          <p className="star">*</p>
+          <div className="inpt-sub-con">
+            <Input
+              className="inp"
+              onChange={(e) =>
+                drawrInptChng("Duties", "code", e.target.value)
+              }
+              value={drawerIpnuts?.Duties?.code}
+            />
+          </div>
+          <p className="error"></p>
+        </div>
+      </div>
+      <div className="drawer-inpts-container">
+        <div className="drawer-lbl-container">
+          <p>Duties Name</p>
+        </div>
+        <div className="inpt-con">
+          <p className="star">*</p>
+          <div className="inpt-sub-con">
+            <Input
+              className="inp"
+              onChange={(e) =>
+                drawrInptChng("Duties", "lookupname", e.target.value)
+              }
+              value={drawerIpnuts?.Duties?.lookupname}
+            />
+          </div>
+          <p className="error"></p>
+        </div>
+      </div>
+      <div className="drawer-inpts-container">
+        <div className="drawer-lbl-container">
+          <p>Display Name :</p>
+        </div>
+        <div className="inpt-con">
+          <p className="star-white">*</p>
+          <div className="inpt-sub-con">
+            <Input
+              className="inp"
+              onChange={(e) =>
+                drawrInptChng("Duties", "DisplayName", e.target.value)
+              }
+              value={drawerIpnuts?.Duties?.DisplayName}
+            />
+          </div>
+          <p className="error"></p>
+        </div>
+      </div>
+      <div className="drawer-inpts-container">
+        <div className="drawer-lbl-container">
+          <p></p>
+        </div>
+        <div className="inpt-con">
+          <p className="star">*</p>
+          <div className="inpt-sub-con">
+            <Checkbox
+              onChange={(e) =>
+                drawrInptChng("Duties", "isActive", e.target.checked)
+              }
+              checked={drawerIpnuts?.Duties?.isActive}
+            >
+              Active
+            </Checkbox>
+          </div>
+          <p className="error"></p>
+        </div>
+      </div>
+    </div>
+    <div className="mt-4 config-tbl-container">
+      <Table
+        pagination={false}
+        columns={columnGender}
+        // dataSource={data?.Duties}
+        loading={lookupsloading}
+        className="drawer-tbl"
+        rowClassName={(record, index) =>
+          index % 2 !== 0 ? "odd-row" : "even-row"
+        }
+        rowSelection={{
+          type: selectionType,
+          ...rowSelection,
+        }}
+        bordered
+      />
+    </div>
+  </div>
+</MyDrawer>;
+
+      <MyDrawer title='Ranks' open={drawerOpen?.Ranks} isPagination={true} onClose={() => {openCloseDrawerFtn('Ranks')
+        IsUpdateFtn('Ranks', false, )
+      }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.ProjectTypes,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Ranks', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Ranks}
+        update={
+          async () => {
+           await updateFtn('/lookup', drawerIpnuts?.Ranks,() => resetCounteries('Ranks', () => dispatch(getAllLookups())))
+           dispatch(getAllLookups())
+           IsUpdateFtn('Ranks', false, )
+          }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect  isSimple={true} placeholder='Ranks'
+                  
+                  disabled={true}
+                   options={lookupsType} onChange={(value) => {
+                    drawrInptChng('Lookup', 'Parentlookup', String(value))
+                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                  }}
+                    
+                     />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Ranks', 'code', e.target.value)}
+                    value={drawerIpnuts?.Ranks?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Rank</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Ranks', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.Ranks}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Ranks', 'DisplayName', e.target.value)} 
+                  value={drawerIpnuts?.ProjectTypes?.DisplayName} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Ranks', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnGender}
+              // dataSource={data?.gender}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>

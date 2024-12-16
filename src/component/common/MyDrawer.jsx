@@ -1,5 +1,5 @@
 import { React, useState } from "react";
-import { Button, Drawer, Space, Pagination, Input, Table } from "antd";
+import { Button, Drawer, Space, Pagination, Input, Table, Checkbox } from "antd";
 import MySelect from "./MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
@@ -11,6 +11,7 @@ import { FaUserAlt } from "react-icons/fa";
 import { BiRefresh } from "react-icons/bi";
 import '../../styles/MyDrawer.css'
 
+
 function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
@@ -20,6 +21,10 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   const [isAproved, setisAproved] = useState(false)
   const [isRecursion, setisRecursion] = useState(false)
   const [selectionType, setSelectionType] = useState('checkbox');
+  const [recData, setrecData] = useState({
+    timeDur: 'Day'
+  })
+  const [isEndDate, setisEndDate] = useState(true)
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -259,11 +264,17 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     { key: "99", label: "99" },
   ];
   const optionForyearorday = [
-    { key: "Day", label: "Day" },
-    { key: "Week", label: "Week" },
-    { key: "Month", label: "Month" },
-    { key: "Year", label: "Year" }
+    { key: "1", label: "Day" },
+    { key: "2", label: "Week" },
+    { key: "3", label: "Month" },
+    { key: "4", label: "Year" }
   ]
+  const updateTimeDur = (name, value) => {
+    setrecData((prevData) => ({
+      ...prevData, // Spread the previous state to retain other properties
+      [name]: value, // Update only the `timeDur` property
+    }));
+  };
   return (
     <Drawer
       width={width}
@@ -570,39 +581,86 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             </div>
             <div className="col-md-10">
               <div className="d-flex align-items-baseline">
-                <div className="w-25 me-2" >
+                <div className="w-25 me-2">
                   Repeat Every
                 </div>
                 <div className="w-10 me-2" >
                   <MySelect options={optionForSelect} />
                 </div>
                 <div className="w-25 me-2" >
-                  <MySelect options={optionForyearorday} />
+                  <MySelect onChange={(e) => updateTimeDur('timeDur', e)} options={optionForyearorday} value={recData?.timeDur} />
                 </div>
-
               </div>
-              <div className="d-flex mt-4">
-                <div className="day-con ">
-                  M
-                </div>
-                <div className="day-con">
-                  T
-                </div>
-                <div className="day-con">
-                  W
-                </div>
-                <div className="day-con">
-                  T
-                </div>
-                <div className="day-con">
-                  F
-                </div>
-                <div className="day-con">
-                  S
-                </div>
-                <div className="day-con">
-                  S
-                </div>
+              {
+                recData?.timeDur === "Week" || recData?.timeDur === "Day" ? (
+                  <div>
+
+                    <div className="d-flex mt-4 align-items-baseline">
+                      <div className="day-con ">
+                        M
+                      </div>
+                      <div className="day-con">
+                        T
+                      </div>
+                      <div className="day-con">
+                        W
+                      </div>
+                      <div className="day-con">
+                        T
+                      </div>
+                      <div className="day-con">
+                        F
+                      </div>
+                      <div className="day-con">
+                        S
+                      </div>
+                      <div className="day-con">
+                        S
+                      </div>
+                    </div>
+                    <div className="pt-3">
+                      <p>
+                        Occurs every Tuesday until{
+                          isEndDate && (
+                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer" }}> Choose an end date</span>
+                          )
+                        }
+                      </p>
+                    </div>
+                  </div>
+                ) :
+                (
+                  <div className="d-flex flex-column pt-4">
+                    <Checkbox>
+                      On December 16
+                    </Checkbox>
+                    <Checkbox>
+                    On third Monday of December
+                    </Checkbox>
+                    <div className="pt-3">
+                      <p>
+                        Occur on day 16 of every month{
+                          isEndDate===false && (
+                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer" }}> Choose an end date</span>
+                          )
+                        }
+                      </p>
+                    </div>
+                  </div>
+
+                )
+              }
+              <div>
+                {
+                  isEndDate === false && (
+                    <div className="d-flex ">
+                      <div style={{ width: '50%' }} className="me-4">
+                        <MyDatePicker />
+                      </div>
+                      <p style={{ cursor: 'pointer' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
+                    </div>
+                  )
+                }
               </div>
             </div>
           </div>
