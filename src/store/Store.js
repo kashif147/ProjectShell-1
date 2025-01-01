@@ -5,13 +5,15 @@ import regionReducer from '../features/RegionSlice'; // Region slice
 // import lookupsTypeReducer from '../features/RegionSlice'; 
 import lookupsTypeReducer from '../features/LookupTypeSlice'
 import lookupsReducer from '../features/LookupsSlice'
+import regionTypeReducer from '../features/RegionTypeSlice'
 const store = configureStore({
     reducer: {
         auth: authReducer,          // Authentication state
         regions: regionReducer,      // Regions state
-        // lookupsTypes: lookupsTypeReducer, 
+
         lookups: lookupsReducer, 
-        lookupsTypes: lookupsTypeReducer
+        lookupsTypes: lookupsTypeReducer,
+        regionTypes:regionTypeReducer,
 
     },
 });

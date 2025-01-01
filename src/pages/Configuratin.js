@@ -17,19 +17,20 @@ import { HiOutlineMinusCircle } from "react-icons/hi";
 import { FiPlusCircle } from "react-icons/fi";
 import { getAllLookupsType } from '../features/LookupTypeSlice';
 import { getAllLookups } from '../features/LookupsSlice'
+import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux';
 import MyConfirm from "../component/common/MyConfirm";
-// import {county, Province_flat,Provinec_Outlined,District_Outlined, Marital_Status_Outlined} from '../utils/Icons'
-import { ProvinceOutlined, CountyOutlined, MaritalStatusOutlined,
-   StationOutlined,Gender,PostCodeOutlined,DistrictsOutlined,
-   DivisionsOutlined,
-   BoardOutlined,
-   CouncilOutlined,
-   CitiesOutlined,
-   LanguageOutlined,
-   Title
+import {
+  ProvinceOutlined, CountyOutlined, MaritalStatusOutlined,
+  StationOutlined, Gender, PostCodeOutlined, DistrictsOutlined,
+  DivisionsOutlined,
+  BoardOutlined,
+  CouncilOutlined,
+  CitiesOutlined,
+  LanguageOutlined,
+  Title
 
-  } from "../utils/Icons";
+} from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
@@ -39,13 +40,22 @@ import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
+import { getAllRegionTypes } from '../features/RegionTypeSlice'
+
 import { set } from "react-hook-form";
 
 function Configuratin() {
-const [data, setdata] = useState({
-  gender:[],
-  SpokenLanguages:[],
-})
+  const [data, setdata] = useState({
+    gender: [],
+    SpokenLanguages: [],
+    Provinces: [],
+    county: [],
+    Divisions: [],
+    Districts: [],
+    Cities: [],
+    Titles:[],
+  })
+
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
@@ -79,8 +89,9 @@ const [data, setdata] = useState({
   const dispatch = useDispatch()
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
-  const {  lookupsTypes,lookupsTypesloading } = useSelector((state) => state.lookupsTypes);
-  
+  const { lookupsTypes, lookupsTypesloading } = useSelector((state) => state.lookupsTypes);
+  const { regionTypes, regionTypesLoading } = useSelector((state) => state.regionTypes);
+
   const [drawerOpen, setDrawerOpen] = useState({
     Counteries: false,
     Provinces: false,
@@ -93,60 +104,189 @@ const [data, setdata] = useState({
     LookupType: false,
     Lookup: false,
     Solicitors: false,
-    Committees:false,
-    SpokenLanguages:false,
-    Gender:false,
-    Title:false,
-    ProjectTypes:false,
-    Trainings:false,
-    Ranks:false,
-    Duties:false,
+    Committees: false,
+    SpokenLanguages: false,
+    Gender: false,
+    Title: false,
+    ProjectTypes: false,
+    Trainings: false,
+    Ranks: false,
+    Duties: false,
+    RegionType: false
   })
+  const [selectLokups, setselectLokups] = useState({
+    Provinces: [],
+    Counteries: [],
+    Divisions: [],
+    Districts: [],
+  });
+ 
+const [lookupsData, setlookupsData] = useState({
+  Duties:[],
+  MaritalStatus:[],
+  
+})
+// this state indicate that drawer inputs have the value for editing
   const [isUpdateRec, setisUpdateRec] = useState({
     Lookup: false,
-    LookupType:false,
+    LookupType: false,
+    RegionType: false,
+    Title:false,
+    Gender:false,
+    MaritalStatus:false,
+    Provinces:false,
   })
-  useEffect(()=>{
-if(lookups && Array.isArray(lookups)){
-  const filteredGender = lookups?.filter((item)=>item?.Parentlookup==='674a1977cc0986f64ca36fc6')
-  setdata((prevState) => ({
-    ...prevState,
-    gender: filteredGender,
-  }));
-}
-  },[lookups]) 
-  useEffect(()=>{
-if(lookups && Array.isArray(lookups)){
-  const filteredGender = lookups?.filter((item)=>item?.Parentlookup==='674a195dcc0986f64ca36fc2')
-  setdata((prevState) => ({
-    ...prevState,
-    SpokenLanguages: filteredGender,
-  }));
-}
-  },[lookups]) 
-
-const [drawer, setdrawer] = useState(false)
   useEffect(() => {
-    if (drawerOpen?.LookupType === true) {
-      dispatch(fetchRegions());
+    if (data?.Provinces) {
+      const transformedData = data.Provinces.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Provinces: transformedData,
+      }));
     }
-  }, [drawerOpen?.LookupType, dispatch]);
+    if (data?.county) {
+      const transformedData = data.county.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Counteries: transformedData,
+      }));
+    }
+    if (data?.Divisions) {
+      const transformedData = data.Divisions.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Divisions: transformedData,
+      }));
+    }
+    if (data?.Districts) {
+      const transformedData = data.Districts.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Districts: transformedData,
+      }));
+    }
+  }, [data]);
+  useEffect(() => {
+    if (lookups && Array.isArray(lookups)) {
+      const filteredGender = lookups?.filter((item) => item?.lookuptypeId?._id === '674a1977cc0986f64ca36fc6')
+      setdata((prevState) => ({
+        ...prevState,
+        gender: filteredGender,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredDuties = lookups?.filter((item) => item?.Parentlookup === '674a219fcc0986f64ca3701b')
+      setlookupsData((prevState) => ({
+        ...prevState,
+        Duties: filteredDuties, 
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredMaritalStatus = lookups?.filter((item) => item?.lookuptypeId?._id === '676a9ec44a1a6d0778731c29')
+      setlookupsData((prevState) => ({
+        ...prevState,
+        MaritalStatus: filteredMaritalStatus,
+      }));
+    }
+  }, [lookups])
+  useEffect(() => {
+    if (regions && Array.isArray(regions)) {
+      const filteredProvinces = regions.filter((item) => item.RegionTypeID === '6761492de9640143bfc38e4c');
+      setdata((prevState) => ({
+        ...prevState,
+        Provinces: filteredProvinces,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredCounty = regions.filter((item) => item.RegionTypeID === '67182268a0072a28aab883dc' && item?.ParentRegion === '67614e73479dfae6328a2641');
+
+      setdata((prevState) => ({
+        ...prevState,
+        county: filteredCounty,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredDivision = regions.filter((item) => item.RegionTypeID === '671822b4a0072a28aab883e5');
+
+      setdata((prevState) => ({
+        ...prevState,
+        Divisions: filteredDivision,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '671822bca0072a28aab883e7');
+
+      setdata((prevState) => ({
+        ...prevState,
+        Districts: filteredDistricts,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '6718228ca0072a28aab883e0');
+
+      setdata((prevState) => ({
+        ...prevState,
+        Cities: filteredDistricts,
+      }));
+    }
+  }, [regions]);
+
+  useEffect(() => {
+    dispatch(getAllRegionTypes())
+  }, [])
+  useEffect(() => {
+    if (lookups && Array.isArray(lookups)) {
+      const filteredLanguage = lookups?.filter((item) => item?.Parentlookup === '674a195dcc0986f64ca36fc2')
+      setdata((prevState) => ({
+        ...prevState,
+        SpokenLanguages: filteredLanguage,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredTitles = lookups?.filter((item) => item?.lookuptypeId?._id === '675fc362e9640143bfc38d28')
+      debugger
+      setdata((prevState) => ({
+        ...prevState,
+        Titles: filteredTitles,
+      }));
+    }
+  }, [lookups])
+  const [drawer, setdrawer] = useState(false)
+  useEffect(() => {
+    dispatch(fetchRegions());
+
+  }, []);
   const [lookupsType, setLookupsType] = useState([]);
   useEffect(() => {
     dispatch(getAllLookups());
   }, []);
-
   useEffect(() => {
     const updatedLookupsType = lookupsTypes?.map(item => ({
       key: item._id,
       label: item.lookuptype
     }));
-    
+
     setLookupsType(updatedLookupsType);
   }, [lookupsTypes]);
-useEffect(()=>{
-  dispatch(getLookupTypes())
-},[])
+  useEffect(() => {
+    dispatch(getLookupTypes())
+  }, [])
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
     ReigonType: "",
@@ -216,19 +356,22 @@ useEffect(()=>{
   };
 
   let drawerInputsInitalValues = {
-    Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
-    Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
-    Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null },
-    LookupType: { lookuptype: '', code: '',DisplayName:'', isActive: true, isDeleted: false },
-    Lookup: { lookuptypeId: '',DisplayName:'', lookupname: '',  code: '', Parentlookup: '',"userid": "67117bea87c907f6cdda0ad9",isActive:true },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a1977cc0986f64ca36fc6',"userid": "67117bea87c907f6cdda0ad9",isActive:true },
-    Title: { lookuptypeId: '675fc362e9640143bfc38d28',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a1977cc0986f64ca36fc6',"userid": "67117bea87c907f6cdda0ad9",isActive:true },
-    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
-    MaritalStatus: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
-    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
-    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
-    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
-    Duties: { lookuptypeId: '674a195dcc0986f64ca36fc2',DisplayName:'', lookupname: '',  code: '', Parentlookup: '674a195dcc0986f64ca36fc2',"userid": "67117bea87c907f6cdda0ad9", isActive:true },
+    Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '67182268a0072a28aab883dc' },
+    Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, RegionTypeID: '6761492de9640143bfc38e4c', isDeleted: false },
+    Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
+    Divisions: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '671822b4a0072a28aab883e5' },
+    Districts: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '671822bca0072a28aab883e7' },
+    LookupType: { lookuptype: '', code: '', DisplayName: '', isActive: true, isDeleted: false },
+    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9",},
+    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9"},
+    MaritalStatus: { lookuptypeId: '676a9ec44a1a6d0778731c29', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9"},
+    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
@@ -242,8 +385,8 @@ useEffect(()=>{
 
   }
   const IsUpdateFtn = (drawer, value, data) => {
-    if(value==false){
-    setisUpdateRec((prev) => ({
+    if (value == false) {
+      setisUpdateRec((prev) => ({
         ...prev,
         [drawer]: false,
       }));
@@ -254,11 +397,6 @@ useEffect(()=>{
       ...prev,
       [drawer]: value,
     }));
-
-    if (!drawerInputsInitalValues[drawer]) {
-      console.error(`Invalid drawer key: ${drawer}`);
-      return;
-    }
 
     const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce((acc, key) => {
       if (data.hasOwnProperty(key)) {
@@ -275,7 +413,29 @@ useEffect(()=>{
       },
     }));
   };
-
+  // /region/RegionTypeID/6761492de9640143bfc38e4c/ParentRegion/67614e73479dfae6328a2641
+  //   const getCountyById = async (ParentRegion) =>{
+  //     try {
+  //         const token = localStorage.getItem('token');
+  //         const response = await axios.get(`${baseURL}/region/RegionTypeID/67182268a0072a28aab883dc/ParentRegion/${ParentRegion}`, {
+  // // /region/RegionTypeID/67182268a0072a28aab883dc/ParentRegion/67614e73479dfae6328a2641
+  //           headers: {
+  //                 Authorization: `Bearer ${token}`,
+  //                 'Content-Type': 'application/json',
+  //             },
+  //         });
+  // const countyLookup = response?.data?.map((item)=>({
+  //   key:item?._id,
+  //   label:item?.RegionName
+  // }))
+  //         return setselectLokups((prev)=>({
+  //           ...prev,  Counteries:countyLookup
+  //         })) ;
+  //     } catch (error) {
+  //         // return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookups');
+  //     }
+  // }
+  // console.log(selectLokups,"//")
   const [errors, seterrors] = useState()
 
   const resetCounteries = (drawer, callback) => {
@@ -310,27 +470,51 @@ useEffect(()=>{
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
-    setdrawerIpnuts((prev) => {
+        setdrawerIpnuts((prev) => {
       const updatedDrawerInputs = { ...prev };
-  
       if (drawer === "Lookup" && updatedDrawerInputs.Lookup) {
-        // Add 'id' to Lookup
         updatedDrawerInputs.Lookup = {
           ...updatedDrawerInputs.Lookup,
           id: idValue,
         };
       } else if (drawer === "LookupType" && updatedDrawerInputs.LookupType) {
-        // Add 'id' to LookupType
         updatedDrawerInputs.LookupType = {
           ...updatedDrawerInputs.LookupType,
           id: idValue,
         };
+      } else if (drawer === "Gender" && updatedDrawerInputs.Gender) {
+        updatedDrawerInputs.Gender = {
+          ...updatedDrawerInputs.Gender,
+          id: idValue,
+        };
+      } else if (drawer === "RegionType" && updatedDrawerInputs?.RegionType) {
+       
+        updatedDrawerInputs.RegionType = {
+          ...updatedDrawerInputs.RegionType,
+          id: idValue,
+        };
+      } else if (drawer === "MaritalStatus" && updatedDrawerInputs?.MaritalStatus) {
+       
+        updatedDrawerInputs.MaritalStatus = {
+          ...updatedDrawerInputs.MaritalStatus,
+          id: idValue,
+        };
+      } else if (drawer === "Title" && updatedDrawerInputs?.Title) {
+        updatedDrawerInputs.Title = {
+          ...updatedDrawerInputs.Title,
+          id: idValue,
+        };
+      } else if (drawer === "Provinces" && updatedDrawerInputs?.Provinces) {
+        updatedDrawerInputs.Title = {
+          ...updatedDrawerInputs.Title,
+          id: idValue,
+        };
       }
-  
+
       return updatedDrawerInputs;
     });
   };
-  
+
 
   const dataSource = [
     {
@@ -381,9 +565,20 @@ useEffect(()=>{
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
-
+           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Provinces', !isUpdateRec?.Provinces, record)
+            addIdKeyToLookup(record?._id, "Provinces")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/region`, record?._id,);
+                dispatch(fetchRegions())
+              },
+            })
+          } />
         </Space>
       ),
     },
@@ -406,15 +601,15 @@ useEffect(()=>{
     },
     {
       title: 'Province',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: 'ParentRegion',
+      key: 'ParentRegion',
     },
     {
       title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: 'isActive',
+      key: 'isActive',
       render: (index, record) => (
-        <Checkbox>
+        <Checkbox checked={record?.isActive}>
 
         </Checkbox>
       )
@@ -700,8 +895,9 @@ useEffect(()=>{
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {IsUpdateFtn('LookupType', !IsUpdateFtn?.LookupType, record)
-             addIdKeyToLookup(record?._id, "LookupType")
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('LookupType', !IsUpdateFtn?.LookupType, record)
+            addIdKeyToLookup(record?._id, "LookupType")
           }} />
           <AiFillDelete
             size={16}
@@ -711,7 +907,62 @@ useEffect(()=>{
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookuptype`, record?._id,);
-                  dispatch(getLookupTypes())
+                 dispatch(getAllRegionTypes())
+                },
+              })
+            }
+            style={{ cursor: 'pointer' }} // Change the cursor to pointer for better UX
+          />
+        </Space>
+      ),
+    },
+  ];
+  const columnRegionType = [
+    {
+      title: 'Region Type',
+      dataIndex: 'RegionType',
+      key: 'RegionType',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+
+    {
+      title: 'Active',
+      dataIndex: 'isactive',
+      key: 'isactive',
+      render: (index, record) => (
+        <Checkbox checked={record?.isactive}>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn('RegionType', !IsUpdateFtn?.RegionType, record)
+              addIdKeyToLookup(record?._id, "RegionType")
+            }} />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/RegionType`, record?._id,()=>dispatch(getAllRegionTypes()));
                 },
               })
             }
@@ -740,6 +991,11 @@ useEffect(()=>{
         // Add more filter options as needed
       ],
       // onFilter: (value, record) => record.RegionCode === value,
+      render:(index, record)=>(
+        <div>
+          {record?.lookuptypeId?.lookuptype}
+        </div>
+      )
     },
     {
       title: ' Display Name',
@@ -757,7 +1013,7 @@ useEffect(()=>{
       key: 'isActive',
       render: (index, record) => (
         <Checkbox checked={record?.isActive}>
-        </Checkbox> 
+        </Checkbox>
       )
     },
     {
@@ -771,8 +1027,9 @@ useEffect(()=>{
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
-             addIdKeyToLookup(record?._id,"Lookup")
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
+            addIdKeyToLookup(record?._id, "Lookup")
           }} />
           <AiFillDelete size={16} onClick={() =>
             MyConfirm({
@@ -790,6 +1047,219 @@ useEffect(()=>{
     },
   ];
   const columnGender = [
+    {
+      title: 'code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
+      sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
+      render:(index,record)=>(
+        <>
+        {
+          record?.lookuptypeId?.lookuptype
+        }
+        </>
+      )
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (index, record) => (
+        <Checkbox checked={record?.isActive}>
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Gender', !IsUpdateFtn?.Gender, record)
+            addIdKeyToLookup(record?._id, "Gender")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id,);
+                dispatch(getAllLookups())
+                resetCounteries('Gender')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columntTitles = [
+    {
+      title: 'code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
+      sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
+    },
+    {
+      title: ' Lookup Type ',
+      // dataIndex: 'lookuptypeId',
+      // key: 'lookuptypeId',
+      filters: [
+        { text: 'A01', value: 'A01' },
+        { text: 'B02', value: 'B02' },
+        { text: 'C03', value: 'C03' },
+        // Add more filter options as needed
+      ],
+      // onFilter: (value, record) => record.RegionCode === value,
+      render:(index,record)=>(
+        <>
+        {record?.lookuptypeId?.lookuptype}
+        </>
+      )
+    },
+    {
+      title: ' Display Name',
+      dataIndex: '',
+      key: '',
+    },
+    {
+      title: 'lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (index, record) => (
+        <Checkbox checked={record?.isActive}>
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Title', !IsUpdateFtn?.Title, record)
+            addIdKeyToLookup(record?._id, "Title")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id,);
+                dispatch(getAllLookups())
+                resetCounteries('Gender')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnMaritalStatus = [
+    { 
+      title: 'code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
+      sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
+    },
+    {
+      title: ' Lookup Type ',
+      filters: [
+        { text: 'A01', value: 'A01' },
+        { text: 'B02', value: 'B02' },
+        { text: 'C03', value: 'C03' },
+      ],
+      render:(index,record)=>(
+        <>
+        {record?.lookuptypeId?.lookuptype}
+        </>
+      )
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (index, record) => (
+        <Checkbox checked={record?.isActive}>
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+              IsUpdateFtn('MaritalStatus', !isUpdateRec?.MaritalStatus, record)
+              addIdKeyToLookup(record?._id, "MaritalStatus")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id,);
+                dispatch(getAllLookups())
+                resetCounteries('Gender')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnDuties = [
     {
       title: 'code',
       dataIndex: 'code',
@@ -825,7 +1295,7 @@ useEffect(()=>{
       key: 'isActive',
       render: (index, record) => (
         <Checkbox checked={record?.isActive}>
-        </Checkbox> 
+        </Checkbox>
       )
     },
     {
@@ -839,8 +1309,9 @@ useEffect(()=>{
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {IsUpdateFtn('Gender', !IsUpdateFtn?.Gender, record)
-             addIdKeyToLookup(record?._id,"Gender")
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Gender', !IsUpdateFtn?.Gender, record)
+            addIdKeyToLookup(record?._id, "Gender")
           }} />
           <AiFillDelete size={16} onClick={() =>
             MyConfirm({
@@ -907,8 +1378,9 @@ useEffect(()=>{
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
-             addIdKeyToLookup(record?._id,"Lookup")
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
+            addIdKeyToLookup(record?._id, "Lookup")
           }} />
           <AiFillDelete size={16} onClick={() =>
             MyConfirm({
@@ -925,7 +1397,7 @@ useEffect(()=>{
       ),
     },
   ];
-  
+
   const SubscriptionsColumn = [
     {
       title: "Short Name",
@@ -1509,33 +1981,33 @@ useEffect(()=>{
   const AddSubscriptionsFtn = () => {
     console.log(SubscriptionData);
   }
-  const {Search} = Input;
+  const { Search } = Input;
   return (
     <div className="configuration-main">
       <h1 className="config-heading" style={{ marginLeft: '45px' }}>Configurations</h1>
-    <div className="search-inpt">
-    <Search style={{borderRadius:"3px", height:'62px' }}  />
+      <div className="search-inpt">
+        <Search style={{ borderRadius: "3px", height: '62px' }} />
 
-    </div>
+      </div>
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
-        <Col className="hover-col" span={3} onClick={()=>{openCloseDrawerFtn('Title')}}>
-          <div  className="center-content">
+        <Col className="hover-col" span={3} onClick={() => { openCloseDrawerFtn('Title') }}>
+          <div className="center-content">
             <div className="icon-container">
               <Title className="icons custom-icon" />
             </div>
             <p className="lookups-title">Titles</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>{openCloseDrawerFtn('Gender')}}>
-          <div  className="center-content">
+        <Col className="hover-col" span={3} onClick={() => { openCloseDrawerFtn('Gender') }}>
+          <div className="center-content">
             <div className="icon-container">
               <Gender className="custom-icon" />
             </div>
             <p className="lookups-title">Gender</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>{openCloseDrawerFtn('MaritalStatus')}}>
+        <Col className="hover-col" span={3} onClick={() => { openCloseDrawerFtn('MaritalStatus') }}>
           <div className="center-content">
             <div className="icon-container">
               {/* <img src={Marital_Status_Outlined} className="icons custom-icon" /> */}
@@ -1544,9 +2016,9 @@ useEffect(()=>{
             <p className="lookups-title">Marital Status</p>
           </div>
         </Col>
-        <Col  onClick={() => openCloseDrawerFtn('Provinces')} className="hover-col" span={3} style={styles.centeredCol}>
+        <Col onClick={() => openCloseDrawerFtn('Provinces')} className="hover-col" span={3} style={styles.centeredCol}>
           <div>
-            <ProvinceOutlined  className="custom-icon icons"   />
+            <ProvinceOutlined className="custom-icon icons" />
             <p className="lookups-title">Provinces</p>
           </div>
         </Col>
@@ -1559,29 +2031,25 @@ useEffect(()=>{
             <p className="lookups-title">Counteries</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3}>
-          <div onClick={() => openCloseDrawerFtn('Cities')}>
-            <CitiesOutlined className="custom-icon icons" />
-            <p className="lookups-title">Cities</p>
-          </div>
-        </Col>
 
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('PostCode')}>
-            <PostCodeOutlined className="icons custom-icon" />
-            <p className="lookups-title">Post Codes</p>
-          </div>
-        </Col>
+
+
         <Col className="hover-col" span={3} style={styles.centeredCol}>
           <div onClick={() => openCloseDrawerFtn('Divisions')}>
             <DivisionsOutlined className="icons custom-icon" />
             <p className="lookups-title">Divisions</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('Districts')}>
+        <Col onClick={() => openCloseDrawerFtn('Districts')} className="hover-col" span={3} style={styles.centeredCol}>
+          <div >
             <DistrictsOutlined className="icons custom-icon" />
             <p className="lookups-title">Districts</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Cities')}>
+          <div >
+            <CitiesOutlined className="custom-icon icons" />
+            <p className="lookups-title">Cities</p>
           </div>
         </Col>
         <Col className="hover-col" span={3} >
@@ -1590,8 +2058,14 @@ useEffect(()=>{
             <p className="lookups-title">Station</p>
           </div>
         </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={() => openCloseDrawerFtn('PostCode')}>
+            <PostCodeOutlined className="icons custom-icon" />
+            <p className="lookups-title">Post Codes</p>
+          </div>
+        </Col>
         <Col className="hover-col" span={3} >
-          <div onClick={()=>openCloseDrawerFtn('Committees')}>
+          <div onClick={() => openCloseDrawerFtn('Committees')}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Committees</p>
           </div>
@@ -1609,25 +2083,25 @@ useEffect(()=>{
             <p className="lookups-title">Boards</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('SpokenLanguages')}>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('SpokenLanguages')}>
           <div>
             <LanguageOutlined className="icons custom-icon" />
             <p className="lookups-title">Spoken Languages</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('ProjectTypes')}>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('ProjectTypes')}>
           <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Project Types</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('Trainings')}>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Trainings')}>
           <div >
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Trainings</p>
           </div>
         </Col>
-        <Col className="hover-col" span={3} onClick={()=>openCloseDrawerFtn('Ranks')}>
+        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Ranks')}>
           <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Ranks</p>
@@ -1640,7 +2114,7 @@ useEffect(()=>{
           </div>
         </Col> */}
         <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Duties')} >
-          <div onClick={dummyModalFtn}>
+          <div>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Duties</p>
           </div>
@@ -1697,7 +2171,7 @@ useEffect(()=>{
           </div>
         </Col>
         {/* <Col className="hover-col" span={3} style={styles.centeredCol}> */}
-          {/* <div onClick={dummyModalFtn}>
+        {/* <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Ranks</p>
           </div> */}
@@ -1760,6 +2234,12 @@ useEffect(()=>{
           <div onClick={dummyModalFtn}>
             <PiHandshakeDuotone className="icons" />
             <p className="lookups-title">Solicitors</p>
+          </div>
+        </Col>
+        <Col className="hover-col" span={3} style={styles.centeredCol}>
+          <div onClick={() => openCloseDrawerFtn('RegionType')}>
+            <PiHandshakeDuotone className="icons" />
+            <p className="lookups-title">Region Type</p>
           </div>
         </Col>
         {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
@@ -1923,9 +2403,6 @@ useEffect(()=>{
         </Col>
       </Row>
 
-  
-
-      {/* Membership Drawer */}
       <MyDrawer
         open={membershipModal}
         onClose={membershipModalFtn}
@@ -2577,9 +3054,10 @@ useEffect(()=>{
         />
       </MyDrawer>
       <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries} onClose={() => openCloseDrawerFtn('Counteries')} add={() => {
-
-        console.log(drawerIpnuts?.Counteries)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Counteries'))
+        insertDataFtn(`${baseURL}/region`, { 'region': drawerIpnuts?.Counteries }, 'Data inserted successfully:', 'Data did not insert:', () => {
+          resetCounteries('Counteries')
+          dispatch(fetchRegions())
+        })
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -2640,7 +3118,10 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect isSimple={true} />
+                  <MySelect isSimple={true} options={selectLokups?.Provinces}
+                    onChange={(e) => {
+                      drawrInptChng('Counteries', 'ParentRegion', e)
+                    }} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2662,6 +3143,7 @@ useEffect(()=>{
             <Table
               pagination={false}
               columns={columnCountry}
+              dataSource={data?.county}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2671,13 +3153,21 @@ useEffect(()=>{
                 ...rowSelection,
               }}
               bordered
-            />;
+            />
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Provinces' open={drawerOpen?.Provinces} isPagination={true} onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
-        console.log(drawerIpnuts?.Provinces)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Provinces, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Provinces'))
+      <MyDrawer title='Provinces' 
+      open={drawerOpen?.Provinces} 
+      isPagination={true} 
+      onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
+        insertDataFtn(`${baseURL}/region`, { "region": drawerIpnuts?.Provinces }, 
+          'Data inserted successfully:', 'Data did not insert:',
+          () => {
+            resetCounteries('Provinces')
+            dispatch()
+          })  
+
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -2700,7 +3190,8 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'RegionCode', e.target.value)}
+                    value={drawerIpnuts?.Provinces?.RegionCode} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2712,7 +3203,8 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'RegionName', e.target.value)}
+                    value={drawerIpnuts?.Provinces?.RegionName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2724,7 +3216,8 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Provinces?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2746,6 +3239,7 @@ useEffect(()=>{
             <Table
               pagination={false}
               columns={columnProvince}
+              dataSource={data?.Provinces}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2761,7 +3255,7 @@ useEffect(()=>{
       </MyDrawer>
       <MyDrawer title='City' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
         console.log(drawerIpnuts?.Cities)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Cities, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Cities'))
+        insertDataFtn(`${baseURL}/region`, { region: drawerIpnuts?.Cities }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Cities'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -2777,6 +3271,39 @@ useEffect(()=>{
                 <p className="error"></p>
               </div>
             </div>
+            {/* <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Province :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} 
+                   options={selectLokups?.Provinces} 
+                   onChange={(e) => {
+                    // drawrInptChng('Counteries', 'RegionTypeID', e)
+                    drawrInptChng('Counteries', 'ParentRegion', e)
+                    getCountyById(e)
+                  }}/>        
+                </div>
+                <p className="error"></p>
+              </div>
+            </div> */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>District :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect placeholder='Select County' isSimple={true} options={selectLokups?.Districts}
+                    value={drawerIpnuts?.Cities?.ParentRegion}
+                    onChange={(e) => drawrInptChng('Cities', 'ParentRegion', e)}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Code :</p>
@@ -2784,13 +3311,13 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'RegionCode', e.target.value)}
+                    value={drawerIpnuts?.Cities?.RegionCode} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>City Name :</p>
@@ -2798,8 +3325,11 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} />
-                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                  <Input className="inp"
+                    onChange={(e) => {
+
+                      drawrInptChng('Cities', 'RegionName', e.target.value)
+                    }} value={drawerIpnuts?.Cities?.RegionName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -2811,24 +3341,12 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'DisplayName', e.target.value)} value={drawerIpnuts?.Cities?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>County :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} disabled={true} />
 
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -2846,6 +3364,7 @@ useEffect(()=>{
             <Table
               pagination={false}
               columns={columnCity}
+              dataSource={data?.Cities}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -2959,7 +3478,8 @@ useEffect(()=>{
       </MyDrawer>
       <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true} onClose={() => openCloseDrawerFtn('Districts')} add={() => {
         console.log(drawerIpnuts?.Districts)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Districts, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Districts'))
+        insertDataFtn(`${baseURL}/region`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
+          () => resetCounteries('Districts'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -2982,7 +3502,9 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Districts', 'RegionCode', e.target.value)}
+                    value={drawerIpnuts?.Districts?.RegionCode} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -2991,13 +3513,15 @@ useEffect(()=>{
 
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>County Name :</p>
+                <p>District</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input />
-                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Districts', 'RegionName', e.target.value)}
+                    value={drawerIpnuts?.Districts?.RegionName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3009,7 +3533,7 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3021,7 +3545,7 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect isSimple={true} placeholder='Select Division' />
+                  <MySelect isSimple={true} placeholder='Select Division' options={selectLokups?.Divisions} onChange={(e) => drawrInptChng('Districts', 'ParentRegion', e)} value={drawerIpnuts?.Districts?.ParentRegion} />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
                   <p className="error"></p>
                 </div>
@@ -3048,6 +3572,7 @@ useEffect(()=>{
             <Table
               pagination={false}
               columns={columnDistricts}
+              dataSource={data?.Districts}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -3064,8 +3589,7 @@ useEffect(()=>{
 
       </MyDrawer>
       <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
-        console.log(drawerIpnuts?.Divisions)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Divisions'))
+        insertDataFtn(`${baseURL}/region`, { region: drawerIpnuts?.Divisions }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Divisions'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3083,27 +3607,40 @@ useEffect(()=>{
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Code :</p>
+                <p>County :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <MySelect placeholder='Select County' onChange={(e) => drawrInptChng('Divisions', 'ParentRegion', e)} isSimple={true} options={selectLokups?.Counteries} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" onChange={(e) => drawrInptChng('Divisions', 'RegionCode', e.target.value)} value={drawerIpnuts?.Divisions?.RegionCode} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
             </div>
 
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>County Name :</p>
+                <p>Division : </p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} />
-                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                  <Input className="inp" onChange={(e) => drawrInptChng('Divisions', 'RegionName', e.target.value)} value={drawerIpnuts?.Divisions?.RegionName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3115,7 +3652,7 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Divisions', 'DisplayName', e.target.value)} value={drawerIpnuts?.Divisions?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3137,6 +3674,7 @@ useEffect(()=>{
             <Table
               pagination={false}
               columns={columnDivisions}
+              dataSource={data?.Divisions}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -3152,7 +3690,7 @@ useEffect(()=>{
       </MyDrawer>
       <MyDrawer title='Station' open={drawerOpen?.Station} isPagination={true} onClose={() => openCloseDrawerFtn('Station')} add={() => {
         console.log(drawerIpnuts?.Station)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Station, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('Districts'))
+        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Station, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Districts'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3331,20 +3869,22 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => {openCloseDrawerFtn('LookupType')
-          IsUpdateFtn('LookupType', false, )
+      <MyDrawer title='Lookup Type' open={drawerOpen?.LookupType} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('LookupType')
+        IsUpdateFtn('LookupType', false,)
       }}
-       isEdit={isUpdateRec?.LookupType}
-       update={
-        async () => {
-         await updateFtn('/lookuptype', drawerIpnuts?.LookupType,() => resetCounteries('LookupType'))
-         dispatch(getLookupTypes())
-         IsUpdateFtn('LookupType', false, )
-        }}
-       add={async () => {
+        isEdit={isUpdateRec?.LookupType}
+        update={
+          async () => {
+            await updateFtn('/lookuptype', drawerIpnuts?.LookupType, () => resetCounteries('LookupType'))
+            dispatch(getLookupTypes())
+            IsUpdateFtn('LookupType', false,)
+          }}
+        add={async () => {
           await insertDataFtn(
             `${baseURL}/lookuptype`,
-            {...drawerIpnuts?.LookupType,   "userid": "67117bea87c907f6cdda0ad9",
+            {
+              ...drawerIpnuts?.LookupType, "userid": "67117bea87c907f6cdda0ad9",
             },
             'Data insert ed successfully',
             'Data did not insert',
@@ -3364,7 +3904,7 @@ useEffect(()=>{
                 <div className="inpt-sub-con">
                   <Input className="inp"
                     onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                    value={drawerIpnuts?.LookupType?.code}  
+                    value={drawerIpnuts?.LookupType?.code}
                   />
                   <h1 className="error-text"></h1>
                 </div>
@@ -3382,8 +3922,8 @@ useEffect(()=>{
                     isSimple={true}
                     placeholder=''
                     onChange={(value) => drawrInptChng('LookupType', 'lookuptype', value.target.value)}
-                   value={drawerIpnuts?.LookupType?.lookuptype}                
-                 />
+                    value={drawerIpnuts?.LookupType?.lookuptype}
+                  />
                 </div>
                 <p className="error">{errors?.LookupType?.RegionType}</p>
               </div>
@@ -3399,8 +3939,8 @@ useEffect(()=>{
                     isSimple={true}
                     placeholder=''
                     onChange={(value) => drawrInptChng('LookupType', 'DisplayName', value.target.value)}
-                   value={drawerIpnuts?.LookupType?.DisplayName}                
-                 />
+                    value={drawerIpnuts?.LookupType?.DisplayName}
+                  />
                 </div>
                 <p className="error">{errors?.LookupType?.RegionType}</p>
               </div>
@@ -3441,13 +3981,130 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Lookup' open={drawerOpen?.Lookup} isPagination={true} onClose={() => {openCloseDrawerFtn('Lookup')
-        IsUpdateFtn('Lookup', false, )
+      <MyDrawer title='Region Type' open={drawerOpen?.RegionType} isPagination={true}
+        onClose={() => {
+          openCloseDrawerFtn('RegionType')
+          IsUpdateFtn('RegionType', false,)
+        }}
+        isEdit={isUpdateRec?.RegionType}
+        update={
+          async () => {
+            await updateFtn('/regiontype', drawerIpnuts?.RegionType, () =>  dispatch(getAllRegionTypes()))
+            IsUpdateFtn('regiontype', false,)
+          }}
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/regiontype`,
+            {
+              ...drawerIpnuts?.RegionType, "userid": "67117bea87c907f6cdda0ad9",
+            },
+            'Data inserted successfully',
+            'Data did not insert',
+            () => {resetCounteries('RegionType')
+              dispatch(getAllRegionTypes())
+            }
+            // Pass a function reference
+          );
+          // dispatch(getLookupTypes())
+        }}
+        total={regions?.length} >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(value) => drawrInptChng('RegionType', 'code', value.target.value)}
+                    value={drawerIpnuts?.RegionType?.code}
+                    disabled={true}
+                  />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Region Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    isSimple={true}
+                    placeholder=''
+                    onChange={(value) => drawrInptChng('RegionType', 'RegionType', value.target.value)}
+                    value={drawerIpnuts?.RegionType?.RegionType}
+                  />
+                </div>
+                <p className="error">{errors?.LookupType?.RegionType}</p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>DisplayName</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    isSimple={true}
+                    placeholder=''
+                    onChange={(value) => drawrInptChng('RegionType', 'DisplayName', value.target.value)}
+                    value={drawerIpnuts?.RegionType?.DisplayName}
+                  />
+                </div>
+                <p className="error">{errors?.LookupType?.RegionType}</p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('RegionType', 'isActive', e.target.checked)}
+                    checked={drawerIpnuts?.RegionType?.isActive}
+                  >Active</Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnRegionType}
+              dataSource={regionTypes}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+              scroll={{ y: 240 }}
+              loading={regionTypesLoading}
+            />;
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Lookup' open={drawerOpen?.Lookup} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Lookup')
+        IsUpdateFtn('Lookup', false,)
       }}
         add={async () => {
           await insertDataFtn(
             `${baseURL}/lookup`,
-            drawerIpnuts?.Lookup ,
+            drawerIpnuts?.Lookup,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
@@ -3457,9 +4114,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Lookup}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Lookup', false, )
+            await updateFtn('/lookup', drawerIpnuts?.Lookup, () => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Lookup', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -3471,11 +4128,11 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Select Lookup type'
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
+                  <MySelect isSimple={true} placeholder='Select Lookup type'
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
                     value={drawerIpnuts?.Lookup?.lookuptypeId} />
                   <h1 className="error-text"></h1>
                 </div>
@@ -3532,7 +4189,7 @@ useEffect(()=>{
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
-                  disabled={true}
+                    disabled={true}
                   />
                 </div>
                 <p className="error"></p>
@@ -3574,13 +4231,14 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Gender' open={drawerOpen?.Gender} isPagination={true} onClose={() => {openCloseDrawerFtn('Gender')
-        IsUpdateFtn('Gender', false, )
+      <MyDrawer title='Gender' open={drawerOpen?.Gender} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Gender')
+        IsUpdateFtn('Gender', false,)
       }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/lookup`,
-            drawerIpnuts?.Gender ,
+           `${baseURL}/lookup`,
+            drawerIpnuts?.Gender,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('Gender', () => dispatch(getAllLookups()))
@@ -3590,9 +4248,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Gender}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.Gender,() => resetCounteries('Gender', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Gender', false, )
+            await updateFtn('/lookup', drawerIpnuts?.Gender, () => resetCounteries('Gender', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Gender', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -3604,15 +4262,9 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Gender'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Gender'
+                    disabled={true}
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -3655,14 +4307,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.Gender?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Gender?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -3698,13 +4350,14 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='' open={drawerOpen?.Gender} isPagination={true} onClose={() => {openCloseDrawerFtn('Gender')
-        IsUpdateFtn('Gender', false, )
+      <MyDrawer title='' isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Gender')
+        IsUpdateFtn('Gender', false,)
       }}
         add={async () => {
           await insertDataFtn(
             `${baseURL}/lookup`,
-            drawerIpnuts?.Gender ,
+            drawerIpnuts?.Gender,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('Gender', () => dispatch(getAllLookups()))
@@ -3714,9 +4367,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Gender}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.Gender,() => resetCounteries('Gender', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Gender', false, )
+            await updateFtn('/lookup', drawerIpnuts?.Gender, () => resetCounteries('Gender', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Gender', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -3728,15 +4381,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Gender'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Gender'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -3779,14 +4432,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.Gender?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Gender?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -3822,8 +4475,9 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Title' open={drawerOpen?.Title} isPagination={true} onClose={() => {openCloseDrawerFtn('Title')
-        IsUpdateFtn('Title', false, )
+      <MyDrawer title='Title' open={drawerOpen?.Title} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Title')
+        IsUpdateFtn('Title', false,)
       }}
         add={async () => {
           await insertDataFtn(
@@ -3838,9 +4492,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Title}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.Title,() => resetCounteries('Title', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Title', false, )
+            await updateFtn('/lookup', drawerIpnuts?.Title, () => resetCounteries('Title', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Title', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -3852,15 +4506,12 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Title'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Title'
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -3903,14 +4554,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('Title', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.Title?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Title', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Title?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -3930,8 +4581,8 @@ useEffect(()=>{
           <div className="mt-4 config-tbl-container">
             <Table
               pagination={false}
-              columns={columnGender}
-              // dataSource={data?.gender}
+              columns={columntTitles}
+              dataSource={data?.Titles}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -3946,8 +4597,9 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='MaritalStatus' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {openCloseDrawerFtn('MaritalStatus')
-        IsUpdateFtn('MaritalStatus', false, )
+      <MyDrawer title='MaritalStatus' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('MaritalStatus')
+        IsUpdateFtn('MaritalStatus', false,)
       }}
         add={async () => {
           await insertDataFtn(
@@ -3962,9 +4614,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.MaritalStatus}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.MaritalStatus,() => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('MaritalStatus', false, )
+            await updateFtn('/lookup', drawerIpnuts?.MaritalStatus, () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('MaritalStatus', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -3976,15 +4628,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='MaritalStatus'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='MaritalStatus'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4027,14 +4679,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.MaritalStatus?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.MaritalStatus?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -4070,8 +4722,9 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Project Types' open={drawerOpen?.ProjectTypes} isPagination={true} onClose={() => {openCloseDrawerFtn('ProjectTypes')
-        IsUpdateFtn('ProjectTypes', false, )
+      <MyDrawer title='Project Types' open={drawerOpen?.ProjectTypes} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('ProjectTypes')
+        IsUpdateFtn('ProjectTypes', false,)
       }}
         add={async () => {
           await insertDataFtn(
@@ -4086,9 +4739,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.ProjectTypes}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.ProjectTypes,() => resetCounteries('ProjectTypes', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('ProjectTypes', false, )
+            await updateFtn('/lookup', drawerIpnuts?.ProjectTypes, () => resetCounteries('ProjectTypes', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('ProjectTypes', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -4100,15 +4753,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='ProjectTypes'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='ProjectTypes'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4151,14 +4804,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.ProjectTypes?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -4194,8 +4847,9 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Trainings' open={drawerOpen?.Trainings} isPagination={true} onClose={() => {openCloseDrawerFtn('Trainings')
-        IsUpdateFtn('Trainings', false, )
+      <MyDrawer title='Trainings' open={drawerOpen?.Trainings} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Trainings')
+        IsUpdateFtn('Trainings', false,)
       }}
         add={async () => {
           await insertDataFtn(
@@ -4210,9 +4864,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Trainings}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.Trainings,() => resetCounteries('Trainings', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Trainings', false, )
+            await updateFtn('/lookup', drawerIpnuts?.Trainings, () => resetCounteries('Trainings', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Trainings', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -4224,15 +4878,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Trainings'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Trainings'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4275,14 +4929,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.ProjectTypes?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -4319,155 +4973,156 @@ useEffect(()=>{
         </div>
       </MyDrawer>
       <MyDrawer
-  title="Duties"
-  open={drawerOpen?.Duties}
-  isPagination={true}
-  onClose={() => {
-    openCloseDrawerFtn("Duties");
-    IsUpdateFtn("Duties", false);
-  }}
-  add={async () => {
-    await insertDataFtn(
-      `${baseURL}/lookup`,
-      drawerIpnuts?.Duties,
-      "Data inserted successfully",
-      "Data did not insert",
-      () =>
-        resetCounteries("Duties", () => dispatch(getAllLookups()))
-    );
-    dispatch(getAllLookups());
-  }}
-  isEdit={isUpdateRec?.Duties}
-  update={async () => {
-    await updateFtn(
-      "/lookup",
-      drawerIpnuts?.Duties,
-      () => resetCounteries("Duties", () => dispatch(getAllLookups()))
-    );
-    dispatch(getAllLookups());
-    IsUpdateFtn("Duties", false);
-  }}
->
-  <div className="drawer-main-cntainer">
-    <div className="mb-4 pb-4">
-      <div className="drawer-inpts-container">
-        <div className="drawer-lbl-container">
-          <p>Lookup Type :</p>
-        </div>
-        <div className="inpt-con">
-          <p className="star">*</p>
-          <div className="inpt-sub-con">
-            <MySelect
-              isSimple={true}
-              placeholder="Duties"
-              disabled={true}
-              options={lookupsType}
-              onChange={(value) => {
-                drawrInptChng("Lookup", "Parentlookup", String(value));
-                drawrInptChng("Lookup", "lookuptypeId", String(value));
-              }}
-            />
-            <h1 className="error-text"></h1>
-          </div>
-          <p className="error"></p>
-        </div>
-      </div>
-      <div className="drawer-inpts-container">
-        <div className="drawer-lbl-container">
-          <p>Code:</p>
-        </div>
-        <div className="inpt-con">
-          <p className="star">*</p>
-          <div className="inpt-sub-con">
-            <Input
-              className="inp"
-              onChange={(e) =>
-                drawrInptChng("Duties", "code", e.target.value)
-              }
-              value={drawerIpnuts?.Duties?.code}
-            />
-          </div>
-          <p className="error"></p>
-        </div>
-      </div>
-      <div className="drawer-inpts-container">
-        <div className="drawer-lbl-container">
-          <p>Duties Name</p>
-        </div>
-        <div className="inpt-con">
-          <p className="star">*</p>
-          <div className="inpt-sub-con">
-            <Input
-              className="inp"
-              onChange={(e) =>
-                drawrInptChng("Duties", "lookupname", e.target.value)
-              }
-              value={drawerIpnuts?.Duties?.lookupname}
-            />
-          </div>
-          <p className="error"></p>
-        </div>
-      </div>
-      <div className="drawer-inpts-container">
-        <div className="drawer-lbl-container">
-          <p>Display Name :</p>
-        </div>
-        <div className="inpt-con">
-          <p className="star-white">*</p>
-          <div className="inpt-sub-con">
-            <Input
-              className="inp"
-              onChange={(e) =>
-                drawrInptChng("Duties", "DisplayName", e.target.value)
-              }
-              value={drawerIpnuts?.Duties?.DisplayName}
-            />
-          </div>
-          <p className="error"></p>
-        </div>
-      </div>
-      <div className="drawer-inpts-container">
-        <div className="drawer-lbl-container">
-          <p></p>
-        </div>
-        <div className="inpt-con">
-          <p className="star">*</p>
-          <div className="inpt-sub-con">
-            <Checkbox
-              onChange={(e) =>
-                drawrInptChng("Duties", "isActive", e.target.checked)
-              }
-              checked={drawerIpnuts?.Duties?.isActive}
-            >
-              Active
-            </Checkbox>
-          </div>
-          <p className="error"></p>
-        </div>
-      </div>
-    </div>
-    <div className="mt-4 config-tbl-container">
-      <Table
-        pagination={false}
-        columns={columnGender}
-        // dataSource={data?.Duties}
-        loading={lookupsloading}
-        className="drawer-tbl"
-        rowClassName={(record, index) =>
-          index % 2 !== 0 ? "odd-row" : "even-row"
-        }
-        rowSelection={{
-          type: selectionType,
-          ...rowSelection,
+        title="Duties"
+        open={drawerOpen?.Duties}
+        isPagination={true}
+        onClose={() => {
+          openCloseDrawerFtn("Duties");
+          IsUpdateFtn("Duties", false);
         }}
-        bordered
-      />
-    </div>
-  </div>
-</MyDrawer>;
+        add={async () => {
+          await insertDataFtn(
+            `${baseURL}/lookup`,
+            drawerIpnuts?.Duties,
+            "Data inserted successfully",
+            "Data did not insert",
+            () =>
+              resetCounteries("Duties", () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+        }}
+        isEdit={isUpdateRec?.Duties}
+        update={async () => {
+          await updateFtn(
+            "/lookup",
+            drawerIpnuts?.Duties,
+            () => resetCounteries("Duties", () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Duties", false);
+        }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect
+                    isSimple={true}
+                    placeholder="Duties"
+                    disabled={true}
+                    options={lookupsType}
+                    onChange={(value) => {
+                      drawrInptChng("Lookup", "Parentlookup", String(value));
+                      drawrInptChng("Lookup", "lookuptypeId", String(value));
+                    }}
+                  />
+                  <h1 className="error-text"></h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) =>
+                      drawrInptChng("Duties", "code", e.target.value)
+                    }
+                    value={drawerIpnuts?.Duties?.code}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Duties Name</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) =>
+                      drawrInptChng("Duties", "lookupname", e.target.value)
+                    }
+                    value={drawerIpnuts?.Duties?.lookupname}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) =>
+                      drawrInptChng("Duties", "DisplayName", e.target.value)
+                    }
+                    value={drawerIpnuts?.Duties?.DisplayName}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) =>
+                      drawrInptChng("Duties", "isActive", e.target.checked)
+                    }
+                    checked={drawerIpnuts?.Duties?.isActive}
+                  >
+                    Active
+                  </Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnDuties}
+              dataSource={lookupsData?.Duties}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>;
 
-      <MyDrawer title='Ranks' open={drawerOpen?.Ranks} isPagination={true} onClose={() => {openCloseDrawerFtn('Ranks')
-        IsUpdateFtn('Ranks', false, )
+      <MyDrawer title='Ranks' open={drawerOpen?.Ranks} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Ranks')
+        IsUpdateFtn('Ranks', false,)
       }}
         add={async () => {
           await insertDataFtn(
@@ -4482,9 +5137,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Ranks}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.Ranks,() => resetCounteries('Ranks', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Ranks', false, )
+            await updateFtn('/lookup', drawerIpnuts?.Ranks, () => resetCounteries('Ranks', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Ranks', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -4496,15 +5151,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Ranks'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Ranks'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4547,14 +5202,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('Ranks', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.ProjectTypes?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Ranks', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.ProjectTypes?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -4590,13 +5245,13 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Marital Status' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {openCloseDrawerFtn('MaritalStatus')
-        IsUpdateFtn('MaritalStatus', false, )
+      <MyDrawer title='Marital Status' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('MaritalStatus')
       }}
         add={async () => {
           await insertDataFtn(
             `${baseURL}/lookup`,
-            drawerIpnuts?.MaritalStatus ,
+            drawerIpnuts?.MaritalStatus,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups()))
@@ -4606,9 +5261,10 @@ useEffect(()=>{
         isEdit={isUpdateRec?.MaritalStatus}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.MaritalStatus,() => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('MaritalStatus', false, )
+            await updateFtn('/lookup', drawerIpnuts?.MaritalStatus, () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('MaritalStatus', false,)
+          
           }}
       >
         <div className="drawer-main-cntainer">
@@ -4620,15 +5276,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Marital Status'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Marital Status'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4643,7 +5299,7 @@ useEffect(()=>{
                 <div className="inpt-sub-con">
                   <Input
                     className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
-                    value={drawerIpnuts?.lookupname?.code}
+                    value={drawerIpnuts?.MaritalStatus?.code}
                   />
                 </div>
                 <p className="error"></p>
@@ -4657,7 +5313,7 @@ useEffect(()=>{
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
-                    onChange={(e) => drawrInptChng('Marital Status', 'lookupname', e.target.value)}
+                    onChange={(e) => drawrInptChng('MaritalStatus', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.lookupname}
                   />
                 </div>
@@ -4671,14 +5327,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.MaritalStatus?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.MaritalStatus?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -4698,8 +5354,8 @@ useEffect(()=>{
           <div className="mt-4 config-tbl-container">
             <Table
               pagination={false}
-              columns={columnGender}
-              dataSource={data?.gender}
+              columns={columnMaritalStatus}
+              dataSource={lookupsData?.MaritalStatus}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -4714,8 +5370,9 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Spoken Languages' open={drawerOpen?.SpokenLanguages} isPagination={true} onClose={() => {openCloseDrawerFtn('SpokenLanguages')
-        IsUpdateFtn('Spoken Languages', false, )
+      <MyDrawer title='Spoken Languages' open={drawerOpen?.SpokenLanguages} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('SpokenLanguages')
+        IsUpdateFtn('Spoken Languages', false,)
       }}
         add={async () => {
           await insertDataFtn(
@@ -4730,9 +5387,9 @@ useEffect(()=>{
         isEdit={isUpdateRec?.SpokenLanguages}
         update={
           async () => {
-           await updateFtn('/lookup', drawerIpnuts?.SpokenLanguages,() => resetCounteries('SpokenLanguages', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('SpokenLanguages', false, )
+            await updateFtn('/lookup', drawerIpnuts?.SpokenLanguages, () => resetCounteries('SpokenLanguages', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('SpokenLanguages', false,)
           }}
       >
         <div className="drawer-main-cntainer">
@@ -4744,15 +5401,15 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect  isSimple={true} placeholder='Spoken Languages'
-                  
-                  disabled={true}
-                   options={lookupsType} onChange={(value) => {
-                    drawrInptChng('Lookup', 'Parentlookup', String(value))
-                    drawrInptChng('Lookup', 'lookuptypeId', String(value))
-                  }}
-                    
-                     />
+                  <MySelect isSimple={true} placeholder='Spoken Languages'
+
+                    disabled={true}
+                    options={lookupsType} onChange={(value) => {
+                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                    }}
+
+                  />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4795,14 +5452,14 @@ useEffect(()=>{
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('SpokenLanguages', 'DisplayName', e.target.value)} 
-                  value={drawerIpnuts?.SpokenLanguages?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('SpokenLanguages', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.SpokenLanguages?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p></p>
@@ -5018,10 +5675,11 @@ useEffect(()=>{
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Committees' open={drawerOpen?.Committees} isPagination={true} onClose={() => {openCloseDrawerFtn('Committees')
-        IsUpdateFtn('Committees', false, )
+      <MyDrawer title='Committees' open={drawerOpen?.Committees} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Committees')
+        IsUpdateFtn('Committees', false,)
       }}
-      isAddMemeber={true}
+        isAddMemeber={true}
         add={async () => {
           await insertDataFtn(
             `${baseURL}/region`,
@@ -5035,11 +5693,11 @@ useEffect(()=>{
         isEdit={isUpdateRec?.Lookup}
         update={
           async () => {
-           await updateFtn('/region', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
-           dispatch(getAllLookups())
-           IsUpdateFtn('Lookup', false, )
+            await updateFtn('/region', drawerIpnuts?.Lookup, () => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Lookup', false,)
           }}
-          width="680"
+        width="680"
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -5068,8 +5726,8 @@ useEffect(()=>{
                 <div className="inpt-sub-con">
                   <Input
                     className="inp"
-                    //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
-                    // value={drawerIpnuts?.Lookup?.RegionCode}
+                  //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
+                  // value={drawerIpnuts?.Lookup?.RegionCode}
                   />
                 </div>
                 <p className="error"></p>
@@ -5083,8 +5741,8 @@ useEffect(()=>{
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
-                    // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
-                    // value={drawerIpnuts?.Lookup?.RegionName}
+                  // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
+                  // value={drawerIpnuts?.Lookup?.RegionName}
                   />
                 </div>
                 <p className="error"></p>

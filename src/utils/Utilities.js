@@ -12,6 +12,7 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
     const response = await axios.post(url, data, {
       headers: {
         'Content-Type': 'application/json',
+        maxBodyLength: Infinity,
         Authorization: `Bearer ${token}`, 
       },
     });
@@ -22,22 +23,24 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
 
       MyAlert('success', successNotification);
       callback()
+      return
 
     } else {
-      return MyAlert('error', failureNotification);
+      return MyAlert('error', `${failureNotification}`);
     }
   } catch (error) {
-    console.error(error);
+    console.error(error,'222');
     MyAlert('error', failureNotification); 
   }
 };
 
 export const deleteFtn = async (url,id, callback)=>{
+  debugger
   token = localStorage.getItem('token')
   const data = JSON.stringify({ id });
   const config = {
     method: 'delete',
-    maxBodyLength: Infinity,
+    // maxBodyLength: Infinity,
     url: url,
     headers: {
         'Content-Type': 'application/json',

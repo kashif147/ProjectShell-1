@@ -32,6 +32,7 @@ import MyFooter from "./component/common/MyFooter";
 import CorspndncDetail from "./pages/Correspondences/CorspndncDetail";
 import Doucmnets from "./pages/Doucmnets";
 import RosterDetails from "./pages/roster/RosterDetails";
+import RusterSummary from "./pages/roster/RusterSummary";
 // import RousterDetails from "./pages/rouster/RousterDetails";
 
 function Entry() {
@@ -103,6 +104,7 @@ function Entry() {
               <Route path="LandingPage" element={<LandingPage />} /> 
               <Route path="Reports" element={<Reports />} />
               <Route path="CorspndncDetail" element={<CorspndncDetail />} />
+              <Route path="RosterSummary" element={<RusterSummary />} />
               <Route path="Doucmnets" element={<Doucmnets />} />
               <Route path="Roster" element={<RosterDetails />} />
               </Route>

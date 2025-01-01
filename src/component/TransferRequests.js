@@ -68,6 +68,7 @@ function TransferRequests({ open, onClose, isSearch }) {
     const onFormLayoutChange = ({ layout }) => {
         setFormLayout(layout);
     };
+    
     return (
         <MyDrawer title="Transfer Requests" open={open} onClose={onClose}>
             <div>

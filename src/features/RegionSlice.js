@@ -11,7 +11,7 @@ export const fetchRegions = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try { 
             token = localStorage.getItem('token')
-            const response = await axios.get(`${baseURL}/regiontype`, {
+            const response = await axios.get(`${baseURL}/region`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Include token in headers
                     'Content-Type': 'application/json',

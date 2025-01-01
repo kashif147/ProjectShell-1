@@ -211,7 +211,26 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
               {text}
             </span>
           </Link>
-        ):col.title === "Correspondence ID" ? (
+        ):
+        col.title === "Roster ID" ? (
+          <Link
+            to="/Roster"
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              code: record?.regNo,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth: record?.dateOfBirth,
+            }}
+            onClick={() => getProfile([record], index)}
+          >
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
+            </span>
+          </Link>)
+          :
+        col.title === "Correspondence ID" ? (
           <Link
             to="/CorspndncDetail"
             state={{

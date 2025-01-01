@@ -309,8 +309,8 @@ export const TableColumnsProvider = ({ children }) => {
     ],
     Roster:[
       {
-        dataIndex: "correspondenceID",
-        title: "Correspondence ID",
+        dataIndex: "RosterID",
+        title: "Roster ID",
         ellipsis: true,
         isGride: true,
         isVisible: true,
@@ -319,6 +319,14 @@ export const TableColumnsProvider = ({ children }) => {
       {
         dataIndex: "regNo",
         title: "Reg No",
+        ellipsis: true,
+        isGride: true,
+        isVisible: true,
+        width: 150,
+      },
+      {
+        dataIndex: "fullName",
+        title: "Full Name",
         ellipsis: true,
         isGride: true,
         isVisible: true,
@@ -341,69 +349,39 @@ export const TableColumnsProvider = ({ children }) => {
         width: 150,
       },
       {
-        dataIndex: "methodOfContact",
-        title: "Method of Contact",
+        dataIndex: "StartDate",
+        title: "StartDate",
         ellipsis: true,
         isGride: true,
         isVisible: true,
         width: 150,
       },
       {
-        dataIndex: "dateOfContact",
-        title: "Date of Contact",
+        dataIndex: "EndDate",
+        title: "End Date",
+        ellipsis: true,
+        isGride: true,
+        isVisible: true,
+        width: 150,
+      },
+      
+      {
+        dataIndex: "Heading",
+        title: "Details",
         ellipsis: true,
         isGride: true,
         isVisible: true,
         width: 150,
       },
       {
-        dataIndex: "duration",
-        title: "Duration",
-        ellipsis: true,
-        isGride: true,
-        isVisible: true,
-        width: 150,
-      },
-      {
-        dataIndex: "details",
+        dataIndex: "Heading",
         title: "Details",
         ellipsis: true,
         isGride: true,
         isVisible: true,
         width: 400,
       },
-      {
-        dataIndex: "followUpNeeded",
-        title: "Follow-up Needed",
-        ellipsis: true,
-        isGride: true,
-        isVisible: true,
-        width: 150,
-      },
-      {
-        dataIndex: "followUpDate",
-        title: "Follow-up Date",
-        ellipsis: true,
-        isGride: true,
-        isVisible: true,
-        width: 150,
-      },
-      {
-        dataIndex: "status",
-        title: "Status",
-        ellipsis: true,
-        isGride: true,
-        isVisible: true,
-        width: 150,
-      },
-      {
-        dataIndex: "nextStep",
-        title: "Next Step",
-        ellipsis: true,
-        isGride: true,
-        isVisible: true,
-        width: 200,
-      },
+      
     ],
   });
 
@@ -437,14 +415,12 @@ export const TableColumnsProvider = ({ children }) => {
       {
         titleColumn: "District",
         isSearch: true,
-
         isCheck: false,
         lookups: { "All District": false },
       },
       {
         titleColumn: "Station",
         isSearch: true,
-
         isCheck: false,
         lookups: { Male: false, Female: false, Other: false },
       },
@@ -1041,6 +1017,164 @@ export const TableColumnsProvider = ({ children }) => {
       },
     ],
     Transfer: [
+      {
+        titleColumn: "Rank",
+        isSearch: true,
+        isCheck: false,
+        lookups: { "All Ranks": false, "0001": false, "0021": false },
+        comp: "!="
+      },
+      {
+        titleColumn: "Duty",
+        isSearch: true,
+        comp: "!=",
+        isCheck: false,
+        lookups: { "All Duties": false, "Sargent": false, "Garda": false },
+      },
+      {
+        titleColumn: "Division",
+        isSearch: true,
+        isCheck: false,
+        lookups: {
+          "All Divisions": false,
+          Northland: false,
+          Southland: false,
+          Eastland: false,
+        },
+      },
+      {
+        titleColumn: "District",
+        isSearch: true,
+
+        isCheck: false,
+        lookups: { "All District": false },
+      },
+      {
+        titleColumn: "Station",
+        isSearch: true,
+
+        isCheck: false,
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Station ID",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Pensioner ",
+        isSearch: false,
+        isCheck: false,
+        lookups: { Pensioner: false },
+      },
+      {
+        titleColumn: "Date Of Birth",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Date Retired",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Date Aged 65",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Date Of Death",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Station Phone",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Distric Rep",
+        isSearch: false,
+        isCheck: false,
+        lookups: { "Distric Rep": false },
+      },
+      {
+        titleColumn: "Division Rep",
+        isSearch: false,
+        isCheck: false,
+        lookups: { "Division Rep": false },
+      },
+      {
+        titleColumn: "Pension No",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "GRA Member",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Date Joined",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Date Left",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Associate Member",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+
+      {
+        titleColumn: "Address",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Status",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+      {
+        titleColumn: "Updated",
+        isSearch: false,
+        isCheck: false,
+
+        lookups: { Male: false, Female: false, Other: false },
+      },
+    ],
+    Roster: [
       {
         titleColumn: "Rank",
         isSearch: true,

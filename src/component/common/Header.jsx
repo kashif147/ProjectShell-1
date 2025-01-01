@@ -113,6 +113,24 @@ function Header() {
       ),
     },
   ];
+  const Roster = [
+    {
+      key: "1",
+      label: (
+        <Link to="/RosterSummary" state={{ search: "Rouster" }} className="link" style={{ textDecoration: "none" }}>
+          Summary
+        </Link>
+      ),
+    },
+    {
+      key: "",
+      label: (
+        <Link className="link" to="Dummy" state={{ search: "Correspondences" }}>
+          Dummy Page
+        </Link>
+      ),
+    },
+  ];
   let arr = []
   const reportLink = ReportsTitle?.map((i, index) => {
     return {
@@ -154,6 +172,9 @@ function Header() {
               </li>
               <li className={`${pathname == "/CorrespondencesSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
                 <MyDrowpDown title={"Correspondences"} items={CorrespondencesLink} />
+              </li>
+              <li className={`${pathname == "/RosterSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
+                <MyDrowpDown title={"Roster"} items={Roster} />
               </li>
               {/* <li class="nav-item nav-links-container">
                 <MyDrowpDown title={"Documents"} items={navLinks} />
