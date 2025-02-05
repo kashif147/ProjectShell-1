@@ -1,13 +1,24 @@
+
+
+
+
+
 import React, { createContext, useContext, useEffect, useState } from "react";
 import { tableData } from "../Data";
 import { useLocation } from "react-router-dom";
-
+import { useDispatch, useSelector } from 'react-redux';
+import { fetchRegions, deleteRegion } from "../features/RegionSlice";
+import { getAllLookups } from '../features/LookupsSlice'
 const TableColumnsContext = createContext();
 
 export const TableColumnsProvider = ({ children }) => {
   const location = useLocation()
+  const dispatch = useDispatch()
   const [ascending, setAscending] = useState(true);
   const [claimsDrawer, setclaimsDrawer] = useState(false)
+  const { regions, loading } = useSelector((state) => state.regions);
+  const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+  console.log(lookups, 'lookups')
   const handlClaimDrawerChng = () => {
     setclaimsDrawer(!claimsDrawer)
   }
@@ -124,7 +135,7 @@ export const TableColumnsProvider = ({ children }) => {
       { dataIndex: "noOfDays_used", title: "No Of Days_used", ellipsis: true, isGride: true, isVisible: true, width: 120 },
       { dataIndex: "description", title: "Description", ellipsis: true, isGride: true, isVisible: true, width: 200 },
     ],
-    Transfer : [
+    Transfer: [
       {
         dataIndex: "regNo",
         title: "Reg No",
@@ -209,7 +220,7 @@ export const TableColumnsProvider = ({ children }) => {
         width: 150,
       },
     ],
-    Correspondence:[
+    Correspondence: [
       {
         dataIndex: "correspondenceID",
         title: "Correspondence ID",
@@ -307,7 +318,7 @@ export const TableColumnsProvider = ({ children }) => {
         width: 200,
       },
     ],
-    Roster:[
+    Roster: [
       {
         dataIndex: "RosterID",
         title: "Roster ID",
@@ -364,7 +375,7 @@ export const TableColumnsProvider = ({ children }) => {
         isVisible: true,
         width: 150,
       },
-      
+
       {
         dataIndex: "Heading",
         title: "Details",
@@ -381,7 +392,7 @@ export const TableColumnsProvider = ({ children }) => {
         isVisible: true,
         width: 400,
       },
-      
+
     ],
   });
 
@@ -1633,13 +1644,15 @@ export const TableColumnsProvider = ({ children }) => {
     const result = filterData();
     setGridData(result);
   }, [searchFilters, location?.pathname]); // Re-run when gridData or filters change
-
+  useEffect(() => {
+    dispatch(fetchRegions())
+  }, [dispatch])
   const [ProfileDetails, setProfileDetails] = useState([])
   const [rowIndex, setrowIndex] = useState(0)
 
   const getProfile = (row, index) => {
     setProfileDetails(row)
-    setrowIndex(index) 
+    setrowIndex(index)
   }
 
   const profilNextBtnFtn = () => {
@@ -1649,15 +1662,15 @@ export const TableColumnsProvider = ({ children }) => {
       const filteredData = gridData?.filter((_, index) => index === newIndex);
       setProfileDetails(filteredData);
       return newIndex;
-  });
-};
+    });
+  };
 
   const profilPrevBtnFtn = () => {
-    setrowIndex(prev=>{
-      const newIndex= prev-1;
-      const filteredData = gridData?.filter((_,index)=>index==newIndex);
+    setrowIndex(prev => {
+      const newIndex = prev - 1;
+      const filteredData = gridData?.filter((_, index) => index == newIndex);
       setProfileDetails(filteredData)
-      
+
       return newIndex
     })
 
@@ -1706,6 +1719,185 @@ export const TableColumnsProvider = ({ children }) => {
   useEffect(() => {
     setReportsTitle(extractMainKeys());
   }, [report]);
+  // region lookups
+  const [regionLookups, setRegionLookups] = useState({
+    gender: [],
+    SpokenLanguages: [],
+    Provinces: [],
+    county: [],
+    Divisions: [],
+    Districts: [],
+    Cities: [],
+    Titles: [],
+  })
+  const [selectLokups, setselectLokups] = useState({
+    Provinces: [],
+    Counteries: [],
+    Divisions: [],
+    Districts: [],
+  });
+  useEffect(() => {
+    if (regions && Array.isArray(regions)) {
+      const filteredProvinces = regions.filter((item) => item?.lookuptypeId?._id === '6761492de9640143bfc38e4c');
+      setRegionLookups((prevState) => ({
+        ...prevState,
+        Provinces: filteredProvinces,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredCounty = regions.filter((item) => item.RegionTypeID === '67182268a0072a28aab883dc' && item?.ParentRegion === '67614e73479dfae6328a2641');
+
+      setRegionLookups((prevState) => ({
+        ...prevState,
+        county: filteredCounty,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredDivision = regions.filter((item) => item.RegionTypeID === '671822b4a0072a28aab883e5');
+
+      setRegionLookups((prevState) => ({
+        ...prevState,
+        Divisions: filteredDivision,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '671822bca0072a28aab883e7');
+
+      setRegionLookups((prevState) => ({
+        ...prevState,
+        Districts: filteredDistricts,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '6718228ca0072a28aab883e0');
+
+      setRegionLookups((prevState) => ({
+        ...prevState,
+        Cities: filteredDistricts,
+      }));
+    }
+  }, [regions]);
+  useEffect(() => {
+    if (regionLookups?.Provinces) {
+      const transformedData = regionLookups?.Provinces.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Provinces: transformedData,
+      }));
+    }
+    if (regionLookups?.county) {
+      const transformedData = regionLookups?.county.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Counteries: transformedData,
+      }));
+    }
+    if (regionLookups?.Divisions) {
+      const transformedData = regionLookups?.Divisions.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Divisions: transformedData,
+      }));
+    }
+    if (regionLookups?.Districts) {
+      const transformedData = regionLookups?.Districts.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Districts: transformedData,
+      }));
+    }
+  }, [regionLookups]);
+
+  // genral lookups
+  useEffect(() => {
+    dispatch(getAllLookups())
+  }, [dispatch])
+  const [lookupsData, setlookupsData] = useState({
+    Duties: [],
+    MaritalStatus: [],
+    Ranks: []
+  })
+  const [lookupsForSelect, setlookupsForSelect] = useState({
+    Duties: [],
+    MaritalStatus: [],
+    Ranks: []
+  })
+  useEffect(() => {
+   
+    if (lookups && Array.isArray(lookups)) {
+      const filteredGender = lookups.filter((item) => item?.lookuptypeId?._id === '674a1977cc0986f64ca36fc6')
+      setlookupsData((prevState) => ({
+        ...prevState,
+        gender: filteredGender,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredDuties = lookups?.filter((item) => item?.lookuptypeId?._id === '674a219fcc0986f64ca3701b')
+     
+      setlookupsData((prevState) => ({
+        ...prevState,
+        Duties: filteredDuties,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredMaritalStatus = lookups?.filter((item) => item?.lookuptypeId?._id === '676a9ec44a1a6d0778731c29')
+      setlookupsData((prevState) => ({
+        ...prevState,
+        MaritalStatus: filteredMaritalStatus,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredRanks = lookups?.lookups?.filter((item) => item?.lookuptypeId?._id === '674a219fcc0986f64ca3701b')
+      setlookupsData((prevState) => ({
+        ...prevState,
+        Ranks: filteredRanks,
+      }));
+    }
+  }, [lookups])
+
+  useEffect(()=>{
+    // lookupsData?.Duties
+    if (lookupsData?.Duties) {
+      const transformedData = lookupsData?.Duties.map((item) => ({
+        key: item?._id,
+        label: item?.lookupsData,
+      }));
+
+      setlookupsForSelect((prevState) => ({
+        ...prevState,
+        Duties: transformedData,
+      }));
+    }
+
+    if (lookupsData?.Ranks) {
+      const transformedData = lookupsData?.Ranks.map((item) => ({
+        key: item?._id,
+        label: item?.lookupsData,
+      }));
+
+      setlookupsForSelect((prevState) => ({
+        ...prevState,
+        Ranks: transformedData,
+      }));
+    }
+  },[lookupsData])
+console.log(lookupsData,"lookupsData")
+
 
   return (
     <TableColumnsContext.Provider
@@ -1738,7 +1930,11 @@ export const TableColumnsProvider = ({ children }) => {
         rowIndex,
         profilNextBtnFtn,
         profilPrevBtnFtn,
-        globleFilters
+        globleFilters,
+        regionLookups,
+        selectLokups,
+        lookupsData,
+        lookupsForSelect
       }}
     >
       {children}

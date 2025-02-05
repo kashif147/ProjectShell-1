@@ -91,6 +91,7 @@ const lookupsSlice = createSlice({
                 state.error = null;
             })
             .addCase(getAllLookups.fulfilled, (state, action) => {
+                debugger
                 state.lookupsloading = false;
                 state.lookups = action.payload;
             })
