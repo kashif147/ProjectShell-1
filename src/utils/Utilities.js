@@ -3,34 +3,35 @@ import MyAlert from "../component/common/MyAlert";
 import { notificationsMsg } from "../Data";
 let token;
 export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
+// export const  baseURL = "http://localhost:3500"
 
 
 export const insertDataFtn = async (url, data, successNotification, failureNotification,callback) => {
-  debugger
   const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
-    const response = await axios.post(url, data, {
+    const response = await axios.post(baseURL+url, data, {
       headers: {
         'Content-Type': 'application/json',
         maxBodyLength: Infinity,
         Authorization: `Bearer ${token}`, 
       },
     });
-
+    
     console.log({ successNotification }, response?.status);
-
+    
     if (response.status === 201) { // Strict equality check
-
+      
       MyAlert('success', successNotification);
       callback()
       return
-
+      
     } else {
       return MyAlert('error', `${failureNotification}`);
     }
   } catch (error) {
     console.error(error,'222');
     MyAlert('error', failureNotification); 
+    debugger
   }
 };
 

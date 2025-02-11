@@ -1841,6 +1841,7 @@ export const TableColumnsProvider = ({ children }) => {
    
     if (lookups && Array.isArray(lookups)) {
       const filteredGender = lookups.filter((item) => item?.lookuptypeId?._id === '674a1977cc0986f64ca36fc6')
+     
       setlookupsData((prevState) => ({
         ...prevState,
         gender: filteredGender,
@@ -1887,7 +1888,7 @@ export const TableColumnsProvider = ({ children }) => {
     if (lookupsData?.Ranks) {
       const transformedData = lookupsData?.Ranks.map((item) => ({
         key: item?._id,
-        label: item?.lookupsData,
+        label: item?.lookupname,
       }));
 
       setlookupsForSelect((prevState) => ({

@@ -1,7 +1,8 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useState } from "react";
 import MyDrawer from "../common/MyDrawer";
 import MySelect from "../common/MySelect";
-// import { getAllLookups } from "../../features/LookupsSlice";
+import { fetchRegions } from "../../features/RegionSlice";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Input,
@@ -22,20 +23,13 @@ import {
   UserOutlined,
 } from "@ant-design/icons";
 import { IoSettingsOutline } from "react-icons/io5";
-import { getAllLookups } from "../../features/LookupsSlice";
 import moment from "moment";
-import { useTableColumns } from "../../context/TableColumnsContext ";
+const { TextArea } = Input;
 
 function AddNewGarda({ open, onClose }) {
   const dispath = useDispatch();
-  const {lookupsData,lookupsForSelect} = useTableColumns()
-  console.log(lookupsData,'123')
-  useEffect(()=>{
-dispath(getAllLookups())
-  },[dispath])
   const state = useSelector((state) => state.lookups);
-  const { lookups, lookupsloading, error } = state;
-  const { TextArea } = Input;
+  const { lookups } = state;
 
   const options = [
     { value: "NY", label: "New York" },
@@ -54,7 +48,7 @@ dispath(getAllLookups())
     areaOrTown: null,
     eirCode: null,
     mobile: null,
-    postcode: "null",
+    postcode: null,
     otherContact: null,
     email: null,
     class: null,
@@ -68,11 +62,12 @@ dispath(getAllLookups())
     Partnership: null,
     stationPh: null,
     District: null,
+    selectStation: null,
     Division: null,
     isPensioner: null,
     pensionNo: null,
     duty: null,
-    rank: "",
+    rank: null,
     graduated: null,
     isGRAMember: null,
     dateJoined: null,
@@ -85,6 +80,7 @@ dispath(getAllLookups())
   };
   const [InfData, setInfData] = useState(inputsInitValue);
   const [errors, setErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
   const [updateInput, setUpdateInput] = useState({});
   const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
 
@@ -103,8 +99,48 @@ dispath(getAllLookups())
           ? value.format("DD/MM/YYYY")
           : value,
       }));
+      setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
     }
   };
+
+  const validateForm = () => {
+    let newErrors = {};
+    if (!InfData.gardaRegNo) newErrors.gardaRegNo = "RegNo Required";
+    if (!InfData.forename) newErrors.forename = "ForeName Required";
+    if (!InfData.surname) newErrors.surname = "SurName Required";
+    if (!InfData.dateOfBirth) newErrors.dateOfBirth = "Date Of Birth Required";
+    if (!InfData.gender) newErrors.gender = "Gender Required";
+    if (!InfData.buildingOrHouse)
+      newErrors.buildingOrHouse = "Building Or House Required";
+    if (!InfData.streetOrRoad)
+      newErrors.streetOrRoad = "Street Or Road Required";
+    if (!InfData.postcode) newErrors.postcode = "PostCode Required";
+    if (!InfData.mobile) newErrors.mobile = "Mobile Required";
+    if (!InfData.email) newErrors.email = "Email Required";
+    if (!InfData.rank) newErrors.rank = "Rank Required";
+    if (!InfData.duty) newErrors.duty = "Duty Required";
+    if (!InfData.Division) newErrors.Division = "Division Required";
+    if (!InfData.District) newErrors.District = "District Required";
+    if (!InfData.selectStation) newErrors.selectStation = "Station Required";
+    if (!InfData.dateOfTemplemore)
+      newErrors.dateOfTemplemore = "Date Of Templemore Required";
+    if (!InfData.class) newErrors.class = "Class Required";
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmit = (e) => {
+   
+    e.preventDefault();
+    setSubmitted(true);
+
+    if (validateForm()) {
+      alert("Form submitted successfully!");
+      console.log("Form Data:", InfData);
+    }
+  };
+
   //   const handleInputChangeWhole = (field, value) => {
   //     setInfData((prev) => ({
   //       ...prev,
@@ -169,6 +205,7 @@ dispath(getAllLookups())
         title='New Garda Details'
         open={open}
         onClose={onClose}
+        add={handleSubmit}
         width='991px'>
         <div className='details-con-header1'>
           <Row>
@@ -214,8 +251,8 @@ dispath(getAllLookups())
                             </div>
                           }
                         />
-                        {InfData?.gardaRegNo === "" && (
-                          <h1 className='error-text'>RegNo Required</h1>
+                        {submitted && errors.gardaRegNo && (
+                          <h1 className='error-text'>{errors.gardaRegNo}</h1>
                         )}
                       </div>
                     </div>
@@ -249,8 +286,8 @@ dispath(getAllLookups())
                         onChange={handleInputChange}
                         value={InfData?.forename}
                       />
-                      {InfData?.forename === "" && (
-                        <h1 className='error-text'>ForeName Required</h1>
+                      {submitted && errors.forename && (
+                        <h1 className='error-text'>{errors.forename}</h1>
                       )}
                     </div>
                   </div>
@@ -268,8 +305,8 @@ dispath(getAllLookups())
                         name='surname'
                         onChange={handleInputChange}
                       />
-                      {InfData?.surname === "" && (
-                        <h1 className='error-text'>Surname Required</h1>
+                      {submitted && errors.surname && (
+                        <h1 className='error-text'>{errors.surname}</h1>
                       )}
                     </div>
                   </div>
@@ -283,6 +320,7 @@ dispath(getAllLookups())
                     <div className='input-sub-con d-flex flex-column'>
                       <DatePicker
                         style={{ width: "100%", borderRadius: "3px" }}
+                        name='dob'
                         value={
                           InfData?.dateOfBirth
                             ? moment(InfData.dateOfBirth, "DD/MM/YYYY")
@@ -296,12 +334,12 @@ dispath(getAllLookups())
                         }}
                         format='DD/MM/YYYY'
                       />
-                      {InfData.dateOfBirth === "" && (
-                        <h1 className='error-text'>Date Of Birth Required</h1>
-                      )}
                       {/* <div className="ag-65"> */}
                       {ageOnNextBirthday != null && (
-                        <p className='ag-65-title'>{`${ageOnNextBirthday} Yrs`}</p>
+                        <p className='ag-65-title'>{ageOnNextBirthday} Yrs</p>
+                      )}
+                      {submitted && errors.dateOfBirth && (
+                        <h1 className='error-text'>{errors.dateOfBirth}</h1>
                       )}
                     </div>
                     {/* </div> */}
@@ -322,10 +360,10 @@ dispath(getAllLookups())
                         value={InfData.gender}
                         onChange={handleInputChange}
                       />
+                      {submitted && errors.gender && (
+                        <h1 className='error-text'>{errors.gender}</h1>
+                      )}
                     </div>
-                    {InfData.gender === "" && (
-                      <h1 className='error-text'>Gender Required</h1>
-                    )}
                   </div>
                 </div>
 
@@ -343,10 +381,8 @@ dispath(getAllLookups())
                         value={InfData?.buildingOrHouse}
                         onChange={handleInputChange}
                       />
-                      {InfData.buildingOrHouse === "" && (
-                        <h1 className='error-text'>
-                          Building Or House Required
-                        </h1>
+                      {submitted && errors.buildingOrHouse && (
+                        <h1 className='error-text'>{errors.buildingOrHouse}</h1>
                       )}
                     </div>
                   </div>
@@ -365,8 +401,8 @@ dispath(getAllLookups())
                         value={InfData.streetOrRoad}
                         onChange={handleInputChange}
                       />
-                      {InfData?.streetOrRoad === "" && (
-                        <h1 className='error-text'>Street Or Road Required</h1>
+                      {submitted && errors?.streetOrRoad && (
+                        <h1 className='error-text'>{errors?.streetOrRoad}</h1>
                       )}
                     </div>
                   </div>
@@ -397,16 +433,15 @@ dispath(getAllLookups())
                       <MySelect
                         placeholder='Select City'
                         isSimple={true}
+                        name='postcode'
                         value={InfData.postcode}
                         options={options}
                         onChange={(value) =>
                           handleInputChange("postcode", value)
                         }
                       />
-                      {InfData.postcode === "" && (
-                        <h1 className='error-text'>
-                          Country City Or Postcode Required
-                        </h1>
+                      {submitted && errors.postcode && (
+                        <h1 className='error-text'>{errors.postcode}</h1>
                       )}
                     </div>
                   </div>
@@ -441,8 +476,8 @@ dispath(getAllLookups())
                         value={InfData.mobile}
                         onChange={handleInputChange}
                       />
-                      {InfData?.mobile === "" && (
-                        <h1 className='error-text'>Mobile Required</h1>
+                      {submitted && errors?.mobile && (
+                        <h1 className='error-text'>{errors?.mobile}</h1>
                       )}
                     </div>
                   </div>
@@ -477,8 +512,8 @@ dispath(getAllLookups())
                         value={InfData.email}
                         onChange={handleInputChange}
                       />
-                      {InfData?.email === "" && (
-                        <h1 className='error-text'>Email Required</h1>
+                      {submitted && errors?.email && (
+                        <h1 className='error-text'>{errors?.email}</h1>
                       )}
                     </div>
                   </div>
@@ -508,14 +543,15 @@ dispath(getAllLookups())
                         placeholder='Select Rank'
                         isSimple={true}
                         options={options}
+                        name='rank'
                         value={InfData.rank}
                         onChange={(value) => {
                           console.log("New rank", value);
                           handleInputChange("rank", value);
                         }}
                       />
-                      {InfData.rank === "" && (
-                        <h1 className='error-text'>Rank Required</h1>
+                      {submitted && errors.rank && (
+                        <h1 className='error-text'>{errors.rank}</h1>
                       )}
                     </div>
                   </div>
@@ -533,11 +569,13 @@ dispath(getAllLookups())
                       <MySelect
                         placeholder='Select Duty'
                         isSimple={true}
+                        options={options}
+                        name='duty'
                         value={InfData.duty}
                         onChange={(value) => handleInputChange("duty", value)}
                       />
-                      {InfData.duty === "" && (
-                        <h1 className='error-text'>Duty Required</h1>
+                      {submitted && errors.duty && (
+                        <h1 className='error-text'>{errors.duty}</h1>
                       )}
                     </div>
                   </div>
@@ -553,12 +591,13 @@ dispath(getAllLookups())
                         placeholder='Select Division'
                         isSimple={true}
                         value={InfData.Division}
+                        name='division'
                         onChange={(value) =>
                           handleInputChange("division", value)
                         }
                       />
-                      {InfData.Division === "" && (
-                        <h1 className='error-text'>Division Required</h1>
+                      {submitted && errors.Division && (
+                        <h1 className='error-text'>{errors.Division}</h1>
                       )}
                     </div>
                   </div>
@@ -574,12 +613,13 @@ dispath(getAllLookups())
                         placeholder='Select District'
                         isSimple={true}
                         value={InfData.District}
+                        name='district'
                         onChange={(value) =>
                           handleInputChange("district", value)
                         }
                       />
-                      {InfData.District === "" && (
-                        <h1 className='error-text'>District Required</h1>
+                      {submitted && errors.District && (
+                        <h1 className='error-text'>{errors.District}</h1>
                       )}
                     </div>
                   </div>
@@ -611,12 +651,13 @@ dispath(getAllLookups())
                         placeholder='Select Station'
                         isSimple={true}
                         value={InfData.selectStation}
+                        name='station'
                         onChange={(value) =>
                           handleInputChange("station", value)
                         }
                       />
-                      {InfData.selectStation === "" && (
-                        <h1 className='error-text'>Station Required</h1>
+                      {submitted && errors.selectStation && (
+                        <h1 className='error-text'>{errors.selectStation}</h1>
                       )}
                     </div>
                     <Button
@@ -666,6 +707,7 @@ dispath(getAllLookups())
                     <div className='input-sub-con d-flex flex-column'>
                       <MyDatePicker
                         className='date-picker'
+                        name='dop'
                         isSimple={true}
                         value={
                           InfData.dateOfTemplemore
@@ -680,8 +722,10 @@ dispath(getAllLookups())
                         }}
                         format='DD/MM/YYYY'
                       />
-                      {InfData.dateOfTemplemore === "" && (
-                        <h1 className='error-text'>Templemore Required</h1>
+                      {submitted && errors.dateOfTemplemore && (
+                        <h1 className='error-text'>
+                          {errors.dateOfTemplemore}
+                        </h1>
                       )}
                     </div>
                   </div>
@@ -715,6 +759,7 @@ dispath(getAllLookups())
                             ? moment(InfData.dateRetired, "DD/MM/YYYY")
                             : null
                         }
+                        name='dr'
                         onChange={(date, dateString) => {
                           handleInputChange(
                             "dateRetired",
@@ -755,8 +800,8 @@ dispath(getAllLookups())
                         value={InfData?.class}
                         onChange={handleInputChange}
                       />
-                      {InfData?.class === "" && (
-                        <h1 className='error-text'>Class Required</h1>
+                      {submitted && errors?.class && (
+                        <h1 className='error-text'>{errors?.class}</h1>
                       )}
                     </div>
                   </div>
@@ -775,6 +820,7 @@ dispath(getAllLookups())
                           ? moment(InfData.attested, "DD/MM/YYYY")
                           : null
                       }
+                      name='dt'
                       onChange={(date, dateString) => {
                         handleInputChange(
                           "attested",
@@ -798,6 +844,7 @@ dispath(getAllLookups())
                           ? moment(InfData.graduation, "DD/MM/YYYY")
                           : null
                       }
+                      name='dg'
                       onChange={(date, dateString) => {
                         handleInputChange(
                           "graduation",

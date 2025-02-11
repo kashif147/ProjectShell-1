@@ -1,15 +1,30 @@
+/** @format */
 
 import { React, useEffect, useState } from "react";
 
-import { Tabs, message, Button, Radio, Divider, DatePicker, Table, Space } from "antd";
-import { LoadingOutlined, UploadOutlined, DownOutlined, UserOutlined } from "@ant-design/icons";
+import {
+  Tabs,
+  message,
+  Button,
+  Radio,
+  Divider,
+  DatePicker,
+  Table,
+  Space,
+} from "antd";
+import {
+  LoadingOutlined,
+  UploadOutlined,
+  DownOutlined,
+  UserOutlined,
+} from "@ant-design/icons";
 import MySelect from "../common/MySelect";
 import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
-import moment from 'moment';
+import moment from "moment";
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import '../../styles/MyDetails.css'
+import "../../styles/MyDetails.css";
 import { BsThreeDots } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useForm } from "react-hook-form";
@@ -18,8 +33,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 import MyTransfer from "./MyTransfer";
-
-
+import { insertDataFtn } from "../../utils/Utilities";
 
 const { TextArea } = Input;
 
@@ -30,19 +44,17 @@ const getBase64 = (img, callback) => {
   reader.readAsDataURL(img);
 };
 
-
-const plainOptions = ['Male', 'Female', 'Other'];
+const plainOptions = ["Male", "Female", "Other"];
 const options = [
-  { label: 'Male', value: 'Male' },
-  { label: 'Female', value: 'Female' },
-  { label: 'Other', value: 'Other', title: 'Other' },
+  { label: "Male", value: "Male" },
+  { label: "Female", value: "Female" },
+  { label: "Other", value: "Other", title: "Other" },
 ];
 const optionsWithDisabled = [
-  { label: 'Male', value: 'Male' },
-  { label: 'Female', value: 'Female' },
-  { label: 'Other', value: 'Other', disabled: true },
+  { label: "Male", value: "Male" },
+  { label: "Female", value: "Female" },
+  { label: "Other", value: "Other", disabled: true },
 ];
-
 
 const beforeUpload = (file) => {
   const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
@@ -56,14 +68,122 @@ const beforeUpload = (file) => {
   return isJpgOrPng && isLt2M;
 };
 
-
-
 function MyDeatails() {
-  const { ProfileDetails, topSearchData, rowIndex, } = useTableColumns()
-  const { register, handleSubmit, watch, formState: { errors } } = useForm();
-  const [InfData, setInfData] = useState()
+  const { ProfileDetails, topSearchData, rowIndex } = useTableColumns();
+  const {
+    register,
+    handleSubmit,
+    watch,
+    formState: { errors },
+  } = useForm();
+  const [InfData, setInfData] = useState();
+  const [InfDataPartner, setInfDataPartner] = useState({
+    // profileId: "67a1b268a203d65ec4a553e2",
+    // title: "",
+    // forename: "",
+    // surname: "",
+    // maidenName: "",
+    // dateOfBirth: "",
+    // dateMarriage: null,
+    // deceased: false,
+    // dateOfDeath: null,
+    "profileId": "67a1b268a203d65ec4a553e2",
+    "maidenName": "",
+    "dateOfBirth": "",
+    "deceased": false,
+    "dateOfDeath": "",
+    "title":"",
+    "forename":"",
+    "surname":""
+  });
+
+  const [iserrors, setIsErrors] = useState({});
+  const [submitted, setSubmitted] = useState(false);
+  const validateForm = () => {
+    let newErrors = {};
+    if (!InfDataPartner.title) newErrors.title = "Title Required";
+    if (!InfDataPartner.forename) newErrors.forename = "ForeName Required";
+    if (!InfDataPartner.surname) newErrors.surname = "SurName Required";
+    if (!InfDataPartner.maidenName)
+      newErrors.maidenName = "Maiden Name Required";
+    if (!InfDataPartner.dateOfBirth)
+      newErrors.dateOfBirth = "Date Of Birth Required";
+    if (!InfDataPartner.dateMarriage)
+      newErrors.dateMarriage = "Date Marriage Required";
+    if (!InfDataPartner.dateOfDeath)
+      newErrors.dateOfDeath = "Date of Death Required";
+
+    setIsErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+
+  const handleSubmitPartner = (e) => {
+    e.preventDefault();
+    setSubmitted(true); // Track form submission attempt
+
+    if (validateForm()) {
+      console.log("Form Data:", InfDataPartner);
+
+      insertDataFtn(
+        "/partner", 
+        InfDataPartner,
+        "Partner added successfully",
+        "Failed to submit data", // Failure notification
+        () => {
+          console.log("Form submitted successfully!");
+        }
+      );
+    } else {
+      console.log("Form data is invalid!");
+      alert("Please fill all required fields correctly.");
+    }
+  };
+// children
+
+const [childrenData, setChildrenData] = useState({
+  profileId: "65c1f6a4b12d3c001fc9abcd",
+  title: "",
+  forename: "",
+  surname: "",
+});
+const [childrenerror, setChildrenError] = useState({});
+const validateChildren = () => {
+  let newErrors = {};
+  if (!childrenerror.title) newErrors.title = "title Required";
+  if (!childrenerror.forename) newErrors.forename = "forename Required";
+  if (!childrenerror.surname) newErrors.surname = "surname Required";
+
+  setChildrenError(newErrors);
+  return Object.keys(newErrors).length === 0;
+};
+const handleInputChangeChildren = (e) => {
+  const { name, value } = e.target;
+  setChildrenData((prevState) => ({
+    ...prevState,
+    [name]: value,
+  }));
+  setChildrenError((prev) => ({
+    ...prev,
+    [name]: "",
+  }));
+};
+
+const handleSubmitChildren = (e) => {
+  debugger
+  e.preventDefault();
+
+  if (!validateChildren()) {
+    console.error("Form data is invalid!");
+    return;
+  }
+
+  alert("Form submitted successfully!");
+  console.log("Form Data:", childrenData);
+  setChildrenData({});
+  setChildrenError({});
+};
   const location = useLocation();
-  const profileData = location?.state
+  const profileData = location?.state;
   const [activeTab, setActiveTab] = useState("1");
   const [isChecked, setIsChecked] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -93,22 +213,41 @@ function MyDeatails() {
   });
 
   const [modalOpenData, setmodalOpenData] = useState({
-    Partnership: false, Children: false,
-    TransferScreen: false, criticalIllnessScheme: false, GardaReviews: false,
+    Partnership: false,
+    Children: false,
+    TransferScreen: false,
+    criticalIllnessScheme: false,
+    GardaReviews: false,
     Committees: false,
     PartnerLifeAssuranceClaim: false,
     GardaLifeAssuranceClaim: false,
-    GardaLegalAidScheme: false
-  })
-  const openCloseModalsFtn = (key,) => {
+    GardaLegalAidScheme: false,
+  });
+
+  const openCloseModalsFtn = (key) => {
     setmodalOpenData((prevState) => ({
       ...prevState,
       [key]: !modalOpenData[key],
     }));
   };
-
+  const handleInputPartnerChange = (eventOrName, value) => {
+    if (eventOrName && eventOrName.target) {
+      const { name, type, checked } = eventOrName.target;
+      setInfDataPartner((prev) => ({
+        ...prev,
+        [name]: type === "checkbox" ? checked : eventOrName.target.value,
+      }));
+    } else {
+      setInfDataPartner((prev) => ({
+        ...prev,
+        [eventOrName]: moment.isMoment(value)
+          ? value.format("DD/MM/YYYY")
+          : value,
+      }));
+    }
+    setIsErrors((prev) => ({ ...prev, [eventOrName]: "" }));
+  };
   const handleInputChange = (name, value) => {
-
     setTransferData((prevState) => ({
       ...prevState,
       [name]: value,
@@ -153,10 +292,16 @@ function MyDeatails() {
         forename: ProfileDetails[0]?.forename,
         surname: ProfileDetails[0]?.surname,
         dateOfBirth: ProfileDetails[0]?.dateOfBirth,
-        dateRetired: ProfileDetails[0]?.dateRetired == 'N/A' ? null : ProfileDetails[0]?.dateRetired,
+        dateRetired:
+          ProfileDetails[0]?.dateRetired == "N/A"
+            ? null
+            : ProfileDetails[0]?.dateRetired,
         dateAged65: ProfileDetails[0]?.dateAged65,
         isDeceased: ProfileDetails[0]?.dateOfDeath == "N/A" ? false : true,
-        dateOfDeath: ProfileDetails[0]?.dateOfDeath == 'N/A' ? null : ProfileDetails[0]?.dateOfDeath,
+        dateOfDeath:
+          ProfileDetails[0]?.dateOfDeath == "N/A"
+            ? null
+            : ProfileDetails[0]?.dateOfDeath,
         Partnership: ProfileDetails[0]?.Partnership,
         stationPh: ProfileDetails[0]?.stationPhone,
         District: ProfileDetails[0]?.district,
@@ -172,20 +317,22 @@ function MyDeatails() {
         attested: ProfileDetails[0]?.attested,
         DateLeft: ProfileDetails[0]?.dateLeft,
         isLeft: true,
-        isAssociateMember: ProfileDetails[0]?.associateMember === "yes" ? true : false,
+        isAssociateMember:
+          ProfileDetails[0]?.associateMember === "yes" ? true : false,
       };
       setInfData(profils);
     }
-
   }, [ProfileDetails]);
   const handleInputChangeWhole = (field, value) => {
-
     setInfData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-  console.log(InfData, "77")
+  useEffect(() => {
+    console.log(InfData, "77");
+  }, [InfData]); // This will log the state whenever it changes
+
   useEffect(() => {
     return () => {
       setInfData({});
@@ -211,55 +358,55 @@ function MyDeatails() {
 
   const options = [
     {
-      label: 'Male',
-      value: 'Male',
+      label: "Male",
+      value: "Male",
     },
     {
-      label: 'Female',
-      value: 'Female',
+      label: "Female",
+      value: "Female",
     },
     {
-      label: 'Not Specified',
-      value: 'Not Specified',
-      title: 'Not Specified',
+      label: "Not Specified",
+      value: "Not Specified",
+      title: "Not Specified",
     },
   ];
 
   const optionsWithDisabled = [
     {
-      label: 'Male',
-      value: 'Male',
+      label: "Male",
+      value: "Male",
     },
     {
-      label: 'Female',
-      value: 'Female',
+      label: "Female",
+      value: "Female",
     },
     {
-      label: 'Not Specified',
-      value: 'Not Specified',
+      label: "Not Specified",
+      value: "Not Specified",
       disabled: false,
     },
   ];
 
-  const [value1, setValue1] = useState('Male');
-  const [value2, setValue2] = useState('Male');
-  const [value3, setValue3] = useState('Male');
-  const [value4, setValue4] = useState('Male');
+  const [value1, setValue1] = useState("Male");
+  const [value2, setValue2] = useState("Male");
+  const [value3, setValue3] = useState("Male");
+  const [value4, setValue4] = useState("Male");
 
   const onChange1 = ({ target: { value } }) => {
-    console.log('radio1 checked', value);
+    console.log("radio1 checked", value);
     setValue1(value);
   };
   const onChange2 = ({ target: { value } }) => {
-    console.log('radio2 checked', value);
+    console.log("radio2 checked", value);
     setValue2(value);
   };
   const onChange3 = ({ target: { value } }) => {
-    console.log('radio3 checked', value);
+    console.log("radio3 checked", value);
     setValue3(value);
   };
   const onChange4 = ({ target: { value } }) => {
-    console.log('radio4 checked', value);
+    console.log("radio4 checked", value);
     setValue4(value);
   };
 
@@ -267,9 +414,7 @@ function MyDeatails() {
     console.log("radio checked", e.target.value);
     setValue(e.target.value);
   };
-  const inputsChangeFtn = () => {
-
-  }
+  const inputsChangeFtn = () => {};
   const onCheckboxChange = (e) => {
     setIsChecked(e.target.checked);
   };
@@ -283,7 +428,7 @@ function MyDeatails() {
   const DutyOpenCloseFtn = () => setisDuty(!isDuty);
 
   const AddTransferFtn = () => {
-    // Lgenderogic for adding 
+    // Lgenderogic for adding
     console.log(TransferData);
   };
 
@@ -298,7 +443,7 @@ function MyDeatails() {
   };
   function getNextBirthdayAge(birthDateStr) {
     // Parse the birth date in DD/MM/YYYY format using Moment.js
-    const birthDate = moment(birthDateStr, 'DD/MM/YYYY');
+    const birthDate = moment(birthDateStr, "DD/MM/YYYY");
 
     // Get today's date
     const today = moment();
@@ -308,7 +453,7 @@ function MyDeatails() {
 
     // If the birthday has passed this year, move it to next year
     if (today.isAfter(nextBirthday)) {
-      nextBirthday.add(1, 'years');
+      nextBirthday.add(1, "years");
     }
 
     // Calculate the age on the next birthday
@@ -337,306 +482,367 @@ function MyDeatails() {
   };
   const childrencolumns = [
     {
-      title: 'Title',
-      dataIndex: 'title',
-      key: 'title'
+      title: "Title",
+      dataIndex: "title",
+      key: "title",
     },
     {
-      title: 'Forename',
-      dataIndex: 'forename',
-      key: 'forename'
+      title: "Forename",
+      dataIndex: "forename",
+      key: "forename",
     },
     {
-      title: 'Surname',
-      dataIndex: 'surname',
-      key: 'surname'
+      title: "Surname",
+      dataIndex: "surname",
+      key: "surname",
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <FaRegCircleQuestion
+            size={16}
+            style={{ marginRight: "8px" }}
+          />
           Action
         </div>
       ),
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+        <Space size='middle'>
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+          />
           <AiFillDelete size={16} />
-
         </Space>
       ),
     },
   ];
   const partnershipColumns = [
     {
-      title: 'Name',
-      dataIndex: 'gardaRegNo',
-      key: 'gardaRegNo',
+      title: "Name",
+      dataIndex: "gardaRegNo",
+      key: "gardaRegNo",
     },
     {
-      title: 'Date of Birth',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "Date of Birth",
+      dataIndex: "dateOfBirth",
+      key: "dateOfBirth",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
-      title: 'Date Marriage',
-      dataIndex: 'dateMarriage',
-      key: 'dateMarriage',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "Date Marriage",
+      dataIndex: "dateMarriage",
+      key: "dateMarriage",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
-      title: 'Date of Death',
-      dataIndex: 'dateMarriage',
-      key: 'dateMarriage',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "Date of Death",
+      dataIndex: "dateMarriage",
+      key: "dateMarriage",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <FaRegCircleQuestion
+            size={16}
+            style={{ marginRight: "8px" }}
+          />
           Action
         </div>
       ),
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle">
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+        <Space size='middle'>
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+          />
           <AiFillDelete size={16} />
-
         </Space>
       ),
     },
-  ]
+  ];
   const GardaReviewColumns = [
     {
-      title: 'Start Date',
-      dataIndex: 'gardaRegNo',
-      key: 'gardaRegNo',
+      title: "Start Date",
+      dataIndex: "gardaRegNo",
+      key: "gardaRegNo",
     },
     {
-      title: 'End Date',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "End Date",
+      dataIndex: "dateOfBirth",
+      key: "dateOfBirth",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
-      title: 'Notese',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Notese",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <FaRegCircleQuestion
+            size={16}
+            style={{ marginRight: "8px" }}
+          />
           Action
         </div>
       ),
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+        <Space size='middle'>
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+          />
           <AiFillDelete size={16} />
         </Space>
       ),
     },
-  ]
-  const [drawer, setdrawer] = useState(false)
+  ];
+  const [drawer, setdrawer] = useState(false);
   const criticalIllnessSchemeClm = [
     {
-      title: 'Claim Type',
-      dataIndex: 'gardaRegNo',
-      key: 'gardaRegNo',
+      title: "Claim Type",
+      dataIndex: "gardaRegNo",
+      key: "gardaRegNo",
     },
     {
-      title: 'Claim Reason',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "Claim Reason",
+      dataIndex: "dateOfBirth",
+      key: "dateOfBirth",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
-      title: 'Claim Date',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Claim Date",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
-      title: 'Beneficiary',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Beneficiary",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
-      title: 'Child Name',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Child Name",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
-      title: 'Partner Name',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Partner Name",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
+          <FaRegCircleQuestion
+            size={16}
+            style={{ marginRight: "8px" }}
+          />
           Action
         </div>
       ),
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+        <Space size='middle'>
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+          />
           <AiFillDelete size={16} />
         </Space>
       ),
     },
+  ];
 
-  ]
- 
   const PartnerLifeAssuranceClaimClm = [
     {
-      title: 'Transfer Date',
-      dataIndex: 'gardaRegNo',
-      key: 'gardaRegNo',
+      title: "Transfer Date",
+      dataIndex: "gardaRegNo",
+      key: "gardaRegNo",
     },
     {
-      title: 'Station From',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "Station From",
+      dataIndex: "dateOfBirth",
+      key: "dateOfBirth",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
-      title: 'Station To',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Station To",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
-      title: 'Notes',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "Notes",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
           Action
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          <FaRegCircleQuestion
+            size={16}
+            style={{ marginRight: "8px" }}
+          />
         </div>
       ),
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+        <Space size='middle'>
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+          />
           <AiFillDelete size={16} />
         </Space>
       ),
     },
-
-  ]
+  ];
   const CommitteesColumns = [
     {
-      title: 'Committee',
-      dataIndex: 'gardaRegNo',
-      key: 'gardaRegNo',
+      title: "Committee",
+      dataIndex: "gardaRegNo",
+      key: "gardaRegNo",
     },
     {
-      title: 'Start Date',
-      dataIndex: 'dateOfBirth',
-      key: 'dateOfBirth',
-      render: (date) => (date ? moment(date).format('DD/MM/YYYY') : ''),
+      title: "Start Date",
+      dataIndex: "dateOfBirth",
+      key: "dateOfBirth",
+      render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
     },
     {
-      title: 'End Date',
-      dataIndex: 'Notes',
-      key: 'Notes',
+      title: "End Date",
+      dataIndex: "Notes",
+      key: "Notes",
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}>
           Action
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          <FaRegCircleQuestion
+            size={16}
+            style={{ marginRight: "8px" }}
+          />
         </div>
       ),
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
+        <Space size='middle'>
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+          />
           <AiFillDelete size={16} />
         </Space>
       ),
     },
-
-  ]
-  const onSubmit = data => console.log(data);
+  ];
+  const onSubmit = (data) => console.log(data);
   const handleButtonClick = (e) => {
-    message.info('Click on left button.');
-    console.log('click left button', e);
+    message.info("Click on left button.");
+    console.log("click left button", e);
   };
   const handleMenuClick = (e) => {
-    message.info('Click on menu item.');
-    console.log('click', e);
+    message.info("Click on menu item.");
+    console.log("click", e);
   };
   const items = [
     {
-      label: '1st menu item',
-      key: '1',
+      label: "1st menu item",
+      key: "1",
       icon: <UserOutlined />,
     },
     {
-      label: '2nd menu item',
-      key: '2',
+      label: "2nd menu item",
+      key: "2",
       icon: <UserOutlined />,
     },
     {
-      label: '3rd menu item',
-      key: '3',
+      label: "3rd menu item",
+      key: "3",
       icon: <UserOutlined />,
       danger: true,
     },
     {
-      label: '4rd menu item',
-      key: '4',
+      label: "4rd menu item",
+      key: "4",
       icon: <UserOutlined />,
       danger: true,
       disabled: true,
     },
-  ]
+  ];
   const menuProps = {
     items,
     onClick: handleMenuClick,
   };
   const props = {
-    action: 'https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload',
+    action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
     onChange({ file, fileList }) {
-      if (file.status !== 'uploading') {
+      if (file.status !== "uploading") {
         console.log(file, fileList);
       }
     },
     defaultFileList: [
       {
-        uid: '1',
-        name: 'khan.png',
-        status: 'done',
-        url: 'http://www.bise.com/khan.png',
+        uid: "1",
+        name: "khan.png",
+        status: "done",
+        url: "http://www.bise.com/khan.png",
         percent: 33,
       },
       {
-        uid: '2',
-        name: 'Error',
-        status: 'done',
-        url: 'http://www.bise.com/yyy.png',
+        uid: "2",
+        name: "Error",
+        status: "done",
+        url: "http://www.bise.com/yyy.png",
       },
       {
-        uid: '3',
-        name: 'zzz.png',
-        status: 'uploading',
+        uid: "3",
+        name: "zzz.png",
+        status: "uploading",
         // custom error message to show
-        url: 'http://www.bise.com/zzz.png',
+        url: "http://www.bise.com/zzz.png",
       },
     ],
   };
@@ -645,245 +851,290 @@ function MyDeatails() {
     selectedRowKeys,
     onChange: (selectedKeys) => {
       setSelectedRowKeys(selectedKeys);
-    }
+    },
   };
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
-      <div className="details-container">
-        <div className="details-con-header1">
+      <div className='details-container'>
+        <div className='details-con-header1'>
           <Row>
             <Col span={8}>
-              <div className="details-con-header"><h2>Personal Information</h2></div>
-              <div className="detail-sub-con detail-sub-con-ist">
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Title :</p>
+              <div className='details-con-header'>
+                <h2>Personal Information</h2>
+              </div>
+              <div className='detail-sub-con detail-sub-con-ist'>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Title :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <div className="input-sub-con">
-                      <MySelect isSimple={true} placeholder='Mr.' />
-                      <h1 className="error-text"></h1>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <div className='input-sub-con'>
+                      <MySelect
+                        isSimple={true}
+                        placeholder='Mr.'
+                      />
+                      <h1 className='error-text'></h1>
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Forename :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Forename :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <div className="input-sub-con">
-                      <Input className="input" value={InfData?.forename} />
-                      <h1 className="error-text"></h1>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <div className='input-sub-con'>
+                      <Input
+                        className='input'
+                        value={InfData?.forename}
+                      />
+                      <h1 className='error-text'></h1>
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Surname :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Surname :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <Input className="input" value={InfData?.surname} {...register("exampleRequired", { required: true })} />
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <Input
+                      className='input'
+                      value={InfData?.surname}
+                      {...register("exampleRequired", { required: true })}
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt gender-container">
-                  <div className="title-cont gender-title-con">
-                    <p className=" ">Gender :</p>
+                <div className='lbl-inpt gender-container'>
+                  <div className='title-cont gender-title-con'>
+                    <p className=' '>Gender :</p>
                   </div>
-                  <div className="input-cont gender-inpt">
-                    <p className="star-white">*</p>
-                    <div className="input">
+                  <div className='input-cont gender-inpt'>
+                    <p className='star-white'>*</p>
+                    <div className='input'>
                       <Radio.Group
                         options={optionsWithDisabled}
                         onChange={onChange4}
                         value={value4}
-                        optionType="button"
-                        buttonStyle="solid"
+                        optionType='button'
+                        buttonStyle='solid'
                       />
-
                     </div>
                   </div>
                 </div>
 
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Date of Birth :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Date of Birth :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
                     <DatePicker
                       style={{ width: "100%", borderRadius: "3px" }}
-                      value={InfData?.dateOfBirth ? moment(InfData.dateOfBirth, 'DD/MM/YYYY') : null} // Convert string to moment
+                      value={
+                        InfData?.dateOfBirth
+                          ? moment(InfData.dateOfBirth, "DD/MM/YYYY")
+                          : null
+                      } // Convert string to moment
                       onChange={(date, dateString) => {
-                        handleInputChangeWhole('dateOfBirth', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                        handleInputChangeWhole(
+                          "dateOfBirth",
+                          date ? date.format("DD/MM/YYYY") : null
+                        ); // Pass the string value
                       }}
                       format='DD/MM/YYYY'
                     />
-                    <p className="ag-65-title" >{`${ageOnNextBirthday} Yrs`}</p>
+                    <p className='ag-65-title'>{`${ageOnNextBirthday} Yrs`}</p>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Date Aged 65 :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Date Aged 65 :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
                     <MyDatePicker
-                      value={InfData?.dateAged65 ? moment(InfData?.dateAged65, 'DD/MM/YYYY') : null}
+                      value={
+                        InfData?.dateAged65
+                          ? moment(InfData?.dateAged65, "DD/MM/YYYY")
+                          : null
+                      }
                       disabled={true}
                     />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Deceased :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Deceased :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <div className="checkbox-con">
-                      <div className="checkbox-sub">
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <div className='checkbox-con'>
+                      <div className='checkbox-sub'>
                         <Checkbox
                           checked={InfData?.isDeceased}
                           onChange={(e) => {
-                            handleInputChangeWhole('isDeceased', e.target.checked)
+                            handleInputChangeWhole(
+                              "deceased",
+                              e.target.checked
+                            );
                             // if (e.target.checked == false) {
                             //   handleInputChangeWhole('dateOfDeath', null);
                             // }
                           }}
                         />
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom"
-                        value={InfData?.dateOfDeath ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
+                      <MyDatePicker
+                        className='w-100 date-picker-custom'
+                        value={
+                          InfData?.dateOfDeath
+                            ? moment(InfData?.dateOfDeath, "DD/MM/YYYY")
+                            : null
+                        }
                         disabled={!InfData?.isDeceased}
                       />
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Partnership :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Partnership :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <Input className="input" value={InfData?.Partnership} />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <Input
+                      className='input'
+                      value={InfData?.Partnership}
+                    />
                     <Button
                       onClick={() => openCloseModalsFtn("Partnership")}
-                      className="primary-btn butn ms-2 detail-btn"
-                    >
+                      className='primary-btn butn ms-2 detail-btn'>
                       +
                     </Button>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Children :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Children :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <Input className="input" value={InfData?.gardaRegNo} />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <Input
+                      className='input'
+                      value={InfData?.gardaRegNo}
+                    />
                     <Button
                       onClick={() => openCloseModalsFtn("Children")}
-                      className="primary-btn butn ms-2 detail-btn"
-                    >
+                      className='primary-btn butn ms-2 detail-btn'>
                       +
                     </Button>
                   </div>
                 </div>
                 <Divider>Correspondence Details</Divider>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Email :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Email :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <Input className="input" />
-                  </div>
-                </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Mobile :</p>
-                  </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <Input className="input" placeholder="000-000-0000" />
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <Input className='input' />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Other Contact :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Mobile :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <Input className="input" placeholder="000-000-0000" />
-                  </div>
-                </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Building or House :</p>
-                  </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <Input className="input" />
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <Input
+                      className='input'
+                      placeholder='000-000-0000'
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Street or Road :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Other Contact :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <Input className="input" />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <Input
+                      className='input'
+                      placeholder='000-000-0000'
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Area or Town :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Building or House :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <Input className='input' />
+                  </div>
+                </div>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Street or Road :</p>
+                  </div>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <Input className='input' />
+                  </div>
+                </div>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Area or Town :</p>
+                  </div>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
 
-                    <Input className="input" />
+                    <Input className='input' />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">County, City or ZIP :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>County, City or ZIP :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <MySelect placeholder="Select City" isSimple={true} />
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <MySelect
+                      placeholder='Select City'
+                      isSimple={true}
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Eircode :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Eircode :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <Input className="input" />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <Input className='input' />
                   </div>
                 </div>
               </div>
             </Col>
 
-            <Col span={8} >
-              <div className="details-con-header"><h2>Professional Details</h2></div>
-              <div className="detail-sub-con">
+            <Col span={8}>
+              <div className='details-con-header'>
+                <h2>Professional Details</h2>
+              </div>
+              <div className='detail-sub-con'>
                 {/* <div className="lbl-inpt">
                 <p className="lbl">Station :</p>
                 <p className="star">*</p>
                 <Input value={InfData?.gardaRegNo} suffix={<BsThreeDots />} />
                 <Button className="butn primary-btn ">Tr</Button>
               </div> */}
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Station :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Station :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <div style={{ display: 'flex', width: '100%' }}>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <div style={{ display: "flex", width: "100%" }}>
                       {/* <div className="input-container-with-sup"> */}
                       {/* <Input
                         placeholder="Enter text"
@@ -895,512 +1146,718 @@ function MyDeatails() {
                       {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
                         Select Station
                       </Dropdown.Button> */}
-                      <MySelect placeholder='Select Station' isSimple={true} />
+                      <MySelect
+                        placeholder='Select Station'
+                        isSimple={true}
+                      />
                     </div>
-                    <Button className="butn primary-btn detail-btn ms-2" onClick={() => openCloseModalsFtn("TransferScreen")}>
+                    <Button
+                      className='butn primary-btn detail-btn ms-2'
+                      onClick={() => openCloseModalsFtn("TransferScreen")}>
                       Tr
                     </Button>
                   </div>
                 </div>
-                <div className="lbl-txtarea-2">
-                  <div className="title-cont-txtarea">
-                    <p className=""></p>
+                <div className='lbl-txtarea-2'>
+                  <div className='title-cont-txtarea'>
+                    <p className=''></p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <TextArea rows={3} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <TextArea
+                      rows={3}
+                      style={{
+                        width: "100%",
+                        borderRadius: "3px",
+                        borderColor: "D9D9D9",
+                      }}
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Station Phone : </p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Station Phone : </p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
                     <Input value={InfData?.gardaRegNo} />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">District :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>District :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <MySelect placeholder="Select District" isSimple={true} />
-                  </div>
-                </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Division :</p>
-                  </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <MySelect placeholder="Select Division" isSimple={true} />
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <MySelect
+                      placeholder='Select District'
+                      isSimple={true}
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Retired :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Division :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <div className="checkbox-con">
-                      <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <MySelect
+                      placeholder='Select Division'
+                      isSimple={true}
+                    />
+                  </div>
+                </div>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Retired :</p>
+                  </div>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <div className='checkbox-con'>
+                      <div
+                        style={{
+                          backgroundColor: "white",
+                          marginRight: "8px",
+                          width: "32px",
+                          height: "32px",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}>
                         <Checkbox
-                          onChange={(e) => { handleInputChangeWhole('isPensioner', e.target.checked) }}
+                          onChange={(e) => {
+                            handleInputChangeWhole(
+                              "isPensioner",
+                              e.target.checked
+                            );
+                          }}
                           checked={InfData?.isPensioner}
                         />
                       </div>
-                      <MyDatePicker disabled={!InfData?.isPensioner}
+                      <MyDatePicker
+                        disabled={!InfData?.isPensioner}
                         onChange={(date, dateString) => {
-                          handleInputChangeWhole('dateRetired', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                          handleInputChangeWhole(
+                            "dateRetired",
+                            date ? date.format("DD/MM/YYYY") : null
+                          ); // Pass the string value
                         }}
-                        value={InfData?.dateRetired ? moment(InfData?.dateRetired, 'DD/MM/YYYY') : null} />
+                        value={
+                          InfData?.dateRetired
+                            ? moment(InfData?.dateRetired, "DD/MM/YYYY")
+                            : null
+                        }
+                      />
                     </div>
                   </div>
                 </div>
 
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Pension No :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Pension No :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
                     <Input
-                      type="text"
-                      placeholder="Enter something..."
+                      type='text'
+                      placeholder='Enter something...'
                       disabled={!InfData?.isPensioner}
                       value={InfData?.pensionNo}
                     />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Rank :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Rank :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
                     {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
                       Select Rank
                     </Dropdown.Button> */}
-                    <MySelect placeholder='Select Rank' isSimple={true} />
+                    <MySelect
+                      placeholder='Select Rank'
+                      isSimple={true}
+                    />
                   </div>
                 </div>
 
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="lbl">Duty:</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className='lbl'>Duty:</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
                     {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
                       Select Duty
                     </Dropdown.Button> */}
-                    <MySelect placeholder='Select Duty' isSimple={true} />
+                    <MySelect
+                      placeholder='Select Duty'
+                      isSimple={true}
+                    />
                   </div>
                 </div>
                 <Divider>Training Details</Divider>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Templemore :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Templemore :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <MyDatePicker className="date-picker" isSimple={true} />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <MyDatePicker
+                      className='date-picker'
+                      isSimple={true}
+                    />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Class  :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Class :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
                     <Input />
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Attested :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Attested :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <MyDatePicker style={{ width: "100%", borderRadius: "3px" }} />
-                  </div>
-                </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Graduation :</p>
-                  </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <MyDatePicker className="date-picker" />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <MyDatePicker
+                      style={{ width: "100%", borderRadius: "3px" }}
+                    />
                   </div>
                 </div>
-                <div className="lbl-txtarea-2">
-                  <div className="title-cont-txtarea">
-                    <p className="">Notes</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Graduation :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <TextArea rows={5} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <MyDatePicker className='date-picker' />
+                  </div>
+                </div>
+                <div className='lbl-txtarea-2'>
+                  <div className='title-cont-txtarea'>
+                    <p className=''>Notes</p>
+                  </div>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <TextArea
+                      rows={5}
+                      style={{
+                        width: "100%",
+                        borderRadius: "3px",
+                        borderColor: "D9D9D9",
+                      }}
+                    />
                   </div>
                 </div>
               </div>
             </Col>
-            <Col span={8} >
-              <div className="details-con-header"><h2>Membership & Subscriptions</h2></div>
-              <div className="detail-sub-con">
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Reg No :</p>
+            <Col span={8}>
+              <div className='details-con-header'>
+                <h2>Membership & Subscriptions</h2>
+              </div>
+              <div className='detail-sub-con'>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Reg No :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <div style={{ display: 'flex', width: '100%', alignItems: 'baseline' }}>
-                      <div className="input-container-with-sup">
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <div
+                      style={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "baseline",
+                      }}>
+                      <div className='input-container-with-sup'>
                         <Input
-                          placeholder="Enter text"
-                          style={{ padding: '0px', width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                          suffix={<div className="suffix-container">
-                            <IoSettingsOutline />
-                          </div>}
+                          placeholder='Enter text'
+                          style={{
+                            padding: "0px",
+                            width: "100%",
+                            borderRight: "1px solid #d9d9d9",
+                            borderRadius: "4px 0 0 4px",
+                            padding: "0px",
+                            paddingLeft: "5px",
+                            margin: "0px",
+                            height: "33px",
+                          }} // Adjust border style
+                          suffix={
+                            <div className='suffix-container'>
+                              <IoSettingsOutline />
+                            </div>
+                          }
                         />
                       </div>
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Date Joined :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Date Joined :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
-                    <div className="checkbox-con">
-                      <div className="checkbox-sub">
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
+                    <div className='checkbox-con'>
+                      <div className='checkbox-sub'>
                         <Checkbox
-                          onChange={(e) => handleInputChangeWhole('isJoined', e.target.checked)}
+                          onChange={(e) =>
+                            handleInputChangeWhole("isJoined", e.target.checked)
+                          }
                           checked={InfData?.isJoined}
                         />
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom"
+                      <MyDatePicker
+                        className='w-100 date-picker-custom'
                         onChange={(date, dateString) => {
-                          handleInputChangeWhole('dateJoined', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                          handleInputChangeWhole(
+                            "dateJoined",
+                            date ? date.format("DD/MM/YYYY") : null
+                          ); // Pass the string value
                         }}
-                        value={InfData?.dateJoined ? moment(InfData?.dateJoined, 'DD/MM/YYYY') : null}
+                        value={
+                          InfData?.dateJoined
+                            ? moment(InfData?.dateJoined, "DD/MM/YYYY")
+                            : null
+                        }
                         disabled={!InfData?.isJoined}
                       />
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Date Left :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Date Left :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <div className="checkbox-con">
-                      <div className="checkbox-sub">
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <div className='checkbox-con'>
+                      <div className='checkbox-sub'>
                         <Checkbox
-                          onChange={(e) => handleInputChangeWhole('isLeft', e.target.checked)}
+                          onChange={(e) =>
+                            handleInputChangeWhole("isLeft", e.target.checked)
+                          }
                           checked={InfData?.isLeft}
                         />
-
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom" disabled={!InfData?.isLeft}
+                      <MyDatePicker
+                        className='w-100 date-picker-custom'
+                        disabled={!InfData?.isLeft}
                         onChange={(date, dateString) => {
-                          handleInputChangeWhole('isLeft', date ? date.format('DD/MM/YYYY') : null); // Pass the string value
+                          handleInputChangeWhole(
+                            "isLeft",
+                            date ? date.format("DD/MM/YYYY") : null
+                          ); // Pass the string value
                         }}
-                        value={InfData?.dateAged65 ? moment(InfData?.dateAged65, 'DD/MM/YYYY') : null}
+                        value={
+                          InfData?.dateAged65
+                            ? moment(InfData?.dateAged65, "DD/MM/YYYY")
+                            : null
+                        }
                       />
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Reason (Left) :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Reason (Left) :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
                     {/* <MySelect isSimple={true} /> */}
                     <Input disabled={!InfData?.isLeft} />
                   </div>
                 </div>
 
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Associate Member :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Associate Member :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star-white">*</p>
-                    <div className="checkbox-con">
-                      <div style={{ backgroundColor: "white", marginRight: '8px', width: '32px', height: '32px', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <div className='checkbox-con'>
+                      <div
+                        style={{
+                          backgroundColor: "white",
+                          marginRight: "8px",
+                          width: "32px",
+                          height: "32px",
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                        }}>
                         <Checkbox
                           onChange={onCheckboxChange}
                           checked={InfData?.isPensioner}
                         />
                       </div>
                       <Input
-                        type="text"
-                        placeholder="Enter something..."
+                        type='text'
+                        placeholder='Enter something...'
                         disabled={!InfData?.isPensioner}
                         value={InfData?.pensionNo}
                       />
                     </div>
                   </div>
                 </div>
-                <div className="lbl-inpt">
-                  <div className="title-cont">
-                    <p className="">Statue :</p>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Statue :</p>
                   </div>
-                  <div className="input-cont">
-                    <p className="star">*</p>
+                  <div className='input-cont'>
+                    <p className='star'>*</p>
                     <Input value={InfData?.gardaRegNo} />
                   </div>
                 </div>
-                <Row style={{ paddingLeft: '12px' }}>
+                <Row style={{ paddingLeft: "12px" }}>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      District Rep
-                    </Checkbox>
+                    <Checkbox className='lbl'>District Rep</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      Division Rep
-                    </Checkbox>
+                    <Checkbox className='lbl'>Division Rep</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      C.E.C
-                    </Checkbox>
+                    <Checkbox className='lbl'>C.E.C</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      District Sec
-                    </Checkbox>
+                    <Checkbox className='lbl'>District Sec</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      Division Sec
-                    </Checkbox>
+                    <Checkbox className='lbl'>Division Sec</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      Panel of
-                      Friends
-                    </Checkbox>
+                    <Checkbox className='lbl'>Panel of Friends</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      Division Chair
-                    </Checkbox>
+                    <Checkbox className='lbl'>Division Chair</Checkbox>
                   </Col>
                   <Col span={8}>
-                    <Checkbox className="lbl">
-                      District Chair
-                    </Checkbox>
+                    <Checkbox className='lbl'>District Chair</Checkbox>
                   </Col>
                 </Row>
-                <div className="d-flex justify-content-start ms-2">
-                  <div className="sub-com-cont me-4">
-                    <p className="sub-com">Sub Committees :</p>
+                <div className='d-flex justify-content-start ms-2'>
+                  <div className='sub-com-cont me-4'>
+                    <p className='sub-com'>Sub Committees :</p>
                   </div>
-                  <div className="me-4">
-                    <Button className="butn primary-btn" onClick={() => openCloseModalsFtn("Committees")}>+</Button>
+                  <div className='me-4'>
+                    <Button
+                      className='butn primary-btn'
+                      onClick={() => openCloseModalsFtn("Committees")}>
+                      +
+                    </Button>
                   </div>
                 </div>
-                <div className="d-flex justify-content-center upload-container">
+                <div className='d-flex justify-content-center upload-container'>
                   <Upload {...props}>
-                    <div className="d-flex
-                    ">
-                      <p className="star">*</p>
+                    <div
+                      className='d-flex
+                    '>
+                      <p className='star'>*</p>
                       <Button icon={<UploadOutlined />}>Click to Upload</Button>
                     </div>
                   </Upload>
                 </div>
                 <Divider>Subscriptions</Divider>
-                <Row style={{ paddingLeft: '12px' }}>
+                <Row style={{ paddingLeft: "12px" }}>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn("GardaLifeAssuranceClaim")} >
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'
+                      onChange={() =>
+                        openCloseModalsFtn("GardaLifeAssuranceClaim")
+                      }>
                       Life Assurance (Member)
                     </Checkbox>
                   </Col>
-                  <Col span={12} >
-                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}>
+                  <Col span={12}>
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'
+                      onChange={() =>
+                        openCloseModalsFtn("PartnerLifeAssuranceClaim")
+                      }>
                       Life Assurance (Partner)
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn("criticalIllnessScheme")}>
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'
+                      onChange={() =>
+                        openCloseModalsFtn("criticalIllnessScheme")
+                      }>
                       Critical Illness (Member)
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx">
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'>
                       Critical Illness (Partner)
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx">
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'>
                       Income Protection
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx">
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'>
                       Finance Application
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx">
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'>
                       Illness / Injury
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaLegalAidScheme')}>
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'
+                      onChange={() =>
+                        openCloseModalsFtn("GardaLegalAidScheme")
+                      }>
                       Legal Assistance
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx" onChange={() => openCloseModalsFtn('GardaReviews')}>
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'
+                      onChange={() => openCloseModalsFtn("GardaReviews")}>
                       Garda Review
                     </Checkbox>
                   </Col>
                   <Col span={12}>
-                    <Checkbox checked={drawer} className="subs-chkbx">
+                    <Checkbox
+                      checked={drawer}
+                      className='subs-chkbx'>
                       Balloted
                     </Checkbox>
-                    <Input style={{ width: '80%' }} />
+                    <Input style={{ width: "80%" }} />
                   </Col>
                 </Row>
               </div>
             </Col>
           </Row>
           <Row>
-            <Col>
-
-            </Col>
+            <Col></Col>
           </Row>
         </div>
-        <MyDrawer title='Partnership' open={modalOpenData?.Partnership} onClose={() => openCloseModalsFtn("Partnership")} >
-          <div className="drawer-main-cntainer">
-            <div className="details-drawer mb-4">
+        <MyDrawer
+          title='Partnership'
+          open={modalOpenData?.Partnership}
+          add={handleSubmitPartner}
+          // handleSubmit={handleSubmitPartner}
+          onClose={() => openCloseModalsFtn("Partnership")}>
+          <div className='drawer-main-cntainer'>
+            <div className='details-drawer mb-4'>
               <p>{InfData?.gardaRegNo}</p>
               <p>{InfData?.fullname}</p>
               <p>Garda</p>
             </div>
-            <div className="mb-4 pb-4">
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+            <div className='mb-4 pb-4'>
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Title :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input />
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      className='inp'
+                      type='text'
+                      name='title'
+                      value={InfDataPartner.title}
+                      onChange={handleInputPartnerChange}
+                    />
+                      {submitted && iserrors.title && (
+                          <h1 className='error-text'>{iserrors.title}</h1>
+                        )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Forename :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      className='inp'
+                      type='text'
+                      name='forename'
+                      value={InfDataPartner.forename}
+                      onChange={handleInputPartnerChange}
+                    />
+                    {submitted && iserrors.forename && (
+                          <h1 className='error-text'>{iserrors.forename}</h1>
+                        )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Surname :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      className='inp'
+                      type='text'
+                      name='surname'
+                      value={InfDataPartner.surname}
+                      onChange={handleInputPartnerChange}
+                    />
+                    {submitted && iserrors.surname && (
+                          <h1 className='error-text'>{iserrors.surname}</h1>
+                        )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Maiden Name :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      className='inp'
+                      type='text'
+                      name='maidenName'
+                      value={InfDataPartner.maidenName}
+                      onChange={handleInputPartnerChange}
+                    />
+                    {submitted && iserrors.maidenName && (
+                          <h1 className='error-text'>{iserrors.maidenName}</h1>
+                        )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Date of Birth :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <MyDatePicker className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <MyDatePicker
+                      className='inp'
+                      value={
+                        InfDataPartner?.dateOfBirth
+                          ? moment(InfDataPartner.dateOfBirth, "DD/MM/YYYY")
+                          : null
+                      } // Convert string to moment
+                      onChange={(date, dateString) => {
+                        handleInputPartnerChange(
+                          "dateOfBirth",
+                          date ? date.format("DD/MM/YYYY") : null
+                        ); // Pass the string value
+                      }}
+                      format='DD/MM/YYYY'
+                    />
+                      {submitted && iserrors.dateOfBirth && (
+                          <h1 className='error-text'>{iserrors.dateOfBirth}</h1>
+                        )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Date Marriage :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <MyDatePicker className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <MyDatePicker
+                      className='inp'
+                      value={
+                        InfDataPartner?.dateMarriage
+                          ? moment(InfDataPartner.dateMarriage, "DD/MM/YYYY")
+                          : null
+                      } // Convert string to moment
+                      onChange={(date, dateString) => {
+                        handleInputPartnerChange(
+                          "dateMarriage",
+                          date ? date.format("DD/MM/YYYY") : null
+                        ); // Pass the string value
+                      }}
+                      format='DD/MM/YYYY'
+                    />
+                    {submitted && iserrors.dateMarriage && (
+                          <h1 className='error-text'>{iserrors.dateMarriage}</h1>
+                        )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Deceased :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-
-
-                    <div className="checkbox-con">
-                      <div className="checkbox-sub">
+                <div className='inpt-con'>
+                  <p className='star-white'>*</p>
+                  <div className='inpt-sub-con'>
+                    <div className='checkbox-con'>
+                      <div className='checkbox-sub'>
                         <Checkbox
-                          checked={InfData?.isDeceased}
+                          checked={InfDataPartner?.deceased}
                           onChange={(e) => {
-                            handleInputChangeWhole('isDeceased', e.target.checked)
+                            handleInputPartnerChange(
+                              "deceased",
+                              e.target.checked
+                            );
                             // if (e.target.checked == false) {
                             //   handleInputChangeWhole('dateOfDeath', null);
                             // }
                           }}
                         />
                       </div>
-                      <MyDatePicker className="w-100 date-picker-custom"
-                        value={InfData?.dateOfDeath ? moment(InfData?.dateOfDeath, 'DD/MM/YYYY') : null}
-                        disabled={!InfData?.isDeceased}
+                      <MyDatePicker
+                        className='w-100 date-picker-custom'
+                        onChange={(date, dateString) => {
+                          handleInputPartnerChange(
+                            "dateOfDeath",
+                            date ? date.format("DD/MM/YYYY") : null
+                          ); // Pass the string value
+                        }}
+                        value={
+                          InfDataPartner?.dateOfDeath
+                            ? moment(InfDataPartner?.dateOfDeath, "DD/MM/YYYY")
+                            : null
+                        }
+                        disabled={!InfDataPartner?.deceased}
                       />
                     </div>
-
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-
-
-
-
-
+              {/* <button
+                onClick={handleSubmitPartner}
+                type='submit'>
+                Submite Button
+              </button> */}
             </div>
             <h3>History</h3>
             <Table
@@ -1408,118 +1865,85 @@ function MyDeatails() {
               columns={partnershipColumns}
               pagination={false}
               bordered
-              className="drawer-tbl"
+              className='drawer-tbl'
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
             />
           </div>
         </MyDrawer>
-        <MyDrawer title='Children' open={modalOpenData?.Children} onClose={() => openCloseModalsFtn("Children")} >
-          <div className="drawer-main-cntainer">
-            <div className="details-drawer mb-4">
+        <MyDrawer
+          title='Children'
+          open={modalOpenData?.Children}
+          add={handleSubmitChildren}
+          onClose={() => openCloseModalsFtn("Children")}>
+          <div className='drawer-main-cntainer'>
+            <div className='details-drawer mb-4'>
               <p>{InfData?.gardaRegNo}</p>
               <p>{InfData?.fullname}</p>
               <p>Garda</p>
             </div>
-            <div className="mb-4 pb-4">
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+            <div className='mb-4 pb-4'>
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Title :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input />
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      type='text'
+                      name='title'
+                      value={childrenData.title}
+                      onChange={handleInputChangeChildren}
+                    />
+                    {childrenerror.title && (
+                      <h1 className='error-text'>{childrenerror.title}</h1>
+                    )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Forename :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      className='inp'
+                      type='text'
+                      name='forename'
+                      value={childrenData.forename}
+                      onChange={handleInputChangeChildren}
+                    />
+                    {childrenerror.forename && (
+                      <h1 className='error-text'>{childrenerror.forename}</h1>
+                    )}
                   </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
                   <p>Surname :</p>
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input
+                      className='inp'
+                      type='text'
+                      name='surname'
+                      value={childrenData.surname}
+                      onChange={handleInputChangeChildren}
+                    />
+                    {childrenerror.surname && (
+                      <h1 className='error-text'>{childrenerror.surname}</h1>
+                    )}
                   </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-            </div>
-            <h3>History</h3>
-            <Table
-              rowSelection={rowSelection} // Enables row selection with checkboxes
-              columns={childrencolumns}
-              pagination={false}
-
-              bordered
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-            />
-          </div>
-        </MyDrawer>
-        <MyDrawer title='Children' open={modalOpenData?.Children} onClose={() => openCloseModalsFtn("Children")} >
-          <div className="drawer-main-cntainer">
-            <div className="details-drawer mb-4">
-              <p>{InfData?.gardaRegNo}</p>
-              <p>{InfData?.fullname}</p>
-              <p>Garda</p>
-            </div>
-            <div className="mb-4 pb-4">
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Title :</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Forename :</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Surname :</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" />
-                    <h1 className="error-text"></h1>
-                  </div>
-                  <p className="error"></p>
+                  <p className='error'></p>
                 </div>
               </div>
             </div>
@@ -1529,176 +1953,264 @@ function MyDeatails() {
               columns={childrencolumns}
               pagination={false}
               bordered
-              className="drawer-tbl"
+              className='drawer-tbl'
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
             />
           </div>
         </MyDrawer>
-        <MyDrawer title='Transfer Screen' open={modalOpenData?.TransferScreen} onClose={() => openCloseModalsFtn("TransferScreen")} >
-          <div className="drawer-main-cntainer">
-            <div className="d-flex">
-              <div className="w-50  ">
-                <div className="d-flex align-items-center justify-content-center" style={{ height: '44px', backgroundColor: "#215E97", color: 'white' }}><h3 className="text-center" >Current</h3></div>
-                <div className="body-container">
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Station Code :</p>
+        {/* <MyDrawer
+          title='Children'
+          open={modalOpenData?.Children}
+          onClose={() => openCloseModalsFtn("Children")}>
+          <div className='drawer-main-cntainer'>
+            <div className='details-drawer mb-4'>
+              <p>{InfData?.gardaRegNo}</p>
+              <p>{InfData?.fullname}</p>
+              <p>Garda</p>
+            </div>
+            <div className='mb-4 pb-4'>
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
+                  <p>Title :</p>
+                </div>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input type="text" name="title" />
+                  </div>
+                  <p className='error'></p>
+                </div>
+              </div>
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
+                  <p>Forename :</p>
+                </div>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input className='inp' />
+                    <h1 className='error-text'></h1>
+                  </div>
+                  <p className='error'></p>
+                </div>
+              </div>
+              <div className='drawer-inpts-container'>
+                <div className='drawer-lbl-container'>
+                  <p>Surname :</p>
+                </div>
+                <div className='inpt-con'>
+                  <p className='star'>*</p>
+                  <div className='inpt-sub-con'>
+                    <Input className='inp' />
+                    <h1 className='error-text'></h1>
+                  </div>
+                  <p className='error'></p>
+                </div>
+              </div>
+            </div>
+            <h3>History</h3>
+            <Table
+              rowSelection={rowSelection} // Enables row selection with checkboxes
+              columns={childrencolumns}
+              pagination={false}
+              bordered
+              className='drawer-tbl'
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+            />
+          </div>
+        </MyDrawer> */}
+        <MyDrawer
+          title='Transfer Screen'
+          open={modalOpenData?.TransferScreen}
+          onClose={() => openCloseModalsFtn("TransferScreen")}>
+          <div className='drawer-main-cntainer'>
+            <div className='d-flex'>
+              <div className='w-50  '>
+                <div
+                  className='d-flex align-items-center justify-content-center'
+                  style={{
+                    height: "44px",
+                    backgroundColor: "#215E97",
+                    color: "white",
+                  }}>
+                  <h3 className='text-center'>Current</h3>
+                </div>
+                <div className='body-container'>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Station Code :</p>
                     </div>
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <MySelect placeholder='Select Station Code' isSimple={true} />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <MySelect
+                          placeholder='Select Station Code'
+                          isSimple={true}
+                        />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Station Name :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Station Name :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <Input />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts1">
-                    <div className="transfer-inpts-title1">
-                      <p className="transfer-main-inpts-p"></p>
+                  <div className='transfer-main-inpts1'>
+                    <div className='transfer-inpts-title1'>
+                      <p className='transfer-main-inpts-p'></p>
                     </div>
 
-                    <div className="transfer-inputs1">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs1'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <TextArea rows={3} />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">District :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>District :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <MySelect isSimple={true} placeholder='Select District' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='Select District'
+                        />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Division :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Division :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <MySelect isSimple={true} placeholder='Select District' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='Select District'
+                        />
                       </div>
-
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="w-50 ms-4 ">
-                <div className="d-flex align-items-center justify-content-center" style={{ height: '44px', backgroundColor: "#215E97", color: 'white' }}><h3 className="text-center" >New</h3></div>
-                <div className="body-container">
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Station Code :</p>
+              <div className='w-50 ms-4 '>
+                <div
+                  className='d-flex align-items-center justify-content-center'
+                  style={{
+                    height: "44px",
+                    backgroundColor: "#215E97",
+                    color: "white",
+                  }}>
+                  <h3 className='text-center'>New</h3>
+                </div>
+                <div className='body-container'>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Station Code :</p>
                     </div>
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star">*</p>
-                        <MySelect placeholder='Select Station Code' isSimple={true} />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star'>*</p>
+                        <MySelect
+                          placeholder='Select Station Code'
+                          isSimple={true}
+                        />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Station Name :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Station Name :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <Input />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts1">
-                    <div className="transfer-inpts-title1">
-                      <p className="transfer-main-inpts-p"></p>
+                  <div className='transfer-main-inpts1'>
+                    <div className='transfer-inpts-title1'>
+                      <p className='transfer-main-inpts-p'></p>
                     </div>
 
-                    <div className="transfer-inputs1">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs1'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <TextArea rows={3} />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">District :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>District :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star">*</p>
-                        <MySelect isSimple={true} placeholder='Select District' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star'>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='Select District'
+                        />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Division :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Division :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star">*</p>
-                        <MySelect isSimple={true} placeholder='Select District' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star'>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='Select District'
+                        />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Transfer Date :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Transfer Date :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <DatePicker className="w-100" />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <DatePicker className='w-100' />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts1">
-                    <div className="transfer-inpts-title1">
-                      <p className="transfer-main-inpts-p">Memo :</p>
+                  <div className='transfer-main-inpts1'>
+                    <div className='transfer-inpts-title1'>
+                      <p className='transfer-main-inpts-p'>Memo :</p>
                     </div>
 
-                    <div className="transfer-inputs1">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs1'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <TextArea rows={3} />
                       </div>
-
                     </div>
                   </div>
                 </div>
@@ -1706,135 +2218,132 @@ function MyDeatails() {
             </div>
           </div>
         </MyDrawer>
-        <MyDrawer title='Critical Illness Scheme'
-          open={modalOpenData?.criticalIllnessScheme} onClose={() => openCloseModalsFtn("criticalIllnessScheme")}
+        <MyDrawer
+          title='Critical Illness Scheme'
+          open={modalOpenData?.criticalIllnessScheme}
+          onClose={() => openCloseModalsFtn("criticalIllnessScheme")}
           isPyment={true}
           InfData={InfData}
-          width='785px' >
-          <div className="drawer-main-cntainer">
-            <div className="details-drawer mb-4">
+          width='785px'>
+          <div className='drawer-main-cntainer'>
+            <div className='details-drawer mb-4'>
               <p>{InfData?.gardaRegNo}</p>
               <p>{InfData?.fullname}</p>
               <p>Garda</p>
             </div>
-            <div className="d-flex">
-              <div className="w-50  ">
-                <div className="body-container">
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Joining Date :</p>
+            <div className='d-flex'>
+              <div className='w-50  '>
+                <div className='body-container'>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Joining Date :</p>
                     </div>
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <MyDatePicker />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Claim Type : </p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Claim Type : </p>
                     </div>
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <MySelect isSimple={true} placeholder='Claim Type' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='Claim Type'
+                        />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Claim Date :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Claim Date :</p>
                     </div>
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <MyDatePicker />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Child Name :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Child Name :</p>
                     </div>
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <MySelect isSimple={true} placeholder='Select Child Name' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='Select Child Name'
+                        />
                       </div>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="w-50 ms-4">
-                <div className="body-container">
-                  <div className="d-flex ">
-                    <div className="transfer-main-inpts">
-
-                      <div className="transfer-inputs">
-                        <div className="d-flex ">
-                          <p className="star-white ">*</p>
-                          <Checkbox>
-                            Member Cover
-                          </Checkbox>
+              <div className='w-50 ms-4'>
+                <div className='body-container'>
+                  <div className='d-flex '>
+                    <div className='transfer-main-inpts'>
+                      <div className='transfer-inputs'>
+                        <div className='d-flex '>
+                          <p className='star-white '>*</p>
+                          <Checkbox>Member Cover</Checkbox>
                         </div>
-
                       </div>
-                      <div className="transfer-inputs">
-                        <div className="d-flex ">
-                          <p className="star-white ">*</p>
-                          <Checkbox>
-                            Partner Cover
-                          </Checkbox>
+                      <div className='transfer-inputs'>
+                        <div className='d-flex '>
+                          <p className='star-white '>*</p>
+                          <Checkbox>Partner Cover</Checkbox>
                         </div>
-
                       </div>
                     </div>
                   </div>
 
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Claim Reason :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Claim Reason :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <MySelect isSimple={true} />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Beneficiary :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Beneficiary :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
                         <Input />
                       </div>
-
                     </div>
                   </div>
-                  <div className="transfer-main-inpts">
-                    <div className="transfer-inpts-title">
-                      <p className="transfer-main-inpts-p">Partner Name :</p>
+                  <div className='transfer-main-inpts'>
+                    <div className='transfer-inpts-title'>
+                      <p className='transfer-main-inpts-p'>Partner Name :</p>
                     </div>
 
-                    <div className="transfer-inputs">
-                      <div className="d-flex ">
-                        <p className="star-white ">*</p>
-                        <MySelect isSimple={true} placeholder='N/A' />
+                    <div className='transfer-inputs'>
+                      <div className='d-flex '>
+                        <p className='star-white '>*</p>
+                        <MySelect
+                          isSimple={true}
+                          placeholder='N/A'
+                        />
                       </div>
-
                     </div>
                   </div>
-
                 </div>
               </div>
             </div>
@@ -1842,7 +2351,7 @@ function MyDeatails() {
               <Table
                 pagination={false}
                 columns={criticalIllnessSchemeClm}
-                className="drawer-tbl"
+                className='drawer-tbl'
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -1852,55 +2361,67 @@ function MyDeatails() {
             </div>
           </div>
         </MyDrawer>
-        <MyDrawer title='Garda Reviews'
-          open={modalOpenData?.GardaReviews} onClose={() => openCloseModalsFtn("GardaReviews")}
-          width='725px' >
-          <div className="drawer-main-cntainer">
-            <div className="details-drawer mb-4">
+        <MyDrawer
+          title='Garda Reviews'
+          open={modalOpenData?.GardaReviews}
+          onClose={() => openCloseModalsFtn("GardaReviews")}
+          width='725px'>
+          <div className='drawer-main-cntainer'>
+            <div className='details-drawer mb-4'>
               <p>{InfData?.gardaRegNo}</p>
               <p>{InfData?.fullname}</p>
               <p>Garda</p>
             </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: '20%' }}>
+            <div className='drawer-inpts-container'>
+              <div
+                className='drawer-lbl-container'
+                style={{ width: "20%" }}>
                 <p>Review Start date :</p>
               </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
+              <div className='inpt-con'>
+                <p className='star'>*</p>
+                <div className='inpt-sub-con'>
                   <MyDatePicker />
                 </div>
-                <p className="error"></p>
+                <p className='error'></p>
               </div>
             </div>
-            <div className="drawer-inpts-container" >
-              <div className="drawer-lbl-container" style={{ width: '20%' }}>
+            <div className='drawer-inpts-container'>
+              <div
+                className='drawer-lbl-container'
+                style={{ width: "20%" }}>
                 <p>Review End date :</p>
               </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
+              <div className='inpt-con'>
+                <p className='star-white'>*</p>
+                <div className='inpt-sub-con'>
                   <MyDatePicker />
                 </div>
-                <p className="error"></p>
+                <p className='error'></p>
               </div>
             </div>
-            <div className="drawer-inpts-container" style={{ height: '200px' }}>
-
-              <div className="inpt-con" style={{ width: '80%', }}>
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <TextArea rows={6} placeholder="Autosize height based on content lines" />
+            <div
+              className='drawer-inpts-container'
+              style={{ height: "200px" }}>
+              <div
+                className='inpt-con'
+                style={{ width: "80%" }}>
+                <p className='star-white'>*</p>
+                <div className='inpt-sub-con'>
+                  <TextArea
+                    rows={6}
+                    placeholder='Autosize height based on content lines'
+                  />
                 </div>
-                <p className="error"></p>
+                <p className='error'></p>
               </div>
             </div>
-            <div className="mt-4 pt-4">
+            <div className='mt-4 pt-4'>
               <h5>History</h5>
               <Table
                 pagination={false}
                 columns={GardaReviewColumns}
-                className="drawer-tbl"
+                className='drawer-tbl'
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -1910,19 +2431,21 @@ function MyDeatails() {
             </div>
           </div>
         </MyDrawer>
-        <MyDrawer title='Committees'
-          open={modalOpenData?.Committees} onClose={() => openCloseModalsFtn("Committees")}
-          width='576px' >
-          <div className="drawer-main-cntainer">
-           <div className="d-flex justify-content-center">
-            <MyTransfer />
-           </div>
-            <div className="">
+        <MyDrawer
+          title='Committees'
+          open={modalOpenData?.Committees}
+          onClose={() => openCloseModalsFtn("Committees")}
+          width='576px'>
+          <div className='drawer-main-cntainer'>
+            <div className='d-flex justify-content-center'>
+              <MyTransfer />
+            </div>
+            <div className=''>
               <h5>History</h5>
               <Table
                 pagination={false}
                 columns={CommitteesColumns}
-                className="drawer-tbl"
+                className='drawer-tbl'
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -1932,213 +2455,256 @@ function MyDeatails() {
             </div>
           </div>
         </MyDrawer>
-        <MyDrawer title='Partner Life Assurance Claim'
-          open={modalOpenData?.PartnerLifeAssuranceClaim} onClose={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}
-          width='837px' >
-          <div className="drawer-main-cntainer">
-            <div className="">
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+        <MyDrawer
+          title='Partner Life Assurance Claim'
+          open={modalOpenData?.PartnerLifeAssuranceClaim}
+          onClose={() => openCloseModalsFtn("PartnerLifeAssuranceClaim")}
+          width='837px'>
+          <div className='drawer-main-cntainer'>
+            <div className=''>
+              <div className='row'>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Partner Name :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
-                        <MySelect isSimple={true} disabled={true} placeholder="Jane Doe" />
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
+                        <MySelect
+                          isSimple={true}
+                          disabled={true}
+                          placeholder='Jane Doe'
+                        />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Assured From :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con">
+                    <div className='inpt-con'>
+                      <p className='star'>*</p>
+                      <div className='inpt-sub-con'>
                         <MyDatePicker />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-
                 </div>
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
-                    </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
-
-                      </div>
-                      <p className="error"></p>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}></div>
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'></div>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Deceased :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
                         <MyDatePicker />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
-
               </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
-                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+              <div className='row'>
+                <div className='col-md-12'>
+                  <div
+                    className='drawer-inpts-container'
+                    style={{ height: "64px" }}>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "16%" }}>
                       <p>Contact Address :</p>
                     </div>
-                    <div className="inpt-con" style={{ width: '81%' }}>
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
-                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                    <div
+                      className='inpt-con'
+                      style={{ width: "81%" }}>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
+                        <TextArea
+                          rows={2}
+                          placeholder='Autosize height based on content lines'
+                        />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+              <div className='row'>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Fire Reference :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con d-flex">
+                    <div className='inpt-con'>
+                      <p className='star'>*</p>
+                      <div className='inpt-sub-con d-flex'>
                         <Input />
-                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                        <Button className='primary-btn butn ms-2 detail-btn'>
+                          +
+                        </Button>
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Advance Amount :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con d-flex">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con d-flex'>
                         <Input />
-                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                        <Button className='primary-btn butn ms-2 detail-btn'>
+                          +
+                        </Button>
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Advance Date :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
                         <MyDatePicker />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Advance Cheque # :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
                         <Input />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Cover Level :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
-                        <Input placeholder="0.00" />
-
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
+                        <Input placeholder='0.00' />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Balance Amount :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
-                        <Input placeholder="0.00" />
-
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
+                        <Input placeholder='0.00' />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Balance Date :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
                         <MyDatePicker />
-
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Balance Cheque # :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
-                        <Input placeholder="" />
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
+                        <Input placeholder='' />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
-
               </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
-                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+              <div className='row'>
+                <div className='col-md-12'>
+                  <div
+                    className='drawer-inpts-container'
+                    style={{ height: "64px" }}>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "16%" }}>
                       <p>Memo :</p>
                     </div>
-                    <div className="inpt-con" style={{ width: '81%' }}>
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
-                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                    <div
+                      className='inpt-con'
+                      style={{ width: "81%" }}>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
+                        <TextArea
+                          rows={2}
+                          placeholder='Autosize height based on content lines'
+                        />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="mt-4 pt-2">
+            <div className='mt-4 pt-2'>
               <h5>History</h5>
               <Table
                 pagination={false}
                 columns={PartnerLifeAssuranceClaimClm}
-                className="drawer-tbl"
+                className='drawer-tbl'
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -2148,223 +2714,262 @@ function MyDeatails() {
             </div>
           </div>
         </MyDrawer>
-        <MyDrawer title='Garda Life Assurance Claim'
+        <MyDrawer
+          title='Garda Life Assurance Claim'
           open={modalOpenData?.GardaLifeAssuranceClaim}
           isAss={true}
           onClose={() => openCloseModalsFtn("GardaLifeAssuranceClaim")}
-          width='837px' >
-          <div className="drawer-main-cntainer">
-            <div className="">
-              <div className="row">
-                <div className="col-md-6">
-
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+          width='837px'>
+          <div className='drawer-main-cntainer'>
+            <div className=''>
+              <div className='row'>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Assured From :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
                         <MyDatePicker />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Contact Name :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con">
+                    <div className='inpt-con'>
+                      <p className='star'>*</p>
+                      <div className='inpt-sub-con'>
                         <MyDatePicker />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-
                 </div>
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
-                    </div>
-
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}></div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Deceased :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
                         <MyDatePicker />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Contact Phone :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
                         <Input />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
-
               </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
-                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+              <div className='row'>
+                <div className='col-md-12'>
+                  <div
+                    className='drawer-inpts-container'
+                    style={{ height: "64px" }}>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "16%" }}>
                       <p>Contact Address :</p>
                     </div>
-                    <div className="inpt-con" style={{ width: '81%' }}>
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
-                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                    <div
+                      className='inpt-con'
+                      style={{ width: "81%" }}>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
+                        <TextArea
+                          rows={2}
+                          placeholder='Autosize height based on content lines'
+                        />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
               </div>
-              <div className="row">
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+              <div className='row'>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Fire Reference :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con d-flex">
+                    <div className='inpt-con'>
+                      <p className='star'>*</p>
+                      <div className='inpt-sub-con d-flex'>
                         <Input />
-                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                        <Button className='primary-btn butn ms-2 detail-btn'>
+                          +
+                        </Button>
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Advance Amount :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con d-flex">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con d-flex'>
                         <Input />
-                        <Button className="primary-btn butn ms-2 detail-btn">+</Button>
+                        <Button className='primary-btn butn ms-2 detail-btn'>
+                          +
+                        </Button>
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Advance Date :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
                         <MyDatePicker />
-
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Advance Cheque # :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
                         <Input />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
-                <div className="col-md-6">
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                <div className='col-md-6'>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Cover Level :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
-                        <Input placeholder="0.00" />
-
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
+                        <Input placeholder='0.00' />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Balance Amount :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
-                        <Input placeholder="0.00" />
-
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
+                        <Input placeholder='0.00' />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Balance Date :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
                         <MyDatePicker />
-
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container" style={{ width: '33%' }}>
+                  <div className='drawer-inpts-container'>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "33%" }}>
                       <p>Balance Cheque # :</p>
                     </div>
-                    <div className="inpt-con">
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con ">
-                        <Input placeholder="" />
+                    <div className='inpt-con'>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con '>
+                        <Input placeholder='' />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
-
               </div>
-              <div className="row">
-                <div className="col-md-12">
-                  <div className="drawer-inpts-container" style={{ height: '64px' }}>
-                    <div className="drawer-lbl-container" style={{ width: '16%' }}>
+              <div className='row'>
+                <div className='col-md-12'>
+                  <div
+                    className='drawer-inpts-container'
+                    style={{ height: "64px" }}>
+                    <div
+                      className='drawer-lbl-container'
+                      style={{ width: "16%" }}>
                       <p>Memo :</p>
                     </div>
-                    <div className="inpt-con" style={{ width: '81%' }}>
-                      <p className="star-white">*</p>
-                      <div className="inpt-sub-con">
-                        <TextArea rows={2} placeholder="Autosize height based on content lines" />
+                    <div
+                      className='inpt-con'
+                      style={{ width: "81%" }}>
+                      <p className='star-white'>*</p>
+                      <div className='inpt-sub-con'>
+                        <TextArea
+                          rows={2}
+                          placeholder='Autosize height based on content lines'
+                        />
                       </div>
-                      <p className="error"></p>
+                      <p className='error'></p>
                     </div>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="mt-4 pt-2">
+            <div className='mt-4 pt-2'>
               <h5>History</h5>
               <Table
                 pagination={false}
                 columns={PartnerLifeAssuranceClaimClm}
-                className="drawer-tbl"
+                className='drawer-tbl'
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -2374,93 +2979,108 @@ function MyDeatails() {
             </div>
           </div>
         </MyDrawer>
-        <MyDrawer title="Garda Legal Aid Scheme" open={modalOpenData?.GardaLegalAidScheme}
-          onClose={() => openCloseModalsFtn("GardaLegalAidScheme")
-          }
+        <MyDrawer
+          title='Garda Legal Aid Scheme'
+          open={modalOpenData?.GardaLegalAidScheme}
+          onClose={() => openCloseModalsFtn("GardaLegalAidScheme")}
           isAprov={true}
           isPyment={true}
-          width='800px'
-        >
+          width='800px'>
           <div>
-            <div className="details-drawer mb-4">
+            <div className='details-drawer mb-4'>
               <p>{InfData?.gardaRegNo}</p>
               <p>{InfData?.fullname}</p>
               <p>Garda</p>
             </div>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="drawer-inpts-container" >
-                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
+            <div className='row'>
+              <div className='col-md-6'>
+                <div className='drawer-inpts-container'>
+                  <div
+                    className='drawer-lbl-container'
+                    style={{ width: "45%" }}>
                     <p>Claim Type : </p>
                   </div>
-                  <div className="inpt-con">
-                    <p className="star-white">*</p>
-                    <div className="inpt-sub-con">
+                  <div className='inpt-con'>
+                    <p className='star-white'>*</p>
+                    <div className='inpt-sub-con'>
                       <MyDatePicker />
                     </div>
-                    <p className="error"></p>
+                    <p className='error'></p>
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="drawer-inpts-container" >
-                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
-                    <p>Date of Incident  :</p>
+              <div className='col-md-6'>
+                <div className='drawer-inpts-container'>
+                  <div
+                    className='drawer-lbl-container'
+                    style={{ width: "45%" }}>
+                    <p>Date of Incident :</p>
                   </div>
-                  <div className="inpt-con">
-                    <p className="star-white">*</p>
-                    <div className="inpt-sub-con">
+                  <div className='inpt-con'>
+                    <p className='star-white'>*</p>
+                    <div className='inpt-sub-con'>
                       <MyDatePicker />
                     </div>
-                    <p className="error"></p>
+                    <p className='error'></p>
                   </div>
                 </div>
               </div>
             </div>
-            <div className="">
-
-              <div className="drawer-inpts-container" style={{height:'130px'}} >
-              <div className="drawer-lbl-container" style={{ width: '21.7%' }}>
-                <p>Notes :</p>
-              </div>
-              <div className="inpt-con" style={{width:'80%'}}>
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                <TextArea 
-                rows={5}
-                />
+            <div className=''>
+              <div
+                className='drawer-inpts-container'
+                style={{ height: "130px" }}>
+                <div
+                  className='drawer-lbl-container'
+                  style={{ width: "21.7%" }}>
+                  <p>Notes :</p>
                 </div>
-                <p className="error"></p>
-              </div>
-              </div>
-
-            </div>
-            <div className="row">
-              <div className="col-md-6">
-                <div className="drawer-inpts-container" >
-                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
-                    <p>Date Proc Commenced  :</p>
+                <div
+                  className='inpt-con'
+                  style={{ width: "80%" }}>
+                  <p className='star-white'>*</p>
+                  <div className='inpt-sub-con'>
+                    <TextArea rows={5} />
                   </div>
-                  <div className="inpt-con" style={{}}>
-                    <p className="star-white">*</p>
-                    <div className="inpt-sub-con">
+                  <p className='error'></p>
+                </div>
+              </div>
+            </div>
+            <div className='row'>
+              <div className='col-md-6'>
+                <div className='drawer-inpts-container'>
+                  <div
+                    className='drawer-lbl-container'
+                    style={{ width: "45%" }}>
+                    <p>Date Proc Commenced :</p>
+                  </div>
+                  <div
+                    className='inpt-con'
+                    style={{}}>
+                    <p className='star-white'>*</p>
+                    <div className='inpt-sub-con'>
                       <MyDatePicker />
                     </div>
-                    <p className="error"></p>
+                    <p className='error'></p>
                   </div>
                 </div>
               </div>
-              <div className="col-md-6">
-                <div className="drawer-inpts-container" >
-                  <div className="drawer-lbl-container" style={{ width: '45%' }}>
-                    <p>Solicitor’s  :</p>
+              <div className='col-md-6'>
+                <div className='drawer-inpts-container'>
+                  <div
+                    className='drawer-lbl-container'
+                    style={{ width: "45%" }}>
+                    <p>Solicitor’s :</p>
                   </div>
-                  <div className="inpt-con">
-                    <p className="star-white">*</p>
-                    <div className="inpt-sub-con">
-                      <MySelect placeholder="NA" isSimple={true}/>
+                  <div className='inpt-con'>
+                    <p className='star-white'>*</p>
+                    <div className='inpt-sub-con'>
+                      <MySelect
+                        placeholder='NA'
+                        isSimple={true}
+                      />
                     </div>
-                    <p className="error"></p>
+                    <p className='error'></p>
                   </div>
                 </div>
               </div>
@@ -2469,7 +3089,7 @@ function MyDeatails() {
         </MyDrawer>
       </div>
     </form>
-  )
+  );
 }
 
 export default MyDeatails;
