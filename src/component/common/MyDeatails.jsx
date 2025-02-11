@@ -23,6 +23,7 @@ import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
 import moment from "moment";
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux'
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import "../../styles/MyDetails.css";
 import { BsThreeDots } from "react-icons/bs";
@@ -34,6 +35,8 @@ import { FaEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 import MyTransfer from "./MyTransfer";
 import { insertDataFtn } from "../../utils/Utilities";
+import { getPartners } from "../../features/PartnersSlice";
+import { getChildren } from "../../features/ChildrenSlice";
 
 const { TextArea } = Input;
 
@@ -69,7 +72,11 @@ const beforeUpload = (file) => {
 };
 
 function MyDeatails() {
+  const dispatch = useDispatch();
   const { ProfileDetails, topSearchData, rowIndex } = useTableColumns();
+  const { partner, partnerloading, error } = useSelector((state) => state.partner);
+  const { children, childrenError, childrenLoading } = useSelector((state) => state.children);
+  console.log(children,"partner")
   const {
     register,
     handleSubmit,
@@ -78,15 +85,6 @@ function MyDeatails() {
   } = useForm();
   const [InfData, setInfData] = useState();
   const [InfDataPartner, setInfDataPartner] = useState({
-    // profileId: "67a1b268a203d65ec4a553e2",
-    // title: "",
-    // forename: "",
-    // surname: "",
-    // maidenName: "",
-    // dateOfBirth: "",
-    // dateMarriage: null,
-    // deceased: false,
-    // dateOfDeath: null,
     "profileId": "67a1b268a203d65ec4a553e2",
     "maidenName": "",
     "dateOfBirth": "",
@@ -120,7 +118,6 @@ function MyDeatails() {
   const handleSubmitPartner = (e) => {
     e.preventDefault();
     setSubmitted(true); // Track form submission attempt
-
     if (validateForm()) {
       console.log("Form Data:", InfDataPartner);
 
@@ -130,7 +127,17 @@ function MyDeatails() {
         "Partner added successfully",
         "Failed to submit data", // Failure notification
         () => {
-          console.log("Form submitted successfully!");
+       dispatch( getPartners())
+       setInfDataPartner({
+        "profileId": "67a1b268a203d65ec4a553e2",
+        "maidenName": "",
+        "dateOfBirth": "",
+        "deceased": false,
+        "dateOfDeath": "",
+        "title":"",
+        "forename":"",
+        "surname":""
+       })
         }
       );
     } else {
@@ -141,7 +148,7 @@ function MyDeatails() {
 // children
 
 const [childrenData, setChildrenData] = useState({
-  profileId: "65c1f6a4b12d3c001fc9abcd",
+  profileId: "67a1b268a203d65ec4a553e2",
   title: "",
   forename: "",
   surname: "",
@@ -149,9 +156,9 @@ const [childrenData, setChildrenData] = useState({
 const [childrenerror, setChildrenError] = useState({});
 const validateChildren = () => {
   let newErrors = {};
-  if (!childrenerror.title) newErrors.title = "title Required";
-  if (!childrenerror.forename) newErrors.forename = "forename Required";
-  if (!childrenerror.surname) newErrors.surname = "surname Required";
+  if (!childrenData.title) newErrors.title = "title Required";
+  if (!childrenData.forename) newErrors.forename = "forename Required";
+  if (!childrenData.surname) newErrors.surname = "surname Required";
 
   setChildrenError(newErrors);
   return Object.keys(newErrors).length === 0;
@@ -176,9 +183,18 @@ const handleSubmitChildren = (e) => {
     console.error("Form data is invalid!");
     return;
   }
+  insertDataFtn(
+    "/children", 
+    childrenData,
+    "Partner added successfully",
+    "Failed to submit data", // Failure notification
+    () => {
+      dispatch(getChildren()); 
+    }
+  );
 
-  alert("Form submitted successfully!");
-  console.log("Form Data:", childrenData);
+
+  
   setChildrenData({});
   setChildrenError({});
 };
@@ -323,6 +339,10 @@ const handleSubmitChildren = (e) => {
       setInfData(profils);
     }
   }, [ProfileDetails]);
+  useEffect(() => {
+    dispatch(getPartners()); 
+    dispatch(getChildren()); 
+  }, [dispatch]);
   const handleInputChangeWhole = (field, value) => {
     setInfData((prev) => ({
       ...prev,
@@ -527,8 +547,13 @@ const handleSubmitChildren = (e) => {
   const partnershipColumns = [
     {
       title: "Name",
-      dataIndex: "gardaRegNo",
-      key: "gardaRegNo",
+      // dataIndex: "gardaRegNo",
+      // key: "gardaRegNo",
+    render:(items,index)=>(
+      <>
+      {items?.forename} {items?.surname}
+      </>
+    )
     },
     {
       title: "Date of Birth",
@@ -544,9 +569,14 @@ const handleSubmitChildren = (e) => {
     },
     {
       title: "Date of Death",
-      dataIndex: "dateMarriage",
-      key: "dateMarriage",
+      dataIndex: "dateOfDeath",
+      key: "dateOfDeath",
       render: (date) => (date ? moment(date).format("DD/MM/YYYY") : ""),
+    },
+    {
+      title: "Maiden Name",
+      dataIndex: "maidenName",
+      key: "maidenName",
     },
     {
       title: (
@@ -1863,6 +1893,8 @@ const handleSubmitChildren = (e) => {
             <Table
               rowSelection={rowSelection} // Enables row selection with checkboxes
               columns={partnershipColumns}
+              dataSource={partner}
+              loading={partnerloading}
               pagination={false}
               bordered
               className='drawer-tbl'
@@ -1951,6 +1983,8 @@ const handleSubmitChildren = (e) => {
             <Table
               rowSelection={rowSelection} // Enables row selection with checkboxes
               columns={childrencolumns}
+              dataSource={children}
+              loading={childrenLoading}
               pagination={false}
               bordered
               className='drawer-tbl'
