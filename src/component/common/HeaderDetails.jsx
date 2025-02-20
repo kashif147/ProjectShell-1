@@ -72,8 +72,8 @@ function HeaderDetails() {
   };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, globleFilters } = useTableColumns();
-
+  const { searchFilters,lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, globleFilters } = useTableColumns();
+console.log(searchFilters,"pppp")
   const screenName = location?.state?.search
   const format = 'HH:mm';
   const column = [

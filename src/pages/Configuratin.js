@@ -53,9 +53,11 @@ function Configuratin() {
     Divisions: [],
     Districts: [],
     Cities: [],
-    Titles:[],
+    Titles: [],
+    Stations:[]
   })
 
+console.log(data?.Stations,"88")
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
@@ -120,21 +122,21 @@ function Configuratin() {
     Divisions: [],
     Districts: [],
   });
- 
-const [lookupsData, setlookupsData] = useState({
-  Duties:[],
-  MaritalStatus:[],
-  
-})
-// this state indicate that drawer inputs have the value for editing
+
+  const [lookupsData, setlookupsData] = useState({
+    Duties: [],
+    MaritalStatus: [],
+  })
+  // this state indicate that drawer inputs have the value for editing
   const [isUpdateRec, setisUpdateRec] = useState({
     Lookup: false,
     LookupType: false,
     RegionType: false,
-    Title:false,
-    Gender:false,
-    MaritalStatus:false,
-    Provinces:false,
+    Title: false,
+    Gender: false,
+    MaritalStatus: false,
+    Provinces: false,
+    Counteries: false
   })
   useEffect(() => {
     if (data?.Provinces) {
@@ -194,17 +196,19 @@ const [lookupsData, setlookupsData] = useState({
       const filteredDuties = lookups?.filter((item) => item?.Parentlookup === '674a219fcc0986f64ca3701b')
       setlookupsData((prevState) => ({
         ...prevState,
-        Duties: filteredDuties, 
+        Duties: filteredDuties,
       }));
     }
     if (lookups && Array.isArray(lookups)) {
-      const filteredMaritalStatus = lookups?.filter((item) => item?.lookuptypeId?._id === '676a9ec44a1a6d0778731c29')
+      const filteredMaritalStatus = lookups?.filter((item) => item?.lookuptypeId?._id === '67b434ccc51214d371b7c0d1')
       setlookupsData((prevState) => ({
         ...prevState,
         MaritalStatus: filteredMaritalStatus,
       }));
     }
+   
   }, [lookups])
+
   useEffect(() => {
     if (regions && Array.isArray(regions)) {
       const filteredProvinces = regions.filter((item) => item.RegionTypeID === '6761492de9640143bfc38e4c');
@@ -214,8 +218,7 @@ const [lookupsData, setlookupsData] = useState({
       }));
     }
     if (regions && Array.isArray(regions)) {
-      const filteredCounty = regions.filter((item) => item.RegionTypeID === '67182268a0072a28aab883dc' && item?.ParentRegion === '67614e73479dfae6328a2641');
-
+      const filteredCounty = regions.filter((item) => item.RegionTypeID === '67182276a0072a28aab883de');
       setdata((prevState) => ({
         ...prevState,
         county: filteredCounty,
@@ -238,15 +241,31 @@ const [lookupsData, setlookupsData] = useState({
       }));
     }
     if (regions && Array.isArray(regions)) {
-      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '6718228ca0072a28aab883e0');
+      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '671822bca0072a28aab883e7');
 
       setdata((prevState) => ({
         ...prevState,
         Cities: filteredDistricts,
       }));
     }
+    if (regions && Array.isArray(regions)) {
+      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '6718228ca0072a28aab883e0');
+      
+      setdata((prevState) => ({
+        ...prevState,
+        Cities: filteredDistricts,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      
+      const filteredStations = regions.filter((item) => item.RegionTypeID === '671822c6a0072a28aab883e9')
+     debugger
+      setdata((prevState) => ({
+        ...prevState,
+        Stations: filteredStations,
+      }));
+    }
   }, [regions]);
-
   useEffect(() => {
     dispatch(getAllRegionTypes())
   }, [])
@@ -260,7 +279,6 @@ const [lookupsData, setlookupsData] = useState({
     }
     if (lookups && Array.isArray(lookups)) {
       const filteredTitles = lookups?.filter((item) => item?.lookuptypeId?._id === '675fc362e9640143bfc38d28')
-      debugger
       setdata((prevState) => ({
         ...prevState,
         Titles: filteredTitles,
@@ -356,21 +374,22 @@ const [lookupsData, setlookupsData] = useState({
   };
 
   let drawerInputsInitalValues = {
-    Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '67182268a0072a28aab883dc' },
-    Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, RegionTypeID: '6761492de9640143bfc38e4c', isDeleted: false },
-    Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
-    Divisions: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '671822b4a0072a28aab883e5' },
-    Districts: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegion: null, isDeleted: false, RegionTypeID: '671822bca0072a28aab883e7' },
+    Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '67182276a0072a28aab883de', isActive: true },
+    Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, RegionTypeID: '6761492de9640143bfc38e4c', isDeleted: false },
+    Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
+    Station: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822c6a0072a28aab883e9' },
+    // Station:     {RegionCode:'', RegionTypeID: '671822c6a0072a28aab883e9',RegionName:'', DisplayName: '', isDeleted: false},
+    Districts: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822bca0072a28aab883e7' },
     LookupType: { lookuptype: '', code: '', DisplayName: '', isActive: true, isDeleted: false },
     Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9",},
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
     Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9"},
-    MaritalStatus: { lookuptypeId: '676a9ec44a1a6d0778731c29', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9"},
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9" },
+    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9" },
     ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true ,},
     RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
@@ -470,7 +489,7 @@ const [lookupsData, setlookupsData] = useState({
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
-        setdrawerIpnuts((prev) => {
+    setdrawerIpnuts((prev) => {
       const updatedDrawerInputs = { ...prev };
       if (drawer === "Lookup" && updatedDrawerInputs.Lookup) {
         updatedDrawerInputs.Lookup = {
@@ -488,13 +507,13 @@ const [lookupsData, setlookupsData] = useState({
           id: idValue,
         };
       } else if (drawer === "RegionType" && updatedDrawerInputs?.RegionType) {
-       
+
         updatedDrawerInputs.RegionType = {
           ...updatedDrawerInputs.RegionType,
           id: idValue,
         };
       } else if (drawer === "MaritalStatus" && updatedDrawerInputs?.MaritalStatus) {
-       
+
         updatedDrawerInputs.MaritalStatus = {
           ...updatedDrawerInputs.MaritalStatus,
           id: idValue,
@@ -505,6 +524,12 @@ const [lookupsData, setlookupsData] = useState({
           id: idValue,
         };
       } else if (drawer === "Provinces" && updatedDrawerInputs?.Provinces) {
+        updatedDrawerInputs.Title = {
+          ...updatedDrawerInputs.Title,
+          id: idValue,
+        };
+      }
+      else if (drawer === "Counteries" && updatedDrawerInputs?.Counteries) {
         updatedDrawerInputs.Title = {
           ...updatedDrawerInputs.Title,
           id: idValue,
@@ -565,7 +590,7 @@ const [lookupsData, setlookupsData] = useState({
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Provinces', !isUpdateRec?.Provinces, record)
             addIdKeyToLookup(record?._id, "Provinces")
           }} />
@@ -601,8 +626,8 @@ const [lookupsData, setlookupsData] = useState({
     },
     {
       title: 'Province',
-      dataIndex: 'ParentRegion',
-      key: 'ParentRegion',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
     },
     {
       title: 'Active',
@@ -625,8 +650,24 @@ const [lookupsData, setlookupsData] = useState({
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn('Counteries', !isUpdateRec?.Provinces, record)
+              addIdKeyToLookup(record?._id, "Counteries")
+            }}
+          />
+          <AiFillDelete size={16}
+            onClick={() => {
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  dispatch(fetchRegions())
+                },
+              })
+            }}
+          />
         </Space>
       ),
     },
@@ -697,13 +738,12 @@ const [lookupsData, setlookupsData] = useState({
     },
     {
       title: 'Division',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
     },
     {
       title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+
       render: (index, record) => (
         <Checkbox>
 
@@ -721,8 +761,87 @@ const [lookupsData, setlookupsData] = useState({
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn('Districts', !isUpdateRec?.Provinces, record)
+              addIdKeyToLookup(record?._id, "Districts")
+            }}
+          />
+          <AiFillDelete size={16}
+            onClick={() => {
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  dispatch(fetchRegions())
+                },
+              })
+            }}
+          />
+        </Space>
+      ),
+    },
+  ];
+  const columnStations = [
+    {
+      title: 'Code',
+      dataIndex: 'RegionCode',
+      key: 'RegionCode',
+    },
+    {
+      title: 'Stations',
+      dataIndex: 'RegionName',
+      key: 'RegionName',
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'District',
+      dataIndex: '',
+      key: 'RegionName',
+    },
+    {
+      title: 'Active',
+
+      render: (index, record) => (
+        <Checkbox>
+
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn('Districts', !isUpdateRec?.Provinces, record)
+              addIdKeyToLookup(record?._id, "Districts")
+            }}
+          />
+          <AiFillDelete size={16}
+            onClick={() => {
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  dispatch(fetchRegions())
+                },
+              })
+            }}
+          />
         </Space>
       ),
     },
@@ -745,8 +864,7 @@ const [lookupsData, setlookupsData] = useState({
     },
     {
       title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: '',
       render: (index, record) => (
         <Checkbox>
 
@@ -764,8 +882,24 @@ const [lookupsData, setlookupsData] = useState({
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn('Divisions', !isUpdateRec?.Provinces, record)
+              addIdKeyToLookup(record?._id, "Divisions")
+            }}
+          />
+          <AiFillDelete size={16}
+            onClick={() => {
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  dispatch(fetchRegions())
+                },
+              })
+            }}
+          />
         </Space>
       ),
     },
@@ -803,8 +937,24 @@ const [lookupsData, setlookupsData] = useState({
       align: "center",
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn('Divisions', !isUpdateRec?.Provinces, record)
+              addIdKeyToLookup(record?._id, "Divisions")
+            }}
+          />
+          <AiFillDelete size={16}
+            onClick={() => {
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  dispatch(fetchRegions())
+                },
+              })
+            }}
+          />
         </Space>
       ),
     },
@@ -907,7 +1057,7 @@ const [lookupsData, setlookupsData] = useState({
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookuptype`, record?._id,);
-                 dispatch(getAllRegionTypes())
+                  dispatch(getAllRegionTypes())
                 },
               })
             }
@@ -962,7 +1112,7 @@ const [lookupsData, setlookupsData] = useState({
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/RegionType`, record?._id,()=>dispatch(getAllRegionTypes()));
+                  await deleteFtn(`${baseURL}/RegionType`, record?._id, () => dispatch(getAllRegionTypes()));
                 },
               })
             }
@@ -991,7 +1141,7 @@ const [lookupsData, setlookupsData] = useState({
         // Add more filter options as needed
       ],
       // onFilter: (value, record) => record.RegionCode === value,
-      render:(index, record)=>(
+      render: (index, record) => (
         <div>
           {record?.lookuptypeId?.lookuptype}
         </div>
@@ -1058,11 +1208,11 @@ const [lookupsData, setlookupsData] = useState({
       title: ' Lookup Type ',
       dataIndex: 'lookuptype',
       key: 'lookuptype',
-      render:(index,record)=>(
+      render: (index, record) => (
         <>
-        {
-          record?.lookuptypeId?.lookuptype
-        }
+          {
+            record?.lookuptypeId?.lookuptype
+          }
         </>
       )
     },
@@ -1134,9 +1284,9 @@ const [lookupsData, setlookupsData] = useState({
         // Add more filter options as needed
       ],
       // onFilter: (value, record) => record.RegionCode === value,
-      render:(index,record)=>(
+      render: (index, record) => (
         <>
-        {record?.lookuptypeId?.lookuptype}
+          {record?.lookuptypeId?.lookuptype}
         </>
       )
     },
@@ -1190,7 +1340,7 @@ const [lookupsData, setlookupsData] = useState({
     },
   ];
   const columnMaritalStatus = [
-    { 
+    {
       title: 'code',
       dataIndex: 'code',
       key: 'code',
@@ -1204,9 +1354,9 @@ const [lookupsData, setlookupsData] = useState({
         { text: 'B02', value: 'B02' },
         { text: 'C03', value: 'C03' },
       ],
-      render:(index,record)=>(
+      render: (index, record) => (
         <>
-        {record?.lookuptypeId?.lookuptype}
+          {record?.lookuptypeId?.lookuptype}
         </>
       )
     },
@@ -1241,8 +1391,8 @@ const [lookupsData, setlookupsData] = useState({
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
-              IsUpdateFtn('MaritalStatus', !isUpdateRec?.MaritalStatus, record)
-              addIdKeyToLookup(record?._id, "MaritalStatus")
+            IsUpdateFtn('MaritalStatus', !isUpdateRec?.MaritalStatus, record)
+            addIdKeyToLookup(record?._id, "MaritalStatus")
           }} />
           <AiFillDelete size={16} onClick={() =>
             MyConfirm({
@@ -1987,7 +2137,6 @@ const [lookupsData, setlookupsData] = useState({
       <h1 className="config-heading" style={{ marginLeft: '45px' }}>Configurations</h1>
       <div className="search-inpt">
         <Search style={{ borderRadius: "3px", height: '62px' }} />
-
       </div>
       <Divider orientation="left">lookups Configuration</Divider>
       <Row>
@@ -3054,7 +3203,7 @@ const [lookupsData, setlookupsData] = useState({
         />
       </MyDrawer>
       <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries} onClose={() => openCloseDrawerFtn('Counteries')} add={() => {
-        insertDataFtn(`${baseURL}/region`, { 'region': drawerIpnuts?.Counteries }, 'Data inserted successfully:', 'Data did not insert:', () => {
+        insertDataFtn(`/region`, { 'region': drawerIpnuts?.Counteries }, 'Data inserted successfully:', 'Data did not insert:', () => {
           resetCounteries('Counteries')
           dispatch(fetchRegions())
         })
@@ -3120,8 +3269,11 @@ const [lookupsData, setlookupsData] = useState({
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} options={selectLokups?.Provinces}
                     onChange={(e) => {
-                      drawrInptChng('Counteries', 'ParentRegion', e)
-                    }} />
+                      drawrInptChng('Counteries', 'ParentRegionId', e)
+                      console.log()
+                    }}
+                    value={drawerIpnuts?.Counteries?.ParentRegionId}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3157,18 +3309,18 @@ const [lookupsData, setlookupsData] = useState({
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Provinces' 
-      open={drawerOpen?.Provinces} 
-      isPagination={true} 
-      onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
-        insertDataFtn(`${baseURL}/region`, { "region": drawerIpnuts?.Provinces }, 
-          'Data inserted successfully:', 'Data did not insert:',
-          () => {
-            resetCounteries('Provinces')
-            dispatch()
-          })  
+      <MyDrawer title='Provinces'
+        open={drawerOpen?.Provinces}
+        isPagination={true}
+        onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
+          insertDataFtn(`${baseURL}/region`, { "region": drawerIpnuts?.Provinces },
+            'Data inserted successfully:', 'Data did not insert:',
+            () => {
+              resetCounteries('Provinces')
+              dispatch(fetchRegions())
+            })
 
-      }} >
+        }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3255,7 +3407,7 @@ const [lookupsData, setlookupsData] = useState({
       </MyDrawer>
       <MyDrawer title='City' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
         console.log(drawerIpnuts?.Cities)
-        insertDataFtn(`${baseURL}/region`, { region: drawerIpnuts?.Cities }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Cities'))
+        insertDataFtn(`/region`, { region: drawerIpnuts?.Cities }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Cities'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3297,8 +3449,8 @@ const [lookupsData, setlookupsData] = useState({
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County' isSimple={true} options={selectLokups?.Districts}
-                    value={drawerIpnuts?.Cities?.ParentRegion}
-                    onChange={(e) => drawrInptChng('Cities', 'ParentRegion', e)}
+                    value={drawerIpnuts?.Cities?.ParentRegionId}
+                    onChange={(e) => drawrInptChng('Cities', 'ParentRegionId', e)}
                   />
                 </div>
                 <p className="error"></p>
@@ -3380,7 +3532,7 @@ const [lookupsData, setlookupsData] = useState({
       </MyDrawer>
       <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true} onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
         console.log(drawerIpnuts?.PostCode)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
+        insertDataFtn(`/region`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3478,8 +3630,11 @@ const [lookupsData, setlookupsData] = useState({
       </MyDrawer>
       <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true} onClose={() => openCloseDrawerFtn('Districts')} add={() => {
         console.log(drawerIpnuts?.Districts)
-        insertDataFtn(`${baseURL}/region`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
-          () => resetCounteries('Districts'))
+        insertDataFtn(`/region`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
+          () => {
+            resetCounteries('Districts')
+            dispatch(fetchRegions())
+          })
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3545,7 +3700,8 @@ const [lookupsData, setlookupsData] = useState({
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect isSimple={true} placeholder='Select Division' options={selectLokups?.Divisions} onChange={(e) => drawrInptChng('Districts', 'ParentRegion', e)} value={drawerIpnuts?.Districts?.ParentRegion} />
+                  <MySelect isSimple={true} placeholder='Select Division'
+                    options={selectLokups?.Divisions} onChange={(e) => drawrInptChng('Districts', 'ParentRegionId', e)} value={drawerIpnuts?.Districts?.ParentRegion} />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
                   <p className="error"></p>
                 </div>
@@ -3589,7 +3745,10 @@ const [lookupsData, setlookupsData] = useState({
 
       </MyDrawer>
       <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
-        insertDataFtn(`${baseURL}/region`, { region: drawerIpnuts?.Divisions }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Divisions'))
+        insertDataFtn(`/region`, { region: drawerIpnuts?.Divisions }, 'Data inserted successfully:', 'Data did not insert:', () => {
+          resetCounteries('Divisions')
+          dispatch(fetchRegions())
+        })
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3612,7 +3771,7 @@ const [lookupsData, setlookupsData] = useState({
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' onChange={(e) => drawrInptChng('Divisions', 'ParentRegion', e)} isSimple={true} options={selectLokups?.Counteries} />
+                  <MySelect placeholder='Select County' onChange={(e) => drawrInptChng('Divisions', 'ParentRegionId', e)} isSimple={true} options={selectLokups?.Counteries} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3688,9 +3847,16 @@ const [lookupsData, setlookupsData] = useState({
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Station' open={drawerOpen?.Station} isPagination={true} onClose={() => openCloseDrawerFtn('Station')} add={() => {
+      <MyDrawer title='Station' 
+      open={drawerOpen?.Station} 
+      isPagination={true} onClose={() => openCloseDrawerFtn('Station')} add={() => {
         console.log(drawerIpnuts?.Station)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.Station, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Districts'))
+        insertDataFtn(`/region`,{region:drawerIpnuts?.Station}, 
+          'Data inserted successfully:', 'Data did not insert:',
+           () => {resetCounteries('Station')
+           dispatch(fetchRegions())
+          }
+          )
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3713,22 +3879,25 @@ const [lookupsData, setlookupsData] = useState({
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Station', 'RegionCode', e.target.value)} 
+                  value={drawerIpnuts?.Station?.RegionCode} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>County Name :</p>
+                <p>Station Name :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} />
-                  {/* <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  /> */}
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Station', 'RegionName', e.target.value)} 
+                  value={drawerIpnuts?.Station?.RegionName} 
+                  />
                 </div>
                 <p className="error"></p>
               </div>
@@ -3740,19 +3909,25 @@ const [lookupsData, setlookupsData] = useState({
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp"
+                   onChange={(e) => drawrInptChng('Station', 'DisplayName', e.target.value)} 
+                   value={drawerIpnuts?.Station?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Division :</p>
+                <p>District :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect isSimple={true} placeholder='Select Division' />
+                  <MySelect placeholder='Select County' isSimple={true} 
+                  options={selectLokups?.Districts}
+                    value={drawerIpnuts?.Station?.ParentRegionId}
+                    onChange={(e) => drawrInptChng('Station', 'ParentRegionId', e)}
+                  />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
                   <p className="error"></p>
                 </div>
@@ -3778,7 +3953,8 @@ const [lookupsData, setlookupsData] = useState({
           <div className="mt-4 config-tbl-container">
             <Table
               pagination={false}
-              columns={columnDistricts}
+              columns={columnStations}
+              dataSource={data?.Stations}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -3882,7 +4058,7 @@ const [lookupsData, setlookupsData] = useState({
           }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/lookuptype`,
+            `/lookuptype`,
             {
               ...drawerIpnuts?.LookupType, "userid": "67117bea87c907f6cdda0ad9",
             },
@@ -3989,7 +4165,7 @@ const [lookupsData, setlookupsData] = useState({
         isEdit={isUpdateRec?.RegionType}
         update={
           async () => {
-            await updateFtn('/regiontype', drawerIpnuts?.RegionType, () =>  dispatch(getAllRegionTypes()))
+            await updateFtn('/regiontype', drawerIpnuts?.RegionType, () => dispatch(getAllRegionTypes()))
             IsUpdateFtn('regiontype', false,)
           }}
         add={async () => {
@@ -4000,7 +4176,8 @@ const [lookupsData, setlookupsData] = useState({
             },
             'Data inserted successfully',
             'Data did not insert',
-            () => {resetCounteries('RegionType')
+            () => {
+              resetCounteries('RegionType')
               dispatch(getAllRegionTypes())
             }
             // Pass a function reference
@@ -4103,7 +4280,7 @@ const [lookupsData, setlookupsData] = useState({
       }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `/lookup`,
             drawerIpnuts?.Lookup,
             'Data inserted successfully',
             'Data did not insert',
@@ -4237,7 +4414,7 @@ const [lookupsData, setlookupsData] = useState({
       }}
         add={async () => {
           await insertDataFtn(
-           `${baseURL}/lookup`,
+            `${baseURL}/lookup`,
             drawerIpnuts?.Gender,
             'Data inserted successfully',
             'Data did not insert',
@@ -4479,9 +4656,9 @@ const [lookupsData, setlookupsData] = useState({
         openCloseDrawerFtn('Title')
         IsUpdateFtn('Title', false,)
       }}
-        add={async () => {
-          await insertDataFtn(
-            `${baseURL}/lookup`,
+        add={() => {
+           insertDataFtn(
+            `/lookup`,
             drawerIpnuts?.Title,
             'Data inserted successfully',
             'Data did not insert',
@@ -5250,7 +5427,7 @@ const [lookupsData, setlookupsData] = useState({
       }}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `/lookup`,
             drawerIpnuts?.MaritalStatus,
             'Data inserted successfully',
             'Data did not insert',
@@ -5264,7 +5441,7 @@ const [lookupsData, setlookupsData] = useState({
             await updateFtn('/lookup', drawerIpnuts?.MaritalStatus, () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
             dispatch(getAllLookups())
             IsUpdateFtn('MaritalStatus', false,)
-          
+
           }}
       >
         <div className="drawer-main-cntainer">
@@ -5280,7 +5457,7 @@ const [lookupsData, setlookupsData] = useState({
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      
+
                       drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
 

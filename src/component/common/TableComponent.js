@@ -1,5 +1,6 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Table, Pagination, Space, Form, Input, Checkbox } from "antd";
+import { Table, Pagination, Space, Form, Input, Checkbox,Upload } from "antd";
+import { UploadOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
@@ -53,8 +54,10 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
   );
 };
 
-const TableComponent = ({ dataSource, screenName, redirect }) => {
+const TableComponent = ({ data, screenName, redirect }) => {
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
+  const [dataSource, setdataSource] = useState(data)
+  console.log(data,"pp")
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -66,6 +69,21 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       }))
   );
 
+    const fileInputRef = useRef(null);
+  
+    // Function to trigger file input
+    const handleUploadClick = () => {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""; // Reset value to allow re-selection of same file
+        fileInputRef.current.click();
+      }
+    };
+    const handleFileUpload = (event, key) => {
+      const file = event.target.files[0]; // Get the selected file
+      if (file) {
+        addAttributeToTableData(key)
+      }
+    };
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -119,7 +137,16 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       direction: overIndex > activeIndex ? "right" : "left",
     });
   };
-
+  const addAttributeToTableData = (key) => {
+ 
+    setdataSource(dataSource?.map((item) =>
+      item.key === key ? { ...item, isAttachment: true } : item
+    ))
+ 
+    console.log(dataSource, "Updated dataSource");
+ 
+  };
+console.log(dataSource,"data00")
   const draggableColumns = [
     {
       title: () => (
@@ -158,7 +185,13 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
       fixed: "left",
       render: (record, index) => (
         <Space size="small" className="action-buttons">
-          <CgAttachment style={{ fontSize: "15px", fontWeight: 500 }} />
+          <CgAttachment style={{ fontSize: "15px", fontWeight: 500,color: record?.isAttachment ? "green" : "inherit",  }} />
+          <input
+        type="file"
+        ref={fileInputRef}
+        onChange={(e)=>handleFileUpload(e,record?.key)}
+        style={{ display: "none" }}
+      />
           <SimpleMenu
             title={<BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />}
             data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false, 'Career Break': false }}
@@ -166,6 +199,10 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
             isSearched={false}
             isTransparent={true}
             actions={() => { }}
+            attachedFtn={()=>{
+              handleUploadClick()
+              
+            }}
             record={record}
             index={index}
           />
@@ -353,6 +390,7 @@ const TableComponent = ({ dataSource, screenName, redirect }) => {
   }) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
+    
     const form = useContext(EditableContext);
     useEffect(() => {
       if (editing) {

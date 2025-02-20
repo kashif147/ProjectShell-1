@@ -22,6 +22,11 @@ export const TableColumnsProvider = ({ children }) => {
   const handlClaimDrawerChng = () => {
     setclaimsDrawer(!claimsDrawer)
   }
+  const [lookupsForSelect, setlookupsForSelect] = useState({
+    Duties: [],
+    MaritalStatus: [],
+    Ranks: [],
+  })
   const handleSaveAfterEdit = (row) => {
     const newData = [...gridData];
     const index = newData.findIndex((item) => row.key === item.key);
@@ -395,33 +400,47 @@ export const TableColumnsProvider = ({ children }) => {
 
     ],
   });
-
+  const [selectLokups, setselectLokups] = useState({
+    Provinces: [],
+    Counteries: [],
+    Divisions: [],
+    Districts: [],
+    Stations:[],
+  });
   const [searchFilters, setsearchFilters] = useState({
     Profile: [
       {
         titleColumn: "Rank",
         isSearch: true,
         isCheck: false,
-        lookups: { "All Ranks": false, "0001": false, "0021": false },
-        comp: "!="
+        comp: "!=",
+        lookups: lookupsForSelect?.Ranks.map((item)=>({
+          // 'All Ranks':false,
+          [item.label]:false
+        }))
+        
+        // { "All Ranks": false, "0001": false, "0021": false },
+        // comp: "!="
       },
       {
         titleColumn: "Duty",
         isSearch: true,
         comp: "!=",
         isCheck: false,
-        lookups: { "All Duties": false, "Sargent": false, "Garda": false },
+        lookups: lookupsForSelect?.Duties .map((item)=>({
+          // 'All Ranks':false,
+          [item.label]:false
+        }))
       },
       {
         titleColumn: "Division",
         isSearch: true,
+        comp: "!=",
         isCheck: false,
-        lookups: {
-          "All Divisions": false,
-          Northland: false,
-          Southland: false,
-          Eastland: false,
-        },
+        lookups: selectLokups?.Divisions .map((item)=>({
+          // 'All Ranks':false,
+          [item.label]:false
+        }))
       },
       {
         titleColumn: "District",
@@ -1345,6 +1364,78 @@ export const TableColumnsProvider = ({ children }) => {
     ],
   });
 
+ 
+  useEffect(() => {
+    if (lookupsForSelect?.Ranks?.length) { // Ensure Ranks data is available before updating
+      console.log("Ranks data exists:", lookupsForSelect.Ranks);
+  
+      setsearchFilters((prevState) => ({
+        ...prevState,
+        Profile: prevState.Profile.map((item) =>
+          item.titleColumn === "Rank"
+            ? {
+                ...item,
+                lookups: {
+                  ...item.lookups, // Preserve existing lookups
+                  ...lookupsForSelect.Ranks.reduce((acc, rank) => {
+                    acc[rank.label] = false; // Convert array into an object
+                    return acc;
+                  }, {}),
+                },
+              }
+            : item
+        ),
+      }));
+    }
+  }, [lookupsForSelect?.Ranks]);
+  
+  useEffect(() => {
+    if (lookupsForSelect?.Duties?.length) { // Ensure Ranks data is available before updating
+      console.log("Ranks data exists:", lookupsForSelect.Duties);
+  
+      setsearchFilters((prevState) => ({
+        ...prevState,
+        Profile: prevState.Profile.map((item) =>
+          item.titleColumn === "Duty"
+            ? {
+                ...item,
+                lookups: {
+                  ...item.lookups, // Preserve existing lookups
+                  ...lookupsForSelect.Duties.reduce((acc, rank) => {
+                    acc[rank.label] = false; // Convert array into an object
+                    return acc;
+                  }, {}),
+                },
+              }
+            : item
+        ),
+      }));
+    }
+  }, [lookupsForSelect?.Duties]);
+  useEffect(() => {
+    if (selectLokups?.Divisions?.length) { // Ensure Ranks data is available before updating
+      console.log("Ranks data exists:", selectLokups?.Divisions);
+  debugger
+      setsearchFilters((prevState) => ({
+        ...prevState,
+        Profile: prevState.Profile.map((item) =>
+          item.titleColumn === "Division"
+            ? {
+                ...item,
+                lookups: {
+                  ...item.lookups, // Preserve existing lookups
+                  ...selectLokups?.Divisions.reduce((acc, rank) => {
+                    acc[rank.label] = false; // Convert array into an object
+                    return acc;
+                  }, {}),
+                },
+              }
+            : item
+        ),
+      }));
+    }
+  }, [selectLokups?.Divisions]);
+  
   const filteredSearchFilters = [
     {
       titleColumn: "Rank",
@@ -1729,13 +1820,9 @@ export const TableColumnsProvider = ({ children }) => {
     Districts: [],
     Cities: [],
     Titles: [],
+    Stations:[],
   })
-  const [selectLokups, setselectLokups] = useState({
-    Provinces: [],
-    Counteries: [],
-    Divisions: [],
-    Districts: [],
-  });
+
   useEffect(() => {
     if (regions && Array.isArray(regions)) {
       const filteredProvinces = regions.filter((item) => item?.lookuptypeId?._id === '6761492de9640143bfc38e4c');
@@ -1774,6 +1861,14 @@ export const TableColumnsProvider = ({ children }) => {
       setRegionLookups((prevState) => ({
         ...prevState,
         Cities: filteredDistricts,
+      }));
+    }
+    if (regions && Array.isArray(regions)) {
+      const filteredStations = regions.filter((item) => item.RegionTypeID === '671822c6a0072a28aab883e9');
+
+      setRegionLookups((prevState) => ({
+        ...prevState,
+        Stations: filteredStations,
       }));
     }
   }, [regions]);
@@ -1821,6 +1916,19 @@ export const TableColumnsProvider = ({ children }) => {
         Districts: transformedData,
       }));
     }
+    if (regionLookups?.Stations) {
+      const transformedData = regionLookups?.Stations.map((item) => ({
+        key: item?._id,
+        label: item?.RegionName,
+      }));
+
+      setselectLokups((prevState) => ({
+        ...prevState,
+        Stations: transformedData,
+      }));
+    }
+
+    
   }, [regionLookups]);
 
   // genral lookups
@@ -1830,13 +1938,10 @@ export const TableColumnsProvider = ({ children }) => {
   const [lookupsData, setlookupsData] = useState({
     Duties: [],
     MaritalStatus: [],
-    Ranks: []
+    Ranks: [],
+    Titles:[]
   })
-  const [lookupsForSelect, setlookupsForSelect] = useState({
-    Duties: [],
-    MaritalStatus: [],
-    Ranks: []
-  })
+ 
   useEffect(() => {
    
     if (lookups && Array.isArray(lookups)) {
@@ -1863,7 +1968,14 @@ export const TableColumnsProvider = ({ children }) => {
       }));
     }
     if (lookups && Array.isArray(lookups)) {
-      const filteredRanks = lookups?.lookups?.filter((item) => item?.lookuptypeId?._id === '674a219fcc0986f64ca3701b')
+      const filteredTitles = lookups?.filter((item) => item?.lookuptypeId?._id === '675fc362e9640143bfc38d28')
+      setlookupsData((prevState) => ({
+        ...prevState,
+        Titles: filteredTitles,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const filteredRanks = lookups?.filter((item) => item?.lookuptypeId?._id === '67ac73c693e73711692bf859')
       setlookupsData((prevState) => ({
         ...prevState,
         Ranks: filteredRanks,
@@ -1876,24 +1988,32 @@ export const TableColumnsProvider = ({ children }) => {
     if (lookupsData?.Duties) {
       const transformedData = lookupsData?.Duties.map((item) => ({
         key: item?._id,
-        label: item?.lookupsData,
+        label: item?.lookupname,
       }));
-
       setlookupsForSelect((prevState) => ({
         ...prevState,
         Duties: transformedData,
       }));
     }
-
     if (lookupsData?.Ranks) {
       const transformedData = lookupsData?.Ranks.map((item) => ({
+        key: item?._id,
+        label: item?.lookupname,
+      }));
+      setlookupsForSelect((prevState) => ({
+        ...prevState,
+        Ranks: transformedData,
+      }));
+    }
+    if (lookupsData?.Titles) {
+      const transformedData = lookupsData?.Titles.map((item) => ({
         key: item?._id,
         label: item?.lookupname,
       }));
 
       setlookupsForSelect((prevState) => ({
         ...prevState,
-        Ranks: transformedData,
+        Titles: transformedData,
       }));
     }
   },[lookupsData])

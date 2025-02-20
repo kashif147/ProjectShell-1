@@ -159,7 +159,7 @@ function ClaimSummary() {
     return (
       <div className="">
    
-      <TableComponent dataSource={claimsData} screenName="Claims" redirect="/ClaimsDetails"  />
+      <TableComponent data={claimsData} screenName="Claims" redirect="/ClaimsDetails"  />
     </div>
     );
   }

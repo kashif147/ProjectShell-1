@@ -21,6 +21,7 @@ function SimpleMenu({
   isCheckBox = true,
   actions,
   vertical,
+  attachedFtn,
   isBtn = false,
   isTable = false,
   categoryKey = "gender",
@@ -112,7 +113,7 @@ function SimpleMenu({
                 Delete
               </div>
             ) : key === "Attached" ? (
-              <div className="d-flex align-items-baseline">
+              <div onClick={attachedFtn} className="d-flex align-items-baseline">
                 <ImAttachment
                   style={{
                     fontSize: "12px",
@@ -121,7 +122,7 @@ function SimpleMenu({
                     color: "#45669d",
                   }}
                 />
-                Attached
+                Attached1
               </div>
             ) : key === "View" ? (
               <div className="d-flex align-items-baseline">
@@ -131,6 +132,7 @@ function SimpleMenu({
                     marginRight: "10px",
                     color: "#45669d",
                   }}
+
                 />
                 View
               </div>

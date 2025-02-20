@@ -114,7 +114,7 @@ function RusterSummary() {
   ];
   return (
     <>
-<TableComponent dataSource={dataSource}  screenName="Roster" redirect="/Details" />
+<TableComponent data={dataSource}  screenName="Roster" redirect="/Details" />
     </>
   )
 }

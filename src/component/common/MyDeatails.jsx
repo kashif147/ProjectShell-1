@@ -23,6 +23,7 @@ import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
 import moment from "moment";
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
+import { getAllLookups } from "../../features/LookupsSlice";
 import { useSelector, useDispatch } from 'react-redux'
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import "../../styles/MyDetails.css";
@@ -37,7 +38,8 @@ import MyTransfer from "./MyTransfer";
 import { insertDataFtn } from "../../utils/Utilities";
 import { getPartners } from "../../features/PartnersSlice";
 import { getChildren } from "../../features/ChildrenSlice";
-
+import { baseURL } from "../../utils/Utilities";
+import axios from "axios";
 const { TextArea } = Input;
 
 const CheckboxGroup = Checkbox.Group;
@@ -73,10 +75,13 @@ const beforeUpload = (file) => {
 
 function MyDeatails() {
   const dispatch = useDispatch();
-  const { ProfileDetails, topSearchData, rowIndex } = useTableColumns();
+   useEffect(() => {
+      dispatch(getAllLookups())
+    }, [dispatch])
+  const { ProfileDetails, topSearchData, rowIndex,lookupsData,lookupsForSelect,selectLokups } = useTableColumns();
   const { partner, partnerloading, error } = useSelector((state) => state.partner);
   const { children, childrenError, childrenLoading } = useSelector((state) => state.children);
-  console.log(children,"partner")
+  console.log(selectLokups,"partner")
   const {
     register,
     handleSubmit,
@@ -176,7 +181,6 @@ const handleInputChangeChildren = (e) => {
 };
 
 const handleSubmitChildren = (e) => {
-  debugger
   e.preventDefault();
 
   if (!validateChildren()) {
@@ -481,7 +485,65 @@ const handleSubmitChildren = (e) => {
 
     return ageNextBirthday;
   }
-
+  const [regionByParntTyp, setregionByParntTyp] = useState({
+    Districts:[],
+    station:[],
+  })
+  const getRegionsByTypAndPrntId = async (data, callback) => {
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      // Make the API request
+      const response = await axios.get(`${baseURL}/region/RegionTypeID/${data?.RegionTypeID}/ParentRegion/${data?.ParentRegion}`, {
+        headers: {
+          Authorization: `Bearer ${token}`, // Include token in headers
+          'Content-Type': 'application/json',
+        },
+      });
+  
+      // Check if the RegionTypeID matches and the response status is OK (200)
+      if (response.status === 200 && data?.RegionTypeID === "671822bca0072a28aab883e7") {
+        setregionByParntTyp(prev => ({
+          ...prev,
+          Districts: response.data?.map(i=>({key:i?._id,
+            label:i?.RegionName
+          })),
+        }));
+      }
+  
+      // In case the resource is not found, handle the 404 status code as necessary
+      if (response.status === 404 && data?.RegionTypeID === "671822bca0072a28aab883e7") {
+        setregionByParntTyp(prev => ({
+          ...prev,
+          Districts: [], // You may want to set an empty array or some other value
+        }));
+      }
+      
+      if(data?.RegionTypeID === "671822c6a0072a28aab883e9"){
+        if(response.status===200){
+          setregionByParntTyp(prev => ({
+            ...prev,
+            station: response.data?.map(i=>({key:i?._id,
+              label:i?.RegionName
+            })),
+          }));
+        }
+      }
+  
+      // If there's a callback, pass the response data to it
+      if (callback) {
+        callback(null, response.data); // Assuming the callback handles success with (error, data)
+      }
+  
+      return response.data; // Assuming the API returns an array of regions
+  
+    } catch (error) {
+      console.error(error.response?.data?.message );
+    }
+  };
+  
+  
   const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
 
   // let ageOnNextBirthday = getNextBirthdayAge(InfData?.dateOfBirth);
@@ -900,10 +962,12 @@ const handleSubmitChildren = (e) => {
                   <div className='input-cont'>
                     <p className='star'>*</p>
                     <div className='input-sub-con'>
-                      <MySelect
-                        isSimple={true}
-                        placeholder='Mr.'
-                      />
+                   
+                       <MySelect
+                      placeholder='Select Title'
+                      isSimple={true}
+                      options={lookupsForSelect?.Titles}
+                    />
                       <h1 className='error-text'></h1>
                     </div>
                   </div>
@@ -1179,6 +1243,8 @@ const handleSubmitChildren = (e) => {
                       <MySelect
                         placeholder='Select Station'
                         isSimple={true}
+                        options={regionByParntTyp?.station}
+                        // onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822bca0072a28aab883e7',ParentRegion:e})}
                       />
                     </div>
                     <Button
@@ -1222,6 +1288,8 @@ const handleSubmitChildren = (e) => {
                     <MySelect
                       placeholder='Select District'
                       isSimple={true}
+                      options={regionByParntTyp?.Districts}
+                      onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822c6a0072a28aab883e9',ParentRegion:e})}
                     />
                   </div>
                 </div>
@@ -1234,6 +1302,8 @@ const handleSubmitChildren = (e) => {
                     <MySelect
                       placeholder='Select Division'
                       isSimple={true}
+                      options={selectLokups?.Divisions}
+                      onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822bca0072a28aab883e7',ParentRegion:e})}
                     />
                   </div>
                 </div>
@@ -1308,6 +1378,7 @@ const handleSubmitChildren = (e) => {
                     <MySelect
                       placeholder='Select Rank'
                       isSimple={true}
+                      options={lookupsForSelect?.Ranks}
                     />
                   </div>
                 </div>
@@ -1324,6 +1395,7 @@ const handleSubmitChildren = (e) => {
                     <MySelect
                       placeholder='Select Duty'
                       isSimple={true}
+                      options={lookupsForSelect?.Duties}
                     />
                   </div>
                 </div>
@@ -1706,12 +1778,10 @@ const handleSubmitChildren = (e) => {
                 <div className='inpt-con'>
                   <p className='star'>*</p>
                   <div className='inpt-sub-con'>
-                    <Input
-                      className='inp'
-                      type='text'
-                      name='title'
-                      value={InfDataPartner.title}
-                      onChange={handleInputPartnerChange}
+                  <MySelect
+                      placeholder='Select Title'
+                      isSimple={true}
+                      options={lookupsForSelect?.Titles}
                     />
                       {submitted && iserrors.title && (
                           <h1 className='error-text'>{iserrors.title}</h1>

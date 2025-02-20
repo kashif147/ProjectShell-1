@@ -9,7 +9,7 @@ function Reports({screenName}) {
     console.log(location,"location")
      
   return (
-    <TableComponent dataSource={gridData} screenName="Profile"   />
+    <TableComponent data={gridData} screenName="Profile"   />
 //    <h1>testing</h1>
   )
 }

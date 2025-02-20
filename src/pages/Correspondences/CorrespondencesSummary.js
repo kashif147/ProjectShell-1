@@ -157,7 +157,7 @@ function CorrespondencesSummary() {
   
   return (
     <div>
-     <TableComponent   screenName="Correspondence" dataSource={correspondenceDetailsDataSource} redirect="/Details" />
+     <TableComponent   screenName="Correspondence" data={correspondenceDetailsDataSource} redirect="/Details" />
       
     </div>
   )

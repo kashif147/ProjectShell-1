@@ -213,7 +213,7 @@ function ProfileSummary() {
 
   return (
     <div className="">
-    <TableComponent dataSource={gridData}  screenName="Profile" redirect="/Details" />
+    <TableComponent data={gridData}  screenName="Profile" redirect="/Details" />
     </div>
   );
 }

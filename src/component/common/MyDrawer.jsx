@@ -275,7 +275,10 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       [name]: value, // Update only the `timeDur` property
     }));
   };
-  console.log(recData,'555')
+  console.log(recData, '555')
+  const handleEnter = (e) => {
+    isEdit == true ? update() : add()
+};
   return (
     <Drawer
       width={width}
@@ -284,7 +287,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       onClose={onClose}
       open={open}
       extra={
-        <div className="d-flex space-evenly">
+        <div className="d-flex space-evenly" onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
           {
             isContact && (
               <div className="mx-auto" style={{ marginRight: '80%' }}>
@@ -622,24 +625,24 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
                     <div className="pt-3 d-flex flex-column ">
                       <p>
                         Occurs every Tuesday until{
-                          isEndDate===true &&  (recData?.timeDur === "Week" || recData?.timeDur === "Day")  &&  (
-                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer", color:'#215E97' }}> Choose an end date</span>
+                          isEndDate === true && (recData?.timeDur === "Week" || recData?.timeDur === "Day") && (
+                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer", color: '#215E97' }}> Choose an end date</span>
                           )
                         }
                       </p>
                       {
-                        isEndDate===false && (recData?.timeDur === "Week" || recData?.timeDur === "Day") &&
-                      (
-                      <div className="d-flex ">
-                      <div style={{ width: '50%' }} className="me-4">
-                        <MyDatePicker />
-                      </div>
-                      <p style={{ cursor: 'pointer', color:'#215E97' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
-                    </div>)
-}
+                        isEndDate === false && (recData?.timeDur === "Week" || recData?.timeDur === "Day") &&
+                        (
+                          <div className="d-flex ">
+                            <div style={{ width: '50%' }} className="me-4">
+                              <MyDatePicker />
+                            </div>
+                            <p style={{ cursor: 'pointer', color: '#215E97' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
+                          </div>)
+                      }
                     </div>
                   </div>
-                ) }{
+                )}{
                 (recData?.timeDur === "Year" || recData?.timeDur === "Month") &&
                 (
                   <div className="d-flex flex-column pt-4">
@@ -647,26 +650,26 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
                       On December 16
                     </Checkbox>
                     <Checkbox>
-                    On third Monday of December
+                      On third Monday of December
                     </Checkbox>
                     <div className="pt-3 d-flex flex-column">
                       <p>
                         Occur on day 16 of every month{
-                          isEndDate===true && (recData?.timeDur === "Year" || recData?.timeDur === "Month") && (
-                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer", color:'#215E97' }}> Choose an end date</span>
+                          isEndDate === true && (recData?.timeDur === "Year" || recData?.timeDur === "Month") && (
+                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer", color: '#215E97' }}> Choose an end date</span>
                           )
                         }
                       </p>
                       {
-                  isEndDate === false && (
-                    <div className="d-flex ">
-                      <div style={{ width: '50%' }} className="me-4">
-                        <MyDatePicker />
-                      </div>
-                      <p style={{ cursor: 'pointer', color:'#215E97' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
-                    </div>
-                  )
-                }
+                        isEndDate === false && (
+                          <div className="d-flex ">
+                            <div style={{ width: '50%' }} className="me-4">
+                              <MyDatePicker />
+                            </div>
+                            <p style={{ cursor: 'pointer', color: '#215E97' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
+                          </div>
+                        )
+                      }
                     </div>
                   </div>
 

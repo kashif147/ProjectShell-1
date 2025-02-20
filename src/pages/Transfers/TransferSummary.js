@@ -280,7 +280,7 @@ function TransferSummary() {
   return (
     <div className="">
    
-      <TableComponent dataSource={transferDataSource}  screenName="Transfer" redirect="/Details" />
+      <TableComponent data={transferDataSource}  screenName="Transfer" redirect="/Details" />
     </div>
   );
 }

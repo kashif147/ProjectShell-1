@@ -48,7 +48,7 @@ function CorspndncDetail() {
     })
       
     const handleMenuClick = (key ) => {
-     debugger
+   
     };
     const createDocument = async ( ) => {
       const graphClient = getGraphClient(instance, accounts);
