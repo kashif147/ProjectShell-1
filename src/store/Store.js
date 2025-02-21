@@ -10,6 +10,7 @@ import lookupsReducer from "../features/LookupsSlice";
 import regionTypeReducer from "../features/RegionTypeSlice";
 import partnerReducer from "../features/PartnersSlice";
 import childrenReducer from "../features/ChildrenSlice";
+import refreshReducer from '../features/RefreshSlice';
 const store = configureStore({
   reducer: {
     auth: authReducer, // Authentication state
@@ -19,6 +20,7 @@ const store = configureStore({
     regionTypes: regionTypeReducer,
     partner: partnerReducer,
     children: childrenReducer, 
+    refresh: refreshReducer,
   },
 });
 

@@ -33,11 +33,16 @@ const Login = () => {
         instance.loginPopup({
             scopes: ["openid", "profile", "User.Read", "Mail.Read"], // Scopes you need
         }).then((response) => {
-            // console.log("Login response: ", response);
-            localStorage.setItem('token',response?.accessToken)
+            console.log("Login response: ", response?.accessToken);
+            if(response){
+                dispatch(loginUser({ 
+                      user:response?.account?.username,
+                      isMicrosoft:true }));
+            }
+            // localStorage.setItem('token',response?.accessToken)
             navigate("/Summary",{
                 state: {
-                  search: "Correspondences"
+                  search: "Profile"
                 },
               })
         }).catch(e => {

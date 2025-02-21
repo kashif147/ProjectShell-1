@@ -1,6 +1,7 @@
 // regionSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
+import axiosInstance from '../utils/AxiosInstance'
 import { baseURL } from '../utils/Utilities';
 
 let token; 
@@ -11,7 +12,7 @@ export const fetchRegions = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try { 
             token = localStorage.getItem('token')
-            const response = await axios.get(`${baseURL}/region`, {
+            const response = await axiosInstance.get(`${baseURL}/region`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Include token in headers
                     'Content-Type': 'application/json',
