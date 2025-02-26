@@ -25,13 +25,12 @@ axiosInstance.interceptors.response.use(
     async (error) => {
         const originalRequest = error.config;
         const dispatch = useDispatch()
-        if (error.response?.status === 401 && !originalRequest._retry) {
+        if (error.response?.status === 403 && !originalRequest._retry) {
             originalRequest._retry = true;
 
             try {
                 // 🔥 Call Redux to refresh token
                 const result = await dispatch(refreshAccessToken());
-
                 const newToken = result.payload?.accessToken;
                 if (newToken) {
                     localStorage.setItem("token", newToken);  // Update token

@@ -375,7 +375,6 @@ console.log(data?.Stations,"88")
 
   let drawerInputsInitalValues = {
     Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '67182276a0072a28aab883de', isActive: true },
-    Provinces: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, RegionTypeID: '6761492de9640143bfc38e4c', isDeleted: false },
     Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
     Station: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822c6a0072a28aab883e9' },
     // Station:     {RegionCode:'', RegionTypeID: '671822c6a0072a28aab883e9',RegionName:'', DisplayName: '', isDeleted: false},
@@ -389,6 +388,7 @@ console.log(data?.Stations,"88")
     ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
+    Provinces: { code: '', lookupname: '', DisplayName: '', Parentlookup: null, lookuptypeId: '6761492de9640143bfc38e4c', isDeleted: false,"userid": "67117bea87c907f6cdda0ad9" },
     Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true ,},
     RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
   }
@@ -599,7 +599,7 @@ console.log(data?.Stations,"88")
               title: 'Confirm Deletion',
               message: 'Do You Want To Delete This Item?',
               onConfirm: async () => {
-                await deleteFtn(`${baseURL}/region`, record?._id,);
+                await deleteFtn(`${baseURL}/lookup`, record?._id,);
                 dispatch(fetchRegions())
               },
             })
@@ -662,7 +662,7 @@ console.log(data?.Stations,"88")
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  await deleteFtn(`${baseURL}/lookup`, record?._id,);
                   dispatch(fetchRegions())
                 },
               })
@@ -773,7 +773,7 @@ console.log(data?.Stations,"88")
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  await deleteFtn(`${baseURL}/lookup`, record?._id,);
                   dispatch(fetchRegions())
                 },
               })
@@ -836,7 +836,7 @@ console.log(data?.Stations,"88")
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  await deleteFtn(`${baseURL}/lookup`, record?._id,);
                   dispatch(fetchRegions())
                 },
               })
@@ -894,7 +894,7 @@ console.log(data?.Stations,"88")
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  await deleteFtn(`${baseURL}/lookup`, record?._id,);
                   dispatch(fetchRegions())
                 },
               })
@@ -949,7 +949,7 @@ console.log(data?.Stations,"88")
                 title: 'Confirm Deletion',
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/region`, record?._id,);
+                  await deleteFtn(`${baseURL}/lookup`, record?._id,);
                   dispatch(fetchRegions())
                 },
               })
@@ -1537,7 +1537,7 @@ console.log(data?.Stations,"88")
               title: 'Confirm Deletion',
               message: 'Do You Want To Delete This Item?',
               onConfirm: async () => {
-                await deleteFtn(`${baseURL}/region`, record?._id,);
+                await deleteFtn(`${baseURL}/lookup`, record?._id,);
                 dispatch(getAllLookups())
                 resetCounteries('Lookup')
               },
@@ -3203,7 +3203,7 @@ console.log(data?.Stations,"88")
         />
       </MyDrawer>
       <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries} onClose={() => openCloseDrawerFtn('Counteries')} add={() => {
-        insertDataFtn(`/region`, { 'region': drawerIpnuts?.Counteries }, 'Data inserted successfully:', 'Data did not insert:', () => {
+        insertDataFtn(`/lookup`, { 'region': drawerIpnuts?.Counteries }, 'Data inserted successfully:', 'Data did not insert:', () => {
           resetCounteries('Counteries')
           dispatch(fetchRegions())
         })
@@ -3313,7 +3313,7 @@ console.log(data?.Stations,"88")
         open={drawerOpen?.Provinces}
         isPagination={true}
         onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
-          insertDataFtn(`${baseURL}/region`, { "region": drawerIpnuts?.Provinces },
+          insertDataFtn(`${baseURL}/lookup`,  drawerIpnuts?.Provinces ,
             'Data inserted successfully:', 'Data did not insert:',
             () => {
               resetCounteries('Provinces')
@@ -3407,7 +3407,7 @@ console.log(data?.Stations,"88")
       </MyDrawer>
       <MyDrawer title='City' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
         console.log(drawerIpnuts?.Cities)
-        insertDataFtn(`/region`, { region: drawerIpnuts?.Cities }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Cities'))
+        insertDataFtn(`/lookup`, { region: drawerIpnuts?.Cities }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Cities'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3532,7 +3532,7 @@ console.log(data?.Stations,"88")
       </MyDrawer>
       <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true} onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
         console.log(drawerIpnuts?.PostCode)
-        insertDataFtn(`/region`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
+        insertDataFtn(`/lookup`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3630,7 +3630,7 @@ console.log(data?.Stations,"88")
       </MyDrawer>
       <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true} onClose={() => openCloseDrawerFtn('Districts')} add={() => {
         console.log(drawerIpnuts?.Districts)
-        insertDataFtn(`/region`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
+        insertDataFtn(`/lookup`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
           () => {
             resetCounteries('Districts')
             dispatch(fetchRegions())
@@ -3745,7 +3745,7 @@ console.log(data?.Stations,"88")
 
       </MyDrawer>
       <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
-        insertDataFtn(`/region`, { region: drawerIpnuts?.Divisions }, 'Data inserted successfully:', 'Data did not insert:', () => {
+        insertDataFtn(`/lookup`, { region: drawerIpnuts?.Divisions }, 'Data inserted successfully:', 'Data did not insert:', () => {
           resetCounteries('Divisions')
           dispatch(fetchRegions())
         })
@@ -3851,7 +3851,7 @@ console.log(data?.Stations,"88")
       open={drawerOpen?.Station} 
       isPagination={true} onClose={() => openCloseDrawerFtn('Station')} add={() => {
         console.log(drawerIpnuts?.Station)
-        insertDataFtn(`/region`,{region:drawerIpnuts?.Station}, 
+        insertDataFtn(`/lookup`,{region:drawerIpnuts?.Station}, 
           'Data inserted successfully:', 'Data did not insert:',
            () => {resetCounteries('Station')
            dispatch(fetchRegions())
@@ -3970,7 +3970,7 @@ console.log(data?.Stations,"88")
       </MyDrawer>
       <MyDrawer title='Contact Types' open={drawerOpen?.ContactTypes} isPagination={true} onClose={() => openCloseDrawerFtn('ContactTypes')} add={() => {
         console.log(drawerIpnuts?.ContactTypes)
-        insertDataFtn(`${baseURL}/region`, drawerIpnuts?.ContactTypes, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('ContactTypes'))
+        insertDataFtn(`${baseURL}/lookup`, drawerIpnuts?.ContactTypes, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('ContactTypes'))
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -5675,7 +5675,7 @@ console.log(data?.Stations,"88")
       <MyDrawer title='Solicitors' open={drawerOpen?.Solicitors} isPagination={true} onClose={() => openCloseDrawerFtn('Solicitors')}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/region`,
+            `${baseURL}/lookup`,
             { 'region': drawerIpnuts?.Lookup },
             'Data inserted successfully',
             'Data did not insert',
@@ -5859,7 +5859,7 @@ console.log(data?.Stations,"88")
         isAddMemeber={true}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/region`,
+            `${baseURL}/lookup`,
             { 'region': drawerIpnuts?.Committees },
             'Data inserted successfully',
             'Data did not insert',
@@ -5870,7 +5870,7 @@ console.log(data?.Stations,"88")
         isEdit={isUpdateRec?.Lookup}
         update={
           async () => {
-            await updateFtn('/region', drawerIpnuts?.Lookup, () => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+            await updateFtn('/lookup', drawerIpnuts?.Lookup, () => resetCounteries('Lookup', () => dispatch(getAllLookups())))
             dispatch(getAllLookups())
             IsUpdateFtn('Lookup', false,)
           }}

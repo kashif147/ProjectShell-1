@@ -2,6 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { baseURL } from '../utils/Utilities';
+import axiosInstance from "../utils/AxiosInstance";
 
 // Fetch all lookups
 export const getAllLookups = createAsyncThunk(
@@ -9,7 +10,7 @@ export const getAllLookups = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${baseURL}/lookup`, {
+            const response = await axiosInstance.get(`${baseURL}/lookup`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',

@@ -3,6 +3,7 @@ import { Resizable } from 'react-resizable';
 import 'react-resizable/css/styles.css';
 import '../../styles/ResizableComp.css'
 import MyDrawer from './MyDrawer';
+const x =8;
 function ResizableComp() {
   const [width, setWidth] = useState(400); // Initial width
   const [eventHistryDrawer, seteventHistryDrawer] = useState(false)
