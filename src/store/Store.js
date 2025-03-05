@@ -11,6 +11,8 @@ import regionTypeReducer from "../features/RegionTypeSlice";
 import partnerReducer from "../features/PartnersSlice";
 import childrenReducer from "../features/ChildrenSlice";
 import refreshReducer from '../features/RefreshSlice';
+import contactTypeReducer from "../features/ContactTypeSlice";
+
 const store = configureStore({
   reducer: {
     auth: authReducer, // Authentication state
@@ -21,6 +23,7 @@ const store = configureStore({
     partner: partnerReducer,
     children: childrenReducer, 
     refresh: refreshReducer,
+    contactType: contactTypeReducer,
   },
 });
 

@@ -5,7 +5,7 @@ import GridWithAGGrid from '../GridWithAGGrid'
 function MainDashBoard() {
   return (
     <div>
-      <GridWithAGGrid />
+      {/* <GridWithAGGrid /> */}
     </div>
   )
 }

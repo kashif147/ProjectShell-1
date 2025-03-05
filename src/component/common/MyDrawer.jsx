@@ -10,9 +10,10 @@ import TextArea from "antd/es/input/TextArea";
 import { FaUserAlt } from "react-icons/fa";
 import { BiRefresh } from "react-icons/bi";
 import '../../styles/MyDrawer.css'
+import { useTableColumns } from '../../context/TableColumnsContext ';
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total=7, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
+  const{selectLokups, lookupsForSelect} = useTableColumns();
 
-
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
@@ -24,6 +25,36 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   const [recData, setrecData] = useState({
     timeDur: 'Day'
   })
+  const [contact, setContact] = useState({
+    ContactName: "",
+    ContactPhone: "",
+    ContactEmail: "",
+    ContactAddress: {
+      BuildingOrHouse: "",
+      StreetOrRoad: "",
+      AreaOrTown: "",
+      CityCountyOrPostCode: "",
+      Eircode: "",
+    },
+    ContactTypeID: "",
+    isDeleted: false, // Boolean (not a string)
+  });
+  const updateContact = (key, value) => {
+    setContact((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
+  };
+  console.log(contact,"contact")
+  const updateAddress = (key, value) => {
+    setContact((prev) => ({
+      ...prev,
+      ContactAddress: {
+        ...prev.ContactAddress,
+        [key]: value,
+      },
+    }));
+  };
   const [isEndDate, setisEndDate] = useState(true)
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
@@ -287,7 +318,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       onClose={onClose}
       open={open}
       extra={
-        <div className="d-flex space-evenly" onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
+        <div className="d-flex space-evenly" >
           {
             isContact && (
               <div className="mx-auto" style={{ marginRight: '80%' }}>
@@ -360,194 +391,139 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             <Button className="butn secoundry-btn" onClick={onClose}>
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={isEdit == true ? update : add}>
+            <Button className="butn primary-btn" onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
               {isEdit == true ? "Save" : 'Add'}
             </Button>
-
           </Space>
         </div>
       }
     >
       <div className="">
         {children}
-        {
+        {/* {
           isPagination &&
           (
             <div className="d-flex justify-content-center align-items-baseline">
-              Total Items: <Pagination showQuickJumper defaultCurrent={1} total={total} onChange={onChange} />
+             Total Items: <Pagination showQuickJumper defaultCurrent={1} total={total} onChange={onChange} />
             </div>
           )
-        }
+        } */}
       </div>
       <Drawer open={contactDrawer}
         onClose={() => setcontactDrawer(!contactDrawer)}
         width="620px"
         title="Contacts"
       >
-        <div className='transfer-main-cont'>
-          <div className='w-100'>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Contact Type :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <MySelect isSimple={true} placeholder="Select contact type" />
-
-                </div>
-                <p className="error"></p>
-              </div>
+      <div className="transfer-main-cont">
+        <div className="w-100">
+          {/* Contact Type */}
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "33%" }}>
+              <p>Contact Type :</p>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Title :</p>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <MySelect
+                  isSimple={true}
+                  placeholder="Select contact type"
+                  options={selectLokups?.contactTypes}
+                  value={contact.ContactTypeID}
+                  onChange={(value) => updateContact("ContactTypeID", value)}
+                />
               </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <MySelect placeholder='Mr.' isSimple={true} />
-
-                </div>
-                <p className="error"></p>
-              </div>
+              <p className="error"></p>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Forename :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Surname :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Email :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Mobile :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Building or House :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Street or Road :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Area or Town :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>County, City or Postcode :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>Eircode :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-
           </div>
-          <h5>History</h5>
-          <Table
-            pagination={false}
-            columns={columnCountry}
-            className="drawer-tbl"
-            rowClassName={(record, index) =>
-              index % 2 !== 0 ? "odd-row" : "even-row"
-            }
-            rowSelection={{
-              type: selectionType,
-              ...rowSelection,
-            }}
-            bordered
-          />
+
+          {/* Title */}
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "33%" }}>
+              <p>Title :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <MySelect
+                  placeholder="Select Title"
+                  isSimple={true}
+                  options={lookupsForSelect?.Titles}
+                  value={contact.Title}
+                  // onChange={(value) => updateContact("Title", value)}
+                />
+              </div>
+              <p className="error"></p>
+            </div>
+          </div>
+
+          {/* Name & Contact Fields */}
+          {[
+            { label: "Forename", key: "ContactName" },
+            { label: "Surname", key: "ContactPhone" },
+            { label: "Email", key: "ContactEmail" },
+            { label: "Mobile", key: "ContactPhone" },
+          ].map(({ label, key }) => (
+            <div className="drawer-inpts-container" key={key}>
+              <div className="drawer-lbl-container" style={{ width: "33%" }}>
+                <p>{label} :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    value={contact[key]}
+                    onChange={(e) => updateContact(key, e.target.value)}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          ))}
+
+          {/* Address Fields */}
+          {[
+            { label: "Building or House", key: "BuildingOrHouse" },
+            { label: "Street or Road", key: "StreetOrRoad" },
+            { label: "Area or Town", key: "AreaOrTown" },
+            { label: "County, City or Postcode", key: "CityCountyOrPostCode" },
+            { label: "Eircode", key: "Eircode" },
+          ].map(({ label, key }) => (
+            <div className="drawer-inpts-container" key={key}>
+              <div className="drawer-lbl-container" style={{ width: "33%" }}>
+                <p>{label} :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    value={contact.ContactAddress[key]}
+                    onChange={(e) => updateAddress(key, e.target.value)}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          ))}
         </div>
 
-      </Drawer>
+        {/* History Table */}
+        <h5>History</h5>
+        <Table
+          pagination={false}
+          columns={columnCountry}
+          className="drawer-tbl"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          rowSelection={{
+            type: selectionType,
+            ...rowSelection,
+          }}
+          bordered
+        />
+      </div>
+    </Drawer>
+
       <Drawer open={isRecursion}
         onClose={() => setisRecursion(!isRecursion)}
         width="526px"

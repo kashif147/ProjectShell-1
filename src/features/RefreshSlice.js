@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-const baseURL = "http://localhost:3500/auth";
+const baseURL = `${process.env.REACT_APP_BASE_URL_DEV}/auth`;
 
 // 🔹 Refresh Token API Call
 export const refreshAccessToken = createAsyncThunk(

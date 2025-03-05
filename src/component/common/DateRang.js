@@ -11,7 +11,7 @@ import {
 } from "antd";
 import MySelect from "./MySelect";
 import { DownOutlined } from "@ant-design/icons";
-import { width } from "@mui/system";
+// import { width } from "@mui/system";
 const { RangePicker } = DatePicker;
 const onOk = (value) => {
   console.log("onOk: ", value);
@@ -40,7 +40,7 @@ function DateRang({ title }) {
           <MySelect
             options={data}
             placeholder="Please select"
-            width="70%"
+           
           />
         </div>
       </Menu.Item>

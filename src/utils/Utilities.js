@@ -2,8 +2,8 @@ import axios from "axios";
 import MyAlert from "../component/common/MyAlert";
 import { notificationsMsg } from "../Data";
 let token;
-// export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
-export const  baseURL = "http://localhost:3500"
+export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
+// export const  baseURL = "http://localhost:3500"
 
 
 export const insertDataFtn = async (url, data, successNotification, failureNotification,callback) => {
@@ -31,12 +31,11 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
   } catch (error) {
     console.error(error,'222');
     MyAlert('error', failureNotification); 
-    debugger
+
   }
 };
 
 export const deleteFtn = async (url,id, callback)=>{
-  debugger
   token = localStorage.getItem('token')
   const data = JSON.stringify({ id });
   const config = {

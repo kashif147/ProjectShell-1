@@ -3,8 +3,8 @@ import { Upload, message, Divider } from 'antd';
 import { FiUpload } from "react-icons/fi";
 import { useLocation } from 'react-router-dom';
 import { useTableColumns } from '../../context/TableColumnsContext ';
-import { Repeat } from '@mui/icons-material';
-import '../../styles/ProfileHeader.css'
+// import { Repeat } from '@mui/icons-material';
+// import '../../styles/ProfileHeader.css'
 function ProfileHeader() {
     const [imageUrl, setImageUrl] = useState("");
     const { ProfileDetails } = useTableColumns()

@@ -589,8 +589,10 @@ tr {
   color: var(--labelColor) !important;
 }
 .icons {
-  font-weight: bold !important;
-  font-size: 36px !important;
+  font-weight: 100 !important;
+  width: 60px;
+  height: 60px;
+  size: 60px !important;
   color: var(--mainBlue) !important;
   text-align: center !important;
 }

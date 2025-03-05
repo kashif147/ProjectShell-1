@@ -14,11 +14,18 @@ import { PiUsersFourDuotone } from "react-icons/pi";
 import { tableData } from "../Data";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
+import { MdOutlineScreenSearchDesktop } from "react-icons/md";
 import { FiPlusCircle } from "react-icons/fi";
 import { getAllLookupsType } from '../features/LookupTypeSlice';
 import { getAllLookups } from '../features/LookupsSlice'
 import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux';
+import { FaFileAlt } from "react-icons/fa";
+import { TbBulb } from "react-icons/tb";
+import { FaRegCircleUser } from "react-icons/fa6";
+import { MdOutlineContactPhone } from "react-icons/md";
+import { LuFileQuestion } from "react-icons/lu";
+import { PiRankingThin } from "react-icons/pi";
 import MyConfirm from "../component/common/MyConfirm";
 import {
   ProvinceOutlined, CountyOutlined, MaritalStatusOutlined,
@@ -32,6 +39,14 @@ import {
 
 } from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
+import { TbUsersGroup } from "react-icons/tb";
+import { TbFileSettings } from "react-icons/tb";
+import { PiRanking } from "react-icons/pi";
+import { GrTask } from "react-icons/gr";
+import { PiGavelThin } from "react-icons/pi";
+import { LuAlarmClock } from "react-icons/lu";
+import { SlEnvelopeOpen } from "react-icons/sl";
+
 // import '../styles/Configuratin.css'
 import '../styles/Configuration.css'
 import MySelect from "../component/common/MySelect";
@@ -41,6 +56,7 @@ import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
 import { getAllRegionTypes } from '../features/RegionTypeSlice'
+import { getContactTypes } from "../features/ContactTypeSlice";
 
 import { set } from "react-hook-form";
 
@@ -54,10 +70,11 @@ function Configuratin() {
     Districts: [],
     Cities: [],
     Titles: [],
-    Stations:[]
+    Stations: [],
   })
 
-console.log(data?.Stations,"88")
+  console.log(data?.Stations, "88")
+  const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
@@ -89,10 +106,12 @@ console.log(data?.Stations,"88")
     DisplayName: "",
   });
   const dispatch = useDispatch()
+
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
   const { lookupsTypes, lookupsTypesloading } = useSelector((state) => state.lookupsTypes);
   const { regionTypes, regionTypesLoading } = useSelector((state) => state.regionTypes);
+  const { contactTypes, contactTypesloading, error } = useSelector((state) => state.contactType);
 
   const [drawerOpen, setDrawerOpen] = useState({
     Counteries: false,
@@ -142,7 +161,7 @@ console.log(data?.Stations,"88")
     if (data?.Provinces) {
       const transformedData = data.Provinces.map((item) => ({
         key: item?._id,
-        label: item?.RegionName,
+        label: item?.lookupname,
       }));
 
       setselectLokups((prevState) => ({
@@ -153,7 +172,7 @@ console.log(data?.Stations,"88")
     if (data?.county) {
       const transformedData = data.county.map((item) => ({
         key: item?._id,
-        label: item?.RegionName,
+        label: item?.lookupname,
       }));
 
       setselectLokups((prevState) => ({
@@ -175,7 +194,7 @@ console.log(data?.Stations,"88")
     if (data?.Districts) {
       const transformedData = data.Districts.map((item) => ({
         key: item?._id,
-        label: item?.RegionName,
+        label: item?.lookupname,
       }));
 
       setselectLokups((prevState) => ({
@@ -206,60 +225,54 @@ console.log(data?.Stations,"88")
         MaritalStatus: filteredMaritalStatus,
       }));
     }
-   
-  }, [lookups])
-
-  useEffect(() => {
-    if (regions && Array.isArray(regions)) {
-      const filteredProvinces = regions.filter((item) => item.RegionTypeID === '6761492de9640143bfc38e4c');
-      setdata((prevState) => ({
-        ...prevState,
-        Provinces: filteredProvinces,
-      }));
-    }
-    if (regions && Array.isArray(regions)) {
-      const filteredCounty = regions.filter((item) => item.RegionTypeID === '67182276a0072a28aab883de');
+    if (lookups && Array.isArray(lookups)) {
+      const filteredCounty = lookups.filter((item) => item?.lookuptypeId?._id === '67bf3d63e314eba2c210517f');
       setdata((prevState) => ({
         ...prevState,
         county: filteredCounty,
       }));
     }
-    if (regions && Array.isArray(regions)) {
-      const filteredDivision = regions.filter((item) => item.RegionTypeID === '671822b4a0072a28aab883e5');
+    if (lookups && Array.isArray(lookups)) {
+      const filteredDivision = lookups.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
 
       setdata((prevState) => ({
         ...prevState,
         Divisions: filteredDivision,
       }));
     }
+    if (lookups && Array.isArray(lookups)) {
+      const CitiesDivision = lookups.filter((item) => item.lookuptypeId?._id === '67c57868a8320b14514d38ca');
+
+      setdata((prevState) => ({
+        ...prevState,
+        Cities: CitiesDivision,
+      }));
+    }
+  }, [lookups])
+
+  useEffect(() => {
     if (regions && Array.isArray(regions)) {
-      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '671822bca0072a28aab883e7');
+      const filteredProvinces = regions.filter((item) => item.lookuptypeId?._id === '67bf243ce314eba2c2105098');
+      setdata((prevState) => ({
+        ...prevState,
+        Provinces: filteredProvinces,
+      }));
+    }
+
+
+    if (regions && Array.isArray(regions)) {
+      const filteredDistricts = regions.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
 
       setdata((prevState) => ({
         ...prevState,
         Districts: filteredDistricts,
       }));
     }
-    if (regions && Array.isArray(regions)) {
-      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '671822bca0072a28aab883e7');
 
-      setdata((prevState) => ({
-        ...prevState,
-        Cities: filteredDistricts,
-      }));
-    }
     if (regions && Array.isArray(regions)) {
-      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '6718228ca0072a28aab883e0');
-      
-      setdata((prevState) => ({
-        ...prevState,
-        Cities: filteredDistricts,
-      }));
-    }
-    if (regions && Array.isArray(regions)) {
-      
+
       const filteredStations = regions.filter((item) => item.RegionTypeID === '671822c6a0072a28aab883e9')
-     debugger
+
       setdata((prevState) => ({
         ...prevState,
         Stations: filteredStations,
@@ -269,6 +282,10 @@ console.log(data?.Stations,"88")
   useEffect(() => {
     dispatch(getAllRegionTypes())
   }, [])
+  useEffect(() => {
+    dispatch(getContactTypes());
+  }, [dispatch]);
+  console.log(contactTypes, "ppppp")
   useEffect(() => {
     if (lookups && Array.isArray(lookups)) {
       const filteredLanguage = lookups?.filter((item) => item?.Parentlookup === '674a195dcc0986f64ca36fc2')
@@ -374,23 +391,29 @@ console.log(data?.Stations,"88")
   };
 
   let drawerInputsInitalValues = {
-    Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '67182276a0072a28aab883de', isActive: true },
-    Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
-    Station: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822c6a0072a28aab883e9' },
+    // Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '67182276a0072a28aab883de', isActive: true },
+    // Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
     // Station:     {RegionCode:'', RegionTypeID: '671822c6a0072a28aab883e9',RegionName:'', DisplayName: '', isDeleted: false},
-    Districts: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822bca0072a28aab883e7' },
+    // Districts: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822bca0072a28aab883e7' },
+    RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
+    // Station: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822c6a0072a28aab883e9' },
+    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
+    Station: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
+    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
+    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
+    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
     LookupType: { lookuptype: '', code: '', DisplayName: '', isActive: true, isDeleted: false },
     Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
     Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
     SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9" },
-    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9" },
+    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9" },
     ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
     Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Provinces: { code: '', lookupname: '', DisplayName: '', Parentlookup: null, lookuptypeId: '6761492de9640143bfc38e4c', isDeleted: false,"userid": "67117bea87c907f6cdda0ad9" },
-    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true ,},
-    RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
+    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9" },
+    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true, },
+    ContactType: { ContactType: "", DisplayName: "", isDeleted: false },
   }
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
@@ -455,14 +478,13 @@ console.log(data?.Stations,"88")
   //     }
   // }
   // console.log(selectLokups,"//")
-  const [errors, seterrors] = useState()
+
 
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
     }));
-    console.log(drawerIpnuts, "test")
     if (callback & typeof callback === 'function') {
       callback()
     }
@@ -558,13 +580,13 @@ console.log(data?.Stations,"88")
   const columnProvince = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Province',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
@@ -611,13 +633,13 @@ console.log(data?.Stations,"88")
   const columnCountry = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'County',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
@@ -626,8 +648,7 @@ console.log(data?.Stations,"88")
     },
     {
       title: 'Province',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      render: (record) => record?.Parentlookup
     },
     {
       title: 'Active',
@@ -723,13 +744,13 @@ console.log(data?.Stations,"88")
   const columnDistricts = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Districts',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
@@ -740,6 +761,7 @@ console.log(data?.Stations,"88")
       title: 'Division',
       dataIndex: 'RegionName',
       key: 'RegionName',
+      render: (item) => item?.lookuptypeId?.lookuptype
     },
     {
       title: 'Active',
@@ -849,18 +871,23 @@ console.log(data?.Stations,"88")
   const columnDivisions = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Division',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
       dataIndex: 'DisplayName',
       key: 'DisplayName',
+    },
+    {
+      title: 'County',
+      dataIndex: '',
+      key: '',
     },
     {
       title: 'Active',
@@ -907,13 +934,13 @@ console.log(data?.Stations,"88")
   const columnCity = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Contact Type',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
@@ -962,33 +989,18 @@ console.log(data?.Stations,"88")
   const contactType = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: '',
+      key: '',
     },
     {
-      title: 'City',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      title: 'Contact Type',
+      dataIndex: 'ContactType',
+      key: 'ContactType',
     },
     {
       title: 'Display Name',
       dataIndex: 'DisplayName',
       key: 'DisplayName',
-    },
-    {
-      title: 'County',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
-    },
-    {
-      title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
-      render: (index, record) => (
-        <Checkbox>
-
-        </Checkbox>
-      )
     },
     {
       title: (
@@ -1002,7 +1014,18 @@ console.log(data?.Stations,"88")
       render: (_, record) => (
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
+          <AiFillDelete size={16}
+            onClick={() => {
+              MyConfirm({
+                title: 'Confirm Deletion',
+                message: 'Do You Want To Delete This Item?',
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/contacttype`, record?._id,);
+                  dispatch(getContactTypes())
+                },
+              })
+            }}
+          />
         </Space>
       ),
     },
@@ -2082,6 +2105,7 @@ console.log(data?.Stations,"88")
   ];
 
   const [selectionType, setSelectionType] = useState('checkbox');
+  const [errors, setErrors] = useState({});
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -2090,6 +2114,26 @@ console.log(data?.Stations,"88")
       disabled: record.name === 'Disabled User',
       name: record.name,
     }),
+  };
+  const validateForm = (drawerType) => {
+    let newErrors = { Lookup: {}, [drawerType]: {} };
+
+    if (!drawerIpnuts?.[drawerType]?.code) {
+      newErrors[drawerType].code = "Code Required";
+    }
+    if (!drawerIpnuts?.[drawerType]?.lookupname) {
+      newErrors[drawerType].lookupname = "Title Name Required";
+    }
+
+    // Mandatory ParentLookup for specific drawers
+    const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries","Station"];
+    if (requiresParentLookup.includes(drawerType) && !drawerIpnuts?.[drawerType]?.parentLookup || drawerIpnuts?.[drawerType]?.parentLookup === null) {
+      newErrors[drawerType].parentLookup = "Parent Lookup Required";
+    }
+    // Set errors only if there are validation failures
+    setErrors(newErrors);
+    // Check if there are any errors in the object
+    return Object.keys(newErrors.Lookup).length === 0 && Object.keys(newErrors[drawerType]).length === 0;
   };
 
   const membershipModalFtn = () => setMembershipModal(!membershipModal);
@@ -2132,425 +2176,92 @@ console.log(data?.Stations,"88")
     console.log(SubscriptionData);
   }
   const { Search } = Input;
+  const sections = [
+    {
+      title: "Lookups Configuration",
+      items: [
+        { key: "Title", icon: <Title className="icons" />, label: "Titles" },
+        { key: "Gender", icon: <Gender className="icons" />, label: "Gender" },
+        { key: "MaritalStatus", icon: <MaritalStatusOutlined className="icons" />, label: "Marital Status" },
+        { key: "Provinces", icon: <ProvinceOutlined className="icons" />, label: "Provinces" },
+        { key: "Counteries", icon: <CountyOutlined className="icons" />, label: "Counteries" },
+        { key: "Divisions", icon: <DivisionsOutlined className="icons" />, label: "Divisions" },
+        { key: "Districts", icon: <DistrictsOutlined className="icons" />, label: "Districts" },
+        { key: "Cities", icon: <CitiesOutlined className="icons" />, label: "Cities" },
+        { key: "Station", icon: <StationOutlined className="icons" />, label: "Station" },
+        { key: "PostCode", icon: <PostCodeOutlined className="icons" />, label: "Post Codes" },
+        { key: "Boards", icon: <BoardOutlined className="icons" />, label: "Boards" },
+        { key: "Councils", icon: <CouncilOutlined className="icons" />, label: "Councils" },
+        { key: "SpokenLanguages", icon: <LanguageOutlined className="icons" />, label: "Spoken Languages" },
+        { key: "ProjectTypes", icon: <PiHandshakeDuotone className="icons" />, label: "Project Types" },
+        { key: "Trainings", icon: <TbBulb className="icons" />, label: "Trainings" },
+        { key: "Ranks", icon: <PiRankingThin className="icons" />, label: "Ranks" },
+        { key: "Duties", icon: <GrTask className="icons" />, label: "Duties" },
+        { key: "Solicitors", icon: <PiGavelThin className="icons" />, label: "Solicitors" },
+        { key: "RosterType", icon: <LuCalendarDays className="icons" />, label: "Roster Type" },
+        { key: "CorrespondenceType", icon: <SlEnvelopeOpen className="icons" />, label: "Correspondence Type" },
+        { key: "DocumentType", icon: <FaFileAlt className="icons" />, label: "Document Type" },
+        { key: "ClaimType", icon: <PiHandshakeDuotone className="icons" />, label: "Claim Type" },
+        { key: "Schemes", icon: <PiHandshakeDuotone className="icons" />, label: "Schemes" },
+        { key: "LookupType", icon: <PiHandshakeDuotone className="icons" />, label: "Lookup Type" },
+        { key: "Lookup", icon: <MdOutlineScreenSearchDesktop className="icons" />, label: "Lookup" },
+        // { key: "RegionType", icon: <PiHandshakeDuotone className="icons" />, label: "Region Type" },
+        { key: "ContactTypes", icon: <MdOutlineContactPhone className="icons" />, label: "Contact Types" },
+        { key: "Reasons", icon: <LuFileQuestion className="icons" />, label: "Reasons" },
+      ],
+    },
+    {
+      title: "Grid Configuration",
+      items: [
+        { key: "Profile", icon: <FaRegCircleUser className="icons" />, label: "Profile" },
+        { key: "Reigontype", icon: <FaRegMap className="icons" />, label: "Reigon type" },
+      ],
+    },
+    {
+      title: "Roles-Based Configuration",
+      items: [
+        { key: "Roles", icon: <FaRegCircleQuestion className="icons" />, label: "Roles" },
+        { key: "Permissions", icon: <HiOutlineMinusCircle className="icons" />, label: "Permissions" },
+        { key: "Permissions", icon: <HiOutlineMinusCircle className="icons" />, label: "Permissions" },
+        // { key: "AccessLevels", icon: <TbUsersGroup className="icons" />, label: "Access Levels" },
+      ],
+    },
+    {
+      title: "Business Rules & Workflows",
+      items: [
+        { key: "Member Status", icon: <FaRegCircleQuestion className="icons" />, label: "Member Status" },
+        { key: "Priorities", icon: <HiOutlineMinusCircle className="icons" />, label: "Priorities" },
+        { key: "pause-circle", icon: <PiHandshakeDuotone className="icons" />, label: "pause-circle" },
+      ],
+    },
+  ];
+
   return (
-    <div className="configuration-main">
-      <h1 className="config-heading" style={{ marginLeft: '45px' }}>Configurations</h1>
+    <div>
       <div className="search-inpt">
-        <Search style={{ borderRadius: "3px", height: '62px' }} />
+        <Search style={{ borderRadius: "3px", height: '62px' }} value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)} />
       </div>
-      <Divider orientation="left">lookups Configuration</Divider>
-      <Row>
-        <Col className="hover-col" span={3} onClick={() => { openCloseDrawerFtn('Title') }}>
-          <div className="center-content">
-            <div className="icon-container">
-              <Title className="icons custom-icon" />
-            </div>
-            <p className="lookups-title">Titles</p>
+      {sections.map((section) => {
+        const filteredItems = section.items.filter((item) =>
+          item.label.toLowerCase().includes(searchQuery.toLowerCase())
+        );
+        return filteredItems.length > 0 ? (
+          <div key={section.title}>
+            <Divider orientation="left">{section.title}</Divider>
+            <Row gutter={[16, 16]} align="top">
+              {filteredItems.map((item) => (
+                <Col key={item.key} className="hover-col" span={3} style={{ textAlign: "left" }} onClick={() => openCloseDrawerFtn(item.key)}>
+                  <div>
+                    {item.icon}
+                    <p className="lookups-title">{item.label}</p>
+                  </div>
+                </Col>
+              ))}
+            </Row>
           </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => { openCloseDrawerFtn('Gender') }}>
-          <div className="center-content">
-            <div className="icon-container">
-              <Gender className="custom-icon" />
-            </div>
-            <p className="lookups-title">Gender</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => { openCloseDrawerFtn('MaritalStatus') }}>
-          <div className="center-content">
-            <div className="icon-container">
-              {/* <img src={Marital_Status_Outlined} className="icons custom-icon" /> */}
-              <MaritalStatusOutlined className="icons custom-icon" />
-            </div>
-            <p className="lookups-title">Marital Status</p>
-          </div>
-        </Col>
-        <Col onClick={() => openCloseDrawerFtn('Provinces')} className="hover-col" span={3} style={styles.centeredCol}>
-          <div>
-            <ProvinceOutlined className="custom-icon icons" />
-            <p className="lookups-title">Provinces</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('Counteries')} className="center-content">
-            <div className="icon-container">
-
-              <CountyOutlined className="custom-icon icons" />
-            </div>
-            <p className="lookups-title">Counteries</p>
-          </div>
-        </Col>
-
-
-
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('Divisions')}>
-            <DivisionsOutlined className="icons custom-icon" />
-            <p className="lookups-title">Divisions</p>
-          </div>
-        </Col>
-        <Col onClick={() => openCloseDrawerFtn('Districts')} className="hover-col" span={3} style={styles.centeredCol}>
-          <div >
-            <DistrictsOutlined className="icons custom-icon" />
-            <p className="lookups-title">Districts</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Cities')}>
-          <div >
-            <CitiesOutlined className="custom-icon icons" />
-            <p className="lookups-title">Cities</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} >
-          <div onClick={() => openCloseDrawerFtn('Station')}>
-            <StationOutlined className="icons custom-icon" />
-            <p className="lookups-title">Station</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('PostCode')}>
-            <PostCodeOutlined className="icons custom-icon" />
-            <p className="lookups-title">Post Codes</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} >
-          <div onClick={() => openCloseDrawerFtn('Committees')}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Committees</p>
-          </div>
-        </Col>
-
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <CouncilOutlined className="icons custom-icon" />
-            <p className="lookups-title">Councils</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} >
-          <div onClick={dummyModalFtn}>
-            <BoardOutlined className="icons custom-icon" />
-            <p className="lookups-title">Boards</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('SpokenLanguages')}>
-          <div>
-            <LanguageOutlined className="icons custom-icon" />
-            <p className="lookups-title">Spoken Languages</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('ProjectTypes')}>
-          <div>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Project Types</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Trainings')}>
-          <div >
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Trainings</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Ranks')}>
-          <div>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Ranks</p>
-          </div>
-        </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Duties</p>
-          </div>
-        </Col> */}
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Duties')} >
-          <div>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Duties</p>
-          </div>
-        </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Schemes</p>
-          </div>
-        </Col> */}
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Solicitors')} >
-          <div >
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Solicitors</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Roster Type</p>
-          </div>
-        </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Reasons</p>
-          </div>
-        </Col> */}
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('ContactTypes')}>
-          <div>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Contact Types</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('LookupType')}>
-          <div>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Lookup Type</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} onClick={() => openCloseDrawerFtn('Lookup')}>
-          <div>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Lookup</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn} className="center-content">
-            <div className="icon-container">
-
-              <PiHandshakeDuotone className="icons" />
-            </div>
-            <p className="lookups-title ">Payment Types</p>
-          </div>
-        </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}> */}
-        {/* <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Ranks</p>
-          </div> */}
-        {/* </Col> */}
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Duties</p>
-          </div>
-        </Col> */}
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Schemes</p>
-          </div>
-        </Col> */}
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Roster Type</p>
-          </div>
-        </Col> */}
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Reasons</p>
-          </div>
-        </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Contact Types</p>
-          </div>
-        </Col> */}
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Correspondence Type</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Document Type</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Claim Type</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Schemes</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Solicitors</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={() => openCloseDrawerFtn('RegionType')}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Region Type</p>
-          </div>
-        </Col>
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Roster Type</p>
-          </div>
-        </Col> */}
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Reasons</p>
-          </div>
-        </Col> */}
-        {/* <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={dummyModalFtn}>
-            <PiHandshakeDuotone className="icons" />
-            <p className="lookups-title">Contact Types</p>
-          </div>
-        </Col> */}
-      </Row>
-      <Divider orientation="left">Grid Configuration</Divider>
-      <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={profileModalOpenCloseFtn}>
-            <UserOutlined className="icons" />
-            <p className="lookups-title">Profile</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={RegionTypeModalOpenCloseFtn}>
-            <FaRegMap className="icons" />
-            <p className="lookups-title">Reigon type</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <TiContacts className="icons" />
-            <p className="lookups-title">Contact Type</p>
-          </div>
-        </Col>
-      </Row>
-      <Divider orientation="left">Roles-Based</Divider>
-      <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion
-              className="icons" />
-            <p className="lookups-title">Roles</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle
-              className="icons" />
-            <p className="lookups-title">Permissions</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle
-              className="icons" />
-            <p className="lookups-title">Permissions</p>
-          </div>
-        </Col>
-      </Row>
-      <Divider orientation="left">Business Rules & Workflows</Divider>
-      <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion
-              className="icons" />
-            <p className="lookups-title">Member Status</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle
-              className="icons" />
-            <p className="lookups-title">Priorities</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle
-              className="icons" />
-            <p className="lookups-title">pause-circle</p>
-          </div>
-        </Col>
-      </Row>
-      <Divider orientation="left">Application Settings</Divider>
-      <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion
-              className="icons" />
-            <p className="lookups-title">Member Status</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle
-              className="icons" />
-            <p className="lookups-title">Priorities</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle
-              className="icons" />
-            <p className="lookups-title">pause-circle</p>
-          </div>
-        </Col>
-      </Row>
-      <Divider orientation="left">Customization and Branding</Divider>
-      <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion
-              className="icons" />
-            <p className="lookups-title">Member Status</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle
-              className="icons" />
-            <p className="lookups-title">Priorities</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle
-              className="icons" />
-            <p className="lookups-title">pause-circle</p>
-          </div>
-        </Col>
-      </Row>
-      <Divider orientation="left">UI/UX Display</Divider>
-      <Row>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FaRegCircleQuestion
-              className="icons" />
-            <p className="lookups-title">Member Status</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <HiOutlineMinusCircle
-              className="icons" />
-            <p className="lookups-title">Priorities</p>
-          </div>
-        </Col>
-        <Col className="hover-col" span={3} style={styles.centeredCol}>
-          <div onClick={ContactTypeModalOpenCloseFtn}>
-            <FiPlusCircle
-              className="icons" />
-            <p className="lookups-title">pause-circle</p>
-          </div>
-        </Col>
-      </Row>
+        ) : null;
+      })}
 
       <MyDrawer
         open={membershipModal}
@@ -3202,16 +2913,19 @@ console.log(data?.Stations,"88")
           )}
         />
       </MyDrawer>
-      <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries} onClose={() => openCloseDrawerFtn('Counteries')} add={() => {
-        insertDataFtn(`/lookup`, { 'region': drawerIpnuts?.Counteries }, 'Data inserted successfully:', 'Data did not insert:', () => {
-          resetCounteries('Counteries')
-          dispatch(fetchRegions())
-        })
-      }} >
+      <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries}
+        onClose={() => openCloseDrawerFtn('Counteries')}
+        add={async () => {
+         if(!validateForm('Counteries')) return; 
+          insertDataFtn(`/lookup`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:', () => {
+            resetCounteries('Counteries')
+            dispatch(getAllLookups())
+          })
+        }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <div className="drawer-lbl-container">
                 <p>Type :</p>
               </div>
               <div className="inpt-con">
@@ -3230,9 +2944,11 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Counteries', 'code', e.target.value)}
+                    value={drawerIpnuts?.Counteries?.code} />
+                  <p className="error">{errors?.Counteries?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3242,9 +2958,11 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionName', e.target.value)} value={drawerIpnuts?.Counteries?.RegionName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Counteries', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Counteries?.lookupname} />
+                  <p className="error">{errors?.Counteries?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3254,9 +2972,11 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Counteries?.DisplayName} />
+                <p className="error text-white">txt</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
 
@@ -3269,13 +2989,13 @@ console.log(data?.Stations,"88")
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} options={selectLokups?.Provinces}
                     onChange={(e) => {
-                      drawrInptChng('Counteries', 'ParentRegionId', e)
+                      drawrInptChng('Counteries', 'Parentlookup', e)
                       console.log()
                     }}
-                    value={drawerIpnuts?.Counteries?.ParentRegionId}
+                    value={drawerIpnuts?.Counteries?.parentLookup}
                   />
+                  <p className="error">{errors?.Counteries?.parentLookup}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3293,7 +3013,7 @@ console.log(data?.Stations,"88")
           </div>
           <div className="mt-4 config-tbl-container">
             <Table
-              pagination={false}
+              pagination={{ pageSize: 10 }}
               columns={columnCountry}
               dataSource={data?.county}
               className="drawer-tbl"
@@ -3312,12 +3032,14 @@ console.log(data?.Stations,"88")
       <MyDrawer title='Provinces'
         open={drawerOpen?.Provinces}
         isPagination={true}
-        onClose={() => openCloseDrawerFtn('Provinces')} add={() => {
-          insertDataFtn(`${baseURL}/lookup`,  drawerIpnuts?.Provinces ,
+        onClose={() => openCloseDrawerFtn('Provinces')}
+        add={() => {
+          if (!validateForm("Provinces")) return;
+          insertDataFtn(`/lookup`, drawerIpnuts?.Provinces,
             'Data inserted successfully:', 'Data did not insert:',
             () => {
               resetCounteries('Provinces')
-              dispatch(fetchRegions())
+              dispatch(getAllLookups())
             })
 
         }} >
@@ -3342,10 +3064,11 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'RegionCode', e.target.value)}
-                    value={drawerIpnuts?.Provinces?.RegionCode} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'code', e.target.value)}
+                    value={drawerIpnuts?.Provinces?.code
+                    } />
+                  <p className="error">{errors?.Provinces?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3355,10 +3078,10 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'RegionName', e.target.value)}
-                    value={drawerIpnuts?.Provinces?.RegionName} />
+                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Provinces?.lookupname} />
+                  <p className="error">{errors?.Provinces?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3405,10 +3128,15 @@ console.log(data?.Stations,"88")
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='City' open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
-        console.log(drawerIpnuts?.Cities)
-        insertDataFtn(`/lookup`, { region: drawerIpnuts?.Cities }, 'Data inserted successfully:', 'Data did not insert:', () => resetCounteries('Cities'))
-      }} >
+      <MyDrawer title='City'
+        open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
+        if(!validateForm('Cities')) return;
+          insertDataFtn(`/lookup`, drawerIpnuts?.Cities,
+            'Data inserted successfully:', 'Data did not insert:', () => {
+              resetCounteries('Cities')
+              dispatch(getAllLookups())
+            })
+        }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3419,28 +3147,11 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='City' isSimple={true} disabled={true} />
+                <p className="error text-white"></p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
-            {/* <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Province :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect isSimple={true} 
-                   options={selectLokups?.Provinces} 
-                   onChange={(e) => {
-                    // drawrInptChng('Counteries', 'RegionTypeID', e)
-                    drawrInptChng('Counteries', 'ParentRegion', e)
-                    getCountyById(e)
-                  }}/>        
-                </div>
-                <p className="error"></p>
-              </div>
-            </div> */}
+        
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>District :</p>
@@ -3449,11 +3160,11 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County' isSimple={true} options={selectLokups?.Districts}
-                    value={drawerIpnuts?.Cities?.ParentRegionId}
-                    onChange={(e) => drawrInptChng('Cities', 'ParentRegionId', e)}
+                    value={drawerIpnuts?.Cities?.Parentlookup}
+                    onChange={(e) => drawrInptChng('Cities', 'Parentlookup', e)}
                   />
+                <p className="error">{errors?.Cities?.parentLookup}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3463,11 +3174,11 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'RegionCode', e.target.value)}
-                    value={drawerIpnuts?.Cities?.RegionCode} />
-                  <h1 className="error-text"></h1>
+                  <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'code', e.target.value)}
+                    value={drawerIpnuts?.Cities?.code} />
+                  <h1 className="error-text">{errors?.Cities?.code}</h1>
                 </div>
-                <p className="error"></p>
+                {/* <p className="error"></p> */}
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3480,10 +3191,10 @@ console.log(data?.Stations,"88")
                   <Input className="inp"
                     onChange={(e) => {
 
-                      drawrInptChng('Cities', 'RegionName', e.target.value)
-                    }} value={drawerIpnuts?.Cities?.RegionName} />
+                      drawrInptChng('Cities', 'lookupname', e.target.value)
+                    }} value={drawerIpnuts?.Cities?.lookupname} />
+                <p className="error">{errors?.Cities?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3491,11 +3202,11 @@ console.log(data?.Stations,"88")
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'DisplayName', e.target.value)} value={drawerIpnuts?.Cities?.DisplayName} />
                 </div>
-                <p className="error"></p>
+                {/* <p className="error">{errors?.Cities?.}</p> */}
               </div>
             </div>
 
@@ -3504,7 +3215,7 @@ console.log(data?.Stations,"88")
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox>Active</Checkbox>
                 </div>
@@ -3531,7 +3242,7 @@ console.log(data?.Stations,"88")
         </div>
       </MyDrawer>
       <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true} onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
-        console.log(drawerIpnuts?.PostCode)
+        if(!validateForm("PostCode")) return;
         insertDataFtn(`/lookup`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
       }} >
         <div className="drawer-main-cntainer">
@@ -3544,8 +3255,8 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Postcode' isSimple={true} disabled={true} />
+                <p className="error text-white">text</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3628,14 +3339,16 @@ console.log(data?.Stations,"88")
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Districts' open={drawerOpen?.Districts} isPagination={true} onClose={() => openCloseDrawerFtn('Districts')} add={() => {
-        console.log(drawerIpnuts?.Districts)
-        insertDataFtn(`/lookup`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
-          () => {
-            resetCounteries('Districts')
-            dispatch(fetchRegions())
-          })
-      }} >
+      <MyDrawer title='Districts'
+        open={drawerOpen?.Districts} isPagination={true}
+        onClose={() => openCloseDrawerFtn('Districts')} add={() => {
+        if(!validateForm('Districts')) return;
+          insertDataFtn(`/lookup`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
+            () => {
+              resetCounteries('Districts')
+              dispatch(getAllLookups())
+            })
+        }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3646,8 +3359,8 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Districts' isSimple={true} disabled={true} />
+                <p className="error text-white">txt</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3658,14 +3371,13 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
-                    onChange={(e) => drawrInptChng('Districts', 'RegionCode', e.target.value)}
-                    value={drawerIpnuts?.Districts?.RegionCode} />
-                  <h1 className="error-text"></h1>
+                    onChange={(e) => drawrInptChng('Districts', 'code', e.target.value)}
+                    value={drawerIpnuts?.Districts?.code} />
+                  <p className="error">{errors?.Districts?.code}</p>
+                  {/* <h1 className="error-text"></h1> */}
                 </div>
-                <p className="error"></p>
               </div>
             </div>
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>District</p>
@@ -3673,12 +3385,11 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-
                   <Input className="inp"
-                    onChange={(e) => drawrInptChng('Districts', 'RegionName', e.target.value)}
-                    value={drawerIpnuts?.Districts?.RegionName} />
+                    onChange={(e) => drawrInptChng('Districts', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Districts?.lookupname} />
+                 <p className="error">{errors?.Districts?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3689,8 +3400,8 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
+                <p className="error text-white">text</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3701,9 +3412,9 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} placeholder='Select Division'
-                    options={selectLokups?.Divisions} onChange={(e) => drawrInptChng('Districts', 'ParentRegionId', e)} value={drawerIpnuts?.Districts?.ParentRegion} />
+                    options={selectLokups?.Divisions} onChange={(e) => drawrInptChng('Districts', 'ParentLookup', e)} value={drawerIpnuts?.Districts?.ParentLookup} />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
-                  <p className="error"></p>
+                  <p className="error">{errors?.Districts?.parentLookup}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2">
                   +
@@ -3726,7 +3437,7 @@ console.log(data?.Stations,"88")
           </div>
           <div className="mt-4 config-tbl-container">
             <Table
-              pagination={false}
+              pagination={{ pageSize: 10 }}
               columns={columnDistricts}
               dataSource={data?.Districts}
               className="drawer-tbl"
@@ -3744,10 +3455,13 @@ console.log(data?.Stations,"88")
         </div>
 
       </MyDrawer>
-      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} onClose={() => openCloseDrawerFtn('Divisions')} add={() => {
-        insertDataFtn(`/lookup`, { region: drawerIpnuts?.Divisions }, 'Data inserted successfully:', 'Data did not insert:', () => {
+      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} 
+      onClose={() => openCloseDrawerFtn('Divisions')} 
+      add={() => {
+      if(!validateForm('Divisions')) return;
+        insertDataFtn(`/lookup`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', () => {
           resetCounteries('Divisions')
-          dispatch(fetchRegions())
+          dispatch(getAllLookups())
         })
       }} >
         <div className="drawer-main-cntainer">
@@ -3771,27 +3485,30 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' onChange={(e) => drawrInptChng('Divisions', 'ParentRegionId', e)} isSimple={true} options={selectLokups?.Counteries} />
+                  <MySelect placeholder='Select County'
+                    onChange={(e) => drawrInptChng('Divisions', 'Parentlookup', e)}
+                    isSimple={true} options={selectLokups?.Counteries}
+                    value={drawerIpnuts?.Divisions?.Parentlookup}
+                  />
+                  <p className="error">{errors?.Divisions?.parentLookup}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Code :</p>
               </div>
-
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Divisions', 'RegionCode', e.target.value)} value={drawerIpnuts?.Divisions?.RegionCode} />
-                  <h1 className="error-text"></h1>
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Divisions', 'code', e.target.value)}
+                    value={drawerIpnuts?.Divisions?.code} />
+                  {/* <h1 className="error-text"></h1> */}
+                <p className="error">{errors?.Divisions?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
-
-
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Division : </p>
@@ -3799,9 +3516,12 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Divisions', 'RegionName', e.target.value)} value={drawerIpnuts?.Divisions?.RegionName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Divisions', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Divisions?.lookupname}
+                  />
+                <h1 className="error-text">{errors?.Divisions?.lookupname}</h1>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3809,11 +3529,13 @@ console.log(data?.Stations,"88")
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Divisions', 'DisplayName', e.target.value)} value={drawerIpnuts?.Divisions?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Divisions', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Divisions?.DisplayName} />
                 </div>
-                <p className="error"></p>
+                <p className="error text-white">text</p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3821,7 +3543,7 @@ console.log(data?.Stations,"88")
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox>Active</Checkbox>
                 </div>
@@ -3831,7 +3553,7 @@ console.log(data?.Stations,"88")
           </div>
           <div className="mt-4 config-tbl-container">
             <Table
-              pagination={false}
+              pagination={{ pageSize: 10 }}
               columns={columnDivisions}
               dataSource={data?.Divisions}
               className="drawer-tbl"
@@ -3847,17 +3569,19 @@ console.log(data?.Stations,"88")
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Station' 
-      open={drawerOpen?.Station} 
-      isPagination={true} onClose={() => openCloseDrawerFtn('Station')} add={() => {
-        console.log(drawerIpnuts?.Station)
-        insertDataFtn(`/lookup`,{region:drawerIpnuts?.Station}, 
-          'Data inserted successfully:', 'Data did not insert:',
-           () => {resetCounteries('Station')
-           dispatch(fetchRegions())
-          }
+      <MyDrawer title='Station'
+        open={drawerOpen?.Station}
+        isPagination={true} onClose={() => openCloseDrawerFtn('Station')} 
+        add={() => {
+          if(!validateForm('Station')) return;
+          insertDataFtn(`/lookup`, drawerIpnuts?.Station ,
+            'Data inserted successfully:', 'Data did not insert:',
+            () => {
+              resetCounteries('Station')
+              dispatch(fetchRegions())
+            }
           )
-      }} >
+        }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3868,8 +3592,8 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Districts' isSimple={true} disabled={true} />
+                <p className="error text-white">txt</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3879,10 +3603,10 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('Station', 'RegionCode', e.target.value)} 
-                  value={drawerIpnuts?.Station?.RegionCode} />
-                  <h1 className="error-text"></h1>
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Station', 'code', e.target.value)}
+                    value={drawerIpnuts?.Station?.code} />
+                  <h1 className="error-text">{errors?.Station?.code}</h1>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3894,12 +3618,12 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" 
-                  onChange={(e) => drawrInptChng('Station', 'RegionName', e.target.value)} 
-                  value={drawerIpnuts?.Station?.RegionName} 
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Station', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Station?.lookupname}
                   />
+                <p className="error">{errors?.Station?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3907,13 +3631,13 @@ console.log(data?.Stations,"88")
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
-                   onChange={(e) => drawrInptChng('Station', 'DisplayName', e.target.value)} 
-                   value={drawerIpnuts?.Station?.DisplayName} />
+                    onChange={(e) => drawrInptChng('Station', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Station?.DisplayName} />
+                <p className="error text-white">text</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -3923,13 +3647,13 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect placeholder='Select County' isSimple={true} 
-                  options={selectLokups?.Districts}
-                    value={drawerIpnuts?.Station?.ParentRegionId}
-                    onChange={(e) => drawrInptChng('Station', 'ParentRegionId', e)}
+                  <MySelect placeholder='Select County' isSimple={true}
+                    options={selectLokups?.Districts}
+                    value={drawerIpnuts?.Station?.Parentlookup}
+                    onChange={(e) => drawrInptChng('Station', 'Parentlookup', e)}
                   />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
-                  <p className="error"></p>
+                  <p className="error">{errors?.Station?.parentLookup}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2">
                   +
@@ -3969,8 +3693,11 @@ console.log(data?.Stations,"88")
         </div>
       </MyDrawer>
       <MyDrawer title='Contact Types' open={drawerOpen?.ContactTypes} isPagination={true} onClose={() => openCloseDrawerFtn('ContactTypes')} add={() => {
-        console.log(drawerIpnuts?.ContactTypes)
-        insertDataFtn(`${baseURL}/lookup`, drawerIpnuts?.ContactTypes, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('ContactTypes'))
+        insertDataFtn(`/contacttype`, drawerIpnuts?.ContactType, 'Data inserted successfully:',
+          'Data did not insert:', () => {
+            resetCounteries('ContactTypes')
+            dispatch(getContactTypes())
+          })
       }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3982,7 +3709,9 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ContactType', 'RegionCode', e.target.value)}
+                    value={drawerIpnuts?.Counteries?.RegionCode} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -3997,7 +3726,10 @@ console.log(data?.Stations,"88")
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
 
-                  <Input className="inp" />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ContactType', 'ContactType', e.target.value)}
+                    value={drawerIpnuts?.ContactType?.ContactType}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
@@ -4009,7 +3741,9 @@ console.log(data?.Stations,"88")
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('ContactType', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.ContactType?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -4031,7 +3765,9 @@ console.log(data?.Stations,"88")
           <div className="mt-4 config-tbl-container">
             <Table
               pagination={false}
-              columns={columnCity}
+              columns={contactType}
+              dataSource={contactTypes}
+              loading={contactTypesloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -4413,6 +4149,7 @@ console.log(data?.Stations,"88")
         IsUpdateFtn('Gender', false,)
       }}
         add={async () => {
+          if (!validateForm('Gender')) return;
           await insertDataFtn(
             `${baseURL}/lookup`,
             drawerIpnuts?.Gender,
@@ -4425,6 +4162,7 @@ console.log(data?.Stations,"88")
         isEdit={isUpdateRec?.Gender}
         update={
           async () => {
+            if (!validateForm('Gender')) return;
             await updateFtn('/lookup', drawerIpnuts?.Gender, () => resetCounteries('Gender', () => dispatch(getAllLookups())))
             dispatch(getAllLookups())
             IsUpdateFtn('Gender', false,)
@@ -4458,8 +4196,8 @@ console.log(data?.Stations,"88")
                     className="inp" onChange={(e) => drawrInptChng('Gender', 'code', e.target.value)}
                     value={drawerIpnuts?.Gender?.code}
                   />
+                  <p className="error">{errors?.Gender?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -4473,8 +4211,8 @@ console.log(data?.Stations,"88")
                     onChange={(e) => drawrInptChng('Gender', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Gender?.lookupname}
                   />
+                  <p className="error">{errors?.Gender?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -4487,8 +4225,8 @@ console.log(data?.Stations,"88")
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Gender?.DisplayName} />
+                  <p className="error"></p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
 
@@ -4657,22 +4395,26 @@ console.log(data?.Stations,"88")
         IsUpdateFtn('Title', false,)
       }}
         add={() => {
-           insertDataFtn(
+          if (!validateForm('Title')) return; // Stop execution if validation fails
+          insertDataFtn(
             `/lookup`,
             drawerIpnuts?.Title,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('Title', () => dispatch(getAllLookups()))
           );
-          dispatch(getAllLookups())
+          dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Title}
-        update={
-          async () => {
-            await updateFtn('/lookup', drawerIpnuts?.Title, () => resetCounteries('Title', () => dispatch(getAllLookups())))
-            dispatch(getAllLookups())
-            IsUpdateFtn('Title', false,)
-          }}
+        update={async () => {
+          if (!validateForm('Title')) return; // Stop execution if validation fails
+          await updateFtn('/lookup', drawerIpnuts?.Title, () =>
+            resetCounteries('Title', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Title', false);
+        }}
+
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -4705,8 +4447,8 @@ console.log(data?.Stations,"88")
                     className="inp" onChange={(e) => drawrInptChng('Title', 'code', e.target.value)}
                     value={drawerIpnuts?.Title?.code}
                   />
+                  <p className="error">{errors?.Title?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -4715,13 +4457,13 @@ console.log(data?.Stations,"88")
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
-                <div className="inpt-sub-con">
+                <div className="inpt-sub-con d-flex flex-column">
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Title', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Title?.lookupname}
                   />
+                  <p className="error">{errors?.Title?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -4734,8 +4476,8 @@ console.log(data?.Stations,"88")
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Title', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Title?.DisplayName} />
+                  <p className="error"></p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
 
@@ -4744,7 +4486,7 @@ console.log(data?.Stations,"88")
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('Title', 'isActive', e.target.checked)}
@@ -4779,22 +4521,25 @@ console.log(data?.Stations,"88")
         IsUpdateFtn('MaritalStatus', false,)
       }}
         add={async () => {
+          if (!validateForm('MaritalStatus')) return;
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `${baseURL}/lookup`, // Ensure consistency with baseURL
             drawerIpnuts?.Title,
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups()))
           );
-          dispatch(getAllLookups())
         }}
         isEdit={isUpdateRec?.MaritalStatus}
-        update={
-          async () => {
-            await updateFtn('/lookup', drawerIpnuts?.MaritalStatus, () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
-            dispatch(getAllLookups())
-            IsUpdateFtn('MaritalStatus', false,)
-          }}
+        update={async () => {
+          if (!validateForm('MaritalStatus')) return;
+          await updateFtn(
+            `${baseURL}/lookup`, // Ensure consistency
+            drawerIpnuts?.MaritalStatus,
+            () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups()))
+          );
+          IsUpdateFtn('MaritalStatus', false);
+        }}
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -4809,7 +4554,7 @@ console.log(data?.Stations,"88")
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      // drawrInptChng('Lookup', 'Parentlookup', String(value))
                       drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
 
@@ -4830,8 +4575,8 @@ console.log(data?.Stations,"88")
                     className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.code}
                   />
+                  <p className="error">{errors?.MaritalStatus?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -4845,8 +4590,8 @@ console.log(data?.Stations,"88")
                     onChange={(e) => drawrInptChng('MaritalStatus', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.lookupname}
                   />
+                  <p className="error">{errors?.MaritalStatus?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -4869,7 +4614,7 @@ console.log(data?.Stations,"88")
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('Title', 'isActive', e.target.checked)}
@@ -5422,10 +5167,13 @@ console.log(data?.Stations,"88")
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Marital Status' open={drawerOpen?.MaritalStatus} isPagination={true} onClose={() => {
-        openCloseDrawerFtn('MaritalStatus')
-      }}
+      <MyDrawer title='Marital Status'
+        open={drawerOpen?.MaritalStatus}
+        isPagination={true} onClose={() => {
+          openCloseDrawerFtn('MaritalStatus')
+        }}
         add={async () => {
+          if (!validateForm('MaritalStatus')) return;
           await insertDataFtn(
             `/lookup`,
             drawerIpnuts?.MaritalStatus,
@@ -5438,6 +5186,7 @@ console.log(data?.Stations,"88")
         isEdit={isUpdateRec?.MaritalStatus}
         update={
           async () => {
+            if (!validateForm('MaritalStatus')) return;
             await updateFtn('/lookup', drawerIpnuts?.MaritalStatus, () => resetCounteries('MaritalStatus', () => dispatch(getAllLookups())))
             dispatch(getAllLookups())
             IsUpdateFtn('MaritalStatus', false,)
@@ -5478,8 +5227,8 @@ console.log(data?.Stations,"88")
                     className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.code}
                   />
+                  <p className="error">{errors?.MaritalStatus?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -5493,8 +5242,8 @@ console.log(data?.Stations,"88")
                     onChange={(e) => drawrInptChng('MaritalStatus', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.lookupname}
                   />
+                  <p className="error">{errors?.MaritalStatus?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -5552,6 +5301,7 @@ console.log(data?.Stations,"88")
         IsUpdateFtn('Spoken Languages', false,)
       }}
         add={async () => {
+          if (!validateForm('SpokenLanguages')) return;
           await insertDataFtn(
             `${baseURL}/lookup`,
             drawerIpnuts?.SpokenLanguages,
@@ -5564,6 +5314,7 @@ console.log(data?.Stations,"88")
         isEdit={isUpdateRec?.SpokenLanguages}
         update={
           async () => {
+            if (!validateForm('SpokenLanguages')) return;
             await updateFtn('/lookup', drawerIpnuts?.SpokenLanguages, () => resetCounteries('SpokenLanguages', () => dispatch(getAllLookups())))
             dispatch(getAllLookups())
             IsUpdateFtn('SpokenLanguages', false,)
@@ -5603,8 +5354,8 @@ console.log(data?.Stations,"88")
                     className="inp" onChange={(e) => drawrInptChng('SpokenLanguages', 'code', e.target.value)}
                     value={drawerIpnuts?.SpokenLanguages?.code}
                   />
+                  <p className="error">{errors?.SpokenLanguages?.code}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -5618,8 +5369,8 @@ console.log(data?.Stations,"88")
                     onChange={(e) => drawrInptChng('SpokenLanguages', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.SpokenLanguages?.lookupname}
                   />
+                  <p className="error">{errors?.SpokenLanguages?.lookupname}</p>
                 </div>
-                <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
@@ -5987,8 +5738,8 @@ console.log(data?.Stations,"88")
           </div>
         </div>
       </MyDrawer>
-
     </div>
+    // </div>
   );
 }
 

@@ -9,6 +9,7 @@ import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 import { getAllLookups } from '../features/LookupsSlice'
+import { getContactTypes } from "../features/ContactTypeSlice";
 const TableColumnsContext = createContext();
 
 export const TableColumnsProvider = ({ children }) => {
@@ -18,7 +19,8 @@ export const TableColumnsProvider = ({ children }) => {
   const [claimsDrawer, setclaimsDrawer] = useState(false)
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
-  console.log(lookups, 'lookups')
+  const { contactTypes, contactTypesloading, error } = useSelector((state) => state.contactType);
+
   const handlClaimDrawerChng = () => {
     setclaimsDrawer(!claimsDrawer)
   }
@@ -26,6 +28,7 @@ export const TableColumnsProvider = ({ children }) => {
     Duties: [],
     MaritalStatus: [],
     Ranks: [],
+    Titles:[]
   })
   const handleSaveAfterEdit = (row) => {
     const newData = [...gridData];
@@ -406,6 +409,7 @@ export const TableColumnsProvider = ({ children }) => {
     Divisions: [],
     Districts: [],
     Stations:[],
+    contactTypes:[],
   });
   const [searchFilters, setsearchFilters] = useState({
     Profile: [
@@ -1363,7 +1367,9 @@ export const TableColumnsProvider = ({ children }) => {
       },
     ],
   });
-
+  useEffect(() => {
+    dispatch(getContactTypes());
+  }, [dispatch]);
  
   useEffect(() => {
     if (lookupsForSelect?.Ranks?.length) { // Ensure Ranks data is available before updating
@@ -1415,7 +1421,6 @@ export const TableColumnsProvider = ({ children }) => {
   useEffect(() => {
     if (selectLokups?.Divisions?.length) { // Ensure Ranks data is available before updating
       console.log("Ranks data exists:", selectLokups?.Divisions);
-  debugger
       setsearchFilters((prevState) => ({
         ...prevState,
         Profile: prevState.Profile.map((item) =>
@@ -1825,14 +1830,14 @@ export const TableColumnsProvider = ({ children }) => {
 
   useEffect(() => {
     if (regions && Array.isArray(regions)) {
-      const filteredProvinces = regions.filter((item) => item?.lookuptypeId?._id === '6761492de9640143bfc38e4c');
+      const filteredProvinces = regions.filter((item) => item?.lookuptypeId?._id === '67bf243ce314eba2c2105098');
       setRegionLookups((prevState) => ({
         ...prevState,
         Provinces: filteredProvinces,
       }));
     }
     if (regions && Array.isArray(regions)) {
-      const filteredCounty = regions.filter((item) => item.RegionTypeID === '67182268a0072a28aab883dc' && item?.ParentRegion === '67614e73479dfae6328a2641');
+      const filteredCounty = regions.filter((item) => item.lookuptypeId?._id === '67bf3d63e314eba2c210517f' && item?.ParentRegion === '67614e73479dfae6328a2641');
 
       setRegionLookups((prevState) => ({
         ...prevState,
@@ -1840,7 +1845,7 @@ export const TableColumnsProvider = ({ children }) => {
       }));
     }
     if (regions && Array.isArray(regions)) {
-      const filteredDivision = regions.filter((item) => item.RegionTypeID === '671822b4a0072a28aab883e5');
+      const filteredDivision = regions.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
 
       setRegionLookups((prevState) => ({
         ...prevState,
@@ -1848,7 +1853,7 @@ export const TableColumnsProvider = ({ children }) => {
       }));
     }
     if (regions && Array.isArray(regions)) {
-      const filteredDistricts = regions.filter((item) => item.RegionTypeID === '671822bca0072a28aab883e7');
+      const filteredDistricts = regions.filter((item) => item.lookuptypeId?._id === '');
 
       setRegionLookups((prevState) => ({
         ...prevState,
@@ -1941,7 +1946,19 @@ export const TableColumnsProvider = ({ children }) => {
     Ranks: [],
     Titles:[]
   })
- 
+ useEffect(()=>{
+  if (contactTypes) {
+    const transformedData = contactTypes.map((item) => ({
+      key: item?._id,
+      label: item?.ContactType,
+    }));
+
+    setselectLokups((prevState) => ({
+      ...prevState,
+      contactTypes: transformedData,
+    }));
+  }
+ },[contactTypes])
   useEffect(() => {
    
     if (lookups && Array.isArray(lookups)) {

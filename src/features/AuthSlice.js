@@ -4,7 +4,7 @@ import axios from 'axios';
 import MyAlert from '../component/common/MyAlert';
 // import { useNavigate } from 'react-router-dom';
 
-const baseURL = "http://localhost:3500/auth";
+const baseURL = `${process.env.REACT_APP_BASE_URL_DEV}/auth`;
 
 export const loginUser = createAsyncThunk(
     'auth/login',
