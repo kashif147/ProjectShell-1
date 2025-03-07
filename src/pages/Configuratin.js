@@ -71,9 +71,13 @@ function Configuratin() {
     Cities: [],
     Titles: [],
     Stations: [],
+    Boards: [],
+    Councils: [],
+    CorrespondenceType: [],
+    DocumentType: [],
+    ClaimType: [],
   })
 
-  console.log(data?.Stations, "88")
   const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
@@ -133,7 +137,10 @@ function Configuratin() {
     Trainings: false,
     Ranks: false,
     Duties: false,
-    RegionType: false
+    RegionType: false,
+    Boards: false,
+    ClaimType: false,
+    Schemes: false
   })
   const [selectLokups, setselectLokups] = useState({
     Provinces: [],
@@ -155,15 +162,21 @@ function Configuratin() {
     Gender: false,
     MaritalStatus: false,
     Provinces: false,
-    Counteries: false
+    Counteries: false,
+    Boards: false,
+    Councils: false,
+    CorrespondenceType: false,
+    DocumentType: false,
+    ClaimType: false,
+    Schemes: false
   })
+
   useEffect(() => {
     if (data?.Provinces) {
       const transformedData = data.Provinces.map((item) => ({
         key: item?._id,
         label: item?.lookupname,
       }));
-
       setselectLokups((prevState) => ({
         ...prevState,
         Provinces: transformedData,
@@ -174,7 +187,6 @@ function Configuratin() {
         key: item?._id,
         label: item?.lookupname,
       }));
-
       setselectLokups((prevState) => ({
         ...prevState,
         Counteries: transformedData,
@@ -203,6 +215,7 @@ function Configuratin() {
       }));
     }
   }, [data]);
+
   useEffect(() => {
     if (lookups && Array.isArray(lookups)) {
       const filteredGender = lookups?.filter((item) => item?.lookuptypeId?._id === '674a1977cc0986f64ca36fc6')
@@ -246,6 +259,41 @@ function Configuratin() {
       setdata((prevState) => ({
         ...prevState,
         Cities: CitiesDivision,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FBoards = lookups.filter((item) => item.lookuptypeId?._id === '67c947b6f41d37131f79b1e8');
+      setdata((prevState) => ({
+        ...prevState,
+        Boards: FBoards,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FCouncils = lookups.filter((item) => item.lookuptypeId?._id === '67c96d8af41d37131f79b37a');
+      setdata((prevState) => ({
+        ...prevState,
+        Councils: FCouncils,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FCorrespondenceType = lookups.filter((item) => item.lookuptypeId?._id === '67ca9528a5cd03df6e08c14d');
+      setdata((prevState) => ({
+        ...prevState,
+        CorrespondenceType: FCorrespondenceType,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FDocumentType = lookups.filter((item) => item.lookuptypeId?._id === '67ca9adda5cd03df6e08c202');
+      setdata((prevState) => ({
+        ...prevState,
+        DocumentType: FDocumentType,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FClaimType = lookups.filter((item) => item.lookuptypeId?._id === '67caa10ba5cd03df6e08c29e');
+      setdata((prevState) => ({
+        ...prevState,
+        ClaimType: FClaimType,
       }));
     }
   }, [lookups])
@@ -391,30 +439,31 @@ function Configuratin() {
   };
 
   let drawerInputsInitalValues = {
-    // Counteries: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '67182276a0072a28aab883de', isActive: true },
-    // Cities: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '6718228ca0072a28aab883e0' },
-    // Station:     {RegionCode:'', RegionTypeID: '671822c6a0072a28aab883e9',RegionName:'', DisplayName: '', isDeleted: false},
-    // Districts: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822bca0072a28aab883e7' },
     RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
-    // Station: { RegionCode: '', RegionName: '', DisplayName: '', ParentRegionId: null, isDeleted: false, RegionTypeID: '671822c6a0072a28aab883e9' },
-    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    Station: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    LookupType: { lookuptype: '', code: '', DisplayName: '', isActive: true, isDeleted: false },
-    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", },
-    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9" },
-    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9" },
-    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', "userid": "67117bea87c907f6cdda0ad9", isActive: true },
-    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9" },
-    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, "userid": "67117bea87c907f6cdda0ad9", isActive: true, },
-    ContactType: { ContactType: "", DisplayName: "", isDeleted: false },
-  }
+    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Station: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isActive: true },
+  };
+
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => ({
@@ -424,7 +473,7 @@ function Configuratin() {
         [field]: value,
       },
     }));
-
+    console.log(drawerIpnuts[drawer], "8889")
   }
   const IsUpdateFtn = (drawer, value, data) => {
     if (value == false) {
@@ -455,30 +504,6 @@ function Configuratin() {
       },
     }));
   };
-  // /region/RegionTypeID/6761492de9640143bfc38e4c/ParentRegion/67614e73479dfae6328a2641
-  //   const getCountyById = async (ParentRegion) =>{
-  //     try {
-  //         const token = localStorage.getItem('token');
-  //         const response = await axios.get(`${baseURL}/region/RegionTypeID/67182268a0072a28aab883dc/ParentRegion/${ParentRegion}`, {
-  // // /region/RegionTypeID/67182268a0072a28aab883dc/ParentRegion/67614e73479dfae6328a2641
-  //           headers: {
-  //                 Authorization: `Bearer ${token}`,
-  //                 'Content-Type': 'application/json',
-  //             },
-  //         });
-  // const countyLookup = response?.data?.map((item)=>({
-  //   key:item?._id,
-  //   label:item?.RegionName
-  // }))
-  //         return setselectLokups((prev)=>({
-  //           ...prev,  Counteries:countyLookup
-  //         })) ;
-  //     } catch (error) {
-  //         // return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookups');
-  //     }
-  // }
-  // console.log(selectLokups,"//")
-
 
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
@@ -496,7 +521,7 @@ function Configuratin() {
       [name]: !prevState[name]
     }))
   }
-
+  // console.log(,drawerOpen?.Schemes,"ppp")
   const handleInputChange4 = (name4, value4) => {
     setSubscriptionData((prevState4) => ({
       ...prevState4,
@@ -545,6 +570,11 @@ function Configuratin() {
           ...updatedDrawerInputs.Title,
           id: idValue,
         };
+      } else if (drawer === "Boards" && updatedDrawerInputs?.Boards) {
+        updatedDrawerInputs.Boards = {
+          ...updatedDrawerInputs.Boards,
+          id: idValue,
+        };
       } else if (drawer === "Provinces" && updatedDrawerInputs?.Provinces) {
         updatedDrawerInputs.Title = {
           ...updatedDrawerInputs.Title,
@@ -557,7 +587,30 @@ function Configuratin() {
           id: idValue,
         };
       }
-
+      else if (drawer === "Councils" && updatedDrawerInputs?.Councils) {
+        updatedDrawerInputs.Councils = {
+          ...updatedDrawerInputs.Councils,
+          id: idValue,
+        };
+      }
+      else if (drawer === "CorrespondenceType" && updatedDrawerInputs?.CorrespondenceType) {
+        updatedDrawerInputs.CorrespondenceType = {
+          ...updatedDrawerInputs.CorrespondenceType,
+          id: idValue,
+        };
+      }
+      else if (drawer === "DocumentType" && updatedDrawerInputs?.DocumentType) {
+        updatedDrawerInputs.DocumentType = {
+          ...updatedDrawerInputs.DocumentType,
+          id: idValue,
+        };
+      }
+      else if (drawer === "ClaimType" && updatedDrawerInputs?.ClaimType) {
+        updatedDrawerInputs.ClaimType = {
+          ...updatedDrawerInputs.ClaimType,
+          id: idValue,
+        };
+      }
       return updatedDrawerInputs;
     });
   };
@@ -1251,8 +1304,8 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
         <Checkbox checked={record?.isActive}>
         </Checkbox>
@@ -1281,6 +1334,195 @@ function Configuratin() {
                 await deleteFtn(`${baseURL}/Lookup`, record?._id,);
                 dispatch(getAllLookups())
                 resetCounteries('Gender')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnBoards = [
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
+      sortDirections: ['ascend', 'descend'], // Optional: Sets the sort order directions
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
+      render: (index, record) => (
+        <>
+          {
+            record?.lookuptypeId?.lookuptype
+          }
+        </>
+      )
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isactive',
+      key: 'isactive',
+      render: (index, record) => (
+        <Checkbox checked={record?.isactive}>
+        </Checkbox>
+      )
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Boards', !IsUpdateFtn?.Boards, record)
+            addIdKeyToLookup(record?._id, "Boards")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id,);
+                dispatch(getAllLookups())
+                resetCounteries('Boards')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnCouncils = [
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      sortDirections: ['ascend', 'descend'],
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
+      render: (_, record) => record?.lookuptypeId?.lookuptype
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (_, record) => <Checkbox checked={record?.isactive} />
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Councils', !IsUpdateFtn?.Councils, record)
+            addIdKeyToLookup(record?._id, "Councils")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                dispatch(getAllLookups())
+                resetCounteries('Councils')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnCorrespondenceType = [
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      sortDirections: ['ascend', 'descend'],
+    },
+    {
+      title: 'Lookup Type',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
+      render: (_, record) => record?.lookuptypeId?.lookuptype,
+    },
+    {
+      title: 'Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (_, record) => <Checkbox checked={record?.isactive} />,
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('CorrespondenceType', !IsUpdateFtn?.CorrespondenceType, record);
+            addIdKeyToLookup(record?._id, "CorrespondenceType");
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                dispatch(getAllLookups());
+                resetCounteries('CorrespondenceType');
               },
             })
           } />
@@ -1354,7 +1596,7 @@ function Configuratin() {
               onConfirm: async () => {
                 await deleteFtn(`${baseURL}/Lookup`, record?._id,);
                 dispatch(getAllLookups())
-                resetCounteries('Gender')
+                resetCounteries('Title')
               },
             })
           } />
@@ -1570,7 +1812,66 @@ function Configuratin() {
       ),
     },
   ];
-
+  const columnDocumentType = [
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      sortDirections: ['ascend', 'descend'],
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
+      render: (_, record) => record?.lookuptypeId?.lookuptype
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isActive',
+      key: 'isActive',
+      render: (_, record) => <Checkbox checked={record?.isactive} />
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('DocumentType', !IsUpdateFtn?.DocumentType, record)
+            addIdKeyToLookup(record?._id, "DocumentType")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                dispatch(getAllLookups())
+                resetCounteries('DocumentType')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
   const SubscriptionsColumn = [
     {
       title: "Short Name",
@@ -2103,6 +2404,38 @@ function Configuratin() {
       DisplayName: 'office',
     },
   ];
+  const columnSchemes = [
+    { title: 'Scheme Name', dataIndex: 'schemeName', key: 'schemeName' },
+    { title: 'Code', dataIndex: 'code', key: 'code', sorter: (a, b) => a.code.localeCompare(b.code), sortDirections: ['ascend', 'descend'] },
+    { title: 'Active', dataIndex: 'isActive', key: 'isActive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
+    {
+      title: <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} /> Action
+      </div>,
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Schemes', !IsUpdateFtn?.Schemes, record);
+            addIdKeyToLookup(record?._id, "Schemes");
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                dispatch(getAllLookups());
+                resetCounteries('Schemes');
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+
 
   const [selectionType, setSelectionType] = useState('checkbox');
   const [errors, setErrors] = useState({});
@@ -2119,16 +2452,16 @@ function Configuratin() {
     let newErrors = { Lookup: {}, [drawerType]: {} };
 
     if (!drawerIpnuts?.[drawerType]?.code) {
-      newErrors[drawerType].code = "Code Required";
+      newErrors[drawerType].code = "Required";
     }
     if (!drawerIpnuts?.[drawerType]?.lookupname) {
-      newErrors[drawerType].lookupname = "Title Name Required";
+      newErrors[drawerType].lookupname = "Required";
     }
 
     // Mandatory ParentLookup for specific drawers
-    const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries","Station"];
+    const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries", "Station"];
     if (requiresParentLookup.includes(drawerType) && !drawerIpnuts?.[drawerType]?.parentLookup || drawerIpnuts?.[drawerType]?.parentLookup === null) {
-      newErrors[drawerType].parentLookup = "Parent Lookup Required";
+      newErrors[drawerType].parentLookup = "Required";
     }
     // Set errors only if there are validation failures
     setErrors(newErrors);
@@ -2175,6 +2508,40 @@ function Configuratin() {
   const AddSubscriptionsFtn = () => {
     console.log(SubscriptionData);
   }
+  const columnClaimType = [
+    { title: 'Code', dataIndex: 'code', key: 'code', sorter: (a, b) => a.code.localeCompare(b.code), sortDirections: ['ascend', 'descend'] },
+    { title: 'Lookup Type', dataIndex: 'lookuptype', key: 'lookuptype', render: (_, record) => record?.lookuptypeId?.lookuptype },
+    { title: 'Display Name', dataIndex: 'DisplayName', key: 'DisplayName' },
+    { title: 'Lookup Name', dataIndex: 'lookupname', key: 'lookupname' },
+    { title: 'Active', dataIndex: 'isActive', key: 'isActive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
+    {
+      title: <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} /> Action
+      </div>,
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('ClaimType', !IsUpdateFtn?.ClaimType, record);
+            addIdKeyToLookup(record?._id, "ClaimType");
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                dispatch(getAllLookups());
+                resetCounteries('ClaimType');
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+
   const { Search } = Input;
   const sections = [
     {
@@ -2679,8 +3046,6 @@ function Configuratin() {
           </div>
         </MyDrawer>
 
-
-
         <Input
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
@@ -2916,7 +3281,7 @@ function Configuratin() {
       <MyDrawer isPagination={true} title='County' open={drawerOpen?.Counteries}
         onClose={() => openCloseDrawerFtn('Counteries')}
         add={async () => {
-         if(!validateForm('Counteries')) return; 
+          if (!validateForm('Counteries')) return;
           insertDataFtn(`/lookup`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:', () => {
             resetCounteries('Counteries')
             dispatch(getAllLookups())
@@ -2975,7 +3340,7 @@ function Configuratin() {
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Counteries?.DisplayName} />
-                <p className="error text-white">txt</p>
+                  <p className="error text-white">txt</p>
                 </div>
               </div>
             </div>
@@ -3130,7 +3495,7 @@ function Configuratin() {
       </MyDrawer>
       <MyDrawer title='City'
         open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
-        if(!validateForm('Cities')) return;
+          if (!validateForm('Cities')) return;
           insertDataFtn(`/lookup`, drawerIpnuts?.Cities,
             'Data inserted successfully:', 'Data did not insert:', () => {
               resetCounteries('Cities')
@@ -3147,11 +3512,11 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='City' isSimple={true} disabled={true} />
-                <p className="error text-white"></p>
+                  <p className="error text-white"></p>
                 </div>
               </div>
             </div>
-        
+
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>District :</p>
@@ -3163,7 +3528,7 @@ function Configuratin() {
                     value={drawerIpnuts?.Cities?.Parentlookup}
                     onChange={(e) => drawrInptChng('Cities', 'Parentlookup', e)}
                   />
-                <p className="error">{errors?.Cities?.parentLookup}</p>
+                  <p className="error">{errors?.Cities?.parentLookup}</p>
                 </div>
               </div>
             </div>
@@ -3193,7 +3558,7 @@ function Configuratin() {
 
                       drawrInptChng('Cities', 'lookupname', e.target.value)
                     }} value={drawerIpnuts?.Cities?.lookupname} />
-                <p className="error">{errors?.Cities?.lookupname}</p>
+                  <p className="error">{errors?.Cities?.lookupname}</p>
                 </div>
               </div>
             </div>
@@ -3242,7 +3607,7 @@ function Configuratin() {
         </div>
       </MyDrawer>
       <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true} onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
-        if(!validateForm("PostCode")) return;
+        if (!validateForm("PostCode")) return;
         insertDataFtn(`/lookup`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
       }} >
         <div className="drawer-main-cntainer">
@@ -3255,7 +3620,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Postcode' isSimple={true} disabled={true} />
-                <p className="error text-white">text</p>
+                  <p className="error text-white">text</p>
                 </div>
               </div>
             </div>
@@ -3342,7 +3707,7 @@ function Configuratin() {
       <MyDrawer title='Districts'
         open={drawerOpen?.Districts} isPagination={true}
         onClose={() => openCloseDrawerFtn('Districts')} add={() => {
-        if(!validateForm('Districts')) return;
+          if (!validateForm('Districts')) return;
           insertDataFtn(`/lookup`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
             () => {
               resetCounteries('Districts')
@@ -3359,7 +3724,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Districts' isSimple={true} disabled={true} />
-                <p className="error text-white">txt</p>
+                  <p className="error text-white">txt</p>
                 </div>
               </div>
             </div>
@@ -3388,7 +3753,7 @@ function Configuratin() {
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Districts', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Districts?.lookupname} />
-                 <p className="error">{errors?.Districts?.lookupname}</p>
+                  <p className="error">{errors?.Districts?.lookupname}</p>
                 </div>
               </div>
             </div>
@@ -3400,7 +3765,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
-                <p className="error text-white">text</p>
+                  <p className="error text-white">text</p>
                 </div>
               </div>
             </div>
@@ -3455,15 +3820,15 @@ function Configuratin() {
         </div>
 
       </MyDrawer>
-      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true} 
-      onClose={() => openCloseDrawerFtn('Divisions')} 
-      add={() => {
-      if(!validateForm('Divisions')) return;
-        insertDataFtn(`/lookup`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', () => {
-          resetCounteries('Divisions')
-          dispatch(getAllLookups())
-        })
-      }} >
+      <MyDrawer title='Divisions' open={drawerOpen?.Divisions} isPagination={true} isContact={true}
+        onClose={() => openCloseDrawerFtn('Divisions')}
+        add={() => {
+          if (!validateForm('Divisions')) return;
+          insertDataFtn(`/lookup`, drawerIpnuts?.Divisions, 'Data inserted successfully:', 'Data did not insert:', () => {
+            resetCounteries('Divisions')
+            dispatch(getAllLookups())
+          })
+        }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3505,7 +3870,7 @@ function Configuratin() {
                     onChange={(e) => drawrInptChng('Divisions', 'code', e.target.value)}
                     value={drawerIpnuts?.Divisions?.code} />
                   {/* <h1 className="error-text"></h1> */}
-                <p className="error">{errors?.Divisions?.code}</p>
+                  <p className="error">{errors?.Divisions?.code}</p>
                 </div>
               </div>
             </div>
@@ -3520,7 +3885,7 @@ function Configuratin() {
                     onChange={(e) => drawrInptChng('Divisions', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Divisions?.lookupname}
                   />
-                <h1 className="error-text">{errors?.Divisions?.lookupname}</h1>
+                  <h1 className="error-text">{errors?.Divisions?.lookupname}</h1>
                 </div>
               </div>
             </div>
@@ -3571,10 +3936,10 @@ function Configuratin() {
       </MyDrawer>
       <MyDrawer title='Station'
         open={drawerOpen?.Station}
-        isPagination={true} onClose={() => openCloseDrawerFtn('Station')} 
+        isPagination={true} onClose={() => openCloseDrawerFtn('Station')}
         add={() => {
-          if(!validateForm('Station')) return;
-          insertDataFtn(`/lookup`, drawerIpnuts?.Station ,
+          if (!validateForm('Station')) return;
+          insertDataFtn(`/lookup`, drawerIpnuts?.Station,
             'Data inserted successfully:', 'Data did not insert:',
             () => {
               resetCounteries('Station')
@@ -3592,7 +3957,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Districts' isSimple={true} disabled={true} />
-                <p className="error text-white">txt</p>
+                  <p className="error text-white">txt</p>
                 </div>
               </div>
             </div>
@@ -3622,7 +3987,7 @@ function Configuratin() {
                     onChange={(e) => drawrInptChng('Station', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Station?.lookupname}
                   />
-                <p className="error">{errors?.Station?.lookupname}</p>
+                  <p className="error">{errors?.Station?.lookupname}</p>
                 </div>
               </div>
             </div>
@@ -3636,7 +4001,7 @@ function Configuratin() {
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Station', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Station?.DisplayName} />
-                <p className="error text-white">text</p>
+                  <p className="error text-white">text</p>
                 </div>
               </div>
             </div>
@@ -4894,6 +5259,316 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+      <MyDrawer title='Document Type' open={drawerOpen?.DocumentType} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('DocumentType')
+        IsUpdateFtn('DocumentType', false)
+      }}
+        add={async () => {
+          if (!validateForm('DocumentType')) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.DocumentType,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('DocumentType', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+        }}
+        isEdit={isUpdateRec?.DocumentType}
+        update={async () => {
+          if (!validateForm('DocumentType')) return;
+          await updateFtn('/lookup', drawerIpnuts?.DocumentType, () =>
+        ()=>    resetCounteries('DocumentType', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('DocumentType', false);
+        }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Document Type'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.DocumentType?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('DocumentType', 'code', e.target.value)}
+                    value={drawerIpnuts?.DocumentType?.code}
+                  />
+                  <p className="error">{errors?.DocumentType?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Document Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('DocumentType', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.DocumentType?.lookupname}
+                  />
+                  <p className="error">{errors?.DocumentType?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('DocumentType', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.DocumentType?.DisplayName} />
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('DocumentType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.DocumentType?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnDocumentType}
+              dataSource={data?.DocumentType}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Claim Type' open={drawerOpen?.ClaimType} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('ClaimType');
+        IsUpdateFtn('ClaimType', false);
+      }}
+        add={async () => {
+          if (!validateForm('ClaimType')) return;
+           await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.ClaimType,
+            'Data inserted successfully',
+            'Data did not insert',
+          );
+          resetCounteries('ClaimType', () => dispatch(getAllLookups()))
+        }}
+        isEdit={isUpdateRec?.ClaimType}
+        update={async () => {
+          if (!validateForm('ClaimType')) return;
+          await updateFtn('/lookup', drawerIpnuts?.ClaimType, () =>
+            resetCounteries('ClaimType', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('ClaimType', false);
+        }}
+      >
+        <div className="drawer-main-container">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Claim Type'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.ClaimType?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('ClaimType', 'code', e.target.value)} 
+                    value={drawerIpnuts?.ClaimType?.code}
+                  />
+                  <p className="error">{errors?.ClaimType?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Claim Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" 
+                    onChange={(e) => drawrInptChng('ClaimType', 'lookupname', e.target.value)} 
+                    value={drawerIpnuts?.ClaimType?.lookupname}
+                  />
+                  <p className="error">{errors?.ClaimType?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" 
+                    onChange={(e) => drawrInptChng('ClaimType', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.ClaimType?.DisplayName}
+                  />
+                  <p className="error"></p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                <Checkbox
+                    onChange={(e) => drawrInptChng('ClaimType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.ClaimType?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+           
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnClaimType}
+              dataSource={data?.ClaimType}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
+              rowSelection={{ type: selectionType, ...rowSelection }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Schemes' open={drawerOpen?.Schemes}
+        onClose={() => openCloseDrawerFtn('Schemes')}
+        add={async () => {
+          if (!validateForm('Schemes')) return;
+          insertDataFtn(`/lookup`, drawerIpnuts?.Schemes, 'Data inserted successfully:',
+            'Data did not insert:', () => {
+              resetCounteries('Schemes')
+              dispatch(getAllLookups())
+            })
+        }}
+      >
+        <div className="drawer-main-container">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inputs-container">
+              <div className="drawer-lbl-container">
+                <p>Scheme Name:</p>
+              </div>
+              <div className="input-container">
+                <p className="star">*</p>
+                <div className="input-sub-container">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Schemes', 'schemeName', e.target.value)}
+                    value={drawerIpnuts?.Schemes?.schemeName}
+                  />
+                  <p className="error">{errors?.Schemes?.schemeName}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inputs-container">
+              <div className="drawer-label-container">
+                <p>Code:</p>
+              </div>
+              <div className="input-container">
+                <p className="star">*</p>
+                <div className="input-sub-container">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Schemes', 'code', e.target.value)}
+                    value={drawerIpnuts?.Schemes?.code}
+                  />
+                  <p className="error">{errors?.Schemes?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inputs-container">
+              <div className="drawer-label-container">
+                <p>Status:</p>
+              </div>
+              <div className="input-container">
+                <p className="star-white">*</p>
+                <div className="input-sub-container">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Schemes', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Schemes?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnSchemes}
+              dataSource={data?.Schemes}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
+              rowSelection={{ type: selectionType, ...rowSelection }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+
       <MyDrawer
         title="Duties"
         open={drawerOpen?.Duties}
@@ -5167,6 +5842,368 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+      <MyDrawer title='Boards' open={drawerOpen?.Boards} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Boards')
+        IsUpdateFtn('Boards', false,)
+      }}
+        add={async () => {
+          if (!validateForm('Boards')) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Boards,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Boards', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }
+      }
+        isEdit={isUpdateRec?.Boards}  
+        update={async () => {
+          if (!validateForm('Boards')) return; // Stop execution if validation fails
+          await updateFtn('/lookup', drawerIpnuts?.Boards, () =>
+            resetCounteries('Boards', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Boards', false);
+        }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Boards'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.Boards?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Boards', 'code', e.target.value)}
+                    value={drawerIpnuts?.Boards?.code}
+                  />
+                  <p className="error">{errors?.Boards?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Board</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Boards', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Boards?.lookupname}
+                  />
+                  <p className="error">{errors?.Boards?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Boards', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Boards?.DisplayName} />
+                </div>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) =>{
+                      drawrInptChng('Boards', 'isactive', e.target.checked)}}
+                    checked={drawerIpnuts?.Boards?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnBoards}
+              dataSource={data?.Boards}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Councils' open={drawerOpen?.Councils} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Councils')
+        IsUpdateFtn('Councils', false)
+      }}
+        add={async () => {
+
+          if (!validateForm('Councils')) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Councils,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Councils', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())          
+        }}
+        isEdit={isUpdateRec?.Councils}
+        update={async () => {
+          if (!validateForm('Councils')) return; // Stop execution if validation fails
+          await updateFtn('/lookup', drawerIpnuts?.Councils, () =>
+            resetCounteries('Councils', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Councils', false);
+        }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Councils'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.Councils?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Councils', 'code', e.target.value)}
+                    value={drawerIpnuts?.Councils?.code}
+                  />
+                  <p className="error">{errors?.Councils?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Council</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Councils', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Councils?.lookupname}
+                  />
+                  <p className="error">{errors?.Councils?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Councils', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Councils?.DisplayName} />
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Councils', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Councils?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnCouncils}
+              dataSource={data?.Councils}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Correspondence Type' open={drawerOpen?.CorrespondenceType} isPagination={true}
+        onClose={() => {
+          openCloseDrawerFtn('CorrespondenceType');
+          IsUpdateFtn('CorrespondenceType', false);
+        }}
+        add={async () => {
+          if (!validateForm('CorrespondenceType')) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.CorrespondenceType,
+            'Data inserted successfully',
+            'Data did not insert',
+          ()=>  resetCounteries('CorrespondenceType', dispatch(getAllLookups()))
+          );
+        }}
+        isEdit={isUpdateRec?.CorrespondenceType}
+        update={async () => {
+          if (!validateForm('CorrespondenceType')) return;
+          await updateFtn('/lookup', drawerIpnuts?.CorrespondenceType, () =>
+            resetCounteries('CorrespondenceType', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('CorrespondenceType', false);
+        }}
+      >
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Correspondence Type'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.CorrespondenceType?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('CorrespondenceType', 'code', e.target.value)}
+                    value={drawerIpnuts?.CorrespondenceType?.code}
+                  />
+                  <p className="error">{errors?.CorrespondenceType?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Correspondence Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('CorrespondenceType', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.CorrespondenceType?.lookupname}
+                  />
+                  <p className="error">{errors?.CorrespondenceType?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('CorrespondenceType', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.CorrespondenceType?.DisplayName} />
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('CorrespondenceType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.CorrespondenceType?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnCorrespondenceType}
+              dataSource={data?.CorrespondenceType}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+
       <MyDrawer title='Marital Status'
         open={drawerOpen?.MaritalStatus}
         isPagination={true} onClose={() => {

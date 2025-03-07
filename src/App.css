@@ -1145,7 +1145,7 @@ color: red !important;
 .top-icon {
   font-size: 40px !important;
   margin-right: 1rem;
-  color: var(--second) !important ;
+  color: var(--primary-color) !important ;
 }
 .input-border-active {
   border: 2px solid #007bff !important;
