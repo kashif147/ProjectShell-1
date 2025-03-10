@@ -76,6 +76,8 @@ function Configuratin() {
     CorrespondenceType: [],
     DocumentType: [],
     ClaimType: [],
+    Schemes: [],
+    Reasons: [],
   })
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -140,7 +142,8 @@ function Configuratin() {
     RegionType: false,
     Boards: false,
     ClaimType: false,
-    Schemes: false
+    Schemes: false,
+    Reasons: false
   })
   const [selectLokups, setselectLokups] = useState({
     Provinces: [],
@@ -168,7 +171,9 @@ function Configuratin() {
     CorrespondenceType: false,
     DocumentType: false,
     ClaimType: false,
-    Schemes: false
+    Schemes: false,
+    Reasons: false,
+
   })
 
   useEffect(() => {
@@ -294,6 +299,20 @@ function Configuratin() {
       setdata((prevState) => ({
         ...prevState,
         ClaimType: FClaimType,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FSchemes = lookups.filter((item) => item.lookuptypeId?._id === '67ce8fda4055ac8c72b37e3b');
+      setdata((prevState) => ({
+        ...prevState,
+        Schemes: FSchemes,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
+      const FReasons = lookups.filter((item) => item.lookuptypeId?._id === '67ce93394055ac8c72b37ec0');
+      setdata((prevState) => ({
+        ...prevState,
+        Reasons: FReasons,
       }));
     }
   }, [lookups])
@@ -439,29 +458,45 @@ function Configuratin() {
   };
 
   let drawerInputsInitalValues = {
-    RegionType: { RegionType: '', DisplayName: '', isActive: true, isDeleted: false },
-    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Station: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    Contacts: {
+        ContactName: "",
+        ContactPhone: "",
+        ContactEmail: "",
+        ContactAddress: {
+          BuildingOrHouse: "",
+          StreetOrRoad: "",
+          AreaOrTown: "",
+          CityCountyOrPostCode: "",
+          Eircode: ""
+        },
+        ContactTypeID: "",
+        isDeleted: false
+      },
+    RegionType: { RegionType: '', DisplayName: '', isactive: true, isDeleted: false },
+    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Station: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
     Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
+    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
     ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
     DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
     Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isActive: true, isDeleted: false },
-    ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isActive: true },
+    LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isactive: true },
   };
 
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
@@ -611,6 +646,18 @@ function Configuratin() {
           id: idValue,
         };
       }
+      else if (drawer === "Schemes" && updatedDrawerInputs?.Schemes) {
+        updatedDrawerInputs.Schemes = {
+          ...updatedDrawerInputs.Schemes,
+          id: idValue,
+        };
+      }
+      else if (drawer === "Reasons" && updatedDrawerInputs?.Reasons) {
+        updatedDrawerInputs.Reasons = {
+          ...updatedDrawerInputs.Reasons,
+          id: idValue,
+        };
+      }
       return updatedDrawerInputs;
     });
   };
@@ -705,11 +752,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
-
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1002,8 +1048,7 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      render: (record) => <Checkbox checked={record?.isactive} ></Checkbox>
     },
 
     {
@@ -1235,10 +1280,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1307,7 +1352,7 @@ function Configuratin() {
       dataIndex: 'isactive',
       key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1436,8 +1481,8 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (_, record) => <Checkbox checked={record?.isactive} />
     },
     {
@@ -1496,8 +1541,8 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (_, record) => <Checkbox checked={record?.isactive} />,
     },
     {
@@ -1557,8 +1602,8 @@ function Configuratin() {
     },
     {
       title: ' Display Name',
-      dataIndex: '',
-      key: '',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
     },
     {
       title: 'lookup Name',
@@ -1567,10 +1612,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1637,10 +1682,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1706,10 +1751,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1776,10 +1821,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
-      render: (isActive) => (
-        <Checkbox checked={isActive}>Active</Checkbox>
+      dataIndex: 'isactive',
+      key: 'isactive',
+      render: (isactive) => (
+        <Checkbox checked={isactive}>Active</Checkbox>
       ),
     },
     {
@@ -1838,8 +1883,8 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'isActive',
-      key: 'isActive',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (_, record) => <Checkbox checked={record?.isactive} />
     },
     {
@@ -1865,6 +1910,66 @@ function Configuratin() {
                 await deleteFtn(`${baseURL}/Lookup`, record?._id);
                 dispatch(getAllLookups())
                 resetCounteries('DocumentType')
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  const columnReasons = [
+    {
+      title: 'Code',
+      dataIndex: 'code',
+      key: 'code',
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      sortDirections: ['ascend', 'descend'],
+    },
+    {
+      title: ' Lookup Type ',
+      dataIndex: 'lookuptype',
+      key: 'lookuptype',
+      render: (_, record) => record?.lookuptypeId?.lookuptype
+    },
+    {
+      title: ' Display Name',
+      dataIndex: 'DisplayName',
+      key: 'DisplayName',
+    },
+    {
+      title: 'Lookup Name',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
+    },
+    {
+      title: 'Active',
+      dataIndex: 'isactive',
+      key: 'isactive',
+      render: (_, record) => <Checkbox checked={record?.isactive} />
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" style={styles.centeredCell}>
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Reasons', !IsUpdateFtn?.Reasons, record)
+            addIdKeyToLookup(record?._id, "Reasons")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                dispatch(getAllLookups())
+                resetCounteries('Reasons')
               },
             })
           } />
@@ -2404,10 +2509,11 @@ function Configuratin() {
       DisplayName: 'office',
     },
   ];
+
   const columnSchemes = [
-    { title: 'Scheme Name', dataIndex: 'schemeName', key: 'schemeName' },
+    { title: 'Scheme Name', dataIndex: 'lookupname', key: 'lookupname' },
     { title: 'Code', dataIndex: 'code', key: 'code', sorter: (a, b) => a.code.localeCompare(b.code), sortDirections: ['ascend', 'descend'] },
-    { title: 'Active', dataIndex: 'isActive', key: 'isActive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
+    { title: 'Active', dataIndex: 'isactive', key: 'isactive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
     {
       title: <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} /> Action
@@ -2439,6 +2545,7 @@ function Configuratin() {
 
   const [selectionType, setSelectionType] = useState('checkbox');
   const [errors, setErrors] = useState({});
+  console.log(errors, "errors")
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
       console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -2460,7 +2567,7 @@ function Configuratin() {
 
     // Mandatory ParentLookup for specific drawers
     const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries", "Station"];
-    if (requiresParentLookup.includes(drawerType) && !drawerIpnuts?.[drawerType]?.parentLookup || drawerIpnuts?.[drawerType]?.parentLookup === null) {
+    if (requiresParentLookup.includes(drawerType) && (!drawerIpnuts?.[drawerType]?.Parentlookup || drawerIpnuts?.[drawerType]?.Parentlookup === null)) {
       newErrors[drawerType].parentLookup = "Required";
     }
     // Set errors only if there are validation failures
@@ -2513,7 +2620,7 @@ function Configuratin() {
     { title: 'Lookup Type', dataIndex: 'lookuptype', key: 'lookuptype', render: (_, record) => record?.lookuptypeId?.lookuptype },
     { title: 'Display Name', dataIndex: 'DisplayName', key: 'DisplayName' },
     { title: 'Lookup Name', dataIndex: 'lookupname', key: 'lookupname' },
-    { title: 'Active', dataIndex: 'isActive', key: 'isActive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
+    { title: 'Active', dataIndex: 'isactive', key: 'isactive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
     {
       title: <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
         <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} /> Action
@@ -2581,7 +2688,7 @@ function Configuratin() {
       title: "Grid Configuration",
       items: [
         { key: "Profile", icon: <FaRegCircleUser className="icons" />, label: "Profile" },
-        { key: "Reigontype", icon: <FaRegMap className="icons" />, label: "Reigon type" },
+        // { key: "Reigontype", icon: <FaRegMap className="icons" />, label: "Reigon type" },
       ],
     },
     {
@@ -3500,7 +3607,9 @@ function Configuratin() {
             'Data inserted successfully:', 'Data did not insert:', () => {
               resetCounteries('Cities')
               dispatch(getAllLookups())
-            })
+            }
+          )
+          dispatch(getAllLookups())
         }} >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3526,7 +3635,10 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County' isSimple={true} options={selectLokups?.Districts}
                     value={drawerIpnuts?.Cities?.Parentlookup}
-                    onChange={(e) => drawrInptChng('Cities', 'Parentlookup', e)}
+                    onChange={(e) => {
+                      drawrInptChng('Cities', 'Parentlookup', e)
+                      console.log(drawerIpnuts?.Cities?.Parentlookup, "888")
+                    }}
                   />
                   <p className="error">{errors?.Cities?.parentLookup}</p>
                 </div>
@@ -3569,7 +3681,9 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'DisplayName', e.target.value)} value={drawerIpnuts?.Cities?.DisplayName} />
+                  <Input className="inp"
+                    onChange={(e) => drawrInptChng('Cities', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Cities?.DisplayName} />
                 </div>
                 {/* <p className="error">{errors?.Cities?.}</p> */}
               </div>
@@ -3582,7 +3696,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox checked={drawerIpnuts?.Cities?.isactive} onChange={(e) => drawrInptChng('Cities', 'isactive', e.target.value)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4230,8 +4344,8 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.LookupType?.isActive}
+                    onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.LookupType?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4347,8 +4461,8 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('RegionType', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.RegionType?.isActive}
+                    onChange={(e) => drawrInptChng('RegionType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.RegionType?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4482,8 +4596,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.LookupType?.isActive}
+                    onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.LookupType?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4603,8 +4717,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.Gender?.isActive}
+                    onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Gender?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4728,8 +4842,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.Gender?.isActive}
+                    onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Gender?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4854,8 +4968,8 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('Title', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.Title?.isActive}
+                    onChange={(e) => drawrInptChng('Title', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Title?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4982,8 +5096,8 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('Title', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                    onChange={(e) => drawrInptChng('Title', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -5107,8 +5221,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('ProjectTypes', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -5232,8 +5346,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('ProjectTypes', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                    onChange={(e) => drawrInptChng('ProjectTypes', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -5278,7 +5392,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm('DocumentType')) return;
           await updateFtn('/lookup', drawerIpnuts?.DocumentType, () =>
-        ()=>    resetCounteries('DocumentType', () => dispatch(getAllLookups()))
+            () => resetCounteries('DocumentType', () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
           IsUpdateFtn('DocumentType', false);
@@ -5384,7 +5498,7 @@ function Configuratin() {
       }}
         add={async () => {
           if (!validateForm('ClaimType')) return;
-           await insertDataFtn(
+          await insertDataFtn(
             `/lookup`,
             drawerIpnuts?.ClaimType,
             'Data inserted successfully',
@@ -5427,7 +5541,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
-                    className="inp" onChange={(e) => drawrInptChng('ClaimType', 'code', e.target.value)} 
+                    className="inp" onChange={(e) => drawrInptChng('ClaimType', 'code', e.target.value)}
                     value={drawerIpnuts?.ClaimType?.code}
                   />
                   <p className="error">{errors?.ClaimType?.code}</p>
@@ -5442,8 +5556,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
-                    className="inp" 
-                    onChange={(e) => drawrInptChng('ClaimType', 'lookupname', e.target.value)} 
+                    className="inp"
+                    onChange={(e) => drawrInptChng('ClaimType', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.ClaimType?.lookupname}
                   />
                   <p className="error">{errors?.ClaimType?.lookupname}</p>
@@ -5458,7 +5572,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
-                    className="inp" 
+                    className="inp"
                     onChange={(e) => drawrInptChng('ClaimType', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.ClaimType?.DisplayName}
                   />
@@ -5473,14 +5587,14 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                <Checkbox
+                  <Checkbox
                     onChange={(e) => drawrInptChng('ClaimType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.ClaimType?.isactive}
                   >Active</Checkbox>
                 </div>
               </div>
             </div>
-           
+
           </div>
           <div className="mt-4 config-tbl-container">
             <Table
@@ -5496,7 +5610,245 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Schemes' open={drawerOpen?.Schemes}
+      <MyDrawer title='Schemes' open={drawerOpen?.Schemes} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Schemes');
+        IsUpdateFtn('Schemes', false);
+      }}
+        add={async () => {
+          if (!validateForm('Schemes')) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Schemes,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Schemes', () => dispatch(getAllLookups()))
+          );
+          // dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Schemes}
+        update={async () => {
+          if (!validateForm('Schemes')) return;
+          await updateFtn('/lookup', drawerIpnuts?.Schemes, () =>
+            resetCounteries('Schemes', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Schemes', false);
+        }}
+      >
+        <div className="drawer-main-container">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Schemes'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.ClaimType?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Schemes', 'code', e.target.value)}
+                    value={drawerIpnuts?.Schemes?.code}
+                  />
+                  <p className="error">{errors?.Schemes?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Claim Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) => drawrInptChng('Schemes', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Schemes?.lookupname}
+                  />
+                  <p className="error">{errors?.Schemes?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) => drawrInptChng('Schemes', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Schemes?.DisplayName}
+                  />
+                  <p className="error"></p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Schemes', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Schemes?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnSchemes}
+              dataSource={data?.Schemes}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
+              rowSelection={{ type: selectionType, ...rowSelection }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer title='Reasons' open={drawerOpen?.Reasons} isPagination={true} onClose={() => {
+        openCloseDrawerFtn('Reasons');
+        IsUpdateFtn('Reasons', false);
+      }}
+        add={async () => {
+          if (!validateForm('Reasons')) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Reasons,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Reasons', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups())
+        }}
+        isEdit={isUpdateRec?.Reasons}
+        update={async () => {
+          if (!validateForm('Reasons')) return;
+          await updateFtn('/lookup', drawerIpnuts?.Reasons, () =>
+            resetCounteries('Reasons', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Reasons', false);
+        }}
+      >
+        <div className="drawer-main-container">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Lookup Type:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Schemes'
+                    disabled={true}
+                    options={lookupsType}
+                  />
+                  <p className="error text-white">errors?.ClaimType?.lookupname</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Code:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp" onChange={(e) => drawrInptChng('Reasons', 'code', e.target.value)}
+                    value={drawerIpnuts?.Reasons?.code}
+                  />
+                  <p className="error">{errors?.Reasons?.code}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Claim Type</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) => drawrInptChng('Reasons', 'lookupname', e.target.value)}
+                    value={drawerIpnuts?.Reasons?.lookupname}
+                  />
+                  <p className="error">{errors?.Reasons?.lookupname}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Display Name:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    onChange={(e) => drawrInptChng('Reasons', 'DisplayName', e.target.value)}
+                    value={drawerIpnuts?.Reasons?.DisplayName}
+                  />
+                  <p className="error"></p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p></p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox
+                    onChange={(e) => drawrInptChng('Reasons', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Reasons?.isactive}
+                  >Active</Checkbox>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnReasons}
+              dataSource={data?.Reasons}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
+              rowSelection={{ type: selectionType, ...rowSelection }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      {/* <MyDrawer title='Schemes' open={drawerOpen?.Schemes}
         onClose={() => openCloseDrawerFtn('Schemes')}
         add={async () => {
           if (!validateForm('Schemes')) return;
@@ -5567,7 +5919,7 @@ function Configuratin() {
             />
           </div>
         </div>
-      </MyDrawer>
+      </MyDrawer> */}
 
       <MyDrawer
         title="Duties"
@@ -5686,9 +6038,9 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) =>
-                      drawrInptChng("Duties", "isActive", e.target.checked)
+                      drawrInptChng("Duties", "isactive", e.target.checked)
                     }
-                    checked={drawerIpnuts?.Duties?.isActive}
+                    checked={drawerIpnuts?.Duties?.isactive}
                   >
                     Active
                   </Checkbox>
@@ -5815,8 +6167,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('Ranks', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.MaritalStatus?.isActive}
+                    onChange={(e) => drawrInptChng('Ranks', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -5857,8 +6209,8 @@ function Configuratin() {
           );
           dispatch(getAllLookups())
         }
-      }
-        isEdit={isUpdateRec?.Boards}  
+        }
+        isEdit={isUpdateRec?.Boards}
         update={async () => {
           if (!validateForm('Boards')) return; // Stop execution if validation fails
           await updateFtn('/lookup', drawerIpnuts?.Boards, () =>
@@ -5937,8 +6289,9 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) =>{
-                      drawrInptChng('Boards', 'isactive', e.target.checked)}}
+                    onChange={(e) => {
+                      drawrInptChng('Boards', 'isactive', e.target.checked)
+                    }}
                     checked={drawerIpnuts?.Boards?.isactive}
                   >Active</Checkbox>
                 </div>
@@ -5978,7 +6331,7 @@ function Configuratin() {
             'Data did not insert',
             () => resetCounteries('Councils', () => dispatch(getAllLookups()))
           );
-          dispatch(getAllLookups())          
+          dispatch(getAllLookups())
         }}
         isEdit={isUpdateRec?.Councils}
         update={async () => {
@@ -6096,7 +6449,7 @@ function Configuratin() {
             drawerIpnuts?.CorrespondenceType,
             'Data inserted successfully',
             'Data did not insert',
-          ()=>  resetCounteries('CorrespondenceType', dispatch(getAllLookups()))
+            () => resetCounteries('CorrespondenceType', dispatch(getAllLookups()))
           );
         }}
         isEdit={isUpdateRec?.CorrespondenceType}
@@ -6306,8 +6659,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('MaritalStatus', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.Gender?.isActive}
+                    onChange={(e) => drawrInptChng('MaritalStatus', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.Gender?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -6433,8 +6786,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('SpokenLanguages', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.SpokenLanguages?.isActive}
+                    onChange={(e) => drawrInptChng('SpokenLanguages', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.SpokenLanguages?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -6464,10 +6817,10 @@ function Configuratin() {
         add={async () => {
           await insertDataFtn(
             `${baseURL}/lookup`,
-            { 'region': drawerIpnuts?.Lookup },
+            { 'region': drawerIpnuts?.Solicitors },
             'Data inserted successfully',
             'Data did not insert',
-            () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
+            () => resetCounteries('Solicitors', () => dispatch(getAllLookups()))
           );
         }}
       >
@@ -6480,9 +6833,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  {/* <Input className="inp" onChange={(e) => drawrInptChng('LookupType :', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} /> */}
                   <MySelect isSimple={true} placeholder='Select Contact type'
-                    disabled={true}
+                    disabled={true} value={drawerIpnuts?.Solicitors?.ContactTypeID}
                   />
                   <h1 className="error-text"></h1>
                 </div>
@@ -6491,135 +6843,117 @@ function Configuratin() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Title :</p>
+                <p>Name :</p>
               </div>
               <div className="inpt-con">
-                <p className="star-white">*</p>
+                <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <MySelect isSimple={true} placeholder='Mr.' />
+                  <Input className="inp"
+                    value={drawerIpnuts?.Solicitors?.ContactName}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactName', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Forename :</p>
+                <p>Email :</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
-
+                  <Input value={drawerIpnuts?.Solicitors?.ContactEmail}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactEmail', e.target.value)}
                   />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
-                <p>Surname :</p>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Phone :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactPhone}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactPhone', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
-                <p>Email :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
-                <p>Mobile :</p>
-              </div>
-              <div className="inpt-con" >
-                <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
                 <p>Building or House :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.BuildingOrHouse', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
                 <p>Street or Road :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.StreetOrRoad', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
                 <p>Area or Town :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.AreaOrTown', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
                 <p>County, City or Postcode :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.CityCountyOrPostCode', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container ">
-              <div className="drawer-lbl-container" style={{ width: "25%" }} >
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
                 <p>Eircode :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star">*</p>
-                <div className="inpt-sub-con" >
-                  <Input />
-
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.Eircode', e.target.value)}
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-
           </div>
           <div className="mt-4 config-tbl-container">
             <Table
@@ -6748,8 +7082,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
-                    checked={drawerIpnuts?.LookupType?.isActive}
+                    onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
+                    checked={drawerIpnuts?.LookupType?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>

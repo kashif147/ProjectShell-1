@@ -11,13 +11,31 @@ import { FaUserAlt } from "react-icons/fa";
 import { BiRefresh } from "react-icons/bi";
 import '../../styles/MyDrawer.css'
 import { useTableColumns } from '../../context/TableColumnsContext ';
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total=7, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
-  const{selectLokups, lookupsForSelect} = useTableColumns();
+import { useFormState } from "react-dom";
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total = 7, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
+  const { selectLokups, lookupsForSelect } = useTableColumns();
+  const drawerInputsInitalValues = {
+    Contacts: {
+      ContactName: "",
+      ContactPhone: "",
+      ContactEmail: "",
+      ContactAddress: {
+        BuildingOrHouse: "",
+        StreetOrRoad: "",
+        AreaOrTown: "",
+        CityCountyOrPostCode: "",
+        Eircode: ""
+      },
+      ContactTypeID: "",
+      isDeleted: false
+    },
+  }
 
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
   const [contactDrawer, setcontactDrawer] = useState(false)
+  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const [isPayment, setisPayment] = useState(false)
   const [isAproved, setisAproved] = useState(false)
   const [isRecursion, setisRecursion] = useState(false)
@@ -45,7 +63,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       [key]: value,
     }));
   };
-  console.log(contact,"contact")
+  console.log(contact, "contact")
   const updateAddress = (key, value) => {
     setContact((prev) => ({
       ...prev,
@@ -65,6 +83,59 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       name: record.name,
     }),
   };
+
+  const drawrInptChng = (drawer, field, value) => {
+    setdrawerIpnuts((prevState) => ({
+      ...prevState,
+      [drawer]: {
+        ...prevState[drawer],
+        [field]: value,
+      },
+    }));
+    console.log(drawerIpnuts[drawer], "8889")
+  }
+
+  const [errors, setErrors] = useState();
+  const [isUpdate, setisUpdate] = useState();
+
+  const validateSolicitorForm = () => {
+    debugger
+    let newErrors = { Solicitors: {} };
+
+    // Required fields
+    const requiredFields = [
+      "ContactTypeID",
+      "ContactName",
+      "ContactEmail",
+      "ContactPhone",
+      "ContactAddress.BuildingOrHouse",
+      "ContactAddress.StreetOrRoad",
+      "ContactAddress.AreaOrTown",
+      "ContactAddress.CityCountyOrPostCode",
+      "ContactAddress.Eircode",
+    ];
+
+    requiredFields.forEach((field) => {
+      const fieldPath = field.split(".");
+      let value = drawerIpnuts?.Solicitors;
+
+      // Handle nested fields
+      for (let key of fieldPath) {
+        value = value?.[key];
+        if (value === undefined || value === null || value === "") {
+          newErrors.Solicitors[field] = "Required";
+          break;
+        }
+      }
+    });
+
+    // Set errors only if validation fails
+    setErrors(newErrors);
+
+    // Return validation success
+    return Object.keys(newErrors.Solicitors).length === 0;
+  };
+
   const columnCountry = [
     {
       title: 'Transfer Date',
@@ -309,7 +380,69 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   console.log(recData, '555')
   const handleEnter = (e) => {
     isEdit == true ? update() : add()
-};
+  };
+
+  const solicitorColumns = [
+    {
+      title: "Name",
+      dataIndex: "ContactName",
+      key: "ContactName",
+    },
+    {
+      title: "Phone",
+      dataIndex: "ContactPhone",
+      key: "ContactPhone",
+    },
+    {
+      title: "Email",
+      dataIndex: "ContactEmail",
+      key: "ContactEmail",
+    },
+    {
+      title: "Adress",
+      dataIndex: ["ContactAddress", "BuildingOrHouse"],
+      key: "BuildingOrHouse",
+      ellipsis: true,
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }}
+          // onClick={() => {
+          //   IsUpdateFtn('Counteries', !isUpdateRec?.Provinces, record)
+          //   addIdKeyToLookup(record?._id, "Counteries")
+          // }}
+          />
+          <AiFillDelete size={16}
+          // onClick={() => {
+          //   MyConfirm({
+          //     title: 'Confirm Deletion',
+          //     message: 'Do You Want To Delete This Item?',
+          //     onConfirm: async () => {
+          //       await deleteFtn(`${baseURL}/lookup`, record?._id,);
+          //       dispatch(fetchRegions())
+          //     },
+          //   })
+          // }}
+          />
+        </Space>
+      ),
+    },
+
+  ];
+  const addFtn = () => {
+    debugger
+    //  if(validateSolicitorForm()) return;
+    validateSolicitorForm()
+  }
   return (
     <Drawer
       width={width}
@@ -391,9 +524,11 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             <Button className="butn secoundry-btn" onClick={onClose}>
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
+            <Button className="butn primary-btn"
+              onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
               {isEdit == true ? "Save" : 'Add'}
             </Button>
+
           </Space>
         </div>
       }
@@ -411,14 +546,29 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       </div>
       <Drawer open={contactDrawer}
         onClose={() => setcontactDrawer(!contactDrawer)}
-        width="620px"
+        width="740px"
         title="Contacts"
+        extra={
+          <Space>
+            <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
+              Close
+            </Button>
+            {/* <Button className="butn primary-btn" 
+          onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
+            {isEdit == true ? "Save" : 'Add'}
+          </Button> */}
+            <Button className="butn primary-btn"
+              onClick={isUpdate?.Contacts == true ? update : addFtn}
+              onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
+              {isUpdate?.Contacts == true ? "Save1" : 'Add1'}
+            </Button>
+          </Space>
+        }
+
       >
-      <div className="transfer-main-cont">
-        <div className="w-100">
-          {/* Contact Type */}
+        <div className="drawer-main-cntainer">
           <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "33%" }}>
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
               <p>Contact Type :</p>
             </div>
             <div className="inpt-con">
@@ -426,103 +576,146 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               <div className="inpt-sub-con">
                 <MySelect
                   isSimple={true}
-                  placeholder="Select contact type"
-                  options={selectLokups?.contactTypes}
-                  value={contact.ContactTypeID}
-                  onChange={(value) => updateContact("ContactTypeID", value)}
+                  placeholder="Select Contact type"
+                  disabled={true}
+                  value={drawerIpnuts?.Solicitors?.ContactTypeID}
                 />
+                <p className="error">{errors?.Solicitors?.ContactTypeID}</p>
               </div>
-              <p className="error"></p>
             </div>
           </div>
 
-          {/* Title */}
           <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "33%" }}>
-              <p>Title :</p>
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Name :</p>
             </div>
             <div className="inpt-con">
               <p className="star">*</p>
               <div className="inpt-sub-con">
-                <MySelect
-                  placeholder="Select Title"
-                  isSimple={true}
-                  options={lookupsForSelect?.Titles}
-                  value={contact.Title}
-                  // onChange={(value) => updateContact("Title", value)}
+                <Input
+                  className="inp"
+                  value={drawerIpnuts?.Solicitors?.ContactName}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactName", e.target.value)}
                 />
+                <p className="error">{errors?.Solicitors?.ContactName}</p>
               </div>
-              <p className="error"></p>
             </div>
           </div>
 
-          {/* Name & Contact Fields */}
-          {[
-            { label: "Forename", key: "ContactName" },
-            { label: "Surname", key: "ContactPhone" },
-            { label: "Email", key: "ContactEmail" },
-            { label: "Mobile", key: "ContactPhone" },
-          ].map(({ label, key }) => (
-            <div className="drawer-inpts-container" key={key}>
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>{label} :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    value={contact[key]}
-                    onChange={(e) => updateContact(key, e.target.value)}
-                  />
-                </div>
-                <p className="error"></p>
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Email :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input
+                  value={drawerIpnuts?.Solicitors?.ContactEmail}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactEmail", e.target.value)}
+                />
+                <p className="error">{errors?.Solicitors?.ContactEmail}</p>
               </div>
             </div>
-          ))}
+          </div>
 
-          {/* Address Fields */}
-          {[
-            { label: "Building or House", key: "BuildingOrHouse" },
-            { label: "Street or Road", key: "StreetOrRoad" },
-            { label: "Area or Town", key: "AreaOrTown" },
-            { label: "County, City or Postcode", key: "CityCountyOrPostCode" },
-            { label: "Eircode", key: "Eircode" },
-          ].map(({ label, key }) => (
-            <div className="drawer-inpts-container" key={key}>
-              <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                <p>{label} :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    value={contact.ContactAddress[key]}
-                    onChange={(e) => updateAddress(key, e.target.value)}
-                  />
-                </div>
-                <p className="error"></p>
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Phone :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input
+                  value={drawerIpnuts?.Solicitors?.ContactPhone}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactPhone", e.target.value)}
+                />
+                <p className="error">{errors?.Solicitors?.ContactPhone}</p>
               </div>
             </div>
-          ))}
+          </div>
+
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Building or House :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input
+                  value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.BuildingOrHouse", e.target.value)}
+                />
+                <p className="error">{errors?.Solicitors?.["ContactAddress.BuildingOrHouse"]}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Street or Road :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input
+                  value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.StreetOrRoad", e.target.value)}
+                />
+                <p className="error">{errors?.Solicitors?.["ContactAddress.StreetOrRoad"]}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>City, County or Postcode :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input
+                  value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.CityCountyOrPostCode", e.target.value)}
+                />
+                <p className="error">{errors?.Solicitors?.["ContactAddress.CityCountyOrPostCode"]}</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Eircode :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input
+                  value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.Eircode", e.target.value)}
+                />
+                <p className="error">{errors?.Solicitors?.["ContactAddress.Eircode"]}</p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={solicitorColumns}
+              //  dataSource={lookups}
+              //  loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
         </div>
-
-        {/* History Table */}
-        <h5>History</h5>
-        <Table
-          pagination={false}
-          columns={columnCountry}
-          className="drawer-tbl"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          rowSelection={{
-            type: selectionType,
-            ...rowSelection,
-          }}
-          bordered
-        />
-      </div>
-    </Drawer>
+      </Drawer>
 
       <Drawer open={isRecursion}
         onClose={() => setisRecursion(!isRecursion)}
