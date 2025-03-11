@@ -158,21 +158,46 @@ function Configuratin() {
   })
   // this state indicate that drawer inputs have the value for editing
   const [isUpdateRec, setisUpdateRec] = useState({
-    Lookup: false,
-    LookupType: false,
-    RegionType: false,
-    Title: false,
-    Gender: false,
-    MaritalStatus: false,
-    Provinces: false,
+    // Lookup: false,
+    // LookupType: false,
+    // RegionType: false,
+    // Title: false,
+    // Gender: false,
+    // MaritalStatus: false,
+    // Provinces: false,
+    // Counteries: false,
+    // Boards: false,
+    // Councils: false,
+    // CorrespondenceType: false,
+    // DocumentType: false,
+    // ClaimType: false,
+    // Schemes: false,
+    // Reasons: false,
+
     Counteries: false,
+    Provinces: false,
+    Cities: false,
+    PostCode: false,
+    Districts: false,
+    Divisions: false,
+    Station: false,
+    ContactTypes: false,
+    LookupType: false,
+    Lookup: false,
+    Solicitors: false,
+    Committees: false,
+    SpokenLanguages: false,
+    Gender: false,
+    Title: false,
+    ProjectTypes: false,
+    Trainings: false,
+    Ranks: false,
+    Duties: false,
+    RegionType: false,
     Boards: false,
-    Councils: false,
-    CorrespondenceType: false,
-    DocumentType: false,
     ClaimType: false,
     Schemes: false,
-    Reasons: false,
+    Reasons: false
 
   })
 
@@ -572,93 +597,15 @@ function Configuratin() {
   };
   const addIdKeyToLookup = (idValue, drawer) => {
     setdrawerIpnuts((prev) => {
-      const updatedDrawerInputs = { ...prev };
-      if (drawer === "Lookup" && updatedDrawerInputs.Lookup) {
-        updatedDrawerInputs.Lookup = {
-          ...updatedDrawerInputs.Lookup,
+      if (!prev?.[drawer]) return prev; // Ensure the key exists in state
+  
+      return {
+        ...prev,
+        [drawer]: {
+          ...prev[drawer],
           id: idValue,
-        };
-      } else if (drawer === "LookupType" && updatedDrawerInputs.LookupType) {
-        updatedDrawerInputs.LookupType = {
-          ...updatedDrawerInputs.LookupType,
-          id: idValue,
-        };
-      } else if (drawer === "Gender" && updatedDrawerInputs.Gender) {
-        updatedDrawerInputs.Gender = {
-          ...updatedDrawerInputs.Gender,
-          id: idValue,
-        };
-      } else if (drawer === "RegionType" && updatedDrawerInputs?.RegionType) {
-
-        updatedDrawerInputs.RegionType = {
-          ...updatedDrawerInputs.RegionType,
-          id: idValue,
-        };
-      } else if (drawer === "MaritalStatus" && updatedDrawerInputs?.MaritalStatus) {
-
-        updatedDrawerInputs.MaritalStatus = {
-          ...updatedDrawerInputs.MaritalStatus,
-          id: idValue,
-        };
-      } else if (drawer === "Title" && updatedDrawerInputs?.Title) {
-        updatedDrawerInputs.Title = {
-          ...updatedDrawerInputs.Title,
-          id: idValue,
-        };
-      } else if (drawer === "Boards" && updatedDrawerInputs?.Boards) {
-        updatedDrawerInputs.Boards = {
-          ...updatedDrawerInputs.Boards,
-          id: idValue,
-        };
-      } else if (drawer === "Provinces" && updatedDrawerInputs?.Provinces) {
-        updatedDrawerInputs.Title = {
-          ...updatedDrawerInputs.Title,
-          id: idValue,
-        };
-      }
-      else if (drawer === "Counteries" && updatedDrawerInputs?.Counteries) {
-        updatedDrawerInputs.Title = {
-          ...updatedDrawerInputs.Title,
-          id: idValue,
-        };
-      }
-      else if (drawer === "Councils" && updatedDrawerInputs?.Councils) {
-        updatedDrawerInputs.Councils = {
-          ...updatedDrawerInputs.Councils,
-          id: idValue,
-        };
-      }
-      else if (drawer === "CorrespondenceType" && updatedDrawerInputs?.CorrespondenceType) {
-        updatedDrawerInputs.CorrespondenceType = {
-          ...updatedDrawerInputs.CorrespondenceType,
-          id: idValue,
-        };
-      }
-      else if (drawer === "DocumentType" && updatedDrawerInputs?.DocumentType) {
-        updatedDrawerInputs.DocumentType = {
-          ...updatedDrawerInputs.DocumentType,
-          id: idValue,
-        };
-      }
-      else if (drawer === "ClaimType" && updatedDrawerInputs?.ClaimType) {
-        updatedDrawerInputs.ClaimType = {
-          ...updatedDrawerInputs.ClaimType,
-          id: idValue,
-        };
-      }
-      else if (drawer === "Schemes" && updatedDrawerInputs?.Schemes) {
-        updatedDrawerInputs.Schemes = {
-          ...updatedDrawerInputs.Schemes,
-          id: idValue,
-        };
-      }
-      else if (drawer === "Reasons" && updatedDrawerInputs?.Reasons) {
-        updatedDrawerInputs.Reasons = {
-          ...updatedDrawerInputs.Reasons,
-          id: idValue,
-        };
-      }
-      return updatedDrawerInputs;
+        },
+      };
     });
   };
 
@@ -697,8 +644,9 @@ function Configuratin() {
       title: 'Active',
       dataIndex: 'Active',
       key: 'DisplayName',
+
       render: (index, record) => (
-        <Checkbox></Checkbox>
+        <Checkbox checked={record?.isactive}></Checkbox>
       )
     },
     {
@@ -985,14 +933,14 @@ function Configuratin() {
     },
     {
       title: 'County',
-      dataIndex: '',
-      key: '',
+      dataIndex: 'Parentlookup',
+      key: 'Parentlookup',
     },
     {
       title: 'Active',
-      dataIndex: '',
+      dataIndex: 'Active',
       render: (index, record) => (
-        <Checkbox>
+        <Checkbox checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -2575,7 +2523,6 @@ function Configuratin() {
     // Check if there are any errors in the object
     return Object.keys(newErrors.Lookup).length === 0 && Object.keys(newErrors[drawerType]).length === 0;
   };
-
   const membershipModalFtn = () => setMembershipModal(!membershipModal);
   const partnershipModalFtn = () => setPartnershipModal(!partnershipModal);
   const dummyModalFtn = () => setDummyModal(!dummyModal);
@@ -2586,7 +2533,6 @@ function Configuratin() {
   const addRegionTypeModalOpenCloseFtn = () => setisAddRegionTypeModal(!isAddRegionTypeModal);
   const ContactTypeModalOpenCloseFtn = () => setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () => setisAddContactTypeModal(!isAddContactTypeModal);
-
   const addmembershipFtn = () => {
     console.log(membershipdata);
   }
@@ -3393,7 +3339,18 @@ function Configuratin() {
             resetCounteries('Counteries')
             dispatch(getAllLookups())
           })
-        }} >
+        }}
+        isEdit={isUpdateRec?.Counteries}
+        update={async () => {
+          if (!validateForm('Counteries')) return; 
+          await updateFtn('/lookup', drawerIpnuts?.Counteries, () =>
+            resetCounteries('Counteries', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Counteries', false);
+        }}
+        
+        >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3442,7 +3399,7 @@ function Configuratin() {
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp"
                     onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)}
@@ -3462,9 +3419,8 @@ function Configuratin() {
                   <MySelect isSimple={true} options={selectLokups?.Provinces}
                     onChange={(e) => {
                       drawrInptChng('Counteries', 'Parentlookup', e)
-                      console.log()
                     }}
-                    value={drawerIpnuts?.Counteries?.parentLookup}
+                    value={drawerIpnuts?.Counteries?.Parentlookup}
                   />
                   <p className="error">{errors?.Counteries?.parentLookup}</p>
                 </div>
@@ -3475,9 +3431,11 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox 
+                  checked={drawerIpnuts?.Counteries?.isactive} 
+                  onChange={(e)=>drawrInptChng('Counteries', 'isactive', e.target.checked)}> Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3510,11 +3468,20 @@ function Configuratin() {
           insertDataFtn(`/lookup`, drawerIpnuts?.Provinces,
             'Data inserted successfully:', 'Data did not insert:',
             () => {
-              resetCounteries('Provinces')
-              dispatch(getAllLookups())
+              resetCounteries('Provinces',dispatch(getAllLookups()))
             })
 
-        }} >
+        }} 
+        isEdit={isUpdateRec?.Provinces}
+        update={async () => {
+          if (!validateForm('Provinces')) return; 
+          await updateFtn('/lookup', drawerIpnuts?.Provinces, () =>
+            resetCounteries('Provinces', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Provinces', false);
+        }}
+        >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3561,7 +3528,7 @@ function Configuratin() {
                 <p>Display Name :</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Provinces?.DisplayName} />
@@ -3576,7 +3543,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox onChange={(e) => drawrInptChng('Provinces', 'isactive', e.target.checked)} 
+                  checked={drawerIpnuts?.Provinces?.isactive}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3586,6 +3554,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnProvince}
+              loading={lookupsloading}
               dataSource={data?.Provinces}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -3601,7 +3570,9 @@ function Configuratin() {
         </div>
       </MyDrawer>
       <MyDrawer title='City'
-        open={drawerOpen?.Cities} isPagination={true} onClose={() => openCloseDrawerFtn('Cities')} add={() => {
+        open={drawerOpen?.Cities} isPagination={true} 
+        isEdit={isUpdateRec?.Counteries}
+        onClose={() => openCloseDrawerFtn('Cities')} add={() => {
           if (!validateForm('Cities')) return;
           insertDataFtn(`/lookup`, drawerIpnuts?.Cities,
             'Data inserted successfully:', 'Data did not insert:', () => {
@@ -3942,7 +3913,17 @@ function Configuratin() {
             resetCounteries('Divisions')
             dispatch(getAllLookups())
           })
-        }} >
+        }} 
+        update={async () => {
+          if (!validateForm('Divisions')) return; 
+          await updateFtn('/lookup', drawerIpnuts?.Divisions, () =>
+            resetCounteries('Divisions', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Divisions', false);
+        }}
+        isEdit={isUpdateRec?.Divisions}
+        >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -4024,7 +4005,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4630,7 +4611,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm('Gender')) return;
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `/lookup`,
             drawerIpnuts?.Gender,
             'Data inserted successfully',
             'Data did not insert',
@@ -4714,10 +4695,10 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
-                    onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
+                    onChange={(e) => drawrInptChng('Gender', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Gender?.isactive}
                   >Active</Checkbox>
                 </div>
@@ -4893,7 +4874,6 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn('Title', false);
         }}
-
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -5823,7 +5803,7 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('Reasons', 'isactive', e.target.checked)}
@@ -6656,11 +6636,11 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('MaritalStatus', 'isactive', e.target.checked)}
-                    checked={drawerIpnuts?.Gender?.isactive}
+                    checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
                 </div>
                 <p className="error"></p>
