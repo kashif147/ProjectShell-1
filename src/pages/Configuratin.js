@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { SiActigraph } from "react-icons/si";
-import { FaRegMap } from "react-icons/fa6";
+import { FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
 import { Input, Table, Row, Col, Space, Pagination, Divider, Checkbox, Button, } from "antd";
@@ -225,7 +225,7 @@ function Configuratin() {
     if (data?.Divisions) {
       const transformedData = data.Divisions.map((item) => ({
         key: item?._id,
-        label: item?.RegionName,
+        label: item?.lookupname,
       }));
 
       setselectLokups((prevState) => ({
@@ -313,6 +313,13 @@ function Configuratin() {
       }));
     }
     if (lookups && Array.isArray(lookups)) {
+      const FStation = lookups.filter((item) => item.lookuptypeId?._id === '67d252f97c8b9c538a209b81');
+      setdata((prevState) => ({
+        ...prevState,
+        Stations: FStation,
+      }));
+    }
+    if (lookups && Array.isArray(lookups)) {
       const FDocumentType = lookups.filter((item) => item.lookuptypeId?._id === '67ca9adda5cd03df6e08c202');
       setdata((prevState) => ({
         ...prevState,
@@ -340,26 +347,25 @@ function Configuratin() {
         Reasons: FReasons,
       }));
     }
-  }, [lookups])
-
-  useEffect(() => {
-    if (regions && Array.isArray(regions)) {
-      const filteredProvinces = regions.filter((item) => item.lookuptypeId?._id === '67bf243ce314eba2c2105098');
+    if (lookups && Array.isArray(lookups)) {
+      const filteredProvinces = lookups.filter((item) => item.lookuptypeId?._id === '67bf243ce314eba2c2105098');
       setdata((prevState) => ({
         ...prevState,
         Provinces: filteredProvinces,
       }));
     }
-
-
-    if (regions && Array.isArray(regions)) {
-      const filteredDistricts = regions.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
-
+    
+    if (lookups && Array.isArray(lookups)) {
+      const filteredDistricts = lookups.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
       setdata((prevState) => ({
         ...prevState,
         Districts: filteredDistricts,
       }));
     }
+  }, [lookups])
+
+  useEffect(() => {
+   
 
     if (regions && Array.isArray(regions)) {
 
@@ -498,34 +504,35 @@ function Configuratin() {
         isDeleted: false
       },
     RegionType: { RegionType: '', DisplayName: '', isactive: true, isDeleted: false },
-    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Station: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Station: { lookuptypeId: '67d252f97c8b9c538a209b81', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
     LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookup: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookup: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookup: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookupid: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    SpokenLanguages: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    ProjectTypes: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Trainings: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Ranks: { lookuptypeId: '674a195dcc0986f64ca36fc2', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Duties: { lookuptypeId: '674a219fcc0986f64ca3701b', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
     ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isactive: true },
   };
 
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const drawrInptChng = (drawer, field, value) => {
+    debugger
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: {
@@ -670,7 +677,7 @@ function Configuratin() {
               message: 'Do You Want To Delete This Item?',
               onConfirm: async () => {
                 await deleteFtn(`${baseURL}/lookup`, record?._id,);
-                dispatch(fetchRegions())
+                dispatch(getAllLookups())
               },
             })
           } />
@@ -731,7 +738,7 @@ function Configuratin() {
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookup`, record?._id,);
-                  dispatch(fetchRegions())
+                  dispatch(getAllLookups())
                 },
               })
             }}
@@ -743,13 +750,13 @@ function Configuratin() {
   const columnPostCode = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Post Code',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
@@ -763,10 +770,10 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      dataIndex: 'isactive',
+      key: 'isactive',
       render: (index, record) => (
-        <Checkbox>
+        <Checkbox checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -806,15 +813,14 @@ function Configuratin() {
     },
     {
       title: 'Division',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
-      render: (item) => item?.lookuptypeId?.lookuptype
+      dataIndex: 'Parentlookup',
+      key: 'Parentlookup',
     },
     {
       title: 'Active',
 
       render: (index, record) => (
-        <Checkbox>
+        <Checkbox checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -843,7 +849,7 @@ function Configuratin() {
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookup`, record?._id,);
-                  dispatch(fetchRegions())
+                  dispatch(getAllLookups())
                 },
               })
             }}
@@ -855,13 +861,13 @@ function Configuratin() {
   const columnStations = [
     {
       title: 'Code',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      dataIndex: 'code',
+      key: 'code',
     },
     {
       title: 'Stations',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      dataIndex: 'lookupname',
+      key: 'lookupname',
     },
     {
       title: 'Display Name',
@@ -870,15 +876,13 @@ function Configuratin() {
     },
     {
       title: 'District',
-      dataIndex: '',
-      key: 'RegionName',
+      dataIndex: 'Parentlookup',
+      key: 'Parentlookup',
     },
     {
       title: 'Active',
-
       render: (index, record) => (
-        <Checkbox>
-
+        <Checkbox checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -895,8 +899,8 @@ function Configuratin() {
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn('Districts', !isUpdateRec?.Provinces, record)
-              addIdKeyToLookup(record?._id, "Districts")
+              IsUpdateFtn('Station', !isUpdateRec?.Station, record)
+              addIdKeyToLookup(record?._id, "Station")
             }}
           />
           <AiFillDelete size={16}
@@ -906,7 +910,7 @@ function Configuratin() {
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookup`, record?._id,);
-                  dispatch(fetchRegions())
+                  dispatch(getAllLookups())
                 },
               })
             }}
@@ -958,7 +962,7 @@ function Configuratin() {
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn('Divisions', !isUpdateRec?.Provinces, record)
+              IsUpdateFtn('Divisions', !isUpdateRec?.Divisions, record)
               addIdKeyToLookup(record?._id, "Divisions")
             }}
           />
@@ -969,7 +973,7 @@ function Configuratin() {
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookup`, record?._id,);
-                  dispatch(fetchRegions())
+                  dispatch(getAllLookups())
                 },
               })
             }}
@@ -985,7 +989,7 @@ function Configuratin() {
       key: 'code',
     },
     {
-      title: 'Contact Type',
+      title: 'City',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1012,8 +1016,8 @@ function Configuratin() {
         <Space size="middle" style={styles.centeredCell}>
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn('Divisions', !isUpdateRec?.Provinces, record)
-              addIdKeyToLookup(record?._id, "Divisions")
+              IsUpdateFtn('Cities', !isUpdateRec?.Cities, record)
+              addIdKeyToLookup(record?._id, "Cities")
             }}
           />
           <AiFillDelete size={16}
@@ -1023,7 +1027,7 @@ function Configuratin() {
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookup`, record?._id,);
-                  dispatch(fetchRegions())
+                  dispatch(getAllLookups())
                 },
               })
             }}
@@ -2515,7 +2519,7 @@ function Configuratin() {
 
     // Mandatory ParentLookup for specific drawers
     const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries", "Station"];
-    if (requiresParentLookup.includes(drawerType) && (!drawerIpnuts?.[drawerType]?.Parentlookup || drawerIpnuts?.[drawerType]?.Parentlookup === null)) {
+    if (requiresParentLookup.includes(drawerType) && (!drawerIpnuts?.[drawerType]?.Parentlookupid || drawerIpnuts?.[drawerType]?.Parentlookupid === null)) {
       newErrors[drawerType].parentLookup = "Required";
     }
     // Set errors only if there are validation failures
@@ -3336,8 +3340,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm('Counteries')) return;
           insertDataFtn(`/lookup`, drawerIpnuts?.Counteries, 'Data inserted successfully:', 'Data did not insert:', () => {
-            resetCounteries('Counteries')
-            dispatch(getAllLookups())
+            resetCounteries('Counteries',dispatch(getAllLookups()))
           })
         }}
         isEdit={isUpdateRec?.Counteries}
@@ -3349,7 +3352,6 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn('Counteries', false);
         }}
-        
         >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -3418,9 +3420,9 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} options={selectLokups?.Provinces}
                     onChange={(e) => {
-                      drawrInptChng('Counteries', 'Parentlookup', e)
+                      drawrInptChng('Counteries', 'Parentlookupid', e)
                     }}
-                    value={drawerIpnuts?.Counteries?.Parentlookup}
+                    value={drawerIpnuts?.Counteries?.Parentlookupid}
                   />
                   <p className="error">{errors?.Counteries?.parentLookup}</p>
                 </div>
@@ -3445,6 +3447,7 @@ function Configuratin() {
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnCountry}
+              loading={lookupsloading }
               dataSource={data?.county}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -3530,7 +3533,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
+                  <Input className="inp" 
+                  onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Provinces?.DisplayName} />
                 </div>
                 <p className="error"></p>
@@ -3569,9 +3573,11 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='City'
-        open={drawerOpen?.Cities} isPagination={true} 
-        isEdit={isUpdateRec?.Counteries}
+      <MyDrawer 
+      title='City'
+        open={drawerOpen?.Cities} 
+        isPagination={true} 
+        isEdit={isUpdateRec?.Cities}
         onClose={() => openCloseDrawerFtn('Cities')} add={() => {
           if (!validateForm('Cities')) return;
           insertDataFtn(`/lookup`, drawerIpnuts?.Cities,
@@ -3581,7 +3587,16 @@ function Configuratin() {
             }
           )
           dispatch(getAllLookups())
-        }} >
+        }}
+        update={async () => {
+          if (!validateForm('Cities')) return; 
+          await updateFtn('/lookup', drawerIpnuts?.Cities, () =>
+            resetCounteries('Cities', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Cities', false);
+        }}
+        >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3605,13 +3620,12 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County' isSimple={true} options={selectLokups?.Districts}
-                    value={drawerIpnuts?.Cities?.Parentlookup}
+                    value={drawerIpnuts?.Cities?.Parentlookupid}
                     onChange={(e) => {
-                      drawrInptChng('Cities', 'Parentlookup', e)
-                      console.log(drawerIpnuts?.Cities?.Parentlookup, "888")
+                      drawrInptChng('Cities', 'Parentlookupid', e)
                     }}
                   />
-                  <p className="error">{errors?.Cities?.parentLookup}</p>
+                  <p className="error">{errors?.Cities?.Parentlookupid}</p>
                 </div>
               </div>
             </div>
@@ -3667,7 +3681,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Cities?.isactive} onChange={(e) => drawrInptChng('Cities', 'isactive', e.target.value)}>Active</Checkbox>
+                  <Checkbox checked={drawerIpnuts?.Cities?.isactive} onChange={(e) => drawrInptChng('Cities', 'isactive', e.target.checked)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3677,6 +3691,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnCity}
+              loading={lookupsloading}
               dataSource={data?.Cities}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -3691,10 +3706,13 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Post Code' open={drawerOpen?.PostCode} isPagination={true} onClose={() => openCloseDrawerFtn('PostCode')} add={() => {
+      <MyDrawer title='Post Code' 
+      open={drawerOpen?.PostCode} isPagination={true} 
+      onClose={() => openCloseDrawerFtn('PostCode')} 
+      add={() => {
         if (!validateForm("PostCode")) return;
         insertDataFtn(`/lookup`, drawerIpnuts?.PostCode, 'Data inserted successfully:', 'Data did not insert:', resetCounteries('PostCode'))
-      }} >
+      }}>
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -3765,9 +3783,9 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox checked={drawerIpnuts?.PostCode?.isactive} onChange={(e)=>drawrInptChng(e.target.checked)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3791,9 +3809,19 @@ function Configuratin() {
       </MyDrawer>
       <MyDrawer title='Districts'
         open={drawerOpen?.Districts} isPagination={true}
-        onClose={() => openCloseDrawerFtn('Districts')} add={() => {
+        onClose={() => openCloseDrawerFtn('Districts')} 
+        isEdit={isUpdateRec?.Districts}
+        update={async () => {
+          if (!validateForm('Districts')) return; 
+          await updateFtn('/lookup', drawerIpnuts?.Districts, () =>
+            resetCounteries('Districts', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Districts', false);
+        }}
+        add={() => {
           if (!validateForm('Districts')) return;
-          insertDataFtn(`/lookup`, { region: drawerIpnuts?.Districts }, 'Data inserted successfully:', 'Data did not insert:',
+          insertDataFtn(`/lookup`,drawerIpnuts?.Districts , 'Data inserted successfully:', 'Data did not insert:',
             () => {
               resetCounteries('Districts')
               dispatch(getAllLookups())
@@ -3845,9 +3873,9 @@ function Configuratin() {
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
                 <p>Display Name :</p>
-              </div>
+              </div> 
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
                   <p className="error text-white">text</p>
@@ -3862,9 +3890,11 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} placeholder='Select Division'
-                    options={selectLokups?.Divisions} onChange={(e) => drawrInptChng('Districts', 'ParentLookup', e)} value={drawerIpnuts?.Districts?.ParentLookup} />
+                    options={selectLokups?.Divisions} 
+                    onChange={(e) => drawrInptChng('Districts', 'Parentlookupid', e)} 
+                    value={drawerIpnuts?.Districts?.Parentlookupid} />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
-                  <p className="error">{errors?.Districts?.parentLookup}</p>
+                  <p className="error">{errors?.Districts?.Parentlookupid}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2">
                   +
@@ -3877,9 +3907,9 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox checked={drawerIpnuts?.Districts?.isactive} onChange={(e) => drawrInptChng('Divisions', 'ParentLookup', e)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -3889,6 +3919,8 @@ function Configuratin() {
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnDistricts}
+              loading={lookupsloading}
+              pagination={{ pageSize: 10 }}
               dataSource={data?.Districts}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -3946,9 +3978,9 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County'
-                    onChange={(e) => drawrInptChng('Divisions', 'Parentlookup', e)}
+                    onChange={(e) => drawrInptChng('Divisions', 'Parentlookupid', e)}
                     isSimple={true} options={selectLokups?.Counteries}
-                    value={drawerIpnuts?.Divisions?.Parentlookup}
+                    value={drawerIpnuts?.Divisions?.Parentlookupid}
                   />
                   <p className="error">{errors?.Divisions?.parentLookup}</p>
                 </div>
@@ -4016,6 +4048,7 @@ function Configuratin() {
               pagination={{ pageSize: 10 }}
               columns={columnDivisions}
               dataSource={data?.Divisions}
+              loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -4038,10 +4071,20 @@ function Configuratin() {
             'Data inserted successfully:', 'Data did not insert:',
             () => {
               resetCounteries('Station')
-              dispatch(fetchRegions())
             }
           )
-        }} >
+          dispatch(fetchRegions())
+        }}
+        isEdit={isUpdateRec?.Station}
+        update={async () => {
+          if (!validateForm('Station')) return; 
+          await updateFtn('/lookup', drawerIpnuts?.Station, () =>
+            resetCounteries('Station', () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn('Station', false);
+        }}
+        >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
             <div className="drawer-inpts-container">
@@ -4109,11 +4152,11 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County' isSimple={true}
                     options={selectLokups?.Districts}
-                    value={drawerIpnuts?.Station?.Parentlookup}
-                    onChange={(e) => drawrInptChng('Station', 'Parentlookup', e)}
+                    value={drawerIpnuts?.Station?.Parentlookupid}
+                    onChange={(e) => drawrInptChng('Station', 'Parentlookupid', e)}
                   />
                   {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
-                  <p className="error">{errors?.Station?.parentLookup}</p>
+                  <p className="error">{errors?.Station?.Parentlookupid}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2">
                   +
@@ -4126,9 +4169,10 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox>Active</Checkbox>
+                  <Checkbox checked={drawerIpnuts?.Station?.isactive} 
+                  onChange={(e)=>drawrInptChng('Station','isactive', e.target.checked)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4140,6 +4184,7 @@ function Configuratin() {
               columns={columnStations}
               dataSource={data?.Stations}
               className="drawer-tbl"
+              loading={lookupsloading}
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -4503,7 +4548,7 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} placeholder='Select Lookup type'
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'Parentlookupid', String(value))
                       drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
                     value={drawerIpnuts?.Lookup?.lookuptypeId} />
@@ -4760,7 +4805,7 @@ function Configuratin() {
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'Parentlookupid', String(value))
                       drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
 
@@ -5138,7 +5183,7 @@ function Configuratin() {
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
+                      drawrInptChng('Lookup', 'Parentlookupid', String(value))
                       drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
 
@@ -5263,8 +5308,8 @@ function Configuratin() {
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
-                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
+                      drawrInptChng('Lookup', 'Parentlookupid', String(value))
+                      drawrInptChng('Lookup', 'Parentlookupid', String(value))
                     }}
 
                   />
@@ -5549,7 +5594,7 @@ function Configuratin() {
                 <p>Display Name:</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
                     className="inp"
@@ -5565,7 +5610,7 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('ClaimType', 'isactive', e.target.checked)}
@@ -5649,7 +5694,7 @@ function Configuratin() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Claim Type</p>
+                <p>Schemes</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
@@ -5668,7 +5713,7 @@ function Configuratin() {
                 <p>Display Name:</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
                     className="inp"
@@ -5684,7 +5729,7 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('Schemes', 'isactive', e.target.checked)}
@@ -5946,8 +5991,7 @@ function Configuratin() {
                     disabled={true}
                     options={lookupsType}
                     onChange={(value) => {
-                      drawrInptChng("Lookup", "Parentlookup", String(value));
-                      drawrInptChng("Lookup", "lookuptypeId", String(value));
+                   
                     }}
                   />
                   <h1 className="error-text"></h1>
@@ -6084,8 +6128,6 @@ function Configuratin() {
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
-                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
 
                   />
@@ -6703,8 +6745,6 @@ function Configuratin() {
 
                     disabled={true}
                     options={lookupsType} onChange={(value) => {
-                      drawrInptChng('Lookup', 'Parentlookup', String(value))
-                      drawrInptChng('Lookup', 'lookuptypeId', String(value))
                     }}
 
                   />
@@ -6763,7 +6803,7 @@ function Configuratin() {
                 <p></p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Checkbox
                     onChange={(e) => drawrInptChng('SpokenLanguages', 'isactive', e.target.checked)}
