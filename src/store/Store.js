@@ -12,6 +12,7 @@ import partnerReducer from "../features/PartnersSlice";
 import childrenReducer from "../features/ChildrenSlice";
 import refreshReducer from '../features/RefreshSlice';
 import contactTypeReducer from "../features/ContactTypeSlice";
+import contactReducer from "../features/ContactSlice"
 
 const store = configureStore({
   reducer: {
@@ -24,6 +25,7 @@ const store = configureStore({
     children: childrenReducer, 
     refresh: refreshReducer,
     contactType: contactTypeReducer,
+    contact: contactReducer,
   },
 });
 

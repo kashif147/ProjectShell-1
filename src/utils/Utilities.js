@@ -7,6 +7,7 @@ export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 
 
 export const insertDataFtn = async (url, data, successNotification, failureNotification,callback) => {
+
   const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
     const response = await axios.post(baseURL+url, data, {
@@ -14,10 +15,10 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
         'Content-Type': 'application/json',
         maxBodyLength: Infinity,
         Authorization: `Bearer ${token}`, 
-      },
+    },
     });
     
-    console.log({ successNotification }, response?.status);
+    console.log({ successNotification }, response,"2221");
     
     if (response.status === 201) { // Strict equality check
       
@@ -26,11 +27,11 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
       return
       
     } else {
-      return MyAlert('error', `${failureNotification}`);
+      return MyAlert('error', `${failureNotification}`,response?.data?.error);
     }
   } catch (error) {
-    console.error(error,'222');
-    MyAlert('error', failureNotification); 
+    console.error(error?.response,'222');
+    MyAlert('error', failureNotification,error?.response?.data?.error); 
 
   }
 };

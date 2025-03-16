@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useState,useEffect } from "react";
 import { Button, Drawer, Space, Pagination, Input, Table, Checkbox } from "antd";
 import MySelect from "./MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
@@ -9,11 +9,15 @@ import MyDatePicker from "./MyDatePicker";
 import TextArea from "antd/es/input/TextArea";
 import { FaUserAlt } from "react-icons/fa";
 import { BiRefresh } from "react-icons/bi";
+import { useDispatch, useSelector } from 'react-redux';
 import '../../styles/MyDrawer.css'
 import { useTableColumns } from '../../context/TableColumnsContext ';
+import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
+import { getContactTypes } from "../../features/ContactTypeSlice";
 function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total = 7, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
-  const { selectLokups, lookupsForSelect } = useTableColumns();
+  const { selectLokups, lookupsForSelect,contactTypes } = useTableColumns();
+  const dispatch = useDispatch()
   const drawerInputsInitalValues = {
     Contacts: {
       ContactName: "",
@@ -34,6 +38,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   const onChange = (pageNumber) => {
     console.log('Page: ', pageNumber);
   };
+   useEffect(() => {
+      dispatch(getContactTypes());
+    }, [dispatch]);
   const [contactDrawer, setcontactDrawer] = useState(false)
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const [isPayment, setisPayment] = useState(false)
@@ -99,7 +106,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   const [isUpdate, setisUpdate] = useState();
 
   const validateSolicitorForm = () => {
-    debugger
     let newErrors = { Solicitors: {} };
 
     // Required fields
@@ -438,10 +444,20 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     },
 
   ];
+  const resetCounteries = (drawer, callback) => {
+    setdrawerIpnuts((prevState) => ({
+      ...prevState,
+      [drawer]: drawerInputsInitalValues[drawer],
+    }));
+    if (callback & typeof callback === 'function') {
+      callback()
+    }
+  };
   const addFtn = () => {
-    debugger
-    //  if(validateSolicitorForm()) return;
-    validateSolicitorForm()
+   if(!validateSolicitorForm())return
+   insertDataFtn(`/contacttype`, drawerIpnuts?.Solicitors, 'Data inserted successfully:', 'Data did not insert:', () => {
+    resetCounteries('Solicitors')
+  })
   }
   return (
     <Drawer
@@ -553,20 +569,34 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
               Close
             </Button>
-            {/* <Button className="butn primary-btn" 
-          onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
-            {isEdit == true ? "Save" : 'Add'}
-          </Button> */}
+            
             <Button className="butn primary-btn"
               onClick={isUpdate?.Contacts == true ? update : addFtn}
               onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
-              {isUpdate?.Contacts == true ? "Save1" : 'Add1'}
+              {isUpdate?.Contacts == true ? "Save" : 'Add'}
             </Button>
           </Space>
         }
 
       >
         <div className="drawer-main-cntainer">
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container" style={{ width: "25%" }}>
+              <p>Lookup for</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <MySelect
+                  isSimple={true}
+                  placeholder={title}
+                  value={drawerIpnuts?.Solicitors?.ContactTypeID}
+                  options={selectLokups?.contactTypes}
+                />
+                <p className="error">{errors?.Solicitors?.ContactTypeID}</p>
+              </div>
+            </div>
+          </div>
           <div className="drawer-inpts-container">
             <div className="drawer-lbl-container" style={{ width: "25%" }}>
               <p>Contact Type :</p>
@@ -577,8 +607,8 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
                 <MySelect
                   isSimple={true}
                   placeholder="Select Contact type"
-                  disabled={true}
                   value={drawerIpnuts?.Solicitors?.ContactTypeID}
+                  options={selectLokups?.contactTypes}
                 />
                 <p className="error">{errors?.Solicitors?.ContactTypeID}</p>
               </div>
