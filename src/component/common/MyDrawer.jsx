@@ -1,4 +1,4 @@
-import { React, useState,useEffect } from "react";
+import { React, useState, useEffect } from "react";
 import { Button, Drawer, Space, Pagination, Input, Table, Checkbox } from "antd";
 import MySelect from "./MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
@@ -15,11 +15,15 @@ import { useTableColumns } from '../../context/TableColumnsContext ';
 import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
 import { getContactTypes } from "../../features/ContactTypeSlice";
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, total = 7, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false }) {
-  const { selectLokups, lookupsForSelect,contactTypes } = useTableColumns();
+import MyConfirm from "../common/MyConfirm";
+import { deleteFtn } from "../../utils/Utilities";
+import { getContacts } from "../../features/ContactSlice";
+import { baseURL } from "../../utils/Utilities";
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true  }) {
+  const { selectLokups, lookupsForSelect, contactTypes } = useTableColumns();
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
-    Contacts: {
+    Solicitors: {
       ContactName: "",
       ContactPhone: "",
       ContactEmail: "",
@@ -35,12 +39,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     },
   }
 
-  const onChange = (pageNumber) => {
-    console.log('Page: ', pageNumber);
-  };
-   useEffect(() => {
-      dispatch(getContactTypes());
-    }, [dispatch]);
+  useEffect(() => {
+    dispatch(getContactTypes());
+  }, [dispatch]);
   const [contactDrawer, setcontactDrawer] = useState(false)
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const [isPayment, setisPayment] = useState(false)
@@ -51,7 +52,8 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     timeDur: 'Day'
   })
   const [contact, setContact] = useState({
-    ContactName: "",
+    Surname: "",
+    Forename: "",
     ContactPhone: "",
     ContactEmail: "",
     ContactAddress: {
@@ -92,54 +94,64 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   };
 
   const drawrInptChng = (drawer, field, value) => {
-    setdrawerIpnuts((prevState) => ({
-      ...prevState,
-      [drawer]: {
-        ...prevState[drawer],
-        [field]: value,
-      },
-    }));
-    console.log(drawerIpnuts[drawer], "8889")
-  }
+    setdrawerIpnuts((prevState) => {
+      // Check if the field is nested inside ContactAddress
+      if (field.includes(".")) {
+        const [parent, child] = field.split(".");
+        return {
+          ...prevState,
+          [drawer]: {
+            ...prevState[drawer],
+            [parent]: {
+              ...prevState[drawer][parent], // Preserve existing values
+              [child]: value, // Update only the specific nested field
+            },
+          },
+        };
+      } else {
+        return {
+          ...prevState,
+          [drawer]: {
+            ...prevState[drawer],
+            [field]: value, // Update top-level field
+          },
+        };
+      }
+    });
+
+    console.log(drawerIpnuts[drawer], "8889");
+  };
 
   const [errors, setErrors] = useState();
   const [isUpdate, setisUpdate] = useState();
 
-  const validateSolicitorForm = () => {
-    let newErrors = { Solicitors: {} };
+  const validateSolicitors = (drawerType) => {
+    let newErrors = { [drawerType]: {} };
 
-    // Required fields
-    const requiredFields = [
-      "ContactTypeID",
-      "ContactName",
-      "ContactEmail",
-      "ContactPhone",
-      "ContactAddress.BuildingOrHouse",
-      "ContactAddress.StreetOrRoad",
-      "ContactAddress.AreaOrTown",
-      "ContactAddress.CityCountyOrPostCode",
-      "ContactAddress.Eircode",
-    ];
-
-    requiredFields.forEach((field) => {
-      const fieldPath = field.split(".");
-      let value = drawerIpnuts?.Solicitors;
-
-      // Handle nested fields
-      for (let key of fieldPath) {
-        value = value?.[key];
-        if (value === undefined || value === null || value === "") {
-          newErrors.Solicitors[field] = "Required";
-          break;
-        }
+    if (drawerType === "Solicitors") {
+      if (!drawerIpnuts?.Solicitors?.Forename) {
+        newErrors[drawerType].Forename = "Required";
       }
-    });
-
-    // Set errors only if validation fails
+      if (!drawerIpnuts?.Solicitors?.Surname) {
+        newErrors[drawerType].Surname = "Required";
+      }
+      if (!drawerIpnuts?.Solicitors?.ContactEmail) {
+        newErrors[drawerType].ContactEmail = "Required";
+      }
+      if (!drawerIpnuts?.Solicitors?.ContactPhone) {
+        newErrors[drawerType].ContactPhone = "Required";
+      }
+      if (!drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse) {
+        newErrors[drawerType].BuildingOrHouse = "Required";
+      }
+      if (!drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown) {
+        newErrors[drawerType].AreaOrTown = "Required";
+      }
+    }
+    // Set errors only if there are validation failures
     setErrors(newErrors);
-
-    // Return validation success
-    return Object.keys(newErrors.Solicitors).length === 0;
+    // Check if there are any errors in the object
+    return Object.keys(newErrors[drawerType]).length === 0;
   };
 
   const columnCountry = [
@@ -444,6 +456,138 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     },
 
   ];
+  const { contacts, contactsLoading } = useSelector((state) => state.contact);
+  const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false })
+  const addIdKeyToLookup = (idValue, drawer) => {
+    setdrawerIpnuts((prev) => {
+      if (!prev?.[drawer]) return prev; // Ensure the key exists in state
+
+      return {
+        ...prev,
+        [drawer]: {
+          ...prev[drawer],
+          id: idValue,
+        },
+      };
+    });
+  };
+
+  const [data, setdata] = useState({
+    Solicitors: [],
+  })
+  const IsUpdateFtn = (drawer, value, data) => {
+    if (value == false) {
+      setisUpdateRec((prev) => ({
+        ...prev,
+        [drawer]: false,
+      }));
+      resetCounteries(drawer)
+      return
+    }
+    setisUpdateRec((prev) => ({
+      ...prev,
+      [drawer]: value,
+    }));
+
+    const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce((acc, key) => {
+      if (data.hasOwnProperty(key)) {
+        acc[key] = data[key];
+      }
+      return acc;
+    }, {});
+
+    setdrawerIpnuts((prev) => ({
+      ...prev,
+      [drawer]: {
+        ...prev[drawer],
+        ...filteredData,
+      },
+    }));
+  };
+  const columnsSolicitors = [
+    {
+      title: "Surname",
+      dataIndex: "Surname",
+      key: "Surname",
+    },
+    {
+      title: "Forename",
+      dataIndex: "Forename",
+      key: "Forename",
+    },
+    {
+      title: "Phone",
+      dataIndex: "ContactPhone",
+      key: "ContactPhone",
+    },
+    {
+      title: "Email",
+      dataIndex: "ContactEmail",
+      key: "ContactEmail",
+    },
+    {
+      title: "Building/House",
+      dataIndex: ["ContactAddress", "BuildingOrHouse"],
+      key: "BuildingOrHouse",
+    },
+    {
+      title: "Street/Road",
+      dataIndex: ["ContactAddress", "StreetOrRoad"],
+      key: "StreetOrRoad",
+    },
+    {
+      title: "Area/Town",
+      dataIndex: ["ContactAddress", "AreaOrTown"],
+      key: "AreaOrTown",
+    },
+    {
+      title: "City/Postcode",
+      dataIndex: ["ContactAddress", "CityCountyOrPostCode"],
+      key: "CityCountyOrPostCode",
+    },
+    {
+      title: "Eircode",
+      dataIndex: ["ContactAddress", "Eircode"],
+      key: "Eircode",
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle" >
+          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
+            IsUpdateFtn('Solicitors', !isUpdateRec?.Solicitors, record)
+            addIdKeyToLookup(record?._id, "Solicitors")
+          }} />
+          <AiFillDelete size={16} onClick={() =>
+            MyConfirm({
+              title: 'Confirm Deletion',
+              message: 'Do You Want To Delete This Item?',
+              onConfirm: async () => {
+                await deleteFtn(`${baseURL}/contact`, record?._id,);
+                dispatch(getContacts())
+              },
+            })
+          } />
+        </Space>
+      ),
+    },
+  ];
+  // useEffect(() => {
+  //   if (contacts && Array.isArray(contacts)) {
+  //     const filteredSolicitors = contacts?.filter((item) => item?.ContactTypeID === '67d91cdf8a2875433c189f65')
+  //     setdata((prevState) => ({
+  //       ...prevState,
+  //       Solicitors: filteredSolicitors,
+  //     }));
+  //   }
+  // }, [contacts])
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
@@ -454,13 +598,15 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     }
   };
   const addFtn = () => {
-   if(!validateSolicitorForm())return
-   insertDataFtn(`/contacttype`, drawerIpnuts?.Solicitors, 'Data inserted successfully:', 'Data did not insert:', () => {
-    resetCounteries('Solicitors')
-  })
+    if (!validateSolicitors('Solicitors')) return;
+    insertDataFtn(`/contact`, drawerIpnuts?.Solicitors,
+      'Data inserted successfully:', 'Data did not insert:', () => {
+        resetCounteries('Solicitors')
+      })
   }
   return (
     <Drawer
+    bodyStyle={{ paddingBottom: "50px", position: "relative" }}
       width={width}
       title={title}
       placement="right"
@@ -551,25 +697,35 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     >
       <div className="">
         {children}
-        {/* {
+        {
           isPagination &&
           (
-            <div className="d-flex justify-content-center align-items-baseline">
-             Total Items: <Pagination showQuickJumper defaultCurrent={1} total={total} onChange={onChange} />
+            <div style={{width:'100%',backgroundColor:'red'}}>
+            <div className="bottom-div">
+              <Pagination
+                 total={total}
+                 showSizeChanger={showSizeChanger}
+                 showQuickJumper={showQuickJumper}
+                 showTotal={(total) => `Total ${total} items`}
+                 onChange={onChange}
+                 pageSize={pageSize}
+              />
+
+            </div>
             </div>
           )
-        } */}
+        }
       </div>
-      <Drawer open={contactDrawer}
+      {/* <Drawer open={contactDrawer}
         onClose={() => setcontactDrawer(!contactDrawer)}
         width="740px"
-        title="Contacts"
+        title="Contacts123"
         extra={
           <Space>
             <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
               Close
             </Button>
-            
+
             <Button className="butn primary-btn"
               onClick={isUpdate?.Contacts == true ? update : addFtn}
               onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
@@ -577,7 +733,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             </Button>
           </Space>
         }
-
       >
         <div className="drawer-main-cntainer">
           <div className="drawer-inpts-container">
@@ -745,8 +900,235 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             />
           </div>
         </div>
-      </Drawer>
+      </Drawer> */}
+      <Drawer open={contactDrawer}
+        onClose={() => setcontactDrawer(!contactDrawer)}
+        width="1040px"
+        title="Contacts"
+        extra={
+          <Space>
+            <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
+              Close
+            </Button>
 
+            <Button className="butn primary-btn"
+              onClick={isUpdate?.Contacts == true ? update : addFtn}
+              onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
+              {isUpdate?.Contacts == true ? "Save" : 'Add'}
+            </Button>
+          </Space>
+        }
+      >
+        {/* <MyDrawer title='Solicitors'
+        open={contactDrawer}
+        isPagination={true}
+        onClose={() => setcontactDrawer(!contactDrawer)}
+        add={() => {
+          if (!validateSolicitors('Solicitors')) return;
+          insertDataFtn(
+            `/contact`,
+            drawerIpnuts?.Solicitors,
+            'Data inserted successfully',
+            'Data did not insert',
+            () => resetCounteries('Solicitors',() => dispatch(getContacts())))
+          dispatch(getContacts())
+          }}
+        update={
+          async () => {
+            if (!validateSolicitors('Solicitors')) return;
+            await updateFtn('/contact', drawerIpnuts?.Solicitors, () => resetCounteries('Solicitors', () => dispatch(getContacts())))
+            dispatch(getAllLookups())
+            IsUpdateFtn('Solicitors', false,)
+          }}
+          isEdit={isUpdateRec?.Solicitors}
+        width={'1020px'}
+      > */}
+        <div className="drawer-main-cntainer">
+          <div className="mb-4 pb-4">
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Contact Type :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} placeholder='Select Contact type'
+                    // disabled={true}
+                    value={drawerIpnuts?.Solicitors?.ContactTypeID}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactTypeID', e)}
+                    options={selectLokups?.contactTypes}
+                  />
+                  <h1 className="error-text">{errors?.Solicitors?.ContactTypeID}</h1>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Title :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect
+                    placeholder='Select Title'
+                    isSimple={true}
+                    options={lookupsForSelect?.Titles}
+                  />
+                  <p className="error text-white">errors?.Solicitors?.Titles</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Forename :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    value={drawerIpnuts?.Solicitors?.Forename}
+                    onChange={(e) => drawrInptChng('Solicitors', 'Forename', e.target.value)}
+                  />
+                  <p className="error">{errors?.Solicitors?.Forename}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Surname :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp"
+                    value={drawerIpnuts?.Solicitors?.Surname}
+                    onChange={(e) => drawrInptChng('Solicitors', 'Surname', e.target.value)}
+                  />
+                  <p className="error">{errors?.Solicitors?.Surname}</p>
+                </div>
+
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Email :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactEmail}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactEmail', e.target.value)}
+                  />
+                  <p className="error">{errors?.Solicitors?.ContactEmail}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Mobile :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactPhone}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactPhone', e.target.value)}
+                  />
+                  <p className="error">{errors?.Solicitors?.ContactPhone}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Building or House :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.BuildingOrHouse', e.target.value)}
+
+                  />
+                  <p className="error">{errors?.Solicitors?.BuildingOrHouse}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Street or Road :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.StreetOrRoad', e.target.value)}
+                  />
+                  <p className="error text-white">errors?.Solicitors?.ContactEmail</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Area or Town :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.AreaOrTown', e.target.value)}
+                  />
+                  <p className="error">{errors?.Solicitors?.AreaOrTown}</p>
+                </div>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>County, City or Postcode :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.CityCountyOrPostCode', e.target.value)}
+                  />
+                </div>
+                {/* <p className="error">{drawerIpnuts}</p> */}
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container" style={{ width: "25%" }}>
+                <p>Eircode :</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.Eircode', e.target.value)}
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+          <div className="mt-4 config-tbl-container">
+            <Table
+              pagination={false}
+              columns={columnsSolicitors}
+              dataSource={data?.Solicitors}
+              loading={contactsLoading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </Drawer>
       <Drawer open={isRecursion}
         onClose={() => setisRecursion(!isRecursion)}
         width="526px"

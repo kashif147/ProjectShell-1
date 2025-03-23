@@ -75,13 +75,13 @@ const beforeUpload = (file) => {
 
 function MyDeatails() {
   const dispatch = useDispatch();
-   useEffect(() => {
-      dispatch(getAllLookups())
-    }, [dispatch])
-  const { ProfileDetails, topSearchData, rowIndex,lookupsData,lookupsForSelect,selectLokups } = useTableColumns();
+  useEffect(() => {
+    dispatch(getAllLookups())
+  }, [dispatch])
+  const { ProfileDetails, topSearchData, rowIndex, lookupsData, lookupsForSelect, selectLokups } = useTableColumns();
   const { partner, partnerloading, error } = useSelector((state) => state.partner);
   const { children, childrenError, childrenLoading } = useSelector((state) => state.children);
-  console.log(selectLokups,"partner")
+  console.log(selectLokups, "partner")
   const {
     register,
     handleSubmit,
@@ -95,9 +95,9 @@ function MyDeatails() {
     "dateOfBirth": "",
     "deceased": false,
     "dateOfDeath": "",
-    "title":"",
-    "forename":"",
-    "surname":""
+    "title": "",
+    "forename": "",
+    "surname": ""
   });
 
   const [iserrors, setIsErrors] = useState({});
@@ -127,22 +127,22 @@ function MyDeatails() {
       console.log("Form Data:", InfDataPartner);
 
       insertDataFtn(
-        "/partner", 
+        "/partner",
         InfDataPartner,
         "Partner added successfully",
         "Failed to submit data", // Failure notification
         () => {
-       dispatch( getPartners())
-       setInfDataPartner({
-        "profileId": "67a1b268a203d65ec4a553e2",
-        "maidenName": "",
-        "dateOfBirth": "",
-        "deceased": false,
-        "dateOfDeath": "",
-        "title":"",
-        "forename":"",
-        "surname":""
-       })
+          dispatch(getPartners())
+          setInfDataPartner({
+            "profileId": "67a1b268a203d65ec4a553e2",
+            "maidenName": "",
+            "dateOfBirth": "",
+            "deceased": false,
+            "dateOfDeath": "",
+            "title": "",
+            "forename": "",
+            "surname": ""
+          })
         }
       );
     } else {
@@ -150,58 +150,58 @@ function MyDeatails() {
       alert("Please fill all required fields correctly.");
     }
   };
-// children
+  // children
 
-const [childrenData, setChildrenData] = useState({
-  profileId: "67a1b268a203d65ec4a553e2",
-  title: "",
-  forename: "",
-  surname: "",
-});
-const [childrenerror, setChildrenError] = useState({});
-const validateChildren = () => {
-  let newErrors = {};
-  if (!childrenData.title) newErrors.title = "title Required";
-  if (!childrenData.forename) newErrors.forename = "forename Required";
-  if (!childrenData.surname) newErrors.surname = "surname Required";
+  const [childrenData, setChildrenData] = useState({
+    profileId: "67a1b268a203d65ec4a553e2",
+    title: "",
+    forename: "",
+    surname: "",
+  });
+  const [childrenerror, setChildrenError] = useState({});
+  const validateChildren = () => {
+    let newErrors = {};
+    if (!childrenData.title) newErrors.title = "title Required";
+    if (!childrenData.forename) newErrors.forename = "forename Required";
+    if (!childrenData.surname) newErrors.surname = "surname Required";
 
-  setChildrenError(newErrors);
-  return Object.keys(newErrors).length === 0;
-};
-const handleInputChangeChildren = (e) => {
-  const { name, value } = e.target;
-  setChildrenData((prevState) => ({
-    ...prevState,
-    [name]: value,
-  }));
-  setChildrenError((prev) => ({
-    ...prev,
-    [name]: "",
-  }));
-};
+    setChildrenError(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const handleInputChangeChildren = (e) => {
+    const { name, value } = e.target;
+    setChildrenData((prevState) => ({
+      ...prevState,
+      [name]: value,
+    }));
+    setChildrenError((prev) => ({
+      ...prev,
+      [name]: "",
+    }));
+  };
 
-const handleSubmitChildren = (e) => {
-  e.preventDefault();
+  const handleSubmitChildren = (e) => {
+    e.preventDefault();
 
-  if (!validateChildren()) {
-    console.error("Form data is invalid!");
-    return;
-  }
-  insertDataFtn(
-    "/children", 
-    childrenData,
-    "Partner added successfully",
-    "Failed to submit data", // Failure notification
-    () => {
-      dispatch(getChildren()); 
+    if (!validateChildren()) {
+      console.error("Form data is invalid!");
+      return;
     }
-  );
+    insertDataFtn(
+      "/children",
+      childrenData,
+      "Partner added successfully",
+      "Failed to submit data", // Failure notification
+      () => {
+        dispatch(getChildren());
+      }
+    );
 
 
-  
-  setChildrenData({});
-  setChildrenError({});
-};
+
+    setChildrenData({});
+    setChildrenError({});
+  };
   const location = useLocation();
   const profileData = location?.state;
   const [activeTab, setActiveTab] = useState("1");
@@ -344,8 +344,8 @@ const handleSubmitChildren = (e) => {
     }
   }, [ProfileDetails]);
   useEffect(() => {
-    dispatch(getPartners()); 
-    dispatch(getChildren()); 
+    dispatch(getPartners());
+    dispatch(getChildren());
   }, [dispatch]);
   const handleInputChangeWhole = (field, value) => {
     setInfData((prev) => ({
@@ -438,7 +438,7 @@ const handleSubmitChildren = (e) => {
     console.log("radio checked", e.target.value);
     setValue(e.target.value);
   };
-  const inputsChangeFtn = () => {};
+  const inputsChangeFtn = () => { };
   const onCheckboxChange = (e) => {
     setIsChecked(e.target.checked);
   };
@@ -486,14 +486,14 @@ const handleSubmitChildren = (e) => {
     return ageNextBirthday;
   }
   const [regionByParntTyp, setregionByParntTyp] = useState({
-    Districts:[],
-    station:[],
+    Districts: [],
+    station: [],
   })
   const getRegionsByTypAndPrntId = async (data, callback) => {
     try {
       // Get token from localStorage
       const token = localStorage.getItem('token');
-      
+
       // Make the API request
       const response = await axios.get(`${baseURL}/region/RegionTypeID/${data?.RegionTypeID}/ParentRegion/${data?.ParentRegion}`, {
         headers: {
@@ -501,17 +501,18 @@ const handleSubmitChildren = (e) => {
           'Content-Type': 'application/json',
         },
       });
-  
+
       // Check if the RegionTypeID matches and the response status is OK (200)
       if (response.status === 200 && data?.RegionTypeID === "671822bca0072a28aab883e7") {
         setregionByParntTyp(prev => ({
           ...prev,
-          Districts: response.data?.map(i=>({key:i?._id,
-            label:i?.RegionName
+          Districts: response.data?.map(i => ({
+            key: i?._id,
+            label: i?.RegionName
           })),
         }));
       }
-  
+
       // In case the resource is not found, handle the 404 status code as necessary
       if (response.status === 404 && data?.RegionTypeID === "671822bca0072a28aab883e7") {
         setregionByParntTyp(prev => ({
@@ -519,31 +520,32 @@ const handleSubmitChildren = (e) => {
           Districts: [], // You may want to set an empty array or some other value
         }));
       }
-      
-      if(data?.RegionTypeID === "671822c6a0072a28aab883e9"){
-        if(response.status===200){
+
+      if (data?.RegionTypeID === "671822c6a0072a28aab883e9") {
+        if (response.status === 200) {
           setregionByParntTyp(prev => ({
             ...prev,
-            station: response.data?.map(i=>({key:i?._id,
-              label:i?.RegionName
+            station: response.data?.map(i => ({
+              key: i?._id,
+              label: i?.RegionName
             })),
           }));
         }
       }
-  
+
       // If there's a callback, pass the response data to it
       if (callback) {
         callback(null, response.data); // Assuming the callback handles success with (error, data)
       }
-  
+
       return response.data; // Assuming the API returns an array of regions
-  
+
     } catch (error) {
-      console.error(error.response?.data?.message );
+      console.error(error.response?.data?.message);
     }
   };
-  
-  
+
+
   const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
 
   // let ageOnNextBirthday = getNextBirthdayAge(InfData?.dateOfBirth);
@@ -611,11 +613,11 @@ const handleSubmitChildren = (e) => {
       title: "Name",
       // dataIndex: "gardaRegNo",
       // key: "gardaRegNo",
-    render:(items,index)=>(
-      <>
-      {items?.forename} {items?.surname}
-      </>
-    )
+      render: (items, index) => (
+        <>
+          {items?.forename} {items?.surname}
+        </>
+      )
     },
     {
       title: "Date of Birth",
@@ -962,12 +964,11 @@ const handleSubmitChildren = (e) => {
                   <div className='input-cont'>
                     <p className='star'>*</p>
                     <div className='input-sub-con'>
-                   
-                       <MySelect
-                      placeholder='Select Title'
-                      isSimple={true}
-                      options={lookupsForSelect?.Titles}
-                    />
+                      <MySelect
+                        placeholder='Select Title'
+                        isSimple={true}
+                        options={lookupsForSelect?.Titles}
+                      />
                       <h1 className='error-text'></h1>
                     </div>
                   </div>
@@ -1244,7 +1245,7 @@ const handleSubmitChildren = (e) => {
                         placeholder='Select Station'
                         isSimple={true}
                         options={regionByParntTyp?.station}
-                        // onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822bca0072a28aab883e7',ParentRegion:e})}
+                      // onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822bca0072a28aab883e7',ParentRegion:e})}
                       />
                     </div>
                     <Button
@@ -1289,7 +1290,7 @@ const handleSubmitChildren = (e) => {
                       placeholder='Select District'
                       isSimple={true}
                       options={regionByParntTyp?.Districts}
-                      onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822c6a0072a28aab883e9',ParentRegion:e})}
+                      onChange={(e) => getRegionsByTypAndPrntId({ RegionTypeID: '671822c6a0072a28aab883e9', ParentRegion: e })}
                     />
                   </div>
                 </div>
@@ -1303,7 +1304,7 @@ const handleSubmitChildren = (e) => {
                       placeholder='Select Division'
                       isSimple={true}
                       options={selectLokups?.Divisions}
-                      onChange={(e)=>getRegionsByTypAndPrntId({RegionTypeID:'671822bca0072a28aab883e7',ParentRegion:e})}
+                      onChange={(e) => getRegionsByTypAndPrntId({ RegionTypeID: '671822bca0072a28aab883e7', ParentRegion: e })}
                     />
                   </div>
                 </div>
@@ -1778,14 +1779,14 @@ const handleSubmitChildren = (e) => {
                 <div className='inpt-con'>
                   <p className='star'>*</p>
                   <div className='inpt-sub-con'>
-                  <MySelect
+                    <MySelect
                       placeholder='Select Title'
                       isSimple={true}
                       options={lookupsForSelect?.Titles}
                     />
-                      {submitted && iserrors.title && (
-                          <h1 className='error-text'>{iserrors.title}</h1>
-                        )}
+                    {submitted && iserrors.title && (
+                      <h1 className='error-text'>{iserrors.title}</h1>
+                    )}
                   </div>
                   <p className='error'></p>
                 </div>
@@ -1805,8 +1806,8 @@ const handleSubmitChildren = (e) => {
                       onChange={handleInputPartnerChange}
                     />
                     {submitted && iserrors.forename && (
-                          <h1 className='error-text'>{iserrors.forename}</h1>
-                        )}
+                      <h1 className='error-text'>{iserrors.forename}</h1>
+                    )}
                   </div>
                   <p className='error'></p>
                 </div>
@@ -1826,8 +1827,8 @@ const handleSubmitChildren = (e) => {
                       onChange={handleInputPartnerChange}
                     />
                     {submitted && iserrors.surname && (
-                          <h1 className='error-text'>{iserrors.surname}</h1>
-                        )}
+                      <h1 className='error-text'>{iserrors.surname}</h1>
+                    )}
                   </div>
                   <p className='error'></p>
                 </div>
@@ -1847,8 +1848,8 @@ const handleSubmitChildren = (e) => {
                       onChange={handleInputPartnerChange}
                     />
                     {submitted && iserrors.maidenName && (
-                          <h1 className='error-text'>{iserrors.maidenName}</h1>
-                        )}
+                      <h1 className='error-text'>{iserrors.maidenName}</h1>
+                    )}
                   </div>
                   <p className='error'></p>
                 </div>
@@ -1875,9 +1876,9 @@ const handleSubmitChildren = (e) => {
                       }}
                       format='DD/MM/YYYY'
                     />
-                      {submitted && iserrors.dateOfBirth && (
-                          <h1 className='error-text'>{iserrors.dateOfBirth}</h1>
-                        )}
+                    {submitted && iserrors.dateOfBirth && (
+                      <h1 className='error-text'>{iserrors.dateOfBirth}</h1>
+                    )}
                   </div>
                   <p className='error'></p>
                 </div>
@@ -1905,8 +1906,8 @@ const handleSubmitChildren = (e) => {
                       format='DD/MM/YYYY'
                     />
                     {submitted && iserrors.dateMarriage && (
-                          <h1 className='error-text'>{iserrors.dateMarriage}</h1>
-                        )}
+                      <h1 className='error-text'>{iserrors.dateMarriage}</h1>
+                    )}
                   </div>
                   <p className='error'></p>
                 </div>

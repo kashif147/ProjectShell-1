@@ -177,7 +177,7 @@ body {
   background-color: rgba(9, 30, 66, 0.04) !important;
 }
 .nav-link.active {
-  border-bottom: 2px solid #007bff; /* Border color for the active link */
+  border-bottom: 2px solid white; /* Border color for the active link */
   font-weight: bold;
 }
 .checkbox{
@@ -199,6 +199,8 @@ body {
 }
 .Header-border {
   border-bottom: 2px solid #e0e0e0;
+  background-color: var(--mainBlue);
+  color: white !important;
 }
 
 .top-search  input{
@@ -580,7 +582,7 @@ tr {
   vertical-align: middle !important;
 }
 .nav-links-container a {
-  color: rgb(105, 105, 105) !important;
+  color: white !important;
   font-size: 14px !important;
   font-weight: 600 !important;
 }
@@ -593,7 +595,7 @@ tr {
   width: 60px;
   height: 60px;
   size: 60px !important;
-  color: var(--mainBlue) !important;
+  color: white !important;
   text-align: center !important;
 }
 .lookups-main-continer {
@@ -1145,8 +1147,26 @@ color: red !important;
 .top-icon {
   font-size: 40px !important;
   margin-right: 1rem;
-  color: var(--primary-color) !important ;
+  color: white !important ;
 }
 .input-border-active {
   border: 2px solid #007bff !important;
+}
+.drawer-content {
+  position: relative; /* Ensures absolute positioning works */
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.bottom-div {
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%); /* Ensures perfect centering */
+  padding: 8px;
+  color: var(--second) !important;
+  text-align: center;
+  width: 100%; /* Ensures it spans the drawer width */
+  background-color: #f0f0f0; /* Optional: Add a background */
 }

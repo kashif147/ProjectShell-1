@@ -79,23 +79,26 @@ function ProfileHeader() {
                         </div>
                     </Upload>
                 </div>
-
-                <div style={{
-                    display: 'flex',
-                }}>
-                </div>
                 {
                     ProfileDetails?.map((i) => (
 
 
-                        <div className='d-flex  justify-content-center flex-column'>
-                            <div className="centered-text-large">{i?.regNo}</div>
-                            <div className="centered-text">{i?.fullName}</div>
-                            <div className="centered-text">20/06/1979 (36 Y)</div>
-                            <div className="centered-text">Married</div>
+                        <div style={{
+                            display: 'flex',
+                            flexDirection: 'column',
+                            alignItems: 'center', 
+                            // textAlign: 'center', 
+                            fontWeight: 'bold',
+                            fontSize: '14px',
+                            color: '#6B7AAB',
+                        }}>      
+                            <div >{i?.regNo}</div>
+                            <div >{i?.fullName}</div>
+                            <div >20/06/1979 (36 Y)</div>
+                            <div >Married</div>
                             <div className="centered-text-deceased">11/10/2015 (Deceased)</div>
-                            <div className="centered-text">Cases:</div>
-                            <div className="centered-text">Claims:</div>
+                            <div >Cases:</div>
+                            <div >Claims:</div>
 
                         </div>
                     ))

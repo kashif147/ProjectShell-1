@@ -9,11 +9,12 @@ import { IoMdSettings } from "react-icons/io";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
-import { Button,Input } from "antd";
+import { Button, Input } from "antd";
 import { PiPhoneCallBold } from "react-icons/pi";
 import { BiLogOutCircle } from "react-icons/bi";
+import logo from '../../assets/images/gra_logo.png'
 
-const {Search} = Input;
+const { Search } = Input;
 function Header() {
 
   const [token, settoken] = useState(null);
@@ -145,97 +146,93 @@ function Header() {
 
   return (
     <div className="Header-border overflow-y-hidden">
-      <div className=" d-flex justify-content-between align-items-baseline" style={{paddingTop:"8px", paddingBottom:"5px"}}>
-        <nav class="navbar navbar-expand-lg navbar-light ">
-          <button
-            class="navbar-toggler"
-            type="button"
-            data-toggle="collapse"
-            data-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-          >
-            <span class="navbar-toggler-icon"></span>
-          </button>
-          <div class="collapse navbar-collapse" id="navbarNav">
-            <ul class="navbar-nav align-items-baseline" style={{ paddingLeft: "30px" }}>
-              <li className={`${pathname == "/Summary" || pathname == "/Details" ? "activ-link" : ""} nav-item nav-links-container `}>
-                <MyDrowpDown title={"Profile"} items={navLinks} />
-                {/* <Link className="links" to="Configuratin"  state={{ search: "" }}>Profile</Link> */}
-              </li>
-              <li className={`${pathname == "/CasesSummary" || pathname == "/CasesDetails" ? "activ-link" : ""} nav-item nav-links-container `}>
-                <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
-              </li>
-              <li className={`${pathname == "/ClaimSummary" || pathname == "/Claims" ? "activ-link" : ""} nav-item nav-links-container `}>
-                <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
-              </li>
-              <li className={`${pathname == "/CorrespondencesSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
-                <MyDrowpDown title={"Correspondences"} items={CorrespondencesLink} />
-              </li>
-              <li className={`${pathname == "/RosterSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
-                <MyDrowpDown title={"Roster"} items={Roster} />
-              </li>
-              {/* <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Documents"} items={navLinks} />
-              </li> 
-              <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Projects"} items={navLinks} />
-              </li>
-              <li class="nav-item nav-links-container">
-                <MyDrowpDown title={"Roster"} items={navLinks} />
-              </li> */}
-              <li className={`${pathname == "/Transfers" ? "activ-link" : ""} nav-item nav-links-container `}>
-                <Link className="links" to="Transfers" state={{ search: "" }}>Transfer Requests</Link>
-              </li>
-              <li className={`${(pathname == "/Report2" || pathname == "/Report1") ? "activ-link" : ""} nav-item nav-links-container `}>
-                <MyDrowpDown title={"Reports"} items={reportLink} />
-              </li>
-              <li className={`${pathname == "/Configuratin" ? "activ-link" : ""} nav-item nav-links-container `} >
-                <Link className="links" to="Configuratin" state={{ search: "" }}>Configurations</Link>
-              </li>
-            </ul>
-          </div>
-        </nav>
-        <div className="input-container d-flex align-items-center">
-          <Search  placeholder="Reg No" 
-          onChange={(e) => setregNo(e.target.value)}
-          onKeyDown={async (e) => {
-            if (e.key === 'Enter') {
-              filterByRegNo(regNo);
-              await navigate("/Details", {
-                state: {
-                  name: profile?.fullName,
-                  code: profile?.regNo,
-                  search: 'Profile',
-                }
-              });
-            }
-          }}
-           className=" top-search" style={{ marginRight: "1rem" }}
-           
-           />
-           {/* <Link to="/CorrespondencesSummary" state={{ search: "Correspondences" }} */}
-          <PiPhoneCallBold className="top-icon" onClick={()=>{
-            navigate("/CorrespondencesSummary",{
-              state: {
-                search: "Correspondence"
-              },
-            })
-          }}/>
-          <IoNotifications className="top-icon" />
-          <HiMiniQuestionMarkCircle
-            className="top-icon"
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '32px' }}>
+          <img
+            src={logo}
+            alt="Company Logo"
+            width={50}
+            style={{ borderRadius: '10px', }}
+
           />
+          <nav className="navbar navbar-expand-lg navbar-light">
+            <button
+              className="navbar-toggler"
+              type="button"
+              data-toggle="collapse"
+              data-target="#navbarNav"
+              aria-controls="navbarNav"
+              aria-expanded="false"
+              aria-label="Toggle navigation"
+            >
+              <span className="navbar-toggler-icon"></span>
+            </button>
+            <div className="collapse navbar-collapse" id="navbarNav">
+              <ul className="navbar-nav align-items-center" style={{ paddingLeft: "30px" }}>
+                <li className={`${pathname === "/Summary" || pathname === "/Details" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <MyDrowpDown title={"Profile"} items={navLinks} />
+                </li>
+                <li className={`${pathname === "/CasesSummary" || pathname === "/CasesDetails" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
+                </li>
+                <li className={`${pathname === "/ClaimSummary" || pathname === "/Claims" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
+                </li>
+                <li className={`${pathname === "/CorrespondencesSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <MyDrowpDown title={"Correspondences"} items={CorrespondencesLink} />
+                </li>
+                <li className={`${pathname === "/RosterSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <MyDrowpDown title={"Roster"} items={Roster} />
+                </li>
+                <li className={`${pathname === "/Transfers" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <Link className="links" to="Transfers" state={{ search: "" }}>Transfer Requests</Link>
+                </li>
+                <li className={`${pathname === "/Report2" || pathname === "/Report1" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <MyDrowpDown title={"Reports"} items={reportLink} />
+                </li>
+                <li className={`${pathname === "/Configuratin" ? "activ-link" : ""} nav-item nav-links-container`}>
+                  <Link className="links" to="Configuratin" state={{ search: "" }}>Configurations</Link>
+                </li>
+              </ul>
+            </div>
+          </nav>
+        </div>
+        <div className="input-container d-flex align-items-center">
+          <Search
+            placeholder="Reg No"
+            onChange={(e) => setregNo(e.target.value)}
+            onKeyDown={async (e) => {
+              if (e.key === 'Enter') {
+                filterByRegNo(regNo);
+                await navigate("/Details", {
+                  state: {
+                    name: profile?.fullName,
+                    code: profile?.regNo,
+                    search: 'Profile',
+                  }
+                });
+              }
+            }}
+            className="top-search"
+            style={{ marginRight: "1rem" }}
+          />
+          <PiPhoneCallBold
+            className="top-icon"
+            onClick={() => navigate("/CorrespondencesSummary", { state: { search: "Correspondence" } })}
+          />
+          <IoNotifications className="top-icon" />
+          <HiMiniQuestionMarkCircle className="top-icon" />
           <IoMdSettings className="top-icon" />
           <FaUserCircle className="top-icon" />
-
-          <BiLogOutCircle className="top-icon"  onClick={()=>{localStorage.removeItem('token')
-            navigate('/');
-          }} />
+          <BiLogOutCircle
+            className="top-icon"
+            onClick={() => { localStorage.removeItem('token'); navigate('/'); }}
+          />
         </div>
       </div>
     </div>
+
+
   );
 }
 

@@ -34,7 +34,6 @@ function MyDrowpDown({ title, items }) {
           <DownOutlined
             style={{
               cursor: "pointer",
-              color: "black",
               fontSize: "10px",
               fontWeight: "800",
               height: "0.2rem",
