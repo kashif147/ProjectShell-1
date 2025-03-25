@@ -164,39 +164,40 @@ function CreateClaim() {
         },
     
       ]
-    useEffect(() => {
-        let profils;
-        if (ProfileDetails) {
-            profils = {
-                gardaRegNo: ProfileDetails[0]?.regNo,
-                fullname: ProfileDetails[0]?.fullName,
-                forename: ProfileDetails[0]?.forename,
-                surname: ProfileDetails[0]?.surname,
-                dateOfBirth: ProfileDetails[0]?.dateOfBirth,
-                dateRetired: ProfileDetails[0]?.dateRetired == 'N/A' ? null : ProfileDetails[0]?.dateRetired,
-                dateAged65: ProfileDetails[0]?.dateAged65,
-                isDeceased: ProfileDetails[0]?.dateOfDeath == "N/A" ? false : true,
-                dateOfDeath: ProfileDetails[0]?.dateOfDeath == 'N/A' ? null : ProfileDetails[0]?.dateOfDeath,
-                Partnership: ProfileDetails[0]?.Partnership,
-                stationPh: ProfileDetails[0]?.stationPhone,
-                District: ProfileDetails[0]?.district,
-                Division: ProfileDetails[0]?.division,
-                isPensioner: ProfileDetails[0]?.pensionNo ? true : false,
-                pensionNo: ProfileDetails[0]?.pensionNo,
-                duty: ProfileDetails[0]?.duty,
-                rank: ProfileDetails[0]?.rank,
-                graduated: ProfileDetails[0]?.graduated,
-                isGRAMember: ProfileDetails[0]?.graMember ? true : false,
-                dateJoined: ProfileDetails[0]?.dateJoined,
-                isJoined: true,
-                attested: ProfileDetails[0]?.attested,
-                DateLeft: ProfileDetails[0]?.dateLeft,
-                isLeft: true,
-                isAssociateMember: ProfileDetails[0]?.associateMember === "yes" ? true : false,
-            };
-            setInfData(profils);
-        }
-
+      useEffect(() => {
+        if (!ProfileDetails?.length) return;
+    
+        const newProfile = {
+            gardaRegNo: ProfileDetails[0]?.regNo || null,
+            fullname: ProfileDetails[0]?.fullName || "",
+            forename: ProfileDetails[0]?.forename || "",
+            surname: ProfileDetails[0]?.surname || "",
+            dateOfBirth: ProfileDetails[0]?.dateOfBirth || null,
+            dateRetired: ProfileDetails[0]?.dateRetired === "N/A" ? null : ProfileDetails[0]?.dateRetired,
+            dateAged65: ProfileDetails[0]?.dateAged65 || null,
+            isDeceased: ProfileDetails[0]?.dateOfDeath !== "N/A",
+            dateOfDeath: ProfileDetails[0]?.dateOfDeath === "N/A" ? null : ProfileDetails[0]?.dateOfDeath,
+            Partnership: ProfileDetails[0]?.Partnership || "",
+            stationPh: ProfileDetails[0]?.stationPhone || "",
+            District: ProfileDetails[0]?.district || "",
+            Division: ProfileDetails[0]?.division || "",
+            isPensioner: !!ProfileDetails[0]?.pensionNo,
+            pensionNo: ProfileDetails[0]?.pensionNo || "",
+            duty: ProfileDetails[0]?.duty || "",
+            rank: ProfileDetails[0]?.rank || "",
+            graduated: ProfileDetails[0]?.graduated || "",
+            isGRAMember: !!ProfileDetails[0]?.graMember,
+            dateJoined: ProfileDetails[0]?.dateJoined || null,
+            isJoined: true,
+            attested: ProfileDetails[0]?.attested || "",
+            DateLeft: ProfileDetails[0]?.dateLeft || null,
+            isLeft: true,
+            isAssociateMember: ProfileDetails[0]?.associateMember?.toLowerCase() === "yes",
+        };
+    
+        // Only update if the data has changed (prevents re-renders)
+        setInfData(prevData => JSON.stringify(prevData) !== JSON.stringify(newProfile) ? newProfile : prevData);
+    
     }, [ProfileDetails]);
     const handleInputChangeWhole = (field, value) => {
 
@@ -208,9 +209,9 @@ function CreateClaim() {
     console.log(InfData, "77")
     useEffect(() => {
         return () => {
-            setInfData({});
+            setInfData(prevData => (Object.keys(prevData).length ? {} : prevData));
         };
-    }, [location?.pathname]);
+    }, [location.pathname]);
     const [drawer, setdrawer] = useState(false)
     const menu = (
         <Menu>

@@ -23,7 +23,8 @@ function TransferRequests({ open, onClose, isSearch }) {
             name: record.name,
         }),
     };
-    const{getProfile} = useTableColumns();
+    const{ProfileDetails} = useTableColumns();
+    console.log('popo',ProfileDetails)
     const columnCountry = [
         {
             title: 'Transfer Date',
@@ -56,7 +57,7 @@ function TransferRequests({ open, onClose, isSearch }) {
             key: "action",
             align: "center",
             render: (_, record) => (
-                <Space size="middle" style={styles.centeredCell}>
+                <Space size="middle" >
                     <FaEdit size={16} style={{ marginRight: "10px" }} />
                     <AiFillDelete size={16} />
                 </Space>
@@ -68,9 +69,9 @@ function TransferRequests({ open, onClose, isSearch }) {
     const onFormLayoutChange = ({ layout }) => {
         setFormLayout(layout);
     };
-    
+
     return (
-        <MyDrawer title="Transfer Requests" open={open} onClose={onClose}>
+        <MyDrawer title="Transfer Request" open={open} onClose={onClose}>
             <div>
                 {
                     isSearch && (
@@ -82,9 +83,9 @@ function TransferRequests({ open, onClose, isSearch }) {
                     )
                 }
                 <div className="details-drawer mb-4 mt-4">
-                    <p>23458</p>
-                    <p>Jack Smith</p>
-                    <p>Garda</p>
+                    <p>{ProfileDetails?.regNo}</p>
+                    <p>{ProfileDetails?.fullName}</p>
+                    <p>{ProfileDetails?.duty}</p>
                 </div>
 
                 <div className='transfer-main-cont d-flex'>
@@ -227,21 +228,7 @@ function TransferRequests({ open, onClose, isSearch }) {
             </div>
 
         </MyDrawer>
-
     )
 }
-const styles = {
-    // centeredCol: {
-    //   paddingTop: "0.5rem",
-    //   display: "flex",
-    //   justifyContent: "center",
-    //   alignItems: "center",
-    // },
-    // centeredCell: {
-    //   display: "flex",
-    //   alignItems: "center",
-    //   justifyContent: "center",
-    //   height: "100%",
-    // },
-};
+
 export default TransferRequests

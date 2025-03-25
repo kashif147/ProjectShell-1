@@ -86,7 +86,7 @@ function Entry() {
             <Routes>
               <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
-              <Route element={<ProtectedRoute />}>              
+              {/* <Route element={<ProtectedRoute />}>               */}
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
               <Route path="CasesDetails" element={< CasesDetails />} />
@@ -107,7 +107,7 @@ function Entry() {
               <Route path="RosterSummary" element={<RusterSummary />} />
               <Route path="Doucmnets" element={<Doucmnets />} />
               <Route path="Roster" element={<RosterDetails />} />
-              </Route>
+              {/* </Route>  */}
                           </Routes>
           </div>
         </div>

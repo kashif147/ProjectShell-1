@@ -122,7 +122,7 @@ function SimpleMenu({
                     color: "#45669d",
                   }}
                 />
-                Attached1
+                Attached
               </div>
             ) : key === "View" ? (
               <div className="d-flex align-items-baseline">
@@ -160,7 +160,7 @@ function SimpleMenu({
 
             key==='Transfer Requests'?(
               <div className="d-flex align-items-baseline" onClick={()=>{settransferreq(true )
-                // getProfile(record,index)
+                getProfile(record,index)
 
               }}>
               <FaRegArrowAltCircleRight style={{
@@ -168,11 +168,13 @@ function SimpleMenu({
                   marginRight: "10px",
                   color: "#45669d",
                 }} />
-              Transfer Requests
+              Transfer Request
             </div>
             ):
             key==='Career Break'?(
-              <div className="d-flex align-items-baseline" onClick={()=>setcareerBreak(!careerBreak)}>
+              <div className="d-flex align-items-baseline" onClick={()=>{setcareerBreak(!careerBreak)
+                getProfile(record,index)
+              }}>
               <FaUserAltSlash
               style={{
                 fontSize: "12px",

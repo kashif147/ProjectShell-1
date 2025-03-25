@@ -5,10 +5,13 @@ import { Input, Table, Space, Checkbox } from 'antd'
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
+import { useTableColumns } from '../context/TableColumnsContext ';
 const { TextArea } = Input;
+
 
 function CareerBreakDrawer({ open, onClose }) {
     const [selectionType, setSelectionType] = useState('checkbox');
+        const{ProfileDetails} = useTableColumns();
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows) => {
             console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
@@ -54,13 +57,11 @@ function CareerBreakDrawer({ open, onClose }) {
     return (
         <MyDrawer title="Career Break" open={open} onClose={onClose} width='578px' isrecursion={true}>
             <div>
-
                 <div className="details-drawer mb-4 mt-4">
-                    <p>Garda Reg No</p>
-                    <p>Fullname</p>
-                    <p>Garda</p>
+                    <p>{ProfileDetails?.regNo}</p>
+                    <p>{ProfileDetails?.fullName}</p>
+                    <p>{ProfileDetails?.duty}</p>
                 </div>
-
                 <div className='transfer-main-cont'>
 
                     <div className="drawer-inpts-container ">

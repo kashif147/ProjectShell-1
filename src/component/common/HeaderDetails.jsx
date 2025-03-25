@@ -1,4 +1,4 @@
-import { useState, React, useRef, useEffect } from "react";
+import { useState, React, useRef, useEffect,useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePDF } from "react-to-pdf";
 import { FaUser, } from "react-icons/fa6";
@@ -41,7 +41,7 @@ import {
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import '../../styles/HeaderDetails.css'
-import { useDispatch, useSelector } from 'react-redux';
+import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { fetchRegions } from "../../features/RegionSlice";
 import AddNewGarda from "../details/AddNewGarda";
 import TransferRequests from "../TransferRequests";
@@ -116,21 +116,24 @@ console.log(searchFilters,"pppp")
       settrueFilters(filteredResults);
     }
   }
-
+  const currentSearchFilters = useMemo(() => {
+    return searchFilters[screenName];
+  }, [screenName, searchFilters]);
+  
   useEffect(() => {
-    if (screenName && searchFilters[screenName]) {
-      filterSearchableColumns(searchFilters[screenName]);
+    if (screenName && currentSearchFilters) {
+      filterSearchableColumns(currentSearchFilters, globleFilters);
     }
-  }, [screenName, searchFilters, globleFilters]);
-
+  }, [screenName, currentSearchFilters]);
   const genaratePdf = (e) => {
     toPDF();
   };
   const dispatch = useDispatch();
-  const { regions, } = useSelector((state) => state.regions);
+  
+  const regions = useSelector((state) => state.regions.regions, shallowEqual);
   useEffect(() => {
     dispatch(fetchRegions());
-  }, []);
+  }, [dispatch]);
   console.log(regions, 'reg')
   const gender = {
     Male: false,
@@ -461,7 +464,7 @@ console.log(searchFilters,"pppp")
                   }}>
                     Create
                   </Button>
-                  <Button onClick={goBack} className="me-1 gray-btn butn" >
+                  <Button onClick={goBack} className="me-1 gray-btn butn" style={{color:'white'}}>
                     Return to summary
                   </Button>
                   <Button onClick={goBack} className="me-1 gray-btn butn">
@@ -469,7 +472,6 @@ console.log(searchFilters,"pppp")
                   </Button>
                   <Button disabled={rowIndex == 0} onClick={profilPrevBtnFtn} className="me-1 gray-btn butn" >
                     <FaAngleLeft className="deatil-header-icon" />
-
                   </Button>
                   <p className="" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex + 1} of {gridData?.length}</p>
                   <Button disabled={rowIndex == gridData?.length - 1} onClick={profilNextBtnFtn} className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>

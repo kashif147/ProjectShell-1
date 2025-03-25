@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState,useMemo } from "react";
 import { SiActigraph } from "react-icons/si";
 import { FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
@@ -124,7 +124,7 @@ function Configuratin() {
   const { regionTypes, regionTypesLoading } = useSelector((state) => state.regionTypes);
   const { contactTypes, contactTypesloading, error } = useSelector((state) => state.contactType);
   const { contacts, contactsLoading } = useSelector((state) => state.contact);
-  const { lookupsForSelect } = useTableColumns();
+  const { lookupsForSelect, disableFtn, isDisable } = useTableColumns();
   const [drawerOpen, setDrawerOpen] = useState({
     Counteries: false,
     Provinces: false,
@@ -196,273 +196,108 @@ function Configuratin() {
  
   })
 
-  useEffect(() => {
-    if (data?.Provinces) {
-      const transformedData = data.Provinces.map((item) => ({
+  useMemo(() => {
+    if (!data) return;
+  
+    const updatedLookups = {};
+    
+    if (data.Provinces) {
+      updatedLookups.Provinces = data.Provinces.map((item) => ({
         key: item?._id,
         label: item?.lookupname,
       }));
-      setselectLokups((prevState) => ({
-        ...prevState,
-        Provinces: transformedData,
-      }));
     }
-    if (data?.county) {
-      const transformedData = data.county.map((item) => ({
+  
+    if (data.county) {
+      updatedLookups.Counteries = data.county.map((item) => ({
         key: item?._id,
         label: item?.lookupname,
       }));
-      setselectLokups((prevState) => ({
-        ...prevState,
-        Counteries: transformedData,
-      }));
     }
-    if (data?.Divisions) {
-      const transformedData = data.Divisions.map((item) => ({
+  
+    if (data.Divisions) {
+      updatedLookups.Divisions = data.Divisions.map((item) => ({
         key: item?._id,
         label: item?.lookupname,
       }));
-
-      setselectLokups((prevState) => ({
-        ...prevState,
-        Divisions: transformedData,
-      }));
     }
-    if (data?.Districts) {
-      const transformedData = data.Districts.map((item) => ({
+  
+    if (data.Districts) {
+      updatedLookups.Districts = data.Districts.map((item) => ({
         key: item?._id,
         label: item?.lookupname,
       }));
-
-      setselectLokups((prevState) => ({
-        ...prevState,
-        Districts: transformedData,
-      }));
     }
+  
+    setselectLokups((prevState) => ({ ...prevState, ...updatedLookups }));
   }, [data]);
-  useEffect(()=>{
-    dispatch(getContacts())
-  },[dispatch])
-// useEffect(()=>{
-//   if (contacts && Array.isArray(contacts)) {
-//     const filteredSolicitors = contacts?.filter((item) => item?.ContactTypeID=== '67d91cdf8a2875433c189f65')
-//     setdata((prevState) => ({
-//       ...prevState,
-//       Solicitors: filteredSolicitors,
-//     }));
-//   }
-// },[contacts])
-
-  useEffect(() => {
-    if (lookups && Array.isArray(lookups)) {
-      const filteredGender = lookups?.filter((item) => item?.lookuptypeId?._id === '674a1977cc0986f64ca36fc6')
+  
+  useMemo(() => {
+    if (contacts && Array.isArray(contacts)) {
       setdata((prevState) => ({
         ...prevState,
-        gender: filteredGender,
+        Solicitors: contacts.filter((item) => item?.ContactTypeID === '67d91cdf8a2875433c189f65'),
       }));
     }
-    if (lookups && Array.isArray(lookups)) {
-      const FProjectTypes = lookups?.filter((item) => item?.lookuptypeId?._id === '67d67c138a2875433c182345')
-      setdata((prevState) => ({
-        ...prevState,
-        ProjectTypes: FProjectTypes,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredDuties = lookups?.filter((item) => item?.lookuptypeId?._id === '674a219fcc0986f64ca3701b')
-      setdata((prevState) => ({
-        ...prevState,
-        Duties: filteredDuties,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredMaritalStatus = lookups?.filter((item) => item?.lookuptypeId?._id === '67b434ccc51214d371b7c0d1')
-      setlookupsData((prevState) => ({
-        ...prevState,
-        MaritalStatus: filteredMaritalStatus,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredCounty = lookups.filter((item) => item?.lookuptypeId?._id === '67bf3d63e314eba2c210517f');
-      setdata((prevState) => ({
-        ...prevState,
-        county: filteredCounty,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredDivision = lookups.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
-
-      setdata((prevState) => ({
-        ...prevState,
-        Divisions: filteredDivision,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const CitiesDivision = lookups.filter((item) => item.lookuptypeId?._id === '67c57868a8320b14514d38ca');
-
-      setdata((prevState) => ({
-        ...prevState,
-        Cities: CitiesDivision,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FBoards = lookups.filter((item) => item.lookuptypeId?._id === '67c947b6f41d37131f79b1e8');
-      setdata((prevState) => ({
-        ...prevState,
-        Boards: FBoards,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FCouncils = lookups.filter((item) => item.lookuptypeId?._id === '67c96d8af41d37131f79b37a');
-      setdata((prevState) => ({
-        ...prevState,
-        Councils: FCouncils,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FCorrespondenceType = lookups.filter((item) => item.lookuptypeId?._id === '67ca9528a5cd03df6e08c14d');
-      setdata((prevState) => ({
-        ...prevState,
-        CorrespondenceType: FCorrespondenceType,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FStation = lookups.filter((item) => item.lookuptypeId?._id === '67d252f97c8b9c538a209b81');
-      setdata((prevState) => ({
-        ...prevState,
-        Stations: FStation,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FDocumentType = lookups.filter((item) => item.lookuptypeId?._id === '67ca9adda5cd03df6e08c202');
-      setdata((prevState) => ({
-        ...prevState,
-        DocumentType: FDocumentType,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FClaimType = lookups.filter((item) => item.lookuptypeId?._id === '67caa10ba5cd03df6e08c29e');
-      setdata((prevState) => ({
-        ...prevState,
-        ClaimType: FClaimType,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FSchemes = lookups.filter((item) => item.lookuptypeId?._id === '67ce8fda4055ac8c72b37e3b');
-      setdata((prevState) => ({
-        ...prevState,
-        Schemes: FSchemes,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FReasons = lookups.filter((item) => item.lookuptypeId?._id === '67ce93394055ac8c72b37ec0');
-      setdata((prevState) => ({
-        ...prevState,
-        Reasons: FReasons,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredProvinces = lookups.filter((item) => item.lookuptypeId?._id === '67bf243ce314eba2c2105098');
-      setdata((prevState) => ({
-        ...prevState,
-        Provinces: filteredProvinces,
-      }));
-    }
-
-    if (lookups && Array.isArray(lookups)) {
-      const filteredDistricts = lookups.filter((item) => item.lookuptypeId?._id === '67bf4317e314eba2c21051dc');
-      setdata((prevState) => ({
-        ...prevState,
-        Districts: filteredDistricts,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredSpokenLanguages = lookups.filter((item) => item.lookuptypeId?._id === '67d572f28a2875433c182245');
-      setdata((prevState) => ({
-        ...prevState,
-        SpokenLanguages: filteredSpokenLanguages,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredTrainings = lookups.filter((item) => item.lookuptypeId?._id === '67d680048a2875433c1823fd');
-      setdata((prevState) => ({
-        ...prevState,
-        Trainings: filteredTrainings,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const filteredRanks = lookups.filter((item) => item.lookuptypeId?._id === '67ac73c693e73711692bf859');
-      setdata((prevState) => ({
-        ...prevState,
-        Ranks: filteredRanks,
-      }));
-    }
-    if (lookups && Array.isArray(lookups)) {
-      const FRosterType = lookups.filter((item) => item.lookuptypeId?._id === '67d69c6f8a2875433c182815');
-      setdata((prevState) => ({
-        ...prevState,
-        RosterType: FRosterType,
-      }));
-    }
-  }, [lookups])
-
-  useEffect(() => {
-
-
+  }, [contacts]);
+  
+  useMemo(() => {
+    if (!lookups || !Array.isArray(lookups)) return;
+  
+    const lookupFilters = [
+      { key: "gender", id: "674a1977cc0986f64ca36fc6" },
+      { key: "ProjectTypes", id: "67d67c138a2875433c182345" },
+      { key: "Duties", id: "674a219fcc0986f64ca3701b" },
+      { key: "MaritalStatus", id: "67b434ccc51214d371b7c0d1" },
+      { key: "county", id: "67bf3d63e314eba2c210517f" },
+      { key: "Divisions", id: "67bf4317e314eba2c21051dc" },
+      { key: "Cities", id: "67c57868a8320b14514d38ca" },
+      { key: "Boards", id: "67c947b6f41d37131f79b1e8" },
+      { key: "Councils", id: "67c96d8af41d37131f79b37a" },
+      { key: "CorrespondenceType", id: "67ca9528a5cd03df6e08c14d" },
+      { key: "Stations", id: "67d252f97c8b9c538a209b81" },
+      { key: "DocumentType", id: "67ca9adda5cd03df6e08c202" },
+      { key: "ClaimType", id: "67caa10ba5cd03df6e08c29e" },
+      { key: "Schemes", id: "67ce8fda4055ac8c72b37e3b" },
+      { key: "Reasons", id: "67ce93394055ac8c72b37ec0" },
+      { key: "Provinces", id: "67bf243ce314eba2c2105098" },
+      { key: "Districts", id: "67bf4317e314eba2c21051dc" },
+      { key: "SpokenLanguages", id: "67d572f28a2875433c182245" },
+      { key: "Trainings", id: "67d680048a2875433c1823fd" },
+      { key: "Ranks", id: "67ac73c693e73711692bf859" },
+      { key: "RosterType", id: "67d69c6f8a2875433c182815" },
+    ];
+  
+    const filteredData = lookupFilters.reduce((acc, { key, id }) => {
+      acc[key] = lookups.filter((item) => item?.lookuptypeId?._id === id);
+      return acc;
+    }, {});
+  
+    setdata((prevState) => ({ ...prevState, ...filteredData }));
+  }, [lookups]);
+  
+  useMemo(() => {
     if (regions && Array.isArray(regions)) {
-
-      const filteredStations = regions.filter((item) => item.RegionTypeID === '671822c6a0072a28aab883e9')
-
       setdata((prevState) => ({
         ...prevState,
-        Stations: filteredStations,
+        Stations: regions.filter((item) => item.RegionTypeID === '671822c6a0072a28aab883e9'),
       }));
     }
   }, [regions]);
+  
   useEffect(() => {
-    dispatch(getAllRegionTypes())
-  }, [dispatch])
-  useEffect(() => {
+    dispatch(getContacts());
+    dispatch(getAllRegionTypes());
     dispatch(getContactTypes());
   }, [dispatch]);
-  console.log(contactTypes, "ppppp")
-  useEffect(() => {
-
-    if (lookups && Array.isArray(lookups)) {
-      const filteredTitles = lookups?.filter((item) => item?.lookuptypeId?._id === '675fc362e9640143bfc38d28')
-      setdata((prevState) => ({
-        ...prevState,
-        Titles: filteredTitles,
-      }));
-    }
-  }, [lookups])
-  const [drawer, setdrawer] = useState(false)
-  useEffect(() => {
-    dispatch(fetchRegions());
-
-  }, [dispatch]);
-  const [lookupsType, setLookupsType] = useState([]);
-  useEffect(() => {
-    dispatch(getAllLookups());
-  }, [dispatch]);
-  useEffect(() => {
-    const updatedLookupsType = lookupsTypes?.map(item => ({
-      key: item._id,
-      label: item.lookuptype
-    }));
-
-    setLookupsType(updatedLookupsType);
-  }, [lookupsTypes]);
-  useEffect(() => {
-    dispatch(getLookupTypes())
-  }, [dispatch])
+  
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
     ReigonType: "",
     DisplayName: "",
     HasChildren: "",
   });
-
+  const [lookupsType, setLookupsType] = useState([]);
   const [genderData, setGenderData] = useState({
     ShortName: "",
     DisplayName: "",
@@ -639,12 +474,21 @@ function Configuratin() {
   };
 
   const openCloseDrawerFtn = (name) => {
-    setDrawerOpen((prevState) => ({
-      ...prevState,
-      [name]: !prevState[name]
-    }))
-  }
-  // console.log(,drawerOpen?.Schemes,"ppp")
+    setDrawerOpen((prevState) => {
+      const wasOpen = prevState[name]; // Check if it was open before
+      const newState = {
+        ...prevState,
+        [name]: !prevState[name],
+      };
+      if (wasOpen) {
+        disableFtn(true); // Execute only when closing
+      }
+      return newState;
+    });
+    setErrors({});
+  };
+
+
   const handleInputChange4 = (name4, value4) => {
     setSubscriptionData((prevState4) => ({
       ...prevState4,
@@ -783,7 +627,7 @@ function Configuratin() {
       key: 'DisplayName',
 
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}></Checkbox>
+        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
       )
     },
     {
@@ -840,7 +684,7 @@ function Configuratin() {
       dataIndex: 'isactive',
       key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -903,7 +747,7 @@ function Configuratin() {
       dataIndex: 'isactive',
       key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -950,7 +794,7 @@ function Configuratin() {
       title: 'Active',
 
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -1012,7 +856,7 @@ function Configuratin() {
     {
       title: 'Active',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1074,7 +918,7 @@ function Configuratin() {
       title: 'Active',
       dataIndex: 'Active',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -1130,7 +974,7 @@ function Configuratin() {
     },
     {
       title: 'Active',
-      render: (record) => <Checkbox checked={record?.isactive} ></Checkbox>
+      render: (record) => <Checkbox disabled={isDisable} checked={record?.isactive} ></Checkbox>
     },
 
     {
@@ -1187,7 +1031,7 @@ function Configuratin() {
       dataIndex: 'isActive',
       key: 'isActive',
       render: (index, record) => (
-        <Checkbox checked={record?.isActive}>
+        <Checkbox disabled={isDisable} checked={record?.isActive}>
 
         </Checkbox>
       )
@@ -1230,7 +1074,7 @@ function Configuratin() {
       key: 'code',
     },
     {
-      title: 'Lookup Type ',
+      title: 'Name',
       dataIndex: 'lookuptype',
       key: 'lookuptype',
     },
@@ -1245,7 +1089,7 @@ function Configuratin() {
       dataIndex: 'isactive',
       key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -1300,7 +1144,7 @@ function Configuratin() {
       dataIndex: 'isactive',
       key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
 
         </Checkbox>
       )
@@ -1372,7 +1216,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1381,7 +1225,7 @@ function Configuratin() {
       dataIndex: 'isactive',
       key: 'isactive',
       render: (index, record) => (
-        <Checkbox checked={record?.isactive}>
+        <Checkbox disabled={isDisable} checked={record?.isactive}>
         </Checkbox>
       )
     },
@@ -1441,7 +1285,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1510,7 +1354,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1579,7 +1423,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1648,7 +1492,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1683,7 +1527,7 @@ function Configuratin() {
               onConfirm: async () => {
                 await deleteFtn(`${baseURL}/Lookup`, record?._id,);
                 dispatch(getAllLookups())
-                resetCounteries('SpokenLanguages')
+                resetCounteries('ProjectTypes')
               },
             })
           } />
@@ -1717,7 +1561,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1786,7 +1630,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1849,7 +1693,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'Lookup Name',
+      title: 'Councils',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1909,7 +1753,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'Lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -1980,7 +1824,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -2054,7 +1898,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -2124,7 +1968,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -2257,7 +2101,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'Lookup Name',
+      title: 'Name',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -3095,7 +2939,7 @@ function Configuratin() {
     { title: 'Code', dataIndex: 'code', key: 'code', sorter: (a, b) => a.code.localeCompare(b.code), sortDirections: ['ascend', 'descend'] },
     { title: 'Lookup Type', dataIndex: 'lookuptype', key: 'lookuptype', render: (_, record) => record?.lookuptypeId?.lookuptype },
     { title: 'Display Name', dataIndex: 'DisplayName', key: 'DisplayName' },
-    { title: 'Lookup Name', dataIndex: 'lookupname', key: 'lookupname' },
+    { title: 'Name', dataIndex: 'lookupname', key: 'lookupname' },
     { title: 'Active', dataIndex: 'isactive', key: 'isactive', render: (_, record) => <Checkbox checked={record?.isactive} /> },
     {
       title: <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
@@ -3192,7 +3036,6 @@ function Configuratin() {
       ],
     },
   ];
-
   return (
     <div>
       <div className="search-inpt">
@@ -3229,6 +3072,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Short Name</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter short name"
             onChange={(e) => handleInputChange3("ShortName", e.target.value)}
           />
@@ -3236,6 +3080,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Display Name</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter display name"
             onChange={(e) => handleInputChange3("DisplayName", e.target.value)}
           />
@@ -3243,6 +3088,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Alpha</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter alpha"
             onChange={(e) => handleInputChange3("Alpha", e.target.value)}
           />
@@ -3250,11 +3096,13 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Beta</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter Beta"
             onChange={(e) => handleInputChange3("Beta", e.target.value)}
           />
         </div>
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3320,6 +3168,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Short Name</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter short name"
             onChange={(e) => handleInputChange2("ShortName", e.target.value)}
           />
@@ -3327,6 +3176,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Display Name</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter display name"
             onChange={(e) => handleInputChange2("DisplayName", e.target.value)}
           />
@@ -3334,6 +3184,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Alpha</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter alpha"
             onChange={(e) => handleInputChange2("Alpha", e.target.value)}
           />
@@ -3341,11 +3192,13 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Beta</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter Beta"
             onChange={(e) => handleInputChange2("Beta", e.target.value)}
           />
         </div>
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3409,10 +3262,12 @@ function Configuratin() {
       >
         <div className="input-group">
           <p className="inpt-lbl">Dummy Field</p>
-          <Input placeholder="Please enter dummy field" />
+          <Input
+          disabled={isDisable} placeholder="Please enter dummy field" />
         </div>
         {/* Add more input fields as required */}
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3438,6 +3293,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Short Name</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter short name"
             onChange={(e) => handleInputChange4("ShortName", e.target.value)}
           />
@@ -3445,6 +3301,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Display Name</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter display name"
             onChange={(e) => handleInputChange4("DisplayName", e.target.value)}
           />
@@ -3452,6 +3309,7 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Alpha</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter alpha"
             onChange={(e) => handleInputChange4("Alpha", e.target.value)}
           />
@@ -3459,11 +3317,13 @@ function Configuratin() {
         <div className="input-group">
           <p className="inpt-lbl">Beta</p>
           <Input
+          disabled={isDisable}
             placeholder="Please enter Beta"
             onChange={(e) => handleInputChange4("Beta", e.target.value)}
           />
         </div>
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3534,6 +3394,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">RegNo</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter RegNo"
               onChange={(e) => handleInputChange7("RegNo", e.target.value)}
             />
@@ -3542,6 +3403,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Name</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Name"
               onChange={(e) => handleInputChange7("Name", e.target.value)}
             />
@@ -3550,6 +3412,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Rank</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Rank"
               onChange={(e) => handleInputChange7("Rank", e.target.value)}
             />
@@ -3558,6 +3421,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Duty</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Duty"
               onChange={(e) => handleInputChange7("Duty", e.target.value)}
             />
@@ -3566,6 +3430,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Station</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Station"
               onChange={(e) => handleInputChange7("Station", e.target.value)}
             />
@@ -3574,6 +3439,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">District</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter District"
               onChange={(e) => handleInputChange7("District", e.target.value)}
             />
@@ -3582,6 +3448,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Division</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Division"
               onChange={(e) => handleInputChange7("Division", e.target.value)}
             />
@@ -3590,6 +3457,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Address</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Address"
               onChange={(e) => handleInputChange7("Address", e.target.value)}
             />
@@ -3598,6 +3466,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Status</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Status"
               onChange={(e) => handleInputChange7("Status", e.target.value)}
             />
@@ -3606,6 +3475,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Updated</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Updated"
               onChange={(e) => handleInputChange7("Updated", e.target.value)}
             />
@@ -3614,6 +3484,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Alpha</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Alpha"
               onChange={(e) => handleInputChange7("alpha", e.target.value)}
             />
@@ -3622,6 +3493,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Beta</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Beta"
               onChange={(e) => handleInputChange7("beta", e.target.value)}
             />
@@ -3630,6 +3502,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Giga</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter Giga"
               onChange={(e) => handleInputChange7("giga", e.target.value)}
             />
@@ -3637,6 +3510,7 @@ function Configuratin() {
         </MyDrawer>
 
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3709,6 +3583,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Reigon type</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter RegionType"
               onChange={(e) => handleInputChange00("RegionType", e.target.value)}
             />
@@ -3717,6 +3592,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Display Name</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter DisplayName"
               onChange={(e) => handleInputChange00("DisplayName", e.target.value)}
             />
@@ -3726,6 +3602,7 @@ function Configuratin() {
 
 
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3798,6 +3675,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Reigon type</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter ContactType"
               onChange={(e) => handleInputChange01("ContactType", e.target.value)}
             />
@@ -3806,6 +3684,7 @@ function Configuratin() {
           <div className="input-group">
             <p className="inpt-lbl">Display Name</p>
             <Input
+            disabled={isDisable}
               placeholder="Please enter DisplayName"
               onChange={(e) => handleInputChange01("DisplayName", e.target.value)}
             />
@@ -3815,6 +3694,7 @@ function Configuratin() {
 
 
         <Input
+        disabled={isDisable}
           placeholder="Search..."
           style={{ marginBottom: "5px" }}
           suffix={<SearchOutlined />}
@@ -3908,7 +3788,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Counteries', 'code', e.target.value)}
                     value={drawerIpnuts?.Counteries?.code} />
                   <p className="error">{errors?.Counteries?.code}</p>
@@ -3922,7 +3803,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Counteries', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Counteries?.lookupname} />
                   <p className="error">{errors?.Counteries?.lookupname}</p>
@@ -3936,7 +3818,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Counteries?.DisplayName} />
                   <p className="error text-white">txt</p>
@@ -3952,6 +3835,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <MySelect isSimple={true} options={selectLokups?.Provinces}
+                  disabled={isDisable}
                     onChange={(e) => {
                       drawrInptChng('Counteries', 'Parentlookupid', e)
                     }}
@@ -4039,7 +3923,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'code', e.target.value)}
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Provinces', 'code', e.target.value)}
                     value={drawerIpnuts?.Provinces?.code
                     } />
                   <p className="error">{errors?.Provinces?.code}</p>
@@ -4053,7 +3938,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Provinces', 'lookupname', e.target.value)}
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Provinces', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Provinces?.lookupname} />
                   <p className="error">{errors?.Provinces?.lookupname}</p>
                 </div>
@@ -4066,7 +3952,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Provinces?.DisplayName} />
                 </div>
@@ -4080,7 +3967,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox onChange={(e) => drawrInptChng('Provinces', 'isactive', e.target.checked)}
+                  <Checkbox disabled={isDisable} onChange={(e) => drawrInptChng('Provinces', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Provinces?.isactive}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4153,7 +4040,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Cities', 'code', e.target.value)}
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Cities', 'code', e.target.value)}
                     value={drawerIpnuts?.Cities?.code} />
                   <h1 className="error-text">{errors?.Cities?.code}</h1>
                 </div>
@@ -4167,7 +4055,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => {
 
                       drawrInptChng('Cities', 'lookupname', e.target.value)
@@ -4183,7 +4072,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Cities', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Cities?.DisplayName} />
                 </div>
@@ -4213,7 +4103,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Cities?.isactive} onChange={(e) => drawrInptChng('Cities', 'isactive', e.target.checked)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Cities?.isactive} onChange={(e) => drawrInptChng('Cities', 'isactive', e.target.checked)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4266,7 +4156,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Counteries', 'RegionCode', e.target.value)} value={drawerIpnuts?.Counteries?.RegionCode} />
                   <h1 className="error-text"></h1>
                 </div>
                 <p className="error"></p>
@@ -4282,7 +4173,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   {/* <MySelect placeholder='Select County' isSimple={true} /> */}
-                  <Input className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e)=>drawrInptChng('Counteries','DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName}  />
                 </div>
                 <p className="error"></p>
               </div>
@@ -4294,7 +4186,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -4318,7 +4211,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.PostCode?.isactive} onChange={(e) => drawrInptChng(e.target.checked)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.PostCode?.isactive} onChange={(e) => drawrInptChng(e.target.checked)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4382,7 +4275,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Districts', 'code', e.target.value)}
                     value={drawerIpnuts?.Districts?.code} />
                   <p className="error">{errors?.Districts?.code}</p>
@@ -4397,7 +4291,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Districts', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Districts?.lookupname} />
                   <p className="error">{errors?.Districts?.lookupname}</p>
@@ -4411,7 +4306,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
                   <p className="error text-white">text</p>
                 </div>
               </div>
@@ -4427,7 +4323,8 @@ function Configuratin() {
                     options={selectLokups?.Divisions}
                     onChange={(e) => drawrInptChng('Districts', 'Parentlookupid', e)}
                     value={drawerIpnuts?.Districts?.Parentlookupid} />
-                  {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
+                  {/* <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
                   <p className="error">{errors?.Districts?.Parentlookupid}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2" onClick={()=>openCloseDrawerFtn('DivisionsForDistrict')}>
@@ -4443,7 +4340,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Districts?.isactive} onChange={(e) => drawrInptChng('Divisions', 'ParentLookup', e)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Districts?.isactive} onChange={(e) => drawrInptChng('Divisions', 'ParentLookup', e)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4507,7 +4404,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'code', e.target.value)}
                     value={drawerIpnuts?.Divisions?.code} />
                   {/* <h1 className="error-text"></h1> */}
@@ -4522,7 +4420,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Divisions?.lookupname}
                   />
@@ -4537,7 +4436,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Divisions?.DisplayName} />
                 </div>
@@ -4567,7 +4467,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4634,7 +4534,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'code', e.target.value)}
                     value={drawerIpnuts?.Divisions?.code} />
                   {/* <h1 className="error-text"></h1> */}
@@ -4649,7 +4550,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Divisions?.lookupname}
                   />
@@ -4664,7 +4566,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Divisions?.DisplayName} />
                 </div>
@@ -4694,7 +4597,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -4764,7 +4667,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Station', 'code', e.target.value)}
                     value={drawerIpnuts?.Station?.code} />
                   <h1 className="error-text">{errors?.Station?.code}</h1>
@@ -4779,7 +4683,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Station', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Station?.lookupname}
                   />
@@ -4794,7 +4699,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Station', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Station?.DisplayName} />
                   <p className="error text-white">text</p>
@@ -4813,7 +4719,8 @@ function Configuratin() {
                     value={drawerIpnuts?.Station?.Parentlookupid}
                     onChange={(e) => drawrInptChng('Station', 'Parentlookupid', e)}
                   />
-                  {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
+                  {/* <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
                   <p className="error">{errors?.Station?.Parentlookupid}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2" onClick={()=>openCloseDrawerFtn('DivisionsForStation')}>
@@ -4829,7 +4736,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Station?.isactive}
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Station?.isactive}
                     onChange={(e) => drawrInptChng('Station', 'isactive', e.target.checked)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
@@ -4896,7 +4803,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Districts', 'code', e.target.value)}
                     value={drawerIpnuts?.Districts?.code} />
                   <p className="error">{errors?.Districts?.code}</p>
@@ -4911,7 +4819,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Districts', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Districts?.lookupname} />
                   <p className="error">{errors?.Districts?.lookupname}</p>
@@ -4925,7 +4834,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Districts', 'DisplayName', e.target.value)} value={drawerIpnuts?.Districts?.DisplayName} />
                   <p className="error text-white">text</p>
                 </div>
               </div>
@@ -4941,7 +4851,8 @@ function Configuratin() {
                     options={selectLokups?.Divisions}
                     onChange={(e) => drawrInptChng('Districts', 'Parentlookupid', e)}
                     value={drawerIpnuts?.Districts?.Parentlookupid} />
-                  {/* <Input className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
+                  {/* <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Counteries', 'DisplayName', e.target.value)} value={drawerIpnuts?.Counteries?.DisplayName} /> */}
                   <p className="error">{errors?.Districts?.Parentlookupid}</p>
                 </div>
                 <Button className="butn primary-btn detail-btn ms-2" onClick={()=>openCloseDrawerFtn('DivisionsForDistrict')}>
@@ -4957,7 +4868,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Districts?.isactive} onChange={(e) => drawrInptChng('Divisions', 'ParentLookup', e)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Districts?.isactive} onChange={(e) => drawrInptChng('Divisions', 'ParentLookup', e)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -5023,7 +4934,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'code', e.target.value)}
                     value={drawerIpnuts?.Divisions?.code} />
                   {/* <h1 className="error-text"></h1> */}
@@ -5038,7 +4950,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Divisions?.lookupname}
                   />
@@ -5053,7 +4966,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Divisions', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Divisions?.DisplayName} />
                 </div>
@@ -5083,7 +4997,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.Divisions?.isactive} onChange={(e) => drawrInptChng('Divisions', 'isactive', e.target.value)}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -5127,7 +5041,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('ContactType', 'RegionCode', e.target.value)}
                     value={drawerIpnuts?.Counteries?.RegionCode} />
                   <h1 className="error-text"></h1>
@@ -5143,7 +5058,8 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
 
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('ContactType', 'ContactType', e.target.value)}
                     value={drawerIpnuts?.ContactType?.ContactType}
                   />
@@ -5158,7 +5074,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('ContactType', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.ContactType?.DisplayName} />
                 </div>
@@ -5173,7 +5090,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox checked={drawerIpnuts?.ContactType?.isActive}>Active</Checkbox>
+                  <Checkbox disabled={isDisable} checked={drawerIpnuts?.ContactType?.isActive}>Active</Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -5231,7 +5148,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
                     value={drawerIpnuts?.LookupType?.code}
                   />
@@ -5248,6 +5166,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     isSimple={true}
                     placeholder=''
                     onChange={(value) => drawrInptChng('LookupType', 'lookuptype', value.target.value)}
@@ -5265,6 +5184,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     isSimple={true}
                     placeholder=''
                     onChange={(value) => drawrInptChng('LookupType', 'DisplayName', value.target.value)}
@@ -5281,7 +5201,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.LookupType?.isactive}
                   >Active</Checkbox>
@@ -5347,7 +5267,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(value) => drawrInptChng('RegionType', 'code', value.target.value)}
                     value={drawerIpnuts?.RegionType?.code}
                     disabled={true}
@@ -5365,6 +5286,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     isSimple={true}
                     placeholder=''
                     onChange={(value) => drawrInptChng('RegionType', 'RegionType', value.target.value)}
@@ -5382,6 +5304,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     isSimple={true}
                     placeholder=''
                     onChange={(value) => drawrInptChng('RegionType', 'DisplayName', value.target.value)}
@@ -5398,7 +5321,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('RegionType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.RegionType?.isactive}
                   >Active</Checkbox>
@@ -5479,6 +5402,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Lookup', 'code', e.target.value)}
                     value={drawerIpnuts?.Lookup?.code}
                   />
@@ -5493,7 +5417,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Lookup', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Lookup?.lookupname}
                   />
@@ -5508,7 +5433,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Lookup', 'DisplayName', e.target.value)} value={drawerIpnuts?.Lookup?.DisplayName} />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Lookup', 'DisplayName', e.target.value)} value={drawerIpnuts?.Lookup?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -5520,7 +5446,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     disabled={true}
                   />
                 </div>
@@ -5535,7 +5462,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.LookupType?.isactive}
                   >Active</Checkbox>
@@ -5613,6 +5540,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Gender', 'code', e.target.value)}
                     value={drawerIpnuts?.Gender?.code}
                   />
@@ -5627,7 +5555,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Gender', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Gender?.lookupname}
                   />
@@ -5642,7 +5571,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Gender?.DisplayName} />
                   <p className="error"></p>
@@ -5657,7 +5587,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Gender', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Gender?.isactive}
                   >Active</Checkbox>
@@ -5738,6 +5668,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Gender', 'code', e.target.value)}
                     value={drawerIpnuts?.Gender?.code}
                   />
@@ -5752,7 +5683,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Gender', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Gender?.lookupname}
                   />
@@ -5767,7 +5699,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Gender', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Gender?.DisplayName} />
                 </div>
@@ -5782,7 +5715,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Gender?.isactive}
                   >Active</Checkbox>
@@ -5863,6 +5796,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Title', 'code', e.target.value)}
                     value={drawerIpnuts?.Title?.code}
                   />
@@ -5877,7 +5811,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con d-flex flex-column">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Title', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Title?.lookupname}
                   />
@@ -5892,7 +5827,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Title', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Title?.DisplayName} />
                   <p className="error"></p>
@@ -5907,7 +5843,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Title', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Title?.isactive}
                   >Active</Checkbox>
@@ -5988,6 +5924,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('RosterType', 'code', e.target.value)}
                     value={drawerIpnuts?.RosterType?.code}
                   />
@@ -6002,7 +5939,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con d-flex flex-column">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('RosterType', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.RosterType?.lookupname}
                   />
@@ -6017,7 +5955,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('RosterType', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.RosterType?.DisplayName} />
                   <p className="error"></p>
@@ -6031,7 +5970,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('RosterType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.RosterType?.isactive}
                   >Active</Checkbox>
@@ -6116,6 +6055,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.code}
                   />
@@ -6130,7 +6070,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('MaritalStatus', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.lookupname}
                   />
@@ -6145,7 +6086,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.DisplayName} />
                 </div>
@@ -6160,7 +6102,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Title', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
@@ -6244,6 +6186,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('ProjectTypes', 'code', e.target.value)}
                     value={drawerIpnuts?.ProjectTypes?.code}
                   />
@@ -6258,7 +6201,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('ProjectTypes', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.ProjectTypes?.lookupname}
                   />
@@ -6273,7 +6217,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('ProjectTypes', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.ProjectTypes?.DisplayName} />
                 </div>
@@ -6288,7 +6233,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('ProjectTypes', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.ProjectTypes?.isactive}
                   >Active</Checkbox>
@@ -6369,6 +6314,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Trainings', 'code', e.target.value)}
                     value={drawerIpnuts?.Trainings?.code}
                   />
@@ -6383,7 +6329,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Trainings', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Trainings?.lookupname}
                   />
@@ -6398,7 +6345,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Trainings', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Trainings?.DisplayName} />
                   <p className="error"></p>
@@ -6413,7 +6361,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Trainings', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Trainings?.isactive}
                   >Active</Checkbox>
@@ -6491,6 +6439,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('DocumentType', 'code', e.target.value)}
                     value={drawerIpnuts?.DocumentType?.code}
                   />
@@ -6505,7 +6454,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('DocumentType', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.DocumentType?.lookupname}
                   />
@@ -6520,7 +6470,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('DocumentType', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.DocumentType?.DisplayName} />
                 </div>
@@ -6533,7 +6484,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('DocumentType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.DocumentType?.isactive}
                   >Active</Checkbox>
@@ -6609,6 +6560,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('ClaimType', 'code', e.target.value)}
                     value={drawerIpnuts?.ClaimType?.code}
                   />
@@ -6624,6 +6576,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) => drawrInptChng('ClaimType', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.ClaimType?.lookupname}
@@ -6640,6 +6593,7 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) => drawrInptChng('ClaimType', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.ClaimType?.DisplayName}
@@ -6655,7 +6609,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('ClaimType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.ClaimType?.isactive}
                   >Active</Checkbox>
@@ -6728,6 +6682,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Schemes', 'code', e.target.value)}
                     value={drawerIpnuts?.Schemes?.code}
                   />
@@ -6743,6 +6698,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) => drawrInptChng('Schemes', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Schemes?.lookupname}
@@ -6759,6 +6715,7 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) => drawrInptChng('Schemes', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Schemes?.DisplayName}
@@ -6774,7 +6731,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Schemes', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Schemes?.isactive}
                   >Active</Checkbox>
@@ -6847,6 +6804,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Reasons', 'code', e.target.value)}
                     value={drawerIpnuts?.Reasons?.code}
                   />
@@ -6862,6 +6820,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) => drawrInptChng('Reasons', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Reasons?.lookupname}
@@ -6878,6 +6837,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) => drawrInptChng('Reasons', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Reasons?.DisplayName}
@@ -6893,7 +6853,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Reasons', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Reasons?.isactive}
                   >Active</Checkbox>
@@ -6936,7 +6896,8 @@ function Configuratin() {
               <div className="input-container">
                 <p className="star">*</p>
                 <div className="input-sub-container">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Schemes', 'schemeName', e.target.value)}
                     value={drawerIpnuts?.Schemes?.schemeName}
                   />
@@ -6951,7 +6912,8 @@ function Configuratin() {
               <div className="input-container">
                 <p className="star">*</p>
                 <div className="input-sub-container">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Schemes', 'code', e.target.value)}
                     value={drawerIpnuts?.Schemes?.code}
                   />
@@ -6966,7 +6928,7 @@ function Configuratin() {
               <div className="input-container">
                 <p className="star-white">*</p>
                 <div className="input-sub-container">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Schemes', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Schemes?.isactive}
                   >Active</Checkbox>
@@ -7052,6 +7014,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) =>
                       drawrInptChng("Duties", "code", e.target.value)
@@ -7070,6 +7033,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) =>
                       drawrInptChng("Duties", "lookupname", e.target.value)
@@ -7088,6 +7052,7 @@ function Configuratin() {
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                     onChange={(e) =>
                       drawrInptChng("Duties", "DisplayName", e.target.value)
@@ -7105,7 +7070,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) =>
                       drawrInptChng("Duties", "isactive", e.target.checked)
                     }
@@ -7191,6 +7156,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Ranks', 'code', e.target.value)}
                     value={drawerIpnuts?.Ranks?.code}
                   />
@@ -7205,7 +7171,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Ranks', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Ranks?.lookupname}
                   />
@@ -7220,7 +7187,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Ranks', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Ranks?.DisplayName} />
                   {/* <p className="error">{errors?.Ranks?.}</p> */}
@@ -7235,7 +7203,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Ranks', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Ranks?.isactive}
                   >Active</Checkbox>
@@ -7314,6 +7282,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Boards', 'code', e.target.value)}
                     value={drawerIpnuts?.Boards?.code}
                   />
@@ -7328,7 +7297,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Boards', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Boards?.lookupname}
                   />
@@ -7343,7 +7313,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Boards', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Boards?.DisplayName} />
                 </div>
@@ -7357,7 +7328,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => {
                       drawrInptChng('Boards', 'isactive', e.target.checked)
                     }}
@@ -7437,6 +7408,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('Councils', 'code', e.target.value)}
                     value={drawerIpnuts?.Councils?.code}
                   />
@@ -7451,7 +7423,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Councils', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.Councils?.lookupname}
                   />
@@ -7466,7 +7439,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('Councils', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.Councils?.DisplayName} />
                 </div>
@@ -7479,7 +7453,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('Councils', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.Councils?.isactive}
                   >Active</Checkbox>
@@ -7556,6 +7530,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('CorrespondenceType', 'code', e.target.value)}
                     value={drawerIpnuts?.CorrespondenceType?.code}
                   />
@@ -7570,7 +7545,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('CorrespondenceType', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.CorrespondenceType?.lookupname}
                   />
@@ -7585,7 +7561,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('CorrespondenceType', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.CorrespondenceType?.DisplayName} />
                 </div>
@@ -7598,7 +7575,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('CorrespondenceType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.CorrespondenceType?.isactive}
                   >Active</Checkbox>
@@ -7683,6 +7660,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('MaritalStatus', 'code', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.code}
                   />
@@ -7697,7 +7675,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('MaritalStatus', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.lookupname}
                   />
@@ -7712,7 +7691,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('MaritalStatus', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.MaritalStatus?.DisplayName} />
                 </div>
@@ -7727,7 +7707,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('MaritalStatus', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.MaritalStatus?.isactive}
                   >Active</Checkbox>
@@ -7808,6 +7788,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp" onChange={(e) => drawrInptChng('SpokenLanguages', 'code', e.target.value)}
                     value={drawerIpnuts?.SpokenLanguages?.code}
                   />
@@ -7822,7 +7803,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('SpokenLanguages', 'lookupname', e.target.value)}
                     value={drawerIpnuts?.SpokenLanguages?.lookupname}
                   />
@@ -7837,7 +7819,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     onChange={(e) => drawrInptChng('SpokenLanguages', 'DisplayName', e.target.value)}
                     value={drawerIpnuts?.SpokenLanguages?.DisplayName} />
                 </div>
@@ -7851,7 +7834,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('SpokenLanguages', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.SpokenLanguages?.isactive}
                   >Active</Checkbox>
@@ -7943,7 +7926,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     value={drawerIpnuts?.Solicitors?.Forename}
                     onChange={(e) => drawrInptChng('Solicitors', 'Forename', e.target.value)}
                   />
@@ -7958,7 +7942,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                     value={drawerIpnuts?.Solicitors?.Surname}
                     onChange={(e) => drawrInptChng('Solicitors', 'Surname', e.target.value)}
                   />
@@ -7974,7 +7959,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactEmail}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactEmail}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactEmail', e.target.value)}
                   />
                   <p className="error">{errors?.Solicitors?.ContactEmail}</p>
@@ -7988,7 +7974,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactPhone}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactPhone}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactPhone', e.target.value)}
                   />
                   <p className="error">{errors?.Solicitors?.ContactPhone}</p>
@@ -8002,7 +7989,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.BuildingOrHouse', e.target.value)}
 
                   />
@@ -8017,7 +8005,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.StreetOrRoad', e.target.value)}
                   />
                   <p className="error text-white">errors?.Solicitors?.ContactEmail</p>
@@ -8031,7 +8020,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.AreaOrTown', e.target.value)}
                   />
                   <p className="error">{errors?.Solicitors?.AreaOrTown}</p>
@@ -8045,7 +8035,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.CityCountyOrPostCode', e.target.value)}
                   />
                 </div>
@@ -8059,7 +8050,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+                  <Input
+                  disabled={isDisable} value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
                     onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.Eircode', e.target.value)}
                   />
                 </div>
@@ -8136,6 +8128,7 @@ function Configuratin() {
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
                   <Input
+                  disabled={isDisable}
                     className="inp"
                   //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
                   // value={drawerIpnuts?.Lookup?.RegionCode}
@@ -8151,7 +8144,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
+                  <Input
+                  disabled={isDisable} className="inp"
                   // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
                   // value={drawerIpnuts?.Lookup?.RegionName}
                   />
@@ -8166,7 +8160,8 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp" onChange={(e) => drawrInptChng('Lookup', 'DisplayName', e.target.value)} value={drawerIpnuts?.Lookup?.DisplayName} />
+                  <Input
+                  disabled={isDisable} className="inp" onChange={(e) => drawrInptChng('Lookup', 'DisplayName', e.target.value)} value={drawerIpnuts?.Lookup?.DisplayName} />
                 </div>
                 <p className="error"></p>
               </div>
@@ -8194,7 +8189,7 @@ function Configuratin() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Checkbox
+                  <Checkbox disabled={isDisable}
                     onChange={(e) => drawrInptChng('LookupType', 'isactive', e.target.checked)}
                     checked={drawerIpnuts?.LookupType?.isactive}
                   >Active</Checkbox>

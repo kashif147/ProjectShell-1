@@ -29,11 +29,7 @@ const store = configureStore({
   },
 });
 
-if (process.env.NODE_ENV !== "production") {
-  store.subscribe(() => {
-    console.log("Current State:", store.getState());
-  });
-}
+
 
 export default store;
 

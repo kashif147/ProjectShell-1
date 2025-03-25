@@ -19,8 +19,8 @@ import MyConfirm from "../common/MyConfirm";
 import { deleteFtn } from "../../utils/Utilities";
 import { getContacts } from "../../features/ContactSlice";
 import { baseURL } from "../../utils/Utilities";
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true  }) {
-  const { selectLokups, lookupsForSelect, contactTypes } = useTableColumns();
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true }) {
+  const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
     Solicitors: {
@@ -456,7 +456,11 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     },
 
   ];
-  const { contacts, contactsLoading } = useSelector((state) => state.contact);
+
+  const { contacts, contactsLoading, error } = useSelector(
+    (state) => state.contactType
+  );
+
   const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false })
   const addIdKeyToLookup = (idValue, drawer) => {
     setdrawerIpnuts((prev) => {
@@ -606,7 +610,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   }
   return (
     <Drawer
-    bodyStyle={{ paddingBottom: "50px", position: "relative" }}
+      bodyStyle={{ paddingBottom: "50px", position: "relative" }}
       width={width}
       title={title}
       placement="right"
@@ -687,8 +691,17 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               Close
             </Button>
             <Button className="butn primary-btn"
-              onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
-              {isEdit == true ? "Save" : 'Add'}
+              // onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
+              onClick={() => {
+                if (isDisable) {
+                  disableFtn(false);
+                } else if (!isEdit) {
+                  add();
+                } else {
+                  update();
+                }
+              }}>
+              {isDisable == true ? "Add" : 'Save'}
             </Button>
 
           </Space>
@@ -700,18 +713,18 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
         {
           isPagination &&
           (
-            <div style={{width:'100%',backgroundColor:'red'}}>
-            <div className="bottom-div">
-              <Pagination
-                 total={total}
-                 showSizeChanger={showSizeChanger}
-                 showQuickJumper={showQuickJumper}
-                 showTotal={(total) => `Total ${total} items`}
-                 onChange={onChange}
-                 pageSize={pageSize}
-              />
+            <div style={{ width: '100%', backgroundColor: 'red' }}>
+              <div className="bottom-div">
+                <Pagination
+                  total={total}
+                  showSizeChanger={showSizeChanger}
+                  showQuickJumper={showQuickJumper}
+                  showTotal={(total) => `Total ${total} items`}
+                  onChange={onChange}
+                  pageSize={pageSize}
+                />
 
-            </div>
+              </div>
             </div>
           )
         }

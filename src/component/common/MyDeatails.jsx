@@ -24,7 +24,7 @@ import moment from "moment";
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
 import { getAllLookups } from "../../features/LookupsSlice";
-import { useSelector, useDispatch } from 'react-redux'
+import { useSelector, useDispatch,shallowEqual } from 'react-redux'
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import "../../styles/MyDetails.css";
 import { BsThreeDots } from "react-icons/bs";
@@ -75,12 +75,9 @@ const beforeUpload = (file) => {
 
 function MyDeatails() {
   const dispatch = useDispatch();
-  useEffect(() => {
-    dispatch(getAllLookups())
-  }, [dispatch])
   const { ProfileDetails, topSearchData, rowIndex, lookupsData, lookupsForSelect, selectLokups } = useTableColumns();
-  const { partner, partnerloading, error } = useSelector((state) => state.partner);
-  const { children, childrenError, childrenLoading } = useSelector((state) => state.children);
+  const { partner, partnerloading, error } = useSelector((state) => state.partner, shallowEqual);
+  const { children, childrenError, childrenLoading } = useSelector((state) => state.children, shallowEqual);
   console.log(selectLokups, "partner")
   const {
     register,
@@ -304,58 +301,54 @@ function MyDeatails() {
   };
 
   useEffect(() => {
-    let profils;
-    if (ProfileDetails) {
-      profils = {
-        gardaRegNo: ProfileDetails[0]?.regNo,
-        fullname: ProfileDetails[0]?.fullName,
-        forename: ProfileDetails[0]?.forename,
-        surname: ProfileDetails[0]?.surname,
-        dateOfBirth: ProfileDetails[0]?.dateOfBirth,
-        dateRetired:
-          ProfileDetails[0]?.dateRetired == "N/A"
-            ? null
-            : ProfileDetails[0]?.dateRetired,
-        dateAged65: ProfileDetails[0]?.dateAged65,
-        isDeceased: ProfileDetails[0]?.dateOfDeath == "N/A" ? false : true,
-        dateOfDeath:
-          ProfileDetails[0]?.dateOfDeath == "N/A"
-            ? null
-            : ProfileDetails[0]?.dateOfDeath,
-        Partnership: ProfileDetails[0]?.Partnership,
-        stationPh: ProfileDetails[0]?.stationPhone,
-        District: ProfileDetails[0]?.district,
-        Division: ProfileDetails[0]?.division,
-        isPensioner: ProfileDetails[0]?.pensionNo ? true : false,
-        pensionNo: ProfileDetails[0]?.pensionNo,
-        duty: ProfileDetails[0]?.duty,
-        rank: ProfileDetails[0]?.rank,
-        graduated: ProfileDetails[0]?.graduated,
-        isGRAMember: ProfileDetails[0]?.graMember ? true : false,
-        dateJoined: ProfileDetails[0]?.dateJoined,
-        isJoined: true,
-        attested: ProfileDetails[0]?.attested,
-        DateLeft: ProfileDetails[0]?.dateLeft,
-        isLeft: true,
-        isAssociateMember:
-          ProfileDetails[0]?.associateMember === "yes" ? true : false,
-      };
-      setInfData(profils);
-    }
-  }, [ProfileDetails]);
+    if (!ProfileDetails?.length) return; // Exit early if ProfileDetails is empty
+  
+    const profileData = ProfileDetails[0];
+  
+    const profils = {
+      gardaRegNo: profileData?.regNo,
+      fullname: profileData?.fullName,
+      forename: profileData?.forename,
+      surname: profileData?.surname,
+      dateOfBirth: profileData?.dateOfBirth,
+      dateRetired: profileData?.dateRetired === "N/A" ? null : profileData?.dateRetired,
+      dateAged65: profileData?.dateAged65,
+      isDeceased: profileData?.dateOfDeath !== "N/A",
+      dateOfDeath: profileData?.dateOfDeath === "N/A" ? null : profileData?.dateOfDeath,
+      Partnership: profileData?.Partnership,
+      stationPh: profileData?.stationPhone,
+      District: profileData?.district,
+      Division: profileData?.division,
+      isPensioner: !!profileData?.pensionNo,
+      pensionNo: profileData?.pensionNo,
+      duty: profileData?.duty,
+      rank: profileData?.rank,
+      graduated: profileData?.graduated,
+      isGRAMember: !!profileData?.graMember,
+      dateJoined: profileData?.dateJoined,
+      isJoined: true,
+      attested: profileData?.attested,
+      DateLeft: profileData?.dateLeft,
+      isLeft: true,
+      isAssociateMember: profileData?.associateMember === "yes",
+    };
+  
+    setInfData(profils);
+  }, [ProfileDetails?.length]); // Dependency optimized
+  
   useEffect(() => {
     dispatch(getPartners());
     dispatch(getChildren());
-  }, [dispatch]);
+    dispatch(getAllLookups())
+  }, [dispatch]); // ✅ No change needed here
+  
+  
   const handleInputChangeWhole = (field, value) => {
     setInfData((prev) => ({
       ...prev,
       [field]: value,
     }));
   };
-  useEffect(() => {
-    console.log(InfData, "77");
-  }, [InfData]); // This will log the state whenever it changes
 
   useEffect(() => {
     return () => {
@@ -550,10 +543,10 @@ function MyDeatails() {
 
   // let ageOnNextBirthday = getNextBirthdayAge(InfData?.dateOfBirth);
   useEffect(() => {
-    if (InfData?.dateOfBirth) {
-      const age = getNextBirthdayAge(InfData?.dateOfBirth);
-      setAgeOnNextBirthday(age);
-    }
+    if (!InfData?.dateOfBirth) return;
+  
+    const age = getNextBirthdayAge(InfData.dateOfBirth);
+    setAgeOnNextBirthday((prevAge) => (prevAge !== age ? age : prevAge));
   }, [InfData?.dateOfBirth]);
   const customRequest = ({ file, onSuccess, onError }) => {
     setTimeout(() => {

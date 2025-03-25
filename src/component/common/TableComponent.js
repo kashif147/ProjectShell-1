@@ -201,7 +201,6 @@ console.log(dataSource,"data00")
             actions={() => { }}
             attachedFtn={()=>{
               handleUploadClick()
-              
             }}
             record={record}
             index={index}
