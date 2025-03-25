@@ -5271,7 +5271,6 @@ function Configuratin() {
                   disabled={isDisable} className="inp"
                     onChange={(value) => drawrInptChng('RegionType', 'code', value.target.value)}
                     value={drawerIpnuts?.RegionType?.code}
-                    disabled={true}
                   />
                   <h1 className="error-text"></h1>
                 </div>
@@ -5448,7 +5447,7 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <Input
                   disabled={isDisable} className="inp"
-                    disabled={true}
+
                   />
                 </div>
                 <p className="error"></p>
