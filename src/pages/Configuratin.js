@@ -4088,6 +4088,7 @@ function Configuratin() {
                 <MySelect placeholder='Select County'
                     onChange={(e) => drawrInptChng('Cities', 'Parentlookupid', e)}
                     isSimple={true} options={selectLokups?.Counteries}
+                    disabled={isDisable}
                     value={drawerIpnuts?.Cities?.Parentlookupid}
                   />
                   <p className="error">{errors?.Cities?.Parentlookupid}</p>
@@ -4714,6 +4715,7 @@ function Configuratin() {
                 <div className="inpt-sub-con">
                   <MySelect placeholder='Select County' isSimple={true}
                     options={selectLokups?.Districts}
+                    disabled={isDisable}
                     value={drawerIpnuts?.Station?.Parentlookupid}
                     onChange={(e) => drawrInptChng('Station', 'Parentlookupid', e)}
                   />
