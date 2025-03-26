@@ -1,9 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect,useRef } from "react";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { FaTrashAlt } from "react-icons/fa";
 import { ImAttachment } from "react-icons/im";
 import { GrView } from "react-icons/gr";
+import QRCode from 'qrcode';
+import { LuSmartphoneNfc } from "react-icons/lu";
 import { useTableColumns } from "../../context/TableColumnsContext "; // Import the context
 import ExportCSV from "./ExportCSV";
 import ExportPDF from "./ExportPDF";
@@ -38,7 +40,7 @@ function SimpleMenu({
   const location = useLocation
   const screenName = location?.state?.search
   const [ddSearch, setddSearch] = useState("")
-  const { updateSelectedTitles, searchFilters, gridData,globleFilters, getProfile } = useTableColumns();
+  const { updateSelectedTitles, searchFilters, gridData,globleFilters, getProfile,ProfileDetails } = useTableColumns();
 
   useEffect(() => {
     if(ddSearch!=""){
@@ -64,6 +66,55 @@ function SimpleMenu({
       item.titleColumn.toLowerCase().includes(normalizedQuery)
     );
     setCheckboxes(filteredResults);
+  };
+   // The QR code value could come from NFC data; here we use a static example.
+   const [qrValue] = useState("Hello NFC");
+   // Reference to the wrapper element containing the QR code SVG.
+   const qrRef = useRef(null);
+ /**
+ * Simulates the creation of an NFC tag object for testing purposes.
+ * @param {Array} records - An array of record objects, each should include:
+ *                          - recordType: A string (e.g., "text", "url").
+ *                          - data: The payload data (e.g., a string).
+ *                          - (Optional) mediaType: MIME type for the data.
+ * @returns {Object} A simulated NFC tag object.
+ */
+ function createTestNFCTag(records = []) {
+  const simulatedTag = {
+    id: 'test-tag-' + Math.floor(Math.random() * 10000), // Generates a random ID
+    records: records.map(record => ({
+      recordType: record.recordType,
+      RegNo: record.data,
+      // mediaType: record.mediaType || 'text/plain'
+    })),
+    timestamp: Date.now()
+  };
+
+  return simulatedTag;
+}
+const handleGenerate = () => {
+  // Example records; adjust or modify as needed.
+  const tag = createTestNFCTag([
+    { recordType: "text", data: ProfileDetails?.regNo },
+  ]);
+  // For demonstration, we show the tag data in an alert.
+  alert("Generated NFC Tag:\n" + JSON.stringify(tag, null, 2));
+};
+   const downloadQRCode = async () => {
+    try {
+      const qrText = "Hello NFC"; // Replace with your desired data
+      // Generate a data URL for the QR code as a PNG image
+      const url = await QRCode.toDataURL(qrText, { type: 'image/png' });
+      // Create a temporary link element to trigger the download
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = 'qr-code.png';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    } catch (error) {
+      console.error("Error generating QR code:", error);
+    }
   };
   const menu = (
     <Menu>
@@ -183,6 +234,21 @@ function SimpleMenu({
               }}
               />
               Career Break
+            </div>
+            ):
+            key==='Generate NFC tag'?(
+              <div className="d-flex align-items-baseline" onClick={async () => {
+                await getProfile(record, index);
+                handleGenerate();
+              }}>
+              <LuSmartphoneNfc 
+              style={{
+                fontSize: "12px",
+                marginRight: "10px",
+                color: "#45669d",
+              }}
+              />
+              Generate NFC tag
             </div>
             ):
             (

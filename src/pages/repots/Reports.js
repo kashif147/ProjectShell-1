@@ -6,7 +6,6 @@ import { useLocation } from 'react-router-dom'
 function Reports({screenName}) {
     const {gridData} = useTableColumns()
     const location = useLocation()
-    console.log(location,"location")
      
   return (
     <TableComponent data={gridData} screenName="Profile"   />

@@ -19,11 +19,10 @@ export const getContactTypes = createAsyncThunk(
           },
         }
       );
-      console.log(response.data, "ContactType API Response");
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch contact types"
+
       );
     }
   }

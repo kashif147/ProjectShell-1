@@ -37,7 +37,6 @@ function AddNewGarda({ open, onClose }) {
     { value: "CHI", label: "Chicago" },
   ];
 
-  console.log(state, "this is the lookupstate");
   const inputsInitValue = {
     gardaRegNo: null,
     fullname: null,
@@ -85,7 +84,6 @@ function AddNewGarda({ open, onClose }) {
   const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
 
   const handleInputChange = (eventOrName, value) => {
-    console.log("myNewValue", value);
     if (eventOrName && eventOrName.target) {
       const { name, type, checked } = eventOrName.target;
       setInfData((prev) => ({
@@ -546,7 +544,6 @@ function AddNewGarda({ open, onClose }) {
                         name='rank'
                         value={InfData.rank}
                         onChange={(value) => {
-                          console.log("New rank", value);
                           handleInputChange("rank", value);
                         }}
                       />

@@ -20,7 +20,7 @@ export const fetchRegions = createAsyncThunk(
             });
             return response.data; // Assuming the API returns an array of regions
         } catch (error) {
-            return rejectWithValue(error.response.data.message || 'Failed to fetch regions');
+            // return rejectWithValue(error.response.data.message || 'Failed to fetch regions');
         }
     }
 );

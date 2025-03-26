@@ -57,7 +57,6 @@ function HeaderDetails() {
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
   const formattedNav = nav.replace(/^\//, " ");
-  console.log(formattedNav, "formattedNav")
   const [isSideNav, setisSideNav] = useState(true);
   const [ReportName, setReportName] = useState(null)
   const [imageUrl, setImageUrl] = useState("");
@@ -73,7 +72,7 @@ function HeaderDetails() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const { searchFilters,lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, globleFilters } = useTableColumns();
-console.log(searchFilters,"pppp")
+
   const screenName = location?.state?.search
   const format = 'HH:mm';
   const column = [
@@ -134,7 +133,7 @@ console.log(searchFilters,"pppp")
   useEffect(() => {
     dispatch(fetchRegions());
   }, [dispatch]);
-  console.log(regions, 'reg')
+
   const gender = {
     Male: false,
     Female: false,
@@ -550,7 +549,7 @@ console.log(searchFilters,"pppp")
                           style={{ fontSize: "15px", fontWeight: 500 }}
                         />
                       }
-                      data={{ "Bulk Changes": "false", "Print Labels": "false" }}
+                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag':'false' }}
                       isCheckBox={false}
                       isSearched={false}
                       isTransparent={true}

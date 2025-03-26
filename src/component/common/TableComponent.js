@@ -57,7 +57,6 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 const TableComponent = ({ data, screenName, redirect }) => {
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
-  console.log(data,"pp")
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -142,11 +141,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
     setdataSource(dataSource?.map((item) =>
       item.key === key ? { ...item, isAttachment: true } : item
     ))
- 
-    console.log(dataSource, "Updated dataSource");
- 
   };
-console.log(dataSource,"data00")
   const draggableColumns = [
     {
       title: () => (
@@ -193,8 +188,12 @@ console.log(dataSource,"data00")
         style={{ display: "none" }}
       />
           <SimpleMenu
-            title={<BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />}
-            data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false, 'Career Break': false }}
+            title={<BsThreeDotsVertical 
+            style={{ fontSize: "15px", fontWeight: 500 }} />}
+            data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false, 
+              'Career Break': false, 
+               'Generate NFC tag':false,
+            }}
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
@@ -411,7 +410,6 @@ console.log(dataSource,"data00")
           ...values,
         });
       } catch (errInfo) {
-        console.log("Save failed:", errInfo);
       }
     };
     let childNode = children;

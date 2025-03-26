@@ -35,10 +35,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
   const getColumnWidth = (key) => widthMapping[key] || 120;
 
-  console.log(columns, "update");
   const searchInFilters = (query) => {
-    console.log({columnsForFilter})
-    console.log({query}, query.trim().toLowerCase())
+
     const normalizedQuery = query.trim().toLowerCase();
 
     const filteredResults = columnsForFilter?.map((item) =>

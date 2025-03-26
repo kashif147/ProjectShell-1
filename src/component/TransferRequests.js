@@ -24,7 +24,7 @@ function TransferRequests({ open, onClose, isSearch }) {
         }),
     };
     const{ProfileDetails} = useTableColumns();
-    console.log('popo',ProfileDetails)
+
     const columnCountry = [
         {
             title: 'Transfer Date',

@@ -5,11 +5,9 @@ import { Row, Col, Input, DatePicker, Button, Checkbox } from 'antd';
 const { TextArea } = Input;
 function AddClaims() {
     const handleCancel = () => {
-        console.log("Cancelled");
       };
     
       const handleSubmit = () => {
-        console.log("Submitted");
       };
     
       return (

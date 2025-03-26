@@ -72,7 +72,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       [key]: value,
     }));
   };
-  console.log(contact, "contact")
   const updateAddress = (key, value) => {
     setContact((prev) => ({
       ...prev,
@@ -395,7 +394,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       [name]: value, // Update only the `timeDur` property
     }));
   };
-  console.log(recData, '555')
+
   const handleEnter = (e) => {
     isEdit == true ? update() : add()
   };
@@ -610,7 +609,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   }
   return (
     <Drawer
-      bodyStyle={{ paddingBottom: "50px", position: "relative" }}
+      // bodyStyle={{ paddingBottom: "50px", position: "relative" }}
       width={width}
       title={title}
       placement="right"

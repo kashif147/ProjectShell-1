@@ -16,10 +16,7 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
         maxBodyLength: Infinity,
         Authorization: `Bearer ${token}`, 
     },
-    });
-    
-    console.log({ successNotification }, response,"2221");
-    
+    });  
     if (response.status === 201) { // Strict equality check
       
       MyAlert('success', successNotification);

@@ -16,11 +16,11 @@ export const getContacts = createAsyncThunk(
           "Content-Type": "application/json",
         },
       });
-      console.log(response.data, "Contact API Response");
+      // console.log(response.data, "Contact API Response");
       return response.data;
     } catch (error) {
       return rejectWithValue(
-        error.response?.data?.message || "Failed to fetch contacts"
+        // error.response?.data?.message || "Failed to fetch contacts"
       );
     }
   }

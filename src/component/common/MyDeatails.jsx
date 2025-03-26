@@ -78,7 +78,7 @@ function MyDeatails() {
   const { ProfileDetails, topSearchData, rowIndex, lookupsData, lookupsForSelect, selectLokups } = useTableColumns();
   const { partner, partnerloading, error } = useSelector((state) => state.partner, shallowEqual);
   const { children, childrenError, childrenLoading } = useSelector((state) => state.children, shallowEqual);
-  console.log(selectLokups, "partner")
+
   const {
     register,
     handleSubmit,
@@ -143,7 +143,7 @@ function MyDeatails() {
         }
       );
     } else {
-      console.log("Form data is invalid!");
+
       alert("Please fill all required fields correctly.");
     }
   };
@@ -411,7 +411,7 @@ function MyDeatails() {
   const [value4, setValue4] = useState("Male");
 
   const onChange1 = ({ target: { value } }) => {
-    console.log("radio1 checked", value);
+
     setValue1(value);
   };
   const onChange2 = ({ target: { value } }) => {

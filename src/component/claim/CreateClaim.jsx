@@ -206,7 +206,6 @@ function CreateClaim() {
             [field]: value,
         }));
     };
-    console.log(InfData, "77")
     useEffect(() => {
         return () => {
             setInfData(prevData => (Object.keys(prevData).length ? {} : prevData));

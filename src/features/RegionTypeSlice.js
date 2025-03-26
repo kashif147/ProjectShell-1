@@ -17,7 +17,7 @@ export const getAllRegionTypes = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch region types');
+            // return rejectWithValue(error.response?.data?.message || 'Failed to fetch region types');
         }
     }
 );
@@ -35,7 +35,7 @@ export const addRegionType = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to add region type');
+            // return rejectWithValue(error.response?.data?.message || 'Failed to add region type');
         }
     }
 );
@@ -53,7 +53,7 @@ export const updateRegionType = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to update region type');
+            // return rejectWithValue(error.response?.data?.message || 'Failed to update region type');
         }
     }
 );

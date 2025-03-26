@@ -70,7 +70,7 @@ function CorspndncDetail() {
           refreshFileList(); // Refresh the file list after creating the document
         } else {
           // alert('Error: Failed to create document.');
-          console.log('Error: Failed to create document.')
+
         }
       } catch (error) {
         console.error('Error creating document:', error.message);
@@ -400,7 +400,6 @@ function CorspndncDetail() {
       const [selectionType, setSelectionType] = useState('checkbox');
       const rowSelection = {
           onChange: (selectedRowKeys, selectedRows) => {
-              console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
           },
           getCheckboxProps: (record) => ({
               disabled: record.name === 'Disabled User',

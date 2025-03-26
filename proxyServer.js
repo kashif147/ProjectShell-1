@@ -34,5 +34,5 @@ app.get('/getDocument', async (req, res) => {
 });
 
 app.listen(PORT, () => {
-  console.log(`Proxy server running on port ${PORT}`);
+
 });

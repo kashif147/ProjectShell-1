@@ -430,7 +430,6 @@ function Configuratin() {
       }
     });
 
-    console.log(drawerIpnuts[drawer], "8889");
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
@@ -1205,7 +1204,7 @@ function Configuratin() {
     
       // Filtering logic
       onFilter: (value, record) => {
-        console.log("Filtering for:", value, "against", record?.lookuptypeId?.lookuptype);
+        // console.log("Filtering for:", value, "against", record?.lookuptypeId?.lookuptype);
         return String(record?.lookuptypeId?.lookuptype) === String(value);
       },
     }
@@ -2838,10 +2837,9 @@ function Configuratin() {
 
   const [selectionType, setSelectionType] = useState('checkbox');
   const [errors, setErrors] = useState({});
-  console.log(errors, "errors")
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+
     },
     getCheckboxProps: (record) => ({
       disabled: record.name === 'Disabled User',
@@ -2908,7 +2906,7 @@ function Configuratin() {
   const ContactTypeModalOpenCloseFtn = () => setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () => setisAddContactTypeModal(!isAddContactTypeModal);
   const addmembershipFtn = () => {
-    console.log(membershipdata);
+
   }
 
   const addGenderFtn = () => {

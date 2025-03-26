@@ -19,7 +19,6 @@ export const loginUser = createAsyncThunk(
             return response.data; 
         } catch (error) {
             if (error) {
-                console.log(error,"55")
                 return MyAlert('error','Login failed Please Try Again.')
             }
             return rejectWithValue(error.message); 

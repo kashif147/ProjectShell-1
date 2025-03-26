@@ -26,12 +26,12 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
     updateCompByTitleColumn,
     handleCompChang,
   } = useTableColumns();
-  console.log(searchFilters, "state");
+
   const menuState = state[title] || {
     selectedOption: "!=",
     checkboxes: data || {},
   };
-  console.log(menuState, "menuState");
+
   const Location = useLocation()
   const [trueKeys, setTrueKeys] = useState([]);
   const [trueKeys1, setTrueKeys1] = useState([]);
@@ -83,7 +83,6 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
     };
   };
   const trueLookupsArrayByTitle = getTrueLookupsArrayByTitle(title);
-  console.log(trueLookupsArrayByTitle, "trueLookupsArrayByTitle");
   const graterEqualDD = [
     { key: "!=", label: "!= (not equal)" },
     { key: "=", label: "= (equal)" },

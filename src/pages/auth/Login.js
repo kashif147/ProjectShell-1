@@ -19,10 +19,9 @@ const Login = () => {
     const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
     const navigate = useNavigate(); // Use the useHistory hook
     const { loading, error, user } = useSelector((state) => state.auth);
-    console.log(user,"122")
+
     const handleLogin = () => {
         if (inProgress !== InteractionStatus.None) {
-            console.log("Interaction is in progress, please wait...");
             return;
         }
 
@@ -33,7 +32,6 @@ const Login = () => {
         instance.loginPopup({
             scopes: ["openid", "profile", "User.Read", "Mail.Read"], // Scopes you need
         }).then((response) => {
-            console.log("Login response: ", response?.accessToken);
             if(response){
                 dispatch(loginUser({ 
                       user:response?.account?.username,
