@@ -2,7 +2,7 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { baseURL } from "../utils/Utilities";
+import { baseURL } from "../../utils/Utilities";
 
 // Fetch all children
 export const getChildren = createAsyncThunk(

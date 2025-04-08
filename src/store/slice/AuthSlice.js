@@ -1,7 +1,7 @@
 // authSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import MyAlert from '../component/common/MyAlert';
+import MyAlert from '../../component/common/MyAlert';
 // import { useNavigate } from 'react-router-dom';
 
 const baseURL = `${process.env.REACT_APP_BASE_URL_DEV}/auth`;

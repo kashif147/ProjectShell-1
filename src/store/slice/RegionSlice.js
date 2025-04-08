@@ -1,8 +1,8 @@
 // regionSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import axiosInstance from '../utils/AxiosInstance'
-import { baseURL } from '../utils/Utilities';
+import axiosInstance from '../../utils/AxiosInstance'
+import { baseURL } from '../../utils/Utilities';
 
 let token; 
  

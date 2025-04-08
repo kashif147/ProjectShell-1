@@ -1,7 +1,7 @@
 // regionTypeSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { baseURL } from '../utils/Utilities';
+import { baseURL } from '../../utils/Utilities';
 
 // Fetch all region types
 export const getAllRegionTypes = createAsyncThunk(

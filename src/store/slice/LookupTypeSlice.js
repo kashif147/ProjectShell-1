@@ -1,7 +1,7 @@
 // lookupsTypeSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { baseURL } from '../utils/Utilities';
+import { baseURL } from "../../utils/Utilities";
 
 // Fetch all lookup types
 export const getLookupTypes = createAsyncThunk(
