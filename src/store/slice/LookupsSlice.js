@@ -10,7 +10,7 @@ export const getAllLookups = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axiosInstance.get(`${baseURL}/lookup`, {
+            const response = await axios.get(`${baseURL}/lookup`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -22,6 +22,7 @@ export const getAllLookups = createAsyncThunk(
         }
     }
 );
+
 
 // Add new lookup
 export const addLookup = createAsyncThunk(

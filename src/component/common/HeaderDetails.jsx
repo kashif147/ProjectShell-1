@@ -30,14 +30,19 @@ import JiraLikeMenu from "./JiraLikeMenu";
 import { FaChevronDown } from "react-icons/fa";
 import { FaRegCircleUser } from "react-icons/fa6";
 import { FiUpload } from "react-icons/fi";
+import { IoSettingsOutline } from "react-icons/io5";
 import {
   FaListCheck,
-  FaArrowRightArrowLeft,
+  // FaArrowRightArrowLeft,
   FaCalendarDays,
   FaClipboardList,
   FaAngleLeft,
-  FaEnvelopesBulk
+  FaEnvelopesBulk,
+  // FaArrowRightArrowLeft,
+  // FaMoneyCheckAlt,
+
 } from "react-icons/fa6";
+import { LuArrowLeftRight } from "react-icons/lu";
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import '../../styles/HeaderDetails.css'
@@ -71,8 +76,8 @@ function HeaderDetails() {
   };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters,lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, globleFilters } = useTableColumns();
-
+  const { searchFilters,lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex,resetFtn, globleFilters, } = useTableColumns();
+console.log(globleFilters,'globleFilters')
   const screenName = location?.state?.search
   const format = 'HH:mm';
   const column = [
@@ -123,7 +128,7 @@ function HeaderDetails() {
     if (screenName && currentSearchFilters) {
       filterSearchableColumns(currentSearchFilters, globleFilters);
     }
-  }, [screenName, currentSearchFilters]);
+  }, [screenName,globleFilters]);
   const genaratePdf = (e) => {
     toPDF();
   };
@@ -323,6 +328,7 @@ function HeaderDetails() {
         {(location?.pathname === "/ClaimSummary" ||
           location?.pathname === "/Summary" ||
           location?.pathname === "/CorrespondencesSummary" ||
+          location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
           location?.pathname === "/CasesSummary") && (
             <FaClipboardList
@@ -386,6 +392,17 @@ function HeaderDetails() {
                     }}
                   />
                 )}
+                {location?.state?.search === "Transfers" && (
+                      <LuArrowLeftRight   
+                    style={{
+                      fontSize: "16px",
+                      marginRight: "5px",
+                      color: "#45669d",
+                      display: "inline-flex",
+                      alignSelf: "center",
+                    }}
+                  />
+                )}
                 {location?.state?.search === "Correspondence" && (
                   <FaEnvelopesBulk
                     style={{
@@ -398,8 +415,7 @@ function HeaderDetails() {
                   />
                 )}
                 <p>{location?.state?.search}</p>
-                <p>&nbsp;/&nbsp;{iconFtn()}&nbsp;</p>
-
+                <p>&nbsp;{location?.pathname==="/Configuratin"?"":"/"}&nbsp;{iconFtn()}&nbsp;</p>
                 {location?.pathname === "/ClaimsById" && (
                   <FaMoneyCheckAlt
                     style={{
@@ -435,8 +451,18 @@ function HeaderDetails() {
                 )}
 
                 {
-                  nav === '/CorrespondencesSummary' || nav === '/RosterSummary'  ?
+                  nav === '/CorrespondencesSummary' || nav === '/RosterSummary' || nav === '/Transfers'  ?
                     <p>Summary</p> :
+                    nav === '/Configuratin'?
+                    <>
+                    <IoSettingsOutline style={{
+                fontSize: "15px",
+                color: "#45669d",
+                marginRight:'2px'
+              }} /> 
+              <p style={{}}>Configuration</p>
+                    </>
+                    :
                     <p>{formattedNav}</p>
                 }
 
@@ -459,11 +485,10 @@ function HeaderDetails() {
                   <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
                     if (nav == "/ClaimsById")
                       handlClaimDrawerChng()
-                  
                   }}>
                     Create
                   </Button>
-                  <Button onClick={goBack} className="me-1 gray-btn butn" style={{color:'white'}}>
+                  <Button onClick={goBack} className="me-1 gray-btn butn" >
                     Return to summary
                   </Button>
                   <Button onClick={goBack} className="me-1 gray-btn butn">
@@ -593,7 +618,7 @@ function HeaderDetails() {
                       />
                     </div>
                     <div>
-                      <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFilters()}>
+                      <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>
                         Reset
                       </Button>
                       <Button className="transparent bordr-less" onClick={showHidSavModal} >Save fliter</Button>
@@ -629,7 +654,6 @@ function HeaderDetails() {
                   <p className="error"></p>
                 </div>
               </div>
-
               {/* Claim Type */}
               <div className="drawer-inpts-container">
                 <div className="drawer-lbl-container">

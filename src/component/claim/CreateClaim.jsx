@@ -545,7 +545,7 @@ function CreateClaim() {
                                     </div>
                                     <div className="inpt-con">
                                         <p className="star">*</p>
-                                        <div className="inpt-sub-con d-flex">
+                                        <div className=" d-flex flex-row">
                                             <Input />
                                             <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                                         </div>
@@ -558,7 +558,7 @@ function CreateClaim() {
                                     </div>
                                     <div className="inpt-con">
                                         <p className="star-white">*</p>
-                                        <div className="inpt-sub-con d-flex">
+                                        <div className="inpt-sub-con d-flex flex-row">
                                             <Input />
                                             <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                                         </div>
@@ -770,7 +770,7 @@ function CreateClaim() {
                                     </div>
                                     <div className="inpt-con">
                                         <p className="star">*</p>
-                                        <div className="inpt-sub-con d-flex">
+                                        <div className="inpt-sub-con d-flex flex-row">
                                             <Input />
                                             <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                                         </div>
@@ -783,7 +783,7 @@ function CreateClaim() {
                                     </div>
                                     <div className="inpt-con">
                                         <p className="star-white">*</p>
-                                        <div className="inpt-sub-con d-flex">
+                                        <div className="inpt-sub-con d-flex flex-row">
                                             <Input />
                                             <Button className="primary-btn butn ms-2 detail-btn">+</Button>
                                         </div>

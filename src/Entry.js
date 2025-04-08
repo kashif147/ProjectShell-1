@@ -60,7 +60,7 @@ function Entry() {
           || location?.pathname == "/Doucmnets"
           || location?.pathname == "/Roster"
         ) && (
-            <div>
+            <div className="sid-nav-main">
               <SideNav />
             </div>
           )}
@@ -76,9 +76,7 @@ function Entry() {
           || location?.pathname == "/Roster"
 
         ) && (
-
             <ProfileHeader />
-
           )}
         <div style={{ width: "100%", overflow: "hidden" }}>
 

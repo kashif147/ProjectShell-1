@@ -335,6 +335,10 @@ export const TableColumnsProvider = ({ children }) => {
 
   const [globleFilters, setGlobleFilters] = useState(filteredSearchFilters);
 
+  const resetFtn= () =>{
+    setGlobleFilters(filteredSearchFilters)
+  }
+
   // Handlers and functions
   const handlClaimDrawerChng = useCallback(() => {
     setClaimsDrawer(prev => !prev);
@@ -470,14 +474,13 @@ export const TableColumnsProvider = ({ children }) => {
     setRowIndex(index);
   }, []);
 
-  const profilNextBtnFtn = useCallback(() => {
-    setRowIndex(prevIndex => {
-      const newIndex = prevIndex + 1;
-      const filteredData = gridData?.filter((_, index) => index === newIndex);
-      setProfileDetails(filteredData);
-      return newIndex;
-    });
-  }, [gridData]);
+  const profilNextBtnFtn = () => {
+    const newIndex = rowIndex + 1;
+    const filteredData = gridData?.filter((_, index) => index === newIndex);
+    setProfileDetails(filteredData);
+    setRowIndex(newIndex);
+  };
+  
 
   const profilPrevBtnFtn = useCallback(() => {
     setRowIndex(prevIndex => {
@@ -512,7 +515,7 @@ export const TableColumnsProvider = ({ children }) => {
       }
       return prev;
     });
-  }, [screenName]);
+  }, []);
 
   const extractMainKeys = useCallback(() => {
     if (!report || typeof report !== 'object') return [];
@@ -600,7 +603,6 @@ export const TableColumnsProvider = ({ children }) => {
         }
         return acc;
       }, {});
-
       setLookupsForSelect(prevState => ({ ...prevState, ...transformedData }));
     }
   }, [lookupsData]);
@@ -617,7 +619,7 @@ export const TableColumnsProvider = ({ children }) => {
         contactTypes: transformedData,
       }));
     }
-  }, [contactTypes]);
+  }, []);
 
   // Filter data effect
   const getFiltersWithTrueLookups = useCallback((filters) => {
@@ -736,7 +738,8 @@ export const TableColumnsProvider = ({ children }) => {
     lookupsForSelect,
     disableFtn,
     isDisable,
-    handleSaveAfterEdit
+    handleSaveAfterEdit,
+    resetFtn
   }), [
     columns,
     gridData,
@@ -768,7 +771,8 @@ export const TableColumnsProvider = ({ children }) => {
     lookupsForSelect,
     disableFtn,
     isDisable,
-    handleSaveAfterEdit
+    handleSaveAfterEdit,
+    resetFtn
   ]);
 
   return (
