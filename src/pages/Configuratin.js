@@ -55,10 +55,11 @@ import { deleteFtn, insertDataFtn, updateFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
-import { getLookupTypes } from "../features/LookupTypeSlice";
+// import { getLookupTypes } from "../features/LookupTypeSlice";
 import { getAllRegionTypes } from '../features/RegionTypeSlice'
 import { getContactTypes } from "../features/ContactTypeSlice";
 import { getContacts } from "../features/ContactSlice";
+import { getLookupTypes } from "../features/LookupTypeSlice";
 import { set } from "react-hook-form";
 
 function Configuratin() {
@@ -290,6 +291,7 @@ function Configuratin() {
     dispatch(getContacts());
     dispatch(getAllRegionTypes());
     dispatch(getContactTypes());
+    dispatch(getLookupTypes())
   }, [dispatch]);
   
   const [ContactTypeData, setContactTypeData] = useState({
@@ -1117,7 +1119,7 @@ function Configuratin() {
                 message: 'Do You Want To Delete This Item?',
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/lookuptype`, record?._id,);
-                  dispatch(getAllRegionTypes())
+                  dispatch(getLookupTypes())
                 },
               })
             }
