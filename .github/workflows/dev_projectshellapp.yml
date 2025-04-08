@@ -1,7 +1,7 @@
 # Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
 # More GitHub Actions for Azure: https://github.com/Azure/actions
 
-name: Build and deploy Node.js app to Azure Web App - projectshell
+name: Build and deploy Node.js app to Azure Web App - ProjectShellApp
 
 on:
   push:
@@ -60,15 +60,15 @@ jobs:
       - name: Login to Azure
         uses: azure/login@v2
         with:
-          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_5D20A76E580B41D692915C5E109E25F0 }}
-          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_721A81449AB8408090606E1969D2ECF2 }}
-          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_3BD124B069424E33908F02756AFA16E0 }}
+          client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_70C6BAC5E47844BBAFE2F9690BE966EE }}
+          tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_7D018E81F2B7416E940216D94D0B6F2E }}
+          subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_6F6A202E4FE24383A3FED4601EEB0B8B }}
 
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-          app-name: 'projectshell'
+          app-name: 'ProjectShellApp'
           slot-name: 'Production'
           package: .
           
