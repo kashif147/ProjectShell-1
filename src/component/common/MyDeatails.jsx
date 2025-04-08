@@ -75,7 +75,7 @@ const beforeUpload = (file) => {
 
 function MyDeatails() {
   const dispatch = useDispatch();
-  const { ProfileDetails, topSearchData, rowIndex, lookupsData, lookupsForSelect, selectLokups } = useTableColumns();
+  const { ProfileDetails,resetFtn, topSearchData, rowIndex, lookupsData, lookupsForSelect, selectLokups } = useTableColumns();
   const { partner, partnerloading, error } = useSelector((state) => state.partner, shallowEqual);
   const { children, childrenError, childrenLoading } = useSelector((state) => state.children, shallowEqual);
 
@@ -334,8 +334,8 @@ function MyDeatails() {
     };
   
     setInfData(profils);
-  }, [ProfileDetails?.length]); // Dependency optimized
-  
+  }, [ProfileDetails]); // Dependency optimized
+
   useEffect(() => {
     dispatch(getPartners());
     dispatch(getChildren());
@@ -544,7 +544,6 @@ function MyDeatails() {
   // let ageOnNextBirthday = getNextBirthdayAge(InfData?.dateOfBirth);
   useEffect(() => {
     if (!InfData?.dateOfBirth) return;
-  
     const age = getNextBirthdayAge(InfData.dateOfBirth);
     setAgeOnNextBirthday((prevAge) => (prevAge !== age ? age : prevAge));
   }, [InfData?.dateOfBirth]);
@@ -2657,7 +2656,7 @@ function MyDeatails() {
                     </div>
                     <div className='inpt-con'>
                       <p className='star'>*</p>
-                      <div className='inpt-sub-con d-flex'>
+                      <div className='inpt-sub-con d-flex flex-row'>
                         <Input />
                         <Button className='primary-btn butn ms-2 detail-btn'>
                           +
@@ -2674,7 +2673,7 @@ function MyDeatails() {
                     </div>
                     <div className='inpt-con'>
                       <p className='star-white'>*</p>
-                      <div className='inpt-sub-con d-flex'>
+                      <div className='inpt-sub-con d-flex flex-row'>
                         <Input />
                         <Button className='primary-btn butn ms-2 detail-btn'>
                           +
@@ -2922,7 +2921,7 @@ function MyDeatails() {
                     </div>
                     <div className='inpt-con'>
                       <p className='star'>*</p>
-                      <div className='inpt-sub-con d-flex'>
+                      <div className='inpt-sub-con d-flex flex-row'>
                         <Input />
                         <Button className='primary-btn butn ms-2 detail-btn'>
                           +
@@ -2939,7 +2938,7 @@ function MyDeatails() {
                     </div>
                     <div className='inpt-con'>
                       <p className='star-white'>*</p>
-                      <div className='inpt-sub-con d-flex'>
+                      <div className='inpt-sub-con d-flex flex-row'>
                         <Input />
                         <Button className='primary-btn butn ms-2 detail-btn'>
                           +

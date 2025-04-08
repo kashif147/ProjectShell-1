@@ -1,29 +1,30 @@
 // regionSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
-import axiosInstance from '../utils/AxiosInstance'
 import { baseURL } from '../utils/Utilities';
 
 let token; 
- 
+
+ // Replace with your actual base URL
 
 export const fetchRegions = createAsyncThunk(
     'regions/fetchRegions',
     async (_, { rejectWithValue }) => {
         try { 
-            token = localStorage.getItem('token')
-            const response = await axiosInstance.get(`${baseURL}/lookup`, {
+            const token = localStorage.getItem('token');
+            const response = await axios.get(`${baseURL}/lookup`, {
                 headers: {
-                    Authorization: `Bearer ${token}`, // Include token in headers
+                    Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
                 },
             });
             return response.data; // Assuming the API returns an array of regions
         } catch (error) {
-            // return rejectWithValue(error.response.data.message || 'Failed to fetch regions');
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch regions');
         }
     }
 );
+
 
 export const addRegion = createAsyncThunk(
     'regions/addRegion',

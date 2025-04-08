@@ -199,8 +199,9 @@ body {
 }
 .Header-border {
   border-bottom: 2px solid #e0e0e0;
+}
+.bg{
   background-color: var(--mainBlue);
-  color: white !important;
 }
 
 .top-search  input{

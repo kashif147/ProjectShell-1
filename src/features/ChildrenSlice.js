@@ -11,8 +11,8 @@ export const getChildren = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        // `${baseURL}/children/profile/67a1b268a203d65ec4a553e2`, // Update this endpoint as needed
-        `http://localhost:3500/children/profile/67a1b268a203d65ec4a553e2`, // Update this endpoint as needed
+        `${baseURL}/children/profile/67a1b268a203d65ec4a553e2`, // Update this endpoint as needed
+        // `http://localhost:3500/children/profile/67a1b268a203d65ec4a553e2`, // Update this endpoint as needed
         {
           headers: {
             Authorization: `Bearer ${token}`,

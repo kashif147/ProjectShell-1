@@ -23,6 +23,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { FaFileAlt } from "react-icons/fa";
 import { TbBulb } from "react-icons/tb";
 import { FaRegCircleUser } from "react-icons/fa6";
+import { IoSettingsOutline } from "react-icons/io5";
 import { MdOutlineContactPhone } from "react-icons/md";
 import { LuFileQuestion } from "react-icons/lu";
 import { PiRankingThin } from "react-icons/pi";
@@ -376,30 +377,30 @@ function Configuratin() {
       isDeleted: false
     },
     RegionType: { RegionType: '', DisplayName: '', isactive: true, isDeleted: false },
-    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Station: { lookuptypeId: '67d252f97c8b9c538a209b81', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookupid: '', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    SpokenLanguages: { lookuptypeId: '67d572f28a2875433c182245', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    ProjectTypes: { lookuptypeId: '67d67c138a2875433c182345', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Trainings: { lookuptypeId: '67d680048a2875433c1823fd', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Ranks: { lookuptypeId: '67ac73c693e73711692bf859', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    Duties: { lookuptypeId: '67d680048a2875433c1823fd', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
-    RosterType: { lookuptypeId: '67d69c6f8a2875433c182815', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67117bea87c907f6cdda0ad9", isactive: true, isDeleted: false },
+    Counteries: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Station: { lookuptypeId: '67d252f97c8b9c538a209b81', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Districts: { lookuptypeId: '67bf3d63e314eba2c210517f', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Divisions: { lookuptypeId: '67bf4317e314eba2c21051dc', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookupid: '', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Gender: { lookuptypeId: '674a1977cc0986f64ca36fc6', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Title: { lookuptypeId: '675fc362e9640143bfc38d28', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    SpokenLanguages: { lookuptypeId: '67d572f28a2875433c182245', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    MaritalStatus: { lookuptypeId: '67b434ccc51214d371b7c0d1', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    ProjectTypes: { lookuptypeId: '67d67c138a2875433c182345', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Trainings: { lookuptypeId: '67d680048a2875433c1823fd', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Ranks: { lookuptypeId: '67ac73c693e73711692bf859', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Provinces: { lookuptypeId: '67bf243ce314eba2c2105098', DisplayName: '', code: '', lookupname: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Duties: { lookuptypeId: '67d680048a2875433c1823fd', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    RosterType: { lookuptypeId: '67d69c6f8a2875433c182815', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isactive: true },
   };
 
@@ -5130,7 +5131,7 @@ function Configuratin() {
           await insertDataFtn(
             `/lookuptype`,
             {
-              ...drawerIpnuts?.LookupType, "userid": "67117bea87c907f6cdda0ad9",
+              ...drawerIpnuts?.LookupType, "userid": "67f3f9d812b014a0a7a94081",
             },
             'Data insert ed successfully',
             'Data did not insert',
@@ -5181,7 +5182,7 @@ function Configuratin() {
                 <p>DisplayName</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
                   disabled={isDisable}
@@ -5245,7 +5246,7 @@ function Configuratin() {
           await insertDataFtn(
             `${baseURL}/regiontype`,
             {
-              ...drawerIpnuts?.RegionType, "userid": "67117bea87c907f6cdda0ad9",
+              ...drawerIpnuts?.RegionType, "userid": "67f3f9d812b014a0a7a94081",
             },
             'Data inserted successfully',
             'Data did not insert',

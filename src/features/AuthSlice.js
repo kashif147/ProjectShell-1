@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 import MyAlert from '../component/common/MyAlert';
-// import { useNavigate } from 'react-router-dom';
+
 
 const baseURL = `${process.env.REACT_APP_BASE_URL_DEV}/auth`;
 
@@ -43,7 +43,7 @@ const authSlice = createSlice({
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action?.payload;
-
+debugger
                 // Set the accessToken in localStorage
                 if (action.payload?.accessToken) {
                     localStorage.setItem('token', action.payload.accessToken);

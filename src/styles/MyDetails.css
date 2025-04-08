@@ -32,10 +32,9 @@ p {
 }
 
 .detail-sub-con-ist {
-    border-top-left-radius: 20px;
-    border-bottom-left-radius: 20px;
+    /* border-top-left-radius: 20px;
+    border-bottom-left-radius: 20px; */
 }
-
 .lbl-inpt {
     display: flex;
     align-items: center;

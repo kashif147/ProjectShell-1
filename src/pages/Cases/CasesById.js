@@ -5,16 +5,13 @@ import  "../../styles/CasesById.css";
 
 function CasesById() {
     const viewCase = (caseId) => {
-        console.log(`Viewing case: ${caseId}`);
       };
       
       const editCase = (caseId) => {
-        console.log(`Editing case: ${caseId}`);
         // Edit case logic
       };
       
       const deleteCase = (caseId) => {
-        console.log(`Deleting case: ${caseId}`);
         // Delete case logic
       };
       const caseColumns = [

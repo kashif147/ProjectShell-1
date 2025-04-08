@@ -39,9 +39,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
     },
   }
 
-  useEffect(() => {
-    dispatch(getContactTypes());
-  }, [dispatch]);
+  // useEffect(() => {
+  //   dispatch(getContactTypes());
+  // }, [dispatch]);
   const [contactDrawer, setcontactDrawer] = useState(false)
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const [isPayment, setisPayment] = useState(false)

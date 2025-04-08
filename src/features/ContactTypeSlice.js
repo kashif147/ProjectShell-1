@@ -1,9 +1,7 @@
 /** @format */
-
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { baseURL } from "../utils/Utilities";
-
 // Fetch all contact types
 export const getContactTypes = createAsyncThunk(
   "contactType/getContactTypes",
@@ -11,7 +9,7 @@ export const getContactTypes = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${baseURL}/contacttype`, // Update the API endpoint
+        `${baseURL}/contacttype`, 
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -21,9 +19,7 @@ export const getContactTypes = createAsyncThunk(
       );
       return response.data;
     } catch (error) {
-      return rejectWithValue(
-
-      );
+      return rejectWithValue();
     }
   }
 );

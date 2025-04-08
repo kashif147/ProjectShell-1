@@ -146,7 +146,7 @@ function Header() {
 
   return (
     <div className="Header-border overflow-y-hidden">
-      <div className="d-flex justify-content-between align-items-center">
+      <div className="d-flex justify-content-between align-items-center bg">
         <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '32px' }}>
           <img
             src={logo}
@@ -185,7 +185,7 @@ function Header() {
                   <MyDrowpDown title={"Roster"} items={Roster} />
                 </li>
                 <li className={`${pathname === "/Transfers" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <Link className="links" to="Transfers" state={{ search: "" }}>Transfer Requests</Link>
+                  <Link className="links" to="Transfers" state={{ search: "Transfers" }}>Transfer Requests</Link>
                 </li>
                 <li className={`${pathname === "/Report2" || pathname === "/Report1" ? "activ-link" : ""} nav-item nav-links-container`}>
                   <MyDrowpDown title={"Reports"} items={reportLink} />
