@@ -5229,6 +5229,7 @@ function Configuratin() {
               loading={lookupsTypesloading}
             />;
           </div>
+          {/* test */}
         </div>
       </MyDrawer>
       <MyDrawer title='Region Type' open={drawerOpen?.RegionType} isPagination={true}
