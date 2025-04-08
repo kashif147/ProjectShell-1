@@ -39,14 +39,14 @@ function Entry() {
   const location = useLocation();
   return (
     <div className="">{
-      location?.pathname != "/" && 
+      location?.pathname != "/" &&
       <Header />
     }
       <div>
-      {
-      location?.pathname != "/" && 
-      <HeaderDetails />
-      }
+        {
+          location?.pathname != "/" &&
+          <HeaderDetails />
+        }
       </div>
       <div className="main-route d-flex ">
         {(location?.pathname == "/Details"
@@ -101,20 +101,20 @@ function Entry() {
               <Route path="Transfers" element={<TransferSummary />} />
               <Route path="AddClaims" element={<AddClaims />} />
               <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
-              <Route path="LandingPage" element={<LandingPage />} /> 
+              <Route path="LandingPage" element={<LandingPage />} />
               <Route path="Reports" element={<Reports />} />
               <Route path="CorspndncDetail" element={<CorspndncDetail />} />
               <Route path="RosterSummary" element={<RusterSummary />} />
               <Route path="Doucmnets" element={<Doucmnets />} />
               <Route path="Roster" element={<RosterDetails />} />
               {/* </Route>  */}
-                          </Routes>
+            </Routes>
           </div>
         </div>
         {(location?.pathname == "/Details"
           || location?.pathname == "/ClaimsDetails"
           || location?.pathname == "/CasesDetails"
-          || location?.pathname == "/AddNewProfile" 
+          || location?.pathname == "/AddNewProfile"
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/ClaimsById"
           || location?.pathname == "/Doucmnets"
@@ -122,10 +122,10 @@ function Entry() {
             <ResizableComp />
           )}
       </div>
-      {((location?.pathname == "/Details" ||location?.pathname == "/CorspndncDetail"||location?.pathname == "/Doucmnets" ) && (
-      <div style={{width:'100%',height:'50px'}} className="footer">
-      <MyFooter />
-      </div>
+      {((location?.pathname == "/Details" || location?.pathname == "/CorspndncDetail" || location?.pathname == "/Doucmnets") && (
+        <div style={{ width: '100%', height: '50px' }} className="footer">
+          <MyFooter />
+        </div>
       ))}
     </div>
   );
