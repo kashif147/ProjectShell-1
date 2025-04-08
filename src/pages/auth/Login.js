@@ -69,11 +69,15 @@ const Login = () => {
     const handleLoginWithCredentional = async(e) => {
         // e.preventDefault();
      await  dispatch(loginUser(credentials));
-        if(user ){
-            navigate('/Summary');
-        }
+        
+            navigate("/Summary",{
+                    state: {
+                      search: "Profile"
+                    },
+                  })
+        
     }; 
-
+  
     return (
 
         <main role="main" className="login-body" >
@@ -151,11 +155,7 @@ const Login = () => {
                         </div>
                         {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
                         <Button loading={loading} style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
-                              navigate("/Summary",{
-                                state: {
-                                  search: "Profile"
-                                },
-                              })
+                            // 
                             handleLoginWithCredentional(e)
                             }}>Log in</Button>
                     </form>
