@@ -2,9 +2,9 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 import { tableData } from "../Data";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchRegions, deleteRegion } from "../features/RegionSlice";
-import { getAllLookups } from '../features/LookupsSlice'
-import { getContactTypes } from "../features/ContactTypeSlice";
+import { fetchRegions, deleteRegion } from "../store/slice/RegionSlice";
+import { getAllLookups } from '../store/slice/LookupsSlice'
+import { getContactTypes } from "../store/slice/ContactTypeSlice";
 
 const TableColumnsContext = createContext();
 

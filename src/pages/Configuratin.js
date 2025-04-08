@@ -16,8 +16,8 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
 import { MdOutlineScreenSearchDesktop } from "react-icons/md";
 import { FiPlusCircle } from "react-icons/fi";
-import { getAllLookupsType } from '../features/LookupTypeSlice';
-import { getAllLookups } from '../features/LookupsSlice'
+import { getAllLookupsType } from '../store/slice/LookupTypeSlice';
+import { getAllLookups } from '../store/slice/LookupsSlice'
 import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux';
 import { FaFileAlt } from "react-icons/fa";
@@ -53,11 +53,11 @@ import MySelect from "../component/common/MySelect";
 import { deleteFtn, insertDataFtn, updateFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
-import { fetchRegions, deleteRegion } from "../features/RegionSlice";
-import { getLookupTypes } from "../features/LookupTypeSlice";
-import { getAllRegionTypes } from '../features/RegionTypeSlice'
-import { getContactTypes } from "../features/ContactTypeSlice";
-import { getContacts } from "../features/ContactSlice";
+import { fetchRegions, deleteRegion } from "../store/slice/RegionSlice";
+import { getLookupTypes } from "../store/slice/LookupTypeSlice";
+import { getAllRegionTypes } from '../store/slice/RegionTypeSlice'
+import { getContactTypes } from "../store/slice/ContactTypeSlice";
+import { getContacts } from "../store/slice/ContactSlice";
 import { set } from "react-hook-form";
 
 function Configuratin() {

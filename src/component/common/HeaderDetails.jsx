@@ -42,12 +42,12 @@ import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import '../../styles/HeaderDetails.css'
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
-import { fetchRegions } from "../../features/RegionSlice";
 import AddNewGarda from "../details/AddNewGarda";
 import TransferRequests from "../TransferRequests";
 import MyDatePicker from "./MyDatePicker";
 import New from "../corespondence/New";
 import CreateClaim from "../claim/CreateClaim";
+import { fetchRegions } from "../../store/slice/RegionSlice";
 
 function HeaderDetails() {
   const { Search } = Input;

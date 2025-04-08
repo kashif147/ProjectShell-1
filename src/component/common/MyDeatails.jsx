@@ -23,7 +23,6 @@ import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
 import moment from "moment";
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
-import { getAllLookups } from "../../features/LookupsSlice";
 import { useSelector, useDispatch,shallowEqual } from 'react-redux'
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import "../../styles/MyDetails.css";
@@ -36,10 +35,11 @@ import { FaEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 import MyTransfer from "./MyTransfer";
 import { insertDataFtn } from "../../utils/Utilities";
-import { getPartners } from "../../features/PartnersSlice";
-import { getChildren } from "../../features/ChildrenSlice";
 import { baseURL } from "../../utils/Utilities";
 import axios from "axios";
+import { getPartners } from "../../store/slice/PartnersSlice";
+import { getChildren } from "../../store/slice/ChildrenSlice";
+import { getAllLookups } from "../../store/slice/LookupsSlice";
 const { TextArea } = Input;
 
 const CheckboxGroup = Checkbox.Group;

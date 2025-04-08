@@ -14,10 +14,10 @@ import '../../styles/MyDrawer.css'
 import { useTableColumns } from '../../context/TableColumnsContext ';
 import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
-import { getContactTypes } from "../../features/ContactTypeSlice";
+import { getContactTypes } from "../../store/slice/ContactTypeSlice";
 import MyConfirm from "../common/MyConfirm";
 import { deleteFtn } from "../../utils/Utilities";
-import { getContacts } from "../../features/ContactSlice";
+import { getContacts } from "../../store/slice/ContactSlice";
 import { baseURL } from "../../utils/Utilities";
 function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();

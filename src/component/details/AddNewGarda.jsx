@@ -2,7 +2,7 @@
 import React, { useState } from "react";
 import MyDrawer from "../common/MyDrawer";
 import MySelect from "../common/MySelect";
-import { fetchRegions } from "../../features/RegionSlice";
+import { fetchRegions } from "../../store/slice/RegionSlice";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Input,

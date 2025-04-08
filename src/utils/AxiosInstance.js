@@ -1,6 +1,6 @@
 import axios from "axios";
 import { useDispatch } from 'react-redux'
-import { refreshAccessToken, logout } from "../features/RefreshSlice";
+import { refreshAccessToken, logout } from "../store/slice/RefreshSlice";
 
 const axiosInstance = axios.create({
     baseURL: "http://localhost:3500",
