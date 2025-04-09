@@ -250,25 +250,25 @@ function Configuratin() {
     const lookupFilters = [
       { key: "gender", id: "67f58a2d17f0ecf3dbf79cfe" },
       { key: "Titles", id: "67f57de817f0ecf3dbf79cc2" },
-      { key: "ProjectTypes", id: "67d67c138a2875433c182345" },
-      { key: "Duties", id: "674a219fcc0986f64ca3701b" },
+      { key: "ProjectTypes", id: "67f6319a17f0ecf3dbf79fbc" },
+      { key: "Duties", id: "67f6351b17f0ecf3dbf7a018" },
       { key: "MaritalStatus", id: "67f590d017f0ecf3dbf79d57" },
       { key: "county", id: "67f5971f17f0ecf3dbf79df6" },
-      { key: "Divisions", id: "67f5971f17f0ecf3dbf79df6" },
-      { key: "Cities", id: "67c57868a8320b14514d38ca" },
-      { key: "Boards", id: "67c947b6f41d37131f79b1e8" },
-      { key: "Councils", id: "67c96d8af41d37131f79b37a" },
+      { key: "Divisions", id: "67f5990b17f0ecf3dbf79e35" },
+      { key: "Cities", id: "67f6282f17f0ecf3dbf79ef8" },
+      { key: "Boards", id: "67f62cbc17f0ecf3dbf79f5a" },
+      { key: "Councils", id: "67f62fb517f0ecf3dbf79f86" },
       { key: "CorrespondenceType", id: "67ca9528a5cd03df6e08c14d" },
-      { key: "Stations", id: "67d252f97c8b9c538a209b81" },
+      { key: "Stations", id: "67f6297617f0ecf3dbf79f12" },
       { key: "DocumentType", id: "67ca9adda5cd03df6e08c202" },
       { key: "ClaimType", id: "67caa10ba5cd03df6e08c29e" },
       { key: "Schemes", id: "67ce8fda4055ac8c72b37e3b" },
       { key: "Reasons", id: "67ce93394055ac8c72b37ec0" },
       { key: "Provinces", id: "67f5945517f0ecf3dbf79db4" },
-      { key: "Districts", id: "67f5971f17f0ecf3dbf79df6" },
-      { key: "SpokenLanguages", id: "67d572f28a2875433c182245" },
-      { key: "Trainings", id: "67d680048a2875433c1823fd" },
-      { key: "Ranks", id: "67ac73c693e73711692bf859" },
+      { key: "Districts", id: "67f626ed17f0ecf3dbf79ed1" },
+      { key: "SpokenLanguages", id: "67f6308417f0ecf3dbf79fa3" },
+      { key: "Trainings", id: "67f6329f17f0ecf3dbf79fd3" },
+      { key: "Ranks", id: "67f6344d17f0ecf3dbf79fff" },
       { key: "RosterType", id: "67d69c6f8a2875433c182815" },
     ];
   
@@ -278,6 +278,7 @@ function Configuratin() {
     }, {});
   
     setdata((prevState) => ({ ...prevState, ...filteredData }));
+      console.log("8888", filteredData);
   }, [lookups]);
   console.log(data,"123")
   
@@ -383,28 +384,28 @@ function Configuratin() {
     },
     RegionType: { RegionType: '', DisplayName: '', isactive: true, isDeleted: false },
     Counteries: { lookuptypeId: '67f5971f17f0ecf3dbf79df6', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Station: { lookuptypeId: '67d252f97c8b9c538a209b81', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Cities: { lookuptypeId: '67c57868a8320b14514d38ca', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Districts: { lookuptypeId: '67f5971f17f0ecf3dbf79df6', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Divisions: { lookuptypeId: '67f5971f17f0ecf3dbf79df6', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Councils: { lookuptypeId: '67c96d8af41d37131f79b37a', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Station: { lookuptypeId: '67f6297617f0ecf3dbf79f12', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Cities: { lookuptypeId: '67f6282f17f0ecf3dbf79ef8', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Districts: { lookuptypeId: '67f626ed17f0ecf3dbf79ed1', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Divisions: { lookuptypeId: '67f5990b17f0ecf3dbf79e35', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Councils: { lookuptypeId: '67f62fb517f0ecf3dbf79f86', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Boards: { lookuptypeId: '67c947b6f41d37131f79b1e8', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Boards: { lookuptypeId: '67f62cbc17f0ecf3dbf79f5a', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookupid: '', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Gender: { lookuptypeId: '67f58a2d17f0ecf3dbf79cfe', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Title: { lookuptypeId: '67f57de817f0ecf3dbf79cc2', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    SpokenLanguages: { lookuptypeId: '67d572f28a2875433c182245', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    SpokenLanguages: { lookuptypeId: '67f6308417f0ecf3dbf79fa3', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     MaritalStatus: { lookuptypeId: '67f590d017f0ecf3dbf79d57', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    ProjectTypes: { lookuptypeId: '67d67c138a2875433c182345', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Trainings: { lookuptypeId: '67d680048a2875433c1823fd', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Ranks: { lookuptypeId: '67ac73c693e73711692bf859', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    ProjectTypes: { lookuptypeId: '67f6319a17f0ecf3dbf79fbc', DisplayName: '', lookupname: '', code: '', Parentlookupid: '674a195dcc0986f64ca36fc2', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Trainings: { lookuptypeId: '67f6329f17f0ecf3dbf79fd3', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Ranks: { lookuptypeId: '67f6344d17f0ecf3dbf79fff', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Provinces: { lookuptypeId: '67f5945517f0ecf3dbf79db4', DisplayName: '', code: '', lookupname: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Duties: { lookuptypeId: '67d680048a2875433c1823fd', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Duties: { lookuptypeId: '67f6351b17f0ecf3dbf7a018', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     RosterType: { lookuptypeId: '67d69c6f8a2875433c182815', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isactive: true },
   };
@@ -4636,10 +4637,10 @@ function Configuratin() {
           insertDataFtn(`/lookup`, drawerIpnuts?.Station,
             'Data inserted successfully:', 'Data did not insert:',
             () => {
-              resetCounteries('Station')
+              resetCounteries('Station',() => dispatch(getAllLookups()))
             }
           )
-          dispatch(fetchRegions())
+          dispatch(getAllLookups())
         }}
         isEdit={isUpdateRec?.Station}
         update={async () => {
@@ -7868,7 +7869,8 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-      <MyDrawer title='Solicitors'
+      <MyDrawer 
+       title='Solicitors'
         open={drawerOpen?.Solicitors}
         isPagination={true}
         onClose={() => openCloseDrawerFtn('Solicitors')}
@@ -7880,7 +7882,7 @@ function Configuratin() {
             'Data inserted successfully',
             'Data did not insert',
             () => resetCounteries('Solicitors',() => dispatch(getContacts())))
-          dispatch(getContacts())
+            dispatch(getContacts())
           }}
         update={
           async () => {

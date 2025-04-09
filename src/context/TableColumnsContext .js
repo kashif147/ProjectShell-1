@@ -553,11 +553,11 @@ export const TableColumnsProvider = ({ children }) => {
     setRegionLookups(prevState => ({
       ...prevState,
       Provinces: filterRegions("lookuptypeId?._id", "67f5945517f0ecf3dbf79db4"),
-      county: filterRegions("lookuptypeId?._id", "67f5971f17f0ecf3dbf79df6", "ParentRegion", "67614e73479dfae6328a2641"),
-      Divisions: filterRegions("lookuptypeId?._id", "67f5971f17f0ecf3dbf79df6"),
-      Districts: filterRegions("lookuptypeId?._id", ""),
-      Cities: filterRegions("RegionTypeID", "6718228ca0072a28aab883e0"),
-      Stations: filterRegions("RegionTypeID", "671822c6a0072a28aab883e9"),
+      county: filterRegions("lookuptypeId?._id", "67f5971f17f0ecf3dbf79df6", "ParentRegion", ""),
+      Divisions: filterRegions("lookuptypeId?._id", "67f5990b17f0ecf3dbf79e35"),
+      Districts: filterRegions("lookuptypeId?._id", "67f626ed17f0ecf3dbf79ed1"),
+      Cities: filterRegions("lookuptypeId?._id", "67f6282f17f0ecf3dbf79ef8"),
+      Stations: filterRegions("lookuptypeId?._id", "67f6297617f0ecf3dbf79f12"),
     }));
   }, [regions, filterRegions]);
 
