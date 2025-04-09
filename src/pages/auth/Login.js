@@ -69,13 +69,11 @@ const Login = () => {
     const handleLoginWithCredentional = async(e) => {
         // e.preventDefault();
      await  dispatch(loginUser(credentials));
-        
             navigate("/Summary",{
                     state: {
                       search: "Profile"
                     },
                   })
-        
     }; 
   
     return (
@@ -92,38 +90,39 @@ const Login = () => {
                         src={loginImg} alt="Logo" 
                         />
                 </div>
+
                 <div className="login-con" style={{ width: '50%', padding: '20px', display: 'flex', flexDirection: 'column', justifycontent: 'center',}}>
                     {/* <h1 className='login-welcom'>Welcome Back</h1> */}
                     <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
-                    <div style={{paddingTop:"10px", paddingBottom:"10px"}}>
-                    <Button  size="large" style={{background:"#caccce",width:"100%",margintTop:"10px", marginBottom:"10px"}} className='d-flex align-items-baseline butn'
+                    <div style={{paddingTop:"10px", paddingBottom:"10px"}} className="d-flex justify-content-center my-2">
+                   
+ <button
+    //   onClick={onClick}
+      style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent:'center',
+        gap: '10px',
+        padding: '8px 16px',
+        border: '1px solid #ccc',
+        borderRadius: '6px',
+        backgroundColor: 'rgba(9, 30, 66, 0.04)',
+        cursor: 'pointer',
+        fontSize: '16px',
+        fontWeight: 500,
+        width:'100%'
+      }}
+    >
+      {/* Microsoft SVG Icon */}
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
+        <rect width="22" height="22" x="2" y="2" fill="#F25022" />
+        <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
+        <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
+        <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
+      </svg>
 
-                    onClick={handleLogin} 
-                            disabled={inProgress !== InteractionStatus.None} // Disable button if login is in progress
-                            >
-                        <span
-                            style={{
-                               
-                                width: 16,
-                                height: 16,
-                                marginRight: 8,
-                            }}
-                            
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
-                                <rect width="22" height="22" x="2" y="2" fill="#F25022" />
-                                <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
-                                <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
-                                <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
-                            </svg>
-                        </span>
-                        {/* <span>Login with Microsoft</span> */}
-
-
-                {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
-
-                    </Button>
-
+      <span>Sign in with Microsoft</span>
+    </button>
                     </div>
                     <Divider orientation="center" style={{ fontWeight: "400", fontSize: "12px" }}>Or</Divider>
                     <form className="login-form">
