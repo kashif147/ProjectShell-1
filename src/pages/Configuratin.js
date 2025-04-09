@@ -258,18 +258,18 @@ function Configuratin() {
       { key: "Cities", id: "67f6282f17f0ecf3dbf79ef8" },
       { key: "Boards", id: "67f62cbc17f0ecf3dbf79f5a" },
       { key: "Councils", id: "67f62fb517f0ecf3dbf79f86" },
-      { key: "CorrespondenceType", id: "67ca9528a5cd03df6e08c14d" },
+      { key: "CorrespondenceType", id: "67f68bee17f0ecf3dbf7a088" },
       { key: "Stations", id: "67f6297617f0ecf3dbf79f12" },
-      { key: "DocumentType", id: "67ca9adda5cd03df6e08c202" },
-      { key: "ClaimType", id: "67caa10ba5cd03df6e08c29e" },
-      { key: "Schemes", id: "67ce8fda4055ac8c72b37e3b" },
-      { key: "Reasons", id: "67ce93394055ac8c72b37ec0" },
+      { key: "DocumentType", id: "67f68ee617f0ecf3dbf7a0bc" },
+      { key: "ClaimType", id: "67f6906617f0ecf3dbf7a0fe" },
+      { key: "Schemes", id: "67f691ef17f0ecf3dbf7a135" },
+      { key: "Reasons", id: "67f6956817f0ecf3dbf7a189" },
       { key: "Provinces", id: "67f5945517f0ecf3dbf79db4" },
       { key: "Districts", id: "67f626ed17f0ecf3dbf79ed1" },
       { key: "SpokenLanguages", id: "67f6308417f0ecf3dbf79fa3" },
       { key: "Trainings", id: "67f6329f17f0ecf3dbf79fd3" },
       { key: "Ranks", id: "67f6344d17f0ecf3dbf79fff" },
-      { key: "RosterType", id: "67d69c6f8a2875433c182815" },
+      { key: "RosterType", id: "67f652cf17f0ecf3dbf7a048" },
     ];
   
     const filteredData = lookupFilters.reduce((acc, { key, id }) => {
@@ -389,11 +389,11 @@ function Configuratin() {
     Districts: { lookuptypeId: '67f626ed17f0ecf3dbf79ed1', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Divisions: { lookuptypeId: '67f5990b17f0ecf3dbf79e35', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Councils: { lookuptypeId: '67f62fb517f0ecf3dbf79f86', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    CorrespondenceType: { lookuptypeId: '67ca9528a5cd03df6e08c14d', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    ClaimType: { lookuptypeId: '67caa10ba5cd03df6e08c29e', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Schemes: { lookuptypeId: '67ce8fda4055ac8c72b37e3b', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    Reasons: { lookuptypeId: '67ce93394055ac8c72b37ec0', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    DocumentType: { lookuptypeId: '67ca9adda5cd03df6e08c202', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    CorrespondenceType: { lookuptypeId: '67f68bee17f0ecf3dbf7a088', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    ClaimType: { lookuptypeId: '67f6906617f0ecf3dbf7a0fe', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Schemes: { lookuptypeId: '67f691ef17f0ecf3dbf7a135', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    Reasons: { lookuptypeId: '67f6956817f0ecf3dbf7a189', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    DocumentType: { lookuptypeId: '67f68ee617f0ecf3dbf7a0bc', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Boards: { lookuptypeId: '67f62cbc17f0ecf3dbf79f5a', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     LookupType: { lookuptype: '', code: '', DisplayName: '', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Lookup: { lookuptypeId: '', DisplayName: '', lookupname: '', code: '', Parentlookupid: '', userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
@@ -406,7 +406,7 @@ function Configuratin() {
     Ranks: { lookuptypeId: '67f6344d17f0ecf3dbf79fff', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Provinces: { lookuptypeId: '67f5945517f0ecf3dbf79db4', DisplayName: '', code: '', lookupname: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     Duties: { lookuptypeId: '67f6351b17f0ecf3dbf7a018', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
-    RosterType: { lookuptypeId: '67d69c6f8a2875433c182815', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
+    RosterType: { lookuptypeId: '67f652cf17f0ecf3dbf7a048', DisplayName: '', lookupname: '', code: '', Parentlookupid: null, userid: "67f3f9d812b014a0a7a94081", isactive: true, isDeleted: false },
     ContactType: { ContactType: "", DisplayName: "", isDeleted: false, isactive: true },
   };
 
@@ -6821,7 +6821,7 @@ function Configuratin() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Claim Type</p>
+                <p>Reasons</p>
               </div>
               <div className="inpt-con">
                 <p className="star">*</p>
@@ -6841,7 +6841,7 @@ function Configuratin() {
                 <p>Display Name:</p>
               </div>
               <div className="inpt-con">
-                <p className="star">*</p>
+                <p className="star-white">*</p>
                 <div className="inpt-sub-con">
                   <Input
                   disabled={isDisable}
