@@ -281,6 +281,7 @@ function Configuratin() {
       console.log("8888", filteredData);
   }, [lookups]);
   console.log(data,"123")
+  console.log(lookups,"1234")
   
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
@@ -296,6 +297,7 @@ function Configuratin() {
     dispatch(getAllRegionTypes());
     dispatch(getContactTypes());
     dispatch(getLookupTypes())
+    dispatch(getAllLookups())
   }, [dispatch]);
   
   const [ContactTypeData, setContactTypeData] = useState({
