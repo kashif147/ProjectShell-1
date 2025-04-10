@@ -574,7 +574,7 @@ console.log(globleFilters,'globleFilters')
                           style={{ fontSize: "15px", fontWeight: 500 }}
                         />
                       }
-                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag':'false' }}
+                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag':'false','Bulk Email':'false','Bulk SMS':'false' }}
                       isCheckBox={false}
                       isSearched={false}
                       isTransparent={true}

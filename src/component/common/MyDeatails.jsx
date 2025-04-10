@@ -945,7 +945,7 @@ function MyDeatails() {
         <div className='details-con-header1'>
           <Row>
             <Col span={8}>
-              <div className='details-con-header'>
+              <div className='details-con-header brdr'>
                 <h2>Personal Information</h2>
               </div>
               <div className='detail-sub-con detail-sub-con-ist'>

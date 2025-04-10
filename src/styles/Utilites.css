@@ -2,5 +2,21 @@
     --primary-color:#215E97;
     --secoundry-color: #C97A2F;
     --secoundry-bg-color:#E6F7FF;
+    --gray:  rgba(9, 30, 66, 0.04); 
+}
+
+.ant-tabs-nav{
+    margin: 0px !important;
+}
+.ant-tabs-nav{
+    background-color: var(--secoundry-bg-color);
+    border-left: 1px solid #e0e0e0;
+    padding-left: 10px !important;
+    color: var(--primary-color) !important ;
+}
+.ant-tabs-tab{
+    color: var(--primary-color) !important ; 
+    font-size: 14px !important;
+    font-weight: 500;
 
 }

@@ -147,7 +147,7 @@ function Header() {
   return (
     <div className="Header-border overflow-y-hidden">
       <div className="d-flex justify-content-between align-items-center bg">
-        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '32px' }}>
+        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '32px', width:'33%' }}>
           <img
             src={logo}
             alt="Company Logo"
@@ -197,8 +197,8 @@ function Header() {
             </div> */}
           </nav>
         </div>
-        <div className="input-container d-flex align-items-center">
-          <Search
+        <div style={{width:'33%'}}> 
+        <Search
             placeholder="Reg No"
             onChange={(e) => setregNo(e.target.value)}
             onKeyDown={async (e) => {
@@ -214,8 +214,10 @@ function Header() {
               }
             }}
             className="top-search"
-            style={{ marginRight: "1rem" }}
+            style={{ marginRight: "",width:'100%' }}
           />
+        </div>
+        <div style={{width:'33%', justifyContent:'end'}} className="input-container d-flex align-items-center justify-content-end">
           <PiPhoneCallBold
             className="top-icon"
             onClick={() => navigate("/CorrespondencesSummary", { state: { search: "Correspondence" } })}

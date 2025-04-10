@@ -1,0 +1,32 @@
+.icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  font-size: 18px;
+  color: #fff !important;
+}
+/* .sid-nav-main {
+    height: 100vh;
+    background-color: #001529;
+  }
+  
+  
+  .sidebar-label {
+    display: block;
+    text-align: center;
+    font-size: 12px;
+    margin-top: 4px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    width: 100%;
+  }
+  
+  .menu-collapsed {
+    width: 60px !important;
+  }
+  
+  .menu-expanded {
+    width: 100px !important;
+  } */
+  

@@ -40,15 +40,18 @@ function Entry() {
   const location = useLocation();
   return (
     <div>
+      {
+        location?.pathname != "/" && 
       <Header />
+      }
       <div className="d-flex">
-      <div style={{width:'10%', backgroundColor:'red'}}>
         {
-      location?.pathname != "/" && 
+        location?.pathname != "/" && 
+      <div style={{ backgroundColor:'red'}}>
       <Sidbar/>
-    }
       </div>
-      <div style={{width:'90%'}}>
+      }
+      <div style={{}}>
       <div>
       {
       location?.pathname != "/" && 
@@ -56,7 +59,7 @@ function Entry() {
       }
       </div>
       <div className="main-route d-flex ">
-        {(location?.pathname == "/Details"
+        {/* {(location?.pathname == "/Details"
           || location?.pathname == "/ClaimsDetails" ||
           location?.pathname == "/CasesDetails" ||
           location?.pathname == "/ClaimsById" ||
@@ -68,9 +71,9 @@ function Entry() {
           || location?.pathname == "/Roster"
         ) && (
             <div className="sid-nav-main">
-              <SideNav />
             </div>
-          )}
+            <SideNav />
+          )} */}
         {(location?.pathname == "/Details"
           || location?.pathname == "/ClaimsDetails" ||
           location?.pathname == "/CasesDetails" ||
