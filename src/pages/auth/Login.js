@@ -108,8 +108,8 @@ const Login = () => {
         borderRadius: '6px',
         backgroundColor: 'rgba(9, 30, 66, 0.04)',
         cursor: 'pointer',
-        fontSize: '16px',
-        fontWeight: 500,
+        fontSize: '14px',
+        // fontWeight: 500,
         width:'100%'
       }}
     >

@@ -576,11 +576,11 @@ export const TableColumnsProvider = ({ children }) => {
   useEffect(() => {
     if (lookups && Array.isArray(lookups)) {
       const lookupTypes = {
-        gender: '674a1977cc0986f64ca36fc6',
-        Duties: '674a219fcc0986f64ca3701b',
-        MaritalStatus: '676a9ec44a1a6d0778731c29',
-        Titles: '675fc362e9640143bfc38d28',
-        Ranks: '67ac73c693e73711692bf859',
+        gender: '67f58a2d17f0ecf3dbf79cfe',
+        Duties: '67f6351b17f0ecf3dbf7a018',
+        MaritalStatus: '67f590d017f0ecf3dbf79d57',
+        Titles: '67f57de817f0ecf3dbf79cc2',
+        Ranks: '67f6344d17f0ecf3dbf79fff',
       };
 
       const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
@@ -594,7 +594,7 @@ export const TableColumnsProvider = ({ children }) => {
 
   useEffect(() => {
     if (lookupsData) {
-      const transformedData = ['Duties', 'Ranks', 'Titles'].reduce((acc, key) => {
+      const transformedData = ['Duties', 'Ranks', 'Titles','gender'].reduce((acc, key) => {
         if (lookupsData[key]) {
           acc[key] = lookupsData[key].map(item => ({
             key: item?._id,
@@ -619,7 +619,7 @@ export const TableColumnsProvider = ({ children }) => {
         contactTypes: transformedData,
       }));
     }
-  }, []);
+  }, [contactTypes]);
 
   // Filter data effect
   const getFiltersWithTrueLookups = useCallback((filters) => {

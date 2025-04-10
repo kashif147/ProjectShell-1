@@ -2,24 +2,24 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import { baseURL } from "../utils/Utilities";
-// Fetch all contact types
+
+// Async thunk to fetch contact types
 export const getContactTypes = createAsyncThunk(
   "contactType/getContactTypes",
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(
-        `${baseURL}/contacttype`, 
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-      return response.data;
+      const response = await axios.get(`${baseURL}/contacttype`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      // Make sure to adjust this if the API wraps the data
+      return response.data; // Or response.data.data if needed
     } catch (error) {
-      return rejectWithValue();
+      return rejectWithValue(error.response?.data || "Something went wrong");
     }
   }
 );
@@ -31,7 +31,13 @@ const contactTypeSlice = createSlice({
     contactTypesloading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    resetContactTypes: (state) => {
+      state.contactTypes = [];
+      state.contactTypesloading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getContactTypes.pending, (state) => {
@@ -49,4 +55,5 @@ const contactTypeSlice = createSlice({
   },
 });
 
+export const { resetContactTypes } = contactTypeSlice.actions;
 export default contactTypeSlice.reducer;

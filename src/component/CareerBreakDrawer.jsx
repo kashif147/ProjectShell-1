@@ -55,7 +55,7 @@ function CareerBreakDrawer({ open, onClose }) {
         },
     ];
     return (
-        <MyDrawer title="Career Break" open={open} onClose={onClose} width='578px' isrecursion={true}>
+        <MyDrawer title="Career Break" open={open} onClose={onClose} width='578px'>
             <div>
                 <div className="details-drawer mb-4 mt-4">
                     <p>{ProfileDetails?.regNo}</p>

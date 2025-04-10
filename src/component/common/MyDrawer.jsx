@@ -38,11 +38,12 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       isDeleted: false
     },
   }
-
-  // useEffect(() => {
-  //   dispatch(getContactTypes());
-  // }, [dispatch]);
   const [contactDrawer, setcontactDrawer] = useState(false)
+  useEffect(() => {
+    if(contactDrawer){
+      dispatch(getContactTypes());
+    }
+  }, [contactDrawer]);
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const [isPayment, setisPayment] = useState(false)
   const [isAproved, setisAproved] = useState(false)

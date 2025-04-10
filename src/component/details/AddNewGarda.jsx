@@ -15,6 +15,7 @@ import {
   Divider,
   Radio,
 } from "antd";
+import { useTableColumns } from '../../context/TableColumnsContext ';
 import MyDatePicker from "../common/MyDatePicker";
 import {
   LoadingOutlined,
@@ -28,6 +29,7 @@ const { TextArea } = Input;
 
 function AddNewGarda({ open, onClose }) {
   const dispath = useDispatch();
+  const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const state = useSelector((state) => state.lookups);
   const { lookups } = state;
 
@@ -265,8 +267,9 @@ function AddNewGarda({ open, onClose }) {
                     <div className='input-sub-con'>
                       <MySelect
                         isSimple={true}
-                        placeholder='Mr.'
+                        placeholder='Select Title'
                         onChange={(value) => handleInputChange("title", value)}
+                        options={lookupsForSelect?.Titles}
                       />
                     </div>
                   </div>
@@ -351,7 +354,7 @@ function AddNewGarda({ open, onClose }) {
                     <p className='star'>*</p>
                     <div className='input-sub-con d-flex flex-column'>
                       <Radio.Group
-                        options={optionsWithDisabled}
+                        options={lookupsForSelect?.gender}
                         optionType='button'
                         buttonStyle='solid'
                         name='gender'
@@ -540,7 +543,7 @@ function AddNewGarda({ open, onClose }) {
                       <MySelect
                         placeholder='Select Rank'
                         isSimple={true}
-                        options={options}
+                        options={lookupsForSelect?.Ranks}
                         name='rank'
                         value={InfData.rank}
                         onChange={(value) => {
@@ -566,7 +569,7 @@ function AddNewGarda({ open, onClose }) {
                       <MySelect
                         placeholder='Select Duty'
                         isSimple={true}
-                        options={options}
+                        options={lookupsForSelect?.Duties}
                         name='duty'
                         value={InfData.duty}
                         onChange={(value) => handleInputChange("duty", value)}
