@@ -6,7 +6,7 @@ import Login from './pages/auth/Login';
 import { Routes, Route } from 'react-router-dom';
 import React from 'react';
 import AuthProvider from './pages/auth/AuthProvider';
-import IdleModal from "./component/common/IdleModal"; // Import the IdleModal component
+// Import the IdleModal component
 
 
 
@@ -19,7 +19,7 @@ function App() {
         <div className="">
         {/* <Login/> */}
           <Entry />
-          <IdleModal />
+         
         </div>
 
       </div>

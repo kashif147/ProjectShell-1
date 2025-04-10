@@ -34,14 +34,21 @@ import Doucmnets from "./pages/Doucmnets";
 import RosterDetails from "./pages/roster/RosterDetails";
 import RusterSummary from "./pages/roster/RusterSummary";
 // import RousterDetails from "./pages/rouster/RousterDetails";
+import Sidbar from "./component/common/Sidbar";
 
 function Entry() {
   const location = useLocation();
   return (
-    <div className="">{
-      location?.pathname != "/" && 
+    <div>
       <Header />
+      <div className="d-flex">
+      <div style={{width:'10%', backgroundColor:'red'}}>
+        {
+      location?.pathname != "/" && 
+      <Sidbar/>
     }
+      </div>
+      <div style={{width:'90%'}}>
       <div>
       {
       location?.pathname != "/" && 
@@ -125,6 +132,8 @@ function Entry() {
       <MyFooter />
       </div>
       ))}
+      </div>
+      </div>
     </div>
   );
 }

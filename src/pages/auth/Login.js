@@ -20,7 +20,7 @@ const Login = () => {
     const navigate = useNavigate(); // Use the useHistory hook
     const { loading, error, user } = useSelector((state) => state.auth);
 
-    const handleLogin = () => {
+    const handleLogin = async() => {
         if (inProgress !== InteractionStatus.None) {
             return;
         }
@@ -29,15 +29,15 @@ const Login = () => {
             scopes: ['User.Read'],
         };
 
-        instance.loginPopup({
+        await instance.loginPopup({
             scopes: ["openid", "profile", "User.Read", "Mail.Read"], // Scopes you need
         }).then((response) => {
-            if(response){
-                dispatch(loginUser({ 
-                      user:response?.account?.username,
-                      isMicrosoft:true }));
-            }
-            // localStorage.setItem('token',response?.accessToken)
+            // if(response){
+            //     dispatch(loginUser({ 
+            //           user:response?.account?.username,
+            //           isMicrosoft:true }));
+            // }
+            localStorage.setItem('token',response?.accessToken)
             navigate("/Summary",{
                 state: {
                   search: "Profile"
@@ -97,7 +97,7 @@ const Login = () => {
                     <div style={{paddingTop:"10px", paddingBottom:"10px"}} className="d-flex justify-content-center my-2">
                    
  <button
-    //   onClick={onClick}
+      onClick={handleLogin}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -106,7 +106,8 @@ const Login = () => {
         padding: '8px 16px',
         border: '1px solid #ccc',
         borderRadius: '6px',
-        backgroundColor: 'rgba(9, 30, 66, 0.04)',
+        backgroundColor: 'rgb(33, 94, 151)',
+        color:'#fff',
         cursor: 'pointer',
         fontSize: '14px',
         // fontWeight: 500,
@@ -120,8 +121,8 @@ const Login = () => {
         <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
         <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
       </svg>
-
-      <span>Sign in with Microsoft</span>
+      {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
+      {/* <span>Sign in with Microsoft</span> */}
     </button>
                     </div>
                     <Divider orientation="center" style={{ fontWeight: "400", fontSize: "12px" }}>Or</Divider>

@@ -167,7 +167,7 @@ function Header() {
             >
               <span className="navbar-toggler-icon"></span>
             </button>
-            <div className="collapse navbar-collapse" id="navbarNav">
+            {/* <div className="collapse navbar-collapse" id="navbarNav">
               <ul className="navbar-nav align-items-center" style={{ paddingLeft: "30px" }}>
                 <li className={`${pathname === "/Summary" || pathname === "/Details" ? "activ-link" : ""} nav-item nav-links-container`}>
                   <MyDrowpDown title={"Profile"} items={navLinks} />
@@ -194,7 +194,7 @@ function Header() {
                   <Link className="links" to="Configuratin" state={{ search: "" }}>Configurations</Link>
                 </li>
               </ul>
-            </div>
+            </div> */}
           </nav>
         </div>
         <div className="input-container d-flex align-items-center">
