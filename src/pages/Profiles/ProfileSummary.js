@@ -14,13 +14,13 @@ import { HiOutlineDotsVertical } from "react-icons/hi";
 import { BsThreeDots } from "react-icons/bs";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
-import {useTableColumns} from "../../context/TableColumnsContext "
+import { useTableColumns } from "../../context/TableColumnsContext "
 
 import SimpleMenu from "../../component/common/SimpleMenu";
 import TableComponent from "../../component/common/TableComponent";
 function ProfileSummary() {
   const navigate = useNavigate();
-   const{gridData} = useTableColumns()
+  const { gridData } = useTableColumns()
   const menu = (
     <Menu>
       <Menu.Item key="1">Option 1</Menu.Item>
@@ -30,16 +30,16 @@ function ProfileSummary() {
   );
   const testing = {
     Delete: "false",
-    Attached:"false",
-    view:'false'
+    Attached: "false",
+    view: 'false'
   };
   const configuration = {
     Graduated: "false",
-    Updated:"false",
-    
+    Updated: "false",
+
   };
   const dataSource = [
-   
+
   ];
   const location = useLocation();
   // const currentURL = `${window.location.origin}${location.pathname}${location.search}${location.hash}`;
@@ -213,7 +213,7 @@ function ProfileSummary() {
 
   return (
     <div className="">
-    <TableComponent data={gridData}  screenName="Profile" redirect="/Details" />
+      <TableComponent data={gridData} screenName="Profile" redirect="/Details" />
     </div>
   );
 }

@@ -2,7 +2,7 @@ import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import MainDashBoard from "./pages/MainDashBoard";
-import Header from "./component/common/Header";
+import Header from "./component/common/header/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
 import SideNav from "./component/common/SideNav";
 import { useLocation } from "react-router-dom";
