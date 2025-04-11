@@ -15,12 +15,13 @@ import { BiLogOutCircle } from "react-icons/bi";
 import logo from "../../../assets/images/gra_logo.png";
 import "./styles.css";
 import NotificationDrawer from "../../drawer/notificationDrawer";
+import { useNotification } from "../../../context/NotificationContext";
 
 const { Search } = Input;
 function Header() {
+  const { addNotification, isLoading } = useNotification();
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("");
-  const [loading, setLoading] = useState(true);
   const [isNotification, setIsNotification] = useState(false);
   const navigate = useNavigate();
   const { filterByRegNo, topSearchData, ProfileDetails, ReportsTitle } =
@@ -182,6 +183,30 @@ function Header() {
       };
     }) || [];
 
+  const handleCreateSomething = (type) => {
+    if (type === "loading") {
+      addNotification({
+        title: "Creating Product",
+        message: "Saving product to database...",
+        status: "loading",
+      });
+    } else if (type === "success") {
+      addNotification({
+        title: "Creating Product",
+        message: "Product saved successfully!",
+        type: "success",
+        status: "completed",
+      });
+    } else {
+      addNotification({
+        title: "Creation Failed",
+        message: "Something Wrong",
+        type: "error",
+        status: "completed",
+      });
+    }
+  };
+
   return (
     <div className="Header-border overflow-y-hidden">
       <div className="d-flex justify-content-between align-items-center bg">
@@ -322,18 +347,30 @@ function Header() {
               })
             }
           />
-          <div onClick={() => setIsNotification(true)} className="notification-container">
+          <div
+            onClick={() => setIsNotification(true)}
+            className="notification-container"
+          >
             <IoNotifications className="top-icons" />
-            {loading && (
+            {isLoading && (
               <div className="loading-bar">
                 <div className="loading-progress"></div>
               </div>
             )}
           </div>
           {/* <IoNotifications className="top-icon" /> */}
-          <HiMiniQuestionMarkCircle className="top-icon" />
-          <IoMdSettings className="top-icon" />
-          <FaUserCircle className="top-icon" />
+          <HiMiniQuestionMarkCircle
+            onClick={() => handleCreateSomething("loading")}
+            className="top-icon"
+          />
+          <IoMdSettings
+            onClick={() => handleCreateSomething("success")}
+            className="top-icon"
+          />
+          <FaUserCircle
+            onClick={() => handleCreateSomething("error")}
+            className="top-icon"
+          />
           <BiLogOutCircle
             className="top-icon"
             onClick={() => {
