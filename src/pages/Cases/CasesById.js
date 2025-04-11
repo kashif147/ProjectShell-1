@@ -153,7 +153,7 @@ function CasesById() {
         },
       ];
   return (
-    <div className='cases-main'>
+    <div className='cases-main' style={{width:'100%'}}>
 <SubTableComp columns={caseColumns} dataSource={caseDataSource} />
 
     </div>

@@ -10,10 +10,13 @@ import {
   FaBars,
 } from 'react-icons/fa6';
 import { IoDocumentTextSharp } from 'react-icons/io5';
+import { Link, useLocation, useNavigate } from "react-router-dom";
+import { IoSettingsOutline } from "react-icons/io5";
 import '../../styles/Sidbar.css';
 
 function Sidbar() {
   const [isSideNav, setIsSideNav] = useState(true);
+  const navigate = useNavigate();
 
   const toggleCollapsed = () => {
     setIsSideNav(!isSideNav);
@@ -25,22 +28,53 @@ function Sidbar() {
         toggleCollapsed()
         break;
       case 'Profile':
-        alert('Profile clicked');
+        navigate("/Summary", {
+          state: {
+            search: 'Profile',
+          }
+        })
+        break;
+      case 'Claims':
+        navigate("/ClaimSummary", {
+          state: {
+            search: 'Claims',
+          }
+        })
         break;
       case 'Cases':
-        alert('Cases clicked');
+        navigate("/CasesSummary", {
+          state: {
+            search: 'Cases',
+          }
+        })
         break;
       case 'Correspondences':
-        alert('Correspondences clicked');
+        navigate("/CorrespondencesSummary", {
+          state: {
+            search: 'Correspondences',
+          }
+        })
         break;
-      case 'Documents':
-        alert('Documents clicked');
+      case 'Transfer Requests':
+        navigate("/Transfers", {
+          state: {
+            search: 'Transfers',
+          }
+        })
         break;
-      case 'Projects':
-        alert('Projects clicked');
+      case 'Configuration':
+        navigate("/Configuratin", {
+          state: {
+            search: '',
+          }
+        })
         break;
       case 'Roster':
-        alert('Roster clicked');
+        navigate("/RosterSummary", {
+          state: {
+            search: 'Rosters',
+          }
+        })
         break;
       case 'Trainings':
         alert('Trainings clicked');
@@ -67,31 +101,36 @@ function Sidbar() {
       label: <span className="sidebar-label">Cases</span>,
     },
     {
+      key: 'Claims',
+      icon: <div className="icon"><FaListCheck /></div>,
+      label: <span className="sidebar-label">Claims</span>,
+    },
+    {
       key: 'Correspondences',
       icon: <div className="icon" ><FaArrowRightArrowLeft /></div>,
       label: <span className="sidebar-label">Correspondences</span>,
     },
-    {
-      key: 'Documents',
-      icon: <div className="icon"><IoDocumentTextSharp /></div>,
-      label: <span className="sidebar-label">Documents</span>,
-    },
-    {
-      key: 'Projects',
-      icon: <div className="icon"><FaDiagramProject /></div>,
-      label: <span className="sidebar-label">Projects</span>,
-    },
+    // {
+    //   key: 'Documents',
+    //   icon: <div className="icon"><IoDocumentTextSharp /></div>,
+    //   label: <span className="sidebar-label">Documents</span>,
+    // },
+    
     {
       key: 'Transfers',
       icon: <div className="icon"><FaDiagramProject /></div>,
-      label: <span className="sidebar-label">Projects</span>,
+      label: <span className="sidebar-label">Transfer Requests</span>,
     },
     {
       key: 'Roster',
       icon: <div className="icon"><FaCalendarDays /></div>,
       label: <span className="sidebar-label">Roster</span>,
     },
-   
+    {
+      key: 'Configuration',
+      icon: <div className="icon"><IoSettingsOutline /></div>,
+      label: <span className="sidebar-label">Configuration</span>,
+    },
   ];
 
   return (

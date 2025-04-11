@@ -39,7 +39,7 @@ import Sidbar from "./component/common/Sidbar";
 function Entry() {
   const location = useLocation();
   return (
-    <div>
+    <div style={{width:'100%'}}>
       {
         location?.pathname != "/" && 
       <Header />

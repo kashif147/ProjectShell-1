@@ -12,7 +12,7 @@ const ProtectedRoute = ({ children }) => {
   }
 
   return (
-    <div>
+    <>
       {/* This div will be shown with each protected route */}
     
 
@@ -20,7 +20,7 @@ const ProtectedRoute = ({ children }) => {
       <IdleModal />
       <Outlet />
       
-    </div>
+    </>
   );
 };
   

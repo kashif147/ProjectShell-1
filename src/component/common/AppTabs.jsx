@@ -4,6 +4,10 @@ import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
 
 import { Tabs } from 'antd';
 import MyDeatails from './MyDeatails';
+import CasesById from '../../pages/Cases/CasesById'
+import ClaimsById from '../../pages/Claims/ClaimsById';
+import CorspndncDetail from '../../pages/Correspondences/CorspndncDetail';
+import RosterDetails from '../../pages/roster/RosterDetails'
 
 function AppTabs() {
     const onChange = key => {
@@ -18,12 +22,22 @@ function AppTabs() {
         {
           key: '2',
           label: 'Cases',
-          children: 'Content of Tab Pane 2',
+          children: <CasesById/>,
+        },
+        {
+          key: '4',
+          label: 'Claims',
+          children: <ClaimsById/>,
+        },
+        {
+          key: '5',
+          label: 'Correspondences',
+          children: <CorspndncDetail/>,
         },
         {
           key: '3',
-          label: 'Correspondences',
-          children: 'Content of Tab Pane 3',
+          label: 'Roster',
+          children: <RosterDetails/>,
         },
         {
           key: '3',
@@ -35,11 +49,7 @@ function AppTabs() {
           label: 'Projects',
           children: 'Content of Tab Pane 3',
         },
-        {
-          key: '3',
-          label: 'Roster',
-          children: 'Content of Tab Pane 3',
-        },
+        
         {
           key: '3',
           label: 'Trainings',
@@ -47,7 +57,7 @@ function AppTabs() {
         },
       ];
   return (
-    <Tabs  defaultActiveKey="1" items={items} onChange={onChange} />
+    <Tabs  defaultActiveKey="1" items={items} onChange={onChange} style={{width:'100%'}}/>
 
   )
 }

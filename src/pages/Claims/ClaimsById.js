@@ -267,6 +267,7 @@ function ClaimsById() {
         return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
       };
     return (
+      <div style={{width:'100%'}}>
         <DndContext
         sensors={sensors}
         modifiers={[restrictToHorizontalAxis]}
@@ -307,6 +308,7 @@ function ClaimsById() {
           </th>
         </DragOverlay>
       </DndContext>
+      </div>
     )
 }
 
