@@ -44,10 +44,10 @@ function Entry() {
         location?.pathname != "/" && 
       <Header />
       }
-      <div className="d-flex">
+      <div className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}>
         {
         location?.pathname != "/" && 
-      <div style={{ backgroundColor:'red'}}>
+      <div style={{ backgroundColor:''}}>
       <Sidbar/>
       </div>
       }
