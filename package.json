@@ -41,6 +41,7 @@
     "react-router-dom": "^6.25.1",
     "react-scripts": "5.0.1",
     "react-to-pdf": "^1.0.1",
+    "react-toastify": "^11.0.5",
     "to": "^0.2.9",
     "web-vitals": "^2.1.4",
     "yarn": "^1.22.22"
@@ -52,11 +53,23 @@
     "eject": "react-scripts eject"
   },
   "eslintConfig": {
-    "extends": [
-      "react-app",
-      "react-app/jest"
-    ]
-  },
+  "extends": [
+    "react-app",
+    "react-app/jest"
+  ],
+  "overrides": [
+    {
+      "files": ["src/**/*.{js,jsx}"],
+      "globals": {
+        "React": "readonly",
+        "toast": "readonly"
+      },
+      "rules": {
+        "react/jsx-no-undef": "off"
+      }
+    }
+  ]
+},
   "browserslist": {
     "production": [
       ">0.2%",
