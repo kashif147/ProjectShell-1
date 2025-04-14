@@ -117,7 +117,7 @@ function Sidbar() {
     // },
     
     {
-      key: 'Transfers',
+      key: 'Transfer Requests',
       icon: <div className="icon"><FaDiagramProject /></div>,
       label: <span className="sidebar-label">Transfer Requests</span>,
     },
