@@ -1,0 +1,60 @@
+.lancher-div{
+    padding: 16px;
+    background-color: #faf8f8;
+    /* background-color: red; */
+    gap: 20px;
+    width: auto;
+    border-radius: 4px;
+}
+.app-launcher-menu {
+    display: grid;
+    grid-template-columns: repeat(5, 120px);
+    width: auto;
+    background-color: #faf8f8;
+  }
+  .app-item {
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 20px;
+    /* transition: background 0.3s ease; */
+  }
+  
+  .app-item:hover {
+    background-color: #f5f5f5;
+  }
+  .app-icon {
+    font-size: 40px;
+  }
+  .app-name {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #333;
+  }
+  .app-search {
+    width: 100%;
+    padding: 15px 10px;
+    font-size: 14px;
+    background-color: #fff;
+    /* border: 1px solid #ccc; */
+    border-radius: 0px;
+    border: none !important;
+  }
+
+  .app-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 10px;
+    cursor: pointer;
+  }
+  .app-icon-blue {
+    color: #215E97;
+    font-size: 40px;
+  }
+  .app-name-blue {
+    margin-top: 6px;
+    font-size: 14px;
+    color: #215E97;
+    font-weight: 500;
+  }

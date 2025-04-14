@@ -197,11 +197,9 @@ body {
   padding-top: 0.5rem;
   padding-bottom: 0.5rem;
 }
-.Header-border {
-  border-bottom: 2px solid #e0e0e0;
-}
+
 .bg{
-  background-color: var(--mainBlue);
+  background-color: rgb(18, 60, 99);
 }
 
 .top-search  input{

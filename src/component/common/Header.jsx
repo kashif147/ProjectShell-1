@@ -2,7 +2,16 @@ import { React, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MyDrowpDown from "./MyDrowpDown";
 import { SettingOutlined } from "@ant-design/icons";
-// import Input from "antd/es/input/Input";
+import {
+  FaRegCircleUser,
+  FaListCheck,
+  FaRegEnvelope,
+  FaDiagramProject,
+} from 'react-icons/fa6';
+import { LuCalendarClock } from 'react-icons/lu';
+import { IoSettingsOutline } from 'react-icons/io5';
+
+import { TbGridDots } from "react-icons/tb";
 import { FaUserCircle } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
 import { IoMdSettings } from "react-icons/io";
@@ -13,6 +22,48 @@ import { Button, Input } from "antd";
 import { PiPhoneCallBold } from "react-icons/pi";
 import { BiLogOutCircle } from "react-icons/bi";
 import logo from '../../assets/images/gra_logo.png'
+import { Dropdown } from 'antd';
+import { PiDotsNineLight } from 'react-icons/pi';
+import '../../styles/AppLauncher.css'; 
+
+const appItems = [
+  { name: 'Profile', icon: <FaRegCircleUser className="app-icon-blue" /> },
+  { name: 'Cases', icon: <FaListCheck className="app-icon-blue" /> },
+  { name: 'Claims', icon: <FaListCheck className="app-icon-blue" /> },
+  { name: 'Correspondences', icon: <FaRegEnvelope className="app-icon-blue" /> },
+  { name: 'Transfer Requests', icon: <FaDiagramProject className="app-icon-blue" /> },
+  { name: 'Roster', icon: <LuCalendarClock className="app-icon-blue" /> },
+  { name: 'Configuration', icon: <IoSettingsOutline className="app-icon-blue" /> },
+];
+const AppLauncherMenu = () => {
+  return (
+    <div className="lancher-div">
+      <input style={{width:'100%', border:'none', backgroundColor:'#fff'}} placeholder="Search App" />
+      <div className="app-launcher-menu">
+      {appItems.map((app) => (
+        <div key={app.name} className="app-item">
+          {app.icon}
+          <div className="app-name-blue">{app.name}</div>
+        </div>
+      ))}
+      </div>
+    </div>
+  );
+};
+
+export const AppLauncher = () => {
+  return (
+    <Dropdown
+      overlay={<AppLauncherMenu />}
+      trigger={['click']}
+      placement="bottomRight"
+    >
+      <div style={{ cursor: 'pointer', fontSize: '20px' }}>
+        <PiDotsNineLight color={'#fff'} size={'30px'} />
+      </div>
+    </Dropdown>
+  );
+};
 
 const { Search } = Input;
 function Header() {
@@ -145,16 +196,18 @@ function Header() {
   }) || [];
 
   return (
-    <div className="Header-border overflow-y-hidden">
-      <div className="d-flex justify-content-between align-items-center bg">
-        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '32px', width:'33%' }}>
-          <img
+    <div className="Header-border overflow-y-hidden bg pt-2 pb-2">
+      <div className="d-flex justify-content-between align-items-center ">
+        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '36px', width:'33%' }}>
+        {/* <TbGridDots size={25} color={'#fff'} style={{marginRight: '32px',}}/> */}
+        <AppLauncher />
+          {/* <img
             src={logo}
             alt="Company Logo"
             width={50}
             style={{ borderRadius: '10px', }}
 
-          />
+          /> */}
           <nav className="navbar navbar-expand-lg navbar-light">
             <button
               className="navbar-toggler"

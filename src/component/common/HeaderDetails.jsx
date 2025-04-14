@@ -449,7 +449,6 @@ console.log(globleFilters,'globleFilters')
                     }}
                   />
                 )}
-
                 {
                   nav === '/CorrespondencesSummary' || nav === '/RosterSummary' || nav === '/Transfers'  ?
                     <p>Summary</p> :

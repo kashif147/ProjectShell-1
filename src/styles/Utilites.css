@@ -4,10 +4,10 @@
     --secoundry-bg-color:#E6F7FF;
     --gray:  rgba(9, 30, 66, 0.04); 
 }
-
 .ant-tabs-nav{
     margin: 0px !important;
 }
+
 .ant-tabs-nav{
     background-color: var(--secoundry-bg-color);
     border-left: 1px solid #e0e0e0;
@@ -18,5 +18,35 @@
     color: var(--primary-color) !important ; 
     font-size: 14px !important;
     font-weight: 500;
-
 }
+.app-launcher-menu {
+    display: grid;
+    grid-template-columns: repeat(3, 80px);
+    gap: 16px;
+    padding: 16px;
+    width: 260px;
+    background: white;
+  }
+  
+  .app-item {
+    text-align: center;
+    cursor: pointer;
+    border-radius: 8px;
+    padding: 10px;
+    transition: background 0.3s ease;
+  }
+  
+  .app-item:hover {
+    background-color: #f5f5f5;
+  }
+  
+  .app-icon {
+    font-size: 24px;
+  }
+  
+  .app-name {
+    margin-top: 6px;
+    font-size: 12px;
+    color: #333;
+  }
+  
