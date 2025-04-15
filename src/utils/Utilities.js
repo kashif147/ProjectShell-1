@@ -5,10 +5,8 @@ let token;
 export const baseURL = process.env.REACT_APP_BASE_URL_DEV
 // export const  baseURL = "http://localhost:3500"
 
-
-export const insertDataFtn = async (url, data, successNotification, failureNotification, callback) => {
-
-  const token = localStorage.getItem('token'); // Explicit declaration with const
+export const insertDataFtn = async (url, data, successNotification, failureNotification, callback, addNotification) => {
+  const token = localStorage.getItem('token');
   try {
     const response = await axios.post(baseURL + url, data, {
       headers: {
@@ -17,20 +15,34 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
         Authorization: `Bearer ${token}`,
       },
     });
-    if (response.status === 201) { // Strict equality check
-      toast.success(successNotification ?? 'Successfully created')
+    if (response.status === 201) {
       MyAlert('success', successNotification);
-      callback()
-      return
-
+      addNotification({
+        type: "success",
+        status: "completed",
+        title: "Creation Successful",
+        message: successNotification ?? "Operation completed successfully",
+      });
+      callback?.();
+      return;
     } else {
+      addNotification({
+        title: "Creation Failed",
+        message: failureNotification ?? "Something Wrong",
+        type: "error",
+        status: "completed",
+      });
       return MyAlert('error', `${failureNotification}`, response?.data?.error);
     }
   } catch (error) {
+    addNotification({
+      title: "Creation Failed",
+      message: failureNotification ?? "Something Wrong",
+      type: "error",
+      status: "completed",
+    });
     console.error(error?.response, '222');
-    toast.error(error?.response?.data?.error ?? failureNotification ?? 'Something went wrong!')
     MyAlert('error', failureNotification, error?.response?.data?.error);
-
   }
 };
 
@@ -49,14 +61,14 @@ export const deleteFtn = async (url, id, callback) => {
   };
   try {
     const response = await axios.request(config);
-    toast.success('Successfully Deleted')
+    // toast.success('Successfully Deleted')
     MyAlert('success', 'You Have Successfully Deleted.')
     if (callback && typeof callback === 'function' && response?.data) {
       callback();
     }
     return response.data;
   } catch (error) {
-    toast.error('Something went wrong!')
+    // toast.error('Something went wrong!')
     console.error('Error deleting region:', error);
     return MyAlert('error', 'Please Try Again');
   }
@@ -71,12 +83,12 @@ export const updateFtn = async (endPoint, data, callback) => {
         Authorization: `Bearer ${token}`,
       },
     });
-    toast.success(notificationsMsg?.updating?.sucess ?? 'Successfully Updated')
+    // toast.success(notificationsMsg?.updating?.sucess ?? 'Successfully Updated')
     MyAlert('success', notificationsMsg?.updating?.sucess)
     callback()
     return response.data;
   } catch (error) {
-    toast.error(notificationsMsg?.updating?.falier ?? 'Something went wrong!')
+    // toast.error(notificationsMsg?.updating?.falier ?? 'Something went wrong!')
     MyAlert('error', notificationsMsg?.updating?.falier)
 
   }
