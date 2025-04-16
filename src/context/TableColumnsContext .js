@@ -265,6 +265,26 @@ export const TableColumnsProvider = ({ children }) => {
     Ranks: [],
     Titles:[]
   })
+  const [menuLbl, setmenuLbl] = useState({
+    "Subscriptions": false,
+    "Finance": false,
+    "Correspondence": false,
+    "Issues": false,
+    "Events": false,
+    "Courses": false,
+    "Professional Development": false,
+    "Settings": false
+  });
+  
+  const updateMenuLbl = useCallback((key, value) => {
+    setmenuLbl(prev => ({
+      ...prev,
+      [key]: value
+    }));
+  }, []);
+  const updateMeu = ()=>{
+    console.log('ii')
+  }
   const [report, setReport] = useState(null);
   const [isSave, setIsSave] = useState(false);
   const [ProfileDetails, setProfileDetails] = useState([]);
@@ -338,7 +358,7 @@ export const TableColumnsProvider = ({ children }) => {
   const resetFtn= () =>{
     setGlobleFilters(filteredSearchFilters)
   }
-
+ 
   // Handlers and functions
   const handlClaimDrawerChng = useCallback(() => {
     setClaimsDrawer(prev => !prev);
@@ -739,7 +759,11 @@ export const TableColumnsProvider = ({ children }) => {
     disableFtn,
     isDisable,
     handleSaveAfterEdit,
-    resetFtn
+    resetFtn,
+    menuLbl,
+    updateMenuLbl,
+    updateMeu,
+    updateMeu
   }), [
     columns,
     gridData,
@@ -772,7 +796,10 @@ export const TableColumnsProvider = ({ children }) => {
     disableFtn,
     isDisable,
     handleSaveAfterEdit,
-    resetFtn
+    resetFtn,
+    menuLbl,
+    updateMenuLbl,
+    updateMeu
   ]);
 
   return (

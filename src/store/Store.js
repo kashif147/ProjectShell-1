@@ -13,6 +13,7 @@ import childrenReducer from "../features/ChildrenSlice";
 import refreshReducer from '../features/RefreshSlice';
 import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice"
+import menuLblReducer from '../features/MenuLblSlice'
 
 const store = configureStore({
   reducer: {
@@ -26,6 +27,7 @@ const store = configureStore({
     refresh: refreshReducer,
     contactType: contactTypeReducer,
     contact: contactReducer,
+    menuLbl: menuLblReducer,
   },
 });
 

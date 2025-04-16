@@ -1,4 +1,4 @@
-import { React, useState } from "react";
+import { React, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import MyDrowpDown from "./MyDrowpDown";
 import { SettingOutlined } from "@ant-design/icons";
@@ -10,7 +10,6 @@ import {
 } from 'react-icons/fa6';
 import { LuCalendarClock } from 'react-icons/lu';
 import { IoSettingsOutline } from 'react-icons/io5';
-
 import { TbGridDots } from "react-icons/tb";
 import { FaUserCircle } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
@@ -24,32 +23,64 @@ import { BiLogOutCircle } from "react-icons/bi";
 import logo from '../../assets/images/gra_logo.png'
 import { Dropdown } from 'antd';
 import { PiDotsNineLight } from 'react-icons/pi';
+import { updateMenuLbl } from '../../features/MenuLblSlice'
+import { useDispatch, useSelector } from 'react-redux';
 import '../../styles/AppLauncher.css'; 
 
-const appItems = [
-  { name: 'Profile', icon: <FaRegCircleUser className="app-icon-blue" /> },
-  { name: 'Cases', icon: <FaListCheck className="app-icon-blue" /> },
-  { name: 'Claims', icon: <FaListCheck className="app-icon-blue" /> },
-  { name: 'Correspondences', icon: <FaRegEnvelope className="app-icon-blue" /> },
-  { name: 'Transfer Requests', icon: <FaDiagramProject className="app-icon-blue" /> },
-  { name: 'Roster', icon: <LuCalendarClock className="app-icon-blue" /> },
-  { name: 'Configuration', icon: <IoSettingsOutline className="app-icon-blue" /> },
-];
+
+
+
 const AppLauncherMenu = () => {
+  const dispatch = useDispatch();
+  const menuLbl = useSelector((state) => state.menuLbl);
+
+  const handleUpdate = (key, value) => {
+    dispatch(updateMenuLbl({ key, value }));
+  };
+
+  const appItems = [
+    { name: 'Subscriptions', icon: FaRegCircleUser },
+    { name: 'Finance', icon: FaListCheck },
+    { name: 'Correspondence', icon: FaListCheck },
+    { name: 'Issues', icon: FaRegEnvelope },
+    { name: 'Events', icon: FaDiagramProject },
+    { name: 'Courses', icon: LuCalendarClock },
+    { name: 'Professional Development', icon: IoSettingsOutline },
+    { name: 'Settings', icon: IoSettingsOutline }
+  ];
+
   return (
     <div className="lancher-div">
-      <input style={{width:'100%', border:'none', backgroundColor:'#fff'}} placeholder="Search App" />
+      <input
+        style={{ width: '100%', border: 'none', backgroundColor: '#fff' }}
+        placeholder="Search App"
+      />
       <div className="app-launcher-menu">
-      {appItems.map((app) => (
-        <div key={app.name} className="app-item">
-          {app.icon}
-          <div className="app-name-blue">{app.name}</div>
-        </div>
-      ))}
+        {appItems.map((app) => {
+          const isActive = menuLbl[app.name];
+          const Icon = app.icon;
+
+          return (
+            <div
+              key={app.name}
+              className={`app-item ${isActive ? 'app-item-active' : ''}`}
+              onClick={() => handleUpdate(app.name, true)}
+            >
+              <Icon className={isActive ? 'app-icon-size app-name-blue-active' : 'app-icon-size app-icon-blue'} />
+              <div className={`app-name-blue ${isActive ? 'app-name-blue-active' : ''}`}>
+                {app.name}
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
 };
+
+
+
+// export default AppLauncherMenu;
 
 export const AppLauncher = () => {
   return (
@@ -67,11 +98,17 @@ export const AppLauncher = () => {
 
 const { Search } = Input;
 function Header() {
-
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("")
   const navigate = useNavigate();
-  const { filterByRegNo, topSearchData, ProfileDetails, ReportsTitle } = useTableColumns()
+  const {
+    filterByRegNo,
+    topSearchData,
+    ProfileDetails,
+    ReportsTitle,
+    updateMenuLbl,
+    updateMeu
+  } = useTableColumns();
   const location = useLocation();
   const pathname = location?.pathname
   const profile = Array.isArray(ProfileDetails) && ProfileDetails.length > 0 ? ProfileDetails[0] : null;

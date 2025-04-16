@@ -81,8 +81,6 @@ function ProfileHeader() {
                 </div>
                 {
                     ProfileDetails?.map((i) => (
-
-
                         <div style={{
                             display: 'flex',
                             flexDirection: 'column',
@@ -92,64 +90,39 @@ function ProfileHeader() {
                             fontSize: '14px',
                             color: '#6B7AAB',
                         }}>      
-                            <div >{i?.regNo}</div>
-                            <div >{i?.fullName}</div>
-                            <div >20/06/1979 (36 Y)</div>
-                            <div >Married</div>
-                            <div className="centered-text-deceased">11/10/2015 (Deceased)</div>
+                            <div style={{color:'#C97A2F', fontSize:'18px'}} >{i?.regNo}</div>
+                            <div style={{color:'#215E97', fontSize:'18px',fontWeight:400}}>{i?.fullName}</div>
+                            <div style={{color:'#215E97', fontSize:'16px',fontWeight:400}}>(M) 36 Yrs</div>
+                            {/* <div >Married</div> */}
+                            <div style={{color:'#C97A2F', fontSize:'18px',marginTop:'20px',}} >Member</div>
+                            <div style={{color:'#C97A2F', fontSize:'14px',fontWeight:400,fontWeight:400}}>joined:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;01/01/2016</div>
+                            <div style={{color:'#C97A2F', fontSize:'14px',fontWeight:400,fontWeight:400}}>renewed:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;01/01/2016</div>
+                            <div style={{color:'#C97A2F', fontSize:'14px',fontWeight:400,fontWeight:400}}>Expiry:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;01/01/2016</div>
+                            <div style={{color:'#C97A2F', fontSize:'18px',marginTop:'20px',fontWeight:400,marginBottom:'10px'}} >General - All Grades</div>
+                            <div style={{color:'#215E97', fontSize:'18px',fontWeight:400}}>Balance:&nbsp;&nbsp;<span style={{fontWeight:'bold'}}>€200</span></div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400}}>Salary Deduction :&nbsp;&nbsp;<span style={{fontWeight:'bold'}}>- QTR</span></div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400, marginTop:'5px'}}>last payment: &nbsp;&nbsp;<span style={{fontWeight:'bold'}}>€74.7 </span></div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400, marginTop:'5px'}}><span style={{fontWeight:''}}>01/03/2025</span></div>
+                            <div style={{color:'#215E97', fontSize:'18px',marginTop:'20px',fontWeight:400}} >STOC</div>
+                            <div style={{color:'#215E97', fontSize:'12px'}} >Hardcore Square 2</div>
+                            <div style={{color:'#215E97', fontSize:'14px',fontWeight:400,marginTop:'5px',marginBottom:'5px'}} >0109  CDU-SDU</div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400,marginTop:'5px',marginBottom:'5px'}} >0026 CDU/SDU</div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400,marginTop:'5px',marginBottom:'5px'}} >0001 Garda</div>
+                            <div style={{color:'#215E97', fontSize:'18px',marginTop:'20px',fontWeight:400}} >CEC Rep</div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400,marginTop:'5px',marginBottom:'5px'}} >Life Assurance (Member)</div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400,marginTop:'5px',marginBottom:'5px'}} >Illness / Injury</div>
+                            <div style={{color:'#215E97', fontSize:'12px',fontWeight:400,marginTop:'5px',marginBottom:'5px'}} >Garda Review</div>
+                            {/* <div className="centered-text-deceased">11/10/2015 (Deceased)</div>
                             <div >Cases:</div>
-                            <div >Claims:</div>
+                            <div >Claims:</div> */}
 
                         </div>
                     ))
                 }
             </div>
-            <Divider type='horizontal' />
-            <div style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center', 
-                textAlign: 'center', 
-                fontWeight: 'bold',
-                fontSize: '14px',
-                color: '#6B7AAB',
-            }}>
-                <div>Member </div>
-                <div>(01/01/2020 - 11/10/2015)</div>
-                <div>Graduated on: 01/09/2007</div>
-                <div>Attested on: 01/01/2008</div>
-                <div>Statue</div>
-                <div>0001 Garda</div>
-                <div>0021 Garda</div>
-                <div>0109 CDU-SDU</div>
-                <div>0026 CDU/SDU</div>
-                <Divider type='horizontal' />
-                <div>District Rep:</div>
-                <div>District Secretary:</div>
-                <div>District Chairman:</div>
-                <div>CEC Rep:</div>
-                <Divider type='horizontal' />
-                <div>Life Assurance (Member):</div>
-                <div>Life Assurance (Partner):</div>
-                {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
-                    <span style={{ marginRight: '45px' }}>Member</span>
-                    <span>Partner</span>
-                    </div> */}
-                <br />
-                <div>Special Illness (Member):</div>
-                {/* <div>Special Illness (Partner):</div> */}
-
-                {/* <div style={{ display: 'flex', justifyContent: 'flex-start', fontWeight: 'bold', fontSize: '14px' }}>
-                        <span style={{ marginRight: '45px' }}>Member</span>
-                        <span>Partner</span>
-                    </div> */}
-                <div style={{ display: 'flex', flexDirection: 'column', fontWeight: 'bold', fontSize: '14px' }}>
-                    <br />
-                    {/* <div>Illness & Injury</div>
-                        <div>Legal Assistance</div>
-                        <div>Salary Protection</div> */}
-                </div>
-            </div>
+            
+             
+            
         </div>
     )
 }
