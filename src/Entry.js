@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
 import { useNavigate } from "react-router-dom";
 import MainDashBoard from "./pages/MainDashBoard";
@@ -37,6 +37,55 @@ import RusterSummary from "./pages/roster/RusterSummary";
 
 function Entry() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const authCode = queryParams.get("code");
+
+    if (authCode) {
+      console.log("AuthCode============>", authCode);
+      setLoading(true); // Start loading
+      // exchangeCodeForToken(authCode)
+      //   .then(() => {
+      //     // Once done, stop loading and redirect
+      //     setLoading(false);
+      //     navigate("/Summary", {
+      //       state: { search: "Profile" },
+      //     });
+      //   })
+      //   .catch((error) => {
+      //     console.error(error);
+      //     setLoading(false);
+      //   });
+    }
+  }, [location, navigate]);
+
+  const exchangeCodeForToken = async (code) => {
+    try {
+      const response = await fetch("YOUR_BACKEND_ENDPOINT", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      const { user } = await response.json();
+      return user;
+    } catch (error) {
+      throw error;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="d-flex justify-content-center align-items-center vh-100">
+        <div className="spinner-border text-primary" role="status">
+          <span className="visually-hidden">Loading...</span>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="">{
       location?.pathname != "/" &&
@@ -84,28 +133,28 @@ function Entry() {
             <Routes>
               <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
-              {/* <Route element={<ProtectedRoute />}>               */}
-              <Route path="Details" element={<ProfileDetails />} />
-              <Route path="Summary" element={<ProfileSummary />} />
-              <Route path="CasesDetails" element={< CasesDetails />} />
-              <Route path="CasesById" element={<CasesById />} />
-              <Route path="CasesSummary" element={< CasesSummary />} />
-              <Route path="ClaimSummary" element={< ClaimSummary />} />
-              <Route path="ClaimsDetails" element={< ClaimsDetails />} />
-              <Route path="Configuratin" element={<Configuratin />} />
-              <Route path="Filters" element={<Filter />} />
-              <Route path="ClaimsById" element={<ClaimsById />} />
-              <Route path="AddNewProfile" element={<AddNewProfile />} />
-              <Route path="Transfers" element={<TransferSummary />} />
-              <Route path="AddClaims" element={<AddClaims />} />
-              <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
-              <Route path="LandingPage" element={<LandingPage />} />
-              <Route path="Reports" element={<Reports />} />
-              <Route path="CorspndncDetail" element={<CorspndncDetail />} />
-              <Route path="RosterSummary" element={<RusterSummary />} />
-              <Route path="Doucmnets" element={<Doucmnets />} />
-              <Route path="Roster" element={<RosterDetails />} />
-              {/* </Route>  */}
+              {/* <Route element={<ProtectedRoute />}> */}
+                <Route path="Details" element={<ProfileDetails />} />
+                <Route path="Summary" element={<ProfileSummary />} />
+                <Route path="CasesDetails" element={< CasesDetails />} />
+                <Route path="CasesById" element={<CasesById />} />
+                <Route path="CasesSummary" element={< CasesSummary />} />
+                <Route path="ClaimSummary" element={< ClaimSummary />} />
+                <Route path="ClaimsDetails" element={< ClaimsDetails />} />
+                <Route path="Configuratin" element={<Configuratin />} />
+                <Route path="Filters" element={<Filter />} />
+                <Route path="ClaimsById" element={<ClaimsById />} />
+                <Route path="AddNewProfile" element={<AddNewProfile />} />
+                <Route path="Transfers" element={<TransferSummary />} />
+                <Route path="AddClaims" element={<AddClaims />} />
+                <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
+                <Route path="LandingPage" element={<LandingPage />} />
+                <Route path="Reports" element={<Reports />} />
+                <Route path="CorspndncDetail" element={<CorspndncDetail />} />
+                <Route path="RosterSummary" element={<RusterSummary />} />
+                <Route path="Doucmnets" element={<Doucmnets />} />
+                <Route path="Roster" element={<RosterDetails />} />
+              {/* </Route> */}
             </Routes>
           </div>
         </div>

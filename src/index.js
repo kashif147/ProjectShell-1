@@ -9,7 +9,7 @@ import store from './store';
 import { NotificationProvider } from './context/NotificationContext';
 import { ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import './config/globals.js';
+import './config/globals';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
