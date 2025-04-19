@@ -33,6 +33,7 @@ import CorspndncDetail from "./pages/Correspondences/CorspndncDetail";
 import Doucmnets from "./pages/Doucmnets";
 import RosterDetails from "./pages/roster/RosterDetails";
 import RusterSummary from "./pages/roster/RusterSummary";
+import { generatePKCE } from "./helpers/crypt.helper";
 // import RousterDetails from "./pages/rouster/RousterDetails";
 
 function Entry() {
@@ -45,20 +46,10 @@ function Entry() {
     const authCode = queryParams.get("code");
 
     if (authCode) {
-      console.log("AuthCode============>", authCode);
-      setLoading(true); // Start loading
-      // exchangeCodeForToken(authCode)
-      //   .then(() => {
-      //     // Once done, stop loading and redirect
-      //     setLoading(false);
-      //     navigate("/Summary", {
-      //       state: { search: "Profile" },
-      //     });
-      //   })
-      //   .catch((error) => {
-      //     console.error(error);
-      //     setLoading(false);
-      //   });
+      const { code_verifier, code_challenge } = generatePKCE();
+      console.log("CODE_VERIFIER=====>", code_verifier);
+      console.log("CODE_CHALLENGE=====>", code_challenge);
+
     }
   }, [location, navigate]);
 
@@ -134,26 +125,26 @@ function Entry() {
               <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
               {/* <Route element={<ProtectedRoute />}> */}
-                <Route path="Details" element={<ProfileDetails />} />
-                <Route path="Summary" element={<ProfileSummary />} />
-                <Route path="CasesDetails" element={< CasesDetails />} />
-                <Route path="CasesById" element={<CasesById />} />
-                <Route path="CasesSummary" element={< CasesSummary />} />
-                <Route path="ClaimSummary" element={< ClaimSummary />} />
-                <Route path="ClaimsDetails" element={< ClaimsDetails />} />
-                <Route path="Configuratin" element={<Configuratin />} />
-                <Route path="Filters" element={<Filter />} />
-                <Route path="ClaimsById" element={<ClaimsById />} />
-                <Route path="AddNewProfile" element={<AddNewProfile />} />
-                <Route path="Transfers" element={<TransferSummary />} />
-                <Route path="AddClaims" element={<AddClaims />} />
-                <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
-                <Route path="LandingPage" element={<LandingPage />} />
-                <Route path="Reports" element={<Reports />} />
-                <Route path="CorspndncDetail" element={<CorspndncDetail />} />
-                <Route path="RosterSummary" element={<RusterSummary />} />
-                <Route path="Doucmnets" element={<Doucmnets />} />
-                <Route path="Roster" element={<RosterDetails />} />
+              <Route path="Details" element={<ProfileDetails />} />
+              <Route path="Summary" element={<ProfileSummary />} />
+              <Route path="CasesDetails" element={< CasesDetails />} />
+              <Route path="CasesById" element={<CasesById />} />
+              <Route path="CasesSummary" element={< CasesSummary />} />
+              <Route path="ClaimSummary" element={< ClaimSummary />} />
+              <Route path="ClaimsDetails" element={< ClaimsDetails />} />
+              <Route path="Configuratin" element={<Configuratin />} />
+              <Route path="Filters" element={<Filter />} />
+              <Route path="ClaimsById" element={<ClaimsById />} />
+              <Route path="AddNewProfile" element={<AddNewProfile />} />
+              <Route path="Transfers" element={<TransferSummary />} />
+              <Route path="AddClaims" element={<AddClaims />} />
+              <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
+              <Route path="LandingPage" element={<LandingPage />} />
+              <Route path="Reports" element={<Reports />} />
+              <Route path="CorspndncDetail" element={<CorspndncDetail />} />
+              <Route path="RosterSummary" element={<RusterSummary />} />
+              <Route path="Doucmnets" element={<Doucmnets />} />
+              <Route path="Roster" element={<RosterDetails />} />
               {/* </Route> */}
             </Routes>
           </div>

@@ -12,13 +12,25 @@ import { InteractionStatus } from '@azure/msal-browser';
 import { useDispatch, useSelector } from 'react-redux';
 import { BatchResponseContent } from '@microsoft/microsoft-graph-client';
 import { loginUser } from '../../store/slice/AuthSlice';
+import { generatePKCE } from '../../helpers/crypt.helper';
+import { signIn } from '../../services/auth.services'
 
 const Login = () => {
   const dispatch = useDispatch();
   const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
   const navigate = useNavigate(); // Use the useHistory hook
   const { loading, error, user } = useSelector((state) => state.auth);
-  
+
+  useEffect(() => {
+    const fetchPKCE = async () => {
+      const { code_verifier, code_challenge } = await generatePKCE();
+      console.log("CODE_VERIFIER=====>", code_verifier);
+      console.log("CODE_CHALLENGE=====>", code_challenge);
+    };
+
+    fetchPKCE();
+  }, []);
+
   const handleLogin = () => {
     if (inProgress !== InteractionStatus.None) {
       return;
@@ -66,13 +78,18 @@ const Login = () => {
     setShowPassword(!showPassword);
   };
 
-  const handleLoginWithCredentional = async (e) => {
-    // e.preventDefault();
-    await dispatch(loginUser(credentials));
-    if (user) {
-      navigate('/Summary');
-    }
+  const handleSubmit = () => {
+    credentials.user && credentials.pwd
+      ? dispatch(signIn(credentials))
+      : toast.warn('Fill all input fields');
   };
+  // const handleLoginWithCredentional = async (e) => {
+  //   // e.preventDefault();
+  //   await dispatch(loginUser(credentials));
+  //   if (user) {
+  //     navigate('/Summary');
+  //   }
+  // };
 
   return (
 
@@ -150,14 +167,7 @@ const Login = () => {
 
             </div>
             {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
-            <Button loading={loading} style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
-              navigate("/Summary", {
-                state: {
-                  search: "Profile"
-                },
-              })
-              handleLoginWithCredentional(e)
-            }}>Log in</Button>
+            <Button loading={loading} style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={handleSubmit}>Log in</Button>
           </form>
           <p className='font-color-12 text-center'>
             Don't have an account? <a href="/contact-us">Request access</a>

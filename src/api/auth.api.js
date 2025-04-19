@@ -1,7 +1,7 @@
 import request from './request';
 
 export const signInRequest = data => {
-  return request.post('/auth/sign_in', data);
+  return request.post('/auth', data);
 };
 
 export const signUpRequest = data => {

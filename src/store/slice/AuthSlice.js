@@ -16,12 +16,14 @@ export const loginUser = createAsyncThunk(
                 },
             });
 
-            return response.data; 
+            console.log('response=========>', response.data);
+
+            return response.data;
         } catch (error) {
             if (error) {
-                return MyAlert('error','Login failed Please Try Again.')
+                return MyAlert('error', 'Login failed Please Try Again.')
             }
-            return rejectWithValue(error.message); 
+            return rejectWithValue(error.message);
         }
     }
 );
@@ -38,12 +40,12 @@ const authSlice = createSlice({
         builder
             .addCase(loginUser.pending, (state) => {
                 state.loading = true;
-                state.error = null; 
+                state.error = null;
             })
             .addCase(loginUser.fulfilled, (state, action) => {
                 state.loading = false;
                 state.user = action?.payload;
-debugger
+                debugger
                 // Set the accessToken in localStorage
                 if (action.payload?.accessToken) {
                     localStorage.setItem('token', action.payload.accessToken);
@@ -52,7 +54,7 @@ debugger
             })
             .addCase(loginUser.rejected, (state, action) => {
                 state.loading = false;
-                state.error = action.payload; 
+                state.error = action.payload;
             });
     },
 });
