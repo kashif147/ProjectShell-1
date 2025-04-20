@@ -1,13 +1,21 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {   "Subscriptions": false,
+  "Subscriptions & Rewards":false,
   "Finance": true,
   "Correspondence": false,
-  "Issues": false,
+  "Issue Management": false,
   "Events": false,
   "Courses": false,
   "Professional Development": false,
-  "Settings": false}
+  "Settings": false,
+  'Configuration':false,
+  'Profiles':false,
+  "Membership":false,
+  "Reports":false,
+  // "Issues":false,
+
+}
   ;
 
   const menuLblSlice = createSlice({

@@ -212,7 +212,7 @@ function ProfileSummary() {
   ];
 
   return (
-    <div className="">
+    <div className="" style={{width:'95vw'}}>
     <TableComponent data={gridData}  screenName="Profile" redirect="/Details" />
     </div>
   );

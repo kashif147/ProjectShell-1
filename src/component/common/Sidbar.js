@@ -3,10 +3,16 @@ import { Menu } from 'antd';
 import {
   subscriptionItems,
   financeItems,
-  correspondenceItems
+  correspondenceItems,
+  configurationItems,
+  profileItems,
+  reportItems,
+  issuesItems,
+  eventsItems
 } from '../../constants/SideNav';
 import { useSelector } from 'react-redux';
 import '../../styles/Sidbar.css';
+import { useNavigate } from "react-router-dom";
 
 const Sidbar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
@@ -16,25 +22,89 @@ const Sidbar = () => {
 
   // Mapping keys to their respective item arrays
   const itemsMap = {
-    Subscriptions: subscriptionItems,
+    'Subscriptions & Rewards': subscriptionItems,
     Finance: financeItems,
     Correspondence: correspondenceItems,
-    // Issues: issuesItems,
-    // Events: eventsItems,
+   Configuration:configurationItems,
+   Profiles:profileItems,
+   Reports:reportItems,
+   "Issue Management": issuesItems,
+    Events: eventsItems,
     // Courses: coursesItems,
     // // 'Professional Development': professionalDevelopmentItems,
     // Settings: settingsItems,
   };
-
+  const navigate = useNavigate();
   const menuItems = itemsMap[activeKey] || [];
-
+  const handleClick = ({ key }) => {
+    switch (key) {
+      // case '':
+      //   toggleCollapsed()
+      //   break;
+      case 'Profiles':
+        navigate("/Summary", {
+          state: {
+            search: 'Profile',
+          }
+        })
+        break;
+      case 'Claims':
+        navigate("/ClaimSummary", {
+          state: {
+            search: 'Claims',
+          }
+        })
+        break;
+      case 'Cases':
+        navigate("/CasesSummary", {
+          state: {
+            search: 'Cases',
+          }
+        })
+        break;
+      case 'Correspondences':
+        navigate("/CorrespondencesSummary", {
+          state: {
+            search: 'Correspondences',
+          }
+        })
+        break;
+      case 'Transfer Requests':
+        navigate("/Transfers", {
+          state: {
+            search: 'Transfers',
+          }
+        })
+        break;
+      case 'System Configuration':
+        navigate("/Configuratin", {
+          state: {
+            search: '',
+          }
+        })
+        break;
+      case 'Roster':
+        navigate("/RosterSummary", {
+          state: {
+            search: 'Rosters',
+          }
+        })
+        break;
+      case 'Trainings':
+        alert('Trainings clicked');
+        break;
+      default:
+        console.log('Unknown key:', key);
+    }
+  };
   return (
     <Menu
       mode="inline"
-      style={{ width:'4.9vw',height:'100vh', borderRight: 0 }}
+      style={{ width:'5vw',height:'100vh', borderRight: 0 }}
       items={menuItems}
       className="sidebar-menu"
-      onClick={(e) => console.log('Clicked:', e.key)}
+      onClick={handleClick}
+
     />
   );
 };

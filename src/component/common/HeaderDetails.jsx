@@ -343,7 +343,7 @@ console.log(globleFilters,'globleFilters')
   };
 
   return (
-    <div className="">
+    <div className="" style={{width:'95vw'}}>
       <div
         className={`details-header d-flex w-100% overflow-hidden ${(location?.pathname == "/Details"
           || location?.pathname == "/CasesById"
@@ -587,7 +587,7 @@ console.log(globleFilters,'globleFilters')
                     <Input
                       placeholder="Reg No or Surname"
                       style={{
-                        width: "21%",
+                        width: "25%",
                         // height: "31px",
                         // border: "1px solid",
                         color: "gray",

@@ -708,7 +708,7 @@ export const TableColumnsProvider = ({ children }) => {
     setSearchFilters(prevState => ({
       ...prevState,
       Profile: prevState.Profile.map(item =>
-        item.titleColumn === "Division"
+          item.titleColumn === "Division"
           ? {
               ...item,
               lookups: selectLokups.Divisions.reduce((acc, division) => {

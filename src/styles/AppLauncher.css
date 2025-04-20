@@ -1,7 +1,6 @@
 .lancher-div{
     padding: 16px;
     background-color: #faf8f8;
-    /* background-color: red; */
     gap: 20px;
     width: auto;
     border-radius: 4px;
@@ -17,7 +16,6 @@
     cursor: pointer;
     border-radius: 8px;
     padding: 20px;
-    /* transition: background 0.3s ease; */
   }
   .app-item-active {
     text-align: center;
@@ -25,14 +23,9 @@
     border-radius: 8px;
     padding: 20px;
     background-color: var(--primary-color);
-
-    /* transition: background 0.3s ease; */
   }
   .app-item-active:hover {
-  
     background-color: #215E97 !important;
-
-    /* transition: background 0.3s ease; */
   }
   
   .app-item:hover {
@@ -67,7 +60,6 @@
     cursor: pointer;
   }
   .app-icon-size {
-    /* color: #215E97; */
     font-size: 40px !important;
   }
   .app-icon-blue {

@@ -5,13 +5,29 @@ import { SettingOutlined } from "@ant-design/icons";
 import {
   FaRegCircleUser,
   FaListCheck,
-  FaRegEnvelope,
+
   FaDiagramProject,
 } from 'react-icons/fa6';
+import {
+  FaRegUserCircle,
+  FaRegMoneyBillAlt,
+  FaRegEnvelope,
+  FaCalendarAlt,
+  FaRegClipboard,
+  FaRegChartBar,
+  FaRegFileAlt,
+  FaCogs,
+  FaUsers,
+  FaToolbox,
+  FaListUl,
+  FaUserCircle,
+} from 'react-icons/fa';
+import { TbReportAnalytics } from 'react-icons/tb';
 import { LuCalendarClock } from 'react-icons/lu';
 import { IoSettingsOutline } from 'react-icons/io5';
 import { TbGridDots } from "react-icons/tb";
-import { FaUserCircle } from "react-icons/fa";
+import { MdOutlineWork } from 'react-icons/md';
+// import {  } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
 import { IoMdSettings } from "react-icons/io";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -39,14 +55,18 @@ const AppLauncherMenu = () => {
   };
 
   const appItems = [
-    { name: 'Subscriptions', icon: FaRegCircleUser },
-    { name: 'Finance', icon: FaListCheck },
-    { name: 'Correspondence', icon: FaListCheck },
-    { name: 'Issues', icon: FaRegEnvelope },
-    { name: 'Events', icon: FaDiagramProject },
+    { name: 'Subscriptions & Rewards', icon: FaRegUserCircle },
+    { name: 'Finance', icon: FaRegMoneyBillAlt },
+    { name: 'Correspondence', icon: FaRegEnvelope },
+    { name: 'Issue Management', icon: FaRegClipboard },
+    { name: 'Events', icon: FaCalendarAlt },
     { name: 'Courses', icon: LuCalendarClock },
-    { name: 'Professional Development', icon: IoSettingsOutline },
-    { name: 'Settings', icon: IoSettingsOutline }
+    { name: 'Professional Development', icon: MdOutlineWork },
+    { name: 'Settings', icon: IoSettingsOutline },
+    { name: 'Configuration', icon: FaCogs },
+    { name: 'Profiles', icon: FaUsers },
+    { name: 'Membership', icon: FaToolbox },
+    { name: 'Reports', icon: TbReportAnalytics }
   ];
 
   return (
@@ -233,7 +253,7 @@ function Header() {
   }) || [];
 
   return (
-    <div className="Header-border overflow-y-hidden bg pt-2 pb-2">
+    <div className="Header-border overflow-y-hidden bg pt-2 pb-2" style={{width:'100vw'}}>
       <div className="d-flex justify-content-between align-items-center ">
         <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '36px', width:'33%' }}>
         {/* <TbGridDots size={25} color={'#fff'} style={{marginRight: '32px',}}/> */}

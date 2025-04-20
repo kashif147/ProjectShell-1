@@ -43,7 +43,7 @@ function Entry() {
         location?.pathname != "/" && 
       <Header />
       }
-      <div className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}>
+      <div style={{width:'100vw'}} className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}>
         {
         location?.pathname != "/" && 
       <div style={{ backgroundColor:''}}>
@@ -51,7 +51,7 @@ function Entry() {
       </div>
       }
       <div style={{}}>
-      <div>
+      <div style={{width: '100vw'}}>
       {
       location?.pathname != "/" && 
       <HeaderDetails />
