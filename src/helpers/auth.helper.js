@@ -1,5 +1,5 @@
 export const setHeaders = headers => {
-  localStorage.setItem('token', headers['access-token']);
+  localStorage.setItem('token', headers['accessToken']);
 };
 
 export const getHeaders = () => {

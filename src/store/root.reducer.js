@@ -1,5 +1,5 @@
-import authReducer from "./slice/AuthSlice"; // Auth slice
-// import AuthReducer from './slice/auth.slice';
+// import authReducer from "./slice/AuthSlice"; // Auth slice
+import AuthReducer from './slice/auth.slice';
 import regionReducer from './slice/RegionSlice'; // Region slice
 // import lookupsTypeReducer from '../features/RegionSlice';
 import lookupsTypeReducer from "./slice/LookupTypeSlice";
@@ -13,8 +13,7 @@ import contactReducer from "./slice/ContactSlice"
 
 
 export const rootReducer = {
-  // auth: AuthReducer,
-  auth: authReducer,
+  auth: AuthReducer,
   regions: regionReducer,
   lookups: lookupsReducer,
   lookupsTypes: lookupsTypeReducer,

@@ -2,8 +2,24 @@ import {
   signInRequest,
   signUpRequest,
 } from '../api/auth.api';
-import { setHeaders } from '../helpers/auth.helper';
+import { getHeaders, setHeaders } from '../helpers/auth.helper';
 import { setSignedIn, setUser } from '../store/slice/auth.slice';
+
+export const validation = () => {
+  return async (dispatch) => {
+    try {
+      const res = getHeaders();
+      console.log('response=====>', res);
+      if (res?.token) {
+        dispatch(setSignedIn(true));
+      } else {
+        dispatch(setSignedIn(false));
+      }
+    } catch (error) {
+      dispatch(setSignedIn(false));
+    }
+  };
+};
 
 export const signIn = data => {
   return dispatch => {
@@ -11,7 +27,7 @@ export const signIn = data => {
       .then(res => {
         console.log('res=============>', res);
         if (res.status === 200) {
-          setHeaders(res.data.accessToken);
+          setHeaders(res.data);
           dispatch(setSignedIn(true));
           // dispatch(setUser(res.data.data));
         } else {

@@ -1,6 +1,6 @@
 import './App.css';
 import './styles/Utilites.css'
-import Entry from './Entry';
+import Entry from './Navigation/Entry';
 import Login from './pages/auth/Login';
 import { Routes, Route } from 'react-router-dom';
 import React from 'react';
@@ -18,7 +18,7 @@ function App() {
         <div className="">
         {/* <Login/> */}
           <Entry />
-          <IdleModal />
+          {/* <IdleModal /> */}
         </div>
 
       </div>
