@@ -4,7 +4,6 @@ export const signInRequest = data => {
   return request.post('/auth', data);
 };
 
-export const signUpRequest = data => {
-  return request.post('/auth', data);
+export const signInMicrosoftRequest = data => {
+  return request.post('/auth/microsoft', data);
 };
-

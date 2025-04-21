@@ -3,7 +3,7 @@ import './styles/Utilites.css'
 import ReactDOM from 'react-dom/client';
 import './index.css';
 // import App from './App';
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useLocation, useNavigate } from 'react-router-dom';
 import { TableColumnsProvider } from './context/TableColumnsContext ';
 import { Provider, useDispatch, useSelector } from 'react-redux'
 import store from './store';
@@ -14,7 +14,8 @@ import './config/globals';
 import AuthProvider from './pages/auth/AuthProvider';
 import Entry from './Navigation/Entry';
 import { privateRoutes, publicRoutes } from './config/routes'
-import { validation } from './services/auth.services';
+import { signInMicrosoft, validation } from './services/auth.services';
+import { getVerifier } from './helpers/verifier.helper';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 
@@ -60,14 +61,35 @@ const Router = ({ auth }) => {
 
 
 const App = () => {
+  const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const auth = useSelector(state => state.auth);
-  console.log('Auth=========>', auth);
+  const queryParams = new URLSearchParams(location.search);
+  const authCode = queryParams.get("code");
 
   React.useEffect(() => {
-    dispatch(validation());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+    const handleAuthentication = async () => {
+      try {
+        if (authCode) {
+          const code_verifier = getVerifier();
+          const data = {
+            code: authCode,
+            codeVerifier: code_verifier
+          };
+          dispatch(signInMicrosoft(data));
+        } else {
+          dispatch(validation());
+        }
+      } catch (error) {
+        console.error('Authentication error:', error);
+        toast.error('Authentication failed');
+      }
+    };
+
+    handleAuthentication();
+      // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authCode, dispatch, location, navigate]);
 
   return auth.isLoading ? <div>loading...</div> : <Router auth={auth} />;
 };
