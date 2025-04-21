@@ -40,6 +40,7 @@ import { getPartners } from "../../features/PartnersSlice";
 import { getChildren } from "../../features/ChildrenSlice";
 import { baseURL } from "../../utils/Utilities";
 import axios from "axios";
+import { Resizable } from "react-resizable";
 const { TextArea } = Input;
 
 const CheckboxGroup = Checkbox.Group;
@@ -940,8 +941,8 @@ function MyDeatails() {
     },
   };
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <div className='details-container'>
+    
+      <div className='details-container' style={{width:'80%'}}>
         <div className='details-con-header1'>
           <Row>
             <Col span={8}>
@@ -1750,6 +1751,7 @@ function MyDeatails() {
           <Row>
             <Col></Col>
           </Row>
+          {/* <Resizable /> */}
         </div>
         <MyDrawer
           title='Partnership'
@@ -3185,7 +3187,7 @@ function MyDeatails() {
           </div>
         </MyDrawer>
       </div>
-    </form>
+    
   );
 }
 

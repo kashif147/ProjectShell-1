@@ -22,6 +22,10 @@ import {
   FaListUl,
   FaUserCircle,
 } from 'react-icons/fa';
+import { IoNotificationsOutline } from "react-icons/io5"; // outlined version
+import { HiOutlineQuestionMarkCircle } from "react-icons/hi2"; // outlined version
+import { IoMdSettings } from "react-icons/io"; // already regular
+import { PiPhoneCallLight } from "react-icons/pi";
 import { TbReportAnalytics } from 'react-icons/tb';
 import { LuCalendarClock } from 'react-icons/lu';
 import { IoSettingsOutline } from 'react-icons/io5';
@@ -29,13 +33,13 @@ import { TbGridDots } from "react-icons/tb";
 import { MdOutlineWork } from 'react-icons/md';
 // import {  } from "react-icons/fa";
 import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
-import { IoMdSettings } from "react-icons/io";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 import { Button, Input } from "antd";
 import { PiPhoneCallBold } from "react-icons/pi";
 import { BiLogOutCircle } from "react-icons/bi";
+import { FaArrowRightFromBracket } from "react-icons/fa6";
 import logo from '../../assets/images/gra_logo.png'
 import { Dropdown } from 'antd';
 import { PiDotsNineLight } from 'react-icons/pi';
@@ -327,20 +331,26 @@ function Header() {
             style={{ marginRight: "",width:'100%' }}
           />
         </div>
-        <div style={{width:'33%', justifyContent:'end'}} className="input-container d-flex align-items-center justify-content-end">
-          <PiPhoneCallBold
-            className="top-icon"
-            onClick={() => navigate("/CorrespondencesSummary", { state: { search: "Correspondence" } })}
-          />
-          <IoNotifications className="top-icon" />
-          <HiMiniQuestionMarkCircle className="top-icon" />
-          <IoMdSettings className="top-icon" />
-          <FaUserCircle className="top-icon" />
-          <BiLogOutCircle
-            className="top-icon"
-            onClick={() => { localStorage.removeItem('token'); navigate('/'); }}
-          />
-        </div>
+       
+<div style={{ width: '33%', justifyContent: 'end' }} className="input-container d-flex align-items-center justify-content-end">
+  <PiPhoneCallLight
+    className="top-icon"
+    onClick={() => navigate("/CorrespondencesSummary", { state: { search: "Correspondence" } })}
+  />
+  <IoNotificationsOutline className="top-icon" />
+  <HiOutlineQuestionMarkCircle className="top-icon" />
+  <IoMdSettings className="top-icon" />
+  <FaRegUserCircle className="top-icon" />
+  <FaArrowRightFromBracket
+  style={{marginRight:'30px', size:'25px'}}
+  color="red"
+  // className="top-icon"
+  onClick={() => {
+    localStorage.removeItem('token');
+    navigate('/');
+  }}
+/>
+</div>
       </div>
     </div>
 

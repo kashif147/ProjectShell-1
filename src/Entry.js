@@ -40,25 +40,27 @@ import Sidbar from "./component/common/Sidbar";
 function Entry() {
   const location = useLocation();
   return (
-    <div style={{ width: '100vw', height: '100vh' }}>      {
-        location?.pathname != "/" && 
-      <Header />
-      }
-      <div style={{width:'100vw'}} className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}>
-        {
-        location?.pathname != "/" && 
-      <div style={{ backgroundColor:''}}>
-      <Sidbar/>
-      </div>
-      }
-      <div style={{}}>
+    <div style={{ width: '100%', height: '100vh', overflowX: 'hidden' }}>
+      {location?.pathname !== "/" && <Header />}
+  
+      <div
+        className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}
+        style={{ width: '100%' }}
+        >
+        {location?.pathname !== "/" && (
+          <div style={{ width: '100%' }}>
+            <Sidbar />
+          </div>
+        )}
+         <div style={{}}>
       <div style={{width: '100vw'}}>
       {
-      location?.pathname != "/" && 
-      <HeaderDetails />
+        location?.pathname != "/" && 
+        <HeaderDetails />
       }
       </div>
-      <div className="main-route d-flex ">
+      <div 
+      className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}>
         {/* {(location?.pathname == "/Details"
           || location?.pathname == "/ClaimsDetails" ||
           location?.pathname == "/CasesDetails" ||
@@ -88,7 +90,7 @@ function Entry() {
         ) && (
             <ProfileHeader />
           )}
-        <div style={{ width: "100%", overflow: "hidden" }}>
+        <div style={{  overflow: "hidden" }}>
 
           <div className="main-main">
             <Routes>
@@ -119,8 +121,8 @@ function Entry() {
                           </Routes>
           </div>
         </div>
-        {(location?.pathname == "/Details"
-          || location?.pathname == "/ClaimsDetails"
+        {(
+           location?.pathname == "/ClaimsDetails"
           || location?.pathname == "/CasesDetails"
           || location?.pathname == "/AddNewProfile" 
           || location?.pathname == "/AddClaims"
@@ -139,6 +141,7 @@ function Entry() {
       </div>
     </div>
   );
+  
 }
 
 export default Entry;

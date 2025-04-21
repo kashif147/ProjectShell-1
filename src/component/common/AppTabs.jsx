@@ -26,14 +26,14 @@ function AppTabs() {
       label: 'Finance',
       children: <MyDeatails />,
     },
-    {
-      key: '3',
-      label: 'Audit History',
-      children: <MyDeatails />,
-    },
+    // {
+    //   key: '3',
+    //   label: 'Audit History',
+    //   children: <MyDeatails />,
+    // },
     {
       key: '4',
-      label: 'Notes & Activities',
+      label: 'Documents',
       children: <MyDeatails />,
     },
     {
@@ -51,11 +51,11 @@ function AppTabs() {
       label: 'Claims',
       children: <ClaimsById />,
     },
-    {
-      key: '8',
-      label: 'Correspondences',
-      children: <CorspndncDetail />,
-    },
+    // {
+    //   key: '8',
+    //   label: 'Correspondences',
+    //   children: <CorspndncDetail />,
+    // },
     // {
     //   key: '9',
     //   label: 'Roster',
@@ -102,7 +102,7 @@ function AppTabs() {
                   style={{ fontSize: "15px", fontWeight: 500 }}
                 />
               }
-              data={{ "Roster": "false", "Documents": "false", 'Projects': 'false', 'Trainings': 'false',}}
+              data={{ "Roster": "false", "Documents": "false", 'Projects': 'false', 'Trainings': 'false','Audit History':'false'}}
               isCheckBox={false}
               isSearched={false}
               isTransparent={true}

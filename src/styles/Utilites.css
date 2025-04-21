@@ -7,6 +7,14 @@
 .ant-tabs-nav{
     margin: 0px !important;
 }
+.sidebar-menu .ant-menu-item,
+.sidebar-menu .ant-menu-submenu-title {
+  white-space: normal !important;
+  height: auto !important;
+  line-height: 1.5 !important;
+  padding-top: 8px;
+  padding-bottom: 8px;
+}
 
 .ant-tabs-nav{
     background-color: var(--secoundry-bg-color);
