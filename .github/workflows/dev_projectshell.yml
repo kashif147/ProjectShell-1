@@ -3,7 +3,7 @@ name: Deploy React App to Azure
 on:
   push:
     branches:
-      - dev 
+      - dev
 
 jobs:
   build-and-deploy:
@@ -18,15 +18,20 @@ jobs:
         with:
           node-version: '20'
 
+      - name: Clean npm cache
+        run: npm cache clean --force
+
       - name: Install Dependencies
         run: npm install
 
       - name: Build React App (with increased memory)
-        run: node --max_old_space_size=4096 node_modules/.bin/react-scripts build
+        run: |
+          npm install cross-env
+          npx cross-env NODE_OPTIONS="--max_old_space_size=4096" npm run build
 
       - name: Deploy to Azure Web App
         uses: azure/webapps-deploy@v2
         with:
-          app-name: "projectshell"
+          app-name: "projectshell"  # Replace with your Azure App Service name
           publish-profile: ${{ secrets.AZURE_WEBAPP_PUBLISH_PROFILE }}
           package: build
