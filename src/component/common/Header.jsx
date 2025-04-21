@@ -342,9 +342,8 @@ function Header() {
   <IoMdSettings className="top-icon" />
   <FaRegUserCircle className="top-icon" />
   <FaArrowRightFromBracket
-  style={{marginRight:'30px', size:'25px'}}
+  style={{ marginRight: '30px', fontSize: '25px' }}  // also works
   color="red"
-  // className="top-icon"
   onClick={() => {
     localStorage.removeItem('token');
     navigate('/');
