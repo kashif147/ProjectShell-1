@@ -90,8 +90,22 @@ const Sidbar = () => {
           }
         })
         break;
+      case 'Applications':
+        navigate("/Applications", {
+          state: {
+            search: 'Applications',
+          }
+        })
+        break;
       case 'Trainings':
         alert('Trainings clicked');
+        break;
+      case 'Change Category':
+        navigate("/ChangCateSumm", {
+          state: {
+            search: 'Change Category Summary',
+          }
+        })
         break;
       default:
         console.log('Unknown key:', key);

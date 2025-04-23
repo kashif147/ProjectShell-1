@@ -24,6 +24,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 
 import Gridmenu from "./Gridmenu";
 import { Link } from "react-router-dom";
+import AddNewGarda from "../details/AddNewGarda";
 const EditableContext = React.createContext(null);
 
 
@@ -93,6 +94,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
         onCell: () => ({ id: `${index}` }),
       }))
   );
+  const [AddNewGardaDrwr, setAddNewGardaDrwr] = useState(false)
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
@@ -250,6 +252,43 @@ const TableComponent = ({ data, screenName, redirect }) => {
         col.title === "Roster ID" ? (
           <Link
             to="/Roster"
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              code: record?.regNo,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth: record?.dateOfBirth,
+            }}
+            onClick={() => getProfile([record], index)}
+          >
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
+            </span>
+          </Link>)
+          :
+        col.title === "Application No" ? (
+          <Link
+            // to="/AproveMembersip"
+            onClick={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)}
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              // code: record?.regNo,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth: record?.dateOfBirth,
+            }}
+            // onClick={() => getProfile([record], index)}
+          >
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
+            </span>
+          </Link>)
+          :
+        col.title === "Change To" ? (
+          <Link
+            to="/ChangeCatById"
             state={{
               search: screenName,
               name: record?.fullName,
@@ -497,7 +536,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
             style={{ tableLayout: 'fixed' }}
             bordered
             virtual
-            scroll={{ x: "100%", y: 500 }}
+            scroll={{ x: "100%", y: 800 }}
             sticky
           />
           <div
@@ -549,6 +588,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
           </th>
         )}
       </DragOverlay>
+    <AddNewGarda open={AddNewGardaDrwr} onClose={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)} isGard={true} />
     </DndContext>
   );
 };

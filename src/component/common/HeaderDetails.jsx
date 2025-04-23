@@ -1,4 +1,4 @@
-import { useState, React, useRef, useEffect,useMemo } from "react";
+import { useState, React, useRef, useEffect, useMemo } from "react";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { usePDF } from "react-to-pdf";
 import { FaUser, } from "react-icons/fa6";
@@ -71,42 +71,44 @@ function HeaderDetails() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [TransferDrawer, setTransferDrawer] = useState(false)
   const [rosterDrawer, setrosterDrawer] = useState(false)
+  const [aprove, setaprove] = useState("001")
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
   };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters,lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex,resetFtn, globleFilters, } = useTableColumns();
-console.log(globleFilters,'globleFilters')
+  const { searchFilters, lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, resetFtn, globleFilters, } = useTableColumns();
+  console.log(globleFilters, 'globleFilters')
+  const plainOptions = ['Pending', 'Approve', 'Reject'];
   const screenName = location?.state?.search
   const format = 'HH:mm';
   const column = [
     {
-        title: 'Title',
-        dataIndex: 'Title',
-        key: 'Title',
+      title: 'Title',
+      dataIndex: 'Title',
+      key: 'Title',
     },
     {
-        title: 'Invite Attendies',
-        dataIndex: 'Invite Attendies',
-        key: 'Invite Attendies',
+      title: 'Invite Attendies',
+      dataIndex: 'Invite Attendies',
+      key: 'Invite Attendies',
     },
     {
-        title: 'Start Time',
-        dataIndex: 'Start Time',
-        key: 'Start Time',
+      title: 'Start Time',
+      dataIndex: 'Start Time',
+      key: 'Start Time',
     },
     {
-        title: 'End Time',
-        dataIndex: 'End Time',
-        key: 'End Time',
+      title: 'End Time',
+      dataIndex: 'End Time',
+      key: 'End Time',
     },
     {
-        title: 'Description',
-        dataIndex: 'Description',
-        key: 'Description',
+      title: 'Description',
+      dataIndex: 'Description',
+      key: 'Description',
     },
-]
+  ]
 
   function filterSearchableColumns(data) {
     if (data) {
@@ -123,17 +125,17 @@ console.log(globleFilters,'globleFilters')
   const currentSearchFilters = useMemo(() => {
     return searchFilters[screenName];
   }, [screenName, searchFilters]);
-  
+
   useEffect(() => {
     if (screenName && currentSearchFilters) {
       filterSearchableColumns(currentSearchFilters, globleFilters);
     }
-  }, [screenName,globleFilters]);
+  }, [screenName, globleFilters]);
   const genaratePdf = (e) => {
     toPDF();
   };
   const dispatch = useDispatch();
-  
+
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
   useEffect(() => {
     dispatch(fetchRegions());
@@ -279,6 +281,12 @@ console.log(globleFilters,'globleFilters')
     BulkChnages: "false",
   };
   const [selectedValue, setSelectedValue] = useState(null);
+  const [selectedValue1, setSelectedValue1] = useState(['Pending']);
+  const handleChangeCheckBox = (checkedValues) => {
+    // Only keep the last selected option
+    const latest = checkedValues[checkedValues.length - 1];
+    setSelectedValue1(latest ? [latest] : []);
+  };
   const [loading, setLoading] = useState(false);
 
   const handleChange = (value) => {
@@ -343,7 +351,7 @@ console.log(globleFilters,'globleFilters')
   };
 
   return (
-    <div className="" style={{width:'95vw'}}>
+    <div className="" style={{ width: '95vw' }}>
       <div
         className={`details-header d-flex w-100% overflow-hidden ${(location?.pathname == "/Details"
           || location?.pathname == "/CasesById"
@@ -356,7 +364,6 @@ console.log(globleFilters,'globleFilters')
       >
         <div style={{ width: "100%" }}>
           <div className="d-flex justify-content-between align-items-baseline">
-
             <div className="bred-cram-main d-flex align-items-center" onClick={goBack}>
               <>
                 {location?.state?.search === "Profile" && (
@@ -382,7 +389,7 @@ console.log(globleFilters,'globleFilters')
                   />
                 )}
                 {location?.state?.search === "Rouster" && (
-                      <FaCalendarDays 
+                  <FaCalendarDays
                     style={{
                       fontSize: "16px",
                       marginRight: "5px",
@@ -393,7 +400,7 @@ console.log(globleFilters,'globleFilters')
                   />
                 )}
                 {location?.state?.search === "Transfers" && (
-                      <LuArrowLeftRight   
+                  <LuArrowLeftRight
                     style={{
                       fontSize: "16px",
                       marginRight: "5px",
@@ -415,7 +422,7 @@ console.log(globleFilters,'globleFilters')
                   />
                 )}
                 <p>{location?.state?.search}</p>
-                <p>&nbsp;{location?.pathname==="/Configuratin"?"":"/"}&nbsp;{iconFtn()}&nbsp;</p>
+                <p>&nbsp;{location?.pathname === "/Configuratin" ? "" : "/"}&nbsp;{iconFtn()}&nbsp;</p>
                 {location?.pathname === "/ClaimsById" && (
                   <FaMoneyCheckAlt
                     style={{
@@ -450,19 +457,19 @@ console.log(globleFilters,'globleFilters')
                   />
                 )}
                 {
-                  nav === '/CorrespondencesSummary' || nav === '/RosterSummary' || nav === '/Transfers'  ?
+                  nav === '/CorrespondencesSummary' || nav === '/RosterSummary' || nav === '/Transfers' ?
                     <p>Summary</p> :
-                    nav === '/Configuratin'?
-                    <>
-                    <IoSettingsOutline style={{
-                fontSize: "15px",
-                color: "#45669d",
-                marginRight:'2px'
-              }} /> 
-              <p style={{}}>Configuration</p>
-                    </>
-                    :
-                    <p>{formattedNav}</p>
+                    nav === '/Configuratin' ?
+                      <>
+                        <IoSettingsOutline style={{
+                          fontSize: "15px",
+                          color: "#45669d",
+                          marginRight: '2px'
+                        }} />
+                        <p style={{}}>Configuration</p>
+                      </>
+                      :
+                      <p>{formattedNav}</p>
                 }
 
                 {location?.state?.code && (
@@ -479,14 +486,40 @@ console.log(globleFilters,'globleFilters')
               || location?.pathname == "/ClaimsById"
               || location?.pathname == "/AddClaims"
               || location?.pathname == "/Doucmnets"
+              || location?.pathname == "/AproveMembersip"
+              || location?.pathname == "/ChangeCatById"
+              // || location?.pathname == "/ChangCateSumm"
             ) && (
                 <div className="d-flex align-items-baseline">
-                  <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
-                    if (nav == "/ClaimsById")
-                      handlClaimDrawerChng()
-                  }}>
-                    Create
-                  </Button>
+                  {location?.pathname == "/AproveMembersip"
+                    || location?.pathname == "/ChangeCatById"
+                    ?
+                    //   <MySelect
+                    //   options={[{key:'001',
+                    //     label:'Aprove'
+                    //   },
+                    //   {key:'002',
+                    //     label:'Reject'
+                    //   }
+                    // ]}
+                    // value={aprove}
+                    // onChange={(e)=>setaprove(e)}
+                    //   />
+
+                    <Checkbox.Group
+                      style={{ marginRight: '10px' }}
+                      options={plainOptions}
+                      value={selectedValue1}
+                      onChange={handleChangeCheckBox}
+                    />
+                    :
+                    <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
+                      if (nav == "/ClaimsById")
+                        handlClaimDrawerChng()
+                    }}>
+                      Create
+                    </Button>
+                  }
                   <Button onClick={goBack} className="me-1 gray-btn butn" >
                     Return to summary
                   </Button>
@@ -506,6 +539,7 @@ console.log(globleFilters,'globleFilters')
           </div>
 
           {(location?.pathname == "/ClaimSummary" ||
+            location?.pathname == "/Applications" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/CasesSummary"
@@ -513,6 +547,7 @@ console.log(globleFilters,'globleFilters')
             || location?.pathname == "/CorrespondencesSummary"
             || location?.pathname == "/Reports"
             || location?.pathname == "/RosterSummary"
+            || location?.pathname == "/ChangCateSumm"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -521,8 +556,8 @@ console.log(globleFilters,'globleFilters')
                       ? `Profile`
                       : ` ${location?.state?.search}`}
                   </h2>
-                  
-                  
+
+
 
                   <div className="d-flex">{
                     nav === '/CorrespondencesSummary' ?
@@ -531,10 +566,10 @@ console.log(globleFilters,'globleFilters')
                       </div>
                       :
                       nav === '/ClaimSummary' ?
-                      <CreateClaim />
-                      :
+                        <CreateClaim />
+                        :
                         <Button onClick={() => {
-                          if (nav == "/Details" || nav == "/Summary") {
+                          if ( nav == "/Applications") {
                             setisGardaDrwer(!isGardaDrwer)
 
                           } else if (nav == "/ClaimSummary") {
@@ -542,15 +577,15 @@ console.log(globleFilters,'globleFilters')
                           }
                           else if (nav == "/Transfers")
                             setTransferDrawer(!TransferDrawer)
-                         else if(nav==="/RosterSummary")
-                          setrosterDrawer(!rosterDrawer)
+                          else if (nav === "/RosterSummary")
+                            setrosterDrawer(!rosterDrawer)
                         }
-                    
-                      }
+
+                        }
                           style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
                           Create
                         </Button>
-                    }
+                  }
                     <SimpleMenu
                       title={
                         <>
@@ -573,7 +608,7 @@ console.log(globleFilters,'globleFilters')
                           style={{ fontSize: "15px", fontWeight: 500 }}
                         />
                       }
-                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag':'false','Bulk Email':'false','Bulk SMS':'false' }}
+                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag': 'false', 'Bulk Email': 'false', 'Bulk SMS': 'false' }}
                       isCheckBox={false}
                       isSearched={false}
                       isTransparent={true}
@@ -779,100 +814,100 @@ console.log(globleFilters,'globleFilters')
       <AddNewGarda open={isGardaDrwer} onClose={() => setisGardaDrwer(!isGardaDrwer)} />
       <TransferRequests open={TransferDrawer} onClose={() => setTransferDrawer(!TransferDrawer)} isSearch={true} />
       <MyDrawer title='Add New Events' open={rosterDrawer} onClose={() => setrosterDrawer(!rosterDrawer)} isrecursion={true}>
-                <div>
-                        
-                  <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                            <p></p>
-                        </div>
-                        <div className="inpt-con">
-                            <p className="star-white">*</p>
-                            <div className="inpt-sub-con">
-                            <Search className="inp"
-                                
-                                />
-                                <h1 className="error-text"></h1>
-                            </div>
-                            <p className="error"></p>
-                        </div>
-                    </div>
-                    <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                            <p>Title :</p>
-                        </div>
-                        <div className="inpt-con">
-                            <p className="star">*</p>
-                            <div className="inpt-sub-con">
-                                <Input className="inp"
-                                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                                // value={drawerIpnuts?.LookupType?.code}  
-                                />
-                                <h1 className="error-text"></h1>
-                            </div>
-                            <p className="error"></p>
-                        </div>
-                    </div>
-                    <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                            <p>Invite Attendies</p>
-                        </div>
-                        <div className="inpt-con">
-                            <p className="star">*</p>
-                            <div className="inpt-sub-con">
-                                <Input className="inp"
-                                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                                // value={drawerIpnuts?.LookupType?.code}  
-                                />
-                                <h1 className="error-text"></h1>
-                            </div>
-                            <p className="error"></p>
-                        </div>
-                    </div>
-                    <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                            <p>Time </p>
-                        </div>
-                        <div className="inpt-con">
-                            <p className="star-white">*</p>
-                            <div className="inpt-sub-con">
-                                <TimePicker.RangePicker format={format} style={{ width: '100%', borderRadius: '3px' }} />
-                                <h1 className="error-text"></h1>
-                            </div>
-                            <p className="error"></p>
-                        </div>
-                    </div>
-                    <div className="drawer-inpts-container" style={{ height: 'auto', }}>
-                        <div className="drawer-lbl-container">
-                            <p>Description </p>
-                        </div>
-                        <div className="inpt-con">
-                            <p className="star-white">*</p>
-                            <div className="inpt-sub-con">
-                                <TextArea
-                                    rows={7}
-                                />
-                                <h1 className="error-text"></h1>
-                            </div>
-                            <p className="error"></p>
-                        </div>
-                    </div>
-                    <Table
-                        pagination={false}
-                        columns={column}
-                   
-                        className="drawer-tbl"
-                        // rowClassName={(record, index) =>
-                        //     index % 2 !== 0 ? "odd-row" : "even-row"
-                        // }
-                        // rowSelection={{
-                        //     type: selectionType,
-                        //     ...rowSelection,
-                        // }}
-                        bordered
-                    />
+        <div>
 
-                </div>
-            </MyDrawer>
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container">
+              <p></p>
+            </div>
+            <div className="inpt-con">
+              <p className="star-white">*</p>
+              <div className="inpt-sub-con">
+                <Search className="inp"
+
+                />
+                <h1 className="error-text"></h1>
+              </div>
+              <p className="error"></p>
+            </div>
+          </div>
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container">
+              <p>Title :</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp"
+                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                // value={drawerIpnuts?.LookupType?.code}  
+                />
+                <h1 className="error-text"></h1>
+              </div>
+              <p className="error"></p>
+            </div>
+          </div>
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container">
+              <p>Invite Attendies</p>
+            </div>
+            <div className="inpt-con">
+              <p className="star">*</p>
+              <div className="inpt-sub-con">
+                <Input className="inp"
+                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                // value={drawerIpnuts?.LookupType?.code}  
+                />
+                <h1 className="error-text"></h1>
+              </div>
+              <p className="error"></p>
+            </div>
+          </div>
+          <div className="drawer-inpts-container">
+            <div className="drawer-lbl-container">
+              <p>Time </p>
+            </div>
+            <div className="inpt-con">
+              <p className="star-white">*</p>
+              <div className="inpt-sub-con">
+                <TimePicker.RangePicker format={format} style={{ width: '100%', borderRadius: '3px' }} />
+                <h1 className="error-text"></h1>
+              </div>
+              <p className="error"></p>
+            </div>
+          </div>
+          <div className="drawer-inpts-container" style={{ height: 'auto', }}>
+            <div className="drawer-lbl-container">
+              <p>Description </p>
+            </div>
+            <div className="inpt-con">
+              <p className="star-white">*</p>
+              <div className="inpt-sub-con">
+                <TextArea
+                  rows={7}
+                />
+                <h1 className="error-text"></h1>
+              </div>
+              <p className="error"></p>
+            </div>
+          </div>
+          <Table
+            pagination={false}
+            columns={column}
+
+            className="drawer-tbl"
+            // rowClassName={(record, index) =>
+            //     index % 2 !== 0 ? "odd-row" : "even-row"
+            // }
+            // rowSelection={{
+            //     type: selectionType,
+            //     ...rowSelection,
+            // }}
+            bordered
+          />
+
+        </div>
+      </MyDrawer>
     </div>
   );
 }

@@ -27,9 +27,10 @@ import { IoSettingsOutline } from "react-icons/io5";
 import moment from "moment";
 const { TextArea } = Input;
 
-function AddNewGarda({ open, onClose }) {
+function AddNewGarda({ open, onClose, isGard }) {
   const dispath = useDispatch();
-  const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
+  const currentStatus = "Pending"
+  const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable, } = useTableColumns();
   const state = useSelector((state) => state.lookups);
   const { lookups } = state;
 
@@ -131,7 +132,7 @@ function AddNewGarda({ open, onClose }) {
   };
 
   const handleSubmit = (e) => {
-   
+
     e.preventDefault();
     setSubmitted(true);
 
@@ -195,6 +196,8 @@ function AddNewGarda({ open, onClose }) {
   ];
   const [value4, setValue4] = useState("Male");
   const onChange4 = ({ target: { value } }) => {
+    let name;
+    name = "numan"
     console.log("radio4 checked", value);
     setValue4(value);
   };
@@ -202,11 +205,12 @@ function AddNewGarda({ open, onClose }) {
   return (
     <>
       <MyDrawer
-        title='New Garda Details'
+        title={`${isGard === true ? "Application [ 93824B ]" : "Application Request"}`}
         open={open}
         onClose={onClose}
         add={handleSubmit}
-        width='991px'>
+        isGarda={isGard ? true : false}
+        width='1400px'>
         <div className='details-con-header1'>
           <Row>
             <Col span={12}>
@@ -217,6 +221,65 @@ function AddNewGarda({ open, onClose }) {
                   border: "none",
                   height: "auto",
                 }}>
+                <div className='lbl-inpt'>
+                  <div className='title-cont'>
+                    <p className=''>Application Status</p>
+                  </div>
+                  <div className='input-cont'>
+                    <p className='star-white'>*</p>
+                    <div
+                      style={{
+                        display: "flex",
+                        width: "100%",
+                        alignItems: "baseline",
+                      }}>
+                      <div className='input-container-with-sup d-flex flex-column '>
+                        {/* <Input
+                          placeholder='Enter text'
+                          name='gardaRegNo'
+                          value={InfData.gardaRegNo}
+                          onChange={handleInputChange}
+                          style={{
+                            padding: "0px",
+                            width: "100%",
+                            borderRight: "1px solid #d9d9d9",
+                            borderRadius: "4px 0 0 4px",
+                            padding: "0px",
+                            paddingLeft: "5px",
+                            margin: "0px",
+                            height: "33px",
+                          }} // Adjust border style
+                          suffix={
+                            <div className='suffix-container'>
+                              <IoSettingsOutline />
+                            </div>
+                          }
+                        /> */}
+                        {
+                          isGard === true &&
+                           <Input
+                          placeholder='Pendding'
+                        disabled={true}  
+                          style={{
+                            padding: "0px",
+                            width: "100%",
+                            borderRight: "1px solid #d9d9d9",
+                            borderRadius: "4px 0 0 4px",
+                            padding: "0px",
+                            paddingLeft: "5px",
+                            margin: "0px",
+                            height: "33px",
+                          }} // Adjust border style
+                        
+                        /> 
+                        }
+                        {submitted && errors.gardaRegNo && (
+                          <h1 className='error-text'>{errors.gardaRegNo}</h1>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                </div>
                 <div className='lbl-inpt'>
                   <div className='title-cont'>
                     <p className=''>Reg No :</p>

@@ -1,8 +1,8 @@
 import { createSlice } from '@reduxjs/toolkit';
 
 const initialState = {   "Subscriptions": false,
-  "Subscriptions & Rewards":false,
-  "Finance": true,
+  "Subscriptions & Rewards":true,
+  "Finance": false,
   "Correspondence": false,
   "Issue Management": false,
   "Events": false,
@@ -14,7 +14,6 @@ const initialState = {   "Subscriptions": false,
   "Membership":false,
   "Reports":false,
   // "Issues":false,
-
 }
   ;
 

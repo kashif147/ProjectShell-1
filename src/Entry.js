@@ -35,6 +35,10 @@ import RosterDetails from "./pages/roster/RosterDetails";
 import RusterSummary from "./pages/roster/RusterSummary";
 // import RousterDetails from "./pages/rouster/RousterDetails";
 import Sidbar from "./component/common/Sidbar";
+import MembershipApplication from "./pages/application/MembershipApplication";
+import ApproveMembership from "./pages/application/ApproveMembership";
+import ChangCateSumm from "./pages/Category/ChangCateSumm";
+import CateById from "./pages/Category/CateById";
 
 // test
 function Entry() {
@@ -48,7 +52,7 @@ function Entry() {
         style={{ width: '100%' }}
         >
         {location?.pathname !== "/" && (
-          <div style={{ width: '100%' }}>
+          <div>
             <Sidbar />
           </div>
         )}
@@ -85,6 +89,7 @@ function Entry() {
           || location?.pathname == "/AddClaims"
           || location?.pathname == "/CorspndncDetail"
           || location?.pathname == "/Doucmnets"
+          // || location?.pathname == "/AproveMembersip"
           || location?.pathname == "/Roster"
 
         ) && (
@@ -117,6 +122,10 @@ function Entry() {
               <Route path="RosterSummary" element={<RusterSummary />} />
               <Route path="Doucmnets" element={<Doucmnets />} />
               <Route path="Roster" element={<RosterDetails />} />
+              <Route path="Applications" element={<MembershipApplication />} />
+              <Route path="AproveMembersip" element={<ApproveMembership />} />
+              <Route path="ChangCateSumm" element={<ChangCateSumm />} />
+              <Route path="ChangeCatById" element={<CateById />} />
               </Route> 
                           </Routes>
           </div>

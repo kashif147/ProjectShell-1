@@ -1,5 +1,5 @@
 import { React, useState, useEffect } from "react";
-import { Button, Drawer, Space, Pagination, Input, Table, Checkbox } from "antd";
+import { Button, Drawer, Space, Pagination, Input, Table, Checkbox, Radio, } from "antd";
 import MySelect from "./MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
@@ -19,7 +19,19 @@ import MyConfirm from "../common/MyConfirm";
 import { deleteFtn } from "../../utils/Utilities";
 import { getContacts } from "../../features/ContactSlice";
 import { baseURL } from "../../utils/Utilities";
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true }) {
+import {
+  FaListCheck,
+  // FaArrowRightArrowLeft,
+  FaCalendarDays,
+  FaClipboardList,
+  FaAngleLeft,
+  FaEnvelopesBulk,
+  // FaArrowRightArrowLeft,
+  // FaMoneyCheckAlt,
+
+} from "react-icons/fa6";
+import { FaAngleRight } from "react-icons/fa";
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true,isGarda }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
@@ -583,6 +595,29 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       ),
     },
   ];
+    const [value4, setValue4] = useState("Pending");
+  const optionsWithDisabled = [
+    // {
+    //   label: "In Progress",
+    //   value: "In Progress",
+    //   // disabled:true 
+    // },
+    // {
+    //   label: "Pending",
+    //   value: "Pending",
+    //   disabled:true
+    // },
+    {
+      label: "Approved",
+      value: "Approved",
+      disabled: false,
+    },
+    {
+      label: "Rejected",
+      value: "Rejected",
+      disabled: false,
+    },
+  ];
   // useEffect(() => {
   //   if (contacts && Array.isArray(contacts)) {
   //     const filteredSolicitors = contacts?.filter((item) => item?.ContactTypeID === '67d91cdf8a2875433c189f65')
@@ -617,7 +652,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       onClose={onClose}
       open={open}
       extra={
-        <div className="d-flex space-evenly" >
+        <div className="d-flex space-evenly gap-3" >
           {
             isContact && (
               <div className="mx-auto" style={{ marginRight: '80%' }}>
@@ -672,6 +707,19 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               </div>
             )
           }
+     {
+      isGarda&&(
+  <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+    <Button className="me-1 butn">
+      <FaAngleLeft className="deatil-header-icon" />
+    </Button>
+    <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>15 of 30</p>
+    <Button className="me-1  butn">
+      <FaAngleRight className="deatil-header-icon" />
+    </Button>
+  </div>
+      )
+}
           <Space>
             {
               isAss == true && (
@@ -690,6 +738,16 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             <Button className="butn secoundry-btn" onClick={onClose}>
               Close
             </Button>
+            {
+              isGarda===true?
+              <Radio.Group
+              options={optionsWithDisabled}
+              value={value4}
+              onChange={(e)=>setValue4(e.target.value)}
+              optionType='button'
+              buttonStyle='solid'
+            />
+            :
             <Button className="butn primary-btn"
               // onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
               onClick={() => {
@@ -703,12 +761,14 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               }}>
               {isDisable == true ? "Add" : 'Save'}
             </Button>
+            }
 
           </Space>
         </div>
       }
     >
       <div className="">
+      
         {children}
         {
           isPagination &&
