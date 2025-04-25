@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
 import { Table, Pagination, Space, Form, Input, Checkbox,Upload } from "antd";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UploadOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
-import SimpleMenu from "./SimpleMenu";
+import { AiOutlineThunderbolt } from "react-icons/ai";
 
+import SimpleMenu from "./SimpleMenu";
 import {
   DndContext,
   DragOverlay,
@@ -23,8 +25,9 @@ import {
 import { arrayMove } from "@dnd-kit/sortable";
 
 import Gridmenu from "./Gridmenu";
-import { Link } from "react-router-dom";
 import AddNewGarda from "../details/AddNewGarda";
+import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
+import CancallationDrawer from "./cancallation/CancallationDrawer";
 const EditableContext = React.createContext(null);
 
 
@@ -56,8 +59,11 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 };
 
 const TableComponent = ({ data, screenName, redirect }) => {
+  const location = useLocation();
+  const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
+  const [iscancellationOpen, setIscancellationOpen] = useState(false)
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -201,74 +207,76 @@ const TableComponent = ({ data, screenName, redirect }) => {
             isTransparent={true}
             actions={() => { }}
             attachedFtn={()=>{
-              handleUploadClick()
-            }}
-            record={record}
-            index={index}
-          />
-        </Space>
-      ),
-    },
-    ...columnsDragbe.map((col) => ({
-      ...col,
-      title: (
-        <DraggableHeaderCell id={col.key} key={col.key}>
-          {col.title}
-        </DraggableHeaderCell>
-      ),
-      render: (text, record, index) =>
-        col.title === "Full Name" ? (
-          <Link
-            to="/Details"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>
-              {text}
-            </span>
-          </Link>
-        ) : col.title === "Claim No" ? (
-          <Link
-            to="/ClaimsById"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>
-              {text}
-            </span>
-          </Link>
-        ):
-        col.title === "Roster ID" ? (
-          <Link
-            to="/Roster"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>
-              {text}
-            </span>
-          </Link>)
-          :
-        col.title === "Application No" ? (
-          <Link
+                handleUploadClick()
+              }}
+              record={record}
+              index={index}
+              />
+              
+              {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
+            </Space>
+            ),
+          },
+          ...columnsDragbe.map((col) => ({
+            ...col,
+            title: (
+            <DraggableHeaderCell id={col.key} key={col.key}>
+              {col.title}
+            </DraggableHeaderCell>
+            ),
+            render: (text, record, index) =>
+            col.title === "Full Name" ? (
+              <Link
+              to="/Details"
+              state={{
+                search: screenName,
+                name: record?.fullName,
+                code: record?.regNo,
+              }}
+              onClick={() => getProfile([record], index)}
+              >
+              <span style={{ textOverflow: "ellipsis" }}>
+                {text}
+              </span>
+              </Link>
+            ) : col.title === "Claim No" ? (
+              <Link
+              to="/ClaimsById"
+              state={{
+                search: screenName,
+                name: record?.fullName,
+                code: record?.regNo,
+                Forename: record?.forename,
+                Fullname: record?.surname,
+                DateOfBirth: record?.dateOfBirth,
+              }}
+              onClick={() => getProfile([record], index)}
+              >
+              <span style={{ textOverflow: "ellipsis" }}>
+                {text}
+              </span>
+              </Link>
+            ):
+            col.title === "Roster ID" ? (
+              <Link
+              to="/Roster"
+              state={{
+                search: screenName,
+                name: record?.fullName,
+                code: record?.regNo,
+                Forename: record?.forename,
+                Fullname: record?.surname,
+                DateOfBirth: record?.dateOfBirth,
+              }}
+              onClick={() => getProfile([record], index)}
+              >
+              <span style={{ textOverflow: "ellipsis" }}>
+                {text}
+              </span>
+              </Link>)
+              :
+            col.title === "Application No" ? (
+              <Link
             // to="/AproveMembersip"
             onClick={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)}
             state={{
@@ -298,6 +306,24 @@ const TableComponent = ({ data, screenName, redirect }) => {
               DateOfBirth: record?.dateOfBirth,
             }}
             onClick={() => getProfile([record], index)}
+          >
+            <span style={{ textOverflow: "ellipsis" }}>
+              {text}
+            </span>
+          </Link>)
+          :
+        col.title === "Batch Name" ? (
+          <Link
+        onClick={() => {
+          if (location.pathname === "/RemindersSummary") {
+            setTriggerReminderDrawer(!TriggerReminderDrawer);
+      
+          } else if (location.pathname === "/Cancallation") {
+            setIscancellationOpen(!iscancellationOpen);
+          }
+        }}
+        state= {{ search: screenName }}
+            // onClick={() => getProfile([record], index)}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
@@ -589,6 +615,8 @@ const TableComponent = ({ data, screenName, redirect }) => {
         )}
       </DragOverlay>
     <AddNewGarda open={AddNewGardaDrwr} onClose={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)} isGard={true} />
+    <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
+    <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
     </DndContext>
   );
 };

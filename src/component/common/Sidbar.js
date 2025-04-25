@@ -97,6 +97,21 @@ const Sidbar = () => {
           }
         })
         break;
+      case 'Reminders':
+        
+        navigate("/RemindersSummary", {
+          state: {
+            search: 'Reminders',
+          }
+        })
+        break;
+      case 'Cancellations':
+        navigate("/Cancallation", {
+          state: {
+            search: 'Cancallation',
+          }
+        })
+        break;
       case 'Trainings':
         alert('Trainings clicked');
         break;

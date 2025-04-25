@@ -31,7 +31,7 @@ import {
 
 } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true,isGarda }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isGardaCheckbx }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
@@ -52,7 +52,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
   }
   const [contactDrawer, setcontactDrawer] = useState(false)
   useEffect(() => {
-    if(contactDrawer){
+    if (contactDrawer) {
       dispatch(getContactTypes());
     }
   }, [contactDrawer]);
@@ -595,7 +595,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       ),
     },
   ];
-    const [value4, setValue4] = useState("Pending");
+  const [value4, setValue4] = useState("Pending");
   const optionsWithDisabled = [
     // {
     //   label: "In Progress",
@@ -707,19 +707,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               </div>
             )
           }
-     {
-      isGarda&&(
-  <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-    <Button className="me-1 butn">
-      <FaAngleLeft className="deatil-header-icon" />
-    </Button>
-    <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>15 of 30</p>
-    <Button className="me-1  butn">
-      <FaAngleRight className="deatil-header-icon" />
-    </Button>
-  </div>
-      )
-}
+
           <Space>
             {
               isAss == true && (
@@ -735,40 +723,65 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
                 </>
               )
             }
-            <Button className="butn secoundry-btn" onClick={onClose}>
+
+            {
+              isGardaCheckbx && (
+                <Checkbox>Multiple</Checkbox>
+              )
+            }
+
+            <Button className="butn secoundry-btn me-4" onClick={onClose}>
               Close
             </Button>
             {
-              isGarda===true?
-              <Radio.Group
-              options={optionsWithDisabled}
-              value={value4}
-              onChange={(e)=>setValue4(e.target.value)}
-              optionType='button'
-              buttonStyle='solid'
-            />
-            :
-            <Button className="butn primary-btn"
-              // onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
-              onClick={() => {
-                if (isDisable) {
-                  disableFtn(false);
-                } else if (!isEdit) {
-                  add();
-                } else {
-                  update();
-                }
-              }}>
-              {isDisable == true ? "Add" : 'Save'}
-            </Button>
-            }
+              !isGarda ?
+                <Button className="butn primary-btn"
+                  // onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
+                  onClick={() => {
+                    if (isDisable) {
+                      disableFtn(false);
+                    } else if (!isEdit) {
+                      add();
+                    } else {
+                      update();
+                    }
+                  }}>
+                  {isDisable == true ? "Add" : 'Save'}
+                </Button>
+                :
+                <>
+                  {/* <Radio.Group
+                    options={optionsWithDisabled}
+                    value={value4}
+                    onChange={(e) => setValue4(e.target.value)}
+                    optionType='button'
+                    buttonStyle='solid'
+                  /> */}
+                  <Button className="butn primary-btn me-2">Approved</Button>
+                  <Button className="butn primary-btn me-2">Rejected</Button>
 
+                </>
+
+            }
+            {
+              isGarda && (
+                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                  <Button className="me-1 gray-btn butn">
+                    <FaAngleLeft className="deatil-header-icon" />
+                  </Button>
+                  <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>15 of 30</p>
+                  <Button className="me-1 gray-btn butn">
+                    <FaAngleRight className="deatil-header-icon" />
+                  </Button>
+                </div>
+              )
+            }
           </Space>
         </div>
       }
     >
       <div className="">
-      
+
         {children}
         {
           isPagination &&

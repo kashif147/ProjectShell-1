@@ -151,6 +151,34 @@ const staticColumns = {
     { dataIndex: "EndDate", title: "End Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Heading", title: "Details", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Heading", title: "Details", ellipsis: true, isGride: true, isVisible: true, width: 400 },
+  ],
+  Reminders: [
+    { dataIndex: "batchName", title: "Batch Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchDate", title: "Batch Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchStatus", title: "Batch Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdAt", title: "Created At", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+    {
+      title: "Action",
+      dataIndex: "action",
+      width: 120,
+      render: (_, record) => (
+        <div className="action-buttons">
+          <button >Approve</button>
+          <button >Reject</button>
+        </div>
+      ),
+    }
+  ],
+  Cancallation: [
+    { dataIndex: "batchName", title: "Batch Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchDate", title: "Batch Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchStatus", title: "Batch Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdAt", title: "Created At", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+ 
   ]
 };
 
@@ -321,7 +349,7 @@ const staticSearchFilters = {
     { titleColumn: "Date Left", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Associate Member", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Address", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
-    { titleColumn: "Status", isSearch: true, isCheck: false, lookups: { Inprogress: true, Pending: true, Rejected: true } },
+    { titleColumn: "Status", isSearch: true, isCheck: false, lookups: { Inprogress: false, Pending: true, Rejected: false } },
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   ChangCateSumm: [
@@ -348,6 +376,54 @@ const staticSearchFilters = {
     { titleColumn: "Status", isSearch: true, isCheck: false, lookups: { Inprogress: true, Pending: true, Rejected: true } },
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
+  Reminders: [
+    { titleColumn: "Batch Name", isSearch: true, isCheck: true, lookups: {} },
+    { titleColumn: "Batch Date", isSearch: true, isCheck: true, lookups: {} },
+    {
+      titleColumn: "Batch Status",
+      isSearch: true,
+      isCheck: true,
+      lookups: {
+        "In Progress": false,
+        "Pending": true,
+        "Approve":false,
+        "Reject": false
+      }
+    },
+    { titleColumn: "Created At", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Created By", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Count", isSearch: false, isCheck: false, lookups: {} },
+    {
+      titleColumn: "Action",
+      isSearch: false,
+      isCheck: false,
+      lookups: {}
+    }
+  ],
+  Cancallation: [
+    { titleColumn: "Batch Name", isSearch: true, isCheck: true, lookups: {} },
+    { titleColumn: "Batch Date", isSearch: true, isCheck: true, lookups: {} },
+    {
+      titleColumn: "Batch Status",
+      isSearch: true,
+      isCheck: true,
+      lookups: {
+        "In Progress": false,
+        "Pending": true,
+        "Approve":false,
+        "Reject": false
+      }
+    },
+    { titleColumn: "Created At", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Created By", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Count", isSearch: false, isCheck: false, lookups: {} },
+    {
+      titleColumn: "Action",
+      isSearch: false,
+      isCheck: false,
+      lookups: {}
+    }
+  ]
 };
 
 export const TableColumnsProvider = ({ children }) => {

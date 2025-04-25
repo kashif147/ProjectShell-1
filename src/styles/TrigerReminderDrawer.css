@@ -1,0 +1,22 @@
+.reminder-gride table tr th {
+    background-color: var(--mainBlue) !important;
+    color: white !important;
+    padding: 4px 12px;
+    font-weight: 600;
+    position: sticky !important;
+    z-index: 10;
+    top: 0;
+}
+.right-modal .ant-modal {
+    position: fixed;
+    top: 0;
+    right: 0;
+    margin: 0;
+    height: 100vh;
+    padding: 0;
+  }
+  
+  .right-modal .ant-modal-content {
+    height: 100%;
+    overflow-y: auto;
+  }

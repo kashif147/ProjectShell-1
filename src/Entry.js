@@ -39,6 +39,8 @@ import MembershipApplication from "./pages/application/MembershipApplication";
 import ApproveMembership from "./pages/application/ApproveMembership";
 import ChangCateSumm from "./pages/Category/ChangCateSumm";
 import CateById from "./pages/Category/CateById";
+import RemindersSummary from "./pages/reminders/RemindersSummary";
+import Cancallation from "./pages/Cancallation";
 
 // test
 function Entry() {
@@ -126,6 +128,8 @@ function Entry() {
               <Route path="AproveMembersip" element={<ApproveMembership />} />
               <Route path="ChangCateSumm" element={<ChangCateSumm />} />
               <Route path="ChangeCatById" element={<CateById />} />
+              <Route path="RemindersSummary" element={<RemindersSummary />} />
+              <Route path="Cancallation" element={<Cancallation />} />
               </Route> 
                           </Routes>
           </div>

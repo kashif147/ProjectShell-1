@@ -7,6 +7,7 @@ function ChangCateSumm() {
   return (
     <div className='' style={{width:'95vw'}}>
     <TableComponent data={gridData}  screenName="ChangCateSumm" />
+    
     </div>
   )
 }

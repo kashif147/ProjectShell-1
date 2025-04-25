@@ -33,7 +33,19 @@ function AddNewGarda({ open, onClose, isGard }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable, } = useTableColumns();
   const state = useSelector((state) => state.lookups);
   const { lookups } = state;
-
+  const ApplicationStatus = [{
+    value: "Pending",
+    label: "Pending",
+  },
+  {
+    value: "Approve",
+    label: "Approve",
+  },
+  {
+    value: "Reject",
+    label: "Reject",
+  },
+]
   const options = [
     { value: "NY", label: "New York" },
     { value: "LA", label: "Los Angeles" },
@@ -210,6 +222,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         onClose={onClose}
         add={handleSubmit}
         isGarda={isGard ? true : false}
+        isGardaCheckbx={isGard ? false : true}
         width='1400px'>
         <div className='details-con-header1'>
           <Row>
@@ -234,29 +247,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                         alignItems: "baseline",
                       }}>
                       <div className='input-container-with-sup d-flex flex-column '>
-                        {/* <Input
-                          placeholder='Enter text'
-                          name='gardaRegNo'
-                          value={InfData.gardaRegNo}
-                          onChange={handleInputChange}
-                          style={{
-                            padding: "0px",
-                            width: "100%",
-                            borderRight: "1px solid #d9d9d9",
-                            borderRadius: "4px 0 0 4px",
-                            padding: "0px",
-                            paddingLeft: "5px",
-                            margin: "0px",
-                            height: "33px",
-                          }} // Adjust border style
-                          suffix={
-                            <div className='suffix-container'>
-                              <IoSettingsOutline />
-                            </div>
-                          }
-                        /> */}
+                     
                         {
-                          isGard === true &&
+                          isGard === true ?
                            <Input
                           placeholder='Pendding'
                         disabled={true}  
@@ -272,6 +265,14 @@ function AddNewGarda({ open, onClose, isGard }) {
                           }} // Adjust border style
                         
                         /> 
+                        :
+                        <MySelect
+                        isSimple={true}
+                        placeholder='Select Status'
+                        onChange={(value) =>{}}
+                        options={ApplicationStatus}
+                        value={currentStatus}
+                       />
                         }
                         {submitted && errors.gardaRegNo && (
                           <h1 className='error-text'>{errors.gardaRegNo}</h1>

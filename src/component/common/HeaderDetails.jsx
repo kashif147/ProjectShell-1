@@ -5,7 +5,7 @@ import { FaUser, } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
-import { Table, Checkbox, DatePicker, Modal, TimePicker } from 'antd'
+import { Table, Checkbox, DatePicker, Modal, TimePicker,Radio } from 'antd'
 import {
   RightOutlined,
   PlusOutlined,
@@ -71,6 +71,7 @@ function HeaderDetails() {
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
   const [TransferDrawer, setTransferDrawer] = useState(false)
   const [rosterDrawer, setrosterDrawer] = useState(false)
+  const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [aprove, setaprove] = useState("001")
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
@@ -79,7 +80,7 @@ function HeaderDetails() {
   const inputRef = useRef(null);
   const { searchFilters, lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, resetFtn, globleFilters, } = useTableColumns();
   console.log(globleFilters, 'globleFilters')
-  const plainOptions = ['Pending', 'Approve', 'Reject'];
+  const plainOptions = ['Approve', 'Reject'];
   const screenName = location?.state?.search
   const format = 'HH:mm';
   const column = [
@@ -281,7 +282,7 @@ function HeaderDetails() {
     BulkChnages: "false",
   };
   const [selectedValue, setSelectedValue] = useState(null);
-  const [selectedValue1, setSelectedValue1] = useState(['Pending']);
+  const [selectedValue1, setSelectedValue1] = useState('');
   const handleChangeCheckBox = (checkedValues) => {
     // Only keep the last selected option
     const latest = checkedValues[checkedValues.length - 1];
@@ -506,12 +507,20 @@ function HeaderDetails() {
                     // onChange={(e)=>setaprove(e)}
                     //   />
 
-                    <Checkbox.Group
-                      style={{ marginRight: '10px' }}
-                      options={plainOptions}
-                      value={selectedValue1}
-                      onChange={handleChangeCheckBox}
-                    />
+                    // <Checkbox.Group
+                    //   style={{ marginRight: '10px' }}
+                    //   options={plainOptions}
+                    //   value={selectedValue1}
+                    //   onChange={handleChangeCheckBox}
+                    // />
+                    <Radio.Group
+                    style={{ marginRight: '10px' }}
+              options={plainOptions}
+              value={selectedValue1}
+              onChange={handleChangeCheckBox}
+              optionType='button'
+              buttonStyle='solid'
+            />
                     :
                     <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
                       if (nav == "/ClaimsById")
@@ -548,6 +557,8 @@ function HeaderDetails() {
             || location?.pathname == "/Reports"
             || location?.pathname == "/RosterSummary"
             || location?.pathname == "/ChangCateSumm"
+            || location?.pathname == "/RemindersSummary"
+            || location?.pathname == "/Cancallation"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -579,6 +590,9 @@ function HeaderDetails() {
                             setTransferDrawer(!TransferDrawer)
                           else if (nav === "/RosterSummary")
                             setrosterDrawer(!rosterDrawer)
+                          else if (nav === "/RemindersSummary") {
+                            setIsBatchOpen(!isBatchOpen);
+                            }
                         }
 
                         }
@@ -908,6 +922,67 @@ function HeaderDetails() {
 
         </div>
       </MyDrawer>
+        <MyDrawer title='Batch' open={isBatchOpen} isPagination={true} onClose={() => {
+              setIsBatchOpen(!isBatchOpen)
+              }}
+              >
+                <div className="drawer-main-cntainer">
+                <div className="mb-4 pb-4">
+                  <div className="drawer-inpts-container">
+                  <div className="drawer-lbl-container">
+                    <p>Batch Name</p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con">
+                  <Input />
+                        <h1 className="error-text"></h1>
+                      </div>
+                      <p className="error"></p>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container">
+                      <p>Batch Date</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con">
+                        <MyDatePicker
+                        // disabled={isDisable}
+                        //   className="inp" onChange={(e) => drawrInptChng('Title', 'code', e.target.value)}
+                        //   value={drawerIpnuts?.Title?.code}
+                        />
+                        {/* <p className="error">{errors?.Title?.code}</p> */}
+                      </div>
+                    </div>
+                  </div>
+                  <div className="drawer-inpts-container">
+                    <div className="drawer-lbl-container">
+                      <p>Status</p>
+                    </div>
+                    <div className="inpt-con">
+                      <p className="star">*</p>
+                      <div className="inpt-sub-con d-flex flex-column">
+                      <MySelect isSimple={true} 
+                      options={[
+                        {key:'001', label:'Draft'},
+                        {key:'002', label:'Inactive'}
+                      ]}
+                      value={"001"}
+                      disabled={true}
+                      />
+                        {/* <p className="error">{errors?.Title?.lookupname}</p> */}
+                      </div>
+                    </div>
+                  </div>
+                  
+      
+                
+                </div>
+               
+              </div>
+            </MyDrawer>
     </div>
   );
 }
