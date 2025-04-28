@@ -24,7 +24,13 @@
   gap: 10px;
   flex-wrap: wrap;
 }
-
+.custom-label {
+  font-size: 14px; /* Adjust the font size */
+  /* font-weight: bold; */
+   /* Make the label bold */
+  color: #333; /* Customize the color */
+  margin-bottom: 8px; /* Adjust the margin below the label */
+}
 .status-item {
   padding: 4px 12px;
   border: 1px solid #ccc;

@@ -7,13 +7,13 @@ import {
   FaClipboardCheck,
   FaMoneyCheckAlt,
   FaCalendarAlt,
-
   FaUserPlus,
   FaUserMinus,
   FaChartBar,
   FaUserEdit,
   FaUserTimes,
   FaUserLock,
+   
 } from 'react-icons/fa';
 export const correspondenceItems = [
   {
@@ -40,24 +40,55 @@ export const correspondenceItems = [
 
 export const financeItems = [
   {
-    key: 'Membership',
-    icon: <div className="icon"><FaUserAlt /></div>,
-    label: <div className="sidebar-label">Membership</div>,
-  },
-  {
-    key: 'Finance Batches',
+    key: 'Batches',
     icon: <div className="icon"><FaCashRegister /></div>,
-    label: <div className="sidebar-label">Finance Batches</div>,
+    label: <div className="sidebar-label">Batches</div>,
   },
   {
-    key: 'Refunds',
+    key: 'Direct Debits',
     icon: <div className="icon"><FaCreditCard /></div>,
-    label: <div className="sidebar-label">Refunds</div>,
+    label: <div className="sidebar-label">Direct Debits</div>,
+    
   },
   {
-    key: 'Online Payments',
+    key: 'DD',
     icon: <div className="icon"><FaRegFileAlt /></div>,
-    label: <div className="sidebar-label">Online Payments</div>,
+    label: <div className="sidebar-label">DD</div>,
+  },
+  {
+    key: 'Authorisations',
+    icon: <div className="icon"><FaUserAlt /></div>,
+    label: <div className="sidebar-label">Authorisations</div>,
+  },
+  {
+    key: 'DD Batches',
+    icon: <div className="icon"><FaCashRegister /></div>,
+    label: <div className="sidebar-label">DD Batches</div>,
+  },
+  {
+    key: 'Salary',
+    icon: <div className="icon"><FaCreditCard /></div>,
+    label: <div className="sidebar-label">Salary</div>,
+  },
+  {
+    key: 'Deductions',
+    icon: <div className="icon"><FaRegFileAlt /></div>,
+    label: <div className="sidebar-label">Deductions</div>,
+  },
+  {
+    key: 'DAS',
+    icon: <div className="icon"><FaUserAlt /></div>,
+    label: <div className="sidebar-label">DAS</div>,
+  },
+  {
+    key: 'DAS Authorisations',
+    icon: <div className="icon"><FaCashRegister /></div>,
+    label: <div className="sidebar-label">DAS Authorisations</div>,
+  },
+  {
+    key: 'Imports',
+    icon: <div className="icon"><FaCreditCard /></div>,
+    label: <div className="sidebar-label">Imports</div>,
   },
 ];
 export const profileItems = [

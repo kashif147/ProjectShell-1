@@ -179,7 +179,17 @@ const staticColumns = {
     { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
  
+  ],
+  Batches: [
+    { dataIndex: "batchName", title: "Batch Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchDate", title: "Batch Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchStatus", title: "Batch Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdAt", title: "Created At", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+ 
   ]
+
 };
 
 // Static search filters
@@ -401,6 +411,30 @@ const staticSearchFilters = {
     }
   ],
   Cancallation: [
+    { titleColumn: "Batch Name", isSearch: true, isCheck: true, lookups: {} },
+    { titleColumn: "Batch Date", isSearch: true, isCheck: true, lookups: {} },
+    {
+      titleColumn: "Batch Status",
+      isSearch: true,
+      isCheck: true,
+      lookups: {
+        "In Progress": false,
+        "Pending": true,
+        "Approve":false,
+        "Reject": false
+      }
+    },
+    { titleColumn: "Created At", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Created By", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Count", isSearch: false, isCheck: false, lookups: {} },
+    {
+      titleColumn: "Action",
+      isSearch: false,
+      isCheck: false,
+      lookups: {}
+    }
+  ],
+  Batches: [
     { titleColumn: "Batch Name", isSearch: true, isCheck: true, lookups: {} },
     { titleColumn: "Batch Date", isSearch: true, isCheck: true, lookups: {} },
     {

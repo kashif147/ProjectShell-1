@@ -79,9 +79,11 @@ function HeaderDetails() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const { searchFilters, lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, resetFtn, globleFilters, } = useTableColumns();
+  // console.log(globleFilters, "globleFilters")
   console.log(globleFilters, 'globleFilters')
   const plainOptions = ['Approve', 'Reject'];
   const screenName = location?.state?.search
+  console.log(screenName, "screenName")
   const format = 'HH:mm';
   const column = [
     {
@@ -119,10 +121,12 @@ function HeaderDetails() {
         );
         return [...acc, ...filteredColumns];
       }, []);
-
+      console.log(data, "data")
       settrueFilters(filteredResults);
+      console.log(filteredResults, "filteredResults")
     }
   }
+  console.log(trueFilters, "trueFilters")
   const currentSearchFilters = useMemo(() => {
     return searchFilters[screenName];
   }, [screenName, searchFilters]);
@@ -559,6 +563,7 @@ function HeaderDetails() {
             || location?.pathname == "/ChangCateSumm"
             || location?.pathname == "/RemindersSummary"
             || location?.pathname == "/Cancallation"
+            || location?.pathname == "/Batches"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -590,7 +595,7 @@ function HeaderDetails() {
                             setTransferDrawer(!TransferDrawer)
                           else if (nav === "/RosterSummary")
                             setrosterDrawer(!rosterDrawer)
-                          else if (nav === "/RemindersSummary") {
+                          else if (nav === "/RemindersSummary" || nav === "/Cancallation" || nav === "/Batches") {
                             setIsBatchOpen(!isBatchOpen);
                             }
                         }
@@ -922,7 +927,7 @@ function HeaderDetails() {
 
         </div>
       </MyDrawer>
-        <MyDrawer title='Batch' open={isBatchOpen} isPagination={true} onClose={() => {
+        <MyDrawer title={`${nav==="/RemindersSummary"?"Batch":nav==="/Batches"?"Add Batch":"Cancellation Batch"}`} open={isBatchOpen} isPagination={true} onClose={() => {
               setIsBatchOpen(!isBatchOpen)
               }}
               >

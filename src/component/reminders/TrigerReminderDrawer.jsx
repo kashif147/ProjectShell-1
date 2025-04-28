@@ -2,9 +2,11 @@ import { useState } from 'react';
 import { Button, Drawer, Input, Modal, Table, Tabs } from 'antd';
 import '../../styles/TrigerReminderDrawer.css';
 import MySelect from '../common/MySelect';
+import MyMenu from '../common/MyMenu';
+import { BsFiletypeXls } from "react-icons/bs";
 
 const { TabPane } = Tabs;
-
+const filename="my-data.csv"
 function TrigerReminderDrawer({ isOpen, onClose, isCancallation }) {
   const columns = [
     {
@@ -48,6 +50,22 @@ function TrigerReminderDrawer({ isOpen, onClose, isCancallation }) {
       key: 'membershipExpiryDate',
     },
   ];
+  const convertToCSV = (data) => {
+    const header = Object.keys(data[0]).join(",") + "\n"; // Create CSV header
+    const rows = data.map(row => Object.values(row).join(",")).join("\n"); // Create CSV rows
+    return header + rows;
+  };
+  const downloadCSV = () => {
+    const csvData = convertToCSV(data);
+    const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.setAttribute("download", filename || "data.csv");
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+  };
 
   const data = [
     {
@@ -137,17 +155,28 @@ function TrigerReminderDrawer({ isOpen, onClose, isCancallation }) {
       <div className='reminder-gride'>
         {/* INPUTS AT THE TOP, OUTSIDE TABS */}
         <div className="d-flex gap-2 mb-3">
-          <Input placeholder="Batch A" style={{ width: 200 }} disabled={true} />
-          <Input placeholder="2024-03-01" style={{ width: 200 }} disabled={true} />
-          <Input placeholder="25" style={{ width: 200 }} disabled={true} />
+          <div style={{ width: '50%' }}>
+            <label className='custom-label'>Batch Name</label>
+          <Input placeholder="Batch A" style={{}} disabled={true} value={"Batch A"} />
+    
+          </div>
+          
+          <div style={{ width: '50%' }}>
+            <label className='custom-label'>Batch Name</label>
+          <Input placeholder="2024-03-01" style={{  }} disabled={true} value={"2024-03-01" } />
           {/* <Input placeholder="Draft" style={{ width: 200 }} disabled={true} />
           <Input placeholder="25" style={{ width: 200 }} disabled={true} /> */}
+          </div>
         </div>
         <div className="d-flex gap-2 mb-3">
-          {/* <Input placeholder="Batch A" style={{ width: 200 }} disabled={true} />
-          <Input placeholder="2024-03-01" style={{ width: 200 }} disabled={true} /> */}
-          {/* <Input placeholder="Draft" style={{ width: 200 }} disabled={true} /> */}
-          <Input placeholder="25" style={{ width: 200 }} disabled={true} />
+        <div style={{ width: '50%' }}>
+            <label className='custom-label'>Batch Status</label>
+          <Input placeholder="Batch A" style={{}} disabled={true} value={"Draft"} />
+          </div>
+        <div style={{ width: '50%' }}>
+            <label className='custom-label'>Count</label>
+          <Input placeholder="" style={{}} disabled={true} value={"25"} />
+          </div>
         </div>
         <Tabs
           defaultActiveKey={String(activeKey)}
@@ -156,12 +185,36 @@ function TrigerReminderDrawer({ isOpen, onClose, isCancallation }) {
           tabBarExtraContent={
             activeKey > 1 && (
               <>
-                <Button className="ant-btn ant-btn-primary me-2" onClick={() => setIsModalOpen(true)}>
+                <Button className="butn secoundry-btn me-2 mb-2" onClick={() => setIsModalOpen(true)}>
                   + Add Member
                 </Button>
-                <Button className="ant-btn ant-btn-primary" onClick={() => setIsModalOpen(true)}>
+                <Button className="butn secoundry-btn me-2 mb-2" onClick={() => setIsModalOpen(true)}>
                   Exclude Member
                 </Button>
+                <MyMenu 
+                                items={[
+                                  {
+                                      key: '2',
+                                      label: 'Export as CSV',
+                                      icon: <BsFiletypeXls style={{
+                                          fontSize: "12px",
+                                          marginRight: "10px",
+                                          color: "#45669d",
+                                        }} />,
+                                        onClick: () => {
+                                          downloadCSV()
+                                        }
+                                  },
+                                  {
+                                      key: '1',
+                                      label: 'Export as CSV',
+                                      icon: <BsFiletypeXls style={{
+                                          fontSize: "12px",
+                                          marginRight: "10px",
+                                          color: "#45669d",
+                                        }} />,
+                                  }
+                              ]} />
               </>
             )
           }

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import { Menu } from 'antd';
 import {
   subscriptionItems,
@@ -16,7 +16,18 @@ import { useNavigate } from "react-router-dom";
 
 const Sidbar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
-
+  // "Subscriptions & Rewards":true,
+  // "Finance": false,
+  // "Correspondence": false,
+  // "Issue Management": false,
+  // "Events": false,
+  // "Courses": false,
+  // "Professional Development": false,
+  // "Settings": false,
+  // 'Configuration':false,
+  // 'Profiles':false,
+  // "Membership":false,
+  // "Reports":false,
   // Find the active menu (only one is true)
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
 
@@ -90,6 +101,13 @@ const Sidbar = () => {
           }
         })
         break;
+      case 'Batches':
+        navigate("/Batches", {
+          state: {
+            search: 'Batches',
+          }
+        })
+        break;
       case 'Applications':
         navigate("/Applications", {
           state: {
@@ -126,6 +144,36 @@ const Sidbar = () => {
         console.log('Unknown key:', key);
     }
   };
+useEffect(() => {
+  if (menuLblState["Subscriptions & Rewards"] === true) {
+    return navigate("/Summary", {
+      state: {
+        search: 'Profile',
+      }
+    });
+  }
+  if (menuLblState["Finance"] === true) {
+    return navigate("/Batches", {
+      state: {
+        search: 'Batches',
+      }
+    });
+  }
+  if (menuLblState["Correspondence"] === true) {
+    return navigate("/CorrespondencesSummary", {
+      state: {
+        search: 'Correspondences',
+      }
+    });
+  }
+  if (menuLblState["Configuration"] === true) {
+    return navigate("/Configuratin", {
+      state: {
+        search: 'Configuration',
+      }
+    });
+  }
+}, [menuLblState]);
   return (
     <Menu
       mode="inline"

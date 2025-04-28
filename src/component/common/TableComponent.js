@@ -8,6 +8,7 @@ import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import { AiOutlineThunderbolt } from "react-icons/ai";
 
+
 import SimpleMenu from "./SimpleMenu";
 import {
   DndContext,
@@ -28,6 +29,7 @@ import Gridmenu from "./Gridmenu";
 import AddNewGarda from "../details/AddNewGarda";
 import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
 import CancallationDrawer from "./cancallation/CancallationDrawer";
+import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 const EditableContext = React.createContext(null);
 
 
@@ -64,6 +66,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
   const [iscancellationOpen, setIscancellationOpen] = useState(false)
+  const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false)
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -318,7 +321,12 @@ const TableComponent = ({ data, screenName, redirect }) => {
           if (location.pathname === "/RemindersSummary") {
             setTriggerReminderDrawer(!TriggerReminderDrawer);
       
-          } else if (location.pathname === "/Cancallation") {
+          } 
+          if (location.pathname === "/Batches") {
+            setIsBatchmemberOpen(!isBatchmemberOpen);
+      
+          } 
+          else if (location.pathname === "/Cancallation") {
             setIscancellationOpen(!iscancellationOpen);
           }
         }}
@@ -617,6 +625,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
     <AddNewGarda open={AddNewGardaDrwr} onClose={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)} isGard={true} />
     <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
     <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
+    <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
     </DndContext>
   );
 };

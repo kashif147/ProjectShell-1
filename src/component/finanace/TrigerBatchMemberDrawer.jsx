@@ -1,14 +1,12 @@
 import { useState } from 'react';
 import { Button, Drawer, Input, Modal, Table, Tabs } from 'antd';
 import { BsFiletypeXls } from "react-icons/bs";
-import '../../../styles/TrigerReminderDrawer.css'
-import MySelect from '../MySelect';
-import MyMenu from '../MyMenu';
-
+import '../../styles/TrigerReminderDrawer.css'
+import MySelect from '../common/MySelect';
 
 const { TabPane } = Tabs;
 
-function CancallationDrawer({ isOpen, onClose, }) {
+function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
   const filename="my-data.csv"
   const convertToCSV = (data) => {
     const header = Object.keys(data[0]).join(",") + "\n"; // Create CSV header
@@ -67,6 +65,19 @@ function CancallationDrawer({ isOpen, onClose, }) {
       dataIndex: 'membershipExpiryDate',
       key: 'membershipExpiryDate',
     },
+    // {
+    //     title: 'Action',
+    //     key: 'action',
+    //     render: (text, record) => (
+    //       <Button 
+    //         type="link" 
+    //         danger 
+    //         onClick={() => console.log(record)}
+    //       >
+    //         Exclude
+    //       </Button>
+    //     ),
+    //   },
   ];
 
   const data = [
@@ -124,15 +135,15 @@ function CancallationDrawer({ isOpen, onClose, }) {
   ];
 
   const summaryData = [
-    {
-      key: "1",
-      batchName: "Batch A",
-      batchDate: "2024-03-01",
-      batchStatus: "Draft",
-      createdAt: "2024-02-28",
-      createdBy: "Admin",
-      Count: 25,
-    },
+    // {
+    //   key: "1",
+    //   batchName: "Batch A",
+    //   batchDate: "2024-03-01",
+    //   batchStatus: "Draft",
+    //   createdAt: "2024-02-28",
+    //   createdBy: "Admin",
+    //   Count: 25,
+    // },
      ];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -140,7 +151,7 @@ function CancallationDrawer({ isOpen, onClose, }) {
 
   return (
     <Drawer
-      title="Cancellation"
+      title="Batch Members"
       placement="right"
       width={1200}
       onClose={onClose}
@@ -150,7 +161,7 @@ function CancallationDrawer({ isOpen, onClose, }) {
           <Button onClick={onClose} className="butn secoundry-btn me-2">
             Close
           </Button>
-          <Button className="butn primary-btn">Process Batch</Button>
+          <Button className="butn primary-btn">Save</Button>
         </>
       }
     >
@@ -180,68 +191,24 @@ function CancallationDrawer({ isOpen, onClose, }) {
           <Input placeholder="" style={{}} disabled={true} value={"25"} />
           </div>
         </div>
-        <Tabs
-          defaultActiveKey={String(activeKey)}
-          activeKey={String(activeKey)}
-          onChange={(key) => setactiveKey(Number(key))}
-          tabBarExtraContent={
-            activeKey > 1 && (
-              <>
-                <Button className="butn secoundry-btn me-2 mb-2" onClick={() => setIsModalOpen(true)}>
-                  + Add Member
+
+        <div style={{backgroundColor:'#e6f8ff'}} className='mt-4 mb-4 p-2 d-flex  justify-content-end'>
+            {/* <div className='float-end'> */}
+<div>
+
+
+            
+        <Button className="butn secoundry-btn me-2 mb-2 " >
+                  Import Excel File
                 </Button>
-                <Button className="butn secoundry-btn me-2 mb-2" onClick={() => setIsModalOpen(true)}>
+                <Button className="butn secoundry-btn me-2 mb-2" >
                   Exclude Member
                 </Button>
-                <MyMenu 
-                                items={[
-                                  {
-                                      key: '2',
-                                      label: 'Export as CSV',
-                                      icon: <BsFiletypeXls style={{
-                                          fontSize: "12px",
-                                          marginRight: "10px",
-                                          color: "#45669d",
-                                        }} />,
-                                        onClick: () => {
-                                          downloadCSV()
-                                        }
-                                  },
-                                  {
-                                      key: '1',
-                                      label: 'Export as CSV',
-                                      icon: <BsFiletypeXls style={{
-                                          fontSize: "12px",
-                                          marginRight: "10px",
-                                          color: "#45669d",
-                                        }} />,
-                                  }
-                              ]} />
-              </>
-            )
-          }
-        >
-          <TabPane tab="Summary" key="1">
-            <div className="mt-4">
-              <Table columns={summaryColumns} dataSource={summaryData} pagination={false} />
-            </div>
-          </TabPane>
-          <TabPane tab="Cancellation" key="2">
-            <div className="mt-4">
-              <Table rowSelection={{ type: "checkbox" }} columns={columns} dataSource={data} />
-            </div>
-          </TabPane>
-          {/* <TabPane tab="Reminder 2" key="3">
-            <div className="mt-4">
-              <Table rowSelection={{ type: "checkbox" }} columns={columns} dataSource={data} />
-            </div>
-          </TabPane>
-          <TabPane tab="Reminder 3" key="4">
-            <div className="mt-4">
-              <Table rowSelection={{ type: "checkbox" }} columns={columns} dataSource={data} />
-            </div>
-          </TabPane> */}
-        </Tabs>
+                </div>
+                {/* </div> */}
+        </div>
+        <Table rowSelection={{ type: "checkbox" }} className='mt-4' columns={columns}  />
+        
       </div>
 
       <Modal
@@ -258,4 +225,4 @@ function CancallationDrawer({ isOpen, onClose, }) {
   );
 }
 
-export default CancallationDrawer;
+export default TrigerBatchMemberDrawer;
