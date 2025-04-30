@@ -45,32 +45,31 @@ import { Dropdown } from 'antd';
 import { PiDotsNineLight } from 'react-icons/pi';
 import { updateMenuLbl } from '../../features/MenuLblSlice'
 import { useDispatch, useSelector } from 'react-redux';
-import '../../styles/AppLauncher.css'; 
+import '../../styles/AppLauncher.css';
 
 
 
 
-const AppLauncherMenu = () => {
+const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
   const menuLbl = useSelector((state) => state.menuLbl);
 
-  const handleUpdate = (key, value) => {
+  const handleUpdate = (key, value, e) => {
     dispatch(updateMenuLbl({ key, value }));
+    closeDropdown();
   };
 
+
   const appItems = [
-    { name: 'Subscriptions & Rewards', icon: FaRegUserCircle },
-    { name: 'Finance', icon: FaRegMoneyBillAlt },
-    { name: 'Correspondence', icon: FaRegEnvelope },
-    { name: 'Issue Management', icon: FaRegClipboard },
-    { name: 'Events', icon: FaCalendarAlt },
-    { name: 'Courses', icon: LuCalendarClock },
-    { name: 'Professional Development', icon: MdOutlineWork },
-    { name: 'Settings', icon: IoSettingsOutline },
-    { name: 'Configuration', icon: FaCogs },
-    { name: 'Profiles', icon: FaUsers },
-    { name: 'Membership', icon: FaToolbox },
-    { name: 'Reports', icon: TbReportAnalytics }
+    { name: 'Subscriptions & Rewards', icon: FaRegUserCircle, bgColor: '#4CAF50' },
+    { name: 'Finance', icon: FaRegMoneyBillAlt, bgColor: '#4CAF50' },
+    { name: 'Correspondence', icon: FaRegClipboard, bgColor: '#FF7043' },
+    { name: 'Events', icon: FaCalendarAlt, bgColor: '#EF5350' },
+    { name: 'Courses', icon: LuCalendarClock, bgColor: '#7E57C2' },
+    { name: 'Professional Development', icon: MdOutlineWork, bgColor: '#3F51B5' },
+    { name: 'Settings', icon: IoSettingsOutline, bgColor: '#3F51B5' },
+    { name: 'Configuration', icon: FaCogs, bgColor: '#5E35B1' },
+    { name: 'Repoints', icon: TbReportAnalytics, bgColor: '#A63D2F' }, // likely meant to be "Reports"
   ];
 
   return (
@@ -87,17 +86,18 @@ const AppLauncherMenu = () => {
           return (
             <div
               key={app.name}
-              className={`app-item ${isActive ? 'app-item-active' : ''}`}
-              onClick={() => handleUpdate(app.name, true)}
+              className="app-item"
+              onClick={(e) => handleUpdate(app.name, true, e)}
             >
-              <Icon className={isActive ? 'app-icon-size app-name-blue-active' : 'app-icon-size app-icon-blue'} />
-              <div className={`app-name-blue ${isActive ? 'app-name-blue-active' : ''}`}>
-                {app.name}
+              <div className="icon-circle" style={{ backgroundColor: app.bgColor }}>
+                <Icon className="app-icon-size" />
               </div>
+              <div className="app-name-blue">{app.name}</div>
             </div>
           );
         })}
       </div>
+
     </div>
   );
 };
@@ -107,10 +107,18 @@ const AppLauncherMenu = () => {
 // export default AppLauncherMenu;
 
 export const AppLauncher = () => {
+  const [visible, setVisible] = useState(false);
+  const [open, setOpen] = useState(false);
+
+  const handleVisibleChange = (flag) => {
+    setVisible(flag);
+  };
   return (
     <Dropdown
-      overlay={<AppLauncherMenu />}
+      dropdownRender={() => <AppLauncherMenu closeDropdown={() => setOpen(false)} />}
       trigger={['click']}
+      open={open}
+      onOpenChange={(flag) => setOpen(flag)}
       placement="bottomRight"
     >
       <div style={{ cursor: 'pointer', fontSize: '20px' }}>
@@ -257,11 +265,11 @@ function Header() {
   }) || [];
 
   return (
-    <div className="Header-border overflow-y-hidden bg pt-2 pb-2" style={{width:'100vw'}}>
-      <div className="d-flex justify-content-between align-items-center ">
-        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '36px', width:'33%' }}>
-        {/* <TbGridDots size={25} color={'#fff'} style={{marginRight: '32px',}}/> */}
-        <AppLauncher />
+    <div className="Header-border overflow-y-hidden bg pt-2 pb-2" style={{borderBottom:'2px solid #dcdfe4', width:'100vw' }}>
+      <div className="d-flex justify-content-between align-items-center " >
+        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '54px', width: '33%' }}>
+          {/* <TbGridDots size={25} color={'#fff'} style={{marginRight: '32px',}}/> */}
+          <AppLauncher />
           {/* <img
             src={logo}
             alt="Company Logo"
@@ -311,8 +319,8 @@ function Header() {
             </div> */}
           </nav>
         </div>
-        <div style={{width:'33%'}}> 
-        <Search
+        <div style={{ width: '33%' }}>
+          <Search
             placeholder="Reg No"
             onChange={(e) => setregNo(e.target.value)}
             onKeyDown={async (e) => {
@@ -328,28 +336,28 @@ function Header() {
               }
             }}
             className="top-search"
-            style={{ marginRight: "",width:'100%' }}
+            style={{ marginRight: "", width: '100%' }}
           />
         </div>
-       
-<div style={{ width: '33%', justifyContent: 'end' }} className="input-container d-flex align-items-center justify-content-end">
-  <PiPhoneCallLight
-    className="top-icon"
-    onClick={() => navigate("/CorrespondencesSummary", { state: { search: "Correspondence" } })}
-  />
-  <IoNotificationsOutline className="top-icon" />
-  <HiOutlineQuestionMarkCircle className="top-icon" />
-  <IoMdSettings className="top-icon" />
-  <FaRegUserCircle className="top-icon" />
-  <FaArrowRightFromBracket
-  style={{ marginRight: '30px', fontSize: '25px' }}  // also works
-  color="red"
-  onClick={() => {
-    localStorage.removeItem('token');
-    navigate('/');
-  }}
-/>
-</div>
+
+        <div style={{ width: '33%', justifyContent: 'end' }} className="input-container d-flex align-items-center justify-content-end">
+          <PiPhoneCallLight
+            className="top-icon"
+            onClick={() => navigate("/CorrespondencesSummary", { state: { search: "Correspondence" } })}
+          />
+          <IoNotificationsOutline className="top-icon" />
+          <HiOutlineQuestionMarkCircle className="top-icon" />
+          <IoMdSettings className="top-icon" />
+          <FaRegUserCircle className="top-icon" />
+          <FaArrowRightFromBracket
+            style={{ marginRight: '30px', fontSize: '25px' }}  // also works
+            color="red"
+            onClick={() => {
+              localStorage.removeItem('token');
+              navigate('/');
+            }}
+          />
+        </div>
       </div>
     </div>
 

@@ -17,6 +17,7 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
+import ManualPaymentEntry from "../finanace/ManualPaymentEntry";
 import {
   SortableContext,
   useSortable,
@@ -30,6 +31,7 @@ import AddNewGarda from "../details/AddNewGarda";
 import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
 import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
+import MyDrawer from "./MyDrawer";
 const EditableContext = React.createContext(null);
 
 
@@ -63,6 +65,7 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 const TableComponent = ({ data, screenName, redirect }) => {
   const location = useLocation();
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
+  const [manualPayment, setmanualPayment] = useState(false)
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
   const [iscancellationOpen, setIscancellationOpen] = useState(false)
@@ -157,7 +160,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
     {
       title: () => (
         <Checkbox
-          style={{ marginLeft: "12px" }}
+        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
           indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
           onChange={e => {
             const checked = e.target.checked;
@@ -215,7 +218,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
               record={record}
               index={index}
               />
-              
+             
               {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
             </Space>
             ),
@@ -322,8 +325,12 @@ const TableComponent = ({ data, screenName, redirect }) => {
             setTriggerReminderDrawer(!TriggerReminderDrawer);
       
           } 
-          if (location.pathname === "/Batches") {
+          if (location.pathname === "/Import") {
             setIsBatchmemberOpen(!isBatchmemberOpen);
+      
+          } 
+          if (location.pathname === "/Batches") {
+            setmanualPayment(!manualPayment)
       
           } 
           else if (location.pathname === "/Cancallation") {
@@ -626,6 +633,9 @@ const TableComponent = ({ data, screenName, redirect }) => {
     <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
     <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
     <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
+   <MyDrawer open={manualPayment} onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={1000}>
+   <ManualPaymentEntry />
+    </MyDrawer>
     </DndContext>
   );
 };

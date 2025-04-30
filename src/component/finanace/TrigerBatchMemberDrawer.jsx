@@ -3,10 +3,40 @@ import { Button, Drawer, Input, Modal, Table, Tabs } from 'antd';
 import { BsFiletypeXls } from "react-icons/bs";
 import '../../styles/TrigerReminderDrawer.css'
 import MySelect from '../common/MySelect';
-
+import * as XLSX from 'xlsx';
 const { TabPane } = Tabs;
 
 function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
+  const [data1, setData1] = useState([]);
+  let selectedFile = null; // To store the selected file
+
+  // Function to handle file selection
+  const handleFileChange = (event) => {
+    selectedFile = event.target.files[0];
+  };
+ 
+  const [excelData, setExcelData] = useState([]);
+  // This will read the file and set array
+  const readExcelFile = () => {
+    if (!selectedFile) {
+      alert('Please select a file first');
+      return;
+    }
+  
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const dataArray = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(dataArray, { type: 'array' });
+  
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+  
+      const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 }); 
+      setExcelData(jsonData); // save array
+    };
+  
+    reader.readAsArrayBuffer(selectedFile);
+  };
   const filename="my-data.csv"
   const convertToCSV = (data) => {
     const header = Object.keys(data[0]).join(",") + "\n"; // Create CSV header
@@ -198,7 +228,7 @@ function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
 
 
             
-        <Button className="butn secoundry-btn me-2 mb-2 " >
+        <Button className="butn secoundry-btn me-2 mb-2 " onClick={()=>readExcelFile()}>
                   Import Excel File
                 </Button>
                 <Button className="butn secoundry-btn me-2 mb-2" >

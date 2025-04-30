@@ -50,9 +50,9 @@ function Batches() {
             }
           ];
   return (
-    <div className='' style={{width:'95vw'}}>
+    <div className='' style={{width:'93vw'}}>
     <TableComponent data={tableData}  screenName="Batches" />
-    </div>
+  </div>
   )
 }
 

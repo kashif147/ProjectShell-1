@@ -1,0 +1,59 @@
+.create-batch-container {
+    padding: 20px;
+    background-color: #f4faf8;
+  }
+  
+  .header {
+    margin-bottom: 8px;
+  }
+  
+  .page-title {
+    margin-bottom: 4px;
+  }
+  
+  .section-title {
+    margin-bottom: 24px;
+  }
+  
+  .batch-card {
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+  
+  .custom-input,
+  .custom-input .ant-select-selector,
+  .custom-input .ant-picker {
+    height: 40px !important;
+    border-radius: 6px !important;
+  }
+  
+  .custom-input textarea {
+    height: auto;
+    min-height: 80px;
+  }
+  
+  .custom-file {
+    border: 1px solid #d9d9d9;
+    padding: 6px 12px;
+    border-radius: 6px;
+    width: 100%;
+  }
+  
+  .cancel-button,
+  .create-button {
+    height: 40px;
+    border-radius: 6px;
+    padding: 0 20px;
+  }
+  
+  .summary-line {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 8px;
+  }
+  
+  .total {
+    font-size: 16px;
+    margin-top: 12px;
+  }
+  

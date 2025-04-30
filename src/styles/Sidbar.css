@@ -2,37 +2,66 @@
   height: 80vh;
   background-color: #001529; /* Dark theme look */
 }
+
+.sidebar-menu {
+  height: 100vh;
+  width: 5vw;
+}
+
+/* General menu item styling */
 .sidebar-menu .ant-menu-item {
   display: flex !important;
   flex-direction: column;
   justify-content: center;
   align-items: center;
-  height: 60px !important;
-  padding: 0 !important;
+  height: auto !important;
+  padding: 10px !important;   /* Inner padding inside item */
+  margin: 8px !important;      /* Space between items */
+  border-radius: 8px;          /* Rounded corners */
+  background: transparent;     /* Default transparent */
   color: white;
   border: none;
-  background: transparent;
+  transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
 }
+
+/* Active (selected) item */
 .sidebar-menu .ant-menu-item-selected {
-  background-color: #1677ff !important;
+  background-color: #1677ff !important; /* Blue background */
   color: white;
+  box-shadow: 0 0 8px rgba(22, 119, 255, 0.5); /* Soft glow effect */
 }
+
+/* Optional: subtle hover effect */
+.sidebar-menu .ant-menu-item:hover {
+  /* background-color: rgba(255, 255, 255, 0.05);  */
+  /* Very light hover */
+}
+
+/* Icon styling */
 .icon {
   font-size: 25px;
   color: white;
 }
+.icon:hover {
+  color: #f2f5f8 !important; /* Change icon color on hover */
+}
+
+
+/* Label styling */
 .sidebar-label {
   font-size: 12px;
   margin-top: 4px;
   text-align: center;
   max-width: 80px;
-  white-space: normal !important;  /* ⬅ allow wrapping */
-  overflow: visible !important;    /* ⬅ don't clip overflow */
-  text-overflow: unset !important; /* ⬅ disable ellipsis */
+  white-space: normal !important;  /* Allow wrapping */
+  overflow: visible !important;    /* Don't clip overflow */
+  text-overflow: unset !important; /* Disable ellipsis */
   color: white;
   word-wrap: break-word;
   line-height: 1.2;
 }
-.ant-menu .ant-menu-item .ant-menu-item-icon +span{
+
+/* Remove default margin between icon and text */
+.ant-menu .ant-menu-item .ant-menu-item-icon + span {
   margin: 0px !important;
 }

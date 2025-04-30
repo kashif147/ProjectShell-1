@@ -45,6 +45,7 @@ import {
 import { LuArrowLeftRight } from "react-icons/lu";
 import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
+import CreateBatchPayment from "./CreateBatchPayment";
 import '../../styles/HeaderDetails.css'
 import { useDispatch, useSelector, shallowEqual } from 'react-redux';
 import { fetchRegions } from "../../features/RegionSlice";
@@ -356,7 +357,7 @@ function HeaderDetails() {
   };
 
   return (
-    <div className="" style={{ width: '95vw' }}>
+    <div className="" style={{ width: '93vw' }}>
       <div
         className={`details-header d-flex w-100% overflow-hidden ${(location?.pathname == "/Details"
           || location?.pathname == "/CasesById"
@@ -927,67 +928,66 @@ function HeaderDetails() {
 
         </div>
       </MyDrawer>
-        <MyDrawer title={`${nav==="/RemindersSummary"?"Batch":nav==="/Batches"?"Add Batch":"Cancellation Batch"}`} open={isBatchOpen} isPagination={true} onClose={() => {
+        <MyDrawer isPagination={false} width='1300px' title={`${nav==="/RemindersSummary"?"Batch":nav==="/Batches"?"Add Batch":"Cancellation Batch"}`} open={isBatchOpen} onClose={() => {
               setIsBatchOpen(!isBatchOpen)
               }}
               >
-                <div className="drawer-main-cntainer">
-                <div className="mb-4 pb-4">
-                  <div className="drawer-inpts-container">
-                  <div className="drawer-lbl-container">
-                    <p>Batch Name</p>
-                  </div>
-                  <div className="inpt-con">
-                    <p className="star">*</p>
-                    <div className="inpt-sub-con">
-                  <Input />
-                        <h1 className="error-text"></h1>
+              {
+                nav === "/Batches" ? (
+                  <CreateBatchPayment />
+                ) : (
+                  <div className="drawer-main-cntainer">
+                    <div className="mb-4 pb-4">
+                      <div className="drawer-inpts-container">
+                        <div className="drawer-lbl-container">
+                          <p>Batch Name</p>
+                        </div>
+                        <div className="inpt-con">
+                          <p className="star">*</p>
+                          <div className="inpt-sub-con">
+                            <Input />
+                            <h1 className="error-text"></h1>
+                          </div>
+                          <p className="error"></p>
+                        </div>
                       </div>
-                      <p className="error"></p>
-                    </div>
-                  </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container">
-                      <p>Batch Date</p>
-                    </div>
-                    <div className="inpt-con">
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con">
-                        <MyDatePicker
-                        // disabled={isDisable}
-                        //   className="inp" onChange={(e) => drawrInptChng('Title', 'code', e.target.value)}
-                        //   value={drawerIpnuts?.Title?.code}
-                        />
-                        {/* <p className="error">{errors?.Title?.code}</p> */}
+                      <div className="drawer-inpts-container">
+                        <div className="drawer-lbl-container">
+                          <p>Batch Date</p>
+                        </div>
+                        <div className="inpt-con">
+                          <p className="star">*</p>
+                          <div className="inpt-sub-con">
+                            <MyDatePicker />
+                          </div>
+                        </div>
+                      </div>
+                      <div className="drawer-inpts-container">
+                        <div className="drawer-lbl-container">
+                          <p>Status</p>
+                        </div>
+                        <div className="inpt-con">
+                          <p className="star">*</p>
+                          <div className="inpt-sub-con d-flex flex-column">
+                            <MySelect
+                              isSimple={true}
+                              options={[
+                                { key: "001", label: "Draft" },
+                                { key: "002", label: "Inactive" },
+                              ]}
+                              value={"001"}
+                              disabled={true}
+                            />
+                          </div>
+                        </div>
                       </div>
                     </div>
                   </div>
-                  <div className="drawer-inpts-container">
-                    <div className="drawer-lbl-container">
-                      <p>Status</p>
-                    </div>
-                    <div className="inpt-con">
-                      <p className="star">*</p>
-                      <div className="inpt-sub-con d-flex flex-column">
-                      <MySelect isSimple={true} 
-                      options={[
-                        {key:'001', label:'Draft'},
-                        {key:'002', label:'Inactive'}
-                      ]}
-                      value={"001"}
-                      disabled={true}
-                      />
-                        {/* <p className="error">{errors?.Title?.lookupname}</p> */}
-                      </div>
-                    </div>
-                  </div>
-                  
-      
-                
-                </div>
-               
-              </div>
+                )
+              }
             </MyDrawer>
+           
+
     </div>
   );
 }

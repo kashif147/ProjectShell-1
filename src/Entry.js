@@ -42,6 +42,8 @@ import CateById from "./pages/Category/CateById";
 import RemindersSummary from "./pages/reminders/RemindersSummary";
 import Cancallation from "./pages/Cancallation";
 import Batches from "./pages/finance/Batches";
+import Import from "./pages/finance/Import";
+import "antd/dist/reset.css";
 
 // test
 function Entry() {
@@ -132,7 +134,7 @@ function Entry() {
               <Route path="RemindersSummary" element={<RemindersSummary />} />
               <Route path="Cancallation" element={<Cancallation />} />
               <Route path="Batches" element={<Batches />} />
-
+              <Route path="Import" element={<Import />} />
               </Route> 
                           </Routes>
           </div>

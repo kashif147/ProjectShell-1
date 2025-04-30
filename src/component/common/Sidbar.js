@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import React, { useEffect,useMemo } from 'react';
 import { Menu } from 'antd';
 import {
   subscriptionItems,
@@ -12,176 +12,117 @@ import {
 } from '../../constants/SideNav';
 import { useSelector } from 'react-redux';
 import '../../styles/Sidbar.css';
-import { useNavigate } from "react-router-dom";
+import { useNavigate,useLocation } from "react-router-dom";
 
 const Sidbar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
-  // "Subscriptions & Rewards":true,
-  // "Finance": false,
-  // "Correspondence": false,
-  // "Issue Management": false,
-  // "Events": false,
-  // "Courses": false,
-  // "Professional Development": false,
-  // "Settings": false,
-  // 'Configuration':false,
-  // 'Profiles':false,
-  // "Membership":false,
-  // "Reports":false,
-  // Find the active menu (only one is true)
-  const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
+  const location = useLocation();
+  const navigate = useNavigate();
 
-  // Mapping keys to their respective item arrays
+  // Find active tab
+  const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
   const itemsMap = {
     'Subscriptions & Rewards': subscriptionItems,
     Finance: financeItems,
     Correspondence: correspondenceItems,
-   Configuration:configurationItems,
-   Profiles:profileItems,
-   Reports:reportItems,
-   "Issue Management": issuesItems,
+    Configuration: configurationItems,
+    Profiles: profileItems,
+    Reports: reportItems,
+    "Issue Management": issuesItems,
     Events: eventsItems,
-    // Courses: coursesItems,
-    // // 'Professional Development': professionalDevelopmentItems,
-    // Settings: settingsItems,
   };
-  const navigate = useNavigate();
   const menuItems = itemsMap[activeKey] || [];
+  const selectedKey = useMemo(() => {
+    if (location.pathname === '/Summary') return 'Profiles';
+    if (location.pathname === '/ClaimSummary') return 'Claims';
+    if (location.pathname === '/CasesSummary') return 'Cases';
+    if (location.pathname === '/CorrespondencesSummary') return 'Correspondences';
+    if (location.pathname === '/Transfers') return 'Transfer Requests';
+    if (location.pathname === '/Configuratin') return 'System Configuration';
+    if (location.pathname === '/RosterSummary') return 'Roster';
+    if (location.pathname === '/Batches') return 'Batches';
+    if (location.pathname === '/Applications') return 'Applications';
+    if (location.pathname === '/RemindersSummary') return 'Reminders';
+    if (location.pathname === '/Cancallation') return 'Cancellations';
+    if (location.pathname === '/ChangCateSumm') return 'Change Category';
+    if (location.pathname === '/Import') return 'Imports';
+    return '';
+  }, [location.pathname]);
+
   const handleClick = ({ key }) => {
     switch (key) {
-      // case '':
-      //   toggleCollapsed()
-      //   break;
       case 'Profiles':
-        navigate("/Summary", {
-          state: {
-            search: 'Profile',
-          }
-        })
+        navigate("/Summary", { state: { search: 'Profile' } });
         break;
       case 'Claims':
-        navigate("/ClaimSummary", {
-          state: {
-            search: 'Claims',
-          }
-        })
+        navigate("/ClaimSummary", { state: { search: 'Claims' } });
         break;
       case 'Cases':
-        navigate("/CasesSummary", {
-          state: {
-            search: 'Cases',
-          }
-        })
+        navigate("/CasesSummary", { state: { search: 'Cases' } });
         break;
       case 'Correspondences':
-        navigate("/CorrespondencesSummary", {
-          state: {
-            search: 'Correspondences',
-          }
-        })
+        navigate("/CorrespondencesSummary", { state: { search: 'Correspondences' } });
         break;
       case 'Transfer Requests':
-        navigate("/Transfers", {
-          state: {
-            search: 'Transfers',
-          }
-        })
+        navigate("/Transfers", { state: { search: 'Transfers' } });
         break;
       case 'System Configuration':
-        navigate("/Configuratin", {
-          state: {
-            search: '',
-          }
-        })
+        navigate("/Configuratin", { state: { search: '' } });
         break;
       case 'Roster':
-        navigate("/RosterSummary", {
-          state: {
-            search: 'Rosters',
-          }
-        })
+        navigate("/RosterSummary", { state: { search: 'Rosters' } });
         break;
       case 'Batches':
-        navigate("/Batches", {
-          state: {
-            search: 'Batches',
-          }
-        })
+        navigate("/Batches", { state: { search: 'Batches' } });
         break;
       case 'Applications':
-        navigate("/Applications", {
-          state: {
-            search: 'Applications',
-          }
-        })
+        navigate("/Applications", { state: { search: 'Applications' } });
         break;
       case 'Reminders':
-        
-        navigate("/RemindersSummary", {
-          state: {
-            search: 'Reminders',
-          }
-        })
+        navigate("/RemindersSummary", { state: { search: 'Reminders' } });
         break;
       case 'Cancellations':
-        navigate("/Cancallation", {
-          state: {
-            search: 'Cancallation',
-          }
-        })
+        navigate("/Cancallation", { state: { search: 'Cancallation' } });
         break;
       case 'Trainings':
         alert('Trainings clicked');
         break;
       case 'Change Category':
-        navigate("/ChangCateSumm", {
-          state: {
-            search: 'Change Category Summary',
-          }
-        })
+        navigate("/ChangCateSumm", { state: { search: 'Change Category Summary' } });
+        break;
+      case 'Imports':
+        navigate("/Import", { state: { search: 'Imports' } });
+        break;
+      case 'Batches':
+        navigate("/Batches", { state: { search: 'Batches' } });
         break;
       default:
         console.log('Unknown key:', key);
     }
   };
-useEffect(() => {
-  if (menuLblState["Subscriptions & Rewards"] === true) {
-    return navigate("/Summary", {
-      state: {
-        search: 'Profile',
-      }
-    });
-  }
-  if (menuLblState["Finance"] === true) {
-    return navigate("/Batches", {
-      state: {
-        search: 'Batches',
-      }
-    });
-  }
-  if (menuLblState["Correspondence"] === true) {
-    return navigate("/CorrespondencesSummary", {
-      state: {
-        search: 'Correspondences',
-      }
-    });
-  }
-  if (menuLblState["Configuration"] === true) {
-    return navigate("/Configuratin", {
-      state: {
-        search: 'Configuration',
-      }
-    });
-  }
-}, [menuLblState]);
+
+  useEffect(() => {
+    if (menuLblState["Subscriptions & Rewards"] === true) {
+      navigate("/Summary", { state: { search: 'Profile' } });
+    }
+    if (menuLblState["Finance"] === true) {
+      navigate("/Batches", { state: { search: 'Batches' } });
+    }
+    if (menuLblState["Correspondence"] === true) {
+      navigate("/CorrespondencesSummary", { state: { search: 'Correspondences' } });
+    }
+    if (menuLblState["Configuration"] === true) {
+      navigate("/Configuratin", { state: { search: 'Configuration' } });
+    }
+  }, [menuLblState]);
   return (
     <Menu
       mode="inline"
-      style={{ width:'5vw',height:'100vh', borderRight: 0 }}
+      selectedKeys={[selectedKey]}  
+      style={{ width: '7vw', height: '100vh', borderRight: 0 }}
       items={menuItems}
       className="sidebar-menu"
       onClick={handleClick}
-
     />
   );
 };
