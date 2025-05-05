@@ -1,6 +1,6 @@
 // src/redux/regionSlice.js
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+const axios = require('axios');
 import { baseURL } from '../utils/Utilities';
 
 // Fetch all regions
