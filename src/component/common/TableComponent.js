@@ -7,6 +7,7 @@ import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import { AiOutlineThunderbolt } from "react-icons/ai";
+import { MdKeyboard } from 'react-icons/md';
 
 
 import SimpleMenu from "./SimpleMenu";
@@ -160,7 +161,8 @@ const TableComponent = ({ data, screenName, redirect }) => {
     {
       title: () => (
         <Checkbox
-        style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
+        // style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
+        style={{ marginLeft:'9px' }}
           indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
           onChange={e => {
             const checked = e.target.checked;
@@ -193,7 +195,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
       width: 75,
       fixed: "left",
       render: (record, index) => (
-        <Space size="small" className="action-buttons">
+        <Space size="small">
           <CgAttachment style={{ fontSize: "15px", fontWeight: 500,color: record?.isAttachment ? "green" : "inherit",  }} />
           <input
         type="file"
@@ -201,6 +203,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
         onChange={(e)=>handleFileUpload(e,record?.key)}
         style={{ display: "none" }}
       />
+     
           <SimpleMenu
             title={<BsThreeDotsVertical 
             style={{ fontSize: "15px", fontWeight: 500 }} />}
@@ -218,7 +221,11 @@ const TableComponent = ({ data, screenName, redirect }) => {
               record={record}
               index={index}
               />
-             
+              {
+                location?.pathname==="/BatchMemberSummary" &&(
+                  <MdKeyboard style={{ fontSize: "15px", color: '#595959', color:'inherit' }}  onClick={()=>setmanualPayment(!isBatchmemberOpen)}/>
+                )
+              }
               {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
             </Space>
             ),
@@ -318,21 +325,21 @@ const TableComponent = ({ data, screenName, redirect }) => {
             </span>
           </Link>)
           :
-        col.title === "Batch Name" ? (
+        col.title === "Batch Name" && location.pathname != "/Batches" ? (
           <Link
         onClick={() => {
           if (location.pathname === "/RemindersSummary") {
             setTriggerReminderDrawer(!TriggerReminderDrawer);
       
           } 
-          if (location.pathname === "/Import") {
+          if (location.pathname === "/Batches") {
             setIsBatchmemberOpen(!isBatchmemberOpen);
       
           } 
-          if (location.pathname === "/Batches") {
-            setmanualPayment(!manualPayment)
-      
-          } 
+          // if (location.pathname === "/Batches") {
+          //   setmanualPayment(!manualPayment)
+          //   getProfile([record], index)
+          // } 
           else if (location.pathname === "/Cancallation") {
             setIscancellationOpen(!iscancellationOpen);
           }
@@ -345,6 +352,17 @@ const TableComponent = ({ data, screenName, redirect }) => {
             </span>
           </Link>)
           :
+          col.title === "Batch Name" &&    location.pathname === "/Batches"? (
+            <Link 
+            to="/BatchMemberSummary"
+            state={{
+              search: screenName,
+            }}
+            >
+              {`${text}`}
+            </Link>
+          )
+            :
         col.title === "Correspondence ID" ? (
           <Link
             to="/CorspndncDetail"
@@ -633,7 +651,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
     <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
     <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
     <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
-   <MyDrawer open={manualPayment} onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={1000}>
+   <MyDrawer open={manualPayment} onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760} isManual={true}>
    <ManualPaymentEntry />
     </MyDrawer>
     </DndContext>

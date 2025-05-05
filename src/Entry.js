@@ -1,10 +1,7 @@
 import React from "react";
 import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
-import { useNavigate } from "react-router-dom";
-import MainDashBoard from "./pages/MainDashBoard";
 import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
-import SideNav from "./component/common/SideNav";
 import { useLocation } from "react-router-dom";
 import Dummy from "./component/common/Dummy";
 import Configuratin from "./pages/Configuratin";
@@ -43,7 +40,9 @@ import RemindersSummary from "./pages/reminders/RemindersSummary";
 import Cancallation from "./pages/Cancallation";
 import Batches from "./pages/finance/Batches";
 import Import from "./pages/finance/Import";
+import { useTableColumns } from "./context/TableColumnsContext ";
 import "antd/dist/reset.css";
+import BatchMemberSummary from "./pages/finance/BatchMemberSummary";
 
 // test
 function Entry() {
@@ -64,7 +63,7 @@ function Entry() {
          <div style={{}}>
       <div style={{width: '100vw'}}>
       {
-        location?.pathname != "/" && 
+        location?.pathname !== "/" && 
         <HeaderDetails />
       }
       </div>
@@ -85,17 +84,17 @@ function Entry() {
             </div>
             <SideNav />
           )} */}
-        {(location?.pathname == "/Details"
-          || location?.pathname == "/ClaimsDetails" ||
-          location?.pathname == "/CasesDetails" ||
-          location?.pathname == "/ClaimsById"
-          || location?.pathname == "/CasesById"
-          || location?.pathname == "/AddNewProfile"
-          || location?.pathname == "/AddClaims"
-          || location?.pathname == "/CorspndncDetail"
-          || location?.pathname == "/Doucmnets"
+        {(location?.pathname === "/Details"
+          || location?.pathname === "/ClaimsDetails" ||
+          location?.pathname === "/CasesDetails" ||
+          location?.pathname === "/ClaimsById"
+          || location?.pathname === "/CasesById"
+          || location?.pathname === "/AddNewProfile"
+          || location?.pathname === "/AddClaims"
+          || location?.pathname === "/CorspndncDetail"
+          || location?.pathname === "/Doucmnets"
           // || location?.pathname == "/AproveMembersip"
-          || location?.pathname == "/Roster"
+          || location?.pathname === "/Roster"
 
         ) && (
             <ProfileHeader />
@@ -106,7 +105,7 @@ function Entry() {
             <Routes>
               <Route path="/" element={<Login />} />
               <Route path="Dummy" element={<Dummy />} />
-              <Route element={<ProtectedRoute />}>              
+              {/* <Route element={<ProtectedRoute />}>               */}
               <Route path="Details" element={<ProfileDetails />} />
               <Route path="Summary" element={<ProfileSummary />} />
               <Route path="CasesDetails" element={< CasesDetails />} />
@@ -135,22 +134,24 @@ function Entry() {
               <Route path="Cancallation" element={<Cancallation />} />
               <Route path="Batches" element={<Batches />} />
               <Route path="Import" element={<Import />} />
-              </Route> 
+              <Route path="BatchMemberSummary" element={<BatchMemberSummary />} />
+              
+              {/* </Route>  */}
                           </Routes>
           </div>
         </div>
         {(
-           location?.pathname == "/ClaimsDetails"
-          || location?.pathname == "/CasesDetails"
-          || location?.pathname == "/AddNewProfile" 
-          || location?.pathname == "/AddClaims"
-          || location?.pathname == "/ClaimsById"
-          || location?.pathname == "/Doucmnets"
+           location?.pathname === "/ClaimsDetails"
+          || location?.pathname === "/CasesDetails"
+          || location?.pathname === "/AddNewProfile" 
+          || location?.pathname === "/AddClaims"
+          || location?.pathname === "/ClaimsById"
+          || location?.pathname === "/Doucmnets"
         ) && (
             <ResizableComp />
           )}
       </div>
-      {((location?.pathname == "/Details" ||location?.pathname == "/CorspndncDetail"||location?.pathname == "/Doucmnets" ) && (
+      {((location?.pathname === "/Details" ||location?.pathname === "/CorspndncDetail"||location?.pathname === "/Doucmnets" ) && (
       <div style={{width:'100%',height:'50px'}} className="footer">
       <MyFooter />
       </div>

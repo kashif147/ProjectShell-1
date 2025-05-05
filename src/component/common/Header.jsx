@@ -86,7 +86,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
           return (
             <div
               key={app.name}
-              className="app-item"
+              className={`app-item ${isActive ? 'active-item' : ''}`}
               onClick={(e) => handleUpdate(app.name, true, e)}
             >
               <div className="icon-circle" style={{ backgroundColor: app.bgColor }}>

@@ -278,10 +278,9 @@ function Configuratin() {
     }, {});
   
     setdata((prevState) => ({ ...prevState, ...filteredData }));
-      console.log("8888", filteredData);
+
   }, [lookups]);
-  console.log(data,"123")
-  console.log(lookups,"1234")
+
   
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
@@ -2918,29 +2917,25 @@ function Configuratin() {
 
   }
 
-  const addGenderFtn = () => {
-    // Logic for adding gender
-    console.log(genderData);
-  };
 
   const AddpartnershipFtn = () => {
-    console.log(PartnershipData);
+    
   }
 
   const AddprofileModalFtn = () => {
-    console.log(profileData)
+    
   }
 
   const AddRegionTypeModalFtn = () => {
-    console.log(RegionTypeData)
+
   }
 
   const AddContactTypeModalFtn = () => {
-    console.log(ContactTypeData)
+    
   }
 
   const AddSubscriptionsFtn = () => {
-    console.log(SubscriptionData);
+    
   }
   const columnClaimType = [
     { title: 'Code', dataIndex: 'code', key: 'code', sorter: (a, b) => a.code.localeCompare(b.code), sortDirections: ['ascend', 'descend'] },

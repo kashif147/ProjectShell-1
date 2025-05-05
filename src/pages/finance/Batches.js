@@ -17,7 +17,8 @@ function Batches() {
               "batchStatus": "Pending",
               "createdAt": "10/11/2023 09:30",
               "createdBy": "admin1",
-              "Count": 5
+              "Count": 5,
+              "PaymentType":'Bank Draft'
             },
             {
               "key": "2",
@@ -31,7 +32,8 @@ function Batches() {
               "batchStatus": "Approved",
               "createdAt": "10/11/2023 10:15",
               "createdBy": "admin2",
-              "Count": 3
+              "Count": 3,
+              "PaymentType":'Credit Card'
             },
             // ... (all other records follow same pattern) ...
             {
@@ -46,7 +48,8 @@ function Batches() {
               "batchStatus": "Rejected",
               "createdAt": "28/11/2023 14:45",
               "createdBy": "admin3",
-              "Count": 7
+              "Count": 7,
+              "PaymentType":'Cheque / PO NO'
             }
           ];
   return (

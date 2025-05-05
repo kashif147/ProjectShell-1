@@ -17,6 +17,7 @@
   width: 60px;
   height: 60px;
 }
+
 .ant-modal-confirm .ant-btn-primary.custom-confirm-ok-button {
   background-color: var(--FontsColor) !important;
 }
@@ -382,7 +383,7 @@ body {
 }
 .ant-table-thead > tr > th {
   /* padding: 6px 10px !important;  Adjust the value as needed */ 
-  padding: 6px 10px !important;
+  padding: 4px 8px !important;
   white-space: nowrap; /* Prevent text from wrapping */
   overflow: hidden; /* Hide overflow text */
   text-overflow: ellipsis;
@@ -535,7 +536,9 @@ body {
   border: 1px solid #d9d9d9 !important;
 }
 .Project-table .ant-table-tbody > tr > td {
-  border-bottom: 1px solid #d9d9d9 !important; /* Add border to table rows */
+  border-bottom: 1px solid #d9d9d9 !important;
+  
+  /* Add border to table rows */
 }
 :where(.css-dev-only-do-not-override-1uq9j6g)[class^="ant-table"] {
   border: 1px solid #dcdfe4 !important;
@@ -548,7 +551,7 @@ body {
 }
 .ant-table-cell{
   border-inline-end: 2px solid #f0f0f0 !important;
-  padding: 4px 12px !important;
+  padding: 8px 18px !important;
   color: var(--mainBlue) !important;
 }
 .ant-table-wrapper {
@@ -561,6 +564,10 @@ body {
 .ant-table-thead > tr > th {
   border-radius: 0; /* Removes border radius from top corners */
 }
+/* tr {
+  display: flex !important;
+  align-items: center !;
+} */
 
 .Project-table tbody,
 td,

@@ -928,9 +928,13 @@ function HeaderDetails() {
 
         </div>
       </MyDrawer>
-        <MyDrawer isPagination={false} width='1300px' title={`${nav==="/RemindersSummary"?"Batch":nav==="/Batches"?"Add Batch":"Cancellation Batch"}`} open={isBatchOpen} onClose={() => {
+        <MyDrawer isPagination={false} width='1300px' title={`${nav==="/RemindersSummary"?"Batch":nav==="/Batches"?"":"Cancellation Batch"}`} open={isBatchOpen} onClose={() => {
               setIsBatchOpen(!isBatchOpen)
+              
               }}
+              add={()=>{navigate("/BatchMemberSummary", { state: { search: "BatchMemberSummary" } })
+              setIsBatchOpen(!isBatchOpen)
+            }}
               >
               {
                 nav === "/Batches" ? (

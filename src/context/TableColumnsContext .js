@@ -2,7 +2,7 @@ import React, { createContext, useContext, useEffect, useState, useMemo, useCall
 import { tableData } from "../Data";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from 'react-redux';
-import { fetchRegions, deleteRegion } from "../features/RegionSlice";
+import { fetchRegions, } from "../features/RegionSlice";
 import { getAllLookups } from '../features/LookupsSlice'
 import { getContactTypes } from "../features/ContactTypeSlice";
 
@@ -184,12 +184,23 @@ const staticColumns = {
     { dataIndex: "batchName", title: "Batch Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "batchDate", title: "Batch Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "batchStatus", title: "Batch Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "PaymentType", title: "Payment Type", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "createdAt", title: "Created At", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
- 
+    
+  ],
+  BatchMemberSummary: [
+    { dataIndex: "MemberName", title: "Member Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "BankAccount", title: "Bank Account", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "PayrollNo", title: "Payroll No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Arrears", title: "Arrears", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Comments", title: "Comments", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Advance", title: "Advance", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+    { dataIndex: "TotalAmount", title: "Total Amount", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+    // { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    // { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+  
   ]
-
 };
 
 // Static search filters
@@ -466,7 +477,7 @@ export const TableColumnsProvider = ({ children }) => {
   const screenName = location?.state?.search;
 
   // State declarations
-  const [ascending, setAscending] = useState(true);
+
 
   const [claimsDrawer, setClaimsDrawer] = useState(false);
   const [isDisable, setIsDisable] = useState(true);
@@ -493,9 +504,7 @@ export const TableColumnsProvider = ({ children }) => {
       [key]: value
     }));
   }, []);
-  const updateMeu = ()=>{
-    console.log('ii')
-  }
+
   const [report, setReport] = useState(null);
   const [isSave, setIsSave] = useState(false);
   const [ProfileDetails, setProfileDetails] = useState([]);
@@ -565,11 +574,11 @@ export const TableColumnsProvider = ({ children }) => {
     { titleColumn: "Updated", isCheck: false },
   ], []);
 
-  const [globleFilters, setGlobleFilters] = useState(filteredSearchFilters);
-
+  
   const resetFtn= () =>{
     setGlobleFilters(filteredSearchFilters)
   }
+  const [globleFilters, setGlobleFilters] = useState(filteredSearchFilters);
  
   // Handlers and functions
   const handlClaimDrawerChng = useCallback(() => {
@@ -974,8 +983,7 @@ export const TableColumnsProvider = ({ children }) => {
     resetFtn,
     menuLbl,
     updateMenuLbl,
-    updateMeu,
-    updateMeu
+   
   }), [
     columns,
     gridData,
@@ -1011,7 +1019,7 @@ export const TableColumnsProvider = ({ children }) => {
     resetFtn,
     menuLbl,
     updateMenuLbl,
-    updateMeu
+   
   ]);
 
   return (

@@ -19,6 +19,7 @@ import MyConfirm from "../common/MyConfirm";
 import { deleteFtn } from "../../utils/Utilities";
 import { getContacts } from "../../features/ContactSlice";
 import { baseURL } from "../../utils/Utilities";
+import { useNavigate, useLocation } from "react-router-dom";
 import {
   FaListCheck,
   // FaArrowRightArrowLeft,
@@ -31,7 +32,7 @@ import {
 
 } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
-function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isGardaCheckbx }) {
+function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isGardaCheckbx, isManual }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
@@ -56,6 +57,8 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
       dispatch(getContactTypes());
     }
   }, [contactDrawer]);
+  const Navigate = useNavigate()
+  const location = useLocation();
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
   const [isPayment, setisPayment] = useState(false)
   const [isAproved, setisAproved] = useState(false)
@@ -737,16 +740,27 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
               !isGarda ?
                 <Button className="butn primary-btn"
                   // onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
-                  onClick={() => {
-                    if (isDisable) {
+                  onClick={async() => {
+                    if (isDisable && location?.pathname!="/Batches") {
                       disableFtn(false);
-                    } else if (!isEdit) {
+                    } else if (!isEdit && !location?.pathname!="/Batches") {
                       add();
-                    } else {
+                    } 
+                    else if(location?.pathname==="/Batches"){
+                      
+                    await Navigate('/BatchMemberSummary', {
+                        state: {
+                          search: "BatchMemberSummary",
+                        }
+                      });
+                      onClose()
+                    }
+                    else  {
                       update();
                     }
+                  
                   }}>
-                  {isDisable == true ? "Add" : 'Save'}
+                  {isDisable == true && !isManual ? "Add" :  'Save'}
                 </Button>
                 :
                 <>
@@ -764,7 +778,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
 
             }
             {
-              isGarda && (
+              isGarda || isManual && (
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
                   <Button className="me-1 gray-btn butn">
                     <FaAngleLeft className="deatil-header-icon" />
@@ -1000,7 +1014,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
             <Button className="butn primary-btn"
               onClick={isUpdate?.Contacts == true ? update : addFtn}
               onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
-              {isUpdate?.Contacts == true ? "Save" : 'Add'}
+              {isUpdate?.Contacts == true  ? "Save" : 'Add'}
             </Button>
           </Space>
         }

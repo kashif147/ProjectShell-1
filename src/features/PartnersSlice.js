@@ -19,8 +19,7 @@ export const getPartners = createAsyncThunk(
           },
         }
       );
-      console.log(response.data, "API Response");
-      console.log("My api Response goes herre theis");
+
       return response.data;
     } catch (error) {
       return rejectWithValue(

@@ -24,6 +24,9 @@
     align-items: center;
     cursor: pointer;
   }
+  .active-item{
+    background-color: #E3F2FD;
+  }
   
   .icon-circle {
     width: 60px;
