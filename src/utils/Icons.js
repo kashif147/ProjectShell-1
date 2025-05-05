@@ -2,7 +2,6 @@ import { ReactComponent as ProvinceOutlined } from '../assets/images/icon/Provin
 import { ReactComponent as CountyOutlined } from '../assets/images/icon/county.svg';
 // import { ReactComponent as CountyOutlined } from '../assets/images/icon/county.svg';
 import { ReactComponent as MaritalStatusOutlined  } from '../assets/images/icon/Marital_Status_Outlined.svg'
-import  {ReactComponent as DistrictOutlined} from '../assets/images/icon/Districts.svg';
 import {ReactComponent as StationOutlined} from '../assets/images/icon/Station_Outlined.svg'
 import {ReactComponent as Gender} from '../assets/images/icon/Gender_outlined.svg'
 // import {ReactComponent as PostCodeOutlined} from '../assets/images/icon/Provinec_Outlined.svg'

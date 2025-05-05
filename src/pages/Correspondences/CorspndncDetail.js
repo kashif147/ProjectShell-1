@@ -1,14 +1,12 @@
 import { useState } from 'react'
 import ChatComponent from '../../component/corespondence/ChatComponent'
 import '../../styles/Correspondence.css'
-import { AndroidOutlined, AppleOutlined } from '@ant-design/icons';
-import { Flex, Radio, Tabs, Input, Button, Menu, Dropdown, Select, Table, Checkbox, Space } from 'antd';
+import {  Radio, Tabs, Input, Button, Select, Table, Checkbox, Space } from 'antd';
 import { FiRefreshCcw } from "react-icons/fi";
 import { CiMenuBurger } from "react-icons/ci";
 import icon from '../../assets/images/Vector.png'
 import { FiCornerUpLeft } from "react-icons/fi";
 import { RiCornerUpLeftDoubleLine } from "react-icons/ri";
-import { IoReturnUpForwardSharp } from "react-icons/io5";
 import { FiCornerUpRight } from "react-icons/fi";
 import { useMsal } from '@azure/msal-react';
 // import { getGraphClient } from '../graphClient';
@@ -27,9 +25,7 @@ function CorspndncDetail() {
     const [path, setPath] = useState('/projectShell');
     
 
-    const handleFolderClick = (newPath) => {
-      setPath(newPath);
-    };
+  
   
     const refreshFileList = () => {
       // This will trigger the useEffect in FileList
@@ -46,10 +42,7 @@ function CorspndncDetail() {
     const [drawerOpen, setDrawerOpen] = useState({
         NewCall:false
     })
-      
-    const handleMenuClick = (key ) => {
    
-    };
     const createDocument = async ( ) => {
       const graphClient = getGraphClient(instance, accounts);
       const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
@@ -111,7 +104,7 @@ function CorspndncDetail() {
         {
             key: '1',
             label: <div className='d-flex align-items-center'>
-                <img src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} />
+                {/* <img src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} /> */}
                 <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
                     Email
                 </h4>
@@ -356,14 +349,6 @@ function CorspndncDetail() {
         },
     ];
 
-    const menu = (
-        <Menu onClick={(e)=>{handleMenuClick(e)}}>
-            <Menu.Item key="1">New Email</Menu.Item>
-            <Menu.Item key="2">New Call</Menu.Item>
-            <Menu.Item key="3">New Letter</Menu.Item>
-            <Menu.Item key="4">New SMS</Menu.Item>
-        </Menu>
-    );
     const [activeKey, setactiveKey] = useState("1")
     const handleOptionSelect = (value) => {
         switch (value) {
@@ -393,7 +378,7 @@ function CorspndncDetail() {
         else if (activeKey==="2"){
             openCloseDrawerFtn('NewCall')
         }
-        else if (activeKey=="3"){
+        else if (activeKey==="3"){
           createDocument()
         }
       }

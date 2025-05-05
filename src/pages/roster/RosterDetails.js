@@ -4,18 +4,18 @@ import { Button, Select, TimePicker, Input, Table } from 'antd'
 import { FaAngleRight } from "react-icons/fa";
 import { FaAngleLeft } from "react-icons/fa";
 import moment from 'moment'
-import AddNew from '../../component/roster/AddNew';
+
 import '../../styles/Roster.css'
 import 'react-big-calendar/lib/css/react-big-calendar.css';
 import MyDrawer from '../../component/common/MyDrawer';
-import MyDatePicker from '../../component/common/MyDatePicker';
+
 
 const localizer = momentLocalizer(moment)
 const format = 'HH:mm';
 const { TextArea } = Input;
 
 function RosterDetails() {
-    const [addNew, setaddNew] = useState(false)
+
     const options = [
         {
             label: 'New Event',
@@ -201,7 +201,7 @@ function RosterDetails() {
                                 // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
                                 // value={drawerIpnuts?.LookupType?.code}  
                                 />
-                                <h1 className="error-text"></h1>
+                                {/* <h1 className="error-text"></h1> */}
                             </div>
                             <p className="error"></p>
                         </div>
@@ -217,7 +217,7 @@ function RosterDetails() {
                                 // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
                                 // value={drawerIpnuts?.LookupType?.code}  
                                 />
-                                <h1 className="error-text"></h1>
+                                {/* <h1 className="error-text"></h1> */}
                             </div>
                             <p className="error"></p>
                         </div>
@@ -230,7 +230,7 @@ function RosterDetails() {
                             <p className="star-white">*</p>
                             <div className="inpt-sub-con">
                                 <TimePicker.RangePicker format={format} style={{ width: '100%', borderRadius: '3px' }} />
-                                <h1 className="error-text"></h1>
+                                {/* <h1 className="error-text"></h1> */}
                             </div>
                             <p className="error"></p>
                         </div>
@@ -245,7 +245,7 @@ function RosterDetails() {
                                 <TextArea
                                     rows={7}
                                 />
-                                <h1 className="error-text"></h1>
+                                {/* <h1 className="error-text"></h1> */}
                             </div>
                             <p className="error"></p>
                         </div>

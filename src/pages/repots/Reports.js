@@ -1,11 +1,10 @@
 import React from 'react'
 import { useTableColumns } from '../../context/TableColumnsContext '
 import TableComponent from '../../component/common/TableComponent'
-import { useLocation } from 'react-router-dom'
+
 
 function Reports({screenName}) {
     const {gridData} = useTableColumns()
-    const location = useLocation()
      
   return (
     <TableComponent data={gridData} screenName="Profile"   />

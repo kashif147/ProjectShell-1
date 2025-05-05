@@ -14,7 +14,6 @@ import ClaimsDetails from "./pages/Claims/ClaimsDetails";
 import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
 import Filter from "./pages/Filters/Filter";
-import Claims from "./pages/Claims/Claims";
 import TransferSummary from "./pages/Transfers/TransferSummary";
 import ClaimsById from "./pages/Claims/ClaimsById";
 import CasesById from "./pages/Cases/CasesById";
@@ -40,7 +39,6 @@ import RemindersSummary from "./pages/reminders/RemindersSummary";
 import Cancallation from "./pages/Cancallation";
 import Batches from "./pages/finance/Batches";
 import Import from "./pages/finance/Import";
-import { useTableColumns } from "./context/TableColumnsContext ";
 import "antd/dist/reset.css";
 import BatchMemberSummary from "./pages/finance/BatchMemberSummary";
 

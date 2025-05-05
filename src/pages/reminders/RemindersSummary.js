@@ -1,9 +1,7 @@
 import React from 'react'
 import TableComponent from '../../component/common/TableComponent'
-import { useTableColumns } from '../../context/TableColumnsContext '
 
 function RemindersSummary() {
-           const{gridData} = useTableColumns()
        const tableData = [
             {
               "key": "1",
