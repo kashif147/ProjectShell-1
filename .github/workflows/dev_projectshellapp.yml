@@ -1,6 +1,3 @@
-# Docs for the Azure Web Apps Deploy action: https://github.com/Azure/webapps-deploy
-# More GitHub Actions for Azure: https://github.com/Azure/actions
-
 name: Build and deploy Node.js app to Azure Web App - ProjectShellApp
 
 on:
@@ -13,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read #This is required for actions/checkout
+      contents: read # This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -23,11 +20,21 @@ jobs:
         with:
           node-version: '22.x'
 
-      - name: npm install, build, and test
+      # Install dependencies
+      - name: Install dependencies
+        run: npm install
+
+      # Build the project with increased memory limit
+      - name: Build project with increased memory limit
         run: |
-          npm install
-          npm run build --if-present
-          npm run test --if-present
+          node --max-old-space-size=8192 $(which npm) run build --verbose
+
+      # Optionally, check for memory-related errors
+      - name: Check for memory issues
+        run: dmesg | grep -i 'out of memory'
+
+      - name: npm test (optional)
+        run: npm run test --if-present
 
       - name: Zip artifact for deployment
         run: zip release.zip ./* -r
@@ -45,8 +52,8 @@ jobs:
       name: 'Production'
       url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
-      id-token: write #This is required for requesting the JWT
-      contents: read #This is required for actions/checkout
+      id-token: write
+      contents: read
 
     steps:
       - name: Download artifact from build job
@@ -71,4 +78,3 @@ jobs:
           app-name: 'ProjectShellApp'
           slot-name: 'Production'
           package: .
-          
