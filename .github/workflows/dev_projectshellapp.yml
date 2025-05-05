@@ -10,7 +10,7 @@ jobs:
   build:
     runs-on: ubuntu-latest
     permissions:
-      contents: read
+      contents: read # This is required for actions/checkout
 
     steps:
       - uses: actions/checkout@v4
@@ -18,32 +18,26 @@ jobs:
       - name: Set up Node.js version
         uses: actions/setup-node@v3
         with:
-          node-version: '22.x'  # ✅ Latest version as you requested
+          node-version: '22.x'
 
-      - name: Cache node modules
-        uses: actions/cache@v3
-        with:
-          path: ~/.npm
-          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
-          restore-keys: |
-            ${{ runner.os }}-node-
-
-      - name: npm install
+      # Install dependencies
+      - name: Install dependencies
         run: npm install
 
-      - name: npm build 
+      # Build the project with increased memory limit
+      - name: Build project with increased memory limit
         run: |
-          set -o pipefail
-          npm run build --if-present 2>&1 | tee build.log
-        continue-on-error: true  # ✅ Ignore warnings, continue on non-critical errors
+          node --max-old-space-size=8192 $(which npm) run build --verbose
 
-      - name: npm test (optional, warnings allowed)
-        run: |
-          npm run test --if-present 2>&1 | tee test.log
-        continue-on-error: true
+      # Optionally, check for memory-related errors
+      - name: Check for memory issues
+        run: dmesg | grep -i 'out of memory'
+
+      - name: npm test (optional)
+        run: npm run test --if-present
 
       - name: Zip artifact for deployment
-        run: zip -r release.zip ./*
+        run: zip release.zip ./* -r
 
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
@@ -56,7 +50,7 @@ jobs:
     needs: build
     environment:
       name: 'Production'
-      url: https://projectshellapp.azurewebsites.net  # Or use your actual domain
+      url: ${{ steps.deploy-to-webapp.outputs.webapp-url }}
     permissions:
       id-token: write
       contents: read
@@ -68,10 +62,8 @@ jobs:
           name: node-app
 
       - name: Unzip artifact for deployment
-        run: |
-          mkdir deploy_dir
-          unzip release.zip -d deploy_dir
-
+        run: unzip release.zip
+      
       - name: Login to Azure
         uses: azure/login@v2
         with:
@@ -79,9 +71,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_2C993618D2234ABB83AB827383DC5A62 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_907B7AA8684242F288B17F09A1F17770 }}
 
-      - name: Deploy to Azure Web App
+      - name: 'Deploy to Azure Web App'
+        id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'ProjectShellApp'
           slot-name: 'Production'
-          package: deploy_dir
+          package: .
