@@ -1,6 +1,8 @@
-import React from 'react'
+import {useState} from 'react'
 import TableComponent from '../../component/common/TableComponent';
-import { Row, Col } from 'antd'; // ✅ IMPORT Row and Col
+import { Row, Col, Button,  } from 'antd'; // ✅ IMPORT Row and Col
+import TrigerBatchMemberDrawer from '../../component/finanace/TrigerBatchMemberDrawer';
+
 
 const inputStyle = { // ✅ DEFINE inputStyle BEFORE using it
   width: '100%',
@@ -14,7 +16,7 @@ const inputStyle = { // ✅ DEFINE inputStyle BEFORE using it
 };
 
 function BatchMemberSummary() {
-    
+  const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false)
   const dataSource = [
     {
       key: '1',
@@ -89,12 +91,61 @@ function BatchMemberSummary() {
         <input value="345" disabled style={inputStyle} />
       </Col>
     </Row>  
+    <Row gutter={[16, 16]} style={{ paddingLeft: '35px', paddingRight: '35px', paddingBottom: '20px', }}>
+  <Col span={4}>
+    <label>Total Arrears (€)</label>
+    <input
+      value="3000"
+      disabled
+      style={{
+        width: '100%',
+        padding: '6px 11px',
+        borderRadius: '6px',
+        border: '1px solid #d9d9d9',
+        backgroundColor: '#f5f5f5',
+        color: 'rgba(0, 0, 0, 0.85)',
+        display: 'block',
+        marginTop: '4px'
+      }}
+    />
+  </Col>
+  <Col span={4}>
+    <label>Total Current (€):</label>
+    <input value="5000" disabled style={inputStyle} />
+  </Col>
+  <Col span={4}>
+    <label>Total Advance</label>
+    <input value="700" disabled style={inputStyle} />
+  </Col>
+  <Col span={4}>
+    <label>Batch Total (€)</label>
+    <input value="€4,000" disabled style={inputStyle} />
+  </Col>
+  <Col span={4}>
+    <label>Source</label>
+    <input value="Testing Source" disabled style={inputStyle} />
+  </Col>
+  <Col span={4} style={{ display: 'flex', alignItems: 'flex-end' }}>
+    <Button
+      style={{
+        backgroundColor: "#215e97",
+        color: "white",
+        borderRadius: "3px",
+        width: "100%"
+      }}
+      onClick={() => setIsBatchmemberOpen(!isBatchmemberOpen)}
+    >
+      Add Members
+    </Button>
+  </Col>
+</Row> 
             <TableComponent data={dataSource} screenName="BatchMemberSummary" />
             {/* <Table
   columns={columns}
   dataSource={dataSource} // replace with your data array
   rowKey="id" // replace with a unique key field from your data
 /> */}
+        <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
         </div>
     )
 }
