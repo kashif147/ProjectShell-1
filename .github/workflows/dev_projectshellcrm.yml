@@ -75,5 +75,6 @@ jobs:
         uses: azure/webapps-deploy@v3
         with:
           app-name: 'ProjectShellCRM'
-          package: .
+          slot-name: 'Production'
+          package: build
           
