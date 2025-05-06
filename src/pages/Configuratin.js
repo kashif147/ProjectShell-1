@@ -8,15 +8,12 @@ import { SearchOutlined } from "@ant-design/icons";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
-import { UserOutlined } from "@ant-design/icons";
 import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
 import { tableData } from "../Data";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
 import { MdOutlineScreenSearchDesktop } from "react-icons/md";
-import { FiPlusCircle } from "react-icons/fi";
-import { getAllLookupsType } from '../features/LookupTypeSlice';
 import { getAllLookups } from '../features/LookupsSlice'
 import axios from "axios";
 import { useDispatch, useSelector } from 'react-redux';
