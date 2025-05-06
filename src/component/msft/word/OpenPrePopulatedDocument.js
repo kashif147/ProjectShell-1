@@ -21,7 +21,7 @@ const OpenPrePopulatedDocument = () => {
           parentReference: { path: destinationPath },
         });
 
-      console.log('Template copied:', copyResponse);
+   
 
       const documentWebUrl = await getFileIdByName(graphClient, newDocumentName, destinationPath);
 

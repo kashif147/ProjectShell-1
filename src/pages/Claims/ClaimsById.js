@@ -56,25 +56,7 @@ const DragIndexContext = createContext({
     }
     return style;
   };
-  const TableHeaderCell = (props) => {
-    const dragState = useContext(DragIndexContext);
-    const { attributes, listeners, setNodeRef, isDragging } = useSortable({
-      id: props.id,
-    });
-    const style = {
-      ...props.style,
-      cursor: 'move',
-      ...(isDragging
-        ? {
-            position: 'relative',
-            zIndex: 9999,
-            userSelect: 'none',
-          }
-        : {}),
-      ...dragActiveStyle(dragState, props.id),
-    };
-    return <th {...props} ref={setNodeRef} style={style} {...attributes} {...listeners} />;
-  };
+ 
 
   const baseColumns = [
     {

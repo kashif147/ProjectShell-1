@@ -1,4 +1,4 @@
-import { React, useState, useEffect } from 'react'
+import { React, useState,  } from 'react'
 import "../../styles/Login.css"
 // import loginImg from "../../assets/images/img1.png"
 import loginImg from "../../assets/images/gra_logo.png"
@@ -11,23 +11,19 @@ import { useMsal } from '@azure/msal-react';
 import { InteractionStatus } from '@azure/msal-browser';
 import { useDispatch, useSelector } from 'react-redux';
 import { loginUser } from '../../features/AuthSlice';
-import { BatchResponseContent } from '@microsoft/microsoft-graph-client';
+
 
 const Login = () => {
     const dispatch = useDispatch();
     
     const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
     const navigate = useNavigate(); // Use the useHistory hook
-    const { loading, error, user } = useSelector((state) => state.auth);
+    const { loading, } = useSelector((state) => state.auth);
 
     const handleLogin = async() => {
         if (inProgress !== InteractionStatus.None) {
             return;
         }
-
-        const loginRequest = {
-            scopes: ['User.Read'],
-        };
 
         await instance.loginPopup({
             scopes: ["openid", "profile", "User.Read", "Mail.Read"], // Scopes you need
@@ -48,11 +44,11 @@ const Login = () => {
         });
     };
   
-    const handleLogout = () => {
-        instance.logoutPopup().catch(e => {
-            console.error("Error during logout:", e);
-        });
-    };
+    // const handleLogout = () => {
+    //     instance.logoutPopup().catch(e => {
+    //         console.error("Error during logout:", e);
+    //     });
+    // };
     const handleInputChange = (target, value) => {
         // Destructure the name from target
         setCredentials((prev) => ({ ...prev, [target]: value }));

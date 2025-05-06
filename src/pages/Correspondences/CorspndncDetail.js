@@ -104,7 +104,7 @@ function CorspndncDetail() {
         {
             key: '1',
             label: <div className='d-flex align-items-center'>
-                {/* <img src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} /> */}
+                <img alt='' src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} />
                 <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
                     Email
                 </h4>
@@ -167,7 +167,7 @@ function CorspndncDetail() {
         {
             key: '2',
             label: <div className='d-flex align-items-center'>
-                <img src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} />
+                <img src={icon} alt="" style={{ width: '18px', height: '18px', marginRight: '4px' }} />
                 <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
                     Calls
                 </h4>
@@ -220,7 +220,7 @@ function CorspndncDetail() {
         {
             key: '3',
             label: <div className='d-flex align-items-center'>
-                <img src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} />
+                <img src={icon} alt="" style={{ width: '18px', height: '18px', marginRight: '4px' }} />
                 <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
                     Letters
                 </h4>
@@ -296,7 +296,7 @@ function CorspndncDetail() {
         {
             key: '4',
             label: <div className='d-flex align-items-center'>
-                <img src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} />
+                <img src={icon} alt='' style={{ width: '18px', height: '18px', marginRight: '4px' }} />
                 <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
                     SMS
                 </h4>
@@ -384,7 +384,7 @@ function CorspndncDetail() {
       }
       const [selectionType, setSelectionType] = useState('checkbox');
       const rowSelection = {
-          onChange: (selectedRowKeys, selectedRows) => {
+          onChange: () => {
           },
           getCheckboxProps: (record) => ({
               disabled: record.name === 'Disabled User',
