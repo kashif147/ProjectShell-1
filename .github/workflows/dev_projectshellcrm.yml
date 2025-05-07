@@ -71,10 +71,10 @@ jobs:
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_F6B1D39DE6C1430D92EA23FE95510021 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_B9BB435DFBC94FFF8073519DF27F5C9C }}
 
+
       - name: 'Deploy to Azure Web App'
         id: deploy-to-webapp
         uses: azure/webapps-deploy@v3
         with:
-         app-name: 'ProjectShellCRM'
-         package: release.zip
-          
+           app-name: 'ProjectShellCRM'
+           package: release.zip
