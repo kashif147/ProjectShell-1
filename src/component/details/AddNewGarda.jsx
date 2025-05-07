@@ -223,7 +223,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         add={handleSubmit}
         isGarda={isGard ? true : false}
         isGardaCheckbx={isGard ? false : true}
-        width='1400px'>
+        width='1000px'>
         <div className='details-con-header1'>
           <Row>
             <Col span={12}>

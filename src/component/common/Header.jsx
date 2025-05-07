@@ -267,7 +267,7 @@ function Header() {
   return (
     <div className="Header-border overflow-y-hidden bg pt-2 pb-2" style={{borderBottom:'2px solid #dcdfe4', width:'100vw' }}>
       <div className="d-flex justify-content-between align-items-center " >
-        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '54px', width: '33%' }}>
+        <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '2.5%', width: '33%' }}>
           {/* <TbGridDots size={25} color={'#fff'} style={{marginRight: '32px',}}/> */}
           <AppLauncher />
           {/* <img
