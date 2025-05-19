@@ -2,10 +2,10 @@ import React from 'react'
 import avator from '../../assets/images/Avatar.png'
 import { PiDotsThreeBold } from "react-icons/pi";
 
-function ChatComponent({ isborder = false, isSimple = true, }) {
+function ChatComponent({ isborder = false, isSimple = true,Subject,ShortDis, onclick }) {
     return (
 
-        <div className={`p-2 row chat-main cursor-pointer h-auto ${isborder == true ? 'border1' : ''}`} >
+        <div className={`p-2 row chat-main cursor-pointer h-auto ${isborder == true ? 'border1' : ''}`} onClick={onclick} style={{ borderRadius: '8px', backgroundColor: '#FFFFFF', height: '78px' }}>
             {
                 isSimple == true ?
                     <>
@@ -14,19 +14,19 @@ function ChatComponent({ isborder = false, isSimple = true, }) {
                         </div>
 
                         <div className='col-md-8'>
-                            <h5 style={{ fontSize: '16px', fontWeight: 500, cursor: 'pointer' }}>Ant Design Part 01</h5>
+                            <h5 style={{ fontSize: '16px', fontWeight: 500, cursor: 'pointer' }}>{Subject}</h5>
                             <div className='d-flex '>
 
                                 <h4 style={{ overflow: 'hidden', fontSize: '14px', cursor: 'pointer', fontWeight: '400', color: '#00000073' }}>
-                                    Ant Design, a design language for background applications, is refined by Ant UED Team.
+                                    {ShortDis}
                                 </h4>
                             </div>
                         </div>
-                        <div className='col-md-2 cursor-pointer'>
+                        {/* <div className='col-md-2 cursor-pointer'>
                          <p style={{color:'#333333'}}>
                          Content
                             </p>   
-                        </div>
+                        </div> */}
                     </>
                     :
                     <>
@@ -36,9 +36,9 @@ function ChatComponent({ isborder = false, isSimple = true, }) {
                                     <img src={avator} style={{ width: "32px" }} />
                                 </div>
                                 <div className='col-md-11'>
-                                    <h5 style={{ fontSize: '16px', fontWeight: 500, cursor: 'pointer' }}>Ant Design Part 01</h5>
+                                    <h5 style={{ fontSize: '16px', fontWeight: 500, cursor: 'pointer' }}>{Subject}</h5>
                                     <h4 style={{ overflow: 'hidden', fontSize: '14px', cursor: 'pointer', fontWeight: '400', color: '#00000073' }}>
-                                        Ant Design, a design language for background applications, is refined by<br></br> Ant UED Team.
+                                        
                                     </h4>
 
                                 </div>

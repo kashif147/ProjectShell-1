@@ -1,5 +1,7 @@
-import React from 'react';
+import React, { useContext } from 'react';
 import { Form, Input, Select, DatePicker, Button, Row, Col, Card, Typography, Divider } from 'antd';
+import * as XLSX from 'xlsx';
+import { ExcelContext } from '../../context/ExcelContext';
 import { UploadOutlined } from '@ant-design/icons';
 import '../../styles/CreateBatchPayment.css'; // You can inline this if needed
 
@@ -7,8 +9,28 @@ const { TextArea } = Input;
 const { Title, Text } = Typography;
 
 const CreateBatchPayment = () => {
+  
   const [form] = Form.useForm();
+  const {excelData ,setExcelData } = useContext(ExcelContext);
+  
+console.log('excelData', excelData);
+  const handleFileUpload = (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
 
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const data = new Uint8Array(e.target.result);
+      const workbook = XLSX.read(data, { type: 'array' });
+
+      const sheetName = workbook.SheetNames[0];
+      const worksheet = workbook.Sheets[sheetName];
+
+      const json = XLSX.utils.sheet_to_json(worksheet);
+      setExcelData(json); // Store in global context
+    };
+    reader.readAsArrayBuffer(file);
+  };
   return (
     <div className="create-batch-container">
       <div className="header">
@@ -47,7 +69,7 @@ const CreateBatchPayment = () => {
                 </Form.Item>
 
                 <Form.Item label="Upload Excel File (optional)" name="file">
-            <Input type="file" className="custom-input" style={{ height: '40px', width:'100%'}} />
+            <Input type="file" accept=".xlsx, .xls" onChange={handleFileUpload} className="custom-input" style={{ height: '40px', width:'100%'}} />
                 </Form.Item>
 
                 {/* <Form.Item>

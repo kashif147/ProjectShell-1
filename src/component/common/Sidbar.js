@@ -96,6 +96,9 @@ const Sidbar = () => {
       case 'Batches':
         navigate("/Batches", { state: { search: 'Batches' } });
         break;
+      case 'LandingPage':
+        navigate("/LandingPage", { state: { search: 'LandingPage' } });
+        break;
       default:
         console.log('Unknown key:', key);
     }

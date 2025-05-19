@@ -5,6 +5,7 @@ import App from './App';
 import reportWebVitals from './reportWebVitals';
 import { BrowserRouter as Router } from 'react-router-dom';
 import { TableColumnsProvider } from './context/TableColumnsContext ';
+import { ExcelProvider } from './context/ExcelContext';
 import {Provider }from 'react-redux'
 import store from './store/Store';
 
@@ -14,11 +15,13 @@ const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <Provider store={store}>
 <Router>
+  <ExcelProvider>
 <TableColumnsProvider>
 
   <App />
 
 </TableColumnsProvider>
+</ExcelProvider>
 
 </Router>
 </Provider>

@@ -54,6 +54,7 @@ function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
     link.click();
     document.body.removeChild(link);
   };
+  
   const columns = [
     {
       title: 'Name',

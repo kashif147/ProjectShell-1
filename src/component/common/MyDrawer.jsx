@@ -1,4 +1,4 @@
-import { React, useState, useEffect } from "react";
+import { React, useState, useEffect,useContext } from "react";
 import { Button, Drawer, Space, Pagination, Input, Table, Checkbox, Radio, } from "antd";
 import MySelect from "./MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
@@ -12,6 +12,7 @@ import { BiRefresh } from "react-icons/bi";
 import { useDispatch, useSelector } from 'react-redux';
 import '../../styles/MyDrawer.css'
 import { useTableColumns } from '../../context/TableColumnsContext ';
+import { ExcelContext } from "../../context/ExcelContext";
 import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
 import { getContactTypes } from "../../features/ContactTypeSlice";
@@ -34,6 +35,7 @@ import {
 import { FaAngleRight } from "react-icons/fa";
 function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isGardaCheckbx, isManual }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
+     const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
     Solicitors: {
@@ -783,7 +785,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 820, isHeader =
                   <Button className="me-1 gray-btn butn">
                     <FaAngleLeft className="deatil-header-icon" />
                   </Button>
-                  <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>15 of 30</p>
+                  <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{selectedRowIndex} of {selectedRowData?.length}</p>
                   <Button className="me-1 gray-btn butn">
                     <FaAngleRight className="deatil-header-icon" />
                   </Button>

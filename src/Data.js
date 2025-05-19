@@ -1084,3 +1084,92 @@ export const notificationsMsg = {
  insertion:{Success:'Data inserted successfully', falier:'Failed to insert. Please try again later.'},
  updating:{sucess:'You have successfully Updated.', falier:'Failed to update. Please try again later.'}
 }
+export const emails = {
+  "value": [
+    {
+      "id": "AAMkADExample1",
+      "subject": "Welcome to the Team!",
+      "bodyPreview": "Hey there, just wanted to welcome you onboard!",
+      "sender": {
+        "emailAddress": {
+          "name": "HR Team",
+          "address": "hr@example.com"
+        }
+      },
+      "receivedDateTime": "2025-05-14T09:00:00Z",
+      "isRead": false,
+      "body": {
+        "contentType": "html",
+        "content": "<p>Hi there,</p><p>We’re thrilled to have you join us! Your onboarding session will be on Monday at 10 AM.</p><p>If you have any questions, feel free to reach out.</p><p>Best,<br>HR Team</p>"
+      }
+    },
+    {
+      "id": "AAMkADExample2",
+      "subject": "Project Kickoff Meeting",
+      "bodyPreview": "The kickoff meeting for Project Phoenix is scheduled.",
+      "sender": {
+        "emailAddress": {
+          "name": "Project Manager",
+          "address": "pm@example.com"
+        }
+      },
+      "receivedDateTime": "2025-05-14T08:30:00Z",
+      "isRead": true,
+      "body": {
+        "contentType": "html",
+        "content": "<p>Hello Team,</p><p>The kickoff meeting for <strong>Project Phoenix</strong> is scheduled for tomorrow at 2 PM in Room 302.</p><p>Please review the attached agenda beforehand.</p><p>Regards,<br>Project Manager</p>"
+      }
+    },
+    {
+      "id": "AAMkADExample3",
+      "subject": "Weekly Status Update",
+      "bodyPreview": "Here is the weekly status update for our current projects.",
+      "sender": {
+        "emailAddress": {
+          "name": "Team Lead",
+          "address": "lead@example.com"
+        }
+      },
+      "receivedDateTime": "2025-05-13T17:00:00Z",
+      "isRead": false,
+      "body": {
+        "contentType": "html",
+        "content": "<p>Hi Team,</p><p>Attached you'll find the weekly status update. Please review and be ready to discuss during tomorrow's standup.</p><p>Thanks,<br>Team Lead</p>"
+      }
+    },
+    {
+      "id": "AAMkADExample4",
+      "subject": "IT Maintenance Notification",
+      "bodyPreview": "Scheduled maintenance will occur this weekend.",
+      "sender": {
+        "emailAddress": {
+          "name": "IT Support",
+          "address": "itsupport@example.com"
+        }
+      },
+      "receivedDateTime": "2025-05-13T12:45:00Z",
+      "isRead": true,
+      "body": {
+        "contentType": "html",
+        "content": "<p>Dear All,</p><p>There will be scheduled IT maintenance this Saturday from 8 PM to 12 AM. Access to internal systems may be limited during this time.</p><p>Regards,<br>IT Support</p>"
+      }
+    },
+    {
+      "id": "AAMkADExample5",
+      "subject": "Lunch & Learn Invitation",
+      "bodyPreview": "Join us for a session on effective communication.",
+      "sender": {
+        "emailAddress": {
+          "name": "Learning & Development",
+          "address": "learning@example.com"
+        }
+      },
+      "receivedDateTime": "2025-05-12T11:15:00Z",
+      "isRead": false,
+      "body": {
+        "contentType": "html",
+        "content": "<p>Hello,</p><p>You're invited to our next Lunch & Learn session on <strong>Effective Communication</strong>. It will be held on Wednesday at noon in the conference hall.</p><p>Lunch will be provided.</p><p>Cheers,<br>Learning & Development</p>"
+      }
+    }
+  ]
+}

@@ -46,7 +46,7 @@ const ReadEmails = () => {
         <ul>
           {emails.map((email) => (
             <li key={email.id}>
-              <strong>From:</strong> {email.from.emailAddress.name} <br />
+              <strong>From:</strong> {email?.from?.emailAddress?.name} <br />
               <strong>Subject:</strong> {email.subject} <br />
               <strong>Received:</strong> {new Date(email.receivedDateTime).toLocaleString()} <br />
               <p>{email.bodyPreview}</p>

@@ -23,7 +23,6 @@ console.log(ProfileDetails[0]?.PaymentType,"ProfileDetails")
   const handleSubmit = (values) => {
     console.log("Form Submitted:", values);
   };
-
   return (
     <div className="">
       <div style={{ padding: "0px" }}

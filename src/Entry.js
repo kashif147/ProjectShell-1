@@ -149,13 +149,14 @@ function Entry() {
             <ResizableComp />
           )}
       </div>
-      {((location?.pathname === "/Details" ||location?.pathname === "/CorspndncDetail"||location?.pathname === "/Doucmnets" ) && (
-      <div style={{width:'100%',height:'50px'}} className="footer">
+    
+      </div>
+      </div>
+        {((location?.pathname === "/Details" ||location?.pathname === "/CorspndncDetail"||location?.pathname === "/Doucmnets" ) && (
+      <div style={{width:'100%',height:'5vh'}} className="footer">
       <MyFooter />
       </div>
       ))}
-      </div>
-      </div>
     </div>
   );
   

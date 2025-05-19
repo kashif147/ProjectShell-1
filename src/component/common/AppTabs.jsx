@@ -7,6 +7,7 @@ import CorspndncDetail from '../../pages/Correspondences/CorspndncDetail';
 import RosterDetails from '../../pages/roster/RosterDetails';
 import SimpleMenu from './SimpleMenu';
 import { BsSliders, BsThreeDots } from "react-icons/bs";
+import FinanceByID from '../finanace/FinanceByID';
 
 function AppTabs() {
   const { TabPane } = Tabs;
@@ -24,7 +25,7 @@ function AppTabs() {
     {
       key: '2',
       label: 'Finance',
-      children: <MyDeatails />,
+      children: <FinanceByID />,
     },
     // {
     //   key: '3',

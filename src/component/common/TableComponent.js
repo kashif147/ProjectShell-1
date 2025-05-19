@@ -8,7 +8,7 @@ import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import { AiOutlineThunderbolt } from "react-icons/ai";
 import { MdKeyboard } from 'react-icons/md';
-
+import { ExcelContext } from "../../context/ExcelContext";
 
 import SimpleMenu from "./SimpleMenu";
 import {
@@ -65,6 +65,7 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 
 const TableComponent = ({ data, screenName, redirect }) => {
   const location = useLocation();
+     const {        selectedRowIndex,setSelectedRowIndex, selectedRowData, setSelectedRowData } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
   const [manualPayment, setmanualPayment] = useState(false)
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
@@ -83,7 +84,10 @@ const TableComponent = ({ data, screenName, redirect }) => {
   );
 
     const fileInputRef = useRef(null);
-  
+    const handleRowClick = (record, rowIndex) => {
+    setSelectedRowData([record]);
+    setSelectedRowIndex(rowIndex);
+  };
     // Function to trigger file input
     const handleUploadClick = () => {
       if (fileInputRef.current) {
@@ -223,7 +227,11 @@ const TableComponent = ({ data, screenName, redirect }) => {
               />
               {
                 location?.pathname==="/BatchMemberSummary" &&(
-                  <MdKeyboard style={{ fontSize: "15px", color: '#595959', color:'inherit' }}  onClick={()=>setmanualPayment(!isBatchmemberOpen)}/>
+                  <MdKeyboard style={{ fontSize: "15px", color: '#595959', color:'inherit' }}  onClick={()=>{
+                    setmanualPayment(!isBatchmemberOpen)
+                   handleRowClick(record, index)
+                  }
+                  }/>
                 )
               }
               {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
@@ -651,7 +659,9 @@ const TableComponent = ({ data, screenName, redirect }) => {
     <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
     <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
     <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
-   <MyDrawer open={manualPayment} onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760} isManual={true}>
+   <MyDrawer open={manualPayment} 
+   onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760} 
+   isManual={true}>
    <ManualPaymentEntry />
     </MyDrawer>
     </DndContext>

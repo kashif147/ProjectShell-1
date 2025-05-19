@@ -160,6 +160,11 @@ export const subscriptionItems = [
     icon: <div className="icon"><FaRegHandshake /></div>,
     label: <div className="sidebar-label">Recruit a Friend</div>,
   },
+  {
+    key: 'LandingPage',
+    icon: <div className="icon"><FaRegHandshake /></div>,
+    label: <div className="sidebar-label">LandingPage</div>,
+  },
 ];
 export const configurationItems = [
   {

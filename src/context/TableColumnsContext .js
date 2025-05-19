@@ -190,13 +190,13 @@ const staticColumns = {
     
   ],
   BatchMemberSummary: [
-    { dataIndex: "MemberName", title: "Member Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "BankAccount", title: "Bank Account", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "PayrollNo", title: "Payroll No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Member Name", title: "Member Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Bank Account", title: "Bank Account", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Payroll No", title: "Payroll No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Arrears", title: "Arrears", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Comments", title: "Comments", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Advance", title: "Advance", ellipsis: true, isGride: true, isVisible: true, width: 100 },
-    { dataIndex: "TotalAmount", title: "Total Amount", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+    { dataIndex: "Total Amount", title: "Total Amount", ellipsis: true, isGride: true, isVisible: true, width: 100 },
     // { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     // { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
   
