@@ -1,5 +1,5 @@
-import React from 'react';
-import SubTableComp from '../../component/common/SubTableComp';
+
+import SubTableComp from '../component/common/SubTableComp';
 
 function HistoryByID() {
   const columns = [
