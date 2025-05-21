@@ -160,7 +160,7 @@ function RosterDetails() {
     };
 
     return (
-        <div>
+        <div className='mt-2'>
             <div className='row'>
                 <div className='col-md-2'>
 

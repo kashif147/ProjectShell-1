@@ -1,8 +1,13 @@
 import { useState, useContext } from 'react'
 import TableComponent from '../../component/common/TableComponent';
-import { Row, Col, Button, } from 'antd'; // ✅ IMPORT Row and Col
+import { Row, Col, Button, Tabs } from 'antd'; // ✅ IMPORT Row and Col
 import TrigerBatchMemberDrawer from '../../component/finanace/TrigerBatchMemberDrawer';
 import { ExcelContext } from '../../context/ExcelContext';
+import '../../styles/ManualEntry.css'
+import ManualPaymentEntry from '../../component/finanace/ManualPaymentEntry';
+import MyDrawer from '../../component/common/MyDrawer';
+import CommonPopConfirm from '../../component/common/CommonPopConfirm';
+
 
 
 const inputStyle = { // ✅ DEFINE inputStyle BEFORE using it
@@ -18,6 +23,8 @@ const inputStyle = { // ✅ DEFINE inputStyle BEFORE using it
 
 function BatchMemberSummary() {
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
+  const [manualPayment, setmanualPayment] = useState(false)
+
   console.log("selectedRowData", selectedRowData);
   console.log("selectedRowIndex", selectedRowIndex);
   const inputStyle1 = {
@@ -59,7 +66,23 @@ function BatchMemberSummary() {
       Comments: 'Created on 2024-09-07',
     },
   ];
+  const items = [
+    {
+      key: '1',
+      label: 'Batch Payments',
+      children: <TableComponent data={excelData} screenName="BatchMemberSummary" />
+    },
+    {
+      key: '2',
+      label: 'Exceptions',
+      children: <TableComponent data={excelData} screenName="BatchMemberSummary" />
+    },
 
+  ];
+  const [activeKey, setactiveKey] = useState("1")
+  const onChange = key => {
+    setactiveKey(key)
+  };
   return (
     <div className='' style={{ width: '93vw', }}>
       <Row gutter={[16, 16]} style={{ paddingLeft: ' 35px', paddingRight: '35px', paddingBottom: '20px', paaddingTop: '20px' }}>
@@ -103,10 +126,6 @@ function BatchMemberSummary() {
             Source.xlsx
           </a>
         </Col>
-        {/* <Col span={4}>
-        <label>Total Records</label>
-        <input value="345" disabled style={inputStyle} />
-      </Col> */}
       </Row>
       <Row gutter={[16, 16]} style={{ paddingLeft: '35px', paddingRight: '35px', paddingBottom: '20px', }}>
         <Col span={4}>
@@ -148,26 +167,46 @@ function BatchMemberSummary() {
       </Row>
       <Row gutter={[16, 16]} style={{ paddingLeft: '35px', paddingRight: '35px', paddingBottom: '20px', }}>
         <Col span={2}>
-          <Button
-            style={{
-              backgroundColor: "#215e97",
-              color: "white",
-              borderRadius: "3px",
-              width: "100%"
-            }}
-            onClick={() => setIsBatchmemberOpen(!isBatchmemberOpen)}
-          >
-            Add Members
-          </Button>
+          <div className='d-flex gap-2'>
+            <Button
+              style={{
+                backgroundColor: "#215e97",
+                color: "white",
+                borderRadius: "3px",
+                width: "100%"
+              }}
+              onClick={() => setmanualPayment(!manualPayment)}
+            >
+              Add Members
+            </Button>
+            <CommonPopConfirm
+              title="Do you want to exclude member?"
+              onConfirm={() => console.log('Confirmed')}
+              onCancel={() => console.log('Cancelled')}
+            >
+              <Button
+                style={{
+                  backgroundColor: "#215e97",
+                  color: "white",
+                  borderRadius: "3px",
+                  width: "100%"
+                }}
+
+              >
+                Exclude Members
+              </Button>
+            </CommonPopConfirm>
+
+          </div>
         </Col>
       </Row>
-      <TableComponent data={excelData} screenName="BatchMemberSummary" />
-      {/* <Table
-  columns={columns}
-  dataSource={dataSource} // replace with your data array
-  rowKey="id" // replace with a unique key field from your data
-/> */}
+      <Tabs activeKey={activeKey} items={items} onChange={onChange} className='batch-tabs' />
       <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={() => setIsBatchmemberOpen(!isBatchmemberOpen)} />
+      <MyDrawer open={manualPayment}
+        onClose={() => setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760}
+        isManual={true}>
+        <ManualPaymentEntry />
+      </MyDrawer>
     </div>
   )
 }

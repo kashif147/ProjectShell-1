@@ -1,89 +1,91 @@
-import React from 'react'
-import { Table } from 'antd';
-// import "../../styles/ClaimsById.css";
+import React from 'react';
 import SubTableComp from '../../component/common/SubTableComp';
 
 function FinanceByID() {
-    
-const columns = [
-//   {
-//     title: 'Member Name',
-//     dataIndex: 'Member Name',
-//     key: 'Member Name',
-//     ellipsis: true,
-//     width: 150,
-//   },
-  {
-    title: 'Bank Account',
-    dataIndex: 'Bank Account',
-    key: 'Bank Account',
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    title: 'Payroll No',
-    dataIndex: 'Payroll No',
-    key: 'Payroll No',
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    title: 'Arrears',
-    dataIndex: 'Arrears',
-    key: 'Arrears',
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    title: 'Comments',
-    dataIndex: 'Comments',
-    key: 'Comments',
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    title: 'Advance',
-    dataIndex: 'Advance',
-    key: 'Advance',
-    ellipsis: true,
-    width: 100,
-  },
-  {
-    title: 'Total Amount',
-    dataIndex: 'Total Amount',
-    key: 'Total Amount',
-    ellipsis: true,
-    width: 100,
-  },
-];
-const dataSource = [
-  {
-    key: '1',
-    'Member Name': 'John Doe',
-    'Bank Account': '1234567890',
-    'Payroll No': 'P001',
-    Arrears: '100.00',
-    Comments: 'Late payment',
-    Advance: '200.00',
-    'Total Amount': '300.00',
-  },
-  {
-    key: '2',
-    'Member Name': 'Jane Smith',
-    'Bank Account': '0987654321',
-    'Payroll No': 'P002',
-    Arrears: '0.00',
-    Comments: 'On time',
-    Advance: '500.00',
-    'Total Amount': '500.00',
-  },
-];
+  const columns = [
+    {
+      title: 'Batch Ref No',
+      dataIndex: 'batchRefNo',
+      key: 'batchRefNo',
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: 'Payment Type',
+      dataIndex: 'paymentType',
+      key: 'paymentType',
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: 'Bank Account',
+      dataIndex: 'bankAccount',
+      key: 'bankAccount',
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: 'Advance',
+      dataIndex: 'advance',
+      key: 'advance',
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: 'Total Amount',
+      dataIndex: 'totalAmount',
+      key: 'totalAmount',
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: 'Arrears',
+      dataIndex: 'arrears',
+      key: 'arrears',
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: 'Comments',
+      dataIndex: 'comments',
+      key: 'comments',
+      ellipsis: true,
+      width: 200,
+    },
+  ];
+
+  const dataSource = [
+    {
+      key: '1',
+      batchRefNo: 'BRN001',
+      paymentType: 'Bank Transfer',
+      bankAccount: '1234567890',
+      advance: '€200.00',
+      totalAmount: '€300.00',
+      arrears: '€100.00',
+      comments: 'Late payment',
+    },
+    {
+      key: '2',
+      batchRefNo: 'BRN002',
+      paymentType: 'Bank Transfer',
+      bankAccount: '0987654321',
+      advance: '€500.00',
+      totalAmount: '€500.00',
+      arrears: '€0.00',
+      comments: 'On time',
+    },
+  ];
+
   return (
     <div className='cases-main'>
-<Table columns={columns} dataSource={dataSource}  className='claims-table'/>
-<SubTableComp columns={columns} dataSource={dataSource} className='claims-table'/>
+      <SubTableComp
+        columns={columns}
+        dataSource={dataSource}
+        className='claims-table'
+      />
     </div>
-  )
+  );
 }
 
-export default FinanceByID
+export default FinanceByID;

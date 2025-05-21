@@ -1,4 +1,4 @@
-import React, { useState, useEffect,useRef } from "react";
+import { useState, useEffect,useRef } from "react";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { FaTrashAlt } from "react-icons/fa";
@@ -12,7 +12,7 @@ import ExportPDF from "./ExportPDF";
 import { MdOutlineLocalPrintshop } from "react-icons/md";
 import { FaRegArrowAltCircleRight } from "react-icons/fa";
 import { FaUserAltSlash } from "react-icons/fa";
-import { useLocation } from "react-router-dom";
+import { Navigate, useLocation } from "react-router-dom";
 import TransferRequests from "../TransferRequests";
 import CareerBreakDrawer from "../CareerBreakDrawer";
 
@@ -24,19 +24,12 @@ function SimpleMenu({
   actions,
   vertical,
   attachedFtn,
-  isBtn = false,
-  isTable = false,
-  categoryKey = "gender",
   record,
   index
 }) {
   const [checkboxes, setCheckboxes] = useState([]);
   const [transferreq, settransferreq] = useState(false)
   const [careerBreak, setcareerBreak] = useState(false)
-  const [selectedValues, setSelectedValues] = useState({
-    checkboxes: {},
-    searchValue: "",
-  });
   const location = useLocation
   const screenName = location?.state?.search
   const [ddSearch, setddSearch] = useState("")
@@ -251,6 +244,14 @@ const handleGenerate = () => {
               Generate NFC tag
             </div>
             ):
+            key==='Roster'?
+            <div className="d-flex align-items-baseline" onClick={() => {
+             
+            }}>
+            
+            </div>
+            :
+
             (
               key
             )}

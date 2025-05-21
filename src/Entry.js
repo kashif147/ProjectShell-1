@@ -1,165 +1,135 @@
-import React from "react";
-import { BrowserRouter as Router, Route, Routes } from "react-router-dom";
+import React, { Suspense, lazy } from "react";
+import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
-import { useLocation } from "react-router-dom";
-import Dummy from "./component/common/Dummy";
-import Configuratin from "./pages/Configuratin";
-import ProfileDetails from "./pages/Profiles/ProfileDetails";
-import ProfileSummary from "./pages/Profiles/ProfileSummary";
-import CasesSummary from "./pages/Cases/CasesSummary";
-import CasesDetails from "./pages/Cases/CasesDetails";
-import ClaimSummary from "./pages/Claims/ClaimSummary";
-import ClaimsDetails from "./pages/Claims/ClaimsDetails";
+import Sidbar from "./component/common/Sidbar";
 import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
-import Filter from "./pages/Filters/Filter";
-import TransferSummary from "./pages/Transfers/TransferSummary";
-import ClaimsById from "./pages/Claims/ClaimsById";
-import CasesById from "./pages/Cases/CasesById";
-import CorrespondencesSummary from "./pages/Correspondences/CorrespondencesSummary";
-import AddNewProfile from "./pages/Profiles/AddNewProfile";
-import AddClaims from "./pages/Claims/AddClaims";
-import Login from "./pages/auth/Login";
-import LandingPage from "./component/msft/LandingPage";
-import Reports from "./pages/repots/Reports";
-import ProtectedRoute from "./Navigation/ProtectedRoute";
 import MyFooter from "./component/common/MyFooter";
-import CorspndncDetail from "./pages/Correspondences/CorspndncDetail";
-import Doucmnets from "./pages/Doucmnets";
-import RosterDetails from "./pages/roster/RosterDetails";
-import RusterSummary from "./pages/roster/RusterSummary";
-// import RousterDetails from "./pages/rouster/RousterDetails";
-import Sidbar from "./component/common/Sidbar";
-import MembershipApplication from "./pages/application/MembershipApplication";
-import ApproveMembership from "./pages/application/ApproveMembership";
-import ChangCateSumm from "./pages/Category/ChangCateSumm";
-import CateById from "./pages/Category/CateById";
-import RemindersSummary from "./pages/reminders/RemindersSummary";
-import Cancallation from "./pages/Cancallation";
-import Batches from "./pages/finance/Batches";
-import Import from "./pages/finance/Import";
-import "antd/dist/reset.css";
-import BatchMemberSummary from "./pages/finance/BatchMemberSummary";
 
-// test
+// Lazy loaded components
+const Dummy = lazy(() => import("./component/common/Dummy"));
+const Configuratin = lazy(() => import("./pages/Configuratin"));
+const ProfileDetails = lazy(() => import("./pages/Profiles/ProfileDetails"));
+const ProfileSummary = lazy(() => import("./pages/Profiles/ProfileSummary"));
+const CasesSummary = lazy(() => import("./pages/Cases/CasesSummary"));
+const CasesDetails = lazy(() => import("./pages/Cases/CasesDetails"));
+const ClaimSummary = lazy(() => import("./pages/Claims/ClaimSummary"));
+const ClaimsDetails = lazy(() => import("./pages/Claims/ClaimsDetails"));
+const ClaimsById = lazy(() => import("./pages/Claims/ClaimsById"));
+const CasesById = lazy(() => import("./pages/Cases/CasesById"));
+const Filter = lazy(() => import("./pages/Filters/Filter"));
+const TransferSummary = lazy(() => import("./pages/Transfers/TransferSummary"));
+const CorrespondencesSummary = lazy(() => import("./pages/Correspondences/CorrespondencesSummary"));
+const AddNewProfile = lazy(() => import("./pages/Profiles/AddNewProfile"));
+const AddClaims = lazy(() => import("./pages/Claims/AddClaims"));
+const Login = lazy(() => import("./pages/auth/Login"));
+const LandingPage = lazy(() => import("./component/msft/LandingPage"));
+const Reports = lazy(() => import("./pages/repots/Reports"));
+const CorspndncDetail = lazy(() => import("./pages/Correspondences/CorspndncDetail"));
+const Doucmnets = lazy(() => import("./pages/Doucmnets"));
+const RosterDetails = lazy(() => import("./pages/roster/RosterDetails"));
+const RusterSummary = lazy(() => import("./pages/roster/RusterSummary"));
+const MembershipApplication = lazy(() => import("./pages/application/MembershipApplication"));
+const ApproveMembership = lazy(() => import("./pages/application/ApproveMembership"));
+const ChangCateSumm = lazy(() => import("./pages/Category/ChangCateSumm"));
+const CateById = lazy(() => import("./pages/Category/CateById"));
+const RemindersSummary = lazy(() => import("./pages/reminders/RemindersSummary"));
+const Cancallation = lazy(() => import("./pages/Cancallation"));
+const Batches = lazy(() => import("./pages/finance/Batches"));
+const Import = lazy(() => import("./pages/finance/Import"));
+const BatchMemberSummary = lazy(() => import("./pages/finance/BatchMemberSummary"));
+const NotDesignedYet = lazy(() => import("./pages/NotDesign"));
+
+// const NotDesignedYet = lazy (()=>import("./pages/NotDesignedYet"));
+// const ProtectedRoute = lazy(() => import("./Navigation/ProtectedRoute")); // Optional
+
 function Entry() {
   const location = useLocation();
+
+  const showSidebar = location.pathname !== "/";
+  const showHeaderDetails = showSidebar;
+  const showProfileHeaderRoutes = [
+    "/Details", "/ClaimsDetails", "/CasesDetails", "/ClaimsById",
+    "/CasesById", "/AddNewProfile", "/AddClaims", "/CorspndncDetail",
+    "/Doucmnets", "/Roster"
+  ];
+  const showResizableCompRoutes = [
+    "/ClaimsDetails", "/CasesDetails", "/AddNewProfile",
+    "/AddClaims", "/ClaimsById", "/Doucmnets"
+  ];
+  const showFooterRoutes = [
+    "/Details", "/CorspndncDetail", "/Doucmnets"
+  ];
+
   return (
-    <div style={{ width: '100%', height: '100vh', overflowX: 'hidden' }}>
-      {location?.pathname !== "/" && <Header />}
-  
-      <div
-        className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}
-        style={{ width: '100%' }}
-        >
-        {location?.pathname !== "/" && (
-          <div>
-            <Sidbar />
+    <div style={{ width: "100%", height: "100vh", overflowX: "hidden" }}>
+      {showSidebar && <Header />}
+
+      <div className={`main-route ${showSidebar ? "d-flex" : ""}`} style={{ width: "100%" }}>
+        {showSidebar && <Sidbar />}
+
+        <div>
+          <div style={{ width: "100vw" }}>
+            {showHeaderDetails && <HeaderDetails />}
           </div>
-        )}
-         <div style={{}}>
-      <div style={{width: '100vw'}}>
-      {
-        location?.pathname !== "/" && 
-        <HeaderDetails />
-      }
-      </div>
-      <div 
-      className={`main-route ${location.pathname !== "/" ? "d-flex" : ""}`}>
-        {/* {(location?.pathname == "/Details"
-          || location?.pathname == "/ClaimsDetails" ||
-          location?.pathname == "/CasesDetails" ||
-          location?.pathname == "/ClaimsById" ||
-          location?.pathname == "/CasesById"
-          || location?.pathname == "/AddNewProfile"
-          || location?.pathname == "/AddClaims"
-          || location?.pathname == "/CorspndncDetail"
-          || location?.pathname == "/Doucmnets"
-          || location?.pathname == "/Roster"
-        ) && (
-            <div className="sid-nav-main">
+
+          <div className={`main-route ${showSidebar ? "d-flex" : ""}`}>
+            {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />}
+
+            <div style={{ overflow: "hidden" }}>
+              <div className="main-main">
+                <Suspense fallback={<div>Loading...</div>}>
+                  <Routes>
+                    <Route path="/" element={<Login />} />
+                    <Route path="Dummy" element={<Dummy />} />
+                    <Route path="Details" element={<ProfileDetails />} />
+                    <Route path="Summary" element={<ProfileSummary />} />
+                    <Route path="CasesDetails" element={<CasesDetails />} />
+                    <Route path="CasesById" element={<CasesById />} />
+                    <Route path="CasesSummary" element={<CasesSummary />} />
+                    <Route path="ClaimSummary" element={<ClaimSummary />} />
+                    <Route path="ClaimsDetails" element={<ClaimsDetails />} />
+                    <Route path="Configuratin" element={<Configuratin />} />
+                    <Route path="Filters" element={<Filter />} />
+                    <Route path="ClaimsById" element={<ClaimsById />} />
+                    <Route path="AddNewProfile" element={<AddNewProfile />} />
+                    <Route path="Transfers" element={<TransferSummary />} />
+                    <Route path="AddClaims" element={<AddClaims />} />
+                    <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
+                    <Route path="LandingPage" element={<LandingPage />} />
+                    <Route path="Reports" element={<Reports />} />
+                    <Route path="CorspndncDetail" element={<CorspndncDetail />} />
+                    <Route path="RosterSummary" element={<RusterSummary />} />
+                    <Route path="Doucmnets" element={<Doucmnets />} />
+                    <Route path="Roster" element={<RosterDetails />} />
+                    <Route path="Applications" element={<MembershipApplication />} />
+                    <Route path="AproveMembersip" element={<ApproveMembership />} />
+                    <Route path="ChangCateSumm" element={<ChangCateSumm />} />
+                    <Route path="ChangeCatById" element={<CateById />} />
+                    <Route path="RemindersSummary" element={<RemindersSummary />} />
+                    <Route path="Cancallation" element={<Cancallation />} />
+                    <Route path="Batches" element={<Batches />} />
+                    <Route path="Import" element={<Import />} />
+                    <Route path="BatchMemberSummary" element={<BatchMemberSummary />} />
+                    <Route path="NotDesignedYet" element={<NotDesignedYet />} />
+                  </Routes>
+                </Suspense>
+              </div>
             </div>
-            <SideNav />
-          )} */}
-        {(location?.pathname === "/Details"
-          || location?.pathname === "/ClaimsDetails" ||
-          location?.pathname === "/CasesDetails" ||
-          location?.pathname === "/ClaimsById"
-          || location?.pathname === "/CasesById"
-          || location?.pathname === "/AddNewProfile"
-          || location?.pathname === "/AddClaims"
-          || location?.pathname === "/CorspndncDetail"
-          || location?.pathname === "/Doucmnets"
-          // || location?.pathname == "/AproveMembersip"
-          || location?.pathname === "/Roster"
 
-        ) && (
-            <ProfileHeader />
-          )}
-        <div style={{  overflow: "hidden" }}>
-
-          <div className="main-main">
-            <Routes>
-              <Route path="/" element={<Login />} />
-              <Route path="Dummy" element={<Dummy />} />
-              {/* <Route element={<ProtectedRoute />}>               */}
-              <Route path="Details" element={<ProfileDetails />} />
-              <Route path="Summary" element={<ProfileSummary />} />
-              <Route path="CasesDetails" element={< CasesDetails />} />
-              <Route path="CasesById" element={<CasesById />} />
-              <Route path="CasesSummary" element={< CasesSummary />} />
-              <Route path="ClaimSummary" element={< ClaimSummary />} />
-              <Route path="ClaimsDetails" element={< ClaimsDetails />} />
-              <Route path="Configuratin" element={<Configuratin />} />
-              <Route path="Filters" element={<Filter />} />
-              <Route path="ClaimsById" element={<ClaimsById />} />
-              <Route path="AddNewProfile" element={<AddNewProfile />} />
-              <Route path="Transfers" element={<TransferSummary />} />
-              <Route path="AddClaims" element={<AddClaims />} />
-              <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
-              <Route path="LandingPage" element={<LandingPage />} /> 
-              <Route path="Reports" element={<Reports />} />
-              <Route path="CorspndncDetail" element={<CorspndncDetail />} />
-              <Route path="RosterSummary" element={<RusterSummary />} />
-              <Route path="Doucmnets" element={<Doucmnets />} />
-              <Route path="Roster" element={<RosterDetails />} />
-              <Route path="Applications" element={<MembershipApplication />} />
-              <Route path="AproveMembersip" element={<ApproveMembership />} />
-              <Route path="ChangCateSumm" element={<ChangCateSumm />} />
-              <Route path="ChangeCatById" element={<CateById />} />
-              <Route path="RemindersSummary" element={<RemindersSummary />} />
-              <Route path="Cancallation" element={<Cancallation />} />
-              <Route path="Batches" element={<Batches />} />
-              <Route path="Import" element={<Import />} />
-              <Route path="BatchMemberSummary" element={<BatchMemberSummary />} />
-              
-              {/* </Route>  */}
-                          </Routes>
+            {showResizableCompRoutes.includes(location.pathname) && <ResizableComp />}
           </div>
         </div>
-        {(
-           location?.pathname === "/ClaimsDetails"
-          || location?.pathname === "/CasesDetails"
-          || location?.pathname === "/AddNewProfile" 
-          || location?.pathname === "/AddClaims"
-          || location?.pathname === "/ClaimsById"
-          || location?.pathname === "/Doucmnets"
-        ) && (
-            <ResizableComp />
-          )}
       </div>
-    
-      </div>
-      </div>
-        {((location?.pathname === "/Details" ||location?.pathname === "/CorspndncDetail"||location?.pathname === "/Doucmnets" ) && (
-      <div style={{width:'100%',height:'5vh'}} className="footer">
-      <MyFooter />
-      </div>
-      ))}
+
+      {showFooterRoutes.includes(location.pathname) && (
+        <div style={{ width: "100%", height: "5vh" }} className="footer">
+          <MyFooter />
+        </div>
+      )}
     </div>
   );
-  
 }
 
 export default Entry;

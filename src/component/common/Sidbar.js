@@ -100,7 +100,7 @@ const Sidbar = () => {
         navigate("/LandingPage", { state: { search: 'LandingPage' } });
         break;
       default:
-        console.log('Unknown key:', key);
+       navigate('/NotDesignedYet')
     }
   };
 

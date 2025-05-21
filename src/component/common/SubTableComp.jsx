@@ -1,44 +1,8 @@
-import React from 'react'
 import { Table } from 'antd';
 
-
-const dataSource = [
-    {
-      key: '1',
-      name: 'Mike',
-      age: 32,
-      address: '10 Downing Street',
-    },
-    {
-      key: '2',
-      name: 'John',
-      age: 42,
-      address: '10 Downing Street',
-    },
-  ];
-  
-  const columns = [
-    {
-      title: 'Name',
-      dataIndex: 'name',
-      key: 'name',
-    },
-    {
-      title: 'Age',
-      dataIndex: 'age',
-      key: 'age',
-    },
-    {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-    },]
-
-
-function SubTableComp({columns,dataSource}) {
+function SubTableComp({ columns, dataSource }) {
   return (
-    // <Table bordered dataSource={dataSource} columns={columns} pagination={false}  className='claims-table'/>
-    <SubTableComp columns={columns} dataSource={dataSource} className='claims-table'/>
+    <Table bordered scroll={{ x: 'max-content' }} dataSource={dataSource} columns={columns} pagination={false} className='claims-table' />
   )
 }
 
