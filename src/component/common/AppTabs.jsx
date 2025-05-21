@@ -85,7 +85,7 @@ function AppTabs() {
       activeKey={activeKey}
       onChange={handleTabChange}
       destroyInactiveTabPane
-      style={{ width: '100vw' }}
+      style={{ width: '83vw' }}
     >
       {filteredItems.map((item) => (
         <TabPane tab={item.label} key={item.key}>
