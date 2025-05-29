@@ -1,4 +1,4 @@
-import { useState, useContext } from 'react'
+import { useState, useContext,useEffect } from 'react'
 import TableComponent from '../../component/common/TableComponent';
 import { Row, Col, Button, Tabs } from 'antd'; // ✅ IMPORT Row and Col
 import TrigerBatchMemberDrawer from '../../component/finanace/TrigerBatchMemberDrawer';
@@ -7,7 +7,7 @@ import '../../styles/ManualEntry.css'
 import ManualPaymentEntry from '../../component/finanace/ManualPaymentEntry';
 import MyDrawer from '../../component/common/MyDrawer';
 import CommonPopConfirm from '../../component/common/CommonPopConfirm';
-
+import { tableData } from '../../Data';
 
 
 const inputStyle = { // ✅ DEFINE inputStyle BEFORE using it
@@ -21,10 +21,39 @@ const inputStyle = { // ✅ DEFINE inputStyle BEFORE using it
   marginTop: '4px'
 };
 
-function BatchMemberSummary() {
-  const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
-  const [manualPayment, setmanualPayment] = useState(false)
+const memberData = [
+  {
+    membershipNumber: "M12345",
+    name: "Ali Raza",
+    accountNumber: "IE29AIBK93115212345678",
+    payrollNo: "PR12345",
+  },
+  {
+    membershipNumber: "M67890",
+    name: "Sara Khan",
+    accountNumber: "IE64IRCE92050112345678",
+    payrollNo: "PR67890",
+  },
+  {
+    membershipNumber: "M54321",
+    name: "Ahmed Noor",
+    accountNumber: "IE12BOFI90001712345678",
+    payrollNo: "PR54321",
+  },
+];
 
+function BatchMemberSummary() {
+  const { excelData, selectedRowIndex, selectedRowData,uploadedFile,batchTotals } = useContext(ExcelContext);
+  const [manualPayment, setmanualPayment] = useState(false)
+   const [selectedMemberId, setSelectedMemberId] = useState("");
+ const batchMemberSummaryData = excelData?.map((member) => {
+  const matched = tableData.find((item) => item.fullName === member["Member Name"]);
+  return {
+    fullName: matched ? matched.fullName : "", // Add fullName if matched
+    ...member                                     // Spread rest of the member data
+  };
+});
+  const [fileUrl, setFileUrl] = useState(null);
   console.log("selectedRowData", selectedRowData);
   console.log("selectedRowIndex", selectedRowIndex);
   const inputStyle1 = {
@@ -33,6 +62,7 @@ function BatchMemberSummary() {
     display: 'inline-block',
     width: '100%',
   };
+  console.log("batchMemberSummaryData", batchMemberSummaryData);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false)
   const dataSource = [
     {
@@ -70,7 +100,7 @@ function BatchMemberSummary() {
     {
       key: '1',
       label: 'Batch Payments',
-      children: <TableComponent data={excelData} screenName="BatchMemberSummary" />
+      children: <TableComponent data={batchMemberSummaryData} screenName="BatchMemberSummary" />
     },
     {
       key: '2',
@@ -83,6 +113,16 @@ function BatchMemberSummary() {
   const onChange = key => {
     setactiveKey(key)
   };
+  useEffect(() => {
+    if (uploadedFile) {
+      const url = URL.createObjectURL(uploadedFile);
+      setFileUrl(url);
+
+      // Revoke previous URL when component unmounts or file changes
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [uploadedFile]);
+  // conosle.log("uploadedFile", uploadedFile);
   return (
     <div className='' style={{ width: '93vw', }}>
       <Row gutter={[16, 16]} style={{ paddingLeft: ' 35px', paddingRight: '35px', paddingBottom: '20px', paaddingTop: '20px' }}>
@@ -117,21 +157,25 @@ function BatchMemberSummary() {
         </Col>
         <Col span={2}>
           <label>Source</label><br />
-          <a
-            href="/source.xlsx"
-            download
+          {uploadedFile ? (
+            <a
+              href={fileUrl}
+              download={uploadedFile.name}
+              style={inputStyle1}
+            >
+              {uploadedFile.name}
+            </a>
+          ) : (
+            <span style={{ color: "#888" }}>No file uploaded</span>
+          )}
 
-            style={inputStyle1}
-          >
-            Source.xlsx
-          </a>
         </Col>
       </Row>
       <Row gutter={[16, 16]} style={{ paddingLeft: '35px', paddingRight: '35px', paddingBottom: '20px', }}>
         <Col span={4}>
           <label>Total Arrears (€)</label>
           <input
-            value="€3,000"
+            value={`€${batchTotals?.arrears}`}
             disabled
             style={{
               width: '100%',
@@ -147,15 +191,15 @@ function BatchMemberSummary() {
         </Col>
         <Col span={4}>
           <label>Total Current (€):</label>
-          <input value="€5,000" disabled style={inputStyle} />
+          <input value={`€300.00`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Advance</label>
-          <input value="€700.00" disabled style={inputStyle} />
+          <input value={`€${batchTotals?.advance}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Batch Total (€)</label>
-          <input value="€4,000" disabled style={inputStyle} />
+          <input value={`€${batchTotals?.total}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Records</label>

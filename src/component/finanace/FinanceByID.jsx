@@ -1,22 +1,8 @@
-import React from 'react';
+
 import SubTableComp from '../../component/common/SubTableComp';
 
 function FinanceByID() {
   const columns = [
-    {
-      title: 'Batch Ref No',
-      dataIndex: 'batchRefNo',
-      key: 'batchRefNo',
-      ellipsis: true,
-      width: 150,
-    },
-    {
-      title: 'Payment Type',
-      dataIndex: 'paymentType',
-      key: 'paymentType',
-      ellipsis: true,
-      width: 150,
-    },
     {
       title: 'Bank Account',
       dataIndex: 'bankAccount',
@@ -25,30 +11,58 @@ function FinanceByID() {
       width: 150,
     },
     {
-      title: 'Advance',
-      dataIndex: 'advance',
-      key: 'advance',
+      title: 'Payroll No',
+      dataIndex: 'payrollNo',
+      key: 'payrollNo',
       ellipsis: true,
-      width: 150,
+      width: 120,
     },
     {
-      title: 'Total Amount',
+      title: 'Payment Type',
+      dataIndex: 'paymentType',
+      key: 'paymentType',
+      ellipsis: true,
+      width: 130,
+    },
+    {
+      title: 'Total Amount (€)',
       dataIndex: 'totalAmount',
       key: 'totalAmount',
       ellipsis: true,
       width: 150,
     },
     {
-      title: 'Arrears',
+      title: 'Arrears (€)',
       dataIndex: 'arrears',
       key: 'arrears',
       ellipsis: true,
-      width: 150,
+      width: 130,
     },
     {
-      title: 'Comments',
-      dataIndex: 'comments',
-      key: 'comments',
+      title: 'Current (€)',
+      dataIndex: 'current',
+      key: 'current',
+      ellipsis: true,
+      width: 130,
+    },
+    {
+      title: 'Advance (€)',
+      dataIndex: 'advance',
+      key: 'advance',
+      ellipsis: true,
+      width: 130,
+    },
+    {
+      title: 'Batch Ref No',
+      dataIndex: 'batchRefNo',
+      key: 'batchRefNo',
+      ellipsis: true,
+      width: 130,
+    },
+    {
+      title: 'Description',
+      dataIndex: 'description',
+      key: 'description',
       ellipsis: true,
       width: 200,
     },
@@ -57,23 +71,15 @@ function FinanceByID() {
   const dataSource = [
     {
       key: '1',
-      batchRefNo: 'BRN001',
-      paymentType: 'Bank Transfer',
-      bankAccount: '1234567890',
-      advance: '€200.00',
-      totalAmount: '€300.00',
-      arrears: '€100.00',
-      comments: 'Late payment',
-    },
-    {
-      key: '2',
-      batchRefNo: 'BRN002',
-      paymentType: 'Bank Transfer',
-      bankAccount: '0987654321',
-      advance: '€500.00',
+      bankAccount: '12345678',
+      payrollNo: '1001',
+      paymentType: 'Credit',
       totalAmount: '€500.00',
-      arrears: '€0.00',
-      comments: 'On time',
+      arrears: '€300.00',
+      current: '',
+      advance: '€100.00',
+      batchRefNo: 'B001',
+      description: 'Monthly payments',
     },
   ];
 

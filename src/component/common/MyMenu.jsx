@@ -3,7 +3,6 @@ import { Dropdown, Menu } from 'antd';
 import { EllipsisOutlined } from '@ant-design/icons';
 import styled from 'styled-components';
 
-// Styled components for the dropdown and button
 const MenuContainer = styled.div`
   display: inline-block;
   position: relative;
@@ -13,17 +12,14 @@ const MenuContainer = styled.div`
 const DropdownIcon = styled(EllipsisOutlined)`
   font-size: 24px;
   cursor: pointer;
-  color: #1890ff; /* Customize the icon color */
-  
-  /* Remove transitions on click or hover */
+  color: #123c63;
+
   &:hover {
-    transform: none; /* No transform on hover */
-    color: #40a9ff; /* Hover color */
+    color: #40a9ff;
   }
 
-  /* You can also disable the transition for click */
   &:active {
-    transform: none; /* No transformation when clicked */
+    transform: none;
   }
 `;
 
@@ -32,19 +28,22 @@ const CustomMenu = styled(Menu)`
   border-radius: 8px;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   width: 200px;
-`;
 
-const CustomMenuItem = styled(Menu.Item)`
-  font-size: 14px;
-  color: #333;
-  transition: background-color 0.3s;
-  
-  &:hover {
-    background-color: #e6f7ff;
-  }
+  .ant-dropdown-menu-item {
+    color: #123c63;
 
-  i {
-    margin-right: 8px; /* Space between icon and text */
+    &:hover {
+      background-color: #e6f7ff;
+    }
+
+    .anticon {
+      color: #123c63; /* Icon color */
+      margin-right: 8px;
+    }
+
+    .ant-dropdown-menu-title-content {
+      color: #123c63; /* Label color */
+    }
   }
 `;
 
@@ -52,10 +51,9 @@ const MyMenu = ({ items }) => {
   const menu = (
     <CustomMenu>
       {items?.map((item) => (
-        <CustomMenuItem key={item.key} icon={item.icon}  onClick={item.onClick}>
+        <Menu.Item key={item.key} icon={item.icon} onClick={item.onClick}>
           {item.label}
-         
-        </CustomMenuItem>
+        </Menu.Item>
       ))}
     </CustomMenu>
   );
@@ -63,7 +61,7 @@ const MyMenu = ({ items }) => {
   return (
     <MenuContainer>
       <Dropdown overlay={menu} trigger={['click']}>
-        <DropdownIcon style={{color:'#123c63'}} />
+        <DropdownIcon />
       </Dropdown>
     </MenuContainer>
   );

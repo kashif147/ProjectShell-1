@@ -1,4 +1,4 @@
-import React, { useEffect,useMemo } from 'react';
+import React, { useEffect, useMemo } from 'react';
 import { Menu } from 'antd';
 import {
   subscriptionItems,
@@ -12,14 +12,14 @@ import {
 } from '../../constants/SideNav';
 import { useSelector } from 'react-redux';
 import '../../styles/Sidbar.css';
-import { useNavigate,useLocation } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
+import ProfileHeader from './ProfileHeader';
 
 const Sidbar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
 
-  // Find active tab
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
   const itemsMap = {
     'Subscriptions & Rewards': subscriptionItems,
@@ -31,22 +31,35 @@ const Sidbar = () => {
     "Issue Management": issuesItems,
     Events: eventsItems,
   };
+
   const menuItems = itemsMap[activeKey] || [];
+
+  const routeKeyMap = {
+    '/Summary': 'Profiles',
+    '/ClaimSummary': 'Claims',
+    '/ClaimsById': 'Claims',
+    '/CasesSummary': 'Cases',
+    '/CasesById': 'Cases',
+    '/CorrespondencesSummary': 'Correspondences',
+    '/Transfers': 'Transfer Requests',
+    '/Configuratin': 'System Configuration',
+    '/RosterSummary': 'Roster',
+    '/Batches': 'Batches',
+    '/Applications': 'Applications',
+    '/RemindersSummary': 'Reminders',
+    '/Cancallation': 'Cancellations',
+    '/ChangCateSumm': 'Change Category',
+    '/Import': 'Imports',
+    '/Email': 'Email',
+    '/Sms': 'SMS',
+    '/Notes': 'Notes & Letters',
+    '/Letters': 'Notes & Letters',
+    '/CorspndncDetail': 'Communication History',
+  };
+
   const selectedKey = useMemo(() => {
-    if (location.pathname === '/Summary') return 'Profiles';
-    if (location.pathname === '/ClaimSummary') return 'Claims';
-    if (location.pathname === '/CasesSummary') return 'Cases';
-    if (location.pathname === '/CorrespondencesSummary') return 'Correspondences';
-    if (location.pathname === '/Transfers') return 'Transfer Requests';
-    if (location.pathname === '/Configuratin') return 'System Configuration';
-    if (location.pathname === '/RosterSummary') return 'Roster';
-    if (location.pathname === '/Batches') return 'Batches';
-    if (location.pathname === '/Applications') return 'Applications';
-    if (location.pathname === '/RemindersSummary') return 'Reminders';
-    if (location.pathname === '/Cancallation') return 'Cancellations';
-    if (location.pathname === '/ChangCateSumm') return 'Change Category';
-    if (location.pathname === '/Import') return 'Imports';
-    return '';
+    const currentPath = Object.keys(routeKeyMap).find(route => location.pathname.startsWith(route));
+    return routeKeyMap[currentPath] || '';
   }, [location.pathname]);
 
   const handleClick = ({ key }) => {
@@ -93,40 +106,55 @@ const Sidbar = () => {
       case 'Imports':
         navigate("/Import", { state: { search: 'Imports' } });
         break;
-      case 'Batches':
-        navigate("/Batches", { state: { search: 'Batches' } });
+      case 'Email':
+        navigate("/Email", { state: { search: 'Email' } });
         break;
-      case 'LandingPage':
-        navigate("/LandingPage", { state: { search: 'LandingPage' } });
+      case 'SMS':
+        navigate("/Sms", { state: { search: 'Sms' } });
+        break;
+      case 'Notes & Letters':
+        navigate("/Notes", { state: { search: 'Notes' } });
+        break;
+      case 'Communication History':
+        navigate("/CorrespondencesSummary", { state: { search: 'CorrespondencesSummary' } });
         break;
       default:
-       navigate('/NotDesignedYet')
+        navigate('/NotDesignedYet');
     }
   };
 
   useEffect(() => {
-    if (menuLblState["Subscriptions & Rewards"] === true) {
+    if (menuLblState["Subscriptions & Rewards"]) {
       navigate("/Summary", { state: { search: 'Profile' } });
-    }
-    if (menuLblState["Finance"] === true) {
+    } else if (menuLblState["Finance"]) {
       navigate("/Batches", { state: { search: 'Batches' } });
-    }
-    if (menuLblState["Correspondence"] === true) {
-      navigate("/CorrespondencesSummary", { state: { search: 'Correspondences' } });
-    }
-    if (menuLblState["Configuration"] === true) {
+    } else if (menuLblState["Correspondence"]) {
+      navigate("/Email", { state: { search: 'Email' } });
+    } else if (menuLblState["Configuration"]) {
       navigate("/Configuratin", { state: { search: 'Configuration' } });
     }
   }, [menuLblState]);
+
+  const showProfileHeaderRoutes = [
+    "/ClaimsDetails", "/CasesDetails", "/ClaimsById",
+    "/CasesById", "/AddNewProfile", "/AddClaims", "/CorspndncDetail",
+    "/Doucmnets", "/Roster"
+  ];
+
+  const sideBarWidth = showProfileHeaderRoutes.includes(location.pathname) ? '19vw' : '7vw';
+
   return (
-    <Menu
-      mode="inline"
-      selectedKeys={[selectedKey]}  
-      style={{ width: '7vw', height: '100vh', borderRight: 0 }}
-      items={menuItems}
-      className="sidebar-menu"
-      onClick={handleClick}
-    />
+    <div className='d-flex' style={{ width: sideBarWidth }}>
+      <Menu
+        mode="inline"
+        selectedKeys={[selectedKey]}
+        style={{ width: '7vw', borderRight: 0 }}
+        items={menuItems}
+        className="sidebar-menu"
+        onClick={handleClick}
+      />
+      {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />}
+    </div>
   );
 };
 

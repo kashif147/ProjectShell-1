@@ -36,7 +36,7 @@ function ProfileHeader() {
     };
 
     return (
-        <div className='profil-container-main d-flex flex-column'>
+        <div className='profil-container-main d-flex flex-column' style={{width:'14%',height:'88vh'}}>
             <div className="profile-header-container" style={{
                 display: 'flex',
                 flexDirection: 'column'     // Center vertically
@@ -92,7 +92,7 @@ function ProfileHeader() {
                         }}>      
                             <div style={{color:'#C97A2F', fontSize:'18px'}} >{i?.regNo}</div>
                             <div style={{color:'#215E97', fontSize:'18px',fontWeight:400}}>{i?.fullName}</div>
-                            <div style={{color:'#215E97', fontSize:'16px',fontWeight:400}}>(M) 36 Yrs</div>
+                            <div style={{color:'#215E97', fontSize:'16px',fontWeight:400}}>(M) 36A Yrs</div>
                             {/* <div >Married</div> */}
                             <div style={{color:'#C97A2F', fontSize:'18px',marginTop:'20px',}} >Member</div>
                             <div style={{color:'#C97A2F', fontSize:'14px',fontWeight:400,fontWeight:400}}>joined:&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;01/01/2016</div>

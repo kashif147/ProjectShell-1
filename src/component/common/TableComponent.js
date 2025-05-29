@@ -593,7 +593,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
         items={columnsDragbe.map((column) => column.key)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="common-table " style={{paddingLeft:'34px', paddingRight:'34px'}}>
+        <div className="common-table " style={{paddingLeft:'34px', paddingRight:'34px',width:'93vw'}}>
           <Table
             rowClassName={() => ""}
             components={components}

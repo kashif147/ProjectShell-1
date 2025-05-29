@@ -1,10 +1,11 @@
-import React from "react";
-import { Form, Input, Select, Row, Col, Typography,} from "antd";
+import {useState,useContext}from "react";
+import { Form, Input, Select, Row, Col, Typography, } from "antd";
 import {
   FaUser,
 } from "react-icons/fa";
 import '../../styles/CreateBatchPayment.css'// Create this CSS file
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { ExcelContext } from "../../context/ExcelContext";
 
 const { Title, Text } = Typography;
 const { Option } = Select;
@@ -13,13 +14,40 @@ const { TextArea } = Input;
 const ManualPaymentEntry = () => {
   const [form] = Form.useForm();
   const { ProfileDetails } = useTableColumns()
+    const { excelData, selectedRowIndex, selectedRowData,uploadedFile,batchTotals } = useContext(ExcelContext);
   console.log(ProfileDetails[0]?.PaymentType, "ProfileDetails")
   const handleSubmit = (values) => {
     console.log("Form Submitted:", values);
   };
   const onChange = key => {
-  console.log(key);
-};
+    console.log(key);
+  };
+  const memberData = [
+    {
+      membershipNumber: "M12345",
+      name: "Ali Raza",
+      accountNumber: "IE29AIBK93115212345678",
+      payrollNo: "PR12345",
+    },
+    {
+      membershipNumber: "M67890",
+      name: "Sara Khan",
+      accountNumber: "IE64IRCE92050112345678",
+      payrollNo: "PR67890",
+    },
+    {
+      membershipNumber: "M54321",
+      name: "Ahmed Noor",
+      accountNumber: "IE12BOFI90001712345678",
+      payrollNo: "PR54321",
+    },
+  ];
+
+  const [selectedMemberId, setSelectedMemberId] = useState("");
+    const selectedMember = memberData.find(
+    (member) => member.membershipNumber === selectedMemberId
+  );
+
   return (
     <div className="">
       <div style={{ padding: "0px" }}
@@ -31,19 +59,19 @@ const ManualPaymentEntry = () => {
               <Col span={24}>
                 <Form.Item label="Member No *" name="memberNo">
                   <Select
-                    className="custom-input"
+                    placeholder="Select Member"
+                      className="custom-input"
                     style={{ height: '40px', }}
-                    placeholder="Select Member No"
-                    suffixIcon={<FaUser />}
-                    showSearch
-                    optionFilterProp="children"
-                    filterOption={(input, option) =>
-                      option?.children?.toLowerCase().includes(input.toLowerCase())
-                    }
+                    // style={{ width: 200, marginBottom: "20px" }}
+                    value={selectedMemberId || undefined}
+                    onChange={setSelectedMemberId}
+                    allowClear
                   >
-                    <Option value="M12345">M12345</Option>
-                    <Option value="M67890">M67890</Option>
-                    <Option value="M54321">M54321</Option>
+                    {memberData.map((member) => (
+                      <Option key={member.membershipNumber} value={member.membershipNumber}>
+                        {member.membershipNumber}
+                      </Option>
+                    ))}
                   </Select>
                 </Form.Item>
               </Col>
@@ -67,35 +95,29 @@ const ManualPaymentEntry = () => {
                   </div>
                 </Col> */}
             </Row>
-            <Row gutter={16} className="">
+            <Row gutter={16}>
               <Col span={12}>
                 <div className="detail-item">
                   <Text strong>Member Name</Text><br />
-                  <Text type="secondary">Ann Brown</Text>
-                  {/* <div className="detail-value">Ann Brown</div> */}
+                  <Text type="secondary">{selectedMember?.name || ""}</Text>
                 </div>
               </Col>
               <Col span={12}>
                 <div className="detail-item">
                   <Text strong>Bank Account</Text><br />
-                  <Text type="secondary">12345678</Text>
-                  {/* <div className="detail-value">12345678</div> */}
+                  <Text type="secondary">{selectedMember?.accountNumber || ""}</Text>
                 </div>
               </Col>
             </Row>
 
-            <Row gutter={16} className="member-details">
+            <Row gutter={16} style={{ marginTop: 16 }}>
               <Col span={12}>
                 <div className="detail-item">
                   <Text strong>Payroll No</Text><br />
-                  <Text type="secondary">1001</Text>
-                  {/* <div className="detail-value">1001</div> */}
+                  <Text type="secondary">{selectedMember?.payrollNo || ""}</Text>
                 </div>
               </Col>
             </Row>
-
-
-
           </div>
           <Row>
             <Col span={24}>
@@ -269,13 +291,13 @@ const ManualPaymentEntry = () => {
             <Col span={12}>
               <div className="summary-item">
                 <Text>Batch Total:</Text>
-                <Text strong className="summary-value">€4,500.00</Text>
+                <Text strong className="summary-value">{`€${batchTotals?.total}`}</Text>
               </div>
             </Col>
             <Col span={12}>
               <div className="summary-item">
                 <Text>Total Arrears:</Text>
-                <Text strong className="summary-value">€450.00</Text>
+                <Text strong className="summary-value">{`€${batchTotals?.arrears}`}</Text>
               </div>
             </Col>
           </Row>
@@ -290,7 +312,7 @@ const ManualPaymentEntry = () => {
             <Col span={12}>
               <div className="summary-item">
                 <Text>Total Advance:</Text>
-                <Text strong className="summary-value">€500.00</Text>
+                <Text strong className="summary-value">{`€${batchTotals?.advance}`}</Text>
               </div>
             </Col>
           </Row>

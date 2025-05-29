@@ -2,7 +2,6 @@
 import React, { useState } from "react";
 import MyDrawer from "../common/MyDrawer";
 import MySelect from "../common/MySelect";
-import { fetchRegions } from "../../features/RegionSlice";
 import { useSelector, useDispatch } from "react-redux";
 import {
   Input,
@@ -17,13 +16,8 @@ import {
 } from "antd";
 import { useTableColumns } from '../../context/TableColumnsContext ';
 import MyDatePicker from "../common/MyDatePicker";
-import {
-  LoadingOutlined,
-  UploadOutlined,
-  DownOutlined,
-  UserOutlined,
-} from "@ant-design/icons";
 import { IoSettingsOutline } from "react-icons/io5";
+import '../../styles/MyDetails.css';
 import moment from "moment";
 const { TextArea } = Input;
 
@@ -201,11 +195,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       [key]: !modalOpenData[key],
     }));
   };
-  const optionsWithDisabled = [
-    { label: "Male", value: "Male" },
-    { label: "Female", value: "Female" },
-    { label: "Other", value: "Other", disabled: true },
-  ];
+  
   const [value4, setValue4] = useState("Male");
   const onChange4 = ({ target: { value } }) => {
     let name;

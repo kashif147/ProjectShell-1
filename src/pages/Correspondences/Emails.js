@@ -1,12 +1,8 @@
 import React from 'react';
 import TableComponent from '../../component/common/TableComponent';
-import { useLocation } from 'react-router-dom';
 
-function CorrespondencesSummary() {
-  const location = useLocation();
-  const searchLabel = 'CorrespondencesSummary';
-
-  const communicationHistoryDataSource = [
+function Emails() {
+  const emailData = [
     {
       key: "2",
       correspondenceID: "C002",
@@ -70,14 +66,12 @@ function CorrespondencesSummary() {
   ];
 
   return (
-    <div>
-      <TableComponent
-        screenName={searchLabel}
-        data={communicationHistoryDataSource}
-        redirect="/Details"
-      />
-    </div>
+    <TableComponent
+      screenName="Emails"
+      data={emailData}
+      redirect="/Details"
+    />
   );
 }
 
-export default CorrespondencesSummary;
+export default Emails;

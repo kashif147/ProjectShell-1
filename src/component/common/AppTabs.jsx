@@ -19,8 +19,9 @@ const CommunicationHistory = lazy(() => import('../corespondence/CommunicationHi
 const ThreeDotsMenu = lazy(() => import('../common/ThreeDotsMenu'));
 const Roster = lazy(() => import('../../pages/roster/RosterDetails'));
 const HistoryByID = lazy(() => import('../../pages/HistoryByID'));
+const ProfileHeader = lazy(() => import('../common/ProfileHeader'));
 
-const staticTabKeys = ['1', '2', '4', '5', '6', '7', '8'];
+const staticTabKeys = ['1', '2', '4', '5', '6', '7'];
 
 function AppTabs() {
   const [activeKey, setActiveKey] = useState('1');
@@ -74,32 +75,36 @@ function AppTabs() {
 
   const Menuitems = [
     { key: '8', label: 'Roster', icon: <FaFolder />, onClick: () => handleMenuClick('8') },
-    { key: '4', label: 'Documents', icon: <FaFileAlt />, onClick: () => handleMenuClick('4') },
+    // { key: '4', label: 'Documents', icon: <FaFileAlt />, onClick: () => handleMenuClick('4') },
     { key: '9', label: 'Projects', icon: <FaProjectDiagram />, onClick: () => handleMenuClick('9') },
     { key: '10', label: 'Trainings', icon: <FaBook />, onClick: () => handleMenuClick('10') },
     { key: '11', label: 'Audit History', icon: <FaHistory />, onClick: () => handleMenuClick('11') },
   ];
 
   return (
-    <Tabs
-      activeKey={activeKey}
-      onChange={handleTabChange}
-      destroyInactiveTabPane
-      style={{ width: '83vw' }}
-    >
-      {filteredItems.map((item) => (
-        <TabPane tab={item.label} key={item.key}>
-          <Suspense fallback={<Spin />}>
-            {item.children}
-          </Suspense>
-        </TabPane>
-      ))}
-      <TabPane
-        key="menu"
-        tab={<div style={{ marginLeft: 8 }}><ThreeDotsMenu items={Menuitems} /></div>}
-        disabled
-      />
-    </Tabs>
+    <div className='d-flex'>
+       <ProfileHeader />
+      <Tabs
+        activeKey={activeKey}
+        onChange={handleTabChange}
+        destroyInactiveTabPane
+        style={{width:'100%' }}
+      >
+        {filteredItems.map((item) => (
+          <TabPane tab={item.label} key={item.key}>
+            <Suspense fallback={<Spin />}>
+              {item.children}
+            </Suspense>
+          </TabPane>
+        ))}
+        <TabPane
+          key="menu"
+          tab={<div style={{ marginLeft: 8 }}><ThreeDotsMenu items={Menuitems} /></div>}
+          disabled
+        />
+      </Tabs>
+  
+    </div>
   );
 }
 

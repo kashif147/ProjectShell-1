@@ -942,8 +942,8 @@ function MyDeatails() {
   };
   return (
     
-      <div className='details-container' style={{width:'80%'}}>
-        <div className='details-con-header1'>
+      <div className='' style={{width:'100%'}}>
+        <div className=''>
           <Row>
             <Col span={8}>
               <div className='details-con-header brdr'>
@@ -1748,9 +1748,7 @@ function MyDeatails() {
               </div>
             </Col>
           </Row>
-          <Row>
-            <Col></Col>
-          </Row>
+        
           {/* <Resizable /> */}
         </div>
         <MyDrawer
@@ -2059,69 +2057,7 @@ function MyDeatails() {
             />
           </div>
         </MyDrawer>
-        {/* <MyDrawer
-          title='Children'
-          open={modalOpenData?.Children}
-          onClose={() => openCloseModalsFtn("Children")}>
-          <div className='drawer-main-cntainer'>
-            <div className='details-drawer mb-4'>
-              <p>{InfData?.gardaRegNo}</p>
-              <p>{InfData?.fullname}</p>
-              <p>Garda</p>
-            </div>
-            <div className='mb-4 pb-4'>
-              <div className='drawer-inpts-container'>
-                <div className='drawer-lbl-container'>
-                  <p>Title :</p>
-                </div>
-                <div className='inpt-con'>
-                  <p className='star'>*</p>
-                  <div className='inpt-sub-con'>
-                    <Input type="text" name="title" />
-                  </div>
-                  <p className='error'></p>
-                </div>
-              </div>
-              <div className='drawer-inpts-container'>
-                <div className='drawer-lbl-container'>
-                  <p>Forename :</p>
-                </div>
-                <div className='inpt-con'>
-                  <p className='star'>*</p>
-                  <div className='inpt-sub-con'>
-                    <Input className='inp' />
-                    <h1 className='error-text'></h1>
-                  </div>
-                  <p className='error'></p>
-                </div>
-              </div>
-              <div className='drawer-inpts-container'>
-                <div className='drawer-lbl-container'>
-                  <p>Surname :</p>
-                </div>
-                <div className='inpt-con'>
-                  <p className='star'>*</p>
-                  <div className='inpt-sub-con'>
-                    <Input className='inp' />
-                    <h1 className='error-text'></h1>
-                  </div>
-                  <p className='error'></p>
-                </div>
-              </div>
-            </div>
-            <h3>History</h3>
-            <Table
-              rowSelection={rowSelection} // Enables row selection with checkboxes
-              columns={childrencolumns}
-              pagination={false}
-              bordered
-              className='drawer-tbl'
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-            />
-          </div>
-        </MyDrawer> */}
+       
         <MyDrawer
           title='Transfer Screen'
           open={modalOpenData?.TransferScreen}

@@ -463,7 +463,10 @@ function HeaderDetails() {
                   />
                 )}
                 {
-                  nav === '/CorrespondencesSummary' || nav === '/RosterSummary' || nav === '/Transfers' ?
+                  nav === '/CorrespondencesSummary'
+                || nav === '/Sms' || nav === '/Email'
+                || nav === '/Notes'
+                  || nav === '/RosterSummary' || nav === '/Transfers' ?
                     <p>Summary</p> :
                     nav === '/Configuratin' ?
                       <>
@@ -565,6 +568,9 @@ function HeaderDetails() {
             || location?.pathname == "/RemindersSummary"
             || location?.pathname == "/Cancallation"
             || location?.pathname == "/Batches"
+          || location?.pathname == "/Sms"
+          || location?.pathname == "/Email"
+          || location?.pathname == "/Notes"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -577,7 +583,7 @@ function HeaderDetails() {
 
 
                   <div className="d-flex">{
-                    nav === '/CorrespondencesSummary' ?
+                    nav === '/CorrespondencesSummary' || nav === "/Sms" || nav === "/Emails" ?
                       <div style={{ marginRight: '50px' }}>
                         <New />
                       </div>
@@ -596,6 +602,8 @@ function HeaderDetails() {
                             setTransferDrawer(!TransferDrawer)
                           else if (nav === "/RosterSummary")
                             setrosterDrawer(!rosterDrawer)
+                          else if (nav === "/Summary")
+                            setisGardaDrwer(!isGardaDrwer)
                           else if (nav === "/RemindersSummary" || nav === "/Cancallation" || nav === "/Batches") {
                             setIsBatchOpen(!isBatchOpen);
                             }
