@@ -21,6 +21,8 @@ import { deleteFtn } from "../../utils/Utilities";
 import { getContacts } from "../../features/ContactSlice";
 import { baseURL } from "../../utils/Utilities";
 import { useNavigate, useLocation } from "react-router-dom";
+import CustomSelect from "./CustomSelect";
+import MyInput from "./MyInput";
 import {
   FaListCheck,
   // FaArrowRightArrowLeft,
@@ -1003,234 +1005,167 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
           </div>
         </div>
       </Drawer> */}
-      <Drawer open={contactDrawer}
-        onClose={() => setcontactDrawer(!contactDrawer)}
-        width="1040px"
-        title="Contacts"
-        extra={
-          <Space>
-            <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
-              Close
-            </Button>
-
-            <Button className="butn primary-btn"
-              onClick={isUpdate?.Contacts == true ? update : addFtn}
-              onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
-              {isUpdate?.Contacts == true  ? "Save" : 'Add'}
-            </Button>
-          </Space>
-        }
+   <Drawer 
+  open={contactDrawer}
+  onClose={() => setcontactDrawer(!contactDrawer)}
+  width="1040px"
+  title="Contacts"
+  extra={
+    <Space>
+      <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
+        Close
+      </Button>
+      <Button 
+        className="butn primary-btn"
+        onClick={isUpdate?.Contacts == true ? update : addFtn}
+        onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}
       >
-        {/* <MyDrawer title='Solicitors'
-        open={contactDrawer}
-        isPagination={true}
-        onClose={() => setcontactDrawer(!contactDrawer)}
-        add={() => {
-          if (!validateSolicitors('Solicitors')) return;
-          insertDataFtn(
-            `/contact`,
-            drawerIpnuts?.Solicitors,
-            'Data inserted successfully',
-            'Data did not insert',
-            () => resetCounteries('Solicitors',() => dispatch(getContacts())))
-          dispatch(getContacts())
-          }}
-        update={
-          async () => {
-            if (!validateSolicitors('Solicitors')) return;
-            await updateFtn('/contact', drawerIpnuts?.Solicitors, () => resetCounteries('Solicitors', () => dispatch(getContacts())))
-            dispatch(getAllLookups())
-            IsUpdateFtn('Solicitors', false,)
-          }}
-          isEdit={isUpdateRec?.Solicitors}
-        width={'1020px'}
-      > */}
-        <div className="drawer-main-cntainer">
-          <div className="mb-4 pb-4">
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Contact Type :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect isSimple={true} placeholder='Select Contact type'
-                    // disabled={true}
-                    value={drawerIpnuts?.Solicitors?.ContactTypeID}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactTypeID', e)}
-                    options={selectLokups?.contactTypes}
-                  />
-                  <h1 className="error-text">{errors?.Solicitors?.ContactTypeID}</h1>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Title :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    placeholder='Select Title'
-                    isSimple={true}
-                    options={lookupsForSelect?.Titles}
-                  />
-                  <p className="error text-white">errors?.Solicitors?.Titles</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Forename :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input className="inp"
-                    value={drawerIpnuts?.Solicitors?.Forename}
-                    onChange={(e) => drawrInptChng('Solicitors', 'Forename', e.target.value)}
-                  />
-                  <p className="error">{errors?.Solicitors?.Forename}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Surname :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input className="inp"
-                    value={drawerIpnuts?.Solicitors?.Surname}
-                    onChange={(e) => drawrInptChng('Solicitors', 'Surname', e.target.value)}
-                  />
-                  <p className="error">{errors?.Solicitors?.Surname}</p>
-                </div>
+        {isUpdate?.Contacts == true ? "Save" : 'Add'}
+      </Button>
+    </Space>
+  }
+>
+  <div className="drawer-main-cntainer">
+    <div className="mb-4 pb-4">
+      <CustomSelect
+        label="Contact Type:"
+        placeholder="Select Contact type"
+        options={selectLokups?.contactTypes}
+        value={drawerIpnuts?.Solicitors?.ContactTypeID}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactTypeID', e)}
+        required
+        hasError={!!errors?.Solicitors?.ContactTypeID}
+        errorMessage={errors?.Solicitors?.ContactTypeID}
+        style={{ width: "25%" }}
+      />
 
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Email :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactEmail}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactEmail', e.target.value)}
-                  />
-                  <p className="error">{errors?.Solicitors?.ContactEmail}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Mobile :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactPhone}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactPhone', e.target.value)}
-                  />
-                  <p className="error">{errors?.Solicitors?.ContactPhone}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Building or House :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.BuildingOrHouse', e.target.value)}
+      <CustomSelect
+        label="Title:"
+        placeholder="Select Title"
+        options={lookupsForSelect?.Titles}
+        style={{ width: "25%" }}
+      />
 
-                  />
-                  <p className="error">{errors?.Solicitors?.BuildingOrHouse}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Street or Road :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.StreetOrRoad', e.target.value)}
-                  />
-                  <p className="error text-white">errors?.Solicitors?.ContactEmail</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Area or Town :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.AreaOrTown', e.target.value)}
-                  />
-                  <p className="error">{errors?.Solicitors?.AreaOrTown}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>County, City or Postcode :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.CityCountyOrPostCode', e.target.value)}
-                  />
-                </div>
-                {/* <p className="error">{drawerIpnuts}</p> */}
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Eircode :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-                    onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.Eircode', e.target.value)}
-                  />
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 config-tbl-container">
-            <Table
-              pagination={false}
-              columns={columnsSolicitors}
-              dataSource={data?.Solicitors}
-              loading={contactsLoading}
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </Drawer>
+      <MyInput
+        label="Forename:"
+        name="Forename"
+        placeholder="Enter forename"
+        value={drawerIpnuts?.Solicitors?.Forename}
+        onChange={(e) => drawrInptChng('Solicitors', 'Forename', e.target.value)}
+        required
+        hasError={!!errors?.Solicitors?.Forename}
+        errorMessage={errors?.Solicitors?.Forename}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Surname:"
+        name="Surname"
+        placeholder="Enter surname"
+        value={drawerIpnuts?.Solicitors?.Surname}
+        onChange={(e) => drawrInptChng('Solicitors', 'Surname', e.target.value)}
+        required
+        hasError={!!errors?.Solicitors?.Surname}
+        errorMessage={errors?.Solicitors?.Surname}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Email:"
+        name="ContactEmail"
+        type="email"
+        placeholder="Enter email"
+        value={drawerIpnuts?.Solicitors?.ContactEmail}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactEmail', e.target.value)}
+        required
+        hasError={!!errors?.Solicitors?.ContactEmail}
+        errorMessage={errors?.Solicitors?.ContactEmail}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Mobile:"
+        name="ContactPhone"
+        placeholder="Enter mobile number"
+        value={drawerIpnuts?.Solicitors?.ContactPhone}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactPhone', e.target.value)}
+        required
+        hasError={!!errors?.Solicitors?.ContactPhone}
+        errorMessage={errors?.Solicitors?.ContactPhone}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Building or House:"
+        name="BuildingOrHouse"
+        placeholder="Enter building/house"
+        value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.BuildingOrHouse', e.target.value)}
+        required
+        hasError={!!errors?.Solicitors?.BuildingOrHouse}
+        errorMessage={errors?.Solicitors?.BuildingOrHouse}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Street or Road:"
+        name="StreetOrRoad"
+        placeholder="Enter street/road"
+        value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.StreetOrRoad', e.target.value)}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Area or Town:"
+        name="AreaOrTown"
+        placeholder="Enter area/town"
+        value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.AreaOrTown', e.target.value)}
+        required
+        hasError={!!errors?.Solicitors?.AreaOrTown}
+        errorMessage={errors?.Solicitors?.AreaOrTown}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="County, City or Postcode:"
+        name="CityCountyOrPostCode"
+        placeholder="Enter county/city/postcode"
+        value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.CityCountyOrPostCode', e.target.value)}
+        style={{ width: "25%" }}
+      />
+
+      <MyInput
+        label="Eircode:"
+        name="Eircode"
+        placeholder="Enter Eircode"
+        value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+        onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.Eircode', e.target.value)}
+        style={{ width: "25%" }}
+      />
+    </div>
+
+    <div className="mt-4 config-tbl-container">
+      <Table
+        pagination={false}
+        columns={columnsSolicitors}
+        dataSource={data?.Solicitors}
+        loading={contactsLoading}
+        className="drawer-tbl"
+        rowClassName={(record, index) =>
+          index % 2 !== 0 ? "odd-row" : "even-row"
+        }
+        rowSelection={{
+          type: selectionType,
+          ...rowSelection,
+        }}
+        bordered
+      />
+    </div>
+  </div>
+</Drawer>
       <Drawer open={isRecursion}
         onClose={() => setisRecursion(!isRecursion)}
         width="526px"

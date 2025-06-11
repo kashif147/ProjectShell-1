@@ -16,11 +16,15 @@ import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from './ProfileHeader';
 
 const Sidbar = () => {
+  // state 
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
 
+ // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
+ 
+  // These are the menu links for various modules, imported from a constants file
   const itemsMap = {
     'Subscriptions & Rewards': subscriptionItems,
     Finance: financeItems,
@@ -32,6 +36,7 @@ const Sidbar = () => {
     Events: eventsItems,
   };
 
+  // Displays the currently active module selected from the top menu and passes it to the menu component and  make it ready to pass to the menu.
   const menuItems = itemsMap[activeKey] || [];
 
   const routeKeyMap = {
@@ -137,7 +142,7 @@ const Sidbar = () => {
 
   const showProfileHeaderRoutes = [
     "/ClaimsDetails", "/CasesDetails", "/ClaimsById",
-    "/CasesById", "/AddNewProfile", "/AddClaims", "/CorspndncDetail",
+    "/CasesById", "/AddNewProfile", "/AddClaims", ,
     "/Doucmnets", "/Roster"
   ];
 
@@ -153,7 +158,7 @@ const Sidbar = () => {
         className="sidebar-menu"
         onClick={handleClick}
       />
-      {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />}
+      {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
     </div>
   );
 };

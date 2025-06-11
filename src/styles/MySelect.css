@@ -1,0 +1,90 @@
+.my-input-wrapper {
+  /* margin-bottom: 1.25rem; */
+}
+
+.my-input-label {
+  font-weight: 600;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 6px;
+  color: #212529;
+}
+
+.my-input-label.error {
+  color: #ff4d4f;
+}
+
+.my-input-label.disabled {
+  color: #bfbfbf;
+  cursor: not-allowed;
+}
+
+.required-star {
+  color: #ff4d4f;
+  margin-left: 2px;
+}
+
+.error-message {
+  font-weight: normal;
+  font-size: 13px;
+  color: #ff4d4f;
+  margin-left: 4px;
+}
+
+.my-input-container {
+  position: relative;
+}
+
+.my-input-container .my-input-field-select {
+  width: 100%;
+  padding: 10px 36px 10px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  outline: none;
+  color: #212529;
+  background-color: #fff;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.03);
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 1024 1024' fill='%236c757d' height='14' width='14' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M512 624L160 272h704z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 14px;
+  border-radius: 4px !important;
+}
+
+.my-input-container.focused .my-input-field {
+  border-color: #1677ff;
+  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+}
+
+.my-input-container.error .my-input-field {
+  border-color: #ff4d4f;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.15);
+}
+
+.my-input-container.disabled .my-input-field {
+  background-color: #f5f5f5;
+  color: #bfbfbf;
+  border-color: #d9d9d9;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.my-input-field:disabled {
+  background-color: #f5f5f5;
+  color: #bfbfbf;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+.error-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ff4d4f;
+  font-size: 18px;
+  pointer-events: none;
+}

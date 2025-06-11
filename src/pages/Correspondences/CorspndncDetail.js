@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import ChatComponent from '../../component/corespondence/ChatComponent'
 import '../../styles/Correspondence.css'
-import { Radio, Tabs, Input, Button, Select, Table, Checkbox, Space } from 'antd';
+import { Radio, Tabs, Input, Button, Select, Table, Checkbox, Space, Tooltip } from 'antd';
 import { FiRefreshCcw } from "react-icons/fi";
 import { CiMenuBurger } from "react-icons/ci";
 import icon from '../../assets/images/Vector.png'
@@ -19,6 +19,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 import { emails } from '../../Data';
+import ProfileHeader from '../../component/common/ProfileHeader';
 function CorspndncDetail() {
   const { TextArea } = Input;
   const { Search } = Input;
@@ -26,27 +27,27 @@ function CorspndncDetail() {
   const [path, setPath] = useState('/projectShell');
 
 
-const [emailsData, setemailsData] = useState(emails)
+  const [emailsData, setemailsData] = useState(emails)
   const [searchText, setSearchText] = useState("");
-    useEffect(() => {
-      if(searchText) {
-        debugger
-    const lowerSearch = searchText.toLowerCase();
+  useEffect(() => {
+    if (searchText) {
+      debugger
+      const lowerSearch = searchText.toLowerCase();
 
-    const filtered = emails.value.filter(item => {
-      const subject = item.subject?.toLowerCase() || "";
-      const bodyPreview = item.bodyPreview?.toLowerCase() || "";
-      const content = item.body?.content?.toLowerCase() || "";
+      const filtered = emails.value.filter(item => {
+        const subject = item.subject?.toLowerCase() || "";
+        const bodyPreview = item.bodyPreview?.toLowerCase() || "";
+        const content = item.body?.content?.toLowerCase() || "";
 
-      return (
-        subject.includes(lowerSearch) ||
-        bodyPreview.includes(lowerSearch) ||
-        content.includes(lowerSearch)
-      );
-    });
+        return (
+          subject.includes(lowerSearch) ||
+          bodyPreview.includes(lowerSearch) ||
+          content.includes(lowerSearch)
+        );
+      });
 
-    setemailsData(filtered);
-  }
+      setemailsData(filtered);
+    }
   }, [searchText]);
 
 
@@ -133,6 +134,68 @@ const [emailsData, setemailsData] = useState(emails)
       <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
     );
   }
+  function forwardEmail() {
+    const baseUrl = 'https://outlook.office.com/mail/deeplink/compose';
+
+    let body = activeMails?.body?.content || '';
+    let subject = activeMails?.subject || '';
+    const params = new URLSearchParams({
+      subject,  // Correct param name here
+      body,
+    });
+
+    const url = `${baseUrl}?${params.toString()}`;
+    window.open(url, '_blank');
+  }
+  // isSimple:false,
+  const callHistoryData = [
+    {
+      id: 1,
+      Subject: "Project Kickoff Meeting",
+      ShortDis: "Discussed initial timelines and milestones for the new product launch.",
+      time: "2025-06-04T10:15:00Z",
+      caller: "Alice Johnson",
+      duration: "00:35:20",
+      isSimple:false,
+    },
+    {
+      id: 2,
+      Subject: "Follow-up on Design Review",
+      ShortDis: "Reviewed the latest UI mockups and provided feedback.",
+      time: "2025-06-03T16:30:00Z",
+      isSimple:false,
+      caller: "Bob Smith",
+      duration: "00:20:45",
+    },
+    {
+      id: 3,
+      Subject: "Client Support Call",
+      ShortDis: "Assisted client with setup and troubleshooting network issues.",
+      time: "2025-06-02T09:00:00Z",
+      caller: "Customer Support",
+      duration: "00:45:00",
+      isSimple:false,
+    },
+    {
+      id: 4,
+      Subject: "Quick Sync",
+      ShortDis: "Brief sync about pending tasks.",
+      time: "2025-06-01T14:00:00Z",
+      caller: "Team Lead",
+      isSimple:false,
+      duration: "00:10:00",
+    },
+    {
+      id: 5,
+      Subject: "Weekly Team Meeting",
+      ShortDis: "Weekly updates from all departments.",
+      time: "2025-05-31T11:00:00Z",
+      caller: "Project Manager",
+      duration: "01:00:00",
+      isSimple:false,
+    },
+  ];
+
   const items = [
     {
       key: '1',
@@ -146,9 +209,9 @@ const [emailsData, setemailsData] = useState(emails)
         </div>
       </div>
       ,
-      children: <div className='d-flex '>
-        <div className='chat-container pe-4'>
-          <div className='d-flex justify-content-evenly align-items-center' style={{ height: '70px' }}>
+      children: <div className='d-flex' style={{ backgroundColor: 'rgba(9, 30, 66, 0.04)' }} >
+        <div className='chat-container pe-4 mt-2 pt-2 rounded-sm'>
+          <div className='d-flex justify-content-evenly align-items-center' >
             <Radio.Group
               block
               options={bondOptions}
@@ -168,12 +231,14 @@ const [emailsData, setemailsData] = useState(emails)
             <FiRefreshCcw fontSize={"24px"} />
           </div>
           {/* <ChatComponent isborder={true} /> */}
-          {
-            emails?.value?.map((item, index) => (
-              <ChatComponent key={index} Subject={item?.subject} ShortDis={item?.bodyPreview} 
-              onclick={() => getEmailById(item?.id)} />
-            ))
-          }
+          <div className='pt-2'>
+            {
+              emails?.value?.map((item, index) => (
+                <ChatComponent key={index} Subject={item?.subject} ShortDis={item?.bodyPreview}
+                  onclick={() => getEmailById(item?.id)} />
+              ))
+            }
+          </div>
           {/* <ChatComponent />
                     <ChatComponent />
                     <ChatComponent />
@@ -182,15 +247,39 @@ const [emailsData, setemailsData] = useState(emails)
                     <ChatComponent />
                     <ChatComponent /> */}
         </div>
-        <div className='chat-detail-container'>
+        <div className='chat-detail-container mt-2 pt-2 rounded-sm'>
           <div className='d-flex align-items-baseline justify-content-between'>
             <h2 style={{ fontSize: '24px', fontWeight: '700' }}>{activeMails?.subject}</h2>
             <div >
-              <FiCornerUpLeft style={{ color: '#215E97', fontSize: '26px' }} />
-              <RiCornerUpLeftDoubleLine style={{ color: '#215E97', fontSize: '26px' }} />
-              <FiCornerUpRight style={{ color: '#215E97', fontSize: '26px' }} />
-              {/* <IoReturnUpForwardSharp style={{color:'#215E97', fontSize: '26px' }} /> */}
-              <PiArrowSquareIn style={{ color: '#215E97', fontSize: '26px' }} />
+              <Tooltip title="Back">
+                <Button
+                  type="text"
+                  icon={<FiCornerUpLeft style={{ fontSize: 26, color: '#215E97' }} />}
+                  style={{ transition: 'color 0.3s' }}
+                />
+              </Tooltip>
+
+              <Tooltip title="Double Back">
+                <Button
+                  type="text"
+                  icon={<RiCornerUpLeftDoubleLine style={{ fontSize: 26, color: '#215E97' }} />}
+                />
+              </Tooltip>
+
+              <Tooltip title="Forward Email">
+                <Button
+                  type="text"
+                  onClick={forwardEmail}
+                  icon={<FiCornerUpRight style={{ fontSize: 26, color: '#215E97' }} />}
+                />
+              </Tooltip>
+
+              <Tooltip title="Inward">
+                <Button
+                  type="text"
+                  icon={<PiArrowSquareIn style={{ fontSize: 26, color: '#215E97' }} />}
+                />
+              </Tooltip>
             </div>
           </div>
           <h2 style={{ fontSize: '16px', fontWeight: '600', marginLeft: '25px', marginTop: '15px' }}>  John Doe &lt;john.doe@gra.ie&gt;</h2>
@@ -203,7 +292,7 @@ const [emailsData, setemailsData] = useState(emails)
             After massive project practice and summaries, Ant Design, a design language for background applications, is refined by Ant UED Team, which aims to uniform the user interface specs for internal background projects, lower the unnecessary cost of design differences and implementation and liberate the resources of design and front-end development                    </h2> */}
           {
             activeMails && (
-              <h2 style={{ fontSize: '14px', fontWeight: '400', marginTop:'12px' }}> <EmailBody htmlContent={activeMails?.body?.content} />
+              <h2 style={{ fontSize: '14px', fontWeight: '400', marginTop: '12px' }}> <EmailBody htmlContent={activeMails?.body?.content} />
               </h2>
             )
           }
@@ -256,11 +345,14 @@ const [emailsData, setemailsData] = useState(emails)
         </div>
         <div className='call-container'>
 
-          <ChatComponent isSimple={false} isborder={true} />
+          {/* <ChatComponent isSimple={false} isborder={true} />
+          <ChatComponent isSimple={false} Subject={'test test test test test test subject '} ShortDis={'Testing Short Description. Testing Short Description. Testing Short Description.'}  />
           <ChatComponent isSimple={false} />
           <ChatComponent isSimple={false} />
-          <ChatComponent isSimple={false} />
-          <ChatComponent isSimple={false} />
+          <ChatComponent isSimple={false} /> */}
+          {callHistoryData.map((chatProps, index) => (
+            <ChatComponent key={index} {...chatProps} />
+          ))}
         </div>
       </div>,
     },
@@ -529,11 +621,13 @@ const [emailsData, setemailsData] = useState(emails)
   ];
 
   return (
-    <div className='corespndence-main'>
-      <div style={{ height: '25px', backgroundColor: '#e6f8ff' }}
+    <div className='d-flex' style={{ width: '100%' }}>
+      <div
       >
+        <ProfileHeader />
       </div>
       <Tabs
+        style={{ width: '100%' }}
         defaultActiveKey="1"
         items={items}
         onChange={(e) => setactiveKey(e)}

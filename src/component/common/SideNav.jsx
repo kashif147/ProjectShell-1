@@ -153,7 +153,7 @@ const nav = location?.pathname
   };
 
   return (
-    <div className="sid-nav-main">
+
       <Menu
         mode="inline"
         theme="dark"
@@ -166,7 +166,7 @@ const nav = location?.pathname
         onClick={handleClick}
         className={`${isSideNav ? "menu-collapsed" : "menu-expanded"}`}
       />
-    </div>
+
 
   )
 }

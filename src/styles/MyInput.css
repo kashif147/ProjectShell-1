@@ -1,0 +1,66 @@
+.my-input-wrapper {
+  margin-bottom: 1.25rem;
+}
+
+.my-input-label {
+  font-weight: 600;
+  font-size: 14px;
+  display: block;
+  margin-bottom: 6px;
+  color: #212529;
+}
+
+.my-input-label .error {
+  color: #dc3545;
+  font-size: 14px;
+}
+
+.required-star {
+  color: red;
+  margin-left: 2px;
+}
+
+.error-message {
+  font-weight: normal;
+  font-size: 14px;
+  color: #dc3545;
+  margin-left: 4px;
+}
+
+.my-input-container {
+  position: relative;
+}
+
+.my-input-container.error .my-input-field {
+  border-color: #dc3545;
+}
+
+.my-input-container.focused .my-input-field {
+  border-color: #0d6efd;
+}
+
+.my-input-field {
+  width: 100%;
+  padding: 10px 36px 10px 12px;
+  font-size: 14px;
+  border-radius: 6px;
+  border: 1px solid #ced4da;
+  outline: none;
+  color: #212529;
+  background-color: #fff;
+  transition: border-color 0.2s ease;
+}
+
+.my-input-field::placeholder {
+  color: #6c757d;
+}
+
+.error-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #dc3545;
+  font-size: 16px;
+  pointer-events: none;
+}

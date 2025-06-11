@@ -69,7 +69,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     { name: 'Professional Development', icon: MdOutlineWork, bgColor: '#3F51B5' },
     { name: 'Settings', icon: IoSettingsOutline, bgColor: '#3F51B5' },
     { name: 'Configuration', icon: FaCogs, bgColor: '#5E35B1' },
-    { name: 'Repoints', icon: TbReportAnalytics, bgColor: '#A63D2F' }, // likely meant to be "Reports"
+    { name: 'Reports', icon: TbReportAnalytics, bgColor: '#A63D2F' }, // likely meant to be "Reports"
   ];
 
   return (
@@ -101,10 +101,6 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     </div>
   );
 };
-
-
-
-// export default AppLauncherMenu;
 
 export const AppLauncher = () => {
   const [visible, setVisible] = useState(false);
@@ -268,15 +264,7 @@ function Header() {
     <div className="Header-border overflow-y-hidden bg pt-2 pb-2" style={{borderBottom:'2px solid #dcdfe4', width:'100vw' }}>
       <div className="d-flex justify-content-between align-items-center " >
         <div className="d-flex flex-row align-items-center" style={{ paddingLeft: '2.5%', width: '33%' }}>
-          {/* <TbGridDots size={25} color={'#fff'} style={{marginRight: '32px',}}/> */}
           <AppLauncher />
-          {/* <img
-            src={logo}
-            alt="Company Logo"
-            width={50}
-            style={{ borderRadius: '10px', }}
-
-          /> */}
           <nav className="navbar navbar-expand-lg navbar-light">
             <button
               className="navbar-toggler"
@@ -289,34 +277,6 @@ function Header() {
             >
               <span className="navbar-toggler-icon"></span>
             </button>
-            {/* <div className="collapse navbar-collapse" id="navbarNav">
-              <ul className="navbar-nav align-items-center" style={{ paddingLeft: "30px" }}>
-                <li className={`${pathname === "/Summary" || pathname === "/Details" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <MyDrowpDown title={"Profile"} items={navLinks} />
-                </li>
-                <li className={`${pathname === "/CasesSummary" || pathname === "/CasesDetails" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <MyDrowpDown title={"Cases"} items={CasesnavLinks} />
-                </li>
-                <li className={`${pathname === "/ClaimSummary" || pathname === "/Claims" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <MyDrowpDown title={"Claims"} items={ClaimsnavLinks} />
-                </li>
-                <li className={`${pathname === "/CorrespondencesSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <MyDrowpDown title={"Correspondences"} items={CorrespondencesLink} />
-                </li>
-                <li className={`${pathname === "/RosterSummary" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <MyDrowpDown title={"Roster"} items={Roster} />
-                </li>
-                <li className={`${pathname === "/Transfers" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <Link className="links" to="Transfers" state={{ search: "Transfers" }}>Transfer Requests</Link>
-                </li>
-                <li className={`${pathname === "/Report2" || pathname === "/Report1" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <MyDrowpDown title={"Reports"} items={reportLink} />
-                </li>
-                <li className={`${pathname === "/Configuratin" ? "activ-link" : ""} nav-item nav-links-container`}>
-                  <Link className="links" to="Configuratin" state={{ search: "" }}>Configurations</Link>
-                </li>
-              </ul>
-            </div> */}
           </nav>
         </div>
         <div style={{ width: '33%' }}>

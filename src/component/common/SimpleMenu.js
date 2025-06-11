@@ -109,6 +109,10 @@ const handleGenerate = () => {
       console.error("Error generating QR code:", error);
     }
   };
+ // The three-dots menu (top-right and grid) and actions like "Add Filter" or "Add Column"
+// are handled based on props passed to this component.
+// This separation allows better control and reuse, 
+
   const menu = (
     <Menu>
       {isCheckBox && (

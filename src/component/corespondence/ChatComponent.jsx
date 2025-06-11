@@ -38,7 +38,7 @@ function ChatComponent({ isborder = false, isSimple = true,Subject,ShortDis, onc
                                 <div className='col-md-11'>
                                     <h5 style={{ fontSize: '16px', fontWeight: 500, cursor: 'pointer' }}>{Subject}</h5>
                                     <h4 style={{ overflow: 'hidden', fontSize: '14px', cursor: 'pointer', fontWeight: '400', color: '#00000073' }}>
-                                        
+                                      {ShortDis}  
                                     </h4>
 
                                 </div>

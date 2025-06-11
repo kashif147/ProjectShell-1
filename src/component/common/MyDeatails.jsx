@@ -942,7 +942,7 @@ function MyDeatails() {
   };
   return (
     
-      <div className='' style={{width:'100%'}}>
+      <div style={{width:'100%'}}>
         <div className=''>
           <Row>
             <Col span={8}>

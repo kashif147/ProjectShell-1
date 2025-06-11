@@ -161,6 +161,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
       item.key === key ? { ...item, isAttachment: true } : item
     ))
   };
+  // make columns dragable and also rendered three dots icon in each row
   const draggableColumns = [
     {
       title: () => (
@@ -207,7 +208,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
         onChange={(e)=>handleFileUpload(e,record?.key)}
         style={{ display: "none" }}
       />
-     
+          {/* Three dots icon in each columns */}
           <SimpleMenu
             title={<BsThreeDotsVertical 
             style={{ fontSize: "15px", fontWeight: 500 }} />}
@@ -466,7 +467,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
   const [currentPage, setCurrentPage] = useState(1);
 
   const [currentPageData, setCurrentPageData] = useState([]);
-
+// pagination logic
   useEffect(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -550,6 +551,8 @@ const TableComponent = ({ data, screenName, redirect }) => {
     }
     return <td {...restProps}>{childNode}</td>;
   };
+
+  // reports (apply filters)
   const handleSave = (row) => {
     const newData = [...dataSource];
     const index = newData.findIndex((item) => row.key === item.key);
