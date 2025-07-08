@@ -1,64 +1,91 @@
-
-import React, { useState } from "react";
-import MyDrawer from "../common/MyDrawer";
-import MySelect from "../common/MySelect";
-import { useSelector, useDispatch } from "react-redux";
-import {
-  Input,
-  Button,
-  DatePicker,
-  Col,
-  Row,
-  Upload,
-  Checkbox,
-  Divider,
-  Radio,
-} from "antd";
-import { useTableColumns } from '../../context/TableColumnsContext ';
-import MyDatePicker from "../common/MyDatePicker";
-import { IoSettingsOutline } from "react-icons/io5";
-import '../../styles/MyDetails.css';
+import React, { useState, useRef, useEffect } from "react";
+import axios from 'axios';
+import { Checkbox, Table, Row, Col, Radio } from "antd";
+// import { Radio } from "antd";
 import moment from "moment";
-const { TextArea } = Input;
+import CustomSelect from "../common/CustomSelect";
+import MyInput from "../common/MyInput";
+import MyDatePicker from "../common/MyDatePicker";
+import MyDrawer from "../common/MyDrawer";
+import { useSelector, useDispatch } from "react-redux";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { useJsApiLoader, StandaloneSearchBox } from '@react-google-maps/api'
+import { fetchCountries } from "../../features/CountrySlice";
+import { CatOptions } from "../../Data";
+import { getAllLookups } from "../../features/LookupsSlice";
+
+const libraries = ['places', 'maps'];
+
 
 function AddNewGarda({ open, onClose, isGard }) {
-  const dispath = useDispatch();
-  const currentStatus = "Pending"
-  const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable, } = useTableColumns();
+  const { data: countryOptions, loading, error } = useSelector(
+    (state) => state.countries
+  );
+  const inputRef = useRef(null);
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: 'AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o',
+    libraries: libraries,
+  });
+
+  console.log('isLoaded=========>', isLoaded);
+  const dispatch = useDispatch();
+  const {
+    selectLokups,
+    lookupsForSelect,
+    contactTypes,
+    disableFtn,
+    isDisable,
+  } = useTableColumns();
+
   const state = useSelector((state) => state.lookups);
   const { lookups } = state;
-  const ApplicationStatus = [{
-    value: "Pending",
-    label: "Pending",
-  },
-  {
-    value: "Approve",
-    label: "Approve",
-  },
-  {
-    value: "Reject",
-    label: "Reject",
-  },
-]
-  const options = [
-    { value: "NY", label: "New York" },
-    { value: "LA", label: "Los Angeles" },
-    { value: "CHI", label: "Chicago" },
+  useEffect(() => {
+    dispatch(fetchCountries());
+    dispatch(getAllLookups())
+  }, [dispatch]);
+  const ApplicationStatus = [
+    { value: "Pending", label: "Pending" },
+    { value: "Approve", label: "Approve" },
+    { value: "Reject", label: "Reject" },
   ];
 
+  const preferredOptions = [
+    { value: "Home", label: "Home" },
+    { value: "Office", label: "Office" },
+  ];
+  const preferredEmailOptions = [
+    { value: "Personal", label: "Personal" },
+    { value: "Work", label: "Work" },
+  ];
   const inputsInitValue = {
     gardaRegNo: null,
     fullname: null,
     forename: null,
     surname: null,
-    buildingOrHouse: null,
-    streetOrRoad: null,
+    CountryOfPrimaryQualification: null,
+    AdressLine1: null,
+    AdressLine2: null,
+    AdressLine3: null,
     areaOrTown: null,
     eirCode: null,
     mobile: null,
-    postcode: null,
-    otherContact: null,
+    AdressLine4: null,
+    Country: 'Irland',
+    isTermCon: false,
+    HomeOrWorkTel: null,
     email: null,
+    preferredEmail: null,
+    preferredEmailOptions: null,
+    Grade: null,
+    MembershipCategory: null,
+    WorkLocation: null,
+    Branch: null,
+    RetiredDate: null,
+    OtherWorkLocation: null,
+    RetiredDate: null,
+    otherGrade: null,
+    WorkEmail: null,
     class: null,
     dateOfBirth: null,
     dateOfTemplemore: null,
@@ -86,10 +113,10 @@ function AddNewGarda({ open, onClose, isGard }) {
     isAssociateMember: null,
     notes: null,
   };
+
   const [InfData, setInfData] = useState(inputsInitValue);
   const [errors, setErrors] = useState({});
   const [submitted, setSubmitted] = useState(false);
-  const [updateInput, setUpdateInput] = useState({});
   const [ageOnNextBirthday, setAgeOnNextBirthday] = useState(null);
 
   const handleInputChange = (eventOrName, value) => {
@@ -110,830 +137,653 @@ function AddNewGarda({ open, onClose, isGard }) {
     }
   };
 
-  const validateForm = () => {
-    let newErrors = {};
-    if (!InfData.gardaRegNo) newErrors.gardaRegNo = "RegNo Required";
-    if (!InfData.forename) newErrors.forename = "ForeName Required";
-    if (!InfData.surname) newErrors.surname = "SurName Required";
-    if (!InfData.dateOfBirth) newErrors.dateOfBirth = "Date Of Birth Required";
-    if (!InfData.gender) newErrors.gender = "Gender Required";
-    if (!InfData.buildingOrHouse)
-      newErrors.buildingOrHouse = "Building Or House Required";
-    if (!InfData.streetOrRoad)
-      newErrors.streetOrRoad = "Street Or Road Required";
-    if (!InfData.postcode) newErrors.postcode = "PostCode Required";
-    if (!InfData.mobile) newErrors.mobile = "Mobile Required";
-    if (!InfData.email) newErrors.email = "Email Required";
-    if (!InfData.rank) newErrors.rank = "Rank Required";
-    if (!InfData.duty) newErrors.duty = "Duty Required";
-    if (!InfData.Division) newErrors.Division = "Division Required";
-    if (!InfData.District) newErrors.District = "District Required";
-    if (!InfData.selectStation) newErrors.selectStation = "Station Required";
-    if (!InfData.dateOfTemplemore)
-      newErrors.dateOfTemplemore = "Date Of Templemore Required";
-    if (!InfData.class) newErrors.class = "Class Required";
+  const handleSubmit = () => {
+    const requiredFields = [
+      "status",
+      "title",
+      "forename",
+      "surname",
+      "dateOfBirth",
+      "gender",
+      "AdressLine1",
+      "AdressLine4",
+      "Country",
+      "mobile",
+      "preferredEmailOptions",
+      "MembershipCategory",
+      "WorkLocation",
+      "Grade",
+      'PaymentType',
+      'isTermCon',
+    ];
 
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
+    const newErrors = {};
+
+    // Validate required fields
+    requiredFields.forEach((field) => {
+      const value = InfData[field];
+      if (!value || value.toString().trim() === "") {
+        newErrors[field] = "This field is required";
+      }
+    });
+
+    // Conditional validation for email fields
+    if (InfData.preferredEmailOptions === "Personal") {
+      if (!InfData.email || InfData.email.trim() === "") {
+        newErrors.email = "Personal Email is required";
+      }
+    }
+
+    if (InfData.preferredEmailOptions === "Work") {
+      if (!InfData.WorkEmail || InfData.WorkEmail.trim() === "") {
+        newErrors.WorkEmail = "Work Email is required";
+      }
+    }
+
+    // If there are any errors, stop submission
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+
+    // Clear previous errors
+    setErrors({});
+
+    // Submit the form (replace with your actual logic)
+    console.log("Form submitted successfully:", InfData);
+    // You can call an API or trigger next step here
   };
 
-  const handleSubmit = (e) => {
-
-    e.preventDefault();
-    setSubmitted(true);
-
-    if (validateForm()) {
-      alert("Form submitted successfully!");
-      console.log("Form Data:", InfData);
+  const handlePlacesChanged = () => {
+    const places = inputRef.current.getPlaces();
+    console.log('places=========>', places);
+    if (places && places.length > 0) {
+      const place = places[0];
+      const address = place.formatted_address;
+      debugger
+      const addressParts = address.split(', ').map(part => part.trim());
+      const addressLine1 = addressParts[0] || '';
+      const addressLine2 = addressParts[1] || '';
+      const addressLine3 = addressParts[2] || '';
+      const addressLine4 = addressParts[3] || '';
+      debugger
+      setInfData({
+        ...InfData,
+        AdressLine1: addressLine1,
+        AdressLine2: addressLine2,
+        AdressLine3: addressLine3,
+        AdressLine4: addressLine4,
+      });
     }
   };
 
-  //   const handleInputChangeWhole = (field, value) => {
-  //     setInfData((prev) => ({
-  //       ...prev,
-  //       [field]: value,
-  //     }));
-  //   };
-  const props = {
-    action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
-    onChange({ file, fileList }) {
-      if (file.status !== "uploading") {
-        console.log(file, fileList);
-      }
-    },
-    defaultFileList: [
-      {
-        uid: "1",
-        name: "khan.png",
-        status: "done",
-        url: "http://www.bise.com/khan.png",
-        percent: 33,
-      },
-      {
-        uid: "2",
-        name: "Error",
-        status: "done",
-        url: "http://www.bise.com/yyy.png",
-      },
-      {
-        uid: "3",
-        name: "zzz.png",
-        status: "uploading",
-        // custom error message to show
-        url: "http://www.bise.com/zzz.png",
-      },
-    ],
-  };
-  const [modalOpenData, setmodalOpenData] = useState({
-    Partnership: false,
-    Children: false,
-    TransferScreen: false,
-  });
-  const openCloseModalsFtn = (key) => {
-    setmodalOpenData((prevState) => ({
-      ...prevState,
-      [key]: !modalOpenData[key],
-    }));
-  };
-  
-  const [value4, setValue4] = useState("Male");
-  const onChange4 = ({ target: { value } }) => {
-    let name;
-    name = "numan"
-    console.log("radio4 checked", value);
-    setValue4(value);
-  };
-
+  console.log(InfData, "InfData")
   return (
     <>
       <MyDrawer
-        title={`${isGard === true ? "Application [ 93824B ]" : "Application Request"}`}
+        title={`${isGard === true ? "Bulk Registration [ 93824B ]" : "Regist Registration"}`}
         open={open}
-        onClose={onClose}
+        onClose={() => {
+          setErrors({});
+          setInfData(inputsInitValue);
+          onClose()
+        }}
         add={handleSubmit}
         isGarda={isGard ? true : false}
         isGardaCheckbx={isGard ? false : true}
-        width='1000px'>
-        <div className='details-con-header1'>
-          <Row>
-            <Col span={12}>
-              <div
-                className='detail-sub-con detail-sub-con-ist'
-                style={{
-                  backgroundColor: "white",
-                  border: "none",
-                  height: "auto",
-                }}>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Application Status</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <div
-                      style={{
-                        display: "flex",
-                        width: "100%",
-                        alignItems: "baseline",
-                      }}>
-                      <div className='input-container-with-sup d-flex flex-column '>
-                     
-                        {
-                          isGard === true ?
-                           <Input
-                          placeholder='Pendding'
-                        disabled={true}  
-                          style={{
-                            padding: "0px",
-                            width: "100%",
-                            borderRight: "1px solid #d9d9d9",
-                            borderRadius: "4px 0 0 4px",
-                            padding: "0px",
-                            paddingLeft: "5px",
-                            margin: "0px",
-                            height: "33px",
-                          }} // Adjust border style
-                        
-                        /> 
-                        :
-                        <MySelect
-                        isSimple={true}
-                        placeholder='Select Status'
-                        onChange={(value) =>{}}
-                        options={ApplicationStatus}
-                        value={currentStatus}
-                       />
-                        }
-                        {submitted && errors.gardaRegNo && (
-                          <h1 className='error-text'>{errors.gardaRegNo}</h1>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Reg No :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div
-                      style={{
-                        display: "flex",
-                        width: "100%",
-                        alignItems: "baseline",
-                      }}>
-                      <div className='input-container-with-sup d-flex flex-column '>
-                        <Input
-                          placeholder='Enter text'
-                          name='gardaRegNo'
-                          value={InfData.gardaRegNo}
-                          onChange={handleInputChange}
-                          style={{
-                            padding: "0px",
-                            width: "100%",
-                            borderRight: "1px solid #d9d9d9",
-                            borderRadius: "4px 0 0 4px",
-                            padding: "0px",
-                            paddingLeft: "5px",
-                            margin: "0px",
-                            height: "33px",
-                          }} // Adjust border style
-                          suffix={
-                            <div className='suffix-container'>
-                              <IoSettingsOutline />
-                            </div>
-                          }
-                        />
-                        {submitted && errors.gardaRegNo && (
-                          <h1 className='error-text'>{errors.gardaRegNo}</h1>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Title :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <div className='input-sub-con'>
-                      <MySelect
-                        isSimple={true}
-                        placeholder='Select Title'
-                        onChange={(value) => handleInputChange("title", value)}
-                        options={lookupsForSelect?.Titles}
-                      />
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Forename :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        className='input'
-                        name='forename'
-                        onChange={handleInputChange}
-                        value={InfData?.forename}
-                      />
-                      {submitted && errors.forename && (
-                        <h1 className='error-text'>{errors.forename}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Surname :</p>
-                  </div>
-                  <div className='input-cont '>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        className='input'
-                        value={InfData?.surname}
-                        name='surname'
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors.surname && (
-                        <h1 className='error-text'>{errors.surname}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Date of Birth :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <DatePicker
-                        style={{ width: "100%", borderRadius: "3px" }}
-                        name='dob'
-                        value={
-                          InfData?.dateOfBirth
-                            ? moment(InfData.dateOfBirth, "DD/MM/YYYY")
-                            : null
-                        } // Convert string to moment
-                        onChange={(date, dateString) => {
-                          handleInputChange(
-                            "dateOfBirth",
-                            date ? date.format("DD/MM/YYYY") : null
-                          ); // Pass the string value
-                        }}
-                        format='DD/MM/YYYY'
-                      />
-                      {/* <div className="ag-65"> */}
-                      {ageOnNextBirthday != null && (
-                        <p className='ag-65-title'>{ageOnNextBirthday} Yrs</p>
-                      )}
-                      {submitted && errors.dateOfBirth && (
-                        <h1 className='error-text'>{errors.dateOfBirth}</h1>
-                      )}
-                    </div>
-                    {/* </div> */}
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Gender :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Radio.Group
-                        options={lookupsForSelect?.gender}
-                        optionType='button'
-                        buttonStyle='solid'
-                        name='gender'
-                        value={InfData.gender}
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors.gender && (
-                        <h1 className='error-text'>{errors.gender}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
+        width='1500px'>
+        <div className="drawer-main-cntainer d-flex flex-column	 " >
+          <div>
+          <Row gutter={24}>
+  {/* Section Heading */}
+  <Col span={24}>
+    <h2 style={{ fontSize: '17px', marginBottom: '20px' }}>Personal Information</h2>
+  </Col>
 
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Building or House :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        className='input'
-                        type='text'
-                        name='buildingOrHouse'
-                        value={InfData?.buildingOrHouse}
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors.buildingOrHouse && (
-                        <h1 className='error-text'>{errors.buildingOrHouse}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Street or Road :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        className='input'
-                        type='text'
-                        name='streetOrRoad'
-                        value={InfData.streetOrRoad}
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors?.streetOrRoad && (
-                        <h1 className='error-text'>{errors?.streetOrRoad}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Area or Town :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
+  {/* Title (Empty Data Allowed) */}
+  <Col span={12}>
+    <CustomSelect
+      label="Title"
+      name="title"
+      value={InfData.title}
+      options={lookupsForSelect?.Titles} // can be empty
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("title", e.target.value)}
+      hasError={!!errors?.title}
+    />
+  </Col>
+  {/* Forename | Surname */}
+  <Col span={12}>
+    <MyInput
+      label="Forename"
+      name="forename"
+      value={InfData.forename}
+      required
+      disabled={isDisable}
+      onChange={handleInputChange}
+      hasError={!!errors?.forename}
+    />
+  </Col>
 
-                    <Input
-                      className='input'
-                      type='text'
-                      name='areaOrTown'
-                      value={InfData.areaOrTown}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Country, City or Postcode :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <MySelect
-                        placeholder='Select City'
-                        isSimple={true}
-                        name='postcode'
-                        value={InfData.postcode}
-                        options={options}
-                        onChange={(value) =>
-                          handleInputChange("postcode", value)
-                        }
-                      />
-                      {submitted && errors.postcode && (
-                        <h1 className='error-text'>{errors.postcode}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Eircode :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <Input
-                      className='input'
-                      type='text'
-                      name='eirCode'
-                      value={InfData.eirCode}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Mobile :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        className='input'
-                        placeholder='000-000-0000'
-                        type='number'
-                        name='mobile'
-                        value={InfData.mobile}
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors?.mobile && (
-                        <h1 className='error-text'>{errors?.mobile}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Other Contact :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <Input
-                      className='input'
-                      placeholder='000-000-0000'
-                      type='number'
-                      name='otherContact'
-                      value={InfData.otherContact}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Email :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        className='input'
-                        type='email'
-                        name='email'
-                        value={InfData.email}
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors?.email && (
-                        <h1 className='error-text'>{errors?.email}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </Col>
+  <Col span={12}>
+    <MyInput
+      label="Surname"
+      name="surname"
+      value={InfData.surname}
+      required
+      disabled={isDisable}
+      onChange={handleInputChange}
+      hasError={!!errors?.surname}
+    />
+  </Col>
 
-            <Col span={12}>
-              <div
-                className='detail-sub-con'
-                style={{
-                  border: "none",
-                  backgroundColor: "white",
-                  height: "auto",
-                }}>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Rank :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
-                  Select Rank
-                </Dropdown.Button> */}
-                      <MySelect
-                        placeholder='Select Rank'
-                        isSimple={true}
-                        options={lookupsForSelect?.Ranks}
-                        name='rank'
-                        value={InfData.rank}
-                        onChange={(value) => {
-                          handleInputChange("rank", value);
-                        }}
-                      />
-                      {submitted && errors.rank && (
-                        <h1 className='error-text'>{errors.rank}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className='lbl'>Duty:</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
-                  Select Duty
-                </Dropdown.Button> */}
-                      <MySelect
-                        placeholder='Select Duty'
-                        isSimple={true}
-                        options={lookupsForSelect?.Duties}
-                        name='duty'
-                        value={InfData.duty}
-                        onChange={(value) => handleInputChange("duty", value)}
-                      />
-                      {submitted && errors.duty && (
-                        <h1 className='error-text'>{errors.duty}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Division :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <MySelect
-                        placeholder='Select Division'
-                        isSimple={true}
-                        value={InfData.Division}
-                        name='division'
-                        onChange={(value) =>
-                          handleInputChange("division", value)
-                        }
-                      />
-                      {submitted && errors.Division && (
-                        <h1 className='error-text'>{errors.Division}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>District :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <MySelect
-                        placeholder='Select District'
-                        isSimple={true}
-                        value={InfData.District}
-                        name='district'
-                        onChange={(value) =>
-                          handleInputChange("district", value)
-                        }
-                      />
-                      {submitted && errors.District && (
-                        <h1 className='error-text'>{errors.District}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Station :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div
-                      style={{
-                        display: "flex",
-                        flexDirection: "column",
-                        width: "100%",
-                      }}>
-                      {/* <div className="input-container-with-sup d-flex flex-column"> */}
-                      {/* <Input
-                    placeholder="Enter text"
-                    style={{ width: '100%', borderRight: '1px solid #d9d9d9', borderRadius: '4px 0 0 4px', padding: '0px', paddingLeft: '5px', margin: '0px', height: '33px' }} // Adjust border style
-                    suffix={<div className="suffix-container">
-                      <BsThreeDots />
-                    </div>}
-                  /> */}
-                      {/* <Dropdown.Button menu={menuProps} className="custom-dropdown-button" onClick={handleButtonClick}>
-                    Select Station
-                  </Dropdown.Button> */}
-                      <MySelect
-                        placeholder='Select Station'
-                        isSimple={true}
-                        value={InfData.selectStation}
-                        name='station'
-                        onChange={(value) =>
-                          handleInputChange("station", value)
-                        }
-                      />
-                      {submitted && errors.selectStation && (
-                        <h1 className='error-text'>{errors.selectStation}</h1>
-                      )}
-                    </div>
-                    <Button
-                      className='butn primary-btn detail-btn ms-2'
-                      onClick={() => openCloseModalsFtn("TransferScreen")}>
-                      Tr
-                    </Button>
-                  </div>
-                </div>
+  {/* Gender | Date of Birth */}
+  <Col span={12}>
+    <CustomSelect
+      label="Gender"
+      name="gender"
+      value={InfData.gender}
+      options={lookupsForSelect?.gender}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("gender", e.target.value)}
+      hasError={!!errors?.gender}
+    />
+  </Col>
 
-                <div className='lbl-txtarea-2'>
-                  <div className='title-cont-txtarea'>
-                    <p className=''></p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <TextArea
-                      rows={2}
-                      style={{
-                        width: "100%",
-                        borderRadius: "3px",
-                        borderColor: "D9D9D9",
-                      }}
-                    />
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Station Phone : </p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <Input
-                      value={InfData?.stationPh}
-                      name='stationPh'
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
+  <Col span={12}>
+    <MyDatePicker
+      label="Date of Birth"
+      name="dob"
+      value={InfData.dateOfBirth ? moment(InfData.dateOfBirth, "DD/MM/YYYY") : null}
+      required
+      disabled={isDisable}
+      onChange={(date) =>
+        handleInputChange("dateOfBirth", date ? date.format("DD/MM/YYYY") : null)
+      }
+      hasError={!!errors?.dateOfBirth}
+    />
+    {ageOnNextBirthday != null && (
+      <p className="ag-65-title">{ageOnNextBirthday} Yrs</p>
+    )}
+  </Col>
 
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Templemore :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <MyDatePicker
-                        className='date-picker'
-                        name='dop'
-                        isSimple={true}
-                        value={
-                          InfData.dateOfTemplemore
-                            ? moment(InfData.dateOfTemplemore, "DD/MM/YYYY")
-                            : null
-                        }
-                        onChange={(date, dateString) => {
-                          handleInputChange(
-                            "dateOfTemplemore",
-                            date ? date.format("DD/MM/YYYY") : null
-                          ); // Pass the string value
-                        }}
-                        format='DD/MM/YYYY'
-                      />
-                      {submitted && errors.dateOfTemplemore && (
-                        <h1 className='error-text'>
-                          {errors.dateOfTemplemore}
-                        </h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Retired :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <div className='checkbox-con'>
-                      <div
-                        style={{
-                          backgroundColor: "white",
-                          marginRight: "8px",
-                          width: "32px",
-                          height: "32px",
-                          display: "flex",
-                          justifyContent: "center",
-                          alignItems: "center",
-                        }}>
-                        <Checkbox
-                          name='isPensioner'
-                          checked={InfData.isPensioner}
-                          onChange={handleInputChange}
-                        />
-                      </div>
-                      <MyDatePicker
-                        value={
-                          InfData.dateRetired
-                            ? moment(InfData.dateRetired, "DD/MM/YYYY")
-                            : null
-                        }
-                        name='dr'
-                        onChange={(date, dateString) => {
-                          handleInputChange(
-                            "dateRetired",
-                            date ? date.format("DD/MM/YYYY") : null
-                          ); // Pass the string value
-                        }}
-                        format='DD/MM/YYYY'
-                      />
-                    </div>
-                  </div>
-                </div>
+  {/* Country Of Primary Qualification */}
+  <Col span={12}>
+    <MyInput
+      label="Country Of Primary Qualification"
+      name="Country Of Primary Qualification"
+      value={InfData.CountryOfPrimaryQualification}
+      disabled={isDisable}
+      onChange={handleInputChange}
+    />
+  </Col>
+  <Col span={12}></Col>
+</Row >
 
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Pension No :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <Input
-                      type='text'
-                      placeholder='Enter something...'
-                      disabled={!InfData?.isPensioner}
-                      value={InfData?.pensionNo}
-                      onChange={handleInputChange}
-                    />
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Class :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star'>*</p>
-                    <div className='input-sub-con d-flex flex-column'>
-                      <Input
-                        type='text'
-                        name='class'
-                        value={InfData?.class}
-                        onChange={handleInputChange}
-                      />
-                      {submitted && errors?.class && (
-                        <h1 className='error-text'>{errors?.class}</h1>
-                      )}
-                    </div>
-                  </div>
-                </div>
 
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Attested :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <MyDatePicker
-                      style={{ width: "100%", borderRadius: "3px" }}
-                      value={
-                        InfData.attested
-                          ? moment(InfData.attested, "DD/MM/YYYY")
-                          : null
-                      }
-                      name='dt'
-                      onChange={(date, dateString) => {
-                        handleInputChange(
-                          "attested",
-                          date ? date.format("DD/MM/YYYY") : null
-                        ); // Pass the string value
-                      }}
-                      format='DD/MM/YYYY'
-                    />
-                  </div>
-                </div>
-                <div className='lbl-inpt'>
-                  <div className='title-cont'>
-                    <p className=''>Graduation :</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <MyDatePicker
-                      className='date-picker'
-                      value={
-                        InfData.graduation
-                          ? moment(InfData.graduation, "DD/MM/YYYY")
-                          : null
-                      }
-                      name='dg'
-                      onChange={(date, dateString) => {
-                        handleInputChange(
-                          "graduation",
-                          date ? date.format("DD/MM/YYYY") : null
-                        ); // Pass the string value
-                      }}
-                      format='DD/MM/YYYY'
-                    />
-                  </div>
-                </div>
-                <div className='lbl-txtarea-2'>
-                  <div className='title-cont-txtarea'>
-                    <p className=''>Notes</p>
-                  </div>
-                  <div className='input-cont'>
-                    <p className='star-white'>*</p>
-                    <TextArea
-                      name='notes'
-                      value={InfData.notes}
-                      onChange={handleInputChange}
-                      rows={2}
-                      style={{
-                        width: "100%",
-                        borderRadius: "3px",
-                        borderColor: "D9D9D9",
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-            </Col>
-          </Row>
-          <Row>
-            <Col></Col>
-          </Row>
+          {/* <h2 style={{ fontSize: '17px',  color: 'black' }}>Correspondence Details</h2> */}
+
+<Row gutter={24}>
+  {/* Section Heading */}
+  <Col span={24}>
+    <h2 style={{ fontSize: '17px', marginBottom: '20px' }}>Correspondence Details</h2>
+  </Col>
+
+  {/* Eircode | Preferred Address */}
+  <Col span={12}>
+    {isLoaded && (
+      <StandaloneSearchBox
+        onLoad={(ref) => (inputRef.current = ref)}
+        onPlacesChanged={handlePlacesChanged}
+        placeholder="Enter Eircode (e.g., D01X4X0)"
+      >
+        <MyInput
+          label="Eircode"
+          name="Enter Eircode (e.g., D01X4X0)"
+        />
+      </StandaloneSearchBox>
+    )}
+  </Col>
+
+  <Col span={12}>
+    <CustomSelect
+      label="Preferred Address"
+      name="Preferred Address"
+      value={InfData.PreferredAddress}
+      options={preferredOptions}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("PreferredAddress", e.target.value)}
+      hasError={!!errors?.PreferredAddress}
+    />
+  </Col>
+
+  {/* Address Line 1 | Address Line 2 */}
+  <Col span={12}>
+    <MyInput
+      label="Address Line 1 (Building or House)"
+      name="AdressLine1"
+      value={InfData.AdressLine1}
+      required
+      disabled={isDisable}
+      onChange={handleInputChange}
+      hasError={!!errors?.AdressLine1}
+    />
+  </Col>
+
+  <Col span={12}>
+    <MyInput
+      label="Address Line 2 (Street or Road)"
+      name="AdressLine2"
+      value={InfData.AdressLine2}
+      disabled={isDisable}
+      onChange={handleInputChange}
+    />
+  </Col>
+
+  {/* Address Line 3 | Address Line 4 */}
+  <Col span={12}>
+    <MyInput
+      label="Address Line 3 (Area or Town)"
+      name="AdressLine3"
+      value={InfData.AdressLine3}
+      disabled={isDisable}
+      onChange={handleInputChange}
+    />
+  </Col>
+
+  <Col span={12}>
+    <CustomSelect
+      label="Address Line 4 (County, City or Postcode)"
+      name="AdressLine4"
+      value={InfData.AdressLine4}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("AdressLine4", e.target.value)}
+      hasError={!!errors?.AdressLine4}
+    />
+  </Col>
+
+  {/* Country | Mobile */}
+  <Col span={12}>
+    <CustomSelect
+      label="Country"
+      name="Country"
+      value={InfData.Country}
+      options={countryOptions}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("Country", e.target.value)}
+      hasError={!!errors?.Country}
+    />
+  </Col>
+
+  <Col span={12}>
+    <MyInput
+      label="Mobile"
+      name="mobile"
+      type="number"
+      value={InfData.mobile}
+      required
+      disabled={isDisable}
+      onChange={handleInputChange}
+      hasError={!!errors?.mobile}
+    />
+  </Col>
+
+  {/* Preferred Email (Full Width) */}
+  <Col span={12}>
+    <CustomSelect
+      label="Preferred Email"
+      name="Preferred Email"
+      value={InfData.preferredEmailOptions}
+      options={preferredEmailOptions}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("preferredEmailOptions", e.target.value)}
+      hasError={!!errors?.preferredEmailOptions}
+    />
+  </Col>
+  {/* Personal Email | Work Email */}
+  <Col span={12}>
+    <MyInput
+      label="Personal Email"
+      name="email"
+      type="email"
+      required={InfData.preferredEmailOptions === "Personal"}
+      value={InfData.email}
+      disabled={isDisable}
+      onChange={handleInputChange}
+    />
+  </Col>
+
+  <Col span={12}>
+    <MyInput
+      label="Work Email"
+      name="Work Email"
+      type="email"
+      value={InfData.WorkEmail}
+      required={InfData.preferredEmailOptions === "Work"}
+      disabled={isDisable}
+      onChange={handleInputChange}
+      hasError={!!errors?.email}
+    />
+  </Col>
+</Row>
+          </div>
+          <Row gutter={24}>
+  <Col span={24}>
+    <h2 style={{ fontSize: '17px', marginBottom: '20px' }}>Professional Details</h2>
+  </Col>
+
+  {/* Membership Category | Work Location */}
+  <Col span={12}>
+    <CustomSelect
+      label="Membership Category"
+      name="MembershipCategory"
+      value={InfData.MembershipCategory}
+      options={CatOptions}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("MembershipCategory", e.target.value)}
+      hasError={!!errors?.MembershipCategory}
+    />
+  </Col>
+
+  <Col span={12}>
+    <CustomSelect
+      label="Work Location"
+      name="WorkLocation"
+      value={InfData.WorkLocation}
+      options={[
+        { label: 'Work Location', value: 'Work Location' },
+        { label: 'Other Work Location', value: 'Other Work Location' }
+      ]}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("WorkLocation", e.target.value)}
+      hasError={!!errors?.WorkLocation}
+    />
+  </Col>
+
+  {/* Other Work Location | Grade */}
+  <Col span={12}>
+    <CustomSelect
+      label="Other Work Location"
+      name="OtherWorkLocation"
+      value={InfData.OtherWorkLocation}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("OtherWorkLocation", e.target.value)}
+    />
+  </Col>
+
+  <Col span={12}>
+    <MyInput
+      label="Grade"
+      name="Grade"
+      value={InfData.Grade}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("Grade", e.target.value)}
+      hasError={!!errors?.Grade}
+    />
+  </Col>
+
+  {/* Other Grade | Branch */}
+  <Col span={12}>
+    <MyInput
+      label="Other Grade"
+      name="otherGrade"
+      value={InfData.otherGrade}
+      required
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("otherGrade", e.target.value)}
+      hasError={!!errors?.Grade}
+    />
+  </Col>
+
+  <Col span={12}>
+    <CustomSelect
+      label="Branch"
+      name="Branch"
+      value={InfData.Branch}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("Branch", e.target.value)}
+    />
+  </Col>
+
+  {/* Region | Retired Date */}
+  <Col span={12}>
+    <CustomSelect
+      label="Region"
+      name="Region"
+      value={InfData.Region}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("Region", e.target.value)}
+    />
+  </Col>
+
+  <Col span={12}>
+    <MyDatePicker
+      label="Retired Date"
+      name="RetiredDate"
+      value={InfData.RetiredDate ? moment(InfData.RetiredDate, "DD/MM/YYYY") : null}
+      disabled={isDisable}
+      onChange={(date) =>
+        handleInputChange("RetiredDate", date ? date.format("DD/MM/YYYY") : null)
+      }
+    />
+  </Col>
+
+  {/* Pension No */}
+  <Col span={12}>
+    <MyInput
+      label="Pension No"
+      name="pensionNo"
+      value={InfData.pensionNo}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("pensionNo", e.target.value)}
+      hasError={!!errors?.Grade}
+    />
+  </Col>
+</Row>
+
+       <Row gutter={24}>
+  <Col span={24}>
+    <h2 style={{ fontSize: '17px', marginBottom: '20px' }}>Subscription Details</h2>
+  </Col>
+
+  {/* Column 1 */}
+  <Col span={12}>
+    <CustomSelect
+      label="Payment Type"
+      name="PaymentType"
+      required
+      options={[
+        { label: "Direct Debit", value: 'Direct Debit' },
+        { label: "Credit Card", value: 'Credit Card' }
+      ]}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("PaymentType", e.target.value)}
+      value={InfData.PaymentType}
+      hasError={!!errors?.PaymentType}
+    />
+
+    <MyInput
+      label="Payroll No"
+      name="PayrollNo"
+      value={InfData.PayrollNo}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("PayrollNo", e.target.value)}
+    />
+
+    <label className="my-input-label mt-4 my-input-wrapper">
+      Are you currently undertaking a nursing adaptation programme?
+    </label>
+    <Radio.Group
+      name="isNursingAdaptation"
+      value={InfData.isNursingAdaptation}
+      onChange={handleInputChange}
+    >
+      <Radio value="Yes">Yes</Radio>
+      <Radio value="No">No</Radio>
+    </Radio.Group>
+
+    <MyInput
+      label="NMBI No/An Board Altranais Number"
+      name="NMBINo"
+      value={InfData.NMBINo}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("NMBINo", e.target.value)}
+    />
+
+    <label className="my-input-label mt-4">Please tick one of the following</label>
+    <Radio.Group
+      name="nursingType"
+      value={InfData.nursingType}
+      onChange={handleInputChange}
+    >
+      <Radio value="General Nursing">General Nursing</Radio>
+      <Radio value="Public Health Nurse">Public Health Nurse</Radio>
+      <Radio value="Mental Health Nurse">Mental Health Nurse</Radio>
+      <Radio value="Midwife">Midwife</Radio>
+      <Radio value="Sick Children's Nurse">Sick Children's Nurse</Radio>
+      <Radio value="Registered Nurse for Intellectual Disability">
+        Registered Nurse for Intellectual Disability
+      </Radio>
+    </Radio.Group>
+  </Col>
+
+  {/* Column 2 */}
+  <Col span={12}>
+    <label className="my-input-label mt-4">Please select the most appropriate option below</label>
+    <Radio.Group
+      name="memberType"
+      value={InfData.memberType}
+      onChange={handleInputChange}
+    >
+      <Radio value="New Member">You are a new member</Radio>
+      <Radio value="Newly Graduated">You are newly graduated</Radio>
+      <Radio value="Rejoining">You were previously a member of the INMO, and are rejoining</Radio>
+      <Radio value="Returning from Break">You are returning from a career break</Radio>
+      <Radio value="Returning from Abroad">You are returning from nursing abroad</Radio>
+    </Radio.Group>
+
+    <label className="my-input-label mt-4">If you are a member of another Trade Union. If yes, which Union?</label>
+    <Radio.Group
+      name="otherUnion"
+      value={InfData.otherUnion}
+      onChange={handleInputChange}
+    >
+      <Radio value="Yes">Yes</Radio>
+      <Radio value="No">No</Radio>
+    </Radio.Group>
+
+    <label className="my-input-label mt-4">Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?</label>
+    <Radio.Group
+      name="wasUnionMember"
+      value={InfData.wasUnionMember}
+      onChange={handleInputChange}
+      className="my-input-wrapper"
+    >
+      <Radio value="Yes">Yes</Radio>
+      <Radio value="No">No</Radio>
+    </Radio.Group>
+
+    <MyInput
+      label="Recurited By"
+      name="RecuritedBy"
+      value={InfData.RecuritedBy}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("RecuritedBy", e.target.value)}
+    />
+
+    <MyInput
+      label="Recurited By (Membership No)"
+      name="RecuritedByMemNo"
+      value={InfData.RecuritedByMemNo}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("RecuritedByMemNo", e.target.value)}
+    />
+  </Col>
+
+  {/* Full Width Additional Subscription Section */}
+  <Col span={24}>
+    <h2 style={{ fontSize: '17px', marginBottom: '20px' }}>Additional Subscription Info</h2>
+  </Col>
+
+  <Col span={12}>
+    <CustomSelect
+      label="Primary Section"
+      name="PrimarySection"
+      value={InfData.PrimarySection}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("PrimarySection", e.target.value)}
+    />
+
+    <CustomSelect
+      label="Other Primary Section"
+      name="OtherPrimarySection"
+      value={InfData.OtherPrimarySection}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("OtherPrimarySection", e.target.value)}
+    />
+  </Col>
+
+  <Col span={12}>
+    <CustomSelect
+      label="Secondary Section"
+      name="SecondarySection"
+      value={InfData.SecondarySection}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("SecondarySection", e.target.value)}
+    />
+
+    <CustomSelect
+      label="Other Secondary Section"
+      name="OtherSecondarySection"
+      value={InfData.OtherSecondarySection}
+      disabled={isDisable}
+      onChange={(e) => handleInputChange("OtherSecondarySection", e.target.value)}
+    />
+  </Col>
+
+  <Col span={12} className="mt-4">
+    <Checkbox
+      checked={InfData?.incPro}
+      onChange={(e) => handleInputChange('incPro', e.target.checked)}
+      className="my-input-wrapper"
+    >
+      Tick here to join INMO Income Protection Scheme
+    </Checkbox>
+
+    <Checkbox className="my-input-wrapper">
+      Tick here to join Rewards for INMO members
+    </Checkbox>
+
+    </Col>
+    <Col span={12}>
+    <Checkbox className="my-input-wrapper">
+      Tick here to allow our partners to contact you about Value added Services by Email and SMS
+    </Checkbox>
+    </Col>
+    <Col span={24}>
+    
+    <Checkbox
+      checked={InfData?.isTermCon}
+      onChange={(e) => handleInputChange('isTermCon', e.target.checked)}
+      className="my-input-wrapper"
+    >
+      I have read and agree to the INMO
+      <a href=""> Data Protection Statement </a>, the INMO Privacy Statement and the INMO
+      <a href=""> Conditions of Membership </a>
+      {errors?.isTermCon && <span style={{ color: 'red' }}> (Required)</span>}
+    </Checkbox>
+  </Col>
+</Row>
+
         </div>
       </MyDrawer>
     </>

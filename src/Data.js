@@ -1173,3 +1173,29 @@ export const emails = {
     }
   ]
 }
+export const CatOptions = [
+            { value: 'general', label: 'General (all grades)' },
+            { value: 'postgraduate_student', label: 'Postgraduate Student' },
+            {
+              value: 'short_term_relief',
+              label: 'Short-term/ Relief (under 15 hrs/wk average)',
+            },
+            { value: 'private_nursing_home', label: 'Private nursing home' },
+            {
+              value: 'affiliate_non_practicing',
+              label: 'Affiliate members (non-practicing)',
+            },
+            {
+              value: 'lecturing',
+              label: 'Lecturing (employed in universities and IT institutes)',
+            },
+            {
+              value: 'associate',
+              label: 'Associate (not currently employed as a nurse/midwife)',
+            },
+            { value: 'retired_associate', label: 'Retired Associate' },
+            {
+              value: 'undergraduate_student',
+              label: 'Undergraduate Student',
+            },
+          ];

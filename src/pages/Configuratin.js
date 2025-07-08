@@ -5546,9 +5546,6 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-
-
-
       <MyDrawer title='Title' open={drawerOpen?.Title} isPagination={true} onClose={() => {
         openCloseDrawerFtn('Title')
         IsUpdateFtn('Title', false,)

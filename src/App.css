@@ -112,7 +112,7 @@ textarea::placeholder {
   font-weight: bold !important;
 }
 select {
-  color: var(--labelColor) !important;
+  /* color: var(--labelColor) !important; */
   font-family: var(--fontFamily) !important;
   opacity: 1;
   border-radius: 0px !important;

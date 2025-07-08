@@ -1,6 +1,17 @@
 .my-input-wrapper {
   margin-bottom: 1.25rem;
 }
+.placeholder-error {
+  color: red !important;
+}
+/* Red placeholder when validation error exists */
+.my-input-field-select.error option[value=""] {
+  color: red;
+}
+.my-input-field-select.error {
+  border: 1px solid red;
+  box-shadow: 0 0 4px rgba(229, 57, 53, 0.5);
+}
 
 .my-input-label {
   font-weight: 600;
@@ -11,7 +22,7 @@
 }
 
 .my-input-label .error {
-  color: #dc3545;
+  color: red !important;
   font-size: 14px;
 }
 
@@ -23,7 +34,7 @@
 .error-message {
   font-weight: normal;
   font-size: 14px;
-  color: #dc3545;
+  color: red;
   margin-left: 4px;
 }
 

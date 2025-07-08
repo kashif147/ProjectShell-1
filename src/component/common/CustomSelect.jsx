@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
-import '../../styles/MySelect.css'; 
+import '../../styles/MySelect.css';
 
 const CustomSelect = ({
   label,
@@ -12,16 +12,16 @@ const CustomSelect = ({
   hasError = false,
   errorMessage = 'Required',
   disabled = false,
-  placeholder,
-  isMarginBtm=true,
+  placeholder = 'Select...',
+  isMarginBtm = true,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
-    <div className={`${isMarginBtm? "my-input-wrapper" :''}`}>
+    <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
       <label
         htmlFor={name}
-        className={`my-input-label ${hasError ? 'error' : ''} `}
+        className={`my-input-label ${hasError ? 'error' : ''}`}
       >
         {label}
         {required && <span className="required-star">*</span>}
@@ -31,35 +31,35 @@ const CustomSelect = ({
       </label>
 
       <div
-        className={` my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''} ${
+        className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''} ${
           disabled ? 'disabled' : ''
         }`}
       >
         <select
-          // id={name}
-          name={name||''}
-          value={value}
+          name={name || 'Select'}
+          value={value || ''}
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className="my-input-field-select"
+          className={`my-input-field-select ${hasError ? 'error' : ''} `}
+          // className={hasError ? 'placeholder-error' : ''}
           disabled={disabled}
-          placeholder={placeholder}
         >
-          {/* <option value=""></option> */}
-           {placeholder && !value && (
-    <option value="" >
-      {placeholder}
-    </option>
-  )}
-          {options.map(opt => (
-            <option key={opt.key} value={opt.label}>
+          {placeholder && (
+            <option value="" disabled hidden className={hasError ? 'placeholder-error' : ''}>
+              {placeholder}
+            </option>
+          )}
+          {options.map((opt) => (
+            <option key={opt.key || opt.label} value={opt.label}>
               {opt.label}
             </option>
           ))}
         </select>
 
-        {hasError && !disabled && <AiOutlineExclamationCircle className="error-icon" />}
+        {/* {hasError && !disabled && (
+          <AiOutlineExclamationCircle className="error-icon" />
+        )} */}
       </div>
     </div>
   );

@@ -13,6 +13,8 @@ import childrenReducer from "../features/ChildrenSlice";
 import refreshReducer from '../features/RefreshSlice';
 import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice"
+// import countriesReducer from './countrySlice';
+import countriesReducer from '../features/CountrySlice';
 import menuLblReducer from '../features/MenuLblSlice'
 
 const store = configureStore({
@@ -28,6 +30,8 @@ const store = configureStore({
     contactType: contactTypeReducer,
     contact: contactReducer,
     menuLbl: menuLblReducer,
+    countries: countriesReducer,
+
   },
 });
 

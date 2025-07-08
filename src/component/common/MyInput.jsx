@@ -10,7 +10,8 @@ const MyInput = ({
   type = 'text',
   required = false,
   hasError = false,
-  errorMessage = 'Required'
+  errorMessage = 'Required',
+  disabled
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -23,7 +24,6 @@ const MyInput = ({
           <span className="error-message"> ({errorMessage})</span>
         )}
       </label>
-
       <div className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''}`}>
         <input
           id={name}
@@ -35,6 +35,7 @@ const MyInput = ({
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className="my-input-field"
+          disabled={disabled}
         />
         {hasError && (
           <span className="error-icon">ⓘ</span> 
