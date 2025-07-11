@@ -1,12 +1,14 @@
 import React, { useState } from 'react'
 import MyDrawer from './common/MyDrawer'
-import { Button, Form, Input, Radio, Checkbox, Table, Space } from 'antd';
+import { Button, Form, Input, Radio, Checkbox, Table, Space, DatePicker } from 'antd';
 import MyDatePicker from './common/MyDatePicker';
 import MySelect from './common/MySelect';
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { useTableColumns } from '../context/TableColumnsContext ';
+// import "../../styles/MyDetails.css";
+import "../styles/MyDetails.css"
 const { TextArea } = Input;
 const { Search } = Input;
 
@@ -23,7 +25,7 @@ function TransferRequests({ open, onClose, isSearch }) {
             name: record.name,
         }),
     };
-    const{ProfileDetails} = useTableColumns();
+    const { ProfileDetails } = useTableColumns();
 
     const columnCountry = [
         {
@@ -76,10 +78,10 @@ function TransferRequests({ open, onClose, isSearch }) {
                 {
                     isSearch && (
                         <Search
-                        placeholder="input search text"
-                        onSearch={onSearch}
-                        style={{                       }}
-                      />
+                            placeholder="input search text"
+                            onSearch={onSearch}
+                            style={{}}
+                        />
                     )
                 }
                 <div className="details-drawer mb-4 mt-4">
@@ -88,125 +90,189 @@ function TransferRequests({ open, onClose, isSearch }) {
                     <p>{ProfileDetails?.duty}</p>
                 </div>
 
-                <div className='transfer-main-cont d-flex'>
-                    <div className='w-50'>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                                <p>Current Station :</p>
+                <div className='d-flex'>
+                    <div className='w-50  '>
+                        <div
+                            className='d-flex align-items-center justify-content-center'
+                            style={{
+                                height: "44px",
+                                backgroundColor: "#215E97",
+                                color: "white",
+                            }}>
+                            <h3 className='text-center'>Current</h3>
+                        </div>
+                        <div className='body-container'>
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Work location :</p>
+                                </div>
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <MySelect
+                                            placeholder='Select Work location'
+                                            isSimple={true}
+                                        />
+                                    </div>
+                                </div>
                             </div>
-                            <div className="inpt-con" >
-                                <p className="star">*</p>
-                                <div className="inpt-sub-con" >
-                                    <MySelect placeholder='.' isSimple={true} />
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Branch :</p>
+                                </div>
 
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <Input />
+                                    </div>
                                 </div>
-                                <p className="error"></p>
                             </div>
-                        </div>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%" }}>
-                                <p>Requested Date :</p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star">*</p>
-                                <div className="inpt-sub-con" >
-                                    {/* <MySelect placeholder='Select County' isSimple={true} /> */}
-                                    <MyDatePicker />
+                            <div className='transfer-main-inpts1'>
+                                <div className='transfer-inpts-title1'>
+                                    <p className='transfer-main-inpts-p'></p>
                                 </div>
-                                <p className="error"></p>
-                            </div>
-                        </div>
-                        <div className="drawer-inpts-container " style={{ height: '115px' }}>
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p>Memo :</p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star-white">*</p>
-                                <div className="inpt-sub-con" >
-                                    <TextArea rows={4} style={{ width: "100%", borderRadius: "3px", borderColor: 'D9D9D9' }} />
+
+                                <div className='transfer-inputs1'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <TextArea rows={3} />
+                                    </div>
                                 </div>
-                                <p className="error"></p>
                             </div>
-                        </div>
-                        <div className="drawer-inpts-container mt-10">
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p></p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star-white">*</p>
-                                <div className="inpt-sub-con d-flex justify-content-end" >
-                                    <Checkbox checked={true}>
-                                        Transfer was Successful
-                                    </Checkbox>
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Region :</p>
                                 </div>
-                                <p className="error"></p>
+
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <MySelect
+                                            isSimple={true}
+                                            placeholder='Region'
+                                        />
+                                    </div>
+                                </div>
                             </div>
+                            {/* <div className='transfer-main-inpts'>
+                                    <div className='transfer-inpts-title'>
+                                      <p className='transfer-main-inpts-p'>Division :</p>
+                                    </div>
+                
+                                    <div className='transfer-inputs'>
+                                      <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <MySelect
+                                          isSimple={true}
+                                          placeholder='Select District'
+                                        />
+                                      </div>
+                                    </div>
+                                  </div> */}
                         </div>
                     </div>
-                    <div className='w-50 '>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p>Requested Station :</p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star">*</p>
-                                <div className="inpt-sub-con" >
-                                    <MySelect placeholder='Select Station' isSimple={true} />
-                                </div>
-                                <p className="error"></p>
-                            </div>
+                    <div className='w-50 ms-4 '>
+                        <div
+                            className='d-flex align-items-center justify-content-center'
+                            style={{
+                                height: "44px",
+                                backgroundColor: "#215E97",
+                                color: "white",
+                            }}>
+                            <h3 className='text-center'>New</h3>
                         </div>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p>Resulted Station :</p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star">*</p>
-                                <div className="inpt-sub-con" >
-                                    <MySelect placeholder='Select Station' isSimple={true} />
+                        <div className='body-container'>
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Work location :</p>
                                 </div>
-                                <p className="error"></p>
-                            </div>
-                        </div>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p>Meeting Date :</p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star">*</p>
-                                <div className="inpt-sub-con" >
-                                    <MyDatePicker />
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star'>*</p>
+                                        <MySelect
+                                            placeholder='Select Work location'
+                                            isSimple={true}
+                                        />
+                                    </div>
                                 </div>
-                                <p className="error"></p>
                             </div>
-                        </div>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p></p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star-white">*</p>
-                                <div className="inpt-sub-con" >
-                                    <Checkbox checked={true}>
-                                        Priority
-                                    </Checkbox>
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Branch  :</p>
                                 </div>
-                                <p className="error"></p>
-                            </div>
-                        </div>
-                        <div className="drawer-inpts-container ">
-                            <div className="drawer-lbl-container" style={{ width: "33%", height: 'auto', display: 'flex', alignItems: 'center' }}>
-                                <p>Transfer Date :</p>
-                            </div>
-                            <div className="inpt-con" >
-                                <p className="star-white">*</p>
-                                <div className="inpt-sub-con" >
-                                  <MyDatePicker />
-                                </div>
-                                <p className="error"></p>
-                            </div>
-                        </div>
 
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <Input />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='transfer-main-inpts1'>
+                                <div className='transfer-inpts-title1'>
+                                    <p className='transfer-main-inpts-p'></p>
+                                </div>
+
+                                <div className='transfer-inputs1'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <TextArea rows={3} />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Region :</p>
+                                </div>
+
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star'>*</p>
+                                      <Input />
+                                    </div>
+                                </div>
+                            </div>
+                            {/* <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Division :</p>
+                                </div>
+
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star'>*</p>
+                                        <MySelect
+                                            isSimple={true}
+                                            placeholder='Select District'
+                                        />
+                                    </div>
+                                </div>
+                            </div> */}
+                            <div className='transfer-main-inpts'>
+                                <div className='transfer-inpts-title'>
+                                    <p className='transfer-main-inpts-p'>Transfer Date :</p>
+                                </div>
+
+                                <div className='transfer-inputs'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <DatePicker className='w-100' />
+                                    </div>
+                                </div>
+                            </div>
+                            <div className='transfer-main-inpts1'>
+                                <div className='transfer-inpts-title1'>
+                                    <p className='transfer-main-inpts-p'>Memo :</p>
+                                </div>
+
+                                <div className='transfer-inputs1'>
+                                    <div className='d-flex '>
+                                        <p className='star-white '>*</p>
+                                        <TextArea rows={3} />
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
                 <div>

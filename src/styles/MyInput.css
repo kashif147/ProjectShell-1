@@ -12,7 +12,19 @@
   border: 1px solid red;
   box-shadow: 0 0 4px rgba(229, 57, 53, 0.5);
 }
+.error-text1{
+  color: red !important;
+}
+.radio-error {
+  border: 1px solid red;
+  padding: 4px 8px;
+  border-radius: 4px;
+  color: red !important;
+}
 
+.has-error .ant-radio-group {
+  border-color: red !important;
+}
 .my-input-label {
   font-weight: 600;
   font-size: 14px;
@@ -20,7 +32,15 @@
   margin-bottom: 6px;
   color: #212529;
 }
-
+.my-input-field,
+.my-input-field-select input {
+  height: 40px; /* <-- Unified height */
+  padding: 6px 12px;
+  font-size: 14px;
+  line-height: 1.42857;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
 .my-input-label .error {
   color: red !important;
   font-size: 14px;

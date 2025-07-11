@@ -13,18 +13,29 @@ import store from './store/Store';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
+//   <Provider store={store}>
+// <Router>
+//   <ExcelProvider>
+// <TableColumnsProvider>
+
+//   <App />
+
+// </TableColumnsProvider>
+// </ExcelProvider>
+
+// </Router>
+// </Provider>
+<React.StrictMode>
   <Provider store={store}>
-<Router>
-  <ExcelProvider>
-<TableColumnsProvider>
-
-  <App />
-
-</TableColumnsProvider>
-</ExcelProvider>
-
-</Router>
-</Provider>
+    <Router>
+      <ExcelProvider>
+        <TableColumnsProvider>
+          <App />
+        </TableColumnsProvider>
+      </ExcelProvider>
+    </Router>
+  </Provider>
+</React.StrictMode>
 
 );
 // If you want to start measuring performance in your app, pass a function
