@@ -1,4 +1,4 @@
-import { useState, useEffect,useRef } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { FaTrashAlt } from "react-icons/fa";
@@ -15,6 +15,7 @@ import { FaUserAltSlash } from "react-icons/fa";
 import { Navigate, useLocation } from "react-router-dom";
 import TransferRequests from "../TransferRequests";
 import CareerBreakDrawer from "../CareerBreakDrawer";
+import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 
 
 function SimpleMenu({
@@ -30,13 +31,14 @@ function SimpleMenu({
   const [checkboxes, setCheckboxes] = useState([]);
   const [transferreq, settransferreq] = useState(false)
   const [careerBreak, setcareerBreak] = useState(false)
+    const [isDrawerOpen, setisDrawerOpen] = useState(false)
   const location = useLocation
   const screenName = location?.state?.search
   const [ddSearch, setddSearch] = useState("")
-  const { updateSelectedTitles, searchFilters, gridData,globleFilters, getProfile,ProfileDetails } = useTableColumns();
+  const { updateSelectedTitles, searchFilters, gridData, globleFilters, getProfile, ProfileDetails } = useTableColumns();
 
   useEffect(() => {
-    if(ddSearch!=""){
+    if (ddSearch != "") {
       searchInFilters(ddSearch);
     }
   }, [ddSearch]);
@@ -50,9 +52,9 @@ function SimpleMenu({
       });
     });
   };
- useEffect(()=>{
-  setCheckboxes(globleFilters)
- },[globleFilters])
+  useEffect(() => {
+    setCheckboxes(globleFilters)
+  }, [globleFilters])
   const searchInFilters = (query) => {
     const normalizedQuery = query.trim().toLowerCase();
     const filteredResults = searchFilters[screenName]?.filter((item) =>
@@ -60,40 +62,40 @@ function SimpleMenu({
     );
     setCheckboxes(filteredResults);
   };
-   // The QR code value could come from NFC data; here we use a static example.
-   const [qrValue] = useState("Hello NFC");
-   // Reference to the wrapper element containing the QR code SVG.
-   const qrRef = useRef(null);
- /**
- * Simulates the creation of an NFC tag object for testing purposes.
- * @param {Array} records - An array of record objects, each should include:
- *                          - recordType: A string (e.g., "text", "url").
- *                          - data: The payload data (e.g., a string).
- *                          - (Optional) mediaType: MIME type for the data.
- * @returns {Object} A simulated NFC tag object.
- */
- function createTestNFCTag(records = []) {
-  const simulatedTag = {
-    id: 'test-tag-' + Math.floor(Math.random() * 10000), // Generates a random ID
-    records: records.map(record => ({
-      recordType: record.recordType,
-      RegNo: record.data,
-      // mediaType: record.mediaType || 'text/plain'
-    })),
-    timestamp: Date.now()
-  };
+  // The QR code value could come from NFC data; here we use a static example.
+  const [qrValue] = useState("Hello NFC");
+  // Reference to the wrapper element containing the QR code SVG.
+  const qrRef = useRef(null);
+  /**
+  * Simulates the creation of an NFC tag object for testing purposes.
+  * @param {Array} records - An array of record objects, each should include:
+  *                          - recordType: A string (e.g., "text", "url").
+  *                          - data: The payload data (e.g., a string).
+  *                          - (Optional) mediaType: MIME type for the data.
+  * @returns {Object} A simulated NFC tag object.
+  */
+  function createTestNFCTag(records = []) {
+    const simulatedTag = {
+      id: 'test-tag-' + Math.floor(Math.random() * 10000), // Generates a random ID
+      records: records.map(record => ({
+        recordType: record.recordType,
+        RegNo: record.data,
+        // mediaType: record.mediaType || 'text/plain'
+      })),
+      timestamp: Date.now()
+    };
 
-  return simulatedTag;
-}
-const handleGenerate = () => {
-  // Example records; adjust or modify as needed.
-  const tag = createTestNFCTag([
-    { recordType: "text", data: ProfileDetails?.regNo },
-  ]);
-  // For demonstration, we show the tag data in an alert.
-  alert("Generated NFC Tag:\n" + JSON.stringify(tag, null, 2));
-};
-   const downloadQRCode = async () => {
+    return simulatedTag;
+  }
+  const handleGenerate = () => {
+    // Example records; adjust or modify as needed.
+    const tag = createTestNFCTag([
+      { recordType: "text", data: ProfileDetails?.regNo },
+    ]);
+    // For demonstration, we show the tag data in an alert.
+    alert("Generated NFC Tag:\n" + JSON.stringify(tag, null, 2));
+  };
+  const downloadQRCode = async () => {
     try {
       const qrText = "Hello NFC"; // Replace with your desired data
       // Generate a data URL for the QR code as a PNG image
@@ -109,9 +111,9 @@ const handleGenerate = () => {
       console.error("Error generating QR code:", error);
     }
   };
- // The three-dots menu (top-right and grid) and actions like "Add Filter" or "Add Column"
-// are handled based on props passed to this component.
-// This separation allows better control and reuse, 
+  // The three-dots menu (top-right and grid) and actions like "Add Filter" or "Add Column"
+  // are handled based on props passed to this component.
+  // This separation allows better control and reuse, 
 
   const menu = (
     <Menu>
@@ -204,83 +206,135 @@ const handleGenerate = () => {
                 <ExportPDF data={gridData} filename="my-data.pdf" />
 
               </div>
-            ) : 
+            ) :
 
-            key==='Transfer Requests'?(
-              <div className="d-flex align-items-baseline" onClick={()=>{settransferreq(true )
-                getProfile(record,index)
+              key === 'Transfer Requests' ? (
+                <div className="d-flex align-items-baseline bg-danger" onClick={() => {
+                  settransferreq(true)
+                  getProfile(record, index)
 
-              }}>
-              <FaRegArrowAltCircleRight style={{
-                  fontSize: "12px",
-                  marginRight: "10px",
-                  color: "#45669d",
-                }} />
-              Transfer Request
-            </div>
-            ):
-            key==='Career Break'?(
-              <div className="d-flex align-items-baseline" onClick={()=>{setcareerBreak(!careerBreak)
-                getProfile(record,index)
-              }}>
-              <FaUserAltSlash
-              style={{
-                fontSize: "12px",
-                marginRight: "10px",
-                color: "#45669d",
-              }}
-              />
-              Career Break
-            </div>
-            ):
-            key==='Generate NFC tag'?(
-              <div className="d-flex align-items-baseline" onClick={async () => {
-                await getProfile(record, index);
-                handleGenerate();
-              }}>
-              <LuSmartphoneNfc 
-              style={{
-                fontSize: "12px",
-                marginRight: "10px",
-                color: "#45669d",
-              }}
-              />
-              Generate NFC tag
-            </div>
-            ):
-            key==='Roster'?
-            <div className="d-flex align-items-baseline" onClick={() => {
-             
-            }}>
-            
-            </div>
-            :
+                }}>
+                  <FaRegArrowAltCircleRight style={{
+                    fontSize: "12px",
+                    marginRight: "10px",
+                    color: "#45669d",
+                  }} />
+                  Transfer Request
+                </div>
+              ) :
+                key === 'Career Break' ? (
+                  <div className="d-flex align-items-baseline" onClick={() => {
+                    setcareerBreak(!careerBreak)
+                    getProfile(record, index)
+                  }}>
+                    <FaUserAltSlash
+                      style={{
+                        fontSize: "12px",
+                        marginRight: "10px",
+                        color: "#45669d",
+                      }}
+                    />
+                    Career Break
+                  </div>
+                ) :
+                  key === 'Generate NFC tag' ? (
+                    <div className="d-flex align-items-baseline" onClick={async () => {
+                      await getProfile(record, index);
+                      handleGenerate();
+                    }}>
+                      <LuSmartphoneNfc
+                        style={{
+                          fontSize: "12px",
+                          marginRight: "10px",
+                          color: "#45669d",
+                        }}
+                      />
+                      Generate NFC tag
+                    </div>
+                  ) :
+                  key === 'Change Category' ? (
+                    <div className="d-flex align-items-baseline" onClick={async () => {
+                      await getProfile(record, index);
+                      setisDrawerOpen(true);
+                    }}>
+                      <LuSmartphoneNfc
+                        style={{
+                          fontSize: "12px",
+                          marginRight: "10px",
+                          color: "#45669d",
+                        }}
+                      />
+                      Change Category
+                    </div>
+                  ) :
+                    key === 'Roster' ?
+                      <div className="d-flex align-items-baseline" onClick={() => {
 
-            (
-              key
-            )}
+                      }}>
+
+                      </div>
+                      :
+
+                      (
+                        key
+                      )}
           </Menu.Item>
         ))}
     </Menu>
   );
 
+  const [formData, setFormData] = useState({
+    currentWorkLocation: '',
+    currentBranch: '',
+    currentDescription: '',
+    currentRegion: '',
+    newWorkLocation: '',
+    newBranch: '',
+    newDescription: '',
+    newRegion: '',
+    transferDate: '',
+    memo: ''
+  });
+
+  const [errors, setErrors] = useState({});
   return (
     <>
-  
-    <Dropdown
-      overlay={menu}
-      trigger={["click"]}
-      placement="bottomLeft"
-      overlayStyle={{ width: 200, padding: "0px" }}
-    >
-      <Button className={` ${vertical == true ? "gray-btn butn" : "transparent-bg p-0"}`}>{title}</Button>
 
-    </Dropdown>
-    <TransferRequests open={transferreq} 
-    onClose={()=>settransferreq(!transferreq)}
-    />
-    <CareerBreakDrawer open={careerBreak} onClose={()=>setcareerBreak(!careerBreak)} />
-      </>
+      <Dropdown
+        overlay={menu}
+        trigger={["click"]}
+        placement="bottomLeft"
+        overlayStyle={{ width: 200, padding: "0px" }}
+      >
+        <Button className={` ${vertical == true ? "gray-btn butn" : "transparent-bg p-0"}`}>{title}</Button>
+
+      </Dropdown>
+      {formData && (
+        <TransferRequests
+          open={transferreq}
+          onClose={() => settransferreq(false)}
+          isSearch={false}
+          formData={formData}
+          handleChange={(field, value) =>
+            setFormData(prev => ({ ...prev, [field]: value }))
+          }
+          errors={errors}
+        />
+      )}
+      <CareerBreakDrawer open={careerBreak} onClose={() => setcareerBreak(!careerBreak)} />
+        <ChangeCategoryDrawer
+                open={isDrawerOpen}
+                onClose={() => setisDrawerOpen(false)}
+                isProfileDetails={false}
+                // currentCategory={profileData?.currentCategory}
+                // newCategory={formData?.newCategory}
+                // onNewCategoryChange={(value) =>
+                //   setFormData(prev => ({ ...prev, newCategory: value }))
+                // }
+                // onAccept={handleAccept}
+                // onReject={handleReject}
+              />
+    </>
   );
 }
 

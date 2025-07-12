@@ -214,7 +214,8 @@ const TableComponent = ({ data, screenName, redirect }) => {
             style={{ fontSize: "15px", fontWeight: 500 }} />}
             data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false, 
               'Career Break': false, 
-               'Generate NFC tag':false,
+              'Generate NFC tag':false,
+               'Change Category':false
             }}
             isCheckBox={false}
             isSearched={false}

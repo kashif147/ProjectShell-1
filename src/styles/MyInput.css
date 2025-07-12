@@ -70,7 +70,7 @@
   border-color: #0d6efd;
 }
 
-.my-input-field {
+/* .my-input-field {
   width: 100%;
   padding: 10px 36px 10px 12px;
   font-size: 14px;
@@ -80,8 +80,22 @@
   color: #212529;
   background-color: #fff;
   transition: border-color 0.2s ease;
+} */
+.my-input-field {
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.3s;
 }
 
+textarea.my-input-field {
+  min-height: 100px; /* Makes it display as 4 rows approx */
+  resize: vertical;  /* Allows manual resizing by user */
+  line-height: 1.4;
+}
 .my-input-field::placeholder {
   color: #6c757d;
 }

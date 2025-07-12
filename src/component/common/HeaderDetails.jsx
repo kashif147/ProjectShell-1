@@ -5,7 +5,7 @@ import { FaUser, } from "react-icons/fa6";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
 import MyDrawer from "./MyDrawer";
-import { Table, Checkbox, DatePicker, Modal, TimePicker,Radio } from 'antd'
+import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio } from 'antd'
 import {
   RightOutlined,
   PlusOutlined,
@@ -54,6 +54,7 @@ import TransferRequests from "../TransferRequests";
 import MyDatePicker from "./MyDatePicker";
 import New from "../corespondence/New";
 import CreateClaim from "../claim/CreateClaim";
+import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -74,6 +75,8 @@ function HeaderDetails() {
   const [rosterDrawer, setrosterDrawer] = useState(false)
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [aprove, setaprove] = useState("001")
+  const [isDrawerOpen, setisDrawerOpen] = useState(false)
+
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
   };
@@ -464,9 +467,9 @@ function HeaderDetails() {
                 )}
                 {
                   nav === '/CorrespondencesSummary'
-                || nav === '/Sms' || nav === '/Email'
-                || nav === '/Notes'
-                  || nav === '/RosterSummary' || nav === '/Transfers' ?
+                    || nav === '/Sms' || nav === '/Email'
+                    || nav === '/Notes'
+                    || nav === '/RosterSummary' || nav === '/Transfers' ?
                     <p>Summary</p> :
                     nav === '/Configuratin' ?
                       <>
@@ -522,13 +525,13 @@ function HeaderDetails() {
                     //   onChange={handleChangeCheckBox}
                     // />
                     <Radio.Group
-                    style={{ marginRight: '10px' }}
-              options={plainOptions}
-              value={selectedValue1}
-              onChange={handleChangeCheckBox}
-              optionType='button'
-              buttonStyle='solid'
-            />
+                      style={{ marginRight: '10px' }}
+                      options={plainOptions}
+                      value={selectedValue1}
+                      onChange={handleChangeCheckBox}
+                      optionType='button'
+                      buttonStyle='solid'
+                    />
                     :
                     <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
                       if (nav == "/ClaimsById")
@@ -568,9 +571,9 @@ function HeaderDetails() {
             || location?.pathname == "/RemindersSummary"
             || location?.pathname == "/Cancallation"
             || location?.pathname == "/Batches"
-          || location?.pathname == "/Sms"
-          || location?.pathname == "/Email"
-          || location?.pathname == "/Notes"
+            || location?.pathname == "/Sms"
+            || location?.pathname == "/Email"
+            || location?.pathname == "/Notes"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -592,7 +595,7 @@ function HeaderDetails() {
                         <CreateClaim />
                         :
                         <Button onClick={() => {
-                          if ( nav == "/Applications") {
+                          if (nav == "/Applications") {
                             setisGardaDrwer(!isGardaDrwer)
 
                           } else if (nav == "/ClaimSummary") {
@@ -606,7 +609,11 @@ function HeaderDetails() {
                             setisGardaDrwer(!isGardaDrwer)
                           else if (nav === "/RemindersSummary" || nav === "/Cancallation" || nav === "/Batches") {
                             setIsBatchOpen(!isBatchOpen);
-                            }
+                          }
+                          else if (nav === "/ChangCateSumm") {
+                            setisDrawerOpen(!isDrawerOpen)
+
+                          }
                         }
 
                         }
@@ -936,69 +943,80 @@ function HeaderDetails() {
 
         </div>
       </MyDrawer>
-        <MyDrawer isPagination={false} width='1300px' title={`${nav==="/RemindersSummary"?"Batch":nav==="/Batches"?"":"Cancellation Batch"}`} open={isBatchOpen} onClose={() => {
-              setIsBatchOpen(!isBatchOpen)
-              
-              }}
-              add={()=>{navigate("/BatchMemberSummary", { state: { search: "BatchMemberSummary" } })
-              setIsBatchOpen(!isBatchOpen)
-            }}
-              >
-              {
-                nav === "/Batches" ? (
-                  <CreateBatchPayment />
-                ) : (
-                  <div className="drawer-main-cntainer">
-                    <div className="mb-4 pb-4">
-                      <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                          <p>Batch Name</p>
-                        </div>
-                        <div className="inpt-con">
-                          <p className="star">*</p>
-                          <div className="inpt-sub-con">
-                            <Input />
-                            <h1 className="error-text"></h1>
-                          </div>
-                          <p className="error"></p>
-                        </div>
-                      </div>
-                      <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                          <p>Batch Date</p>
-                        </div>
-                        <div className="inpt-con">
-                          <p className="star">*</p>
-                          <div className="inpt-sub-con">
-                            <MyDatePicker />
-                          </div>
-                        </div>
-                      </div>
-                      <div className="drawer-inpts-container">
-                        <div className="drawer-lbl-container">
-                          <p>Status</p>
-                        </div>
-                        <div className="inpt-con">
-                          <p className="star">*</p>
-                          <div className="inpt-sub-con d-flex flex-column">
-                            <MySelect
-                              isSimple={true}
-                              options={[
-                                { key: "001", label: "Draft" },
-                                { key: "002", label: "Inactive" },
-                              ]}
-                              value={"001"}
-                              disabled={true}
-                            />
-                          </div>
-                        </div>
-                      </div>
+      <MyDrawer isPagination={false} width='1300px' title={`${nav === "/RemindersSummary" ? "Batch" : nav === "/Batches" ? "" : "Cancellation Batch"}`} open={isBatchOpen} onClose={() => {
+        setIsBatchOpen(!isBatchOpen)
+
+      }}
+        add={() => {
+          navigate("/BatchMemberSummary", { state: { search: "BatchMemberSummary" } })
+          setIsBatchOpen(!isBatchOpen)
+        }}
+      >
+        {
+          nav === "/Batches" ? (
+            <CreateBatchPayment />
+          ) : (
+            <div className="drawer-main-cntainer">
+              <div className="mb-4 pb-4">
+                <div className="drawer-inpts-container">
+                  <div className="drawer-lbl-container">
+                    <p>Batch Name</p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con">
+                      <Input />
+                      <h1 className="error-text"></h1>
+                    </div>
+                    <p className="error"></p>
+                  </div>
+                </div>
+                <div className="drawer-inpts-container">
+                  <div className="drawer-lbl-container">
+                    <p>Batch Date</p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con">
+                      <MyDatePicker />
                     </div>
                   </div>
-                )
-              }
-            </MyDrawer>
-           
+                </div>
+                <div className="drawer-inpts-container">
+                  <div className="drawer-lbl-container">
+                    <p>Status</p>
+                  </div>
+                  <div className="inpt-con">
+                    <p className="star">*</p>
+                    <div className="inpt-sub-con d-flex flex-column">
+                      <MySelect
+                        isSimple={true}
+                        options={[
+                          { key: "001", label: "Draft" },
+                          { key: "002", label: "Inactive" },
+                        ]}
+                        value={"001"}
+                        disabled={true}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )
+        }
+      </MyDrawer>
+      <ChangeCategoryDrawer
+        open={isDrawerOpen}
+        onClose={() => setisDrawerOpen(false)}
+        // currentCategory={profileData?.currentCategory}
+        // newCategory={formData?.newCategory}
+        // onNewCategoryChange={(value) =>
+        //   setFormData(prev => ({ ...prev, newCategory: value }))
+        // }
+        // onAccept={handleAccept}
+        // onReject={handleReject}
+      />
 
     </div>
   );

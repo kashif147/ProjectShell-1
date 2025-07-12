@@ -11,12 +11,26 @@ const MyInput = ({
   required = false,
   hasError = false,
   errorMessage = 'Required',
-  disabled
+  disabled,
+  rows=4
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
+  const commonProps = {
+    id: name,
+    name,
+    value,
+    onChange,
+    placeholder,
+    onFocus: () => setIsFocused(true),
+    onBlur: () => setIsFocused(false),
+    className: 'my-input-field',
+    disabled,
+    
+  };
+
   return (
-    <div className="my-input-wrapper">
+<div className="my-input-wrapper">
       <label htmlFor={name} className={`my-input-label ${hasError ? 'error' : ''}`}>
         {label}
         {required && <span className="required-star"> *</span>}
@@ -24,24 +38,19 @@ const MyInput = ({
           <span className="error-message"> ({errorMessage})</span>
         )}
       </label>
+
       <div className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''}`}>
-        <input
-          id={name}
-          name={name}
-          type={type}
-          value={value}
-          onChange={onChange}
-          placeholder={placeholder}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
-          className="my-input-field"
-          disabled={disabled}
-        />
+        {type === 'textarea' ? (
+          <textarea {...commonProps} rows={rows} />
+        ) : (
+          <input type={type} {...commonProps} />
+        )}
         {hasError && (
           <span className="error-icon">ⓘ</span> 
         )}
       </div>
     </div>
+
   );
 };
 

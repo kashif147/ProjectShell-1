@@ -795,7 +795,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                 }))}
               />
             </Col>
-
             {/* Region | Retired Date */}
             <Col span={12}>
               <CustomSelect

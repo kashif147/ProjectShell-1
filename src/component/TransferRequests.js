@@ -1,300 +1,225 @@
-import React, { useState } from 'react'
-import MyDrawer from './common/MyDrawer'
-import { Button, Form, Input, Radio, Checkbox, Table, Space, DatePicker } from 'antd';
-import MyDatePicker from './common/MyDatePicker';
-import MySelect from './common/MySelect';
+import React, { useState } from 'react';
+import { Table, Input, Space } from 'antd';
+import MyDrawer from './common/MyDrawer';
+import MyInput from './common/MyInput';
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { useTableColumns } from '../context/TableColumnsContext ';
-// import "../../styles/MyDetails.css";
-import "../styles/MyDetails.css"
-const { TextArea } = Input;
+import CustomSelect from './common/CustomSelect';
+import "../styles/MyDetails.css";
+
 const { Search } = Input;
 
+function TransferRequests({ open, onClose, isSearch, formData, handleChange, errors = {} }) {
+  const onSearch = (value, _e, info) => console.log(info?.source, value);
 
-function TransferRequests({ open, onClose, isSearch }) {
-    const onSearch = (value, _e, info) => console.log(info?.source, value);
-    const [selectionType, setSelectionType] = useState('checkbox');
-    const rowSelection = {
-        onChange: (selectedRowKeys, selectedRows) => {
-            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
-        },
-        getCheckboxProps: (record) => ({
-            disabled: record.name === 'Disabled User',
-            name: record.name,
-        }),
-    };
-    const { ProfileDetails } = useTableColumns();
+  const [selectionType] = useState('checkbox');
 
-    const columnCountry = [
-        {
-            title: 'Transfer Date',
-            dataIndex: 'RegionCode',
-            key: 'RegionCode',
-        },
-        {
-            title: 'Station From',
-            dataIndex: 'RegionName',
-            key: 'RegionName',
-        },
-        {
-            title: 'Station To',
-            dataIndex: 'DisplayName',
-            key: 'DisplayName',
-        },
-        {
-            title: 'Notes',
-            dataIndex: 'DisplayName',
-            key: 'DisplayName',
-        },
+  const rowSelection = {
+    onChange: (selectedRowKeys, selectedRows) => {
+      console.log('selectedRowKeys:', selectedRowKeys, 'selectedRows:', selectedRows);
+    },
+    getCheckboxProps: (record) => ({
+      disabled: record.name === 'Disabled User',
+      name: record.name,
+    }),
+  };
 
-        {
-            title: (
-                <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-                    <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-                    Action
-                </div>
-            ),
-            key: "action",
-            align: "center",
-            render: (_, record) => (
-                <Space size="middle" >
-                    <FaEdit size={16} style={{ marginRight: "10px" }} />
-                    <AiFillDelete size={16} />
-                </Space>
-            ),
-        },
-    ];
-    const [form] = Form.useForm();
-    const [formLayout, setFormLayout] = useState('horizontal');
-    const onFormLayoutChange = ({ layout }) => {
-        setFormLayout(layout);
-    };
+  const { ProfileDetails } = useTableColumns();
 
-    return (
-        <MyDrawer title="Transfer Request" open={open} onClose={onClose}>
-            <div>
-                {
-                    isSearch && (
-                        <Search
-                            placeholder="input search text"
-                            onSearch={onSearch}
-                            style={{}}
-                        />
-                    )
-                }
-                <div className="details-drawer mb-4 mt-4">
-                    <p>{ProfileDetails?.regNo}</p>
-                    <p>{ProfileDetails?.fullName}</p>
-                    <p>{ProfileDetails?.duty}</p>
-                </div>
+  const columnCountry = [
+    {
+      title: 'Transfer Date',
+      dataIndex: 'transferDate',
+      key: 'transferDate',
+    },
+    {
+      title: 'Station From',
+      dataIndex: 'stationFrom',
+      key: 'stationFrom',
+    },
+    {
+      title: 'Station To',
+      dataIndex: 'stationTo',
+      key: 'stationTo',
+    },
+    {
+      title: 'Notes',
+      dataIndex: 'notes',
+      key: 'notes',
+    },
+    {
+      title: (
+        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit size={16} style={{ marginRight: "10px" }} />
+          <AiFillDelete size={16} />
+        </Space>
+      ),
+    },
+  ];
 
-                <div className='d-flex'>
-                    <div className='w-50  '>
-                        <div
-                            className='d-flex align-items-center justify-content-center'
-                            style={{
-                                height: "44px",
-                                backgroundColor: "#215E97",
-                                color: "white",
-                            }}>
-                            <h3 className='text-center'>Current</h3>
-                        </div>
-                        <div className='body-container'>
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Work location :</p>
-                                </div>
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <MySelect
-                                            placeholder='Select Work location'
-                                            isSimple={true}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Branch :</p>
-                                </div>
-
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <Input />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts1'>
-                                <div className='transfer-inpts-title1'>
-                                    <p className='transfer-main-inpts-p'></p>
-                                </div>
-
-                                <div className='transfer-inputs1'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <TextArea rows={3} />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Region :</p>
-                                </div>
-
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <MySelect
-                                            isSimple={true}
-                                            placeholder='Region'
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            {/* <div className='transfer-main-inpts'>
-                                    <div className='transfer-inpts-title'>
-                                      <p className='transfer-main-inpts-p'>Division :</p>
-                                    </div>
-                
-                                    <div className='transfer-inputs'>
-                                      <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <MySelect
-                                          isSimple={true}
-                                          placeholder='Select District'
-                                        />
-                                      </div>
-                                    </div>
-                                  </div> */}
-                        </div>
-                    </div>
-                    <div className='w-50 ms-4 '>
-                        <div
-                            className='d-flex align-items-center justify-content-center'
-                            style={{
-                                height: "44px",
-                                backgroundColor: "#215E97",
-                                color: "white",
-                            }}>
-                            <h3 className='text-center'>New</h3>
-                        </div>
-                        <div className='body-container'>
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Work location :</p>
-                                </div>
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star'>*</p>
-                                        <MySelect
-                                            placeholder='Select Work location'
-                                            isSimple={true}
-                                        />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Branch  :</p>
-                                </div>
-
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <Input />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts1'>
-                                <div className='transfer-inpts-title1'>
-                                    <p className='transfer-main-inpts-p'></p>
-                                </div>
-
-                                <div className='transfer-inputs1'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <TextArea rows={3} />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Region :</p>
-                                </div>
-
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star'>*</p>
-                                      <Input />
-                                    </div>
-                                </div>
-                            </div>
-                            {/* <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Division :</p>
-                                </div>
-
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star'>*</p>
-                                        <MySelect
-                                            isSimple={true}
-                                            placeholder='Select District'
-                                        />
-                                    </div>
-                                </div>
-                            </div> */}
-                            <div className='transfer-main-inpts'>
-                                <div className='transfer-inpts-title'>
-                                    <p className='transfer-main-inpts-p'>Transfer Date :</p>
-                                </div>
-
-                                <div className='transfer-inputs'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <DatePicker className='w-100' />
-                                    </div>
-                                </div>
-                            </div>
-                            <div className='transfer-main-inpts1'>
-                                <div className='transfer-inpts-title1'>
-                                    <p className='transfer-main-inpts-p'>Memo :</p>
-                                </div>
-
-                                <div className='transfer-inputs1'>
-                                    <div className='d-flex '>
-                                        <p className='star-white '>*</p>
-                                        <TextArea rows={3} />
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-                <div>
-                    <h5>History</h5>
-                    <Table
-                        pagination={false}
-                        columns={columnCountry}
-                        className="drawer-tbl"
-                        rowClassName={(record, index) =>
-                            index % 2 !== 0 ? "odd-row" : "even-row"
-                        }
-                        rowSelection={{
-                            type: selectionType,
-                            ...rowSelection,
-                        }}
-                        bordered
-                    />
-                </div>
+  return (
+    <MyDrawer title="Transfer Request" open={open} onClose={onClose}>
+      <div>
+        {isSearch && (
+          <Search
+            placeholder="Input search text"
+            onSearch={onSearch}
+          />
+        )}
+         {isSearch && (
+        <div className="details-drawer mb-4 mt-4">
+          <p>{ProfileDetails?.regNo}</p>
+          <p>{ProfileDetails?.fullName}</p>
+          <p>{ProfileDetails?.duty}</p>
+        </div>
+         )}
+        <div className="d-flex">
+          {/* Current Section (Disabled) */}
+          <div className="w-50">
+            <div
+              className="d-flex align-items-center justify-content-center"
+              style={{
+                height: '44px',
+                backgroundColor: '#215E97',
+                color: 'white',
+              }}
+            >
+              <h3 className="text-center">Current</h3>
             </div>
+            <div className="body-container">
+              <CustomSelect
+                label="Work Location"
+                name="currentWorkLocation"
+                value={formData?.currentWorkLocation}
+                // options={workLocationOptions}
+                disabled
+              />
 
-        </MyDrawer>
-    )
+              <CustomSelect
+                label="Branch"
+                name="currentBranch"
+                value={formData?.currentBranch}
+                disabled
+              />
+              <CustomSelect
+                label="Region"
+                name="currentRegion"
+                value={formData?.currentRegion}
+                // options={regionOptions}
+                disabled
+              />
+              <MyInput
+                label="Description"
+                name="currentDescription"
+                type="textarea"
+                value={formData?.currentDescription}
+                disabled
+              />
+
+
+            </div>
+          </div>
+
+          {/* New Section (Editable) */}
+          <div className="w-50 ms-4">
+            <div
+              className="d-flex align-items-center justify-content-center"
+              style={{
+                height: '44px',
+                backgroundColor: '#215E97',
+                color: 'white',
+              }}
+            >
+              <h3 className="text-center">New</h3>
+            </div>
+            <div className="body-container">
+              <CustomSelect
+                label="Work Location"
+                name="newWorkLocation"
+                value={formData?.newWorkLocation}
+                onChange={value => handleChange('newWorkLocation', value)}
+                required
+                // options={workLocationOptions}
+                hasError={!!errors?.newWorkLocation}
+              />
+
+              <CustomSelect
+                label="Branch"
+                name="newBranch"
+                required
+                value={formData?.newBranch}
+                onChange={(e) => handleChange('newBranch', e.target.value)}
+                hasError={!!errors?.newBranch}
+              />
+              <CustomSelect
+                label="Region"
+                name="newRegion"
+                placeholder="Select Region"
+                value={formData?.newRegion}
+                onChange={(value) => handleChange('newRegion', value)}
+                required
+                // options={regionOptions}
+                hasError={!!errors?.newRegion}
+              />
+              <MyInput
+                label="Description"
+                name="newDescription"
+                type="textarea"
+                placeholder="Write description"
+                value={formData?.newDescription}
+                onChange={(e) => handleChange('newDescription', e.target.value)}
+              />
+              <MyInput
+                label="Transfer Date"
+                name="transferDate"
+                placeholder="DD/MM/YYYY"
+                required
+                value={formData?.transferDate}
+                onChange={(e) => handleChange('transferDate', e.target.value)}
+                hasError={!!errors?.transferDate}
+              />
+
+              <MyInput
+                label="Memo"
+                name="memo"
+                type="textarea"
+                placeholder="Enter memo"
+                value={formData?.memo}
+                onChange={(e) => handleChange('memo', e.target.value)}
+              />
+            </div>
+          </div>
+        </div>
+
+        <div>
+          <h5>History</h5>
+          <Table
+            pagination={false}
+            columns={columnCountry}
+            className="drawer-tbl"
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? 'odd-row' : 'even-row'
+            }
+            rowSelection={{
+              type: selectionType,
+              ...rowSelection,
+            }}
+            bordered
+          />
+        </div>
+      </div>
+    </MyDrawer>
+  );
 }
 
-export default TransferRequests
+export default TransferRequests;
