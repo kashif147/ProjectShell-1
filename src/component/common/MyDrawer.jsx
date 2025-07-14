@@ -35,7 +35,7 @@ import {
 
 } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isGardaCheckbx, isManual,infoDataChk }) {
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda,isAppRej, isGardaCheckbx, isManual,infoDataChk }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const dispatch = useDispatch()
@@ -84,7 +84,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       Eircode: "",
     },
     ContactTypeID: "",
-    isDeleted: false, // Boolean (not a string)
+    isDeleted: false, 
   });
   const updateContact = (key, value) => {
     setContact((prev) => ({
@@ -137,8 +137,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
         };
       }
     });
-
-    console.log(drawerIpnuts[drawer], "8889");
   };
 
   const [errors, setErrors] = useState();
@@ -173,45 +171,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
     return Object.keys(newErrors[drawerType]).length === 0;
   };
 
-  const columnCountry = [
-    {
-      title: 'Transfer Date',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
-    },
-    {
-      title: 'Station From',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
-    },
-    {
-      title: 'Station To',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
-    },
-    {
-      title: 'Notes',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
-    },
-
-    {
-      title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
-        </Space>
-      ),
-    },
-  ];
+ 
   const CriticalIllnessSchemePaymentsClm = [
     {
       title: 'File Reference',
@@ -414,77 +374,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       [name]: value, // Update only the `timeDur` property
     }));
   };
-
-  const handleEnter = (e) => {
-    isEdit == true ? update() : add()
-  };
-
-  const solicitorColumns = [
-    {
-      title: "Name",
-      dataIndex: "ContactName",
-      key: "ContactName",
-    },
-    {
-      title: "Phone",
-      dataIndex: "ContactPhone",
-      key: "ContactPhone",
-    },
-    {
-      title: "Email",
-      dataIndex: "ContactEmail",
-      key: "ContactEmail",
-    },
-    {
-      title: "Adress",
-      dataIndex: ["ContactAddress", "BuildingOrHouse"],
-      key: "BuildingOrHouse",
-      ellipsis: true,
-    },
-    {
-      title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }}
-          // onClick={() => {
-          //   IsUpdateFtn('Counteries', !isUpdateRec?.Provinces, record)
-          //   addIdKeyToLookup(record?._id, "Counteries")
-          // }}
-          />
-          <AiFillDelete size={16}
-          // onClick={() => {
-          //   MyConfirm({
-          //     title: 'Confirm Deletion',
-          //     message: 'Do You Want To Delete This Item?',
-          //     onConfirm: async () => {
-          //       await deleteFtn(`${baseURL}/lookup`, record?._id,);
-          //       dispatch(fetchRegions())
-          //     },
-          //   })
-          // }}
-          />
-        </Space>
-      ),
-    },
-
-  ];
-
-  const { contacts, contactsLoading, error } = useSelector(
+  const {contactsLoading, } = useSelector(
     (state) => state.contactType
   );
-
   const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false })
   const addIdKeyToLookup = (idValue, drawer) => {
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
-
       return {
         ...prev,
         [drawer]: {
@@ -494,7 +390,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       };
     });
   };
-
   const [data, setdata] = useState({
     Solicitors: [],
   })
@@ -736,8 +631,14 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                 <Checkbox>Multiple</Checkbox>
               )
             }
-         <Checkbox value="Approved" className="me-2">Approved</Checkbox>
-                    <Checkbox value="Rejected">Rejected</Checkbox>
+            {
+              isAppRej && (
+                <>
+                <Checkbox value="Approved" className="me-2">Approved</Checkbox>
+                <Checkbox value="Rejected">Rejected</Checkbox>
+                </>
+              )
+            }
             <Button className="butn secoundry-btn me-4" onClick={onClose}>
               Close
             </Button>

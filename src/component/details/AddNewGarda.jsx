@@ -103,23 +103,18 @@ function AddNewGarda({ open, onClose, isGard }) {
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (eventOrName, value) => {
-
     if (eventOrName?.target) {
-
       const { name, type, value, checked } = eventOrName.target;
       const finalValue = type === "checkbox" ? checked : value;
-
       setInfData((prev) => {
         const updated = {
           ...prev,
           [name]: finalValue,
         };
-
         if (name === "WorkLocation" && workLocationDetails[finalValue]) {
           updated.branch = workLocationDetails[finalValue].branch;
           updated.region = workLocationDetails[finalValue].region;
         }
-
         return updated;
       });
     } else {
@@ -403,6 +398,7 @@ function AddNewGarda({ open, onClose, isGard }) {
           setInfData(inputsInitValue);
           onClose()
         }}
+        isAppRej={true}
         add={handleSubmit}
         isGarda={isGard ? true : false}
         isGardaCheckbx={isGard ? false : true}

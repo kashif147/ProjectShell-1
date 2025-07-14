@@ -7,12 +7,72 @@ import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { useTableColumns } from '../context/TableColumnsContext ';
 import CustomSelect from './common/CustomSelect';
+import { workLocations } from '../Data';
+import { workLocationDetails } from '../Data';
+import { CatOptions } from '../Data';
 import "../styles/MyDetails.css";
+import dayjs from 'dayjs';
 
 const { Search } = Input;
 
-function TransferRequests({ open, onClose, isSearch, formData, handleChange, errors = {} }) {
+function TransferRequests({ open, onClose, isSearch }) {
   const onSearch = (value, _e, info) => console.log(info?.source, value);
+
+  const [formData, setFormData] = useState({
+    newWorkLocation: '',
+    newBranch: '',
+    newRegion: '',
+    newDescription: '',
+    transferDate: '',
+    memo: '',
+  });
+
+  const [errors, setErrors] = useState({});
+  const allBranches = Array.from(
+    new Set(Object.values(workLocationDetails).map(d => d.branch)),
+  );
+  const allRegions = Array.from(
+    new Set(Object.values(workLocationDetails).map(d => d.region)),
+  );
+  const handleChange = (eventOrName, value) => {
+    if (eventOrName?.target) {
+      const { name, type, value, checked } = eventOrName.target;
+      const finalValue = type === "checkbox" ? checked : value;
+      setFormData((prev) => {
+        const updated = {
+          ...prev,
+          [name]: finalValue,
+        };
+        if (name === "newWorkLocation" && workLocationDetails[finalValue]) {
+          updated.newBranch = workLocationDetails[finalValue].branch;
+          updated.newRegion = workLocationDetails[finalValue].region;
+        }
+        return updated;
+      });
+    } else {
+      const name = eventOrName;
+      const formattedValue = dayjs.isDayjs(value)
+        ? value.format("DD/MM/YYYY")
+        : value;
+
+      setFormData((prev) => {
+        const updated = {
+          ...prev,
+          [name]: formattedValue,
+        };
+
+        // Handle WorkLocation → branch & region
+        if (name === "newWorkLocation" && workLocationDetails[formattedValue]) {
+          updated.branch = workLocationDetails[formattedValue].newBranch;
+          updated.region = workLocationDetails[formattedValue].newRegion;
+        }
+
+        return updated;
+      });
+      debugger
+      setErrors((prev) => ({ ...prev, [name]: "" }));
+    }
+  };
 
   const [selectionType] = useState('checkbox');
 
@@ -67,66 +127,101 @@ function TransferRequests({ open, onClose, isSearch, formData, handleChange, err
     },
   ];
 
+  const oncloseftn = () => {
+    onClose()
+
+    setFormData(
+      {
+        newWorkLocation: '',
+        newBranch: '',
+        newRegion: '',
+        newDescription: '',
+        transferDate: '',
+        memo: '',
+      }
+    )
+     setErrors({});
+  }
+  const onSubmit = () => {
+  const requiredFields = [
+    'newWorkLocation',
+    'newBranch',
+    'newRegion',
+    'transferDate'
+  ];
+  
+  const newErrors = {};
+  requiredFields.forEach((field) => {
+    if (!formData[field] || formData[field].trim?.() === '') {
+      newErrors[field] = 'This field is required';
+    }
+  });
+
+  if (Object.keys(newErrors).length > 0) {
+    setErrors(newErrors);
+    return;
+  }
+  console.log('Submitted data:', formData);
+};
   return (
-    <MyDrawer title="Transfer Request" open={open} onClose={onClose}>
+    <MyDrawer title="Transfer Request" open={open} onClose={oncloseftn}
+    add={onSubmit}
+    >
       <div>
-        {isSearch && (
+        {isSearch === true && (
           <Search
-            placeholder="Input search text"
+            placeholder="Input search text "
+            className='pb-4'
             onSearch={onSearch}
           />
         )}
-         {isSearch && (
-        <div className="details-drawer mb-4 mt-4">
-          <p>{ProfileDetails?.regNo}</p>
-          <p>{ProfileDetails?.fullName}</p>
-          <p>{ProfileDetails?.duty}</p>
-        </div>
-         )}
+        {isSearch === false && (
+          <div className="details-drawer mb-4 mt-4">
+            <p>{`${ProfileDetails?.forename}  ${ProfileDetails?.surname}`}</p>
+            <p>{ProfileDetails?.regNo}</p>
+            <p>{ProfileDetails?.duty}</p>
+          </div>
+        )}
         <div className="d-flex">
           {/* Current Section (Disabled) */}
           <div className="w-50">
             <div
               className="d-flex align-items-center justify-content-center"
               style={{
-                height: '44px',
+                height: '35px',
                 backgroundColor: '#215E97',
                 color: 'white',
               }}
             >
-              <h3 className="text-center">Current</h3>
+              <h3 className="text-center" style={{ fontSize: '15px' }}>Current</h3>
             </div>
             <div className="body-container">
               <CustomSelect
                 label="Work Location"
                 name="currentWorkLocation"
-                value={formData?.currentWorkLocation}
-                // options={workLocationOptions}
+                value={ProfileDetails?.workLocation}
+                options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
                 disabled
               />
-
               <CustomSelect
                 label="Branch"
                 name="currentBranch"
-                value={formData?.currentBranch}
+                value={ProfileDetails?.branch}
                 disabled
               />
               <CustomSelect
                 label="Region"
                 name="currentRegion"
-                value={formData?.currentRegion}
-                // options={regionOptions}
+                value={ProfileDetails?.region}
                 disabled
               />
               <MyInput
                 label="Description"
                 name="currentDescription"
                 type="textarea"
-                value={formData?.currentDescription}
+                value={ProfileDetails?.description}
                 disabled
               />
-
-
             </div>
           </div>
 
@@ -135,48 +230,53 @@ function TransferRequests({ open, onClose, isSearch, formData, handleChange, err
             <div
               className="d-flex align-items-center justify-content-center"
               style={{
-                height: '44px',
+                height: '35px',
                 backgroundColor: '#215E97',
                 color: 'white',
               }}
             >
-              <h3 className="text-center">New</h3>
+              <h3 className="text-center" style={{ fontSize: '15px', margin: '0px' }}>New</h3>
             </div>
             <div className="body-container">
               <CustomSelect
                 label="Work Location"
                 name="newWorkLocation"
-                value={formData?.newWorkLocation}
-                onChange={value => handleChange('newWorkLocation', value)}
+                value={formData.newWorkLocation}
+                onChange={handleChange}
                 required
-                // options={workLocationOptions}
-                hasError={!!errors?.newWorkLocation}
+                options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
+                hasError={!!errors.newWorkLocation}
               />
-
               <CustomSelect
                 label="Branch"
                 name="newBranch"
                 required
-                value={formData?.newBranch}
+                disabled={true}
+                value={formData.newBranch}
+                options={allBranches.map(branch => ({
+                  value: branch,
+                  label: branch,
+                }))}
                 onChange={(e) => handleChange('newBranch', e.target.value)}
-                hasError={!!errors?.newBranch}
+                hasError={!!errors.newBranch}
               />
               <CustomSelect
                 label="Region"
                 name="newRegion"
                 placeholder="Select Region"
-                value={formData?.newRegion}
+                value={formData.newRegion}
                 onChange={(value) => handleChange('newRegion', value)}
                 required
-                // options={regionOptions}
-                hasError={!!errors?.newRegion}
+                disabled={true}
+                options={allRegions.map(region => ({ value: region, label: region }))}
+                hasError={!!errors.newRegion}
               />
               <MyInput
                 label="Description"
                 name="newDescription"
                 type="textarea"
                 placeholder="Write description"
-                value={formData?.newDescription}
+                value={formData.newDescription}
                 onChange={(e) => handleChange('newDescription', e.target.value)}
               />
               <MyInput
@@ -184,17 +284,16 @@ function TransferRequests({ open, onClose, isSearch, formData, handleChange, err
                 name="transferDate"
                 placeholder="DD/MM/YYYY"
                 required
-                value={formData?.transferDate}
+                value={formData.transferDate}
                 onChange={(e) => handleChange('transferDate', e.target.value)}
-                hasError={!!errors?.transferDate}
+                hasError={!!errors.transferDate}
               />
-
               <MyInput
                 label="Memo"
                 name="memo"
                 type="textarea"
                 placeholder="Enter memo"
-                value={formData?.memo}
+                value={formData.memo}
                 onChange={(e) => handleChange('memo', e.target.value)}
               />
             </div>

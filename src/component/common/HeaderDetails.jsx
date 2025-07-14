@@ -1,23 +1,14 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { usePDF } from "react-to-pdf";
-import { FaUser, } from "react-icons/fa6";
-import { useTableColumns } from "../../context/TableColumnsContext ";
-import SimpleMenu from "./SimpleMenu";
-import MyDrawer from "./MyDrawer";
 import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio } from 'antd'
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import {
   RightOutlined,
   PlusOutlined,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
-import { Input, Button, Row, Upload, message, Col } from "antd";
-import MySelect from "./MySelect";
-import SideNav from "./SideNav";
-import { FaChevronUp, FaLess } from "react-icons/fa";
-import MyDrowpDown from "./MyDrowpDown";
-import { SerachFitersLookups } from "../../Data";
+import { usePDF } from "react-to-pdf";
+import { FaUser, } from "react-icons/fa6";
 import { BsSliders, BsThreeDots } from "react-icons/bs";
 import { FaAngleRight } from "react-icons/fa";
 import {
@@ -25,25 +16,22 @@ import {
   LoadingOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
-
 import JiraLikeMenu from "./JiraLikeMenu";
-import { FaChevronDown } from "react-icons/fa";
-import { FaRegCircleUser } from "react-icons/fa6";
-import { FiUpload } from "react-icons/fi";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import SimpleMenu from "./SimpleMenu";
+import MyDrawer from "./MyDrawer";
+import { Input, Button, Row, Upload, message, Col } from "antd";
+import MySelect from "./MySelect";
 import { IoSettingsOutline } from "react-icons/io5";
 import {
   FaListCheck,
-  // FaArrowRightArrowLeft,
   FaCalendarDays,
   FaClipboardList,
   FaAngleLeft,
   FaEnvelopesBulk,
-  // FaArrowRightArrowLeft,
-  // FaMoneyCheckAlt,
-
 } from "react-icons/fa6";
 import { LuArrowLeftRight } from "react-icons/lu";
-import { FaUserCircle, FaMoneyCheckAlt } from "react-icons/fa";
+import {FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import CreateBatchPayment from "./CreateBatchPayment";
 import '../../styles/HeaderDetails.css'
@@ -55,7 +43,8 @@ import MyDatePicker from "./MyDatePicker";
 import New from "../corespondence/New";
 import CreateClaim from "../claim/CreateClaim";
 import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
-
+import MyInput from "./MyInput";
+import CustomSelect from "./CustomSelect";
 function HeaderDetails() {
   const { Search } = Input;
   const { TextArea } = Input;
@@ -956,66 +945,52 @@ function HeaderDetails() {
           nav === "/Batches" ? (
             <CreateBatchPayment />
           ) : (
-            <div className="drawer-main-cntainer">
-              <div className="mb-4 pb-4">
-                <div className="drawer-inpts-container">
-                  <div className="drawer-lbl-container">
-                    <p>Batch Name</p>
-                  </div>
-                  <div className="inpt-con">
-                    <p className="star">*</p>
-                    <div className="inpt-sub-con">
-                      <Input />
-                      <h1 className="error-text"></h1>
-                    </div>
-                    <p className="error"></p>
-                  </div>
-                </div>
-                <div className="drawer-inpts-container">
-                  <div className="drawer-lbl-container">
-                    <p>Batch Date</p>
-                  </div>
-                  <div className="inpt-con">
-                    <p className="star">*</p>
-                    <div className="inpt-sub-con">
-                      <MyDatePicker />
-                    </div>
-                  </div>
-                </div>
-                <div className="drawer-inpts-container">
-                  <div className="drawer-lbl-container">
-                    <p>Status</p>
-                  </div>
-                  <div className="inpt-con">
-                    <p className="star">*</p>
-                    <div className="inpt-sub-con d-flex flex-column">
-                      <MySelect
-                        isSimple={true}
-                        options={[
-                          { key: "001", label: "Draft" },
-                          { key: "002", label: "Inactive" },
-                        ]}
-                        value={"001"}
-                        disabled={true}
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
+            <div className="drawer-main-container">
+              <MyInput
+                label="Batch Name"
+                name="batchName"
+                required
+                hasError={false} // Set to true if validation fails
+                errorMessage="Batch name is required"
+              />
+
+              <MyDatePicker
+                label="Batch Date"
+                name="batchDate"
+                required
+                hasError={false}
+                errorMessage="Batch date is required"
+              />
+
+              <CustomSelect
+                label="Status"
+                name="status"
+                value="001"
+                options={[
+                  { value: "001", label: "Draft" },
+                  { value: "002", label: "Inactive" },
+                ]}
+                disabled
+                required
+                hasError={false}
+                errorMessage="Status is required"
+              />
             </div>
+
           )
         }
       </MyDrawer>
       <ChangeCategoryDrawer
         open={isDrawerOpen}
         onClose={() => setisDrawerOpen(false)}
-        // currentCategory={profileData?.currentCategory}
-        // newCategory={formData?.newCategory}
-        // onNewCategoryChange={(value) =>
-        //   setFormData(prev => ({ ...prev, newCategory: value }))
-        // }
-        // onAccept={handleAccept}
-        // onReject={handleReject}
+
+      // currentCategory={profileData?.currentCategory}
+      // newCategory={formData?.newCategory}
+      // onNewCategoryChange={(value) =>
+      //   setFormData(prev => ({ ...prev, newCategory: value }))
+      // }
+      // onAccept={handleAccept}
+      // onReject={handleReject}
       />
 
     </div>
