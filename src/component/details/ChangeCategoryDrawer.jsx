@@ -3,13 +3,16 @@ import { Table, Input } from 'antd';
 import MyDrawer from '../common/MyDrawer';
 import CustomSelect from '../common/CustomSelect';
 import MyInput from '../common/MyInput';
+import { CatOptions } from '../../Data';
+import MyDatePicker from '../common/MyDatePicker';
+import dayjs from 'dayjs';
+import moment from 'moment';
 const { Search } = Input;
 
 function CategoryChangeRequest({
   open,
   onClose,
   ProfileDetails,
-  CatOptions = [],
   columnHistory,
   historyData = [],
   isProfileDetails=false,
@@ -73,9 +76,9 @@ function CategoryChangeRequest({
 
         {isProfileDetails && (
           <div className="details-drawer mb-4 mt-4">
-            <p><strong>Reg No:</strong> {ProfileDetails?.regNo}</p>
-            <p><strong>Full Name:</strong> {ProfileDetails?.fullName}</p>
-            <p><strong>Duty:</strong> {ProfileDetails?.duty}</p>
+            <p>{ProfileDetails?.regNo}</p>
+            <p>{ProfileDetails?.fullName}</p>
+            <p>{ProfileDetails?.duty}</p>
           </div>
         )}
 
@@ -106,6 +109,12 @@ function CategoryChangeRequest({
                 type="textarea"
                 value={ProfileDetails?.remarks}
                 disabled
+              />
+              <MyDatePicker 
+              label='Date'
+              name="Date"
+              value={dayjs()}
+              disabled={true}
               />
             </div>
           </div>

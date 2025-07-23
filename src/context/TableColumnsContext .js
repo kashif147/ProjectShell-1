@@ -222,6 +222,15 @@ const staticColumns = {
     { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
  
   ],
+  CornGrideSummary: [
+    { dataIndex: "batchName", title: "Batch Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchDate", title: "Batch Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "batchStatus", title: "Batch Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdAt", title: "Created At", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
+ 
+  ],
   Batches: [
     { dataIndex: "batchName", title: "Batch Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "batchDate", title: "Batch Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
@@ -246,7 +255,6 @@ const staticColumns = {
   ]
 };
 
-// Static search filters
 const staticSearchFilters = {
   Profile: [
     { titleColumn: "Rank", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
@@ -657,8 +665,16 @@ export const TableColumnsProvider = ({ children }) => {
     Titles: [],
     Stations: [],
   });
+const addColumnToSection = (sectionKey, newColumn) => {
+  setColumns(prev => {
+    const updated = { ...prev };
+    if (updated[sectionKey]) {
+      updated[sectionKey] = [...updated[sectionKey], newColumn];
+    }
+    return updated;
+  });
+};
 
-  // Memoized values
   const filteredSearchFilters = useMemo(() => [
     { titleColumn: "Rank", isCheck: true },
     { titleColumn: "Duty", isCheck: true },
@@ -1062,6 +1078,7 @@ export const TableColumnsProvider = ({ children }) => {
     updateState: () => {},
     gridData,
     handleCheckboxFilterChange,
+    addColumnToSection,
     searchFilters,
     updateSelectedTitles,
     updateLookupValue,
@@ -1130,7 +1147,7 @@ export const TableColumnsProvider = ({ children }) => {
     resetFtn,
     menuLbl,
     updateMenuLbl,
-   
+   addColumnToSection
   ]);
 
   return (

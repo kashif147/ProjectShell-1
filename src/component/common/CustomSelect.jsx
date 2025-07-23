@@ -41,7 +41,8 @@ const CustomSelect = ({
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`my-input-field-select ${hasError ? 'error' : ''} `}
+          // className={`my-input-field-select ${hasError ? 'error' : ''} `}
+          className={`my-input-field-select ${hasError ? 'error' : ''} ${disabled ? 'disabled-select' : ''}`}
           // className={hasError ? 'placeholder-error' : ''}
           disabled={disabled}
         >

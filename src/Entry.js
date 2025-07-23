@@ -6,6 +6,7 @@ import Sidbar from "./component/common/Sidbar";
 import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
 import MyFooter from "./component/common/MyFooter";
+import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 
 // Lazy loaded components
 const Dummy = lazy(() => import("./component/common/Dummy"));
@@ -121,6 +122,7 @@ function Entry() {
                   <Route path="Email" element={<Email />} />
                   <Route path="Sms" element={<Sms />} />
                   <Route path="Notes" element={<Notes />} />
+                  <Route path="CornMarket" element={<CornGrideSummary />} />
                 </Routes>
               </Suspense>
             </div>

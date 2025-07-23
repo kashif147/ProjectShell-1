@@ -26,7 +26,7 @@ import {
 } from "@dnd-kit/sortable";
 
 import { arrayMove } from "@dnd-kit/sortable";
-
+import CornMarketDrawer from "../cornmarket/CornMarketDrawer";
 import Gridmenu from "./Gridmenu";
 import AddNewGarda from "../details/AddNewGarda";
 import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
@@ -68,9 +68,11 @@ const TableComponent = ({ data, screenName, redirect }) => {
      const {        selectedRowIndex,setSelectedRowIndex, selectedRowData, setSelectedRowData } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
   const [manualPayment, setmanualPayment] = useState(false)
-  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn } = useTableColumns();
+  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn,ColumnProp } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
   const [iscancellationOpen, setIscancellationOpen] = useState(false)
+  const [isCornMarOpen, setisCornMarOpen] = useState(false)
+  
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false)
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
@@ -344,7 +346,6 @@ const TableComponent = ({ data, screenName, redirect }) => {
           } 
           if (location.pathname === "/Batches") {
             setIsBatchmemberOpen(!isBatchmemberOpen);
-      
           } 
           // if (location.pathname === "/Batches") {
           //   setmanualPayment(!manualPayment)
@@ -352,6 +353,9 @@ const TableComponent = ({ data, screenName, redirect }) => {
           // } 
           else if (location.pathname === "/Cancallation") {
             setIscancellationOpen(!iscancellationOpen);
+          }
+          else if (location.pathname === "/CornMarket") {
+            setisCornMarOpen(!isCornMarOpen);
           }
         }}
         state= {{ search: screenName }}
@@ -663,6 +667,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
     <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
     <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
     <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
+   <CornMarketDrawer isOpen={isCornMarOpen} onClose={()=>setisCornMarOpen(!isCornMarOpen)} />
    <MyDrawer open={manualPayment} 
    onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760} 
    isManual={true}>

@@ -81,6 +81,28 @@
   background-color: #fff;
   transition: border-color 0.2s ease;
 } */
+ .my-input-container.disabled {
+  background-color: #f5f5f5;  /* light gray */
+  color: #a0a0a0;
+  border-color: #d9d9d9;
+  cursor: not-allowed;
+}
+
+/* Optional: target input field inside the DatePicker too */
+.my-input-container.disabled input {
+  background-color: #f5f5f5;
+  color: #a0a0a0;
+  cursor: not-allowed;
+}
+
+
+ .my-input-field-select.disabled-select {
+  background-color: #f5f5f5; /* light gray like input[disabled] */
+  color: #a0a0a0;
+  cursor: not-allowed;
+  border-color: #d9d9d9;
+}
+
 .my-input-field {
   width: 100%;
   padding: 8px 12px;

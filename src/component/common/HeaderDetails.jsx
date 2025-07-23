@@ -31,7 +31,7 @@ import {
   FaEnvelopesBulk,
 } from "react-icons/fa6";
 import { LuArrowLeftRight } from "react-icons/lu";
-import {FaMoneyCheckAlt } from "react-icons/fa";
+import { FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import CreateBatchPayment from "./CreateBatchPayment";
 import '../../styles/HeaderDetails.css'
@@ -72,11 +72,9 @@ function HeaderDetails() {
   const navigate = useNavigate();
   const inputRef = useRef(null);
   const { searchFilters, lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, resetFtn, globleFilters, } = useTableColumns();
-  // console.log(globleFilters, "globleFilters")
-  console.log(globleFilters, 'globleFilters')
+
   const plainOptions = ['Approve', 'Reject'];
   const screenName = location?.state?.search
-  console.log(screenName, "screenName")
   const format = 'HH:mm';
   const column = [
     {
@@ -105,7 +103,15 @@ function HeaderDetails() {
       key: 'Description',
     },
   ]
-
+// addColumnToSection("CornGrideSummary",{
+//    dataIndex: "email",
+//   title: "Email",
+//   ellipsis: true,
+//   isGride: true,
+//   isVisible: true,
+//   width: 180,
+//   editable: true,
+// })
   function filterSearchableColumns(data) {
     if (data) {
       const filteredResults = globleFilters?.reduce((acc, i) => {
@@ -559,6 +565,7 @@ function HeaderDetails() {
             || location?.pathname == "/ChangCateSumm"
             || location?.pathname == "/RemindersSummary"
             || location?.pathname == "/Cancallation"
+            || location?.pathname == "/CornMarket"
             || location?.pathname == "/Batches"
             || location?.pathname == "/Sms"
             || location?.pathname == "/Email"
@@ -596,7 +603,7 @@ function HeaderDetails() {
                             setrosterDrawer(!rosterDrawer)
                           else if (nav === "/Summary")
                             setisGardaDrwer(!isGardaDrwer)
-                          else if (nav === "/RemindersSummary" || nav === "/Cancallation" || nav === "/Batches") {
+                          else if (nav === "/RemindersSummary" || nav === "/Cancallation" || nav === "/Batches" || nav === "/CornMarket") {
                             setIsBatchOpen(!isBatchOpen);
                           }
                           else if (nav === "/ChangCateSumm") {
@@ -932,10 +939,12 @@ function HeaderDetails() {
 
         </div>
       </MyDrawer>
-      <MyDrawer isPagination={false} width='1300px' title={`${nav === "/RemindersSummary" ? "Batch" : nav === "/Batches" ? "" : "Cancellation Batch"}`} open={isBatchOpen} onClose={() => {
-        setIsBatchOpen(!isBatchOpen)
+      <MyDrawer isPagination={false} width='1300px'
+        title={`${nav === "/RemindersSummary" ? "Batch" : nav === "/Batches" ? "" : nav === "/CancellationBatch" ? "Cancellation Batch" : nav === "/CornMarket" ? "Corn Market Batch" : ""}`}
+        open={isBatchOpen} onClose={() => {
+          setIsBatchOpen(!isBatchOpen)
 
-      }}
+        }}
         add={() => {
           navigate("/BatchMemberSummary", { state: { search: "BatchMemberSummary" } })
           setIsBatchOpen(!isBatchOpen)

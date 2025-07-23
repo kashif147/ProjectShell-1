@@ -87,7 +87,7 @@ function TransferRequests({ open, onClose, isSearch }) {
   };
 
   const { ProfileDetails } = useTableColumns();
-
+  console.log(ProfileDetails,'ProfileDetails1')
   const columnCountry = [
     {
       title: 'Transfer Date',
@@ -145,8 +145,6 @@ function TransferRequests({ open, onClose, isSearch }) {
   const onSubmit = () => {
   const requiredFields = [
     'newWorkLocation',
-    'newBranch',
-    'newRegion',
     'transferDate'
   ];
   
@@ -199,7 +197,7 @@ function TransferRequests({ open, onClose, isSearch }) {
               <CustomSelect
                 label="Work Location"
                 name="currentWorkLocation"
-                value={ProfileDetails?.workLocation}
+                value={ProfileDetails?.worklocation}
                 options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
                 disabled
               />
@@ -208,11 +206,16 @@ function TransferRequests({ open, onClose, isSearch }) {
                 name="currentBranch"
                 value={ProfileDetails?.branch}
                 disabled
+                options={allBranches.map(branch => ({
+                  value: branch,
+                  label: branch,
+                }))}
               />
               <CustomSelect
-                label="Region"
+                label="region"
                 name="currentRegion"
                 value={ProfileDetails?.region}
+                  options={allRegions.map(region => ({ value: region, label: region }))}
                 disabled
               />
               <MyInput
@@ -250,7 +253,7 @@ function TransferRequests({ open, onClose, isSearch }) {
               <CustomSelect
                 label="Branch"
                 name="newBranch"
-                required
+                
                 disabled={true}
                 value={formData.newBranch}
                 options={allBranches.map(branch => ({
@@ -266,20 +269,13 @@ function TransferRequests({ open, onClose, isSearch }) {
                 placeholder="Select Region"
                 value={formData.newRegion}
                 onChange={(value) => handleChange('newRegion', value)}
-                required
+                
                 disabled={true}
                 options={allRegions.map(region => ({ value: region, label: region }))}
                 hasError={!!errors.newRegion}
               />
-              <MyInput
-                label="Description"
-                name="newDescription"
-                type="textarea"
-                placeholder="Write description"
-                value={formData.newDescription}
-                onChange={(e) => handleChange('newDescription', e.target.value)}
-              />
-              <MyInput
+              
+              {/* <MyInput
                 label="Transfer Date"
                 name="transferDate"
                 placeholder="DD/MM/YYYY"
@@ -287,7 +283,7 @@ function TransferRequests({ open, onClose, isSearch }) {
                 value={formData.transferDate}
                 onChange={(e) => handleChange('transferDate', e.target.value)}
                 hasError={!!errors.transferDate}
-              />
+              /> */}
               <MyInput
                 label="Memo"
                 name="memo"

@@ -2,6 +2,7 @@ import axios from "axios";
 import MyAlert from "../component/common/MyAlert";
 import { notificationsMsg } from "../Data";
 import dayjs from 'dayjs';
+import moment from "moment";
 let token;
 export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 // export const  baseURL = "http://localhost:3500"
@@ -78,10 +79,12 @@ export const updateFtn = async (endPoint, data, callback) => {
   }
 };
 
-
-export const calculateAgeFtn = (dobString) => {
-  const dob = dayjs(dobString, "DD/MM/YYYY");
-  if (!dob.isValid()) return "";
-
-  return dayjs().diff(dob, 'year');
+export const calculateAgeFtn = (input) => {
+  const dob = dayjs(input);  // Create Day.js object
+  if (!dob.isValid()) return '';
+  const today = dayjs();
+  console.log("DOB:", dob.format('YYYY-MM-DD'));
+  console.log("Today:", today.format('YYYY-MM-DD'));
+  console.log("Age:", today.diff(dob, 'year'));  // diff in years
+  return today.diff(dob, 'year');
 };

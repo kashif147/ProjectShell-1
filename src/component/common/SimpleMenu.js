@@ -326,6 +326,7 @@ function SimpleMenu({
                 open={isDrawerOpen}
                 onClose={() => setisDrawerOpen(false)}
                 isProfileDetails={true}
+                ProfileDetails={ProfileDetails}
                 // currentCategory={profileData?.currentCategory}
                 // newCategory={formData?.newCategory}
                 // onNewCategoryChange={(value) =>

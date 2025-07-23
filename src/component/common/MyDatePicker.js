@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { DatePicker } from 'antd';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
-import '../../styles/MySelect.css'; // Reusing your existing styles
+import '../../styles/MySelect.css';
 import dayjs from 'dayjs';
+import moment from 'moment';
 
 const MyDatePicker = ({
   label,
@@ -17,16 +18,7 @@ const MyDatePicker = ({
   isMarginBtm = true,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-
-  const handleChange = (date, dateString) => {
-    onChange({
-      target: {
-        name,
-        value: dateString,
-      },
-    });
-  };
-
+  console.log(moment(value).format('DD/MM/YYYY'), "ppp")
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
       <label
@@ -41,22 +33,20 @@ const MyDatePicker = ({
       </label>
 
       <div
-        className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''} ${
-          disabled ? 'disabled' : ''
-        }`}
+        className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''} ${disabled ? 'disabled' : ''}`}
+
       >
         <DatePicker
           name={name}
-          value={value ? dayjs(value) : null}
-          onChange={handleChange}
+          onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled}
           className="my-input-field-select"
           placeholder={placeholder}
-          format="YYYY-MM-DD"
+          format="DD-MM-YYYY"
+          value={value}
         />
-
         {hasError && !disabled && (
           <AiOutlineExclamationCircle className="error-icon" />
         )}

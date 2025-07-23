@@ -40,6 +40,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   }, [dispatch]);
 
   const inputsInitValue = {
+    age: null,
     gardaRegNo: null,
     fullname: null,
     forename: null,
@@ -68,7 +69,7 @@ function AddNewGarda({ open, onClose, isGard }) {
     otherGrade: null,
     WorkEmail: null,
     class: null,
-    dateOfBirth: null,
+    dateOfBirth: "",
     dateOfTemplemore: null,
     dateRetired: null,
     dateAged65: null,
@@ -96,58 +97,79 @@ function AddNewGarda({ open, onClose, isGard }) {
     preferredAddress: null,
     graduationDate: null,
     isNursingAdaptation: 'No',
-    otherUnion:'Yes',
-    wasUnionMember:'Yes'
+    otherUnion: 'Yes',
+    wasUnionMember: 'Yes'
   };
   const [InfData, setInfData] = useState(inputsInitValue);
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (eventOrName, value) => {
-    if (eventOrName?.target) {
-      const { name, type, value, checked } = eventOrName.target;
-      const finalValue = type === "checkbox" ? checked : value;
-      setInfData((prev) => {
-        const updated = {
-          ...prev,
-          [name]: finalValue,
-        };
-        if (name === "WorkLocation" && workLocationDetails[finalValue]) {
-          updated.branch = workLocationDetails[finalValue].branch;
-          updated.region = workLocationDetails[finalValue].region;
-        }
-        return updated;
-      });
-    } else {
-      const name = eventOrName;
+    debugger
+    // Case 1: Standard input event
+    if (eventOrName === "dateOfBirth") {
 
-      const formattedValue = dayjs.isDayjs(value)
-        ? value.format("DD/MM/YYYY")
-        : value;
+      // const { name, value: val } = value.target;
+      const formattedValue = moment(value)
+      debugger
 
       setInfData((prev) => {
         const updated = {
           ...prev,
-          [name]: formattedValue,
+          [eventOrName]: value,
         };
-
         // Handle date of birth → age
-        if (name === "dateOfBirth" && formattedValue) {
-          updated.age = calculateAgeFtn(formattedValue);
+        if (eventOrName === "dateOfBirth" && value) {
+          const age = calculateAgeFtn(value); // value is a moment object
+           updated.age = age;
         }
-
         // Handle WorkLocation → branch & region
-        if (name === "WorkLocation" && workLocationDetails[formattedValue]) {
+        if (eventOrName === "WorkLocation" && workLocationDetails[formattedValue]) {
           updated.branch = workLocationDetails[formattedValue].branch;
           updated.region = workLocationDetails[formattedValue].region;
         }
-
         return updated;
       });
 
-      setErrors((prev) => ({ ...prev, [name]: "" }));
+      setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
     }
-  };
+    else
+      if (eventOrName?.target) {
 
+        const { name, type, value, checked } = eventOrName.target;
+        const finalValue = type === "checkbox" ? checked : value;
+        setInfData((prev) => {
+          const updated = {
+            ...prev,
+            [name]: finalValue,
+          };
+          // Handle WorkLocation → branch & region
+          if (name === "WorkLocation" && workLocationDetails[finalValue]) {
+            updated.branch = workLocationDetails[finalValue].branch;
+            updated.region = workLocationDetails[finalValue].region;
+          }
+          return updated;
+        });
+        setErrors((prev) => ({ ...prev, [eventOrName.target.name]: "" }));
+      }
+      else {
+        debugger
+        // const { name, type, value, checked } = eventOrName.target;
+        // const finalValue = type === "checkbox" ? checked : value;
+        setInfData((prev) => {
+          const updated = {
+            ...prev,
+            [eventOrName]: value,
+          };
+          // Handle WorkLocation → branch & region
+          if (eventOrName === "WorkLocation" && workLocationDetails[value]) {
+            updated.branch = workLocationDetails[value].branch;
+            updated.region = workLocationDetails[value].region;
+          }
+          return updated;
+        });
+        setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
+      }
+  };
 
   console.log(InfData, 'infoData')
   const handleSubmit = () => {
@@ -214,13 +236,13 @@ function AddNewGarda({ open, onClose, isGard }) {
     if (places && places.length > 0) {
       const place = places[0];
       const address = place.formatted_address;
-      debugger
+
       const addressParts = address.split(', ').map(part => part.trim());
       const addressLine1 = addressParts[0] || '';
       const addressLine2 = addressParts[1] || '';
       const addressLine3 = addressParts[2] || '';
       const addressLine4 = addressParts[3] || '';
-      debugger
+
       setInfData({
         ...InfData,
         AdressLine1: addressLine1,
@@ -467,9 +489,12 @@ function AddNewGarda({ open, onClose, isGard }) {
                   label="Date of Birth"
                   name="dob"
                   required
-                  value={InfData?.dateOfBirth}
+                  value={InfData?.dateOfBirth} // ✅ just string like "01/07/2019"
                   disabled={isDisable}
-                  onChange={(date) => handleInputChange("dateOfBirth", date)}
+                  onChange={(date, dateString) => {
+                    console.log(date, "dte")
+                    handleInputChange("dateOfBirth", date)
+                  }}
                   hasError={!!errors?.dateOfBirth}
                 />
               </Col>
@@ -802,6 +827,59 @@ function AddNewGarda({ open, onClose, isGard }) {
                 options={allRegions.map(region => ({ value: region, label: region }))}
               />
             </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <label className="my-input-label mt-4 my-input-wrapper">
+                Are you currently undertaking a nursing adaptation programme?
+              </label>
+              <Radio.Group
+                name="isNursingAdaptation"
+                value={InfData.isNursingAdaptation}
+                onChange={handleInputChange}
+              >
+                <Radio value="Yes">Yes</Radio>
+                <Radio value="No">No</Radio>
+              </Radio.Group>
+
+
+
+            </Col>
+            <Col span={12}>
+              <MyInput
+                label="NMBI No/An Board Altranais Number"
+                name="NMBINo"
+                value={InfData.NMBINo}
+                // disabled={isDisable}
+                disabled={InfData?.isNursingAdaptation !== 'yes'}
+                required={InfData?.isNursingAdaptation === 'yes'}
+                onChange={(e) => handleInputChange("NMBINo", e.target.value)}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <label className="my-input-label mt-4">Please tick one of the following</label>
+            <Col span={24}>
+              <Radio.Group
+                name="nursingType"
+                value={InfData.nursingType}
+                onChange={handleInputChange}
+                required={InfData?.nursingAdaptationProgramme === 'yes'}
+                disabled={InfData?.nursingAdaptationProgramme !== 'yes'}
+                style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
+              >
+                <Radio value="General Nursing">General Nursing</Radio>
+                <Radio value="Public Health Nurse">Public Health Nurse</Radio>
+                <Radio value="Mental Health Nurse">Mental Health Nurse</Radio>
+                <Radio value="Midwife">Midwife</Radio>
+                <Radio value="Sick Children's Nurse">Sick Children's Nurse</Radio>
+                <Radio value="Registered Nurse for Intellectual Disability">
+                  Registered Nurse for Intellectual Disability
+                </Radio>
+              </Radio.Group>
+            </Col>
+          </Row>
+          <Row gutter={24}>
             <Col span={12}>
               <CustomSelect
                 label="Grade"
@@ -894,57 +972,7 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
           </Row>
 
-          <Row gutter={24}>
-            <Col span={12}>
-              <label className="my-input-label mt-4 my-input-wrapper">
-                Are you currently undertaking a nursing adaptation programme?
-              </label>
-              <Radio.Group
-                name="isNursingAdaptation"
-                value={InfData.isNursingAdaptation}
-                onChange={handleInputChange}
-              >
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </Radio.Group>
 
-
-
-            </Col>
-            <Col span={12}>
-              <MyInput
-                label="NMBI No/An Board Altranais Number"
-                name="NMBINo"
-                value={InfData.NMBINo}
-                // disabled={isDisable}
-                disabled={InfData?.isNursingAdaptation !== 'yes'}
-                required={InfData?.isNursingAdaptation === 'yes'}
-                onChange={(e) => handleInputChange("NMBINo", e.target.value)}
-              />
-            </Col>
-          </Row>
-          <Row gutter={24}>
-            <label className="my-input-label mt-4">Please tick one of the following</label>
-            <Col span={24}>
-              <Radio.Group
-                name="nursingType"
-                value={InfData.nursingType}
-                onChange={handleInputChange}
-                required={InfData?.nursingAdaptationProgramme === 'yes'}
-                disabled={InfData?.nursingAdaptationProgramme !== 'yes'}
-                style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
-              >
-                <Radio value="General Nursing">General Nursing</Radio>
-                <Radio value="Public Health Nurse">Public Health Nurse</Radio>
-                <Radio value="Mental Health Nurse">Mental Health Nurse</Radio>
-                <Radio value="Midwife">Midwife</Radio>
-                <Radio value="Sick Children's Nurse">Sick Children's Nurse</Radio>
-                <Radio value="Registered Nurse for Intellectual Disability">
-                  Registered Nurse for Intellectual Disability
-                </Radio>
-              </Radio.Group>
-            </Col>
-          </Row>
 
           <Row gutter={24} >
             <Col span={12}>
@@ -956,6 +984,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   name="otherUnion"
                   value={InfData.otherUnion}
                   onChange={handleInputChange}
+                  disabled={isDisable}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -973,6 +1002,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 value={InfData.wasUnionMember}
                 onChange={handleInputChange}
                 className="my-input-wrapper"
+                disabled={isDisable}
               >
                 <Radio value="Yes">Yes</Radio>
                 <Radio value="No">No</Radio>
@@ -980,12 +1010,13 @@ function AddNewGarda({ open, onClose, isGard }) {
               {/* </div> */}
             </Col>
           </Row>
-          <Row>
+          <Row gutter={24}>
             <Col span={24}>
-              <label className="my-input-label mt-4">Please tick one of the following</label>
+              <label className="my-input-label mt-4 mb-4">Please tick one of the following</label>
               <Radio.Group
                 name="nursingType"
                 value={InfData.nursingType}
+                disabled={isDisable}
                 onChange={handleInputChange}
                 style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
               >

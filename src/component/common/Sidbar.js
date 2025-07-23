@@ -123,6 +123,9 @@ const Sidbar = () => {
       case 'Communication History':
         navigate("/CorrespondencesSummary", { state: { search: 'CorrespondencesSummary' } });
         break;
+      case 'CornMarket':
+        navigate("/CornMarket", { state: { search: 'CornMarket' } });
+        break;
       default:
         navigate('/NotDesignedYet');
     }
