@@ -111,7 +111,7 @@ function CategoryChangeRequest({
                 disabled
               />
               <MyDatePicker 
-              label='Date'
+              label='Effective Date'
               name="Date"
               value={dayjs()}
               disabled={true}

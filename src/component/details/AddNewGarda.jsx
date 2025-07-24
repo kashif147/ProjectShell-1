@@ -1,5 +1,5 @@
 import React, { useState, useRef, useEffect } from "react";
-import { Checkbox, Row, Col, Radio } from "antd";
+import { Checkbox, Row, Col, Radio, Input } from "antd";
 import dayjs from 'dayjs';
 import moment from "moment";
 import CustomSelect from "../common/CustomSelect";
@@ -14,6 +14,7 @@ import { CatOptions, workLocations } from "../../Data";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { calculateAgeFtn } from "../../utils/Utilities";
 import '../../styles/MyInput.css'
+import { info } from "autoprefixer";
 
 const libraries = ['places', 'maps'];
 
@@ -46,15 +47,16 @@ function AddNewGarda({ open, onClose, isGard }) {
     forename: null,
     surname: null,
     CountryOfPrimaryQualification: null,
-    AdressLine1: null,
-    AdressLine2: null,
-    AdressLine3: null,
-    areaOrTown: null,
+    addressLine1: null,
+    addressLine2: null,
+    addressLine3: null,
+    addressLine4: null,
     eirCode: null,
+    eircode: null,
     mobile: null,
-    AdressLine4: null,
-    Country: 'Irland',
-    isTermCon: false,
+    Country: 'Ireland',
+    isTermCon: true,
+    valueAddedServices:true,
     HomeOrWorkTel: null,
     email: null,
     preferredEmail: null,
@@ -98,20 +100,18 @@ function AddNewGarda({ open, onClose, isGard }) {
     graduationDate: null,
     isNursingAdaptation: 'No',
     otherUnion: 'Yes',
-    wasUnionMember: 'Yes'
+    wasUnionMember: 'Yes',
+    memberStatus: null
   };
   const [InfData, setInfData] = useState(inputsInitValue);
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (eventOrName, value) => {
-    debugger
+
     // Case 1: Standard input event
     if (eventOrName === "dateOfBirth") {
-
       // const { name, value: val } = value.target;
       const formattedValue = moment(value)
-      debugger
-
       setInfData((prev) => {
         const updated = {
           ...prev,
@@ -120,7 +120,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         // Handle date of birth → age
         if (eventOrName === "dateOfBirth" && value) {
           const age = calculateAgeFtn(value); // value is a moment object
-           updated.age = age;
+          updated.age = age;
         }
         // Handle WorkLocation → branch & region
         if (eventOrName === "WorkLocation" && workLocationDetails[formattedValue]) {
@@ -191,7 +191,9 @@ function AddNewGarda({ open, onClose, isGard }) {
       'PaymentType',
       'isTermCon',
       'preferredAddress',
-      'PayrollNo'
+      'PayrollNo',
+      'OtherPrimarySection',
+      'OtherSecondarySection'
     ];
 
     const newErrors = {};
@@ -235,20 +237,47 @@ function AddNewGarda({ open, onClose, isGard }) {
     const places = inputRef.current.getPlaces();
     if (places && places.length > 0) {
       const place = places[0];
-      const address = place.formatted_address;
+      const placeId = place.place_id;
+      const service = new window.google.maps.places.PlacesService(
+        document.createElement('div')
+      );
+      const request = {
+        placeId: placeId,
+        fields: ['address_components', 'name', 'formatted_address'],
+      };
+      service.getDetails(request, (details, status) => {
+        if (
+          status === window.google.maps.places.PlacesServiceStatus.OK &&
+          details
+        ) {
+          const components = details.address_components;
 
-      const addressParts = address.split(', ').map(part => part.trim());
-      const addressLine1 = addressParts[0] || '';
-      const addressLine2 = addressParts[1] || '';
-      const addressLine3 = addressParts[2] || '';
-      const addressLine4 = addressParts[3] || '';
+          const getComponent = type =>
+            components.find(c => c.types.includes(type))?.long_name || '';
 
-      setInfData({
-        ...InfData,
-        AdressLine1: addressLine1,
-        AdressLine2: addressLine2,
-        AdressLine3: addressLine3,
-        AdressLine4: addressLine4,
+          const streetNumber = getComponent('street_number');
+          const route = getComponent('route');
+          const sublocality = getComponent('sublocality') || '';
+          const town = getComponent('locality') || getComponent('postal_town') || '';
+          const county =
+            getComponent('administrative_area_level_1') || '';
+          const postalCode = getComponent('postal_code');
+
+          const addressLine1 = `${streetNumber} ${route}`.trim();
+          const addressLine2 = sublocality;
+          const addressLine3 = town;
+          const addressLine4 = `${county}`.trim();
+          const eircode = `${postalCode}`.trim();
+
+          setInfData({
+            ...InfData,
+            addressLine1,
+            addressLine2,
+            addressLine3,
+            addressLine4,
+            eircode,
+          });
+        }
       });
     }
   };
@@ -508,7 +537,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
 
               {/* Country Of Primary Qualification */}
-              <Col span={12}>
+              <Col span={8}>
                 <CustomSelect
                   label="Country Of Primary Qualification"
                   name="Country Of Primary Qualification"
@@ -528,8 +557,33 @@ function AddNewGarda({ open, onClose, isGard }) {
 
             <Row gutter={24}>
               {/* Section Heading */}
-              <Col span={24}>
-                <h2 style={{ fontSize: '22px', marginBottom: '20px', marginTop: '10px' }}>Correspondence Details</h2>
+              <Col span={12}>
+                <div className="d-flex">
+                  <div>
+                    <h2 style={{ fontSize: '22px', marginBottom: '20px', marginTop: '10px' }}>Correspondence Details</h2>
+                  </div>
+
+                </div>
+              </Col>
+              <Col span={12}>
+                <label className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
+                  Preferred Address <span className="text-danger">*</span>
+                </label>
+                <div
+                  className={`d-flex justify-content-between align-items-start ${errors?.preferredAddress ? 'has-error' : ''
+                    }`}
+                >
+                  <Radio.Group
+                    onChange={(e) => handleInputChange("preferredAddress", e.target.value)}
+                    value={InfData?.preferredAddress}
+                    disabled={isDisable}
+                    options={[
+                      { value: 'Home', label: 'Home' },
+                      { value: 'Work', label: 'Work' },
+                    ]}
+                    className={errors?.preferredAddress ? 'radio-error' : ''}
+                  />
+                </div>
               </Col>
               <Col span={24} className="">
                 {/* <Checkbox>Consent to receive Correspondence from INMO </Checkbox> */}
@@ -543,27 +597,11 @@ function AddNewGarda({ open, onClose, isGard }) {
                   <Row>
                     <Col span={12}>
                       {/* <label className="my-input-label mb-2 "> */}
-                      <label className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
-                        Preferred Address <span className="text-danger">*</span>
-                      </label>
-                      <div
-                        className={`d-flex justify-content-between align-items-start ${errors?.preferredAddress ? 'has-error' : ''
-                          }`}
-                      >
-                        <Radio.Group
-                          onChange={(e) => handleInputChange("preferredAddress", e.target.value)}
-                          value={InfData?.preferredAddress}
-                          disabled={isDisable}
-                          options={[
-                            { value: 'Home', label: 'Home' },
-                            { value: 'Work', label: 'Work' },
-                          ]}
-                          className={errors?.preferredAddress ? 'radio-error' : ''}
-                        />
-                        <Checkbox style={{ marginLeft: 10 }}>
-                          Consent to receive Correspondence from INMO
-                        </Checkbox>
-                      </div>
+
+                      <Checkbox style={{ marginLeft: 10, marginTop: '35px' }}>
+                        Consent to receive Correspondence from INMO
+                      </Checkbox>
+
                     </Col>
 
 
@@ -592,20 +630,20 @@ function AddNewGarda({ open, onClose, isGard }) {
               <Col span={12}>
                 <MyInput
                   label="Address Line 1 (Building or House)"
-                  name="AdressLine1"
-                  value={InfData.AdressLine1}
+                  name="addressLine1"
+                  value={InfData.addressLine1}
                   required
                   disabled={isDisable}
                   onChange={handleInputChange}
-                  hasError={!!errors?.AdressLine1}
+                  hasError={!!errors?.addressLine1}
                 />
               </Col>
 
               <Col span={12}>
                 <MyInput
                   label="Address Line 2 (Street or Road)"
-                  name="AdressLine2"
-                  value={InfData.AdressLine2}
+                  name="addressLine2"
+                  value={InfData.addressLine2}
                   disabled={isDisable}
                   onChange={handleInputChange}
                 />
@@ -615,8 +653,8 @@ function AddNewGarda({ open, onClose, isGard }) {
               <Col span={12}>
                 <MyInput
                   label="Address Line 3 (Area or Town)"
-                  name="AdressLine3"
-                  value={InfData.AdressLine3}
+                  name="adressLine3"
+                  value={InfData.addressLine3}
                   disabled={isDisable}
                   onChange={handleInputChange}
                 />
@@ -625,8 +663,8 @@ function AddNewGarda({ open, onClose, isGard }) {
               <Col span={12}>
                 <MyInput
                   label="Address Line 4 (County, City or Postcode)"
-                  name="AdressLine4"
-                  value={InfData.AdressLine4}
+                  name="addressLine4"
+                  value={InfData.addressLine4}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("AdressLine4", e.target.value)}
@@ -641,6 +679,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   name="Eircode"
                   placeholder="Enter Eircode"
                   disabled={isDisable}
+                  value={InfData?.eircode}
                 />
               </Col>
               <Col span={12}>
@@ -797,8 +836,8 @@ function AddNewGarda({ open, onClose, isGard }) {
                 label="Other Work Location"
                 name="Other Work Location"
                 value={InfData.OtherWorkLocation}
-                required={InfData.OtherWorkLocation != 'other'}
-                disabled={isDisable || InfData.OtherWorkLocation != 'other'}
+                required={InfData.WorkLocation == 'other'}
+                disabled={isDisable || InfData.WorkLocation != 'other'}
                 onChange={(e) => handleInputChange("OtherWorkLocation", e.target.value)}
                 hasError={!!errors?.OtherWorkLocation}
               />
@@ -836,14 +875,11 @@ function AddNewGarda({ open, onClose, isGard }) {
               <Radio.Group
                 name="isNursingAdaptation"
                 value={InfData.isNursingAdaptation}
-                onChange={handleInputChange}
+                onChange={(e) => handleInputChange("isNursingAdaptation", e.target.value)}
               >
                 <Radio value="Yes">Yes</Radio>
                 <Radio value="No">No</Radio>
               </Radio.Group>
-
-
-
             </Col>
             <Col span={12}>
               <MyInput
@@ -851,8 +887,8 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="NMBINo"
                 value={InfData.NMBINo}
                 // disabled={isDisable}
-                disabled={InfData?.isNursingAdaptation !== 'yes'}
-                required={InfData?.isNursingAdaptation === 'yes'}
+                disabled={InfData?.isNursingAdaptation !== 'Yes'}
+                required={InfData?.isNursingAdaptation === 'Yes'}
                 onChange={(e) => handleInputChange("NMBINo", e.target.value)}
               />
             </Col>
@@ -864,8 +900,8 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="nursingType"
                 value={InfData.nursingType}
                 onChange={handleInputChange}
-                required={InfData?.nursingAdaptationProgramme === 'yes'}
-                disabled={InfData?.nursingAdaptationProgramme !== 'yes'}
+                required={InfData?.isNursingAdaptation === 'Yes'}
+                disabled={InfData?.isNursingAdaptation !== 'Yes'}
                 style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
               >
                 <Radio value="General Nursing">General Nursing</Radio>
@@ -879,7 +915,35 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Radio.Group>
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row>
+            <Col span={24}>
+              <label className="my-input-label mt-4 mb-4">Please select the most appropriate option below</label>
+              <Radio.Group
+                label="Please select the most appropriate option below"
+                name="memberStatus"
+                value={InfData?.memberStatus || ''}
+                onChange={handleInputChange}
+                options={[
+                  { value: 'new', label: 'You are a new member' },
+                  { value: 'graduate', label: 'You are newly graduated' },
+                  {
+                    value: 'rejoin',
+                    label:
+                      'You were previously a member of the INMO, and are rejoining',
+                  },
+                  {
+                    value: 'careerBreak',
+                    label: 'You are returning from a career break',
+                  },
+                  {
+                    value: 'nursingAbroad',
+                    label: 'You are returning from nursing abroad',
+                  },
+                ]}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24} className="mt-3">
             <Col span={12}>
               <CustomSelect
                 label="Grade"
@@ -899,14 +963,13 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
 
-            {/* Other Grade | Branch */}
             <Col span={12}>
               <MyInput
                 label="Other Grade"
                 name="otherGrade"
                 value={InfData.otherGrade}
-                required={InfData?.Grade === 'other'}
-                disabled={InfData?.Grade !== 'other' || isDisable}
+                required={InfData?.Grade === 'Other'}
+                disabled={InfData?.Grade !== 'Other' || isDisable}
                 // disabled={isDisable}
                 onChange={(e) => handleInputChange("otherGrade", e.target.value)}
                 hasError={!!errors?.Grade}
@@ -1010,27 +1073,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               {/* </div> */}
             </Col>
           </Row>
-          <Row gutter={24}>
-            <Col span={24}>
-              <label className="my-input-label mt-4 mb-4">Please tick one of the following</label>
-              <Radio.Group
-                name="nursingType"
-                value={InfData.nursingType}
-                disabled={isDisable}
-                onChange={handleInputChange}
-                style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
-              >
-                <Radio value="General Nursing">General Nursing</Radio>
-                <Radio value="Public Health Nurse">Public Health Nurse</Radio>
-                <Radio value="Mental Health Nurse">Mental Health Nurse</Radio>
-                <Radio value="Midwife">Midwife</Radio>
-                <Radio value="Sick Children's Nurse">Sick Children's Nurse</Radio>
-                <Radio value="Registered Nurse for Intellectual Disability">
-                  Registered Nurse for Intellectual Disability
-                </Radio>
-              </Radio.Group>
-            </Col>
-          </Row>
+
           <Row gutter={24} className="mt-3">
             <Col span={12} gutter={24} >
               <MyInput
@@ -1070,7 +1113,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
             <Col span={12}>
-              <CustomSelect
+              <MyInput
                 label="Other Primary Section"
                 name="OtherPrimarySection"
                 value={InfData.OtherPrimarySection}
@@ -1078,6 +1121,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 onChange={(e) => handleInputChange("OtherPrimarySection", e.target.value)}
                 required={InfData?.PrimarySection === 'Other'}
                 disabled={InfData?.PrimarySection !== 'Other'}
+                hasError={!!errors?.OtherPrimarySection}
               />
             </Col>
           </Row>
@@ -1087,16 +1131,27 @@ function AddNewGarda({ open, onClose, isGard }) {
                 label="Secondary Section"
                 name="SecondarySection"
                 value={InfData.SecondarySection}
+                options={[
+                  { value: 'section1', label: 'Section 1' },
+                  { value: 'section2', label: 'Section 2' },
+                  { value: 'section3', label: 'Section 3' },
+                  { value: 'section4', label: 'Section 4' },
+                  { value: 'section5', label: 'Section 5' },
+                  { value: 'other', label: 'Other' },
+                ]}
                 disabled={isDisable}
                 onChange={(e) => handleInputChange("SecondarySection", e.target.value)}
+                
               /></Col>
             <Col span={12}>
-              <CustomSelect
+              <MyInput
                 label="Other Secondary Section"
                 name="OtherSecondarySection"
                 value={InfData.OtherSecondarySection}
-                disabled={isDisable}
+                disabled={isDisable || InfData?.SecondarySection !== 'Other'}
+                required={isDisable || InfData?.SecondarySection === 'Other'}
                 onChange={(e) => handleInputChange("OtherSecondarySection", e.target.value)}
+                hasError={!!errors?.OtherSecondarySection}
               /></Col>
           </Row>
           <Row gutter={24}>
@@ -1105,19 +1160,24 @@ function AddNewGarda({ open, onClose, isGard }) {
                 checked={InfData?.incPro}
                 onChange={(e) => handleInputChange('incPro', e.target.checked)}
                 className="my-input-wrapper"
+                disabled={!['new', 'graduate'].includes(InfData?.memberStatus)}
               >
                 Tick here to join INMO Income Protection Scheme
               </Checkbox>
             </Col>
             <Col span={12}>
-              <Checkbox className="my-input-wrapper">
+              <Checkbox className="my-input-wrapper" disabled={isDisable
+              }>
                 Tick here to join Rewards for INMO members
               </Checkbox>
             </Col>
           </Row>
           <Row gutter={24}>
             <Col span={12}>
-              <Checkbox className="my-input-wrapper">
+              <Checkbox className="my-input-wrapper"
+              onChange={(e) => handleInputChange('valueAddedServices', e.target.checked)}
+              checked={InfData?.valueAddedServices}
+              >
                 Tick here to allow our partners to contact you about Value added Services by Email and SMS
               </Checkbox>
             </Col>
