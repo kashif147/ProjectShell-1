@@ -570,6 +570,7 @@ function HeaderDetails() {
             || location?.pathname == "/Sms"
             || location?.pathname == "/Email"
             || location?.pathname == "/Notes"
+            || location?.pathname == "/Popout"
           ) && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
@@ -639,7 +640,7 @@ function HeaderDetails() {
                           style={{ fontSize: "15px", fontWeight: 500 }}
                         />
                       }
-                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag': 'false', 'Bulk Email': 'false', 'Bulk SMS': 'false' }}
+                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag': 'false', 'Bulk Email': 'false', 'Bulk SMS': 'false', 'assign IRO':'false' }}
                       isCheckBox={false}
                       isSearched={false}
                       isTransparent={true}

@@ -62,32 +62,43 @@ const staticColumns = {
     { dataIndex: "status", title: "Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "updated", title: "Updated", ellipsis: true, isGride: true, isVisible: true, width: 150 },
   ],
-  Applications: [
-    { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
-    { dataIndex: "ApplicationNo", title: "Application No", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
-    { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
-    { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-    { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, isVisible: true, width: 150 },
-    { dataIndex: "dateRetired", title: "Date Retired", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "dateAged65", title: "Date Aged 65", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "dateOfDeath", title: "Date Of Death", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "stationID", title: "Station ID", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "stationPhone", title: "Station Phone", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "pensionNo", title: "Pension No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "graMember", title: "GRA Member", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "dateJoined", title: "Date Joined", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "dateLeft", title: "Date Left", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "associateMember", title: "Associate Member", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "status", title: "Status", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "updated", title: "Updated", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-  ],
+  Applications:  [
+  // 🔹 Top-Level Fields
+  { dataIndex: "ApplicationId", title: "Application ID", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  // { dataIndex: "userId",          title: "User ID",         ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "applicationStatus", title: "Status",        ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+  { dataIndex: "createdAt",       title: "Created At",      ellipsis: true, isGride: true, isVisible: true, width: 160, editable: false },
+  { dataIndex: "updatedAt",       title: "Updated At",      ellipsis: true, isGride: true, isVisible: true, width: 160, editable: false },
+
+  // 🔹 Personal Info
+  { dataIndex: ["personalDetails", "personalInfo", "title"],                     title: "Title",                    ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "forename"],                 title: "Forename",                 ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "surname"],                  title: "Surname",                  ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "gender"],                   title: "Gender",                   ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "dateOfBirth"],              title: "Date of Birth",            ellipsis: true, isGride: true, isVisible: true, width: 140, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "countryPrimaryQualification"], title: "Country of Qualification", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
+
+  // 🔹 Contact Info
+  { dataIndex: ["personalDetails", "contactInfo", "preferredAddress"],          title: "Preferred Address",        ellipsis: true, isGride: true, isVisible: true, width: 160, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "eircode"],                   title: "Eircode",                  ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "buildingOrHouse"],           title: "Building",                 ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "streetOrRoad"],              title: "Street",                   ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "areaOrTown"],                title: "Area/Town",                ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "countyCityOrPostCode"],      title: "County/City/PostCode",     ellipsis: true, isGride: true, isVisible: true, width: 180, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "country"],                   title: "Country",                  ellipsis: true, isGride: true, isVisible: true, width: 120, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "mobileNumber"],              title: "Mobile",                   ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"],           title: "Telephone",                ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "personalEmail"],             title: "Personal Email",           ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "workEmail"],                 title: "Work Email",               ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "consentSMS"],                title: "Consent SMS",              ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+  { dataIndex: ["personalDetails", "contactInfo", "consentEmail"],              title: "Consent Email",            ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+
+  // 🔹 Approval Info
+  { dataIndex: ["personalDetails", "approvalDetails", "approvedBy"],            title: "Approved By",              ellipsis: true, isGride: true, isVisible: true, width: 150, editable: false },
+  { dataIndex: ["personalDetails", "approvalDetails", "approvedAt"],            title: "Approved At",              ellipsis: true, isGride: true, isVisible: true, width: 160, editable: false },
+  { dataIndex: ["personalDetails", "approvalDetails", "comments"],              title: "Approval Comments",        ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+]
+,
   Cases: [
     { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
     { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
@@ -240,6 +251,13 @@ const staticColumns = {
     { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     
   ],
+Popout: [
+  { dataIndex: "code", title: "Code", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+  { dataIndex: "lookupname", title: "Work Location", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+  { dataIndex: "DisplayName", title: "Display Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+  { dataIndex: "Parentlookup", title: "Branch", ellipsis: true, isGride: true, isVisible: true, width: 150 }
+],
+
   BatchMemberSummary: [
     { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "Member Name", title: "Member Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
@@ -591,7 +609,38 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: {}
     }
-  ]
+  ],
+  Popout:[
+  {
+    titleColumn: "Code",
+    isSearch: true,
+    isCheck: false,
+    lookups: {},
+    comp: "=="
+  },
+  {
+    titleColumn: "Work Location",
+    isSearch: true,
+    isCheck: false,
+    lookups: {},
+    comp: "=="
+  },
+  {
+    titleColumn: "Display Name",
+    isSearch: true,
+    isCheck: false,
+    lookups: {},
+    comp: "=="
+  },
+  {
+    titleColumn: "Branch",
+    isSearch: true,
+    isCheck: false,
+    lookups: {},
+    comp: "=="
+  }
+]
+
 };
 
 export const TableColumnsProvider = ({ children }) => {

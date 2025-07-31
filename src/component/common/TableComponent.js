@@ -7,9 +7,10 @@ import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
 import { AiOutlineThunderbolt } from "react-icons/ai";
+import { useDispatch, useSelector } from 'react-redux';
 import { MdKeyboard } from 'react-icons/md';
 import { ExcelContext } from "../../context/ExcelContext";
-
+import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import SimpleMenu from "./SimpleMenu";
 import {
   DndContext,
@@ -84,6 +85,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
         onCell: () => ({ id: `${index}` }),
       }))
   );
+  const dispatch = useDispatch();
 
     const fileInputRef = useRef(null);
     const handleRowClick = (record, rowIndex) => {
@@ -300,10 +302,12 @@ const TableComponent = ({ data, screenName, redirect }) => {
               </span>
               </Link>)
               :
-            col.title === "Application No" ? (
+            col.title === "Application ID" ? (
               <Link
             // to="/AproveMembersip"
-            onClick={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)}
+            onClick={()=>{
+              dispatch(getApplicationById(record?.ApplicationId));
+              setAddNewGardaDrwr(!AddNewGardaDrwr)}}
             state={{
               search: screenName,
               name: record?.fullName,
@@ -312,7 +316,8 @@ const TableComponent = ({ data, screenName, redirect }) => {
               Fullname: record?.surname,
               DateOfBirth: record?.dateOfBirth,
             }}
-            // onClick={() => getProfile([record], index)}
+            
+
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}

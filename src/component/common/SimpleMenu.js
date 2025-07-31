@@ -16,6 +16,7 @@ import { Navigate, useLocation } from "react-router-dom";
 import TransferRequests from "../TransferRequests";
 import CareerBreakDrawer from "../CareerBreakDrawer";
 import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
+import ContactDrawer from "./ContactDrawer";
 
 
 function SimpleMenu({
@@ -31,7 +32,8 @@ function SimpleMenu({
   const [checkboxes, setCheckboxes] = useState([]);
   const [transferreq, settransferreq] = useState(false)
   const [careerBreak, setcareerBreak] = useState(false)
-    const [isDrawerOpen, setisDrawerOpen] = useState(false)
+  const [isDrawerOpen, setisDrawerOpen] = useState(false)
+  const [contactDrawer, setcontactDrawer] = useState(false)
   const location = useLocation
   const screenName = location?.state?.search
   const [ddSearch, setddSearch] = useState("")
@@ -209,7 +211,7 @@ function SimpleMenu({
             ) :
 
               key === 'Transfer Requests' ? (
-                <div className="d-flex align-items-baseline bg-danger" onClick={() => {
+                <div className="d-flex align-items-baseline" onClick={() => {
                   settransferreq(true)
                   getProfile(record, index)
 
@@ -220,6 +222,20 @@ function SimpleMenu({
                     color: "#45669d",
                   }} />
                   Transfer Request
+                </div>
+              ) :
+              key === 'assign IRO' ? (
+                <div className="d-flex align-items-baseline bg-danger" onClick={() => {
+                  setcontactDrawer(!contactDrawer)
+                  // getProfile(record, index)
+
+                }}>
+                  {/* <FaRegArrowAltCircleRight style={{
+                    fontSize: "12px",
+                    marginRight: "10px",
+                    color: "#45669d",
+                  }} /> */}
+                  Assign IRO
                 </div>
               ) :
                 key === 'Career Break' ? (
@@ -335,6 +351,7 @@ function SimpleMenu({
                 // onAccept={handleAccept}
                 // onReject={handleReject}
               />
+              <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
     </>
   );
 }

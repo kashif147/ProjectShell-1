@@ -1,6 +1,13 @@
 .my-input-wrapper {
   margin-bottom: 1.25rem;
 }
+:where(.css-dev-only-do-not-override-tjsggz).ant-checkbox-disabled + span {
+    color: #212529 !important;
+}
+:where(.css-dev-only-do-not-override-tjsggz).ant-radio-wrapper-disabled {
+    color: #212529 !important;
+}
+
 .placeholder-error {
   color: red !important;
 }
@@ -95,7 +102,7 @@
   cursor: not-allowed;
 }
 
-
+yse
  .my-input-field-select.disabled-select {
   background-color: #f5f5f5; /* light gray like input[disabled] */
   color: #a0a0a0;

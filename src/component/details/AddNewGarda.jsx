@@ -14,12 +14,48 @@ import { CatOptions, workLocations } from "../../Data";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { calculateAgeFtn } from "../../utils/Utilities";
 import '../../styles/MyInput.css'
+
+
 import { info } from "autoprefixer";
 
 const libraries = ['places', 'maps'];
 
 
 function AddNewGarda({ open, onClose, isGard }) {
+  const { applicationDetail, loading } = useSelector((state) => state.applications);
+  const mapApplicationDetailToInfData = (applicationDetail) => {
+  if (!applicationDetail) return {};
+
+  const personal = applicationDetail?.personalDetails?.personalInfo || {};
+  const contact = applicationDetail?.personalDetails?.contactInfo || {};
+  const approval = applicationDetail?.personalDetails?.approvalDetails || {};
+
+  return {
+    forename: personal.forename || "",
+    surname: personal.surname || "",
+    CountryOfPrimaryQualification: personal.countryPrimaryQualification || "",
+    dateOfBirth: personal.dateOfBirth ? moment(personal.dateOfBirth) : null,
+    isDeceased: personal.deceased || false,
+
+    preferredAddress: contact.preferredAddress || "",
+    eircode: contact.eircode || "",
+    Building: contact.buildingOrHouse || "",
+    Street: contact.streetOrRoad || "",
+    AreaTown: contact.areaOrTown || "",
+    CountyCityOrPostCode: contact.countyCityOrPostCode || "",
+    Country: contact.country || "Ireland",
+    mobile: contact.mobileNumber || "",
+    HomeOrWorkTel: contact.telephoneNumber || "",
+    email: contact.personalEmail || "",
+    preferredEmail: contact.preferredEmail || "",
+    PersonalEmail: contact.personalEmail || "",
+    WorkEmail: contact.workEmail || "",
+    ConsentSMS: contact.consentSMS || false,
+    ConsentEmail: contact.consentEmail || false,
+
+    ApprovalComments: approval.comments || "",
+  };
+};
   const { data: countryOptions, } = useSelector(
     (state) => state.countries
   );
@@ -55,8 +91,8 @@ function AddNewGarda({ open, onClose, isGard }) {
     eircode: null,
     mobile: null,
     Country: 'Ireland',
-    isTermCon: true,
-    valueAddedServices:true,
+    isTermCon: false,
+    valueAddedServices: false,
     HomeOrWorkTel: null,
     email: null,
     preferredEmail: null,
@@ -97,7 +133,7 @@ function AddNewGarda({ open, onClose, isGard }) {
     isAssociateMember: null,
     notes: null,
     preferredAddress: null,
-    graduationDate: null,
+    Graduationdate: null,
     isNursingAdaptation: 'No',
     otherUnion: 'Yes',
     wasUnionMember: 'Yes',
@@ -170,6 +206,12 @@ function AddNewGarda({ open, onClose, isGard }) {
         setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
       }
   };
+useEffect(() => {
+  if (isGard ) {
+    const newData = mapApplicationDetailToInfData(applicationDetail);
+    setInfData((prev) => ({ ...prev, ...newData }));
+  }
+}, [open]);
 
   console.log(InfData, 'infoData')
   const handleSubmit = () => {
@@ -192,8 +234,8 @@ function AddNewGarda({ open, onClose, isGard }) {
       'isTermCon',
       'preferredAddress',
       'PayrollNo',
-      'OtherPrimarySection',
-      'OtherSecondarySection'
+      // 'OtherPrimarySection',
+      // 'OtherSecondarySection'
     ];
 
     const newErrors = {};
@@ -213,6 +255,11 @@ function AddNewGarda({ open, onClose, isGard }) {
       }
     }
 
+    if (InfData.preferredEmailOptions === "Work") {
+      if (!InfData.WorkEmail || InfData.WorkEmail.trim() === "") {
+        newErrors.WorkEmail = "Work Email is required";
+      }
+    }
     if (InfData.preferredEmailOptions === "Work") {
       if (!InfData.WorkEmail || InfData.WorkEmail.trim() === "") {
         newErrors.WorkEmail = "Work Email is required";
@@ -566,42 +613,32 @@ function AddNewGarda({ open, onClose, isGard }) {
                 </div>
               </Col>
               <Col span={12}>
-                <label className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
-                  Preferred Address <span className="text-danger">*</span>
-                </label>
-                <div
-                  className={`d-flex justify-content-between align-items-start ${errors?.preferredAddress ? 'has-error' : ''
-                    }`}
-                >
-                  <Radio.Group
-                    onChange={(e) => handleInputChange("preferredAddress", e.target.value)}
-                    value={InfData?.preferredAddress}
-                    disabled={isDisable}
-                    options={[
-                      { value: 'Home', label: 'Home' },
-                      { value: 'Work', label: 'Work' },
-                    ]}
-                    className={errors?.preferredAddress ? 'radio-error' : ''}
-                  />
-                </div>
+                <Checkbox>
+                  Consent to receive Correspondence from INMO
+                </Checkbox>
               </Col>
               <Col span={24} className="">
-                {/* <Checkbox>Consent to receive Correspondence from INMO </Checkbox> */}
-
-                {/*
-  </Col>
-  <Col span={24}>
-  <label className="my-input-label mt-4">Prefered adress</label>
-    <Checkbox>Work </Checkbox> */}
                 <div className="my-input-group mt-4 mb-4">
                   <Row>
                     <Col span={12}>
-                      {/* <label className="my-input-label mb-2 "> */}
-
-                      <Checkbox style={{ marginLeft: 10, marginTop: '35px' }}>
-                        Consent to receive Correspondence from INMO
-                      </Checkbox>
-
+                      <label className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
+                        Preferred Address <span className="text-danger">*</span>
+                      </label>
+                      <div
+                        className={`d-flex justify-content-between align-items-start ${errors?.preferredAddress ? 'has-error' : ''
+                          }`}
+                      >
+                        <Radio.Group
+                          onChange={(e) => handleInputChange("preferredAddress", e.target.value)}
+                          value={InfData?.preferredAddress}
+                          disabled={isDisable}
+                          options={[
+                            { value: 'Home', label: 'Home' },
+                            { value: 'Work', label: 'Work' },
+                          ]}
+                          className={errors?.preferredAddress ? 'radio-error' : ''}
+                        />
+                      </div>
                     </Col>
 
 
@@ -778,6 +815,20 @@ function AddNewGarda({ open, onClose, isGard }) {
                 hasError={!!errors?.MembershipCategory}
               />
             </Col>
+            <Col span={12}>
+              <MyDatePicker
+                  label="Graduation date"
+                  name="Graduationdate"
+                  required
+                  value={InfData?.Graduationdate} // ✅ just string like "01/07/2019"
+                  disabled={isDisable}
+                  onChange={(date, dateString) => {
+                    console.log(date, "dte")
+                    handleInputChange("Graduationdate", date)
+                  }}
+                  hasError={!!errors?.Graduationdate}
+                />
+            </Col>
           </Row>
           {InfData.MembershipCategory === 'Undergraduate Student' && (
             <Row gutter={24}>
@@ -799,15 +850,15 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
               <Col span={12}>
                 <MyDatePicker
-                  label="Graduation Date"
-                  name="graduationDate"
-                  disabled={InfData?.MembershipCategory !== 'Undergraduate Student'}
-                  value={InfData?.graduationDate || ''}
-                  onChange={(date) =>
-                    handleInputChange('graduationDate', date ? date.format("DD/MM/YYYY") : null)
-                  }
-                  hasError={!!errors?.graduationDate}
-                  disableAgeValidation
+                // label="Graduation Date"
+                // name="graduationDate"
+                // disabled={InfData?.MembershipCategory !== 'Undergraduate Student'}
+                // value={InfData?.graduationDate || ''}
+                // onChange={(date) =>
+                //   handleInputChange('graduationDate', date ? date.format("DD/MM/YYYY") : null)
+                // }
+                // hasError={!!errors?.graduationDate}
+                // disableAgeValidation
                 />
               </Col>
             </Row>
@@ -977,15 +1028,15 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
             <Col span={12}>
               <MyDatePicker
-                label="Retired Date"
-                name="RetiredDate"
-                value={InfData.RetiredDate ? moment(InfData.RetiredDate, "DD/MM/YYYY") : null}
-                disabled={isDisable || InfData?.MembershipCategory != 'Retired Associate'}
-                required={InfData?.MembershipCategory == 'Retired Associate'}
-                onChange={(date) =>
-                  handleInputChange("RetiredDate", date ? date.format("DD/MM/YYYY") : null)
+              // label="Retired Date"
+              // name="RetiredDate"
+              // value={InfData.RetiredDate ? moment(InfData.RetiredDate, "DD/MM/YYYY") : null}
+              // disabled={isDisable || InfData?.MembershipCategory != 'Retired Associate'}
+              // required={InfData?.MembershipCategory == 'Retired Associate'}
+              // onChange={(date) =>
+              //   handleInputChange("RetiredDate", date ? date.format("DD/MM/YYYY") : null)
 
-                }
+              // }
               />
             </Col>
 
@@ -1141,7 +1192,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 ]}
                 disabled={isDisable}
                 onChange={(e) => handleInputChange("SecondarySection", e.target.value)}
-                
+
               /></Col>
             <Col span={12}>
               <MyInput
@@ -1160,13 +1211,14 @@ function AddNewGarda({ open, onClose, isGard }) {
                 checked={InfData?.incPro}
                 onChange={(e) => handleInputChange('incPro', e.target.checked)}
                 className="my-input-wrapper"
-                disabled={!['new', 'graduate'].includes(InfData?.memberStatus)}
+                disabled={!['new', 'graduate'].includes(InfData?.memberStatus) || isDisable}
               >
                 Tick here to join INMO Income Protection Scheme
               </Checkbox>
             </Col>
             <Col span={12}>
-              <Checkbox className="my-input-wrapper" disabled={isDisable
+              <Checkbox className="my-input-wrapper" disabled={isDisable ||
+                !['new', 'graduate'].includes(InfData?.memberStatus)
               }>
                 Tick here to join Rewards for INMO members
               </Checkbox>
@@ -1175,8 +1227,9 @@ function AddNewGarda({ open, onClose, isGard }) {
           <Row gutter={24}>
             <Col span={12}>
               <Checkbox className="my-input-wrapper"
-              onChange={(e) => handleInputChange('valueAddedServices', e.target.checked)}
-              checked={InfData?.valueAddedServices}
+                onChange={(e) => handleInputChange('valueAddedServices', e.target.checked)}
+                checked={InfData?.valueAddedServices}
+
               >
                 Tick here to allow our partners to contact you about Value added Services by Email and SMS
               </Checkbox>

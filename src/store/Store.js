@@ -16,6 +16,9 @@ import contactReducer from "../features/ContactSlice"
 // import countriesReducer from './countrySlice';
 import countriesReducer from '../features/CountrySlice';
 import menuLblReducer from '../features/MenuLblSlice'
+import applicationReducer from '../features/ApplicationSlice'
+import applicationDetailsReducer  from '../features/ApplicationDetailsSlice'
+
 
 const store = configureStore({
   reducer: {
@@ -31,6 +34,8 @@ const store = configureStore({
     contact: contactReducer,
     menuLbl: menuLblReducer,
     countries: countriesReducer,
+    applications: applicationReducer,
+    applicationDetails: applicationDetailsReducer,
 
   },
 });

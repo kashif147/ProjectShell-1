@@ -19,6 +19,7 @@ import { getContactTypes } from "../../features/ContactTypeSlice";
 import MyConfirm from "../common/MyConfirm";
 import { deleteFtn } from "../../utils/Utilities";
 import { getContacts } from "../../features/ContactSlice";
+import CommonPopConfirm from "./CommonPopConfirm";
 import { baseURL } from "../../utils/Utilities";
 import { useNavigate, useLocation } from "react-router-dom";
 import CustomSelect from "./CustomSelect";
@@ -35,7 +36,7 @@ import {
 
 } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda,isAppRej, isGardaCheckbx, isManual,infoDataChk }) {
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const dispatch = useDispatch()
@@ -84,7 +85,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       Eircode: "",
     },
     ContactTypeID: "",
-    isDeleted: false, 
+    isDeleted: false,
   });
   const updateContact = (key, value) => {
     setContact((prev) => ({
@@ -171,7 +172,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
     return Object.keys(newErrors[drawerType]).length === 0;
   };
 
- 
+
   const CriticalIllnessSchemePaymentsClm = [
     {
       title: 'File Reference',
@@ -374,7 +375,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       [name]: value, // Update only the `timeDur` property
     }));
   };
-  const {contactsLoading, } = useSelector(
+  const { contactsLoading, } = useSelector(
     (state) => state.contactType
   );
   const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false })
@@ -634,8 +635,24 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             {
               isAppRej && (
                 <>
-                <Checkbox value="Approved" className="me-2">Approved</Checkbox>
-                <Checkbox value="Rejected">Rejected</Checkbox>
+                  <CommonPopConfirm
+                    title="Are you sure you want to approve this?"
+                    onConfirm={() => console.log("Approved")}
+                    onCancel={() => console.log("Approval cancelled")}
+                  >
+                    <Checkbox value="Approved" className="me-2">
+                      Approved
+                    </Checkbox>
+                  </CommonPopConfirm>
+                  <CommonPopConfirm
+                    title="Are you sure you want to reject this?"
+                    onConfirm={() => console.log("Rejected")}
+                    onCancel={() => console.log("Rejection cancelled")}
+                  >
+                    <Checkbox value="Rejected">
+                      Rejected
+                    </Checkbox>
+                  </CommonPopConfirm>
                 </>
               )
             }
@@ -683,7 +700,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                       
                     // }
                   > */}
-           
+
                   {/* </Checkbox.Group> */}
 
                 </>
