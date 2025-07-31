@@ -311,13 +311,10 @@ const TableComponent = ({ data, screenName, redirect }) => {
             state={{
               search: screenName,
               name: record?.fullName,
-              // code: record?.regNo,
               Forename: record?.forename,
               Fullname: record?.surname,
               DateOfBirth: record?.dateOfBirth,
             }}
-            
-
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}

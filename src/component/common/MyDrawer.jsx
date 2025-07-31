@@ -635,15 +635,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             {
               isAppRej && (
                 <>
-                  <CommonPopConfirm
-                    title="Are you sure you want to approve this?"
-                    onConfirm={() => console.log("Approved")}
-                    onCancel={() => console.log("Approval cancelled")}
-                  >
-                    <Checkbox value="Approved" className="me-2">
+                  <Checkbox value="Approved" className="me-2">
                       Approved
                     </Checkbox>
-                  </CommonPopConfirm>
                   <CommonPopConfirm
                     title="Are you sure you want to reject this?"
                     onConfirm={() => console.log("Rejected")}

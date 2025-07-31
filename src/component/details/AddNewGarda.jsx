@@ -22,7 +22,7 @@ const libraries = ['places', 'maps'];
 
 
 function AddNewGarda({ open, onClose, isGard }) {
-  const { applicationDetail, loading } = useSelector((state) => state.applications);
+  const { application, loading } = useSelector((state) => state.applicationDetails);
   const mapApplicationDetailToInfData = (applicationDetail) => {
   if (!applicationDetail) return {};
 
@@ -36,16 +36,18 @@ function AddNewGarda({ open, onClose, isGard }) {
     CountryOfPrimaryQualification: personal.countryPrimaryQualification || "",
     dateOfBirth: personal.dateOfBirth ? moment(personal.dateOfBirth) : null,
     isDeceased: personal.deceased || false,
+    title:personal?.title,
+    gender:personal?.gender,
 
     preferredAddress: contact.preferredAddress || "",
     eircode: contact.eircode || "",
-    Building: contact.buildingOrHouse || "",
-    Street: contact.streetOrRoad || "",
-    AreaTown: contact.areaOrTown || "",
-    CountyCityOrPostCode: contact.countyCityOrPostCode || "",
-    Country: contact.country || "Ireland",
+    buildingOrHouse: contact.buildingOrHouse || "",
+    streetOrRoad: contact.streetOrRoad || "",
+    areaOrTown: contact.areaOrTown || "",
+    countyCityOrPostCode: contact.countyCityOrPostCode || "",
+    country: contact.country || "Ireland",
     mobile: contact.mobileNumber || "",
-    HomeOrWorkTel: contact.telephoneNumber || "",
+   telephoneNumber: contact.telephoneNumber || "",
     email: contact.personalEmail || "",
     preferredEmail: contact.preferredEmail || "",
     PersonalEmail: contact.personalEmail || "",
@@ -82,11 +84,11 @@ function AddNewGarda({ open, onClose, isGard }) {
     fullname: null,
     forename: null,
     surname: null,
-    CountryOfPrimaryQualification: null,
-    addressLine1: null,
-    addressLine2: null,
-    addressLine3: null,
-    addressLine4: null,
+    countryPrimaryQualification: null,
+    buildingOrHouse: null,
+    streetOrRoad: null,
+    areaOrTown: null,
+    countyCityOrPostCode: null,
     eirCode: null,
     eircode: null,
     mobile: null,
@@ -96,7 +98,6 @@ function AddNewGarda({ open, onClose, isGard }) {
     HomeOrWorkTel: null,
     email: null,
     preferredEmail: null,
-    preferredEmailOptions: null,
     Grade: null,
     MembershipCategory: null,
     WorkLocation: null,
@@ -137,8 +138,11 @@ function AddNewGarda({ open, onClose, isGard }) {
     isNursingAdaptation: 'No',
     otherUnion: 'Yes',
     wasUnionMember: 'Yes',
-    memberStatus: null
+    memberStatus: null,
+    telephoneNumber:null
   };
+
+  
   const [InfData, setInfData] = useState(inputsInitValue);
   const [errors, setErrors] = useState({});
 
@@ -206,14 +210,15 @@ function AddNewGarda({ open, onClose, isGard }) {
         setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
       }
   };
+  let newdata;
 useEffect(() => {
-  if (isGard ) {
-    const newData = mapApplicationDetailToInfData(applicationDetail);
-    setInfData((prev) => ({ ...prev, ...newData }));
+  if (isGard===true && application && open===true ) {
+    newdata = mapApplicationDetailToInfData(application?.data);
+    setInfData((prev) => ({ ...prev, ...newdata }));
   }
-}, [open]);
+}, [open && application]);
 
-  console.log(InfData, 'infoData')
+  console.log(newdata, 'applicationDetail')
   const handleSubmit = () => {
     const requiredFields = [
       "status",
@@ -226,7 +231,7 @@ useEffect(() => {
       "AdressLine4",
       "Country",
       "mobile",
-      "preferredEmailOptions",
+      "preferredEmail",
       "MembershipCategory",
       "WorkLocation",
       "Grade",
@@ -249,18 +254,18 @@ useEffect(() => {
     });
 
     // Conditional validation for email fields
-    if (InfData.preferredEmailOptions === "Personal") {
+    if (InfData.preferredEmail === "personal") {
       if (!InfData.email || InfData.email.trim() === "") {
         newErrors.email = "Personal Email is required";
       }
     }
 
-    if (InfData.preferredEmailOptions === "Work") {
+    if (InfData.preferredEmail === "work") {
       if (!InfData.WorkEmail || InfData.WorkEmail.trim() === "") {
         newErrors.WorkEmail = "Work Email is required";
       }
     }
-    if (InfData.preferredEmailOptions === "Work") {
+    if (InfData.preferredEmail === "Work") {
       if (!InfData.WorkEmail || InfData.WorkEmail.trim() === "") {
         newErrors.WorkEmail = "Work Email is required";
       }
@@ -310,18 +315,18 @@ useEffect(() => {
             getComponent('administrative_area_level_1') || '';
           const postalCode = getComponent('postal_code');
 
-          const addressLine1 = `${streetNumber} ${route}`.trim();
-          const addressLine2 = sublocality;
-          const addressLine3 = town;
-          const addressLine4 = `${county}`.trim();
+          const buildingOrHouse = `${streetNumber} ${route}`.trim();
+          const streetOrRoad = sublocality;
+          const areaOrTown = town;
+          const countyCityOrPostCode = `${county}`.trim();
           const eircode = `${postalCode}`.trim();
 
           setInfData({
             ...InfData,
-            addressLine1,
-            addressLine2,
-            addressLine3,
-            addressLine4,
+            buildingOrHouse,
+            streetOrRoad,
+            areaOrTown,
+            countyCityOrPostCode,
             eircode,
           });
         }
@@ -586,8 +591,8 @@ useEffect(() => {
               {/* Country Of Primary Qualification */}
               <Col span={8}>
                 <CustomSelect
-                  label="Country Of Primary Qualification"
-                  name="Country Of Primary Qualification"
+                  label="countryPrimaryQualification"
+                  name="countryPrimaryQualification"
                   value={InfData?.Country}
                   options={countryOptions}
                   required
@@ -633,8 +638,8 @@ useEffect(() => {
                           value={InfData?.preferredAddress}
                           disabled={isDisable}
                           options={[
-                            { value: 'Home', label: 'Home' },
-                            { value: 'Work', label: 'Work' },
+                            { value: 'home', label: 'Home' },
+                            { value: 'work', label: 'Work' },
                           ]}
                           className={errors?.preferredAddress ? 'radio-error' : ''}
                         />
@@ -667,20 +672,20 @@ useEffect(() => {
               <Col span={12}>
                 <MyInput
                   label="Address Line 1 (Building or House)"
-                  name="addressLine1"
-                  value={InfData.addressLine1}
+                  name="buildingOrHouse"
+                  value={InfData.buildingOrHouse}
                   required
                   disabled={isDisable}
                   onChange={handleInputChange}
-                  hasError={!!errors?.addressLine1}
+                  hasError={!!errors?.buildingOrHouse}
                 />
               </Col>
 
               <Col span={12}>
                 <MyInput
                   label="Address Line 2 (Street or Road)"
-                  name="addressLine2"
-                  value={InfData.addressLine2}
+                  name="streetOrRoad"
+                  value={InfData.streetOrRoad}
                   disabled={isDisable}
                   onChange={handleInputChange}
                 />
@@ -691,7 +696,7 @@ useEffect(() => {
                 <MyInput
                   label="Address Line 3 (Area or Town)"
                   name="adressLine3"
-                  value={InfData.addressLine3}
+                  value={InfData.areaOrTown}
                   disabled={isDisable}
                   onChange={handleInputChange}
                 />
@@ -700,12 +705,12 @@ useEffect(() => {
               <Col span={12}>
                 <MyInput
                   label="Address Line 4 (County, City or Postcode)"
-                  name="addressLine4"
-                  value={InfData.addressLine4}
+                  name="countyCityOrPostCode"
+                  value={InfData.countyCityOrPostCode}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("AdressLine4", e.target.value)}
-                  hasError={!!errors?.AdressLine4}
+                  onChange={(e) => handleInputChange("countyCityOrPostCode", e.target.value)}
+                  hasError={!!errors?.countyCityOrPostCode}
                 />
               </Col>
 
@@ -749,24 +754,24 @@ useEffect(() => {
                   label="Home / Work Tel Number"
                   name="mobile"
                   type="number"
-                  value={InfData.workHomeTel}
+                  value={InfData.telephoneNumber}
                   disabled={isDisable}
                   onChange={handleInputChange}
-                  hasError={!!errors?.workHomeTel}
+                  hasError={!!errors?.telephoneNumber}
                 />
               </Col>
 
               {/* Preferred Email (Full Width) */}
               <Col span={12} className="mt-2 mb-4">
-                <label className={`my-input-label ${errors?.preferredEmailOptions ? "error-text1" : ""}`}>Preferred Email<span className="text-danger ms-1">*</span></label>
+                <label className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>Preferred Email<span className="text-danger ms-1">*</span></label>
                 <Radio.Group
-                  onChange={(e) => handleInputChange("preferredEmailOptions", e.target.value)}
-                  value={InfData?.preferredEmailOptions}
+                  onChange={(e) => handleInputChange("preferredEmail", e.target.value)}
+                  value={InfData?.preferredEmail}
                   disabled={isDisable}
-                  className={errors?.preferredEmailOptions ? 'radio-error' : ''}
+                  className={errors?.preferredEmail ? 'radio-error' : ''}
                 >
-                  <Radio value="Personal">Personal</Radio>
-                  <Radio value="Work">Work</Radio>
+                  <Radio value="personal">Personal</Radio>
+                  <Radio value="work">Work</Radio>
                 </Radio.Group>
               </Col>
               <Col span={12}></Col>
@@ -775,7 +780,7 @@ useEffect(() => {
                   label="Personal Email"
                   name="email"
                   type="email"
-                  required={InfData.preferredEmailOptions === "Personal"}
+                  required={InfData.preferredEmail === "Personal"}
                   value={InfData.email}
                   disabled={isDisable}
                   onChange={handleInputChange}
@@ -789,7 +794,7 @@ useEffect(() => {
                   name="Work Email"
                   type="email"
                   value={InfData.WorkEmail}
-                  required={InfData.preferredEmailOptions === "Work"}
+                  required={InfData.preferredEmail === "Work"}
                   disabled={isDisable}
                   onChange={handleInputChange}
                   hasError={!!errors?.WorkEmail}
