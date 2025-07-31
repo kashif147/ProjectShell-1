@@ -16,6 +16,7 @@ import {
   LoadingOutlined,
   UploadOutlined,
 } from "@ant-design/icons";
+import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import SimpleMenu from "./SimpleMenu";
@@ -45,6 +46,8 @@ import CreateClaim from "../claim/CreateClaim";
 import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
+import ActionDropdown from "./ActionDropdown";
+
 function HeaderDetails() {
   const { Search } = Input;
   const { TextArea } = Input;
@@ -103,15 +106,24 @@ function HeaderDetails() {
       key: 'Description',
     },
   ]
-// addColumnToSection("CornGrideSummary",{
-//    dataIndex: "email",
-//   title: "Email",
-//   ellipsis: true,
-//   isGride: true,
-//   isVisible: true,
-//   width: 180,
-//   editable: true,
-// })
+const handleAction = (label, e) => {
+  console.log("Label:", label);
+  console.log("Event type:", e?.type); // now safe
+};
+const [contactDrawer, setcontactDrawer] = useState(false)
+
+ const menuItems = [
+  { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
+  { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
+  { label: "Generate Bulk NFC Tag", onClick: (e) => handleAction("Generate Bulk NFC Tag", e) },
+  { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
+  { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
+  { label: "Assign IRO", onClick: (e) => {
+     e?.domEvent?.stopPropagation();
+    setcontactDrawer((prev) => !prev)} },
+];
+
+
   function filterSearchableColumns(data) {
     if (data) {
       const filteredResults = globleFilters?.reduce((acc, i) => {
@@ -634,19 +646,7 @@ function HeaderDetails() {
                     <Button className="me-1 gray-btn butn">Share</Button>
                     <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                     <Button className="me-1 gray-btn butn">Grid VIEW</Button>
-                    <SimpleMenu
-                      title={
-                        <BsThreeDots
-                          style={{ fontSize: "15px", fontWeight: 500 }}
-                        />
-                      }
-                      data={{ "Bulk Changes": "false", "Print Labels": "false", 'Generate Bulk NFC Tag': 'false', 'Bulk Email': 'false', 'Bulk SMS': 'false', 'assign IRO':'false' }}
-                      isCheckBox={false}
-                      isSearched={false}
-                      isTransparent={true}
-                      vertical={true}
-
-                    />
+                 <ActionDropdown items={menuItems} />
                   </div>
                 </div>
                 <div className="d-flex search-fliters align-items-baseline">
@@ -1002,6 +1002,7 @@ function HeaderDetails() {
       // onAccept={handleAccept}
       // onReject={handleReject}
       />
+       <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
 
     </div>
   );

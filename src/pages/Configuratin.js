@@ -857,7 +857,7 @@ function Configuratin() {
       key: 'code',
     },
     {
-      title: 'Stations',
+      title: 'Work Location',
       dataIndex: 'lookupname',
       key: 'lookupname',
     },
@@ -867,7 +867,7 @@ function Configuratin() {
       key: 'DisplayName',
     },
     {
-      title: 'District',
+      title: 'Branch',
       dataIndex: 'Parentlookup',
       key: 'Parentlookup',
     },
@@ -4614,8 +4614,9 @@ function Configuratin() {
             <CustomSelect
               label="Type"
               name="type"
-              placeholder="Branch"
+              placeholder="Work Location"
               disabled={true}
+              required
             />
 
             <MyInput
@@ -4626,6 +4627,7 @@ function Configuratin() {
               disabled={isDisable}
               hasError={!!errors?.Station?.code}
               errorMessage={errors?.Station?.code}
+              required
             />
 
             <MyInput
@@ -4636,6 +4638,7 @@ function Configuratin() {
               disabled={isDisable}
               hasError={!!errors?.Station?.lookupname}
               errorMessage={errors?.Station?.lookupname}
+              required
             />
 
             <MyInput
@@ -4647,19 +4650,19 @@ function Configuratin() {
               hasError={false}
               errorMessage={"text"} // Replace if dynamic
             />
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
+            <div className="d-flex ">
+              <div className="">
                 <CustomSelect
                   label=""
                   name="Parentlookupid"
-                  placeholder="Select County"
+                  placeholder="Select Branch"
                   options={selectLokups?.Districts}
                   value={drawerIpnuts?.Station?.Parentlookupid}
                   onChange={(val) => drawrInptChng('Station', 'Parentlookupid', val)}
                   disabled={isDisable}
                   hasError={!!errors?.Station?.Parentlookupid}
                   errorMessage={errors?.Station?.Parentlookupid}
+                  required
                 />
               </div>
               <Button
