@@ -21,12 +21,13 @@ jobs:
         run: |
           npm install
           npm run build
+          cp staticwebapp.config.json build/
 
       - name: Upload build folder
         uses: actions/upload-artifact@v4
         with:
           name: react-build
-          path: build/
+          path: build
 
   deploy:
     runs-on: ubuntu-latest
@@ -36,13 +37,11 @@ jobs:
       contents: read
 
     steps:
-      - uses: actions/checkout@v4
-
       - name: Download build artifact
         uses: actions/download-artifact@v4
         with:
           name: react-build
-          path: .
+          path: build
 
       - name: Azure Login
         uses: azure/login@v2
@@ -56,4 +55,4 @@ jobs:
         with:
           app-name: "ProjectShellCRM"
           slot-name: "Production"
-          package: .
+          package: ./build
