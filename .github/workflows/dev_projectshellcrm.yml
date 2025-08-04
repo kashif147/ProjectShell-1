@@ -9,16 +9,13 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read
-
     steps:
       - uses: actions/checkout@v4
 
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: "22.x"
+          node-version: "18.x"
 
       - name: Install dependencies and build
         run: |
@@ -45,14 +42,14 @@ jobs:
           name: react-build
           path: build
 
-      - name: Login to Azure
+      - name: Azure Login
         uses: azure/login@v2
         with:
           client-id: ${{ secrets.AZUREAPPSERVICE_CLIENTID_D8CC72E260A74D1DA3EA30B686D794BC }}
           tenant-id: ${{ secrets.AZUREAPPSERVICE_TENANTID_B46CEA68AC47400B8F7D48A8D5635B52 }}
           subscription-id: ${{ secrets.AZUREAPPSERVICE_SUBSCRIPTIONID_08FDA9F7A5B94532B660E796DDEA30D5 }}
 
-      - name: Deploy to Azure Web App
+      - name: Deploy static files to Azure Web App
         uses: azure/webapps-deploy@v3
         with:
           app-name: "ProjectShellCRM"
