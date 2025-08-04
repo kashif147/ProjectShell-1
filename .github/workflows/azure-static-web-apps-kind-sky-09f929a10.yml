@@ -17,7 +17,25 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Build and Deploy
+      - name: Set up Node
+        uses: actions/setup-node@v3
+        with:
+          node-version: 18
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build React app
+        run: npm run build
+        env:
+          REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
+          REACT_APP_TENANT_ID: ${{ secrets.REACT_APP_TENANT_ID }}
+          REACT_APP_CLIENT_ID_OUTLOOK: ${{ secrets.REACT_APP_CLIENT_ID_OUTLOOK }}
+          REACT_APP_TENANT_ID_OUTLOOK: ${{ secrets.REACT_APP_TENANT_ID_OUTLOOK }}
+          REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
+          REACT_APP_BASE_URL_DEV: ${{ secrets.REACT_APP_BASE_URL_DEV }}
+
+      - name: Deploy to Azure Static Web Apps
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
         with:
@@ -26,13 +44,6 @@ jobs:
           action: "upload"
           app_location: "/" # root folder of your React app
           output_location: "build" # output folder after build (CRA default)
-        env:
-          REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
-          REACT_APP_TENANT_ID: ${{ secrets.REACT_APP_TENANT_ID }}
-          REACT_APP_CLIENT_ID_OUTLOOK: ${{ secrets.REACT_APP_CLIENT_ID_OUTLOOK }}
-          REACT_APP_TENANT_ID_OUTLOOK: ${{ secrets.REACT_APP_TENANT_ID_OUTLOOK }}
-          REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
-          REACT_APP_BASE_URL_DEV: ${{ secrets.REACT_APP_BASE_URL_DEV }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
