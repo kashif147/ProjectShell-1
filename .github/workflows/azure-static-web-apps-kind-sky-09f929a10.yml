@@ -17,15 +17,6 @@ jobs:
     steps:
       - uses: actions/checkout@v3
 
-      - name: Set environment variables
-        run: |
-          echo "REACT_APP_CLIENT_ID=${{ secrets.REACT_APP_CLIENT_ID }}" >> $GITHUB_ENV
-          echo "REACT_APP_TENANT_ID=${{ secrets.REACT_APP_TENANT_ID }}" >> $GITHUB_ENV
-          echo "REACT_APP_CLIENT_ID_OUTLOOK=${{ secrets.REACT_APP_CLIENT_ID_OUTLOOK }}" >> $GITHUB_ENV
-          echo "REACT_APP_TENANT_ID_OUTLOOK=${{ secrets.REACT_APP_TENANT_ID_OUTLOOK }}" >> $GITHUB_ENV
-          echo "REACT_APP_REDIRECT_URI=${{ secrets.REACT_APP_REDIRECT_URI }}" >> $GITHUB_ENV
-          echo "REACT_APP_BASE_URL_DEV=${{ secrets.REACT_APP_BASE_URL_DEV }}" >> $GITHUB_ENV
-
       - name: Build and Deploy
         id: builddeploy
         uses: Azure/static-web-apps-deploy@v1
@@ -33,8 +24,15 @@ jobs:
           azure_static_web_apps_api_token: ${{ secrets.AZURE_STATIC_WEB_APPS_API_TOKEN_KIND_SKY_09F929A10 }}
           repo_token: ${{ secrets.GITHUB_TOKEN }}
           action: "upload"
-          app_location: "/"
-          output_location: "build"
+          app_location: "/" # root folder of your React app
+          output_location: "build" # output folder after build (CRA default)
+        env:
+          REACT_APP_CLIENT_ID: ${{ secrets.REACT_APP_CLIENT_ID }}
+          REACT_APP_TENANT_ID: ${{ secrets.REACT_APP_TENANT_ID }}
+          REACT_APP_CLIENT_ID_OUTLOOK: ${{ secrets.REACT_APP_CLIENT_ID_OUTLOOK }}
+          REACT_APP_TENANT_ID_OUTLOOK: ${{ secrets.REACT_APP_TENANT_ID_OUTLOOK }}
+          REACT_APP_REDIRECT_URI: ${{ secrets.REACT_APP_REDIRECT_URI }}
+          REACT_APP_BASE_URL_DEV: ${{ secrets.REACT_APP_BASE_URL_DEV }}
 
   close_pull_request_job:
     if: github.event_name == 'pull_request' && github.event.action == 'closed'
