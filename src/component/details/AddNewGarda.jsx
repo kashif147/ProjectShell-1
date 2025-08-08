@@ -78,7 +78,7 @@ function AddNewGarda({ open, onClose, isGard }) {
     rank: null,
     graduated: null,
     isGRAMember: null,
-    dateJoined: null,
+    // dateJoined: null,
     isJoined: null,
     attested: null,
     DateLeft: null,
@@ -132,7 +132,6 @@ function AddNewGarda({ open, onClose, isGard }) {
       WorkEmail: contact.workEmail || "",
       ConsentSMS: contact.consentSMS || false,
       ConsentEmail: contact.consentEmail || false,
-      membershipCategory: professionalDetails?.membershipCategory,
       graduationDate: professionalDetails?.graduationDate,
       workLocation: professionalDetails?.workLocation,
       nursingAdaptationProgramme: professionalDetails?.nursingAdaptationProgramme === false ? "No" : "Yes",
@@ -146,7 +145,8 @@ function AddNewGarda({ open, onClose, isGard }) {
       retiredDate: professionalDetails?.retiredDate,
       primarySection: professionalDetails?.primarySection,
       ApprovalComments: approval.comments || "",
-
+      
+      membershipCategory: subscriptionDetails?.membershipCategory,
       "payrollNo": subscriptionDetails?.payrollNo,
       "membershipStatus": null,
       "otherIrishTradeUnion": subscriptionDetails?.otherIrishTradeUnion,
@@ -162,7 +162,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       "valueAddedServices": subscriptionDetails?.valueAddedServices,
       "termsAndConditions": subscriptionDetails?.termsAndConditions,
       "membershipCategory": "Short-term/ Relief (under 15 hrs/wk average)",
-      dateJoined: subscriptionDetails?.dateJoined ? moment(subscriptionDetails?.dateJoined) : null,
+      // dateJoined: subscriptionDetails?.dateJoined ? moment(subscriptionDetails?.dateJoined) : null,
       "paymentType": "Payroll Deduction",
       "paymentFrequency": "Monthly",
       "submissionDate": subscriptionDetails?.submissionDate ? convertToLocalTime(subscriptionDetails?.submissionDate) : null,
@@ -216,6 +216,7 @@ function AddNewGarda({ open, onClose, isGard }) {
           personalEmail: InfData.email,
           workEmail: InfData.WorkEmail,
           consent: InfData.termsAndConditions || false,
+          
 
         },
       });
@@ -257,7 +258,8 @@ function AddNewGarda({ open, onClose, isGard }) {
           studyLocation: InfData.studyLocation,
           graduationDate: moment(InfData.graduationDate).utc().toISOString(),
           otherGraduationDate: InfData.otherGraduationDate,
-          "isRetired": false
+          "isRetired": false,
+          // dateJoined:moment(InfData.dateJoined).utc().toISOString()
         },
       });
 
@@ -294,7 +296,7 @@ function AddNewGarda({ open, onClose, isGard }) {
           valueAddedServices: InfData.valueAddedServices,
           termsAndConditions: InfData.termsAndConditions,
           membershipCategory: InfData.membershipCategory,
-          dateJoined: InfData.dateJoined,
+          // dateJoined: InfData.dateJoined,
           paymentFrequency: InfData.paymentFrequency,
         },
       });
@@ -421,7 +423,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       "workLocation",
       "grade",
       'PaymentType',
-      'isTermCon',
+      'termsAndConditions',
       'preferredAddress',
       'payrollNo',
       // 'otherPrimarySection',
@@ -687,7 +689,7 @@ const applicationStatusUpdate = (status) => {
       setErrors({});
       setInfData(inputsInitValue);
       onClose();
-      dispatch(getAllApplications());
+      dispatch(getAllApplications("submitted"));
     },
     `You have successfully ${status}`
   );
@@ -696,7 +698,7 @@ const applicationStatusUpdate = (status) => {
     <>
       <MyDrawer
         title={`${isGard === true
-          ? `Bulk Registration [ 93824B ]${InfData?.submissionDate ? ` — Submitted on: ${convertToLocalTime(InfData?.submissionDate)}` : ""}`
+          ? `Bulk Registration ${InfData?.submissionDate ? `  Submitted on: ${convertToLocalTime(InfData?.submissionDate)}` : ""}`
           : "Registration Request"}`}
         open={open}
         onClose={() => {
@@ -819,14 +821,15 @@ const applicationStatusUpdate = (status) => {
                 <div className="d-flex">
                   <div>
                     <h2 style={{ fontSize: '22px', marginBottom: '20px', marginTop: '10px' }}>Correspondence Details</h2>
+                    <Checkbox>
+                  Consent to receive Correspondence from INMO
+                </Checkbox>
                   </div>
 
                 </div>
               </Col>
               <Col span={12}>
-                <Checkbox>
-                  Consent to receive Correspondence from INMO
-                </Checkbox>
+                
               </Col>
               <Col span={24} className="">
                 <div className="my-input-group mt-4 mb-4">
@@ -1030,7 +1033,7 @@ const applicationStatusUpdate = (status) => {
               />
             </Col>
             <Col span={12}>
-              <MyDatePicker
+              {/* <MyDatePicker
                 label="Joining Date"
                 name="dateJoined"
                 required
@@ -1041,7 +1044,7 @@ const applicationStatusUpdate = (status) => {
                   handleInputChange("dateJoined", date)
                 }}
                 hasError={!!errors?.dateJoined}
-              />
+              /> */}
             </Col>
           </Row>
           {InfData.membershipCategory === 'Undergraduate Student' && (
@@ -1312,11 +1315,11 @@ const applicationStatusUpdate = (status) => {
                 <Radio.Group
                   name="otherIrishTradeUnion"
                   value={InfData.otherIrishTradeUnion}
-                  onChange={handleInputChange}
+                  onChange={(e)=>handleInputChange('otherIrishTradeUnion',e.target?.value)}
                   disabled={isDisable}
                 >
-                  <Radio value="Yes">Yes</Radio>
-                  <Radio value="No">No</Radio>
+                  <Radio value={true}>Yes</Radio>
+                  <Radio value={false}>No</Radio>
                 </Radio.Group>
               </div>
             </Col>
@@ -1329,12 +1332,12 @@ const applicationStatusUpdate = (status) => {
               <Radio.Group
                 name="otherScheme"
                 value={InfData.otherScheme}
-                onChange={handleInputChange}
+                onChange={(e)=>handleInputChange('otherIrishTradeUnion',e.target?.value)}
                 className="my-input-wrapper"
                 disabled={isDisable}
               >
                 <Radio value={true}>Yes</Radio>
-                <Radio value={true}>No</Radio>
+                <Radio value={false}>No</Radio>
               </Radio.Group>
               {/* </div> */}
             </Col>
