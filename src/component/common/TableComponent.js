@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Table, Pagination, Space, Form, Input, Checkbox,Upload } from "antd";
+import { Table, Pagination, Space, Form, Input, Checkbox, Upload } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { UploadOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -64,16 +64,19 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
   );
 };
 
-const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
+const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
   const location = useLocation();
-     const {        selectedRowIndex,setSelectedRowIndex, selectedRowData, setSelectedRowData } = useContext(ExcelContext);
+  const { selectedRowIndex, setSelectedRowIndex, selectedRowData, setSelectedRowData } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
   const [manualPayment, setmanualPayment] = useState(false)
-  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn,ColumnProp } = useTableColumns();
+  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn, ColumnProp } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
+  useEffect(() => {
+  setdataSource(data);
+}, [data]);
   const [iscancellationOpen, setIscancellationOpen] = useState(false)
   const [isCornMarOpen, setisCornMarOpen] = useState(false)
-  
+
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false)
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
@@ -87,24 +90,24 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
   );
   const dispatch = useDispatch();
 
-    const fileInputRef = useRef(null);
-    const handleRowClick = (record, rowIndex) => {
+  const fileInputRef = useRef(null);
+  const handleRowClick = (record, rowIndex) => {
     setSelectedRowData([record]);
     setSelectedRowIndex(rowIndex);
   };
-    // Function to trigger file input
-    const handleUploadClick = () => {
-      if (fileInputRef.current) {
-        fileInputRef.current.value = ""; // Reset value to allow re-selection of same file
-        fileInputRef.current.click();
-      }
-    };
-    const handleFileUpload = (event, key) => {
-      const file = event.target.files[0]; // Get the selected file
-      if (file) {
-        addAttributeToTableData(key)
-      }
-    };
+  // Function to trigger file input
+  const handleUploadClick = () => {
+    if (fileInputRef.current) {
+      fileInputRef.current.value = ""; // Reset value to allow re-selection of same file
+      fileInputRef.current.click();
+    }
+  };
+  const handleFileUpload = (event, key) => {
+    const file = event.target.files[0]; // Get the selected file
+    if (file) {
+      addAttributeToTableData(key)
+    }
+  };
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -160,7 +163,7 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
     });
   };
   const addAttributeToTableData = (key) => {
- 
+
     setdataSource(dataSource?.map((item) =>
       item.key === key ? { ...item, isAttachment: true } : item
     ))
@@ -170,8 +173,8 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
     {
       title: () => (
         <Checkbox
-        // style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
-        style={{ marginLeft:'9px' }}
+          // style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
+          style={{ marginLeft: '9px' }}
           indeterminate={selectedRowKeys.length > 0 && selectedRowKeys.length < dataSource.length}
           onChange={e => {
             const checked = e.target.checked;
@@ -205,183 +208,71 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
       fixed: "left",
       render: (record, index) => (
         <Space size="small">
-          <CgAttachment style={{ fontSize: "15px", fontWeight: 500,color: record?.isAttachment ? "green" : "inherit",  }} />
+          <CgAttachment style={{ fontSize: "15px", fontWeight: 500, color: record?.isAttachment ? "green" : "inherit", }} />
           <input
-        type="file"
-        ref={fileInputRef}
-        onChange={(e)=>handleFileUpload(e,record?.key)}
-        style={{ display: "none" }}
-      />
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => handleFileUpload(e, record?.key)}
+            style={{ display: "none" }}
+          />
           {/* Three dots icon in each columns */}
           <SimpleMenu
-            title={<BsThreeDotsVertical 
-            style={{ fontSize: "15px", fontWeight: 500 }} />}
-            data={{ Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false, 
-              'Career Break': false, 
-              'Generate NFC tag':false,
-               'Change Category':false
+            title={<BsThreeDotsVertical
+              style={{ fontSize: "15px", fontWeight: 500 }} />}
+            data={{
+              Delete: "false", Attached: "false", View: "false", "Print Label": "false", 'Transfer Requests': false,
+              'Career Break': false,
+              'Generate NFC tag': false,
+              'Change Category': false
             }}
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
             actions={() => { }}
-            attachedFtn={()=>{
-                handleUploadClick()
-              }}
-              record={record}
-              index={index}
-              />
-              {
-                location?.pathname==="/BatchMemberSummary" &&(
-                  <MdKeyboard style={{ fontSize: "15px", color: '#595959', color:'inherit' }}  onClick={()=>{
-                    setmanualPayment(!isBatchmemberOpen)
-                   handleRowClick(record, index)
-                  }
-                  }/>
-                )
-              }
-              {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
-            </Space>
-            ),
-          },
-          ...columnsDragbe.map((col) => ({
-            ...col,
-            title: (
-            <DraggableHeaderCell id={col.key} key={col.key}>
-              {col.title}
-            </DraggableHeaderCell>
-            ),
-            render: (text, record, index) =>
-            col.title === "Full Name" ? (
-              <Link
-              to="/Details"
-              state={{
-                search: screenName,
-                name: record?.fullName,
-                code: record?.regNo,
-              }}
-              onClick={() => getProfile([record], index)}
-              >
-              <span style={{ textOverflow: "ellipsis" }}>
-                {text}
-              </span>
-              </Link>
-            ) : col.title === "Claim No" ? (
-              <Link
-              to="/ClaimsById"
-              state={{
-                search: screenName,
-                name: record?.fullName,
-                code: record?.regNo,
-                Forename: record?.forename,
-                Fullname: record?.surname,
-                DateOfBirth: record?.dateOfBirth,
-              }}
-              onClick={() => getProfile([record], index)}
-              >
-              <span style={{ textOverflow: "ellipsis" }}>
-                {text}
-              </span>
-              </Link>
-            ):
-            col.title === "Roster ID" ? (
-              <Link
-              to="/Roster"
-              state={{
-                search: screenName,
-                name: record?.fullName,
-                code: record?.regNo,
-                Forename: record?.forename,
-                Fullname: record?.surname,
-                DateOfBirth: record?.dateOfBirth,
-              }}
-              onClick={() => getProfile([record], index)}
-              >
-              <span style={{ textOverflow: "ellipsis" }}>
-                {text}
-              </span>
-              </Link>)
-              :
-            col.title === "Application ID" ? (
-              <Link
-            // to="/AproveMembersip"
-            onClick={()=>{
-              dispatch(getApplicationById(record?.ApplicationId));
-              setAddNewGardaDrwr(!AddNewGardaDrwr)}}
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
+            attachedFtn={() => {
+              handleUploadClick()
             }}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>
-              {text}
-            </span>
-          </Link>)
-          :
-        col.title === "Change To" ? (
+            record={record}
+            index={index}
+          />
+          {
+            location?.pathname === "/BatchMemberSummary" && (
+              <MdKeyboard style={{ fontSize: "15px", color: '#595959', color: 'inherit' }} onClick={() => {
+                setmanualPayment(!isBatchmemberOpen)
+                handleRowClick(record, index)
+              }
+              } />
+            )
+          }
+          {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
+        </Space>
+      ),
+    },
+    ...columnsDragbe.map((col) => ({
+      ...col,
+      title: (
+        <DraggableHeaderCell id={col.key} key={col.key}>
+          {col.title}
+        </DraggableHeaderCell>
+      ),
+      render: (text, record, index) =>
+        col.title === "Full Name" ? (
           <Link
-            to="/ChangeCatById"
+            to="/Details"
             state={{
               search: screenName,
               name: record?.fullName,
               code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
             }}
             onClick={() => getProfile([record], index)}
           >
             <span style={{ textOverflow: "ellipsis" }}>
               {text}
             </span>
-          </Link>)
-          :
-        col.title === "Batch Name" && location.pathname != "/Batches" ? (
+          </Link>
+        ) : col.title === "Claim No" ? (
           <Link
-        onClick={() => {
-          if (location.pathname === "/RemindersSummary") {
-            setTriggerReminderDrawer(!TriggerReminderDrawer);
-      
-          } 
-          if (location.pathname === "/Batches") {
-            setIsBatchmemberOpen(!isBatchmemberOpen);
-          } 
-          // if (location.pathname === "/Batches") {
-          //   setmanualPayment(!manualPayment)
-          //   getProfile([record], index)
-          // } 
-          else if (location.pathname === "/Cancallation") {
-            setIscancellationOpen(!iscancellationOpen);
-          }
-          else if (location.pathname === "/CornMarket") {
-            setisCornMarOpen(!isCornMarOpen);
-          }
-        }}
-        state= {{ search: screenName }}
-            // onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>
-              {text}
-            </span>
-          </Link>)
-          :
-          col.title === "Batch Name" &&    location.pathname === "/Batches"? (
-            <Link 
-            to="/BatchMemberSummary"
-            state={{
-              search: screenName,
-            }}
-            >
-              {`${text}`}
-            </Link>
-          )
-            :
-        col.title === "Correspondence ID" ? (
-          <Link
-            to="/CorspndncDetail"
+            to="/ClaimsById"
             state={{
               search: screenName,
               name: record?.fullName,
@@ -396,11 +287,125 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
               {text}
             </span>
           </Link>
-        ) : (
-          <span style={{ textOverflow: "ellipsis" }}>
-            {text}
-          </span>
-        ),
+        ) :
+          col.title === "Roster ID" ? (
+            <Link
+              to="/Roster"
+              state={{
+                search: screenName,
+                name: record?.fullName,
+                code: record?.regNo,
+                Forename: record?.forename,
+                Fullname: record?.surname,
+                DateOfBirth: record?.dateOfBirth,
+              }}
+              onClick={() => getProfile([record], index)}
+            >
+              <span style={{ textOverflow: "ellipsis" }}>
+                {text}
+              </span>
+            </Link>)
+            :
+            col.title === "Application ID" ? (
+              <Link
+                // to="/AproveMembersip"
+                onClick={() => {
+                  dispatch(getApplicationById(record?.ApplicationId));
+                  setAddNewGardaDrwr(!AddNewGardaDrwr)
+                }}
+                state={{
+                  search: screenName,
+                  name: record?.fullName,
+                  Forename: record?.forename,
+                  Fullname: record?.surname,
+                  DateOfBirth: record?.dateOfBirth,
+                }}
+              >
+                <span style={{ textOverflow: "ellipsis" }}>
+                  {text}
+                </span>
+              </Link>)
+              :
+              col.title === "Change To" ? (
+                <Link
+                  to="/ChangeCatById"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={() => getProfile([record], index)}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>
+                    {text}
+                  </span>
+                </Link>)
+                :
+                col.title === "Batch Name" && location.pathname != "/Batches" ? (
+                  <Link
+                    onClick={() => {
+                      if (location.pathname === "/RemindersSummary") {
+                        setTriggerReminderDrawer(!TriggerReminderDrawer);
+
+                      }
+                      if (location.pathname === "/Batches") {
+                        setIsBatchmemberOpen(!isBatchmemberOpen);
+                      }
+                      // if (location.pathname === "/Batches") {
+                      //   setmanualPayment(!manualPayment)
+                      //   getProfile([record], index)
+                      // } 
+                      else if (location.pathname === "/Cancallation") {
+                        setIscancellationOpen(!iscancellationOpen);
+                      }
+                      else if (location.pathname === "/CornMarket") {
+                        setisCornMarOpen(!isCornMarOpen);
+                      }
+                    }}
+                    state={{ search: screenName }}
+                  // onClick={() => getProfile([record], index)}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>
+                      {text}
+                    </span>
+                  </Link>)
+                  :
+                  col.title === "Batch Name" && location.pathname === "/Batches" ? (
+                    <Link
+                      to="/BatchMemberSummary"
+                      state={{
+                        search: screenName,
+                      }}
+                    >
+                      {`${text}`}
+                    </Link>
+                  )
+                    :
+                    col.title === "Correspondence ID" ? (
+                      <Link
+                        to="/CorspndncDetail"
+                        state={{
+                          search: screenName,
+                          name: record?.fullName,
+                          code: record?.regNo,
+                          Forename: record?.forename,
+                          Fullname: record?.surname,
+                          DateOfBirth: record?.dateOfBirth,
+                        }}
+                        onClick={() => getProfile([record], index)}
+                      >
+                        <span style={{ textOverflow: "ellipsis" }}>
+                          {text}
+                        </span>
+                      </Link>
+                    ) : (
+                      <span style={{ textOverflow: "ellipsis" }}>
+                        {text}
+                      </span>
+                    ),
       sorter:
         col.title === "Full Name"
           ? {
@@ -417,17 +422,17 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
                 compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                 multiple: 1,
               }
-            : col.title === "Reg No" ?
-              {
-                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-                multiple: 1,
-              }
-            : col.title === "Correspondence ID" ?
-              {
-                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-                multiple: 1,
-              }
-              : undefined,
+              : col.title === "Reg No" ?
+                {
+                  compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                  multiple: 1,
+                }
+                : col.title === "Correspondence ID" ?
+                  {
+                    compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                    multiple: 1,
+                  }
+                  : undefined,
       sortDirections: ["ascend", "descend"],
       filters: col.title === "Station" || col.title === "Current Station" ? [
         { text: 'GALC', value: 'GALC' },
@@ -442,25 +447,25 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
         { text: 'Pending', value: 'Pending' },
         { text: 'Rejected', value: 'Rejected' },
       ]
-      : col.title === "Current Station" ? [
-        { text: '0026', value: '0026' },
-        { text: '0031', value: '0031' },
-        { text: '0045', value: '0045' },
-      ]: col.title === "Method of Contact" ? [
-        { text: 'Call', value: 'Call' },
-        { text: 'Email', value: 'Email' },
-        { text: 'Letter', value: 'Letter' },
-        { text: 'Letter', value: 'Letter' },
-      ]: undefined,
+        : col.title === "Current Station" ? [
+          { text: '0026', value: '0026' },
+          { text: '0031', value: '0031' },
+          { text: '0045', value: '0045' },
+        ] : col.title === "Method of Contact" ? [
+          { text: 'Call', value: 'Call' },
+          { text: 'Email', value: 'Email' },
+          { text: 'Letter', value: 'Letter' },
+          { text: 'Letter', value: 'Letter' },
+        ] : undefined,
       onFilter: (value, record) => {
-        if (col.title === "Station" || col.title==="Current Station") {
+        if (col.title === "Station" || col.title === "Current Station") {
           return record[col.dataIndex] === value;
         } else if (col.title === "Division") {
           return record[col.dataIndex] === value;
-        } else if (col.title==="Approval Status"){
+        } else if (col.title === "Approval Status") {
           return record[col.dataIndex] === value;
-        }else if (col.title=="Method of Contact"){
-          return record[col.dataIndex]===value;
+        } else if (col.title == "Method of Contact") {
+          return record[col.dataIndex] === value;
         }
         // else if (col.title=="Method of Contact"){
         //   return record[col.dataIndex]===value;
@@ -470,11 +475,11 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
     })),
   ];
 
-  const pageSize = 10;
+  const pageSize = 8;
   const [currentPage, setCurrentPage] = useState(1);
 
   const [currentPageData, setCurrentPageData] = useState([]);
-// pagination logic
+  // pagination logic
   useEffect(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
@@ -502,7 +507,7 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
   }) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
-    
+
     const form = useContext(EditableContext);
     useEffect(() => {
       if (editing) {
@@ -603,7 +608,7 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
         items={columnsDragbe.map((column) => column.key)}
         strategy={horizontalListSortingStrategy}
       >
-        <div className="common-table " style={{paddingLeft:'34px', paddingRight:'34px',width:'93vw'}}>
+        <div className="common-table " style={{ paddingLeft: '34px', paddingRight: '34px', width: '93vw' }}>
           <Table
             rowClassName={() => ""}
             loading={isGrideLoading}
@@ -666,16 +671,16 @@ const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
           </th>
         )}
       </DragOverlay>
-    <AddNewGarda open={AddNewGardaDrwr} onClose={()=>setAddNewGardaDrwr(!AddNewGardaDrwr)} isGard={true} />
-    <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={()=>setTriggerReminderDrawer(!TriggerReminderDrawer)}/>
-    <CancallationDrawer isOpen={iscancellationOpen} onClose={()=>setIscancellationOpen(!iscancellationOpen)}/>
-    <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={()=>setIsBatchmemberOpen(!isBatchmemberOpen)}/>
-   <CornMarketDrawer isOpen={isCornMarOpen} onClose={()=>setisCornMarOpen(!isCornMarOpen)} />
-   <MyDrawer open={manualPayment} 
-   onClose={()=>setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760} 
-   isManual={true}>
-   <ManualPaymentEntry />
-    </MyDrawer>
+      <AddNewGarda open={AddNewGardaDrwr} onClose={() => setAddNewGardaDrwr(!AddNewGardaDrwr)} isGard={true} />
+      <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={() => setTriggerReminderDrawer(!TriggerReminderDrawer)} />
+      <CancallationDrawer isOpen={iscancellationOpen} onClose={() => setIscancellationOpen(!iscancellationOpen)} />
+      <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={() => setIsBatchmemberOpen(!isBatchmemberOpen)} />
+      <CornMarketDrawer isOpen={isCornMarOpen} onClose={() => setisCornMarOpen(!isCornMarOpen)} />
+      <MyDrawer open={manualPayment}
+        onClose={() => setmanualPayment(!manualPayment)} title={"Manual Payment Entry"} width={760}
+        isManual={true}>
+        <ManualPaymentEntry />
+      </MyDrawer>
     </DndContext>
   );
 };

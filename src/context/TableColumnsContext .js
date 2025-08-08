@@ -14,12 +14,12 @@ const staticColumns = {
   Profile: [
     { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
     { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "rank", title: "Grade", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "duty", title: "Duty", ellipsis: true, isGride: true, isVisible: true, width: 200 },
+    { dataIndex: "Work Location", title: "Work Location", ellipsis: true, isGride: true, isVisible: true, width: 200 },
     { dataIndex: "forename", title: "Forename", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
     { dataIndex: "surname", title: "Surname", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
     { dataIndex: "dob", title: "Date Of Birth", ellipsis: true, isGride: false, isVisible: true, width: 150 },
@@ -41,7 +41,7 @@ const staticColumns = {
     { dataIndex: "Current Category", title: "Current Category", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
     { dataIndex: "Change To", title: "Change To", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true, },
     { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "rank", title: "Grade", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, isVisible: true, width: 150 },
@@ -128,7 +128,7 @@ const staticColumns = {
   Cases: [
     { dataIndex: "regNo", title: "Reg No", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
     { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "rank", title: "Rank", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+    { dataIndex: "rank", title: "Grade", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "station", title: "Station", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "distric", title: "District", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     { dataIndex: "division", title: "Division", ellipsis: true, isGride: true, isVisible: true, width: 150 },
@@ -301,9 +301,9 @@ Popout: [
 
 const staticSearchFilters = {
   Profile: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
-    { titleColumn: "Division", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
+    { titleColumn: "Region", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
     { titleColumn: "Station", isSearch: true, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Station ID", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
@@ -325,9 +325,9 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Cases: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
-    { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
+    { titleColumn: "Region", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
     { titleColumn: "Station", isSearch: true, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Station ID", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
@@ -349,7 +349,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Claims: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -373,7 +373,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Correspondence: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -397,7 +397,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Emails: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -421,7 +421,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Notes: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -445,7 +445,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Sms: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -469,7 +469,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Transfer: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -493,7 +493,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Roster: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, lookups: { "All Ranks": false, "0001": false, "0021": false }, comp: "!=" },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: { "All Duties": false, "Sargent": false, "Garda": false } },
     { titleColumn: "Division", isSearch: true, isCheck: false, lookups: { "All Divisions": false, "Northland": false, "Southland": false, "Eastland": false } },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -517,9 +517,9 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   Applications: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
-    { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
-    { titleColumn: "Division", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Work Location", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
+    { titleColumn: "Region", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
     { titleColumn: "Station", isSearch: true, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Station ID", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
@@ -541,7 +541,7 @@ const staticSearchFilters = {
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   ChangCateSumm: [
-    { titleColumn: "Rank", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Grade", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
     { titleColumn: "Duty", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
     { titleColumn: "Division", isSearch: true, comp: "!=", isCheck: false, lookups: {} },
     { titleColumn: "District", isSearch: true, isCheck: false, lookups: { "All District": false } },
@@ -751,10 +751,10 @@ const addColumnToSection = (sectionKey, newColumn) => {
 };
 
   const filteredSearchFilters = useMemo(() => [
-    { titleColumn: "Rank", isCheck: true },
-    { titleColumn: "Duty", isCheck: true },
-    { titleColumn: "Division", isCheck: true },
-    { titleColumn: "Status", isCheck: true },
+    { titleColumn: "Grade", isCheck: true },
+    { titleColumn: "Work Location", isCheck: true },
+    { titleColumn: "Region", isCheck: true },
+    // { titleColumn: "Status", isCheck: true },
     { titleColumn: "District", isCheck: false },
     { titleColumn: "Station", isCheck: false },
     { titleColumn: "Station ID", isCheck: false },
@@ -772,7 +772,7 @@ const addColumnToSection = (sectionKey, newColumn) => {
     { titleColumn: "Date Left", isCheck: false },
     { titleColumn: "Associate Member", isCheck: false },
     { titleColumn: "Address", isCheck: false },
-    { titleColumn: "Status", isCheck: false },
+    // { titleColumn: "Status", isCheck: false },
     { titleColumn: "Updated", isCheck: false },
   ], []);
 
@@ -1121,8 +1121,8 @@ const addColumnToSection = (sectionKey, newColumn) => {
   }, [lookupsForSelect]);
 
   useEffect(() => {
-    updateSearchFilters("Ranks", "Rank");
-    updateSearchFilters("Duties", "Duty");
+    updateSearchFilters("Ranks", "Grade");
+    updateSearchFilters("Duties", "Work Location");
   }, [lookupsForSelect?.Ranks, lookupsForSelect?.Duties, updateSearchFilters]);
 
   useEffect(() => {

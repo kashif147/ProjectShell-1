@@ -10,13 +10,20 @@ export const getAllApplications = createAsyncThunk(
   async (status = '', { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      const url = status ? `${api}?type=${status}` : api;
+      let url = api;
+      if (Array.isArray(status) && status.length > 0) {
+        const queryParams = status.map(type => `type=${type}`).join('&');
+        url = `${api}?${queryParams}`;
+      } else if (typeof status === 'string' && status !== '') {
+        url = `${api}?type=${status}`;
+      }
       const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
+
       return response.data?.data?.applications || [];
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch applications');

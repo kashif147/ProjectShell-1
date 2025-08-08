@@ -47,6 +47,8 @@ import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
 import ActionDropdown from "./ActionDropdown";
+import { getAllApplications } from "../../features/ApplicationSlice";
+import MultiFilterDropdown from "./MultiFilterDropdown";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -106,23 +108,36 @@ function HeaderDetails() {
       key: 'Description',
     },
   ]
-const handleAction = (label, e) => {
-  console.log("Label:", label);
-  console.log("Event type:", e?.type); // now safe
-};
-const [contactDrawer, setcontactDrawer] = useState(false)
+  const handleAction = (label, e) => {
+    console.log("Label:", label);
+    console.log("Event type:", e?.type); // now safe
+  };
+  const [contactDrawer, setcontactDrawer] = useState(false)
 
- const menuItems = [
-  { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
-  { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
-  { label: "Generate Bulk NFC Tag", onClick: (e) => handleAction("Generate Bulk NFC Tag", e) },
-  { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
-  { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
-  { label: "Assign IRO", onClick: (e) => {
-     e?.domEvent?.stopPropagation();
-    setcontactDrawer((prev) => !prev)} },
-];
+  const menuItems = [
+    { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
+    { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
+    { label: "Generate Bulk NFC Tag", onClick: (e) => handleAction("Generate Bulk NFC Tag", e) },
+    { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
+    { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
+    {
+      label: "Assign IRO", onClick: (e) => {
+        e?.domEvent?.stopPropagation();
+        setcontactDrawer((prev) => !prev)
+      }
+    },
+  ];
+  const [statusOperator, setStatusOperator] = useState("==");
+  const [statusValues, setStatusValues] = useState(["submitted"]);
 
+  const handleApplyStatusFilter = () => {
+    if (statusValues.length === 0) return;
+    const allStatuses = ["submitted", "approved", "rejected", "in-progress"];
+    const finalStatuses = statusOperator === '=='
+      ? statusValues
+      : allStatuses.filter((status) => !statusValues.includes(status));
+    dispatch(getAllApplications(finalStatuses));
+  };
 
   function filterSearchableColumns(data) {
     if (data) {
@@ -646,7 +661,7 @@ const [contactDrawer, setcontactDrawer] = useState(false)
                     <Button className="me-1 gray-btn butn">Share</Button>
                     <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                     <Button className="me-1 gray-btn butn">Grid VIEW</Button>
-                 <ActionDropdown items={menuItems} />
+                    <ActionDropdown items={menuItems} />
                   </div>
                 </div>
                 <div className="d-flex search-fliters align-items-baseline">
@@ -672,7 +687,15 @@ const [contactDrawer, setcontactDrawer] = useState(false)
                         />
                       )
                     )}
-
+                    <MultiFilterDropdown
+                      label="Status"
+                      options={["submitted", "approved", "rejected", "in-progress"]}
+                      selectedValues={statusValues}
+                      onChange={setStatusValues}
+                      operator={statusOperator}
+                      onOperatorChange={setStatusOperator}
+                      onApply={handleApplyStatusFilter}
+                    />
                     <div className="searchfilter- margin">
                       <SimpleMenu
                         title={
@@ -1002,7 +1025,7 @@ const [contactDrawer, setcontactDrawer] = useState(false)
       // onAccept={handleAccept}
       // onReject={handleReject}
       />
-       <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
+      <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
 
     </div>
   );
