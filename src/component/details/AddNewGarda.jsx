@@ -14,70 +14,22 @@ import { CatOptions, workLocations } from "../../Data";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { calculateAgeFtn } from "../../utils/Utilities";
 import '../../styles/MyInput.css'
+import { insertDataFtn } from "../../utils/Utilities";
+import { updateFtn } from "../../utils/Utilities";
+import { notification } from 'antd'
+import axios from 'axios';
+import { cleanPayload } from "../../utils/Utilities";
+import { convertToLocalTime } from "../../utils/Utilities";
+import { getAllApplications } from "../../features/ApplicationSlice";
 
 
-import { info } from "autoprefixer";
+import { data, info } from "autoprefixer";
 
 const libraries = ['places', 'maps'];
 
 
 function AddNewGarda({ open, onClose, isGard }) {
   const { application, loading } = useSelector((state) => state.applicationDetails);
-  const mapApplicationDetailToInfData = (applicationDetail) => {
-  if (!applicationDetail) return {};
-
-  const personal = applicationDetail?.personalDetails?.personalInfo || {};
-  const contact = applicationDetail?.personalDetails?.contactInfo || {};
-  const approval = applicationDetail?.personalDetails?.approvalDetails || {};
-
-  return {
-    forename: personal.forename || "",
-    surname: personal.surname || "",
-    CountryOfPrimaryQualification: personal.countryPrimaryQualification || "",
-    dateOfBirth: personal.dateOfBirth ? moment(personal.dateOfBirth) : null,
-    isDeceased: personal.deceased || false,
-    title:personal?.title,
-    gender:personal?.gender,
-
-    preferredAddress: contact.preferredAddress || "",
-    eircode: contact.eircode || "",
-    buildingOrHouse: contact.buildingOrHouse || "",
-    streetOrRoad: contact.streetOrRoad || "",
-    areaOrTown: contact.areaOrTown || "",
-    countyCityOrPostCode: contact.countyCityOrPostCode || "",
-    country: contact.country || "Ireland",
-    mobile: contact.mobileNumber || "",
-   telephoneNumber: contact.telephoneNumber || "",
-    email: contact.personalEmail || "",
-    preferredEmail: contact.preferredEmail || "",
-    PersonalEmail: contact.personalEmail || "",
-    WorkEmail: contact.workEmail || "",
-    ConsentSMS: contact.consentSMS || false,
-    ConsentEmail: contact.consentEmail || false,
-
-    ApprovalComments: approval.comments || "",
-  };
-};
-  const { data: countryOptions, } = useSelector(
-    (state) => state.countries
-  );
-  const inputRef = useRef(null);
-  const { isLoaded } = useJsApiLoader({
-    id: 'google-map-script',
-    googleMapsApiKey: 'AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o',
-    libraries: libraries,
-  });
-  const dispatch = useDispatch();
-  const {
-    lookupsForSelect,
-    isDisable,
-  } = useTableColumns();
-
-  useEffect(() => {
-    dispatch(fetchCountries());
-    dispatch(getAllLookups())
-  }, [dispatch]);
-
   const inputsInitValue = {
     age: null,
     gardaRegNo: null,
@@ -92,19 +44,19 @@ function AddNewGarda({ open, onClose, isGard }) {
     eirCode: null,
     eircode: null,
     mobile: null,
-    Country: 'Ireland',
-    isTermCon: false,
+    country: 'Ireland',
+    termsAndConditions: false,
     valueAddedServices: false,
     HomeOrWorkTel: null,
     email: null,
     preferredEmail: null,
-    Grade: null,
-    MembershipCategory: null,
-    WorkLocation: null,
+    grade: null,
+    membershipCategory: null,
+    workLocation: null,
     branch: null,
     region: null,
     OtherWorkLocation: null,
-    RetiredDate: null,
+    retiredDate: null,
     otherGrade: null,
     WorkEmail: null,
     class: null,
@@ -134,20 +86,251 @@ function AddNewGarda({ open, onClose, isGard }) {
     isAssociateMember: null,
     notes: null,
     preferredAddress: null,
-    Graduationdate: null,
-    isNursingAdaptation: 'No',
-    otherUnion: 'Yes',
-    wasUnionMember: 'Yes',
+    graduationDate: null,
+    nursingAdaptationProgramme: false,
+    otherIrishTradeUnion: true,
+    otherScheme: true,
     memberStatus: null,
-    telephoneNumber:null
+    telephoneNumber: null,
+    studyLocation: null,
+    primarySection: null,
+    ApplicationId:null,
+  };
+  const [InfData, setInfData] = useState(inputsInitValue);
+  const mapApplicationDetailToInfData = (applicationDetail) => {
+    if (!applicationDetail) return {};
+
+    const personal = applicationDetail?.personalDetails?.personalInfo || {};
+    const contact = applicationDetail?.personalDetails?.contactInfo || {};
+    const approval = applicationDetail?.personalDetails?.approvalDetails || {};
+    const professionalDetails = applicationDetail?.professionalDetails || {};
+    const subscriptionDetails = applicationDetail?.subscriptionDetails || {};
+
+    return {
+      ApplicationId: applicationDetail?.applicationId,
+      forename: personal.forename || "",
+      surname: personal.surname || "",
+      countryPrimaryQualification: personal.countryPrimaryQualification || "",
+      dateOfBirth: personal.dateOfBirth ? moment(personal?.dateOfBirth) : null,
+      age: personal.dateOfBirth ? calculateAgeFtn(personal?.dateOfBirth) : null,
+      isDeceased: personal.deceased || false,
+      title: personal?.title,
+      gender: personal?.gender,
+
+      preferredAddress: contact.preferredAddress || "",
+      eircode: contact.eircode || "",
+      buildingOrHouse: contact.buildingOrHouse || "",
+      streetOrRoad: contact.streetOrRoad || "",
+      areaOrTown: contact.areaOrTown || "",
+      countyCityOrPostCode: contact.countyCityOrPostCode || "",
+      country: contact.country || "Ireland",
+      mobile: contact.mobileNumber || "",
+      telephoneNumber: contact.telephoneNumber || "",
+      email: contact.personalEmail || "",
+      preferredEmail: contact.preferredEmail || "",
+      PersonalEmail: contact.personalEmail || "",
+      WorkEmail: contact.workEmail || "",
+      ConsentSMS: contact.consentSMS || false,
+      ConsentEmail: contact.consentEmail || false,
+      membershipCategory: professionalDetails?.membershipCategory,
+      graduationDate: professionalDetails?.graduationDate,
+      workLocation: professionalDetails?.workLocation,
+      nursingAdaptationProgramme: professionalDetails?.nursingAdaptationProgramme === false ? "No" : "Yes",
+      nmbiNumber: professionalDetails?.nmbiNumber,
+      branch: professionalDetails?.branch,
+      grade: professionalDetails?.grade,
+      region: professionalDetails?.region,
+      otherGrade: professionalDetails?.otherGrade,
+      nurseType: professionalDetails?.nurseType,
+      studyLocation: professionalDetails?.studyLocation,
+      retiredDate: professionalDetails?.retiredDate,
+      primarySection: professionalDetails?.primarySection,
+      ApprovalComments: approval.comments || "",
+
+      "payrollNo": subscriptionDetails?.payrollNo,
+      "membershipStatus": null,
+      "otherIrishTradeUnion": subscriptionDetails?.otherIrishTradeUnion,
+      "otherScheme": subscriptionDetails?.otherScheme,
+      "recuritedBy": subscriptionDetails?.recuritedBy,
+      "recuritedByMembershipNo": subscriptionDetails?.recuritedByMembershipNo,
+      "primarySection": subscriptionDetails?.primarySection,
+      "otherPrimarySection": null,
+      "secondarySection": null,
+      "otherSecondarySection": null,
+      "incomeProtectionScheme": subscriptionDetails.incomeProtectionScheme,
+      "inmoRewards": subscriptionDetails?.inmoRewards,
+      "valueAddedServices": subscriptionDetails?.valueAddedServices,
+      "termsAndConditions": subscriptionDetails?.termsAndConditions,
+      "membershipCategory": "Short-term/ Relief (under 15 hrs/wk average)",
+      dateJoined: subscriptionDetails?.dateJoined ? moment(subscriptionDetails?.dateJoined) : null,
+      "paymentType": "Payroll Deduction",
+      "paymentFrequency": "Monthly",
+      "submissionDate": subscriptionDetails?.submissionDate ? convertToLocalTime(subscriptionDetails?.submissionDate) : null,
+    };
+  };
+  const { data: countryOptions, } = useSelector(
+    (state) => state.countries
+  );
+  const inputRef = useRef(null);
+  const { isLoaded } = useJsApiLoader({
+    id: 'google-map-script',
+    googleMapsApiKey: 'AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o',
+    libraries: libraries,
+  });
+  const dispatch = useDispatch();
+  const {
+    lookupsForSelect,
+    isDisable,
+  } = useTableColumns();
+
+  useEffect(() => {
+    dispatch(fetchCountries());
+    dispatch(getAllLookups())
+  }, [dispatch]);
+
+
+  const submitApplicationData = async () => {
+    try {
+      const token = localStorage.getItem('token');
+
+      const applicationPayload = cleanPayload({
+        personalInfo: {
+          surname: InfData.surname,
+          forename: InfData.forename,
+          dateOfBirth: moment(InfData.dateOfBirth).utc().toISOString(),
+          countryPrimaryQualification: InfData.countryPrimaryQualification,
+          title: InfData.title || '',
+          gender: InfData.gender || '',
+        },
+        contactInfo: {
+          preferredAddress: InfData.preferredAddress,
+          eircode: InfData.eirCode || InfData.eircode,
+          buildingOrHouse: InfData.buildingOrHouse,
+          streetOrRoad: InfData.streetOrRoad,
+          areaOrTown: InfData.areaOrTown,
+          countyCityOrPostCode: InfData.countyCityOrPostCode,
+          country: InfData.country,
+          mobileNumber: InfData.mobile,
+          telephoneNumber: InfData.telephoneNumber || InfData.HomeOrWorkTel,
+          preferredEmail: InfData.preferredEmail,
+          personalEmail: InfData.email,
+          workEmail: InfData.WorkEmail,
+          consent: InfData.termsAndConditions || false,
+
+        },
+      });
+
+      const personalRes = await axios.post(
+        `${process.env.REACT_APP_PORTAL_SERVICE}/personal-details`,
+        applicationPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      notification.success({ message: 'Application submitted successfully!' });
+
+      const applicationId = personalRes?.data?.data?.ApplicationId;
+      if (!applicationId) {
+        throw new Error('ApplicationId not returned from personal details API');
+      }
+
+      const professionalPayload = cleanPayload({
+        // ApplicationId: applicationId,
+        professionalDetails: {
+          membershipCategory: InfData.membershipCategory,
+          workLocation: InfData.workLocation,
+          otherWorkLocation: InfData.otherWorkLocation,
+          grade: InfData.grade,
+          otherGrade: InfData.otherGrade,
+          nmbiNumber: InfData.nmbiNumber,
+          nurseType: InfData.nurseType,
+          nursingAdaptationProgramme: InfData.nursingAdaptationProgramme,
+          region: InfData.region,
+          branch: InfData.branch,
+          pensionNo: InfData.pensionNo,
+          isRetired: InfData.isRetired,
+          retiredDate: InfData.retiredDate,
+          studyLocation: InfData.studyLocation,
+          graduationDate: moment(InfData.graduationDate).utc().toISOString(),
+          otherGraduationDate: InfData.otherGraduationDate,
+          "isRetired": false
+        },
+      });
+
+      await axios.post(
+        `${process.env.REACT_APP_PORTAL_SERVICE}/professional-details/${applicationId}`,
+        professionalPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      notification.success({
+        message: 'Professional details submitted successfully!',
+      });
+
+      const subscriptionPayload = cleanPayload({
+        // ApplicationId: applicationId,
+        subscriptionDetails: {
+          paymentType: InfData.paymentType,
+          payrollNo: InfData.payrollNo,
+          otherIrishTradeUnion: InfData.otherIrishTradeUnion,
+          otherScheme: InfData.otherScheme,
+          recuritedBy: InfData.recuritedBy,
+          recuritedByMembershipNo: InfData.recuritedByMembershipNo,
+          primarySection: InfData.primarySection,
+          otherPrimarySection: InfData.otherPrimarySection,
+          secondarySection: InfData.secondarySection,
+          otherSecondarySection: InfData.otherSecondarySection,
+          incomeProtectionScheme: InfData.incomeProtectionScheme,
+          inmoRewards: InfData.inmoRewards,
+          valueAddedServices: InfData.valueAddedServices,
+          termsAndConditions: InfData.termsAndConditions,
+          membershipCategory: InfData.membershipCategory,
+          dateJoined: InfData.dateJoined,
+          paymentFrequency: InfData.paymentFrequency,
+        },
+      });
+
+      await axios.post(
+        `${process.env.REACT_APP_PORTAL_SERVICE}/subscription-details/${applicationId}`,
+        subscriptionPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            'Content-Type': 'application/json',
+          },
+        }
+      );
+
+      notification.success({
+        message: 'Subscription details submitted successfully!',
+      });
+    } catch (error) {
+      console.error('Error during application submission:', error);
+
+      notification.error({
+        message: 'Submission failed!',
+        description: error?.response?.data?.message || error.message,
+      });
+    }
   };
 
-  
-  const [InfData, setInfData] = useState(inputsInitValue);
+
+
+
+
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (eventOrName, value) => {
-
+    debugger
     // Case 1: Standard input event
     if (eventOrName === "dateOfBirth") {
       // const { name, value: val } = value.target;
@@ -163,9 +346,9 @@ function AddNewGarda({ open, onClose, isGard }) {
           updated.age = age;
         }
         // Handle WorkLocation → branch & region
-        if (eventOrName === "WorkLocation" && workLocationDetails[formattedValue]) {
-          updated.branch = workLocationDetails[formattedValue].branch;
-          updated.region = workLocationDetails[formattedValue].region;
+        if (eventOrName === "workLocation") {
+          // updated.branch = workLocationDetails[formattedValue].branch;
+          // updated.region = workLocationDetails[formattedValue].region;
         }
         return updated;
       });
@@ -183,16 +366,17 @@ function AddNewGarda({ open, onClose, isGard }) {
             [name]: finalValue,
           };
           // Handle WorkLocation → branch & region
-          if (name === "WorkLocation" && workLocationDetails[finalValue]) {
-            updated.branch = workLocationDetails[finalValue].branch;
-            updated.region = workLocationDetails[finalValue].region;
+          if (eventOrName === "workLocation" && workLocationDetails[value]) {
+
+            updated.branch = workLocationDetails[value].branch;
+            updated.region = workLocationDetails[value].region;
           }
           return updated;
         });
         setErrors((prev) => ({ ...prev, [eventOrName.target.name]: "" }));
       }
       else {
-        debugger
+
         // const { name, type, value, checked } = eventOrName.target;
         // const finalValue = type === "checkbox" ? checked : value;
         setInfData((prev) => {
@@ -201,7 +385,8 @@ function AddNewGarda({ open, onClose, isGard }) {
             [eventOrName]: value,
           };
           // Handle WorkLocation → branch & region
-          if (eventOrName === "WorkLocation" && workLocationDetails[value]) {
+          if (eventOrName === "workLocation" && workLocationDetails[value]) {
+
             updated.branch = workLocationDetails[value].branch;
             updated.region = workLocationDetails[value].region;
           }
@@ -211,36 +396,36 @@ function AddNewGarda({ open, onClose, isGard }) {
       }
   };
   let newdata;
-useEffect(() => {
-  if (isGard===true && application && open===true ) {
-    newdata = mapApplicationDetailToInfData(application?.data);
-    setInfData((prev) => ({ ...prev, ...newdata }));
-  }
-}, [open && application]);
+  useEffect(() => {
+    if (isGard === true && application && open === true) {
+      const newdata = mapApplicationDetailToInfData(application);
+      setInfData((prev) => ({ ...prev, ...newdata }));
+    }
+  }, [isGard, application, open]);
 
-  console.log(newdata, 'applicationDetail')
+  console.log(InfData, 'applicationDetail')
+  console.log(application, 'applicationDetail10')
   const handleSubmit = () => {
     const requiredFields = [
-      "status",
       "title",
       "forename",
       "surname",
       "dateOfBirth",
       "gender",
-      "AdressLine1",
-      "AdressLine4",
-      "Country",
+      "buildingOrHouse",
+      "countyCityOrPostCode",
+      "country",
       "mobile",
       "preferredEmail",
-      "MembershipCategory",
-      "WorkLocation",
-      "Grade",
+      "membershipCategory",
+      "workLocation",
+      "grade",
       'PaymentType',
       'isTermCon',
       'preferredAddress',
-      'PayrollNo',
-      // 'OtherPrimarySection',
-      // 'OtherSecondarySection'
+      'payrollNo',
+      // 'otherPrimarySection',
+      // 'otherSecondarySection'
     ];
 
     const newErrors = {};
@@ -274,14 +459,14 @@ useEffect(() => {
     // If there are any errors, stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      debugger
       return;
     }
-
     // Clear previous errors
     setErrors({});
 
     // Submit the form (replace with your actual logic)
-    console.log("Form submitted successfully:", InfData);
+    submitApplicationData()
     // You can call an API or trigger next step here
   };
 
@@ -490,18 +675,39 @@ useEffect(() => {
   const allRegions = Array.from(
     new Set(Object.values(workLocationDetails).map(d => d.region)),
   );
-
+const applicationStatusUpdate = (status) => {
+  updateFtn(
+    process.env.REACT_APP_PORTAL_SERVICE,
+    `/applications/status/${InfData?.ApplicationId}`,
+    {
+      comments: "testing",
+      applicationStatus: status,
+    },
+    () => {
+      setErrors({});
+      setInfData(inputsInitValue);
+      onClose();
+      dispatch(getAllApplications());
+    },
+    `You have successfully ${status}`
+  );
+};
   return (
     <>
       <MyDrawer
-        title={`${isGard === true ? "Bulk Registration [ 93824B ]" : "Registration Request"}`}
+        title={`${isGard === true
+          ? `Bulk Registration [ 93824B ]${InfData?.submissionDate ? ` — Submitted on: ${convertToLocalTime(InfData?.submissionDate)}` : ""}`
+          : "Registration Request"}`}
         open={open}
         onClose={() => {
           setErrors({});
           setInfData(inputsInitValue);
           onClose()
         }}
+      handleChangeApprove={() => applicationStatusUpdate("approved")}
+        // handleChangeApprove={ }
         isAppRej={true}
+       rejFtn={() => applicationStatusUpdate("rejected")}
         add={handleSubmit}
         isGarda={isGard ? true : false}
         isGardaCheckbx={isGard ? false : true}
@@ -535,7 +741,7 @@ useEffect(() => {
                   value={InfData.forename}
                   required
                   disabled={isDisable}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange("forename", e.target.value)}
                   hasError={!!errors?.forename}
                 />
               </Col>
@@ -547,7 +753,7 @@ useEffect(() => {
                   value={InfData.surname}
                   required
                   disabled={isDisable}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange("surname", e.target.value)}
                   hasError={!!errors?.surname}
                 />
               </Col>
@@ -588,17 +794,17 @@ useEffect(() => {
                 />
               </Col>
 
-              {/* Country Of Primary Qualification */}
+              {/* country Of Primary Qualification */}
               <Col span={8}>
                 <CustomSelect
                   label="countryPrimaryQualification"
                   name="countryPrimaryQualification"
-                  value={InfData?.Country}
+                  value={InfData?.countryPrimaryQualification}
                   options={countryOptions}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("Country", e.target.value)}
-                  hasError={!!errors?.Country}
+                  onChange={(e) => handleInputChange("countryPrimaryQualification", e.target.value)}
+                  hasError={!!errors?.countryPrimaryQualification}
                 />
               </Col>
               <Col span={12}></Col>
@@ -687,7 +893,8 @@ useEffect(() => {
                   name="streetOrRoad"
                   value={InfData.streetOrRoad}
                   disabled={isDisable}
-                  onChange={handleInputChange}
+
+                  onChange={(e) => handleInputChange("streetOrRoad", e.target.value)}
                 />
               </Col>
 
@@ -714,7 +921,7 @@ useEffect(() => {
                 />
               </Col>
 
-              {/* Country | Mobile */}
+              {/* country | Mobile */}
               <Col span={12}>
                 <MyInput
                   label="Eircode"
@@ -726,14 +933,14 @@ useEffect(() => {
               </Col>
               <Col span={12}>
                 <CustomSelect
-                  label="Country"
-                  name="Country"
-                  value={InfData.Country}
+                  label="country"
+                  name="country"
+                  value={InfData.country}
                   options={countryOptions}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("Country", e.target.value)}
-                  hasError={!!errors?.Country}
+                  onChange={(e) => handleInputChange("country", e.target.value)}
+                  hasError={!!errors?.country}
                 />
               </Col>
 
@@ -745,18 +952,19 @@ useEffect(() => {
                   value={InfData.mobile}
                   required
                   disabled={isDisable}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange("mobile", e.target.value)}
                   hasError={!!errors?.mobile}
                 />
               </Col>
               <Col span={12}>
                 <MyInput
                   label="Home / Work Tel Number"
-                  name="mobile"
+                  name="telephoneNumber"
                   type="number"
                   value={InfData.telephoneNumber}
                   disabled={isDisable}
-                  onChange={handleInputChange}
+                  // onChange={handleInputChange}
+                  onChange={(e) => handleInputChange("telephoneNumber", e.target.value)}
                   hasError={!!errors?.telephoneNumber}
                 />
               </Col>
@@ -780,10 +988,11 @@ useEffect(() => {
                   label="Personal Email"
                   name="email"
                   type="email"
-                  required={InfData.preferredEmail === "Personal"}
+                  required={InfData.preferredEmail === "personal"}
                   value={InfData.email}
                   disabled={isDisable}
-                  onChange={handleInputChange}
+                  // onChange={handleInputChange}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
                   hasError={!!errors?.email}
                 />
               </Col>
@@ -794,9 +1003,9 @@ useEffect(() => {
                   name="Work Email"
                   type="email"
                   value={InfData.WorkEmail}
-                  required={InfData.preferredEmail === "Work"}
+                  required={InfData.preferredEmail === "work"}
                   disabled={isDisable}
-                  onChange={handleInputChange}
+                  onChange={(e) => handleInputChange("WorkEmail", e.target.value)}
                   hasError={!!errors?.WorkEmail}
                 />
               </Col>
@@ -811,37 +1020,37 @@ useEffect(() => {
             <Col span={12}>
               <CustomSelect
                 label="Membership Category"
-                name="MembershipCategory"
-                value={InfData.MembershipCategory}
+                name="membershipCategory"
+                value={InfData.membershipCategory}
                 options={CatOptions}
                 required
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("MembershipCategory", e.target.value)}
-                hasError={!!errors?.MembershipCategory}
+                onChange={(e) => handleInputChange("membershipCategory", e.target.value)}
+                hasError={!!errors?.membershipCategory}
               />
             </Col>
             <Col span={12}>
               <MyDatePicker
-                  label="Graduation date"
-                  name="Graduationdate"
-                  required
-                  value={InfData?.Graduationdate} // ✅ just string like "01/07/2019"
-                  disabled={isDisable}
-                  onChange={(date, dateString) => {
-                    console.log(date, "dte")
-                    handleInputChange("Graduationdate", date)
-                  }}
-                  hasError={!!errors?.Graduationdate}
-                />
+                label="Joining Date"
+                name="dateJoined"
+                required
+                value={InfData?.dateJoined} // ✅ just string like "01/07/2019"
+                disabled={isDisable}
+                onChange={(date, dateString) => {
+                  console.log(date, "dte")
+                  handleInputChange("dateJoined", date)
+                }}
+                hasError={!!errors?.dateJoined}
+              />
             </Col>
           </Row>
-          {InfData.MembershipCategory === 'Undergraduate Student' && (
+          {InfData.membershipCategory === 'Undergraduate Student' && (
             <Row gutter={24}>
               <Col span={12}>
                 <CustomSelect
                   label="Study Location"
                   name="studyLocation"
-                  disabled={InfData.MembershipCategory !== 'Undergraduate Student'}
+                  disabled={InfData.membershipCategory !== 'Undergraduate Student'}
                   value={InfData?.studyLocation || ''}
                   onChange={handleInputChange}
                   placeholder="Select study location"
@@ -855,15 +1064,16 @@ useEffect(() => {
               </Col>
               <Col span={12}>
                 <MyDatePicker
-                // label="Graduation Date"
-                // name="graduationDate"
-                // disabled={InfData?.MembershipCategory !== 'Undergraduate Student'}
-                // value={InfData?.graduationDate || ''}
-                // onChange={(date) =>
-                //   handleInputChange('graduationDate', date ? date.format("DD/MM/YYYY") : null)
-                // }
-                // hasError={!!errors?.graduationDate}
-                // disableAgeValidation
+                  label="Graduation date"
+                  name="graduationDate"
+                  required
+                  value={moment(InfData?.graduationDate)} // ✅ just string like "01/07/2019"
+                  disabled={isDisable}
+                  onChange={(date, dateString) => {
+                    console.log(date, "dte")
+                    handleInputChange("graduationDate", date)
+                  }}
+                  hasError={!!errors?.graduationDate}
                 />
               </Col>
             </Row>
@@ -872,16 +1082,16 @@ useEffect(() => {
             <Col span={12}>
               <CustomSelect
                 label="Work Location"
-                name="WorkLocation"
-                value={InfData.WorkLocation}
+                name="workLocation"
+                value={InfData.workLocation}
                 options={[
                   ...workLocations.map(loc => ({ value: loc, label: loc })),
                   { value: 'other', label: 'other' },
                 ]}
                 required
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("WorkLocation", e.target.value)}
-                hasError={!!errors?.WorkLocation}
+                onChange={(e) => handleInputChange("workLocation", e.target.value)}
+                hasError={!!errors?.workLocation}
               />
             </Col>
 
@@ -901,7 +1111,7 @@ useEffect(() => {
             <Col span={12}>
               <CustomSelect
                 label="Branch"
-                name="Branch"
+                name="branch"
                 value={InfData.branch}
                 disabled={true}
                 onChange={(e) => handleInputChange("branch", e.target.value)}
@@ -918,7 +1128,7 @@ useEffect(() => {
                 name="Region"
                 value={InfData.region}
                 disabled={true}
-                onChange={(e) => handleInputChange("Region", e.target.value)}
+                onChange={(e) => handleInputChange("region", e.target.value)}
                 options={allRegions.map(region => ({ value: region, label: region }))}
               />
             </Col>
@@ -929,23 +1139,23 @@ useEffect(() => {
                 Are you currently undertaking a nursing adaptation programme?
               </label>
               <Radio.Group
-                name="isNursingAdaptation"
-                value={InfData.isNursingAdaptation}
-                onChange={(e) => handleInputChange("isNursingAdaptation", e.target.value)}
+                name="nursingAdaptationProgramme"
+                value={InfData.nursingAdaptationProgramme}
+                onChange={(e) => handleInputChange("nursingAdaptationProgramme", e.target.value)}
               >
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
+                <Radio value={true}>Yes</Radio>
+                <Radio value={false}>No</Radio>
               </Radio.Group>
             </Col>
             <Col span={12}>
               <MyInput
                 label="NMBI No/An Board Altranais Number"
-                name="NMBINo"
-                value={InfData.NMBINo}
+                name="nmbiNumber"
+                value={InfData.nmbiNumber}
                 // disabled={isDisable}
-                disabled={InfData?.isNursingAdaptation !== 'Yes'}
-                required={InfData?.isNursingAdaptation === 'Yes'}
-                onChange={(e) => handleInputChange("NMBINo", e.target.value)}
+                disabled={InfData?.nursingAdaptationProgramme !== true}
+                required={InfData?.nursingAdaptationProgramme === true}
+                onChange={(e) => handleInputChange("nmbiNumber", e.target.value)}
               />
             </Col>
           </Row>
@@ -956,8 +1166,8 @@ useEffect(() => {
                 name="nursingType"
                 value={InfData.nursingType}
                 onChange={handleInputChange}
-                required={InfData?.isNursingAdaptation === 'Yes'}
-                disabled={InfData?.isNursingAdaptation !== 'Yes'}
+                required={InfData?.nursingAdaptationProgramme === true}
+                disabled={InfData?.nursingAdaptationProgramme !== true}
                 style={{ display: 'flex', flexWrap: 'wrap', gap: '16px' }} // FLEX layout here
               >
                 <Radio value="General Nursing">General Nursing</Radio>
@@ -1003,11 +1213,11 @@ useEffect(() => {
             <Col span={12}>
               <CustomSelect
                 label="Grade"
-                name="Grade"
-                value={InfData.Grade}
+                name="grade"
+                value={InfData.grade}
                 required
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("Grade", e.target.value)}
+                onChange={(e) => handleInputChange("grade", e.target.value)}
                 options={[
                   { value: 'junior', label: 'Junior' },
                   { value: 'senior', label: 'Senior' },
@@ -1015,7 +1225,7 @@ useEffect(() => {
                   { value: 'manager', label: 'Manager' },
                   { value: 'other', label: 'Other' },
                 ]}
-                hasError={!!errors?.Grade}
+                hasError={!!errors?.grade}
               />
             </Col>
 
@@ -1024,24 +1234,24 @@ useEffect(() => {
                 label="Other Grade"
                 name="otherGrade"
                 value={InfData.otherGrade}
-                required={InfData?.Grade === 'Other'}
-                disabled={InfData?.Grade !== 'Other' || isDisable}
+                required={InfData?.grade === 'other'}
+                disabled={InfData?.grade !== 'other' || isDisable}
                 // disabled={isDisable}
                 onChange={(e) => handleInputChange("otherGrade", e.target.value)}
-                hasError={!!errors?.Grade}
+                hasError={!!errors?.otherGrade}
               />
             </Col>
             <Col span={12}>
               <MyDatePicker
-              // label="Retired Date"
-              // name="RetiredDate"
-              // value={InfData.RetiredDate ? moment(InfData.RetiredDate, "DD/MM/YYYY") : null}
-              // disabled={isDisable || InfData?.MembershipCategory != 'Retired Associate'}
-              // required={InfData?.MembershipCategory == 'Retired Associate'}
-              // onChange={(date) =>
-              //   handleInputChange("RetiredDate", date ? date.format("DD/MM/YYYY") : null)
+                label="Retired Date"
+                name="retiredDate"
+                value={InfData.retiredDate ? moment(InfData.retiredDate, "DD/MM/YYYY") : null}
+                disabled={isDisable || InfData?.membershipCategory != 'Retired Associate'}
+                required={InfData?.membershipCategory == 'Retired Associate'}
+                onChange={(date) =>
+                  handleInputChange("retiredDate", date ? date.format("DD/MM/YYYY") : null)
 
-              // }
+                }
               />
             </Col>
 
@@ -1051,10 +1261,10 @@ useEffect(() => {
                 label="Pension No"
                 name="pensionNo"
                 value={InfData.pensionNo}
-                disabled={isDisable || InfData?.MembershipCategory != 'Retired Associate'}
+                disabled={isDisable || InfData?.membershipCategory != 'Retired Associate'}
                 onChange={(e) => handleInputChange("pensionNo", e.target.value)}
-                required={InfData?.MembershipCategory == 'Retired Associate'}
-                hasError={!!errors?.Grade}
+                required={InfData?.membershipCategory == 'Retired Associate'}
+                hasError={!!errors?.pensionNo}
               />
             </Col>
           </Row>
@@ -1081,12 +1291,12 @@ useEffect(() => {
             <Col span={12}>
               <MyInput
                 label="Payroll No"
-                name="PayrollNo"
-                value={InfData.PayrollNo}
-                hasError={!!errors?.PayrollNo}
+                name="payrollNo"
+                value={InfData.payrollNo}
+                hasError={!!errors?.payrollNo}
                 required={InfData?.PaymentType === 'Deduction at Source'}
                 disabled={InfData?.PaymentType !== 'Deduction at Source'}
-                onChange={(e) => handleInputChange("PayrollNo", e.target.value)}
+                onChange={(e) => handleInputChange("payrollNo", e.target.value)}
               />
             </Col>
           </Row>
@@ -1100,8 +1310,8 @@ useEffect(() => {
                   If you are a member of another Trade Union. If yes, which Union?
                 </label>
                 <Radio.Group
-                  name="otherUnion"
-                  value={InfData.otherUnion}
+                  name="otherIrishTradeUnion"
+                  value={InfData.otherIrishTradeUnion}
                   onChange={handleInputChange}
                   disabled={isDisable}
                 >
@@ -1117,14 +1327,14 @@ useEffect(() => {
                 Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
               </label>
               <Radio.Group
-                name="wasUnionMember"
-                value={InfData.wasUnionMember}
+                name="otherScheme"
+                value={InfData.otherScheme}
                 onChange={handleInputChange}
                 className="my-input-wrapper"
                 disabled={isDisable}
               >
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
+                <Radio value={true}>Yes</Radio>
+                <Radio value={true}>No</Radio>
               </Radio.Group>
               {/* </div> */}
             </Col>
@@ -1134,19 +1344,19 @@ useEffect(() => {
             <Col span={12} gutter={24} >
               <MyInput
                 label="Recurited By"
-                name="RecuritedBy"
-                value={InfData.RecuritedBy}
+                name="recuritedBy"
+                value={InfData.recuritedBy}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("RecuritedBy", e.target.value)}
+                onChange={(e) => handleInputChange("recuritedBy", e.target.value)}
               />
             </Col>
             <Col span={12}>
               <MyInput
                 label="Recurited By (Membership No)"
-                name="RecuritedByMemNo"
-                value={InfData.RecuritedByMemNo}
+                name="recuritedByMembershipNo"
+                value={InfData.recuritedByMembershipNo}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("RecuritedByMemNo", e.target.value)}
+                onChange={(e) => handleInputChange("recuritedByMembershipNo", e.target.value)}
               />
             </Col>
           </Row>
@@ -1154,10 +1364,10 @@ useEffect(() => {
             <Col span={12}>
               <CustomSelect
                 label="Primary Section"
-                name="PrimarySection"
-                value={InfData.PrimarySection}
+                name="primarySection"
+                value={InfData.primarySection}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("PrimarySection", e.target.value)}
+                onChange={(e) => handleInputChange("primarySection", e.target.value)}
                 options={[
                   { value: 'section1', label: 'Section 1' },
                   { value: 'section2', label: 'Section 2' },
@@ -1171,13 +1381,13 @@ useEffect(() => {
             <Col span={12}>
               <MyInput
                 label="Other Primary Section"
-                name="OtherPrimarySection"
-                value={InfData.OtherPrimarySection}
+                name="otherPrimarySection"
+                value={InfData.otherPrimarySection}
                 // disabled={isDisable}
-                onChange={(e) => handleInputChange("OtherPrimarySection", e.target.value)}
-                required={InfData?.PrimarySection === 'Other'}
-                disabled={InfData?.PrimarySection !== 'Other'}
-                hasError={!!errors?.OtherPrimarySection}
+                onChange={(e) => handleInputChange("otherPrimarySection", e.target.value)}
+                required={InfData?.primarySection === 'Other'}
+                disabled={InfData?.primarySection !== 'Other'}
+                hasError={!!errors?.otherPrimarySection}
               />
             </Col>
           </Row>
@@ -1185,8 +1395,8 @@ useEffect(() => {
             <Col span={12}>
               <CustomSelect
                 label="Secondary Section"
-                name="SecondarySection"
-                value={InfData.SecondarySection}
+                name="secondarySection"
+                value={InfData.secondarySection}
                 options={[
                   { value: 'section1', label: 'Section 1' },
                   { value: 'section2', label: 'Section 2' },
@@ -1196,34 +1406,34 @@ useEffect(() => {
                   { value: 'other', label: 'Other' },
                 ]}
                 disabled={isDisable}
-                onChange={(e) => handleInputChange("SecondarySection", e.target.value)}
+                onChange={(e) => handleInputChange("secondarySection", e.target.value)}
 
               /></Col>
             <Col span={12}>
               <MyInput
                 label="Other Secondary Section"
-                name="OtherSecondarySection"
-                value={InfData.OtherSecondarySection}
-                disabled={isDisable || InfData?.SecondarySection !== 'Other'}
-                required={isDisable || InfData?.SecondarySection === 'Other'}
-                onChange={(e) => handleInputChange("OtherSecondarySection", e.target.value)}
-                hasError={!!errors?.OtherSecondarySection}
+                name="otherSecondarySection"
+                value={InfData.otherSecondarySection}
+                disabled={isDisable || InfData?.secondarySection !== 'Other'}
+                required={isDisable || InfData?.secondarySection === 'Other'}
+                onChange={(e) => handleInputChange("otherSecondarySection", e.target.value)}
+                hasError={!!errors?.otherSecondarySection}
               /></Col>
           </Row>
           <Row gutter={24}>
             <Col span={12} >
               <Checkbox
-                checked={InfData?.incPro}
-                onChange={(e) => handleInputChange('incPro', e.target.checked)}
+                checked={InfData?.incomeProtectionScheme}
+                onChange={(e) => handleInputChange('incomeProtectionScheme', e.target.checked)}
                 className="my-input-wrapper"
-                disabled={!['new', 'graduate'].includes(InfData?.memberStatus) || isDisable}
+                disabled={!['new', 'graduate'].includes(InfData?.inmoRewards) || isDisable}
               >
                 Tick here to join INMO Income Protection Scheme
               </Checkbox>
             </Col>
             <Col span={12}>
               <Checkbox className="my-input-wrapper" disabled={isDisable ||
-                !['new', 'graduate'].includes(InfData?.memberStatus)
+                !['new', 'graduate'].includes(InfData?.inmoRewards)
               }>
                 Tick here to join Rewards for INMO members
               </Checkbox>
@@ -1234,27 +1444,26 @@ useEffect(() => {
               <Checkbox className="my-input-wrapper"
                 onChange={(e) => handleInputChange('valueAddedServices', e.target.checked)}
                 checked={InfData?.valueAddedServices}
-
               >
                 Tick here to allow our partners to contact you about Value added Services by Email and SMS
               </Checkbox>
             </Col>
             <Col span={12}>
               <Checkbox
-                checked={InfData?.isTermCon}
-                onChange={(e) => handleInputChange('isTermCon', e.target.checked)}
+                checked={InfData?.termsAndConditions}
+                onChange={(e) => handleInputChange('termsAndConditions', e.target.checked)}
                 className="my-input-wrapper"
               >
                 I have read and agree to the INMO
                 Data Protection Statement , the INMO Privacy Statement and the INMO
                 Conditions of Membership
-                {errors?.isTermCon && <span style={{ color: 'red' }}> (Required)</span>}
+                {errors?.termsAndConditions && <span style={{ color: 'red' }}> (Required)</span>}
               </Checkbox>
 
             </Col>
           </Row>
         </div>
-      </MyDrawer>
+      </MyDrawer >
     </>
   );
 }

@@ -1424,4 +1424,4 @@ export  const workLocationDetails = {
       branch: 'Castlebar',
       region: 'Mid-West, West and North West',
     },
-  };
+};

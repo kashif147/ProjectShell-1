@@ -8,11 +8,12 @@ export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 // export const  baseURL = "http://localhost:3500"
 
 
-export const insertDataFtn = async (url, data, successNotification, failureNotification,callback) => {
-
-  const token = localStorage.getItem('token'); // Explicit declaration with const
+export const insertDataFtn = async (apiURL=baseURL,url, data, successNotification, failureNotification,callback) => {
+// const  apiURL = process.env.REACT_APP_BASE_URL_DEV
+debugger  
+const token = localStorage.getItem('token'); // Explicit declaration with const
   try {
-    const response = await axios.post(baseURL+url, data, {
+    const response = await axios.post(`${apiURL}${url}`, data, {
       headers: {
         'Content-Type': 'application/json',
         maxBodyLength: Infinity,
@@ -20,12 +21,20 @@ export const insertDataFtn = async (url, data, successNotification, failureNotif
     },
     });  
     if (response.status === 201) { // Strict equality check
-      
       MyAlert('success', successNotification);
       callback()
       return
       
-    } else {
+    }
+    // if (response.status === 201 || response.status ) { // Strict equality check
+      
+    //   MyAlert('success', successNotification);
+    //   callback()
+    //   return
+      
+    // }
+    
+    else {
       return MyAlert('error', `${failureNotification}`,response?.data?.error);
     }
   } catch (error) {
@@ -62,10 +71,10 @@ try {
 
 }
 
-export const updateFtn = async (endPoint, data, callback) => {
+export const updateFtn = async (apiURL=baseURL,endPoint, data1, callback,msg=notificationsMsg?.updating?.sucess) => {
   try {
     token=   localStorage.getItem('token');
-    const response = await axios.put(`${baseURL}${endPoint}`, data, {
+    const response = await axios.put(`${apiURL}${endPoint}`, data1, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -88,3 +97,53 @@ export const calculateAgeFtn = (input) => {
   console.log("Age:", today.diff(dob, 'year'));  // diff in years
   return today.diff(dob, 'year');
 };
+
+export const mapApplicationDetailToInfData = (applicationDetail) => {
+  if (!applicationDetail) return {};
+
+  const personal = applicationDetail?.personalDetails?.personalInfo || {};
+  const contact = applicationDetail?.personalDetails?.contactInfo || {};
+  const approval = applicationDetail?.personalDetails?.approvalDetails || {};
+
+  return {
+    forename: personal.forename || "",
+    surname: personal.surname || "",
+    CountryOfPrimaryQualification: personal.countryPrimaryQualification || "",
+    dateOfBirth: personal.dateOfBirth ? moment(personal.dateOfBirth) : null,
+    isDeceased: personal.deceased || false,
+
+    preferredAddress: contact.preferredAddress || "",
+    eircode: contact.eircode || "",
+    Building: contact.buildingOrHouse || "",
+    Street: contact.streetOrRoad || "",
+    AreaTown: contact.areaOrTown || "",
+    CountyCityOrPostCode: contact.countyCityOrPostCode || "",
+    Country: contact.country || "Ireland",
+    mobile: contact.mobileNumber || "",
+    HomeOrWorkTel: contact.telephoneNumber || "",
+    email: contact.personalEmail || "",
+    preferredEmail: contact.preferredEmail || "",
+    PersonalEmail: contact.personalEmail || "",
+    WorkEmail: contact.workEmail || "",
+    ConsentSMS: contact.consentSMS || false,
+    ConsentEmail: contact.consentEmail || false,
+
+    ApprovalComments: approval.comments || "",
+  };
+};
+export const cleanPayload = (obj) => {
+  if (Array.isArray(obj)) {
+    return obj.map(cleanPayload);
+  } else if (typeof obj === 'object' && obj !== null) {
+    return Object.entries(obj)
+      .filter(([_, v]) => v !== null && v !== undefined)
+      .reduce((acc, [k, v]) => {
+        acc[k] = cleanPayload(v);
+        return acc;
+      }, {});
+  }
+  return obj;
+};
+export function convertToLocalTime(utcDateString) {
+  return moment.utc(utcDateString).local().format('DD/MM/YYYY HH:mm');
+}

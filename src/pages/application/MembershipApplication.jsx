@@ -10,13 +10,14 @@ function MembershipApplication() {
     const { applications, applicationsLoading } = useSelector((state) => state.applications);
 
     useEffect(() => {
-    dispatch(getAllApplications());
+    dispatch(getAllApplications("submitted"));
   }, [dispatch]);
+  console.log(applications,"ptdc")
 
   return (
     <div className='' style={{width:'95vw'}}>
 
-    <TableComponent data={applications}  screenName="Applications" />
+    <TableComponent data={applications}  screenName="Applications" isGrideLoading={applicationsLoading} />
 
     </div>
   )

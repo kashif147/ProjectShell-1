@@ -11,6 +11,7 @@ import { FaEdit } from "react-icons/fa";
 import { LuCalendarDays } from "react-icons/lu";
 import { PiUsersFourDuotone } from "react-icons/pi";
 import { tableData } from "../Data";
+import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { HiOutlineMinusCircle } from "react-icons/hi";
 import { MdOutlineScreenSearchDesktop } from "react-icons/md";
@@ -59,7 +60,7 @@ import { getContacts } from "../features/ContactSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
-import { useNavigate  } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 
 // i have different drwers for configuration of lookups for the system 
 
@@ -4650,28 +4651,31 @@ function Configuratin() {
               hasError={false}
               errorMessage={"text"} // Replace if dynamic
             />
-            <div className="d-flex ">
-              <div className="">
-                <CustomSelect
-                  label=""
-                  name="Parentlookupid"
-                  placeholder="Select Branch"
-                  options={selectLokups?.Districts}
-                  value={drawerIpnuts?.Station?.Parentlookupid}
-                  onChange={(val) => drawrInptChng('Station', 'Parentlookupid', val)}
-                  disabled={isDisable}
-                  hasError={!!errors?.Station?.Parentlookupid}
-                  errorMessage={errors?.Station?.Parentlookupid}
-                  required
-                />
-              </div>
-              <Button
-                className="butn primary-btn detail-btn ms-2"
-                onClick={() => openCloseDrawerFtn('DivisionsForStation')}
-              >
-                +
-              </Button>
-            </div>
+            <div className="d-flex">
+  <div style={{ flex: 1 }}>
+    <CustomSelect
+      label="Branch"
+      name="Parentlookupid"
+      placeholder="Select Branch"
+      options={selectLokups?.Districts}
+      value={drawerIpnuts?.Station?.Parentlookupid}
+      onChange={(val) => drawrInptChng('Station', 'Parentlookupid', val)}
+      disabled={isDisable}
+      hasError={!!errors?.Station?.Parentlookupid}
+      errorMessage={errors?.Station?.Parentlookupid}
+      required
+    />
+  </div>
+
+  <div className="ms-2 d-flex align-items-end pb-1">
+    <Button
+      className="butn primary-btn detail-btn"
+      onClick={() => openCloseDrawerFtn('DivisionsForStation')}
+    >
+      +
+    </Button>
+  </div>
+</div>
             <div className="inpt-sub-con">
               <Checkbox
                 disabled={isDisable}
@@ -4687,7 +4691,10 @@ function Configuratin() {
           </div>
           <div class="d-flex">
             <div class="ms-auto">
-              <Button onClick={()=>navigate("/Popout",{ state: { search: 'Work Location' } })}>popout</Button>
+              <Button onClick={() => navigate("/Popout", { state: { search: 'Work Location' } })}>
+                <FaArrowUpRightFromSquare />
+              </Button>
+
             </div>
           </div>
           <div className="mt-4 config-tbl-container">

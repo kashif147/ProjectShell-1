@@ -87,7 +87,6 @@ function TransferRequests({ open, onClose, isSearch }) {
   };
 
   const { ProfileDetails } = useTableColumns();
-  console.log(ProfileDetails,'ProfileDetails1')
   const columnCountry = [
     {
       title: 'Transfer Date',

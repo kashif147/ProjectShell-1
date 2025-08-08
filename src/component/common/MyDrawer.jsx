@@ -25,18 +25,12 @@ import { useNavigate, useLocation } from "react-router-dom";
 import CustomSelect from "./CustomSelect";
 import MyInput from "./MyInput";
 import {
-  FaListCheck,
-  // FaArrowRightArrowLeft,
-  FaCalendarDays,
-  FaClipboardList,
   FaAngleLeft,
-  FaEnvelopesBulk,
-  // FaArrowRightArrowLeft,
-  // FaMoneyCheckAlt,
-
 } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk }) {
+
+
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const dispatch = useDispatch()
@@ -171,7 +165,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
     // Check if there are any errors in the object
     return Object.keys(newErrors[drawerType]).length === 0;
   };
-
 
   const CriticalIllnessSchemePaymentsClm = [
     {
@@ -498,38 +491,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       ),
     },
   ];
-  const [value4, setValue4] = useState("Pending");
-  const optionsWithDisabled = [
-    // {
-    //   label: "In Progress",
-    //   value: "In Progress",
-    //   // disabled:true 
-    // },
-    // {
-    //   label: "Pending",
-    //   value: "Pending",
-    //   disabled:true
-    // },
-    {
-      label: "Approved",
-      value: "Approved",
-      disabled: false,
-    },
-    {
-      label: "Rejected",
-      value: "Rejected",
-      disabled: false,
-    },
-  ];
-  // useEffect(() => {
-  //   if (contacts && Array.isArray(contacts)) {
-  //     const filteredSolicitors = contacts?.filter((item) => item?.ContactTypeID === '67d91cdf8a2875433c189f65')
-  //     setdata((prevState) => ({
-  //       ...prevState,
-  //       Solicitors: filteredSolicitors,
-  //     }));
-  //   }
-  // }, [contacts])
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
@@ -548,7 +509,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
   }
   return (
     <Drawer
-      // bodyStyle={{ paddingBottom: "50px", position: "relative" }}
       width={width}
       title={title}
       placement="right"
@@ -632,24 +592,21 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                 <Checkbox>Multiple</Checkbox>
               )
             }
-            {
-              isAppRej && (
-                <>
-                  <Checkbox value="Approved" className="me-2">
-                      Approved
-                    </Checkbox>
-                  <CommonPopConfirm
-                    title="Are you sure you want to reject this?"
-                    onConfirm={() => console.log("Rejected")}
-                    onCancel={() => console.log("Rejection cancelled")}
-                  >
-                    <Checkbox value="Rejected">
-                      Rejected
-                    </Checkbox>
-                  </CommonPopConfirm>
-                </>
-              )
-            }
+            {isAppRej && (
+              <Radio.Group>
+                <Radio value="approved" onClick={handleChangeApprove}>
+                  Approve
+                </Radio>
+                <CommonPopConfirm
+                  title="Are you sure you want to reject?"
+                  onConfirm={rejFtn}
+                >
+                  <Radio value="rejected">Reject</Radio>
+                </CommonPopConfirm>
+              </Radio.Group>
+            )}
+
+
             <Button className="butn secoundry-btn me-4" onClick={onClose}>
               Close
             </Button>

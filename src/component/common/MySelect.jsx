@@ -31,7 +31,7 @@ function MySelect({ placeholder, options, defaultValue, value, onChange, isMenu,
       disabled={disabled}
     >
       {options?.map(option => (
-        <Option key={option.key} value={option.key}>
+        <Option key={option.value} value={option.label}>
           {option.label}
         </Option>
       ))}

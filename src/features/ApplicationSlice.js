@@ -7,10 +7,11 @@ const api = `${process.env.REACT_APP_PORTAL_SERVICE}/applications`
 // Fetch all applications
 export const getAllApplications = createAsyncThunk(
   'applications/getAllApplications',
-  async (_, { rejectWithValue }) => {
+  async (status = '', { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
-      const response = await axios.get(api, {
+      const url = status ? `${api}?type=${status}` : api;
+      const response = await axios.get(url, {
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',

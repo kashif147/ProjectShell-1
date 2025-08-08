@@ -44,7 +44,7 @@ const MyDatePicker = ({
           disabled={disabled}
           className="my-input-field-select"
           placeholder={placeholder}
-          format="DD-MM-YYYY"
+          format="DD/MM/YYYY"
           value={value}
         />
         {hasError && !disabled && (

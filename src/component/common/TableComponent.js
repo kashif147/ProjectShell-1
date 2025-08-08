@@ -64,7 +64,7 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
   );
 };
 
-const TableComponent = ({ data, screenName, redirect }) => {
+const TableComponent = ({ data, screenName, redirect,isGrideLoading }) => {
   const location = useLocation();
      const {        selectedRowIndex,setSelectedRowIndex, selectedRowData, setSelectedRowData } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
@@ -606,6 +606,7 @@ const TableComponent = ({ data, screenName, redirect }) => {
         <div className="common-table " style={{paddingLeft:'34px', paddingRight:'34px',width:'93vw'}}>
           <Table
             rowClassName={() => ""}
+            loading={isGrideLoading}
             components={components}
             columns={editableColumns}
             dataSource={currentPageData}

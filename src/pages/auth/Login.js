@@ -1,4 +1,4 @@
-import { React, useState,  } from 'react'
+import { React, useState, } from 'react'
 import "../../styles/Login.css"
 // import loginImg from "../../assets/images/img1.png"
 import loginImg from "../../assets/images/gra_logo.png"
@@ -15,12 +15,12 @@ import { loginUser } from '../../features/AuthSlice';
 
 const Login = () => {
     const dispatch = useDispatch();
-    
+
     const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
     const navigate = useNavigate(); // Use the useHistory hook
     const { loading, } = useSelector((state) => state.auth);
 
-    const handleLogin = async() => {
+    const handleLogin = async () => {
         if (inProgress !== InteractionStatus.None) {
             return;
         }
@@ -33,17 +33,27 @@ const Login = () => {
             //           user:response?.account?.username,
             //           isMicrosoft:true }));
             // }
-            localStorage.setItem('token',response?.accessToken)
-            navigate("/Summary",{
-                state: {
-                  search: "Profile"
-                },
-              })
+            localStorage.setItem('token', response?.accessToken)
+        //     const authUrl = new URL("https://login.microsoftonline.com/39866a06-30bc-4a89-80c6-9dd9357dd453/oauth2/v2.0/authorize");
+        // authUrl.searchParams.set("client_id", "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae");
+        // authUrl.searchParams.set("response_type", "code");
+        // authUrl.searchParams.set("redirect_uri", "http://localhost:3000");
+        // authUrl.searchParams.set("scope", "openid profile email offline_access");
+        // authUrl.searchParams.set("code_challenge", challenge);
+        // authUrl.searchParams.set("code_challenge_method", "S256");
+        // authUrl.searchParams.set("state", "12345");
+        // authUrl.searchParams.set("prompt", "login");
+
+            // navigate("/Summary", {
+            //     state: {
+            //         search: "Profile"
+            //     },
+            // })
         }).catch(e => {
             console.error("Error during login:", e);
         });
     };
-  
+
     // const handleLogout = () => {
     //     instance.logoutPopup().catch(e => {
     //         console.error("Error during logout:", e);
@@ -57,86 +67,86 @@ const Login = () => {
     const [credentials, setCredentials] = useState({ user: 'walt1', pwd: 'Aa$12345' });
 
     const [showPassword, setShowPassword] = useState(false);
-    
+
     const togglePasswordVisibility = () => {
         setShowPassword(!showPassword);
     };
-    
-    const handleLoginWithCredentional = async(e) => {
+
+    const handleLoginWithCredentional = async (e) => {
         // e.preventDefault();
-     await  dispatch(loginUser(credentials));
-            navigate("/Summary",{
-                    state: {
-                      search: "Profile"
-                    },
-                  })
-    }; 
-  
+        await dispatch(loginUser(credentials));
+        navigate("/Summary", {
+            state: {
+                search: "Profile"
+            },
+        })
+    };
+
     return (
 
         <main role="main" className="login-body" >
 
             <div className="login-wrapper main-container" >
                 <div>
-                    
+
                 </div>
-                <div className="imag-con" style={{opacity: 0.5}}>
+                <div className="imag-con" style={{ opacity: 0.5 }}>
                     <img
                         className="login-image"
-                        src={loginImg} alt="Logo" 
-                        />
+                        src={loginImg} alt="Logo"
+                    />
                 </div>
 
-                <div className="login-con" style={{ width: '50%', padding: '20px', display: 'flex', flexDirection: 'column', justifycontent: 'center',}}>
+                <div className="login-con" style={{ width: '50%', padding: '20px', display: 'flex', flexDirection: 'column', justifycontent: 'center', }}>
                     {/* <h1 className='login-welcom'>Welcome Back</h1> */}
                     <h1 className='login-heading'>Login with Microsoft or enter your details</h1>
-                    <div style={{paddingTop:"10px", paddingBottom:"10px"}} className="d-flex justify-content-center my-2">
-                   
- <button
-      onClick={handleLogin}
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent:'center',
-        gap: '10px',
-        padding: '8px 16px',
-        border: '1px solid #ccc',
-        borderRadius: '6px',
-        backgroundColor: 'rgb(33, 94, 151)',
-        color:'#fff',
-        cursor: 'pointer',
-        fontSize: '14px',
-        // fontWeight: 500,
-        width:'100%'
-      }}
-    >
-      {/* Microsoft SVG Icon */}
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
-        <rect width="22" height="22" x="2" y="2" fill="#F25022" />
-        <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
-        <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
-        <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
-      </svg>
-      {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
-      {/* <span>Sign in with Microsoft</span> */}
-    </button>
+                    <div style={{ paddingTop: "10px", paddingBottom: "10px" }} className="d-flex justify-content-center my-2">
+
+                        <button
+                            onClick={handleLogin}
+                            style={{
+                                display: 'flex',
+                                alignItems: 'center',
+                                justifyContent: 'center',
+                                gap: '10px',
+                                padding: '8px 16px',
+                                border: '1px solid #ccc',
+                                borderRadius: '6px',
+                                backgroundColor: 'rgb(33, 94, 151)',
+                                color: '#fff',
+                                cursor: 'pointer',
+                                fontSize: '14px',
+                                // fontWeight: 500,
+                                width: '100%'
+                            }}
+                        >
+                            {/* Microsoft SVG Icon */}
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="23px" height="23px">
+                                <rect width="22" height="22" x="2" y="2" fill="#F25022" />
+                                <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
+                                <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
+                                <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
+                            </svg>
+                            {inProgress === InteractionStatus.None ? "Login with Microsoft" : "Logging in..."}
+                            {/* <span>Sign in with Microsoft</span> */}
+                        </button>
                     </div>
                     <Divider orientation="center" style={{ fontWeight: "400", fontSize: "12px" }}>Or</Divider>
                     <form className="login-form">
                         <div className="form-group">
                             <label>Username</label>
-                            <Input className='login-form-input'   
-                            onChange={(e) => handleInputChange("user", e.target.value)} 
-                            value={credentials.user}
+                            <Input className='login-form-input'
+                                onChange={(e) => handleInputChange("user", e.target.value)}
+                                value={credentials.user}
                             />
                         </div>
                         <div className="mb-3 position-relative">
                             <label>Password</label>
                             <div className="d-flex align-items-center">
                                 <Input
-                                  onChange={(e) => handleInputChange("pwd", e.target.value)}
-                                className='login-form-input'
-                                value={credentials?.pwd}
+                                    onChange={(e) => handleInputChange("pwd", e.target.value)}
+                                    className='login-form-input'
+                                    value={credentials?.pwd}
                                     type={showPassword ? 'text' : 'password'}
                                     suffix={showPassword ? < AiFillEye size={20} onClick={togglePasswordVisibility} /> : <AiFillEyeInvisible size={20} onClick={togglePasswordVisibility} />}
                                 />
@@ -153,7 +163,7 @@ const Login = () => {
                         <Button loading={loading} style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={(e) => {
                             // 
                             handleLoginWithCredentional(e)
-                            }}>Log in</Button>
+                        }}>Log in</Button>
                     </form>
                     <p className='font-color-12 text-center'>
                         Don't have an account? <a href="/contact-us">Request access</a>

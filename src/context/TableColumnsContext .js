@@ -5,6 +5,7 @@ import { useDispatch, useSelector } from 'react-redux';
 import { fetchRegions, } from "../features/RegionSlice";
 import { getAllLookups } from '../features/LookupsSlice'
 import { getContactTypes } from "../features/ContactTypeSlice";
+import { convertToLocalTime } from "../utils/Utilities";
 
 const TableColumnsContext = createContext();
 
@@ -65,38 +66,63 @@ const staticColumns = {
   Applications:  [
   // 🔹 Top-Level Fields
   { dataIndex: "ApplicationId", title: "Application ID", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
-  // { dataIndex: "userId",          title: "User ID",         ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
-  { dataIndex: "applicationStatus", title: "Status",        ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
-  { dataIndex: "createdAt",       title: "Created At",      ellipsis: true, isGride: true, isVisible: true, width: 160, editable: false },
-  { dataIndex: "updatedAt",       title: "Updated At",      ellipsis: true, isGride: true, isVisible: true, width: 160, editable: false },
+  { dataIndex: "applicationStatus", title: "Status", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+  {
+    dataIndex: "createdAt",
+    title: "Created At",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 160,
+    editable: false,
+    render: (value) => value ? convertToLocalTime(value) : "-",
+  },
+  {
+    dataIndex: "updatedAt",
+    title: "Updated At",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 160,
+    editable: false,
+    render: (value) => value ? convertToLocalTime(value) : "-",
+  },
 
   // 🔹 Personal Info
-  { dataIndex: ["personalDetails", "personalInfo", "title"],                     title: "Title",                    ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
-  { dataIndex: ["personalDetails", "personalInfo", "forename"],                 title: "Forename",                 ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "personalInfo", "surname"],                  title: "Surname",                  ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "personalInfo", "gender"],                   title: "Gender",                   ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
-  { dataIndex: ["personalDetails", "personalInfo", "dateOfBirth"],              title: "Date of Birth",            ellipsis: true, isGride: true, isVisible: true, width: 140, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "title"], title: "Title", ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "forename"], title: "Forename", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "surname"], title: "Surname", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "gender"], title: "Gender", ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
+  { dataIndex: ["personalDetails", "personalInfo", "dateOfBirth"], title: "Date of Birth", ellipsis: true, isGride: true, isVisible: true, width: 140, editable: true },
   { dataIndex: ["personalDetails", "personalInfo", "countryPrimaryQualification"], title: "Country of Qualification", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
 
   // 🔹 Contact Info
-  { dataIndex: ["personalDetails", "contactInfo", "preferredAddress"],          title: "Preferred Address",        ellipsis: true, isGride: true, isVisible: true, width: 160, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "eircode"],                   title: "Eircode",                  ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "buildingOrHouse"],           title: "Building",                 ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "streetOrRoad"],              title: "Street",                   ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "areaOrTown"],                title: "Area/Town",                ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "countyCityOrPostCode"],      title: "County/City/PostCode",     ellipsis: true, isGride: true, isVisible: true, width: 180, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "country"],                   title: "Country",                  ellipsis: true, isGride: true, isVisible: true, width: 120, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "mobileNumber"],              title: "Mobile",                   ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"],           title: "Telephone",                ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "personalEmail"],             title: "Personal Email",           ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "workEmail"],                 title: "Work Email",               ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
-  { dataIndex: ["personalDetails", "contactInfo", "consentSMS"],                title: "Consent SMS",              ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
-  { dataIndex: ["personalDetails", "contactInfo", "consentEmail"],              title: "Consent Email",            ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+  { dataIndex: ["personalDetails", "contactInfo", "preferredAddress"], title: "Preferred Address", ellipsis: true, isGride: true, isVisible: true, width: 160, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "eircode"], title: "Eircode", ellipsis: true, isGride: true, isVisible: true, width: 100, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "buildingOrHouse"], title: "Building", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "streetOrRoad"], title: "Street", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "areaOrTown"], title: "Area/Town", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "countyCityOrPostCode"], title: "County/City/PostCode", ellipsis: true, isGride: true, isVisible: true, width: 180, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "country"], title: "Country", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "mobileNumber"], title: "Mobile", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"], title: "Telephone", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "personalEmail"], title: "Personal Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "workEmail"], title: "Work Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
+  { dataIndex: ["personalDetails", "contactInfo", "consentSMS"], title: "Consent SMS", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+  { dataIndex: ["personalDetails", "contactInfo", "consentEmail"], title: "Consent Email", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
 
   // 🔹 Approval Info
-  { dataIndex: ["personalDetails", "approvalDetails", "approvedBy"],            title: "Approved By",              ellipsis: true, isGride: true, isVisible: true, width: 150, editable: false },
-  { dataIndex: ["personalDetails", "approvalDetails", "approvedAt"],            title: "Approved At",              ellipsis: true, isGride: true, isVisible: true, width: 160, editable: false },
-  { dataIndex: ["personalDetails", "approvalDetails", "comments"],              title: "Approval Comments",        ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: ["personalDetails", "approvalDetails", "approvedBy"], title: "Approved By", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: false },
+  {
+    dataIndex: ["personalDetails", "approvalDetails", "approvedAt"],
+    title: "Approved At",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 160,
+    editable: false,
+    render: (value) => value ? convertToLocalTime(value) : "-",
+  },
 ]
 ,
   Cases: [
@@ -511,7 +537,7 @@ const staticSearchFilters = {
     { titleColumn: "Date Left", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Associate Member", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
     { titleColumn: "Address", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
-    { titleColumn: "Status", isSearch: true, isCheck: false, lookups: { Inprogress: false, Pending: true, Rejected: false } },
+    { titleColumn: "Status", isSearch: true, isCheck: false, lookups: { submitted: false, approved: false, rejected: false,'in-progress':true } },
     { titleColumn: "Updated", isSearch: false, isCheck: false, lookups: { Male: false, Female: false, Other: false } },
   ],
   ChangCateSumm: [
