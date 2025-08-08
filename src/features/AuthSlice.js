@@ -1,20 +1,18 @@
 // authSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
-import MyAlert from '../component/common/MyAlert';
-
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
+import MyAlert from "../component/common/MyAlert";
 
 const baseURL = `${process.env.REACT_APP_BASE_URL_DEV}/auth`;
+console.log("API Base URL (ENV):", process.env.REACT_APP_BASE_URL_DEV);
 
-export const loginUser = createAsyncThunk(
-    'auth/login',
-    async (credentials, { rejectWithValue }) => {
-        try {
-            const response = await axios.post(`${baseURL}`, credentials, {
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-            });
+export const loginUser = createAsyncThunk("auth/login", async (credentials, { rejectWithValue }) => {
+  try {
+    const response = await axios.post(`${baseURL}`, credentials, {
+      headers: {
+        "Content-Type": "application/json",
+      },
+    });
 
             return response.data;
         } catch (error) {
@@ -23,8 +21,7 @@ export const loginUser = createAsyncThunk(
             }
             return rejectWithValue(error.message);
         }
-    }
-);
+});
 
 const authSlice = createSlice({
     name: 'auth',
