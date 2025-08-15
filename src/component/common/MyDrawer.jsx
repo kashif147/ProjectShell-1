@@ -30,7 +30,7 @@ import {
 import { FaAngleRight } from "react-icons/fa";
 
 
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn }) {
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const dispatch = useDispatch()
@@ -670,7 +670,14 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                 </div>
               )
             }
+
           </Space>
+          {
+            title === "Registration Request" && isDisable===false &&
+            <Button className="butn primary-btn" onClick={draftFtn}>
+              Draft
+            </Button>
+          }
         </div>
       }
     >

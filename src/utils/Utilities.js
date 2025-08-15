@@ -147,3 +147,24 @@ export const cleanPayload = (obj) => {
 export function convertToLocalTime(utcDateString) {
   return moment.utc(utcDateString).local().format('DD/MM/YYYY HH:mm');
 }
+
+function base64URLEncode(buffer) {
+  return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)))
+    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+}
+
+
+export async function generatePKCE() {
+  // Generate random code verifier
+  const array = new Uint8Array(32);
+  crypto.getRandomValues(array);
+  const codeVerifier = base64URLEncode(array);
+
+  // Create code challenge
+  const encoder = new TextEncoder();
+  const data = encoder.encode(codeVerifier);
+  const digest = await crypto.subtle.digest("SHA-256", data);
+  const codeChallenge = base64URLEncode(digest);
+
+  return { codeVerifier, codeChallenge };
+}

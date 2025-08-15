@@ -94,7 +94,7 @@ function AddNewGarda({ open, onClose, isGard }) {
     telephoneNumber: null,
     studyLocation: null,
     primarySection: null,
-    ApplicationId:null,
+    ApplicationId: null,
   };
   const [InfData, setInfData] = useState(inputsInitValue);
   const mapApplicationDetailToInfData = (applicationDetail) => {
@@ -145,7 +145,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       retiredDate: professionalDetails?.retiredDate,
       primarySection: professionalDetails?.primarySection,
       ApprovalComments: approval.comments || "",
-      
+
       membershipCategory: subscriptionDetails?.membershipCategory,
       "payrollNo": subscriptionDetails?.payrollNo,
       "membershipStatus": null,
@@ -181,6 +181,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   const {
     lookupsForSelect,
     isDisable,
+    disableFtn
   } = useTableColumns();
 
   useEffect(() => {
@@ -216,7 +217,7 @@ function AddNewGarda({ open, onClose, isGard }) {
           personalEmail: InfData.email,
           workEmail: InfData.WorkEmail,
           consent: InfData.termsAndConditions || false,
-          
+
 
         },
       });
@@ -324,9 +325,46 @@ function AddNewGarda({ open, onClose, isGard }) {
       });
     }
   };
+  const saveToLocalStorage = () => {
+    try {
+      localStorage.setItem('gardaApplicationDraft', JSON.stringify(InfData));
+      notification.success({ message: 'Draft saved successfully!' });
+      setInfData(inputsInitValue)
+      onClose()
+    } catch (error) {
+      console.error('Error saving to localStorage:', error);
+    }
+  };
+
+  const loadFromLocalStorage = () => {
+    const savedData = localStorage.getItem('gardaApplicationDraft');
+    if (savedData) {
+      const parsedData = JSON.parse(savedData);
+      // Convert date strings back to moment objects
+      if (parsedData.dateOfBirth) {
+        parsedData.dateOfBirth = moment(parsedData.dateOfBirth);
+      }
+      if (parsedData.graduationDate) {
+        parsedData.graduationDate = moment(parsedData.graduationDate);
+      }
+      if (parsedData.retiredDate) {
+        parsedData.retiredDate = moment(parsedData.retiredDate);
+      }
+      setInfData(prev => ({
+        ...prev,
+        ...parsedData
+      }));
+    }
 
 
+  };
 
+  useEffect(() => {
+    const savedData = localStorage.getItem('gardaApplicationDraft');
+    if (savedData) {
+      loadFromLocalStorage();
+    }
+  }, [open])
 
 
   const [errors, setErrors] = useState({});
@@ -677,23 +715,23 @@ function AddNewGarda({ open, onClose, isGard }) {
   const allRegions = Array.from(
     new Set(Object.values(workLocationDetails).map(d => d.region)),
   );
-const applicationStatusUpdate = (status) => {
-  updateFtn(
-    process.env.REACT_APP_PORTAL_SERVICE,
-    `/applications/status/${InfData?.ApplicationId}`,
-    {
-      comments: "testing",
-      applicationStatus: status,
-    },
-    () => {
-      setErrors({});
-      setInfData(inputsInitValue);
-      onClose();
-      dispatch(getAllApplications("submitted"));
-    },
-    `You have successfully ${status}`
-  );
-};
+  const applicationStatusUpdate = (status) => {
+    updateFtn(
+      process.env.REACT_APP_PORTAL_SERVICE,
+      `/applications/status/${InfData?.ApplicationId}`,
+      {
+        comments: "testing",
+        applicationStatus: status,
+      },
+      () => {
+        setErrors({});
+        setInfData(inputsInitValue);
+        onClose();
+        dispatch(getAllApplications("submitted"));
+      },
+      `You have successfully ${status}`
+    );
+  };
   return (
     <>
       <MyDrawer
@@ -705,14 +743,16 @@ const applicationStatusUpdate = (status) => {
           setErrors({});
           setInfData(inputsInitValue);
           onClose()
+          disableFtn(true)
         }}
-      handleChangeApprove={() => applicationStatusUpdate("approved")}
+        handleChangeApprove={() => applicationStatusUpdate("approved")}
         // handleChangeApprove={ }
         isAppRej={true}
-       rejFtn={() => applicationStatusUpdate("rejected")}
+        rejFtn={() => applicationStatusUpdate("rejected")}
         add={handleSubmit}
         isGarda={isGard ? true : false}
         isGardaCheckbx={isGard ? false : true}
+        draftFtn={saveToLocalStorage}
         width='1500px'>
         <div className="drawer-main-cntainer " >
           <div>
@@ -811,10 +851,7 @@ const applicationStatusUpdate = (status) => {
               </Col>
               <Col span={12}></Col>
             </Row >
-
-
             {/* <h2 style={{ fontSize: '17px',  color: 'black' }}>Correspondence Details</h2> */}
-
             <Row gutter={24}>
               {/* Section Heading */}
               <Col span={12}>
@@ -822,14 +859,12 @@ const applicationStatusUpdate = (status) => {
                   <div>
                     <h2 style={{ fontSize: '22px', marginBottom: '20px', marginTop: '10px' }}>Correspondence Details</h2>
                     <Checkbox>
-                  Consent to receive Correspondence from INMO
-                </Checkbox>
+                      Consent to receive Correspondence from INMO
+                    </Checkbox>
                   </div>
-
                 </div>
               </Col>
               <Col span={12}>
-                
               </Col>
               <Col span={24} className="">
                 <div className="my-input-group mt-4 mb-4">
@@ -854,8 +889,6 @@ const applicationStatusUpdate = (status) => {
                         />
                       </div>
                     </Col>
-
-
                     <Col span={12}>
                       {isLoaded && (
                         <StandaloneSearchBox
@@ -870,12 +903,10 @@ const applicationStatusUpdate = (status) => {
                             disabled={isDisable}
                           />
                         </StandaloneSearchBox>
-
                       )}
                     </Col>
                   </Row>
                 </div>
-
               </Col>
               {/* Address Line 1 | Address Line 2 */}
               <Col span={12}>
@@ -1315,7 +1346,7 @@ const applicationStatusUpdate = (status) => {
                 <Radio.Group
                   name="otherIrishTradeUnion"
                   value={InfData.otherIrishTradeUnion}
-                  onChange={(e)=>handleInputChange('otherIrishTradeUnion',e.target?.value)}
+                  onChange={(e) => handleInputChange('otherIrishTradeUnion', e.target?.value)}
                   disabled={isDisable}
                 >
                   <Radio value={true}>Yes</Radio>
@@ -1332,7 +1363,7 @@ const applicationStatusUpdate = (status) => {
               <Radio.Group
                 name="otherScheme"
                 value={InfData.otherScheme}
-                onChange={(e)=>handleInputChange('otherIrishTradeUnion',e.target?.value)}
+                onChange={(e) => handleInputChange('otherIrishTradeUnion', e.target?.value)}
                 className="my-input-wrapper"
                 disabled={isDisable}
               >
