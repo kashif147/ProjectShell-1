@@ -128,7 +128,7 @@ function HeaderDetails() {
     },
   ];
   const [statusOperator, setStatusOperator] = useState("==");
-  const [statusValues, setStatusValues] = useState(["submitted"]);
+  const [statusValues, setStatusValues] = useState(["submitted","draft"]);
 
   const handleApplyStatusFilter = () => {
     if (statusValues.length === 0) return;

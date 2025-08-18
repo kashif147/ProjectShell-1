@@ -30,7 +30,7 @@ import {
 import { FaAngleRight } from "react-icons/fa";
 
 
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData,nextFtn,PrevFtn }) {
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData, nextFtn, PrevFtn, status }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const { applications, applicationsLoading } = useSelector((state) => state.applications);
@@ -614,52 +614,65 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               Close
             </Button>
             {
-              !isGarda ?
-                <Button className="butn primary-btn"
-                  // onClick={isEdit == true ? update : add} onKeyDown={(event) => event.key === "Enter" && (isEdit ? update() : add())}>
+              !isGarda  && status ==="undefined"? (
+                <Button
+                  className="butn primary-btn"
                   onClick={async () => {
-                    if (isDisable && location?.pathname != "/Batches") {
+                    if (isDisable && location?.pathname !== "/Batches") {
                       disableFtn(false);
-                    } else if (!isEdit && !location?.pathname != "/Batches") {
+                    }
+                    else if (!isEdit && location?.pathname !== "/Batches") {
                       add();
                     }
                     else if (location?.pathname === "/Batches") {
-
-                      await Navigate('/BatchMemberSummary', {
-                        state: {
-                          search: "BatchMemberSummary",
-                        }
+                      await Navigate("/BatchMemberSummary", {
+                        state: { search: "BatchMemberSummary" },
                       });
-                      onClose()
+                      onClose();
                     }
                     else {
                       update();
                     }
-
-                  }}>
-                  {isDisable == true && !isManual ? "Add" : 'Save'}
+                  }}
+                >
+                  {
+                    isDisable && !isManual && title !== "Bulk Registration" && title !== "Registration Request"
+                      ? "Add"
+                      : "Save"
+                  }
                 </Button>
-                :
-                <>
-                  {/* <Radio.Group
-                    options={optionsWithDisabled}
-                    value={value4}
-                    onChange={(e) => setValue4(e.target.value)}
-                    optionType='button'
-                    buttonStyle='solid'
-                  /> */}
-                  {/* <Checkbox.Group
-                    value={[infoDataChk?.status]}
-                    // onChange={(val) => handleInputChange("status", val[0])
-                      
-                    // }
-                  > */}
-
-                  {/* </Checkbox.Group> */}
-
-                </>
-
+              ) : (
+                status === "Draft" && (
+                  <Button
+                    className="butn primary-btn"
+                    onClick={async () => {
+                      if (isDisable && location?.pathname !== "/Batches") {
+                        disableFtn(false);
+                      }
+                      else if (!isEdit && location?.pathname !== "/Batches") {
+                        add();
+                      }
+                      else if (location?.pathname === "/Batches") {
+                        await Navigate("/BatchMemberSummary", {
+                          state: { search: "BatchMemberSummary" },
+                        });
+                        onClose();
+                      }
+                      else {
+                        update();
+                      }
+                    }}
+                  >
+                    {
+                      isDisable && !isManual && title !== "Bulk Registration" && title !== "Registration Request"
+                        ? "Add"
+                        : "Save"
+                    }
+                  </Button>
+                )
+              )
             }
+
             {
               (isGarda || isManual) && (
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
@@ -676,7 +689,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
 
           </Space>
           {
-            title === "Registration Request" && isDisable === false &&
+            title === "Registration Request" &&
             <Button className="butn primary-btn" onClick={draftFtn}>
               Add
             </Button>

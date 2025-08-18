@@ -11,7 +11,7 @@ function MembershipApplication() {
   const { applications, applicationsLoading } = useSelector((state) => state.applications);
 
   useEffect(() => {
-    dispatch(getAllApplications("submitted"));
+    dispatch(getAllApplications(['submitted','draft']));
   }, [dispatch]);
   console.log(applications, "ptdc")
 

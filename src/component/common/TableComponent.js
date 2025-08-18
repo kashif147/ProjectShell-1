@@ -312,16 +312,17 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
               <Link
                 // to="/AproveMembersip"
                 onClick={() => {
-                  if (record?.applicationStatus === "Draft") {
-                    const drafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
-                    dispatch(getApplicationById({id:'draft',draftId:record?.ApplicationId,}));
-                    setAddNewGardaDrwr(true);
-                    
-                  } else {
-                    // ✅ fetch from API for submitted apps
-                    dispatch(getApplicationById({id:record?.ApplicationId}));
+                  const { applicationStatus, ApplicationId } = record || {};
+
+                  if (applicationStatus === "Draft") {
+                    dispatch(getApplicationById({ id: "draft", draftId: ApplicationId }));
                     setAddNewGardaDrwr(true);
                   }
+                  else if (applicationStatus === "submitted") {
+                    dispatch(getApplicationById({ id: ApplicationId }));
+                    setAddNewGardaDrwr(true);
+                  }
+  
                 }}
 
                 state={{
