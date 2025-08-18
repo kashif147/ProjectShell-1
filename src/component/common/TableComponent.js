@@ -68,12 +68,13 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
   const location = useLocation();
   const { selectedRowIndex, setSelectedRowIndex, selectedRowData, setSelectedRowData } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
+  const { applications, applicationsLoading } = useSelector((state) => state.applications);
   const [manualPayment, setmanualPayment] = useState(false)
   const { columns, gridData, setGridData, getProfile, profilNextBtnFtn, ColumnProp } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
   useEffect(() => {
-  setdataSource(data);
-}, [data]);
+    setdataSource(data);
+  }, [data]);
   const [iscancellationOpen, setIscancellationOpen] = useState(false)
   const [isCornMarOpen, setisCornMarOpen] = useState(false)
 
@@ -310,9 +311,23 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
               <Link
                 // to="/AproveMembersip"
                 onClick={() => {
-                  dispatch(getApplicationById(record?.ApplicationId));
-                  setAddNewGardaDrwr(!AddNewGardaDrwr)
+                  if (record?.applicationStatus === "Draft") {
+                    const drafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
+                    const draft = drafts.find((d) => d.ApplicationId === record?.ApplicationId);
+                    if(draft){
+                      
+                    }
+                    if (draft) {
+                      // ✅ open drawer with draft data  // <-- populate your form state
+                      setAddNewGardaDrwr(true);
+                    }
+                  } else {
+                    // ✅ fetch from API for submitted apps
+                    dispatch(getApplicationById(record?.ApplicationId));
+                    setAddNewGardaDrwr(true);
+                  }
                 }}
+
                 state={{
                   search: screenName,
                   name: record?.fullName,
@@ -598,6 +613,8 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       }),
     };
   });
+
+
   return (
     <DndContext
       modifiers={[restrictToHorizontalAxis]}

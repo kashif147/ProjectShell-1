@@ -5,6 +5,12 @@ import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
 import { Input, Table, Row, Col, Space, Pagination, Divider, Checkbox, Button, } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
+import {
+  Crown, User, Heart, Map, Globe, Building2, MapPin,
+  MapPinned, Mail, Layout, Landmark, Languages, FolderKanban,
+  Lightbulb, BarChart3, FileText, Gavel, Calendar, MessageSquare,
+  File, Shield, Boxes, Search, Phone, HelpCircle, Users
+} from "lucide-react";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
@@ -605,7 +611,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle" >
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Solicitors', !isUpdateRec?.Solicitors, record)
             addIdKeyToLookup(record?._id, "Solicitors")
@@ -659,7 +665,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Provinces', !isUpdateRec?.Provinces, record)
             addIdKeyToLookup(record?._id, "Provinces")
@@ -717,7 +723,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle" >
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
               IsUpdateFtn('Counteries', !isUpdateRec?.Provinces, record)
@@ -781,7 +787,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle" >
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
         </Space>
@@ -828,7 +834,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
               IsUpdateFtn('Districts', !isUpdateRec?.Provinces, record)
@@ -889,7 +895,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
               IsUpdateFtn('Station', !isUpdateRec?.Station, record)
@@ -952,7 +958,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
               IsUpdateFtn('Divisions', !isUpdateRec?.Divisions, record)
@@ -1006,7 +1012,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
               IsUpdateFtn('Cities', !isUpdateRec?.Cities, record)
@@ -1065,7 +1071,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('ContactType', !IsUpdateFtn?.ContactType, record)
             addIdKeyToLookup(record?._id, "ContactType")
@@ -1123,7 +1129,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('LookupType', !IsUpdateFtn?.LookupType, record)
             addIdKeyToLookup(record?._id, "LookupType")
@@ -1178,7 +1184,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }}
             onClick={() => {
               IsUpdateFtn('RegionType', !IsUpdateFtn?.RegionType, record)
@@ -1258,7 +1264,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
             addIdKeyToLookup(record?._id, "Lookup")
@@ -1327,7 +1333,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Gender', !IsUpdateFtn?.Gender, record)
             addIdKeyToLookup(record?._id, "Gender")
@@ -1396,7 +1402,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Ranks', !IsUpdateFtn?.Ranks, record)
             addIdKeyToLookup(record?._id, "Ranks")
@@ -1465,7 +1471,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('SpokenLanguages', !IsUpdateFtn?.SpokenLanguages, record)
             addIdKeyToLookup(record?._id, "SpokenLanguages")
@@ -1534,7 +1540,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('ProjectTypes', !IsUpdateFtn?.ProjectTypes, record)
             addIdKeyToLookup(record?._id, "ProjectTypes")
@@ -1603,7 +1609,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Trainings', !IsUpdateFtn?.Trainings, record)
             addIdKeyToLookup(record?._id, "Trainings")
@@ -1672,7 +1678,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Boards', !IsUpdateFtn?.Boards, record)
             addIdKeyToLookup(record?._id, "Boards")
@@ -1732,7 +1738,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Councils', !IsUpdateFtn?.Councils, record)
             addIdKeyToLookup(record?._id, "Councils")
@@ -1792,7 +1798,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('CorrespondenceType', !IsUpdateFtn?.CorrespondenceType, record);
             addIdKeyToLookup(record?._id, "CorrespondenceType");
@@ -1866,7 +1872,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Title', !IsUpdateFtn?.Title, record)
             addIdKeyToLookup(record?._id, "Title")
@@ -1940,7 +1946,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Duties', !IsUpdateFtn?.Title, record)
             addIdKeyToLookup(record?._id, "Duties")
@@ -2010,7 +2016,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('MaritalStatus', !isUpdateRec?.MaritalStatus, record)
             addIdKeyToLookup(record?._id, "MaritalStatus")
@@ -2080,7 +2086,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Lookup', !IsUpdateFtn?.Lookup, record)
             addIdKeyToLookup(record?._id, "Lookup")
@@ -2140,7 +2146,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('DocumentType', !IsUpdateFtn?.DocumentType, record)
             addIdKeyToLookup(record?._id, "DocumentType")
@@ -2200,7 +2206,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Reasons', !IsUpdateFtn?.Reasons, record)
             addIdKeyToLookup(record?._id, "Reasons")
@@ -2602,21 +2608,21 @@ function Configuratin() {
       key: "ShortName",
       width: 60,
       align: "center",
-      render: (text) => <div style={styles.centeredCell}>{text}</div>,
+      render: (text) => <div>{text}</div>,
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
       align: "center",
-      render: (text) => <div style={styles.centeredCell}>{text}</div>,
+      render: (text) => <div>{text}</div>,
     },
     {
       title: "Action",
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
         </Space>
@@ -2630,21 +2636,21 @@ function Configuratin() {
       key: "ShortName",
       width: 60,
       align: "center",
-      render: (text) => <div style={styles.centeredCell}>{text}</div>,
+      render: (text) => <div>{text}</div>,
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
       align: "center",
-      render: (text) => <div style={styles.centeredCell}>{text}</div>,
+      render: (text) => <div>{text}</div>,
     },
     {
       title: "Action",
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
         </Space>
@@ -2833,7 +2839,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('Schemes', !IsUpdateFtn?.Schemes, record);
             addIdKeyToLookup(record?._id, "Schemes");
@@ -2983,7 +2989,7 @@ function Configuratin() {
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" style={styles.centeredCell}>
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
             IsUpdateFtn('ClaimType', !IsUpdateFtn?.ClaimType, record);
             addIdKeyToLookup(record?._id, "ClaimType");
@@ -3010,93 +3016,101 @@ function Configuratin() {
     setPageSize(size);
   };
   const { Search } = Input;
-  const sections = [
-    {
-      title: "Lookups Configuration",
-      items: [
-        { key: "Title", icon: <Title className="icons" />, label: "Titles" },
-        { key: "Gender", icon: <Gender className="icons" />, label: "Gender" },
-        { key: "MaritalStatus", icon: <MaritalStatusOutlined className="icons" />, label: "Marital Status" },
-        { key: "Provinces", icon: <ProvinceOutlined className="icons" />, label: "Provinces" },
-        { key: "Counteries", icon: <CountyOutlined className="icons" />, label: "Counteries" },
-        { key: "Divisions", icon: <DivisionsOutlined className="icons" />, label: "Region" },
-        { key: "Districts ", icon: <DistrictsOutlined className="icons" />, label: "Branch" },
-        { key: "Cities", icon: <CitiesOutlined className="icons" />, label: "Cities" },
-        { key: "Station", icon: <StationOutlined className="icons" />, label: "Work Location" },
-        { key: "PostCode", icon: <PostCodeOutlined className="icons" />, label: "Post Codes" },
-        { key: "Boards", icon: <BoardOutlined className="icons" />, label: "Boards" },
-        { key: "Councils", icon: <CouncilOutlined className="icons" />, label: "Councils" },
-        { key: "SpokenLanguages", icon: <LanguageOutlined className="icons" />, label: "Spoken Languages" },
-        { key: "ProjectTypes", icon: <PiHandshakeDuotone className="icons" />, label: "Project Types" },
-        { key: "Trainings", icon: <TbBulb className="icons" />, label: "Trainings" },
-        { key: "Grade", icon: <PiRankingThin className="icons" />, label: "Grade" },
-        { key: "Duties", icon: <GrTask className="icons" />, label: "Duties" },
-        { key: "Solicitors", icon: <PiGavelThin className="icons" />, label: "Solicitors" },
-        { key: "RosterType", icon: <LuCalendarDays className="icons" />, label: "Roster Type" },
-        { key: "CorrespondenceType", icon: <SlEnvelopeOpen className="icons" />, label: "Correspondence Type" },
-        { key: "DocumentType", icon: <FaFileAlt className="icons" />, label: "Document Type" },
-        { key: "ClaimType", icon: <PiHandshakeDuotone className="icons" />, label: "Claim Type" },
-        { key: "Schemes", icon: <PiHandshakeDuotone className="icons" />, label: "Schemes" },
-        { key: "LookupType", icon: <PiHandshakeDuotone className="icons" />, label: "Lookup Type" },
-        { key: "Lookup", icon: <MdOutlineScreenSearchDesktop className="icons" />, label: "Lookup" },
-        // { key: "RegionType", icon: <PiHandshakeDuotone className="icons" />, label: "Region Type" },
-        { key: "ContactTypes", icon: <MdOutlineContactPhone className="icons" />, label: "Contact Types" },
-        { key: "Reasons", icon: <LuFileQuestion className="icons" />, label: "Reasons" },
-        { key: "Committees", icon: <TbUsersGroup className="icons" />, label: "Committees" },
+ const sections = [
+  {
+    title: "Lookups Configuration",
+    items: [
+      { key: "Title", icon: <Crown size={24} color="#3b82f6" />, label: "Titles" }, // blue-500
+      { key: "Gender", icon: <User size={24} color="#ec4899" />, label: "Gender" }, // pink-500
+      { key: "MaritalStatus", icon: <Heart size={24} color="#a78bfa" />, label: "Marital Status" }, // purple-400
+      { key: "Provinces", icon: <Map size={24} color="#22c55e" />, label: "Provinces" }, // green-500
+      { key: "Countries", icon: <Globe size={24} color="#ef4444" />, label: "Countries" }, // red-500
+      { key: "Divisions", icon: <Building2 size={24} color="#6366f1" />, label: "Divisions" }, // indigo-500
+      { key: "Districts", icon: <MapPinned size={24} color="#eab308" />, label: "Districts" }, // yellow-500
+      { key: "Cities", icon: <Building2 size={24} color="#10b981" />, label: "Cities" }, // emerald-500
+      { key: "Station", icon: <MapPin size={24} color="#f97316" />, label: "Station" }, // orange-500
+      { key: "PostCode", icon: <Mail size={24} color="#0ea5e9" />, label: "Post Codes" }, // sky-500
+      { key: "Boards", icon: <Layout size={24} color="#14b8a6" />, label: "Boards" }, // teal-500
+      { key: "Councils", icon: <Landmark size={24} color="#8b5cf6" />, label: "Councils" }, // violet-500
+      { key: "SpokenLanguages", icon: <Languages size={24} color="#f43f5e" />, label: "Spoken Languages" }, // rose-500
+      { key: "ProjectTypes", icon: <FolderKanban size={24} color="#f59e0b" />, label: "Project Types" }, // amber-500
+      { key: "Trainings", icon: <Lightbulb size={24} color="#84cc16" />, label: "Trainings" }, // lime-500
+      { key: "Ranks", icon: <BarChart3 size={24} color="#6b7280" />, label: "Ranks" }, // gray-500
+      { key: "Duties", icon: <FileText size={24} color="#60a5fa" />, label: "Duties" }, // blue-400
+      { key: "Solicitors", icon: <Gavel size={24} color="#64748b" />, label: "Solicitors" }, // slate-500
+      { key: "RosterType", icon: <Calendar size={24} color="#06b6d4" />, label: "Roster Type" }, // cyan-500
+      { key: "CorrespondenceType", icon: <MessageSquare size={24} color="#4ade80" />, label: "Correspondence Type" }, // green-400
+      { key: "DocumentType", icon: <File size={24} color="#818cf8" />, label: "Document Type" }, // indigo-400
+      { key: "ClaimType", icon: <Shield size={24} color="#f472b6" />, label: "Claim Type" }, // pink-400
+      { key: "Schemes", icon: <Boxes size={24} color="#facc15" />, label: "Schemes" }, // yellow-400
+      { key: "LookupType", icon: <Search size={24} color="#34d399" />, label: "Lookup Type" }, // emerald-400
+      { key: "Lookup", icon: <Search size={24} color="#fb7185" />, label: "Lookup" }, // rose-400
+      { key: "ContactTypes", icon: <Phone size={24} color="#a855f7" />, label: "Contact Types" }, // purple-500
+      { key: "Reasons", icon: <HelpCircle size={24} color="#fb923c" />, label: "Reasons" }, // orange-400
+      { key: "Committees", icon: <Users size={24} color="#ec4899" />, label: "Committees" }, // pink-500
+    ],
+  },
+];
 
-      ],
-    },
-    {
-      title: "Grid Configuration",
-      items: [
-        { key: "Profile", icon: <FaRegCircleUser className="icons" />, label: "Profile" },
-        // { key: "Reigontype", icon: <FaRegMap className="icons" />, label: "Reigon type" },
-      ],
-    },
-    {
-      title: "Roles-Based Configuration",
-      items: [
-        { key: "Roles", icon: <FaRegCircleQuestion className="icons" />, label: "Roles" },
-        { key: "Permissions", icon: <HiOutlineMinusCircle className="icons" />, label: "Permissions" },
-        { key: "Permissions", icon: <HiOutlineMinusCircle className="icons" />, label: "Permissions" },
-        // { key: "AccessLevels", icon: <TbUsersGroup className="icons" />, label: "Access Levels" },
-      ],
-    },
-    {
-      title: "Business Rules & Workflows",
-      items: [
-        { key: "Member Status", icon: <FaRegCircleQuestion className="icons" />, label: "Member Status" },
-        { key: "Priorities", icon: <HiOutlineMinusCircle className="icons" />, label: "Priorities" },
-        { key: "pause-circle", icon: <PiHandshakeDuotone className="icons" />, label: "pause-circle" },
-      ],
-    },
-  ];
   return (
-    <div>
-      <div className="search-inpt">
-        <Search style={{ borderRadius: "3px", height: '62px' }} value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)} />
-      </div>
-      {sections.map((section) => {
-        const filteredItems = section.items.filter((item) =>
-          item.label.toLowerCase().includes(searchQuery.toLowerCase())
-        );
-        return filteredItems.length > 0 ? (
-          <div key={section.title}>
-            <Divider orientation="left">{section.title}</Divider>
-            <Row gutter={[16, 16]} align="top">
-              {filteredItems.map((item) => (
-                <Col key={item.key} className="hover-col" span={3} style={{ textAlign: "left" }} onClick={() => openCloseDrawerFtn(item.key)}>
-                  <div>
-                    {item.icon}
-                    <p className="lookups-title">{item.label}</p>
+    <div className="bg-gray-50 mb-4">
+      {/* <div className="text-center mb-4">
+        <h1 className="fw-bold mb-1">Configuration</h1>
+        <p className="text-muted mb-0">System configuration and lookup management</p>
+      </div> */}
+
+      {/* Search Bar */}
+      {/* <div className="row justify-content-center mb-4">
+        <div className="col-md-6"> */}
+      {/* <input
+            type="text"
+            className="form-control form-control-lg"
+            placeholder="Search lookups..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+          /> */}
+      {/* </div>
+      </div> */}
+      <div className="d-flex flex-column mb-4 pb-4" style={{ height: "100vh", overflow: "hidden" }}>
+        <div className="text-center " style={{ flexShrink: 0, marginTop:'-4px' }}>
+          <h1 className="fw-bold">Configuration</h1>
+          <p className="text-muted mb-0">System configuration and lookup management</p>
+        </div>
+        <div className="bg-white rounded shadow-sm p-4 flex-grow-1 overflow-auto">
+          {sections.map((section, idx) => {
+            const filteredItems = section.items.filter((item) =>
+              item.label.toLowerCase().includes(searchQuery.toLowerCase())
+            );
+
+            return (
+              <div key={`${section.title}-${idx}`} className="mb-5">
+                <h5 className="fw-semibold mb-4">{section.title}</h5>
+
+                {filteredItems.length > 0 ? (
+                  <div className="row gx-3 gy-3 mx-n2">
+                    {filteredItems.map((item) => (
+                      <div key={item.key} className="col-6 col-sm-4 col-md-2 d-flex px-2">
+                        <div
+                          onClick={() => openCloseDrawerFtn(item.key)}
+                          className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
+                          style={{ cursor: "pointer" }}
+                        >
+                          <div className="mb-2">{item.icon}</div>
+                          <p className="mb-0 small fw-medium text-dark">{item.label}</p>
+                        </div>
+                      </div>
+                    ))}
                   </div>
-                </Col>
-              ))}
-            </Row>
-          </div>
-        ) : null;
-      })}
+                ) : (
+                  <p className="text-muted small mb-0">No matches for “{searchQuery}”.</p>
+                )}
+              </div>
+            );
+          })}
+        </div>
+      </div>
+
+
 
       <MyDrawer
         open={membershipModal}
@@ -4652,30 +4666,30 @@ function Configuratin() {
               errorMessage={"text"} // Replace if dynamic
             />
             <div className="d-flex">
-  <div style={{ flex: 1 }}>
-    <CustomSelect
-      label="Branch"
-      name="Parentlookupid"
-      placeholder="Select Branch"
-      options={selectLokups?.Districts}
-      value={drawerIpnuts?.Station?.Parentlookupid}
-      onChange={(val) => drawrInptChng('Station', 'Parentlookupid', val)}
-      disabled={isDisable}
-      hasError={!!errors?.Station?.Parentlookupid}
-      errorMessage={errors?.Station?.Parentlookupid}
-      required
-    />
-  </div>
+              <div style={{ flex: 1 }}>
+                <CustomSelect
+                  label="Branch"
+                  name="Parentlookupid"
+                  placeholder="Select Branch"
+                  options={selectLokups?.Districts}
+                  value={drawerIpnuts?.Station?.Parentlookupid}
+                  onChange={(val) => drawrInptChng('Station', 'Parentlookupid', val)}
+                  disabled={isDisable}
+                  hasError={!!errors?.Station?.Parentlookupid}
+                  errorMessage={errors?.Station?.Parentlookupid}
+                  required
+                />
+              </div>
 
-  <div className="ms-2 d-flex align-items-end pb-1">
-    <Button
-      className="butn primary-btn detail-btn"
-      onClick={() => openCloseDrawerFtn('DivisionsForStation')}
-    >
-      +
-    </Button>
-  </div>
-</div>
+              <div className="ms-2 d-flex align-items-end pb-1">
+                <Button
+                  className="butn primary-btn detail-btn"
+                  onClick={() => openCloseDrawerFtn('DivisionsForStation')}
+                >
+                  +
+                </Button>
+              </div>
+            </div>
             <div className="inpt-sub-con">
               <Checkbox
                 disabled={isDisable}
@@ -7582,19 +7596,6 @@ function Configuratin() {
   );
 }
 
-const styles = {
-  // centeredCol: {
-  //   paddingTop: "0.5rem",
-  //   display: "flex",
-  //   justifyContent: "center",
-  //   alignItems: "center",
-  // },
-  // centeredCell: {
-  //   display: "flex",
-  //   alignItems: "center",
-  //   justifyContent: "center",
-  //   height: "100%",
-  // },
-};
+
 
 export default Configuratin;

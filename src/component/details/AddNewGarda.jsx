@@ -16,20 +16,19 @@ import { calculateAgeFtn } from "../../utils/Utilities";
 import '../../styles/MyInput.css'
 import { insertDataFtn } from "../../utils/Utilities";
 import { updateFtn } from "../../utils/Utilities";
+import { v4 as uuidv4 } from "uuid";
 import { notification } from 'antd'
 import axios from 'axios';
 import { cleanPayload } from "../../utils/Utilities";
 import { convertToLocalTime } from "../../utils/Utilities";
 import { getAllApplications } from "../../features/ApplicationSlice";
 
-
-import { data, info } from "autoprefixer";
-
 const libraries = ['places', 'maps'];
-
 
 function AddNewGarda({ open, onClose, isGard }) {
   const { application, loading } = useSelector((state) => state.applicationDetails);
+  const { applications, applicationsLoading } = useSelector((state) => state.applications);
+
   const inputsInitValue = {
     age: null,
     gardaRegNo: null,
@@ -105,9 +104,8 @@ function AddNewGarda({ open, onClose, isGard }) {
     const approval = applicationDetail?.personalDetails?.approvalDetails || {};
     const professionalDetails = applicationDetail?.professionalDetails || {};
     const subscriptionDetails = applicationDetail?.subscriptionDetails || {};
-
     return {
-      ApplicationId: applicationDetail?.applicationId,
+      ApplicationId: applicationDetail?.ApplicationId=='undefined'? applicationDetail?.applicationId:applicationDetail?.ApplicationId,
       forename: personal.forename || "",
       surname: personal.surname || "",
       countryPrimaryQualification: personal.countryPrimaryQualification || "",
@@ -167,6 +165,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       "paymentFrequency": "Monthly",
       "submissionDate": subscriptionDetails?.submissionDate ? convertToLocalTime(subscriptionDetails?.submissionDate) : null,
     };
+
   };
   const { data: countryOptions, } = useSelector(
     (state) => state.countries
@@ -188,20 +187,153 @@ function AddNewGarda({ open, onClose, isGard }) {
     dispatch(fetchCountries());
     dispatch(getAllLookups())
   }, [dispatch]);
+ const submitApplicationData = async () => {
+  localStorage.removeItem("gardaApplicationDraft");
+  try {
+    const token = localStorage.getItem('token');
+    // 1. Personal Info
+    const applicationPayload = cleanPayload({
+      personalInfo: {
+        surname: InfData.surname,
+        forename: InfData.forename,
+        dateOfBirth: moment(InfData.dateOfBirth).utc().toISOString(),
+        countryPrimaryQualification: InfData.countryPrimaryQualification,
+        title: InfData.title || '',
+        gender: InfData.gender || '',
+      },
+      contactInfo: {
+        preferredAddress: InfData.preferredAddress,
+        eircode: InfData.eirCode || InfData.eircode,
+        buildingOrHouse: InfData.buildingOrHouse,
+        streetOrRoad: InfData.streetOrRoad,
+        areaOrTown: InfData.areaOrTown,
+        countyCityOrPostCode: InfData.countyCityOrPostCode,
+        country: InfData.country,
+        mobileNumber: InfData.mobile,
+        telephoneNumber: InfData.telephoneNumber || InfData.HomeOrWorkTel,
+        preferredEmail: InfData.preferredEmail,
+        personalEmail: InfData.email,
+        workEmail: InfData.WorkEmail,
+        consent: InfData.termsAndConditions || false,
+      },
+    });
 
+    const personalRes = await axios.post(
+      `${process.env.REACT_APP_PORTAL_SERVICE}/personal-details`,
+      applicationPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
 
-  const submitApplicationData = async () => {
-    try {
-      const token = localStorage.getItem('token');
+    const applicationId = personalRes?.data?.data?.ApplicationId;
+    if (!applicationId) {
+      throw new Error('ApplicationId not returned from personal details API');
+    }
 
-      const applicationPayload = cleanPayload({
+    // 2. Professional Info
+    const professionalPayload = cleanPayload({
+      professionalDetails: {
+        membershipCategory: InfData.membershipCategory,
+        workLocation: InfData.workLocation,
+        otherWorkLocation: InfData.otherWorkLocation,
+        grade: InfData.grade,
+        otherGrade: InfData.otherGrade,
+        nmbiNumber: InfData.nmbiNumber,
+        nurseType: InfData.nurseType,
+        nursingAdaptationProgramme: InfData.nursingAdaptationProgramme,
+        region: InfData.region,
+        branch: InfData.branch,
+        pensionNo: InfData.pensionNo,
+        isRetired: InfData.isRetired,
+        retiredDate: InfData.retiredDate,
+        studyLocation: InfData.studyLocation,
+        graduationDate: moment(InfData.graduationDate).utc().toISOString(),
+        otherGraduationDate: InfData.otherGraduationDate,
+        isRetired: false,
+      },
+    });
+
+    await axios.post(
+      `${process.env.REACT_APP_PORTAL_SERVICE}/professional-details/${applicationId}`,
+      professionalPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+
+    // 3. Subscription Info
+    const subscriptionPayload = cleanPayload({
+      subscriptionDetails: {
+        paymentType: InfData.paymentType,
+        payrollNo: InfData.payrollNo,
+        otherIrishTradeUnion: InfData.otherIrishTradeUnion,
+        otherScheme: InfData.otherScheme,
+        recuritedBy: InfData.recuritedBy,
+        recuritedByMembershipNo: InfData.recuritedByMembershipNo,
+        primarySection: InfData.primarySection,
+        otherPrimarySection: InfData.otherPrimarySection,
+        secondarySection: InfData.secondarySection,
+        otherSecondarySection: InfData.otherSecondarySection,
+        incomeProtectionScheme: InfData.incomeProtectionScheme,
+        inmoRewards: InfData.inmoRewards,
+        valueAddedServices: InfData.valueAddedServices,
+        termsAndConditions: InfData.termsAndConditions,
+        membershipCategory: InfData.membershipCategory,
+        paymentFrequency: InfData.paymentFrequency,
+      },
+    });
+
+    await axios.post(
+      `${process.env.REACT_APP_PORTAL_SERVICE}/subscription-details/${applicationId}`,
+      subscriptionPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          'Content-Type': 'application/json',
+        },
+      }
+    );
+    notification.success({
+      message: 'Application submitted successfully!',
+    });
+    setInfData(inputsInitValue)
+
+  } catch (error) {
+    console.error('Error during application submission:', error);
+    notification.error({
+      message: 'Submission failed!',
+      description: error?.response?.data?.message || error.message,
+    });
+  }
+};
+ // for ApplicationId
+
+ const saveToLocalStorage = () => {
+  try {
+    const applicationId = uuidv4(); // generate unique ApplicationId
+    const now = new Date().toISOString();
+
+    const draftPayload = {
+      ApplicationId: applicationId,
+      userId: null,
+      personalDetails: {
         personalInfo: {
+          title: InfData.title || "",
           surname: InfData.surname,
           forename: InfData.forename,
-          dateOfBirth: moment(InfData.dateOfBirth).utc().toISOString(),
+          gender: InfData.gender || "",
+          dateOfBirth: InfData.dateOfBirth ? moment(InfData.dateOfBirth).utc().toISOString() : null,
+          age: InfData.dateOfBirth ? moment().diff(moment(InfData.dateOfBirth), "years") : null,
           countryPrimaryQualification: InfData.countryPrimaryQualification,
-          title: InfData.title || '',
-          gender: InfData.gender || '',
+          deceased: false,
+          deceasedDate: null,
         },
         contactInfo: {
           preferredAddress: InfData.preferredAddress,
@@ -211,130 +343,88 @@ function AddNewGarda({ open, onClose, isGard }) {
           areaOrTown: InfData.areaOrTown,
           countyCityOrPostCode: InfData.countyCityOrPostCode,
           country: InfData.country,
+          fullAddress: `${InfData.buildingOrHouse || ""}, ${InfData.streetOrRoad || ""}, ${InfData.areaOrTown || ""}, ${InfData.countyCityOrPostCode || ""}, ${InfData.country || ""}`,
           mobileNumber: InfData.mobile,
           telephoneNumber: InfData.telephoneNumber || InfData.HomeOrWorkTel,
           preferredEmail: InfData.preferredEmail,
           personalEmail: InfData.email,
           workEmail: InfData.WorkEmail,
           consent: InfData.termsAndConditions || false,
-
-
         },
-      });
-
-      const personalRes = await axios.post(
-        `${process.env.REACT_APP_PORTAL_SERVICE}/personal-details`,
-        applicationPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
-
-      notification.success({ message: 'Application submitted successfully!' });
-
-      const applicationId = personalRes?.data?.data?.ApplicationId;
-      if (!applicationId) {
-        throw new Error('ApplicationId not returned from personal details API');
-      }
-
-      const professionalPayload = cleanPayload({
-        // ApplicationId: applicationId,
-        professionalDetails: {
-          membershipCategory: InfData.membershipCategory,
-          workLocation: InfData.workLocation,
-          otherWorkLocation: InfData.otherWorkLocation,
-          grade: InfData.grade,
-          otherGrade: InfData.otherGrade,
-          nmbiNumber: InfData.nmbiNumber,
-          nurseType: InfData.nurseType,
-          nursingAdaptationProgramme: InfData.nursingAdaptationProgramme,
-          region: InfData.region,
-          branch: InfData.branch,
-          pensionNo: InfData.pensionNo,
-          isRetired: InfData.isRetired,
-          retiredDate: InfData.retiredDate,
-          studyLocation: InfData.studyLocation,
-          graduationDate: moment(InfData.graduationDate).utc().toISOString(),
-          otherGraduationDate: InfData.otherGraduationDate,
-          "isRetired": false,
-          // dateJoined:moment(InfData.dateJoined).utc().toISOString()
+        meta: {
+          createdBy: localStorage.getItem("userId") || "system",
+          userType: "CRM",
+          deleted: false,
+          isActive: true,
         },
-      });
+        _id: 'test',
+        userId: null,
+        applicationStatus: "submitted",
+        ApplicationId: applicationId,
+        createdAt: now,
+        updatedAt: now,
+        __v: 0,
+      },
+      professionalDetails: {
+        membershipCategory: InfData.membershipCategory,
+        workLocation: InfData.workLocation,
+        otherWorkLocation: InfData.otherWorkLocation || null,
+        grade: InfData.grade,
+        otherGrade: InfData.otherGrade || null,
+        nmbiNumber: InfData.nmbiNumber || null,
+        nurseType: InfData.nurseType || null,
+        nursingAdaptationProgramme: InfData.nursingAdaptationProgramme || false,
+        region: InfData.region,
+        branch: InfData.branch,
+        pensionNo: InfData.pensionNo || null,
+        isRetired: InfData.isRetired || false,
+        retiredDate: InfData.retiredDate || null,
+        studyLocation: InfData.studyLocation || null,
+        graduationDate: InfData.graduationDate ? moment(InfData.graduationDate).utc().toISOString() : null,
+      },
+      subscriptionDetails: {
+        payrollNo: InfData.payrollNo,
+        membershipStatus: null,
+        otherIrishTradeUnion: InfData.otherIrishTradeUnion || false,
+        otherScheme: InfData.otherScheme || false,
+        recuritedBy: InfData.recuritedBy || null,
+        recuritedByMembershipNo: InfData.recuritedByMembershipNo || null,
+        primarySection: InfData.primarySection || null,
+        otherPrimarySection: InfData.otherPrimarySection || null,
+        secondarySection: InfData.secondarySection || null,
+        otherSecondarySection: InfData.otherSecondarySection || null,
+        incomeProtectionScheme: InfData.incomeProtectionScheme || false,
+        inmoRewards: InfData.inmoRewards || false,
+        valueAddedServices: InfData.valueAddedServices || false,
+        termsAndConditions: InfData.termsAndConditions || false,
+        membershipCategory: InfData.membershipCategory,
+        dateJoined: null,
+        paymentType: InfData.paymentType,
+        paymentFrequency: InfData.paymentFrequency,
+        submissionDate: now,
+      },
+      applicationStatus: "Draft",
+      approvalDetails: {},
+      createdAt: now,
+      updatedAt: now,
+    };
 
-      await axios.post(
-        `${process.env.REACT_APP_PORTAL_SERVICE}/professional-details/${applicationId}`,
-        professionalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    // Save to localStorage
+    const existingDrafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
+    const updatedDrafts = [...existingDrafts, draftPayload];
 
-      notification.success({
-        message: 'Professional details submitted successfully!',
-      });
+    localStorage.setItem("gardaApplicationDrafts", JSON.stringify(updatedDrafts));
 
-      const subscriptionPayload = cleanPayload({
-        // ApplicationId: applicationId,
-        subscriptionDetails: {
-          paymentType: InfData.paymentType,
-          payrollNo: InfData.payrollNo,
-          otherIrishTradeUnion: InfData.otherIrishTradeUnion,
-          otherScheme: InfData.otherScheme,
-          recuritedBy: InfData.recuritedBy,
-          recuritedByMembershipNo: InfData.recuritedByMembershipNo,
-          primarySection: InfData.primarySection,
-          otherPrimarySection: InfData.otherPrimarySection,
-          secondarySection: InfData.secondarySection,
-          otherSecondarySection: InfData.otherSecondarySection,
-          incomeProtectionScheme: InfData.incomeProtectionScheme,
-          inmoRewards: InfData.inmoRewards,
-          valueAddedServices: InfData.valueAddedServices,
-          termsAndConditions: InfData.termsAndConditions,
-          membershipCategory: InfData.membershipCategory,
-          // dateJoined: InfData.dateJoined,
-          paymentFrequency: InfData.paymentFrequency,
-        },
-      });
+    notification.success({ message: "Draft saved successfully!" });
 
-      await axios.post(
-        `${process.env.REACT_APP_PORTAL_SERVICE}/subscription-details/${applicationId}`,
-        subscriptionPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            'Content-Type': 'application/json',
-          },
-        }
-      );
+    setInfData(inputsInitValue);
+    onClose();
+  } catch (error) {
+    console.error("Error saving to localStorage:", error);
+    notification.error({ message: "Failed to save draft!" });
+  }
+};
 
-      notification.success({
-        message: 'Subscription details submitted successfully!',
-      });
-    } catch (error) {
-      console.error('Error during application submission:', error);
-
-      notification.error({
-        message: 'Submission failed!',
-        description: error?.response?.data?.message || error.message,
-      });
-    }
-  };
-  const saveToLocalStorage = () => {
-    try {
-      localStorage.setItem('gardaApplicationDraft', JSON.stringify(InfData));
-      notification.success({ message: 'Draft saved successfully!' });
-      setInfData(inputsInitValue)
-      onClose()
-    } catch (error) {
-      console.error('Error saving to localStorage:', error);
-    }
-  };
 
   const loadFromLocalStorage = () => {
     const savedData = localStorage.getItem('gardaApplicationDraft');
@@ -370,25 +460,18 @@ function AddNewGarda({ open, onClose, isGard }) {
   const [errors, setErrors] = useState({});
 
   const handleInputChange = (eventOrName, value) => {
-    debugger
-    // Case 1: Standard input event
     if (eventOrName === "dateOfBirth") {
-      // const { name, value: val } = value.target;
       const formattedValue = moment(value)
       setInfData((prev) => {
         const updated = {
           ...prev,
           [eventOrName]: value,
         };
-        // Handle date of birth → age
         if (eventOrName === "dateOfBirth" && value) {
-          const age = calculateAgeFtn(value); // value is a moment object
+          const age = calculateAgeFtn(value); 
           updated.age = age;
         }
-        // Handle WorkLocation → branch & region
         if (eventOrName === "workLocation") {
-          // updated.branch = workLocationDetails[formattedValue].branch;
-          // updated.region = workLocationDetails[formattedValue].region;
         }
         return updated;
       });
@@ -435,6 +518,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         setErrors((prev) => ({ ...prev, [eventOrName]: "" }));
       }
   };
+
   let newdata;
   useEffect(() => {
     if (isGard === true && application && open === true) {
@@ -443,8 +527,6 @@ function AddNewGarda({ open, onClose, isGard }) {
     }
   }, [isGard, application, open]);
 
-  console.log(InfData, 'applicationDetail')
-  console.log(application, 'applicationDetail10')
   const handleSubmit = () => {
     const requiredFields = [
       "title",
@@ -467,24 +549,18 @@ function AddNewGarda({ open, onClose, isGard }) {
       // 'otherPrimarySection',
       // 'otherSecondarySection'
     ];
-
     const newErrors = {};
-
-    // Validate required fields
     requiredFields.forEach((field) => {
       const value = InfData[field];
       if (!value || value.toString().trim() === "") {
         newErrors[field] = "This field is required";
       }
     });
-
-    // Conditional validation for email fields
     if (InfData.preferredEmail === "personal") {
       if (!InfData.email || InfData.email.trim() === "") {
         newErrors.email = "Personal Email is required";
       }
     }
-
     if (InfData.preferredEmail === "work") {
       if (!InfData.WorkEmail || InfData.WorkEmail.trim() === "") {
         newErrors.WorkEmail = "Work Email is required";
@@ -495,19 +571,13 @@ function AddNewGarda({ open, onClose, isGard }) {
         newErrors.WorkEmail = "Work Email is required";
       }
     }
-
-    // If there are any errors, stop submission
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       debugger
       return;
     }
-    // Clear previous errors
     setErrors({});
-
-    // Submit the form (replace with your actual logic)
     submitApplicationData()
-    // You can call an API or trigger next step here
   };
 
   const handlePlacesChanged = () => {
@@ -558,7 +628,6 @@ function AddNewGarda({ open, onClose, isGard }) {
       });
     }
   };
-  // Mapping of work locations to their branches and regions
   const workLocationDetails = {
     '24 Hour Care Services': { branch: 'Meath', region: 'Dublin North East' },
     '24 Hour Care Services (Mid-West)': {
@@ -732,6 +801,25 @@ function AddNewGarda({ open, onClose, isGard }) {
       `You have successfully ${status}`
     );
   };
+
+  function navigateApplication(direction) {
+    debugger
+    const index = applications.findIndex(app => app.ApplicationId === application?.applicationId);
+    if (index === -1) return;
+    let newIndex = index;
+    debugger
+    if (direction === "prev") {
+      // newIndex = index === 0 ? applications.length - 1 : index - 1;
+      newIndex = newIndex -1;
+    } else if (direction === "next") {
+      newIndex = newIndex +1;
+    }
+    debugger
+    const newdata = mapApplicationDetailToInfData(applications[newIndex]);
+    setInfData((prev) => ({ ...prev, ...newdata }));
+    debugger
+  }
+  console.log(InfData,"ppppo")
   return (
     <>
       <MyDrawer
@@ -745,8 +833,10 @@ function AddNewGarda({ open, onClose, isGard }) {
           onClose()
           disableFtn(true)
         }}
+        nextPrevData={{ total: applications?.length, }}
+        nextFtn={() => navigateApplication('next')}
+        PrevFtn={() => navigateApplication('prev')}
         handleChangeApprove={() => applicationStatusUpdate("approved")}
-        // handleChangeApprove={ }
         isAppRej={true}
         rejFtn={() => applicationStatusUpdate("rejected")}
         add={handleSubmit}
@@ -757,25 +847,21 @@ function AddNewGarda({ open, onClose, isGard }) {
         <div className="drawer-main-cntainer " >
           <div>
             <Row gutter={24}>
-              {/* Section Heading */}
               <Col span={24}>
                 <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Personal Information</h2>
               </Col>
-
-              {/* Title (Empty Data Allowed) */}
               <Col span={8}>
                 <CustomSelect
                   label="Title"
                   name="title"
                   value={InfData.title}
-                  options={lookupsForSelect?.Titles} // can be empty
+                  options={lookupsForSelect?.Titles}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("title", e.target.value)}
                   hasError={!!errors?.title}
                 />
               </Col>
-              {/* Forename | Surname */}
               <Col span={8}>
                 <MyInput
                   label="Forename"
@@ -787,7 +873,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                   hasError={!!errors?.forename}
                 />
               </Col>
-
               <Col span={8}>
                 <MyInput
                   label="Surname"
@@ -799,8 +884,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                   hasError={!!errors?.surname}
                 />
               </Col>
-
-              {/* Gender | Date of Birth */}
               <Col span={8}>
                 <CustomSelect
                   label="Gender"
@@ -851,9 +934,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
               <Col span={12}></Col>
             </Row >
-            {/* <h2 style={{ fontSize: '17px',  color: 'black' }}>Correspondence Details</h2> */}
             <Row gutter={24}>
-              {/* Section Heading */}
               <Col span={12}>
                 <div className="d-flex">
                   <div>

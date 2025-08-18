@@ -85,7 +85,7 @@ function Entry() {
           {/* Content area + resizable section */}
           <div style={{ flex: 1, display: "flex", overflow: "hidden",  }}>
             {/* Routes Content */}
-            <div style={{ flex: 1, overflowY: "auto", }} className="main-main">
+            <div style={{ flex: 1, overflowY: "hidden", }} className="main-main">
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />

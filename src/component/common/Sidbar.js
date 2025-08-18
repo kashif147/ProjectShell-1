@@ -79,7 +79,7 @@ const Sidbar = () => {
         navigate("/CasesSummary", { state: { search: 'Cases' } });
         break;
       case 'Correspondences':
-        navigate("/CorrespondencesSummary", { state: { search: 'Correspondences' } });
+        navigate("/CorrespondencesSummary", { state: { search: '' } });
         break;
       case 'Transfer Requests':
         navigate("/Transfers", { state: { search: 'Transfers' } });
@@ -139,7 +139,7 @@ const Sidbar = () => {
     } else if (menuLblState["Correspondence"]) {
       navigate("/Email", { state: { search: 'Email' } });
     } else if (menuLblState["Configuration"]) {
-      navigate("/Configuratin", { state: { search: 'Configuration' } });
+      navigate("/Configuratin", { state: { search: '' } });
     }
   }, [menuLblState]);
 

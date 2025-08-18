@@ -495,12 +495,12 @@ function HeaderDetails() {
                     <p>Summary</p> :
                     nav === '/Configuratin' ?
                       <>
-                        <IoSettingsOutline style={{
+                        {/* <IoSettingsOutline style={{
                           fontSize: "15px",
                           color: "#45669d",
                           marginRight: '2px'
-                        }} />
-                        <p style={{}}>Configuration</p>
+                        }} /> */}
+                        <p style={{}}></p>
                       </>
                       :
                       <p>{formattedNav}</p>
@@ -689,7 +689,7 @@ function HeaderDetails() {
                     )}
                     <MultiFilterDropdown
                       label="Status"
-                      options={["submitted", "approved", "rejected", "in-progress"]}
+                      options={["submitted", "approved", "rejected", "in-progress","draft"]}
                       selectedValues={statusValues}
                       onChange={setStatusValues}
                       operator={statusOperator}
@@ -852,7 +852,6 @@ function HeaderDetails() {
             </div>
           )
         }
-
       </MyDrawer>
       <Modal footer={<><Button onClick={async () => {
         try {
@@ -1016,14 +1015,6 @@ function HeaderDetails() {
       <ChangeCategoryDrawer
         open={isDrawerOpen}
         onClose={() => setisDrawerOpen(false)}
-
-      // currentCategory={profileData?.currentCategory}
-      // newCategory={formData?.newCategory}
-      // onNewCategoryChange={(value) =>
-      //   setFormData(prev => ({ ...prev, newCategory: value }))
-      // }
-      // onAccept={handleAccept}
-      // onReject={handleReject}
       />
       <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
 

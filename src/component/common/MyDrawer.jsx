@@ -30,9 +30,10 @@ import {
 import { FaAngleRight } from "react-icons/fa";
 
 
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn }) {
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData,nextFtn,PrevFtn }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
+  const { applications, applicationsLoading } = useSelector((state) => state.applications);
   const dispatch = useDispatch()
   const drawerInputsInitalValues = {
     Solicitors: {
@@ -507,6 +508,8 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
         resetCounteries('Solicitors')
       })
   }
+
+
   return (
     <Drawer
       width={width}
@@ -589,12 +592,12 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
 
             {
               isGardaCheckbx && (
-                <Checkbox>Multiple</Checkbox>
+                <Checkbox>Bulk Registration</Checkbox>
               )
             }
             {isAppRej && (
-              <Radio.Group>
-                <Radio value="approved" onClick={handleChangeApprove}>
+              <Radio.Group value={""}>
+                <Radio value="approved" onClick={handleChangeApprove} >
                   Approve
                 </Radio>
                 <CommonPopConfirm
@@ -658,13 +661,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
 
             }
             {
-              isGarda || isManual && (
+              (isGarda || isManual) && (
                 <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                  <Button className="me-1 gray-btn butn">
+                  <Button className="me-1 gray-btn butn" onClick={PrevFtn}>
                     <FaAngleLeft className="deatil-header-icon" />
                   </Button>
-                  <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{selectedRowIndex} of {selectedRowData?.length}</p>
-                  <Button className="me-1 gray-btn butn">
+                  <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{nextPrevData?.currentApp} of {nextPrevData?.total}</p>
+                  <Button className="me-1 gray-btn butn" onClick={nextFtn}>
                     <FaAngleRight className="deatil-header-icon" />
                   </Button>
                 </div>
@@ -673,7 +676,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
 
           </Space>
           {
-            title === "Registration Request" && isDisable===false &&
+            title === "Registration Request" && isDisable === false &&
             <Button className="butn primary-btn" onClick={draftFtn}>
               Draft
             </Button>

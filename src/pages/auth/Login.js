@@ -78,7 +78,8 @@ const handleAuthRedirect = async () => {
         // Save tokens to localStorage if present
         if (data.accessToken) {
            let  token = data.accessToken.replace(/^Bearer\s/, '');
-            localStorage.setItem("access_token", token);
+            localStorage.setItem("token", token);
+            navigate("/Summary")
         }
         if (data.refresh_token) {
             localStorage.setItem("refresh_token", data.refresh_token);
@@ -96,7 +97,6 @@ const handleAuthRedirect = async () => {
         console.error("Token exchange failed:", err);
     }
 };
-
 
 // Run on page load
 useEffect(() => {

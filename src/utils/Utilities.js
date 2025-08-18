@@ -145,6 +145,7 @@ export const cleanPayload = (obj) => {
   return obj;
 };
 export function convertToLocalTime(utcDateString) {
+  console.log(utcDateString,'ity')
   return moment.utc(utcDateString).local().format('DD/MM/YYYY HH:mm');
 }
 
