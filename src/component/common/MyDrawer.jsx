@@ -678,7 +678,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
           {
             title === "Registration Request" && isDisable === false &&
             <Button className="butn primary-btn" onClick={draftFtn}>
-              Draft
+              Add
             </Button>
           }
         </div>

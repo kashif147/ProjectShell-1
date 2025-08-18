@@ -2,11 +2,25 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const baseURL = `${process.env.REACT_APP_PORTAL_SERVICE}`
+const baseURL = `${process.env.REACT_APP_PORTAL_SERVICE}`;
+
+// ✅ Thunk: fetch from API OR localStorage (if draft)
 export const getApplicationById = createAsyncThunk(
   'applicationDetails/getApplicationById',
-  async (id, { rejectWithValue }) => {
+  async ({ id, draftId }, { rejectWithValue }) => {
     try {
+      if (id === "draft") {
+        // 🔹 Load from localStorage drafts
+        const drafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
+        const draft = drafts.find((d) => d.ApplicationId === draftId);
+        if (draft) {
+          return { ...draft, type: "draft" }; // keep shape consistent
+        } else {
+          return rejectWithValue("Draft not found in local storage");
+        }
+      }
+
+      // 🔹 Otherwise, fetch from API
       const token = localStorage.getItem('token');
       const response = await axios.get(`${baseURL}/applications/${id}`, {
         headers: {
@@ -14,9 +28,12 @@ export const getApplicationById = createAsyncThunk(
           'Content-Type': 'application/json',
         },
       });
+
       return response.data.data; // adjust if response shape differs
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch application details');
+      return rejectWithValue(
+        error.response?.data?.message || 'Failed to fetch application details'
+      );
     }
   }
 );

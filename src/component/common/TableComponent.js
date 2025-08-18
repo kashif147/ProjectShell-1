@@ -34,6 +34,7 @@ import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
 import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
+import { set } from "react-hook-form";
 const EditableContext = React.createContext(null);
 
 
@@ -313,17 +314,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
                 onClick={() => {
                   if (record?.applicationStatus === "Draft") {
                     const drafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
-                    const draft = drafts.find((d) => d.ApplicationId === record?.ApplicationId);
-                    if(draft){
-                      
-                    }
-                    if (draft) {
-                      // ✅ open drawer with draft data  // <-- populate your form state
-                      setAddNewGardaDrwr(true);
-                    }
+                    dispatch(getApplicationById({id:'draft',draftId:record?.ApplicationId,}));
+                    setAddNewGardaDrwr(true);
+                    
                   } else {
                     // ✅ fetch from API for submitted apps
-                    dispatch(getApplicationById(record?.ApplicationId));
+                    dispatch(getApplicationById({id:record?.ApplicationId}));
                     setAddNewGardaDrwr(true);
                   }
                 }}
