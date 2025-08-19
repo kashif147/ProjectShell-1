@@ -134,7 +134,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       ConsentEmail: contact.consentEmail || false,
       graduationDate: professionalDetails?.graduationDate,
       workLocation: professionalDetails?.workLocation,
-      nursingAdaptationProgramme: professionalDetails?.nursingAdaptationProgramme === false ? "No" : "Yes",
+      nursingAdaptationProgramme: professionalDetails?.nursingAdaptationProgramme,
       nmbiNumber: professionalDetails?.nmbiNumber,
       branch: professionalDetails?.branch,
       grade: professionalDetails?.grade,
@@ -181,7 +181,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   const dispatch = useDispatch();
   const {
     lookupsForSelect,
-    
+
 
   } = useTableColumns();
 
@@ -190,7 +190,6 @@ function AddNewGarda({ open, onClose, isGard }) {
     dispatch(getAllLookups())
   }, [dispatch]);
   const submitApplicationData = async () => {
-    localStorage.removeItem("gardaApplicationDraft");
     try {
       const token = localStorage.getItem('token');
       // 1. Personal Info
@@ -317,116 +316,120 @@ function AddNewGarda({ open, onClose, isGard }) {
   };
   // for ApplicationId
 
-  const saveToLocalStorage = () => {
+  const saveToLocalStorage = async () => {
+
+    const applicationId = uuidv4(); // generate unique ApplicationId
+    const now = new Date().toISOString();
+
+    const draftPayload = {
+      ApplicationId: applicationId,
+      userId: null,
+      personalDetails: {
+        personalInfo: {
+          title: InfData.title || "",
+          surname: InfData.surname,
+          forename: InfData.forename,
+          gender: InfData.gender || "",
+          dateOfBirth: InfData.dateOfBirth ? moment(InfData.dateOfBirth).utc().toISOString() : null,
+          age: InfData.dateOfBirth ? moment().diff(moment(InfData.dateOfBirth), "years") : null,
+          countryPrimaryQualification: InfData.countryPrimaryQualification,
+          deceased: false,
+          deceasedDate: null,
+
+        },
+        contactInfo: {
+          preferredAddress: InfData.preferredAddress,
+          eircode: InfData.eirCode || InfData.eircode,
+          buildingOrHouse: InfData.buildingOrHouse,
+          streetOrRoad: InfData.streetOrRoad,
+          areaOrTown: InfData.areaOrTown,
+          countyCityOrPostCode: InfData.countyCityOrPostCode,
+          country: InfData.country,
+          fullAddress: `${InfData.buildingOrHouse || ""}, ${InfData.streetOrRoad || ""}, ${InfData.areaOrTown || ""}, ${InfData.countyCityOrPostCode || ""}, ${InfData.country || ""}`,
+          mobileNumber: InfData.mobile,
+          telephoneNumber: InfData.telephoneNumber || InfData.HomeOrWorkTel,
+          preferredEmail: InfData.preferredEmail,
+          personalEmail: InfData.email,
+          workEmail: InfData.WorkEmail,
+          consent: InfData.termsAndConditions || false,
+        },
+        // meta: {
+        //   createdBy: localStorage.getItem("userId") || "system",
+        //   userType: "CRM",
+        //   deleted: false,
+        //   isActive: true,
+        // },
+        // _id: 'test',
+        // userId: null,
+        applicationStatus: "submitted",
+        // ApplicationId: applicationId,
+        // createdAt: now,
+        // updatedAt: now,
+        // __v: 0,
+      },
+      professionalDetails: {
+        membershipCategory: InfData.membershipCategory,
+        workLocation: InfData.workLocation,
+        otherWorkLocation: InfData.otherWorkLocation || null,
+        grade: InfData.grade,
+        otherGrade: InfData.otherGrade || null,
+        nmbiNumber: InfData.nmbiNumber || null,
+        nurseType: InfData.nurseType || null,
+        nursingAdaptationProgramme: InfData.nursingAdaptationProgramme || false,
+        region: InfData.region,
+        branch: InfData.branch,
+        pensionNo: InfData.pensionNo || null,
+        isRetired: InfData.isRetired || false,
+        retiredDate: InfData.retiredDate || null,
+        studyLocation: InfData.studyLocation || null,
+        graduationDate: InfData.graduationDate ? moment(InfData.graduationDate).utc().toISOString() : null,
+      },
+      subscriptionDetails: {
+        payrollNo: InfData.payrollNo,
+        membershipStatus: null,
+        otherIrishTradeUnion: InfData.otherIrishTradeUnion || false,
+        otherScheme: InfData.otherScheme || false,
+        recuritedBy: InfData.recuritedBy || null,
+        recuritedByMembershipNo: InfData.recuritedByMembershipNo || null,
+        primarySection: InfData.primarySection || null,
+        otherPrimarySection: InfData.otherPrimarySection || null,
+        secondarySection: InfData.secondarySection || null,
+        otherSecondarySection: InfData.otherSecondarySection || null,
+        incomeProtectionScheme: InfData.incomeProtectionScheme || false,
+        inmoRewards: InfData.inmoRewards || false,
+        valueAddedServices: InfData.valueAddedServices || false,
+        termsAndConditions: InfData.termsAndConditions || false,
+        membershipCategory: InfData.membershipCategory,
+        dateJoined: null,
+        paymentType: InfData.paymentType,
+        paymentFrequency: InfData.paymentFrequency,
+        submissionDate: now,
+      },
+      applicationStatus: "Draft",
+      approvalDetails: {},
+      createdAt: now,
+      updatedAt: now,
+    };
     try {
-      const applicationId = uuidv4(); // generate unique ApplicationId
-      const now = new Date().toISOString();
+      if (!("sharedStorage" in window)) {
+        notification.error({ message: "Shared Storage not supported!" });
+        return;
+      }
 
-      const draftPayload = {
-        ApplicationId: applicationId,
-        userId: null,
-        personalDetails: {
-          personalInfo: {
-            title: InfData.title || "",
-            surname: InfData.surname,
-            forename: InfData.forename,
-            gender: InfData.gender || "",
-            dateOfBirth: InfData.dateOfBirth ? moment(InfData.dateOfBirth).utc().toISOString() : null,
-            age: InfData.dateOfBirth ? moment().diff(moment(InfData.dateOfBirth), "years") : null,
-            countryPrimaryQualification: InfData.countryPrimaryQualification,
-            deceased: false,
-            deceasedDate: null,
-
-          },
-          contactInfo: {
-            preferredAddress: InfData.preferredAddress,
-            eircode: InfData.eirCode || InfData.eircode,
-            buildingOrHouse: InfData.buildingOrHouse,
-            streetOrRoad: InfData.streetOrRoad,
-            areaOrTown: InfData.areaOrTown,
-            countyCityOrPostCode: InfData.countyCityOrPostCode,
-            country: InfData.country,
-            fullAddress: `${InfData.buildingOrHouse || ""}, ${InfData.streetOrRoad || ""}, ${InfData.areaOrTown || ""}, ${InfData.countyCityOrPostCode || ""}, ${InfData.country || ""}`,
-            mobileNumber: InfData.mobile,
-            telephoneNumber: InfData.telephoneNumber || InfData.HomeOrWorkTel,
-            preferredEmail: InfData.preferredEmail,
-            personalEmail: InfData.email,
-            workEmail: InfData.WorkEmail,
-            consent: InfData.termsAndConditions || false,
-          },
-          // meta: {
-          //   createdBy: localStorage.getItem("userId") || "system",
-          //   userType: "CRM",
-          //   deleted: false,
-          //   isActive: true,
-          // },
-          // _id: 'test',
-          // userId: null,
-          applicationStatus: "submitted",
-          // ApplicationId: applicationId,
-          // createdAt: now,
-          // updatedAt: now,
-          // __v: 0,
-        },
-        professionalDetails: {
-          membershipCategory: InfData.membershipCategory,
-          workLocation: InfData.workLocation,
-          otherWorkLocation: InfData.otherWorkLocation || null,
-          grade: InfData.grade,
-          otherGrade: InfData.otherGrade || null,
-          nmbiNumber: InfData.nmbiNumber || null,
-          nurseType: InfData.nurseType || null,
-          nursingAdaptationProgramme: InfData.nursingAdaptationProgramme || false,
-          region: InfData.region,
-          branch: InfData.branch,
-          pensionNo: InfData.pensionNo || null,
-          isRetired: InfData.isRetired || false,
-          retiredDate: InfData.retiredDate || null,
-          studyLocation: InfData.studyLocation || null,
-          graduationDate: InfData.graduationDate ? moment(InfData.graduationDate).utc().toISOString() : null,
-        },
-        subscriptionDetails: {
-          payrollNo: InfData.payrollNo,
-          membershipStatus: null,
-          otherIrishTradeUnion: InfData.otherIrishTradeUnion || false,
-          otherScheme: InfData.otherScheme || false,
-          recuritedBy: InfData.recuritedBy || null,
-          recuritedByMembershipNo: InfData.recuritedByMembershipNo || null,
-          primarySection: InfData.primarySection || null,
-          otherPrimarySection: InfData.otherPrimarySection || null,
-          secondarySection: InfData.secondarySection || null,
-          otherSecondarySection: InfData.otherSecondarySection || null,
-          incomeProtectionScheme: InfData.incomeProtectionScheme || false,
-          inmoRewards: InfData.inmoRewards || false,
-          valueAddedServices: InfData.valueAddedServices || false,
-          termsAndConditions: InfData.termsAndConditions || false,
-          membershipCategory: InfData.membershipCategory,
-          dateJoined: null,
-          paymentType: InfData.paymentType,
-          paymentFrequency: InfData.paymentFrequency,
-          submissionDate: now,
-        },
-        applicationStatus: "Draft",
-        approvalDetails: {},
-        createdAt: now,
-        updatedAt: now,
-      };
-
-      // Save to localStorage
-      const existingDrafts = JSON.parse(localStorage.getItem("gardaApplicationDrafts")) || [];
-      const updatedDrafts = [...existingDrafts, draftPayload];
-
-      localStorage.setItem("gardaApplicationDrafts", JSON.stringify(updatedDrafts));
+      // 🔹 Save directly
+      await window.sharedStorage.set(
+        "gardaApplicationDrafts",
+        JSON.stringify([draftPayload])
+      );
 
       notification.success({ message: "Draft saved successfully!" });
-
-      setInfData(inputsInitValue);
-      onClose();
-    } catch (error) {
-      console.error("Error saving to localStorage:", error);
-      notification.error({ message: "Failed to save draft!" });
+    } catch (err) {
+      console.error("Error saving draft:", err);
+      notification.error({ message: "Error saving draft!" });
     }
+
   };
+
 
   const [errors, setErrors] = useState({});
   const [isDisable, setisDisable] = useState(false);

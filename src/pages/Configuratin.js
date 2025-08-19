@@ -3016,41 +3016,41 @@ function Configuratin() {
     setPageSize(size);
   };
   const { Search } = Input;
- const sections = [
-  {
-    title: "Lookups Configuration",
-    items: [
-      { key: "Title", icon: <Crown size={24} color="#3b82f6" />, label: "Titles" }, // blue-500
-      { key: "Gender", icon: <User size={24} color="#ec4899" />, label: "Gender" }, // pink-500
-      { key: "MaritalStatus", icon: <Heart size={24} color="#a78bfa" />, label: "Marital Status" }, // purple-400
-      { key: "Provinces", icon: <Map size={24} color="#22c55e" />, label: "Provinces" }, // green-500
-      { key: "Countries", icon: <Globe size={24} color="#ef4444" />, label: "Countries" }, // red-500
-      { key: "Divisions", icon: <Building2 size={24} color="#6366f1" />, label: "Divisions" }, // indigo-500
-      { key: "Districts", icon: <MapPinned size={24} color="#eab308" />, label: "Districts" }, // yellow-500
-      { key: "Cities", icon: <Building2 size={24} color="#10b981" />, label: "Cities" }, // emerald-500
-      { key: "Station", icon: <MapPin size={24} color="#f97316" />, label: "Station" }, // orange-500
-      { key: "PostCode", icon: <Mail size={24} color="#0ea5e9" />, label: "Post Codes" }, // sky-500
-      { key: "Boards", icon: <Layout size={24} color="#14b8a6" />, label: "Boards" }, // teal-500
-      { key: "Councils", icon: <Landmark size={24} color="#8b5cf6" />, label: "Councils" }, // violet-500
-      { key: "SpokenLanguages", icon: <Languages size={24} color="#f43f5e" />, label: "Spoken Languages" }, // rose-500
-      { key: "ProjectTypes", icon: <FolderKanban size={24} color="#f59e0b" />, label: "Project Types" }, // amber-500
-      { key: "Trainings", icon: <Lightbulb size={24} color="#84cc16" />, label: "Trainings" }, // lime-500
-      { key: "Ranks", icon: <BarChart3 size={24} color="#6b7280" />, label: "Ranks" }, // gray-500
-      { key: "Duties", icon: <FileText size={24} color="#60a5fa" />, label: "Duties" }, // blue-400
-      { key: "Solicitors", icon: <Gavel size={24} color="#64748b" />, label: "Solicitors" }, // slate-500
-      { key: "RosterType", icon: <Calendar size={24} color="#06b6d4" />, label: "Roster Type" }, // cyan-500
-      { key: "CorrespondenceType", icon: <MessageSquare size={24} color="#4ade80" />, label: "Correspondence Type" }, // green-400
-      { key: "DocumentType", icon: <File size={24} color="#818cf8" />, label: "Document Type" }, // indigo-400
-      { key: "ClaimType", icon: <Shield size={24} color="#f472b6" />, label: "Claim Type" }, // pink-400
-      { key: "Schemes", icon: <Boxes size={24} color="#facc15" />, label: "Schemes" }, // yellow-400
-      { key: "LookupType", icon: <Search size={24} color="#34d399" />, label: "Lookup Type" }, // emerald-400
-      { key: "Lookup", icon: <Search size={24} color="#fb7185" />, label: "Lookup" }, // rose-400
-      { key: "ContactTypes", icon: <Phone size={24} color="#a855f7" />, label: "Contact Types" }, // purple-500
-      { key: "Reasons", icon: <HelpCircle size={24} color="#fb923c" />, label: "Reasons" }, // orange-400
-      { key: "Committees", icon: <Users size={24} color="#ec4899" />, label: "Committees" }, // pink-500
-    ],
-  },
-];
+  const sections = [
+    {
+      title: "Lookups Configuration",
+      items: [
+        { key: "Title", icon: <Crown size={24} color="#3b82f6" />, label: "Titles" }, // blue-500
+        { key: "Gender", icon: <User size={24} color="#ec4899" />, label: "Gender" }, // pink-500
+        { key: "MaritalStatus", icon: <Heart size={24} color="#a78bfa" />, label: "Marital Status" }, // purple-400
+        { key: "Provinces", icon: <Map size={24} color="#22c55e" />, label: "Provinces" }, // green-500
+        { key: "Countries", icon: <Globe size={24} color="#ef4444" />, label: "Countries" }, // red-500
+        { key: "Divisions", icon: <Building2 size={24} color="#6366f1" />, label: "Divisions" }, // indigo-500
+        { key: "Districts", icon: <MapPinned size={24} color="#eab308" />, label: "Districts" }, // yellow-500
+        { key: "Cities", icon: <Building2 size={24} color="#10b981" />, label: "Cities" }, // emerald-500
+        { key: "Station", icon: <MapPin size={24} color="#f97316" />, label: "Station" }, // orange-500
+        { key: "PostCode", icon: <Mail size={24} color="#0ea5e9" />, label: "Post Codes" }, // sky-500
+        { key: "Boards", icon: <Layout size={24} color="#14b8a6" />, label: "Boards" }, // teal-500
+        { key: "Councils", icon: <Landmark size={24} color="#8b5cf6" />, label: "Councils" }, // violet-500
+        { key: "SpokenLanguages", icon: <Languages size={24} color="#f43f5e" />, label: "Spoken Languages" }, // rose-500
+        { key: "ProjectTypes", icon: <FolderKanban size={24} color="#f59e0b" />, label: "Project Types" }, // amber-500
+        { key: "Trainings", icon: <Lightbulb size={24} color="#84cc16" />, label: "Trainings" }, // lime-500
+        { key: "Ranks", icon: <BarChart3 size={24} color="#6b7280" />, label: "Ranks" }, // gray-500
+        { key: "Duties", icon: <FileText size={24} color="#60a5fa" />, label: "Duties" }, // blue-400
+        { key: "Solicitors", icon: <Gavel size={24} color="#64748b" />, label: "Solicitors" }, // slate-500
+        { key: "RosterType", icon: <Calendar size={24} color="#06b6d4" />, label: "Roster Type" }, // cyan-500
+        { key: "CorrespondenceType", icon: <MessageSquare size={24} color="#4ade80" />, label: "Correspondence Type" }, // green-400
+        { key: "DocumentType", icon: <File size={24} color="#818cf8" />, label: "Document Type" }, // indigo-400
+        { key: "ClaimType", icon: <Shield size={24} color="#f472b6" />, label: "Claim Type" }, // pink-400
+        { key: "Schemes", icon: <Boxes size={24} color="#facc15" />, label: "Schemes" }, // yellow-400
+        { key: "LookupType", icon: <Search size={24} color="#34d399" />, label: "Lookup Type" }, // emerald-400
+        { key: "Lookup", icon: <Search size={24} color="#fb7185" />, label: "Lookup" }, // rose-400
+        { key: "ContactTypes", icon: <Phone size={24} color="#a855f7" />, label: "Contact Types" }, // purple-500
+        { key: "Reasons", icon: <HelpCircle size={24} color="#fb923c" />, label: "Reasons" }, // orange-400
+        { key: "Committees", icon: <Users size={24} color="#ec4899" />, label: "Committees" }, // pink-500
+      ],
+    },
+  ];
 
   return (
     <div className="bg-gray-50 mb-4">
@@ -3060,21 +3060,22 @@ function Configuratin() {
       </div> */}
 
       {/* Search Bar */}
-      {/* <div className="row justify-content-center mb-4">
-        <div className="col-md-6"> */}
-      {/* <input
-            type="text"
-            className="form-control form-control-lg"
-            placeholder="Search lookups..."
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          /> */}
-      {/* </div>
-      </div> */}
+
       <div className="d-flex flex-column mb-4 pb-4" style={{ height: "100vh", overflow: "hidden" }}>
-        <div className="text-center " style={{ flexShrink: 0, marginTop:'-4px' }}>
+        <div className="text-center " style={{ flexShrink: 0, marginTop: '-4px' }}>
           <h1 className="fw-bold">Configuration</h1>
           <p className="text-muted mb-0">System configuration and lookup management</p>
+          <div className="row justify-content-center">
+            <div className="col-md-6 mt-3 mb-3">
+              <input
+                type="text"
+                className="form-control form-control-lg"
+                placeholder="Search lookups..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+          </div>
         </div>
         <div className="bg-white rounded shadow-sm p-4 flex-grow-1 overflow-auto">
           {sections.map((section, idx) => {
@@ -3084,12 +3085,12 @@ function Configuratin() {
 
             return (
               <div key={`${section.title}-${idx}`} className="mb-5">
-                <h5 className="fw-semibold mb-4">{section.title}</h5>
+                {/* <h5 className="fw-semibold mb-4">{section.title}</h5> */}
 
                 {filteredItems.length > 0 ? (
-                  <div className="row gx-3 gy-3 mx-n2">
+                  <div className="row gx-3 gy-3">
                     {filteredItems.map((item) => (
-                      <div key={item.key} className="col-6 col-sm-4 col-md-2 d-flex px-2">
+                      <div key={item.key} className="col-6 col-sm-4 col-md-2 d-flex">
                         <div
                           onClick={() => openCloseDrawerFtn(item.key)}
                           className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
@@ -3101,6 +3102,7 @@ function Configuratin() {
                       </div>
                     ))}
                   </div>
+
                 ) : (
                   <p className="text-muted small mb-0">No matches for “{searchQuery}”.</p>
                 )}

@@ -31,8 +31,8 @@
 }
 /* Center the tick in the Ant Design checkbox */
 .row {
-  --bs-gutter-x: 0rem !important; /* Horizontal gutter */
-  --bs-gutter-y: 0rem !important; /* Vertical gutter */
+  /* --bs-gutter-x: 0rem !important; 
+  --bs-gutter-y: 0rem !important;  */
 }
 .bordr-less :hover{
 background: transparent !important;

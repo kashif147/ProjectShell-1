@@ -28,6 +28,7 @@ import {
   FaAngleLeft,
 } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
+import MemberSearch from "../profile/MemberSearch";
 
 
 function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData, nextFtn, PrevFtn, status }) {
@@ -573,8 +574,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               </div>
             )
           }
-
+ 
           <Space>
+            {
+            title==="Registration Request"&&(
+              <MemberSearch />
+            )
+            }
             {
               isAss == true && (
                 <>

@@ -133,17 +133,27 @@ export const mapApplicationDetailToInfData = (applicationDetail) => {
 };
 export const cleanPayload = (obj) => {
   if (Array.isArray(obj)) {
-    return obj.map(cleanPayload);
-  } else if (typeof obj === 'object' && obj !== null) {
+    return obj
+      .map(cleanPayload)
+      .filter((v) => v !== null && v !== undefined && v !== ""); // ✅ remove "" inside arrays too
+  } else if (typeof obj === "object" && obj !== null) {
     return Object.entries(obj)
-      .filter(([_, v]) => v !== null && v !== undefined)
+      .filter(([_, v]) => v !== null && v !== undefined && v !== "") // ✅ remove ""
       .reduce((acc, [k, v]) => {
-        acc[k] = cleanPayload(v);
+        const cleaned = cleanPayload(v);
+        // also drop empty objects/arrays
+        if (
+          !(typeof cleaned === "object" && cleaned !== null && Object.keys(cleaned).length === 0) &&
+          !(Array.isArray(cleaned) && cleaned.length === 0)
+        ) {
+          acc[k] = cleaned;
+        }
         return acc;
       }, {});
   }
   return obj;
 };
+
 export function convertToLocalTime(utcDateString) {
   console.log(utcDateString,'ity')
   return moment.utc(utcDateString).local().format('DD/MM/YYYY HH:mm');
