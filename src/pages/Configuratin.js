@@ -3104,7 +3104,7 @@ function Configuratin() {
                   </div>
 
                 ) : (
-                  <p className="text-muted small mb-0">No matches for “{searchQuery}”.</p>
+                  <p className="text-muted small mb-0 text-center">No matches for “{searchQuery}”.</p>
                 )}
               </div>
             );

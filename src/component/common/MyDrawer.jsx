@@ -642,7 +642,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                   }}
                 >
                   {
-                    isDisable && !isManual && title !== "Bulk Registration" && title !== "Registration Request"
+                    !isDisable && !isManual && title !== "Bulk Registration" && title !== "Registration Request"
                       ? "Add"
                       : "Save"
                   }
@@ -651,29 +651,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                 status === "Draft" && (
                   <Button
                     className="butn primary-btn"
-                    onClick={async () => {
-                      if (isDisable && location?.pathname !== "/Batches") {
-                        disableFtn(false);
-                      }
-                      else if (!isEdit && location?.pathname !== "/Batches") {
-                        add();
-                      }
-                      else if (location?.pathname === "/Batches") {
-                        await Navigate("/BatchMemberSummary", {
-                          state: { search: "BatchMemberSummary" },
-                        });
-                        onClose();
-                      }
-                      else {
-                        update();
-                      }
-                    }}
+                    onClick={add}
                   >
-                    {
-                      isDisable && !isManual && title !== "Bulk Registration" && title !== "Registration Request"
-                        ? "Add"
-                        : "Save"
-                    }
+                  Add
                   </Button>
                 )
               )
@@ -696,9 +676,14 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
           </Space>
           {
             title === "Registration Request" &&
+            <>
             <Button className="butn primary-btn" onClick={draftFtn}>
+              Save
+            </Button>
+            <Button className="butn primary-btn" onClick={add}>
               Add
             </Button>
+            </>
           }
         </div>
       }
