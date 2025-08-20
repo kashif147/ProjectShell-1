@@ -8,6 +8,7 @@ const baseURL = `${process.env.REACT_APP_PORTAL_SERVICE}`;
 export const getApplicationById = createAsyncThunk(
   'applicationDetails/getApplicationById',
   async ({ id, draftId }, { rejectWithValue }) => {
+
     try {
       if (id === "draft") {
         // 🔹 Load from localStorage drafts
@@ -23,12 +24,13 @@ export const getApplicationById = createAsyncThunk(
       // 🔹 Otherwise, fetch from API
       const token = localStorage.getItem('token');
       const response = await axios.get(`${baseURL}/applications/${id}`, {
+      
         headers: {
           Authorization: `Bearer ${token}`,
           'Content-Type': 'application/json',
         },
       });
-
+debugger
       return response.data.data; // adjust if response shape differs
     } catch (error) {
       return rejectWithValue(

@@ -22,6 +22,7 @@ import axios from 'axios';
 import { cleanPayload } from "../../utils/Utilities";
 import { convertToLocalTime } from "../../utils/Utilities";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import '../../styles/MyDrawer.css'
 
 const libraries = ['places', 'maps'];
 
@@ -104,7 +105,6 @@ function AddNewGarda({ open, onClose, isGard }) {
     const approval = applicationDetail?.personalDetails?.approvalDetails || {};
     const professionalDetails = applicationDetail?.professionalDetails || {};
     const subscriptionDetails = applicationDetail?.subscriptionDetails || {};
-    debugger
     return {
       applicationStatus: applicationDetail?.applicationStatus,
       ApplicationId: applicationDetail?.ApplicationId == 'undefined' ? applicationDetail?.applicationId : applicationDetail?.ApplicationId,
@@ -167,7 +167,6 @@ function AddNewGarda({ open, onClose, isGard }) {
       "paymentFrequency": "Monthly",
       "submissionDate": subscriptionDetails?.submissionDate ? convertToLocalTime(subscriptionDetails?.submissionDate) : null,
     };
-    debugger
   };
   const { data: countryOptions, } = useSelector(
     (state) => state.countries
@@ -181,7 +180,8 @@ function AddNewGarda({ open, onClose, isGard }) {
   const dispatch = useDispatch();
   const {
     lookupsForSelect,
-
+    isDisable,
+    disableFtn
 
   } = useTableColumns();
 
@@ -192,7 +192,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   const submitApplicationData = async () => {
     try {
       const token = localStorage.getItem('token');
-      // 1. Personal Info
+
       const applicationPayload = cleanPayload({
         personalInfo: {
           surname: InfData.surname,
@@ -316,7 +316,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   };
   // for ApplicationId
 
- const saveToLocalStorage = () => {
+  const saveToLocalStorage = () => {
     try {
       const applicationId = uuidv4(); // generate unique ApplicationId
       const now = new Date().toISOString();
@@ -422,7 +422,7 @@ function AddNewGarda({ open, onClose, isGard }) {
   };
 
   const [errors, setErrors] = useState({});
-  const [isDisable, setisDisable] = useState(false);
+
 
   const handleInputChange = (eventOrName, value) => {
     if (eventOrName === "dateOfBirth") {
@@ -486,11 +486,11 @@ function AddNewGarda({ open, onClose, isGard }) {
 
   let newdata;
   useEffect(() => {
-    if (isGard === true && application && open === true) {
+    if (application) {
       const newdata = mapApplicationDetailToInfData(application);
       setInfData((prev) => ({ ...prev, ...newdata }));
     }
-  }, [isGard, application, open]);
+  }, [application]);
 
   const handleSubmit = () => {
     const requiredFields = [
@@ -796,7 +796,7 @@ function AddNewGarda({ open, onClose, isGard }) {
           setErrors({});
           setInfData(inputsInitValue);
           onClose()
-
+          disableFtn(true)
         }}
         nextPrevData={{ total: applications?.length, }}
         nextFtn={() => navigateApplication('next')}
@@ -809,6 +809,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         isGardaCheckbx={isGard ? false : true}
         status={InfData?.applicationStatus}
         draftFtn={saveToLocalStorage}
+        isDisable={isDisable}
         width='1500px'>
         <div className="drawer-main-cntainer " >
           <div>
