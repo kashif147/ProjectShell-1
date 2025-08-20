@@ -1412,8 +1412,9 @@ function AddNewGarda({ open, onClose, isGard }) {
                 name="otherScheme"
                 value={InfData.otherScheme}
                 onChange={(e) => handleInputChange('otherIrishTradeUnion', e.target?.value)}
-                className="my-input-wrapper"
+                className="my-input-wrapper "
                 disabled={isDisable}
+                
               >
                 <Radio value={true}>Yes</Radio>
                 <Radio value={false}>No</Radio>

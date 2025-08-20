@@ -49,6 +49,7 @@ import CustomSelect from "./CustomSelect";
 import ActionDropdown from "./ActionDropdown";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
+import SaveViewMenu from "./SaveViewMenu";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -695,8 +696,8 @@ function HeaderDetails() {
                       operator={statusOperator}
                       onOperatorChange={setStatusOperator}
                       onApply={handleApplyStatusFilter}
-                    />
-                    <div className="searchfilter- margin">
+                    /> 
+                    <div className="searchfilter- margin d-flex">
                       <SimpleMenu
                         title={
                           <>
@@ -705,6 +706,7 @@ function HeaderDetails() {
                         }
                         isSearched={false}
                       />
+                    <SaveViewMenu />
                     </div>
                     <div>
                       <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>

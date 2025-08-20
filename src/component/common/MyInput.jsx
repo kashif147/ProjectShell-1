@@ -12,7 +12,7 @@ const MyInput = ({
   hasError = false,
   errorMessage = 'Required',
   disabled,
-  rows=4
+  rows = 4
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -26,11 +26,11 @@ const MyInput = ({
     onBlur: () => setIsFocused(false),
     className: 'my-input-field',
     disabled,
-    
+
   };
 
   return (
-<div className="my-input-wrapper">
+    <div className="my-input-wrapper">
       <label htmlFor={name} className={`my-input-label ${hasError ? 'error' : ''}`}>
         {label}
         {required && <span className="required-star"> *</span>}
@@ -46,7 +46,7 @@ const MyInput = ({
           <input type={type} {...commonProps} />
         )}
         {hasError && (
-          <span className="error-icon">ⓘ</span> 
+          <span className="error-icon">ⓘ</span>
         )}
       </div>
     </div>

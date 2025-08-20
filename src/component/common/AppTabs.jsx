@@ -10,7 +10,7 @@ import {
 
 const { TabPane } = Tabs;
 
-const MyDeatails = lazy(() => import('./MyDeatails'));
+const MyDeatails = lazy(() => import('../profile/MembershipForm'));
 const CasesById = lazy(() => import('../../pages/Cases/CasesById'));
 const ClaimsById = lazy(() => import('../../pages/Claims/ClaimsById'));
 const FinanceByID = lazy(() => import('../finanace/FinanceByID'));

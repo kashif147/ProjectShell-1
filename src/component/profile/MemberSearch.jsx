@@ -65,7 +65,7 @@ const MemberSearch = () => {
           value: "__no_match__", // dummy value
           label: (
             <div style={{ padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-              <span>No search match</span>
+              <span>No Member Found</span>
               <Button size="small" className="butn primary-btn" onClick={() => handleAdd(searchValue)}>
                 Add
               </Button>
