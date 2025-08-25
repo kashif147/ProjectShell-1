@@ -60,6 +60,7 @@ const Sidbar = () => {
     '/Notes': 'Notes & Letters',
     '/Letters': 'Notes & Letters',
     '/CorspndncDetail': 'Communication History',
+    '/members': 'Membership',
   };
 
   const selectedKey = useMemo(() => {
@@ -95,6 +96,9 @@ const Sidbar = () => {
         break;
       case 'Applications':
         navigate("/Applications", { state: { search: 'Applications' } });
+        break;
+      case 'Membership':
+        navigate("/members", { state: { search: 'members' } });
         break;
       case 'Reminders':
         navigate("/RemindersSummary", { state: { search: 'Reminders' } });
@@ -133,7 +137,7 @@ const Sidbar = () => {
 
   useEffect(() => {
     if (menuLblState["Subscriptions & Rewards"]) {
-      navigate("/Summary", { state: { search: 'Profile' } });
+      navigate("/Applications", { state: { search: 'Applications' } });
     } else if (menuLblState["Finance"]) {
       navigate("/Batches", { state: { search: 'Batches' } });
     } else if (menuLblState["Correspondence"]) {

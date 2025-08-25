@@ -23,6 +23,10 @@ import { cleanPayload } from "../../utils/Utilities";
 import { convertToLocalTime } from "../../utils/Utilities";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import '../../styles/MyDrawer.css'
+import { data } from "autoprefixer";
+import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { IoBagRemoveOutline } from "react-icons/io5";
+import { CiCreditCard1 } from "react-icons/ci";
 
 const libraries = ['places', 'maps'];
 
@@ -34,21 +38,21 @@ function AddNewGarda({ open, onClose, isGard }) {
     age: null,
     gardaRegNo: null,
     fullname: null,
-    forename: null,
-    surname: null,
+    forename: "",
+    surname: "",
     countryPrimaryQualification: null,
-    buildingOrHouse: null,
-    streetOrRoad: null,
-    areaOrTown: null,
-    countyCityOrPostCode: null,
-    eirCode: null,
-    eircode: null,
-    mobile: null,
+    buildingOrHouse: "",
+    streetOrRoad: "",
+    areaOrTown: "",
+    countyCityOrPostCode: "",
+    eirCode: "",
+    eircode: "",
+    mobile: "",
     country: 'Ireland',
     termsAndConditions: false,
     valueAddedServices: false,
-    HomeOrWorkTel: null,
-    email: null,
+    HomeOrWorkTel: "",
+    email: "",
     preferredEmail: null,
     grade: null,
     membershipCategory: null,
@@ -97,6 +101,8 @@ function AddNewGarda({ open, onClose, isGard }) {
     ApplicationId: null,
   };
   const [InfData, setInfData] = useState(inputsInitValue);
+  const [value, setValue] = useState(false);
+  console.log("tet", value)
   const mapApplicationDetailToInfData = (applicationDetail) => {
     if (!applicationDetail) return {};
 
@@ -258,7 +264,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         },
       });
 
-      await axios.post(
+      const professionalRes = await axios.post(
         `${process.env.REACT_APP_PORTAL_SERVICE}/professional-details/${applicationId}`,
         professionalPayload,
         {
@@ -305,6 +311,15 @@ function AddNewGarda({ open, onClose, isGard }) {
         message: 'Application submitted successfully!',
       });
       setInfData(inputsInitValue)
+      if (value === true) {
+        const apiWorkLocation = professionalRes?.data?.data?.professionalDetails?.workLocation;
+        if (apiWorkLocation) {
+          setInfData((prev) => ({
+            ...prev,
+            workLocation: apiWorkLocation,
+          }));
+        }
+      }
 
     } catch (error) {
       console.error('Error during application submission:', error);
@@ -314,7 +329,6 @@ function AddNewGarda({ open, onClose, isGard }) {
       });
     }
   };
-  // for ApplicationId
 
   const saveToLocalStorage = () => {
     try {
@@ -420,6 +434,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       notification.error({ message: "Failed to save draft!" });
     }
   };
+
 
   const [errors, setErrors] = useState({});
 
@@ -784,7 +799,7 @@ function AddNewGarda({ open, onClose, isGard }) {
     setInfData((prev) => ({ ...prev, ...newdata }));
     debugger
   }
-  console.log(InfData, "ppppo")
+
   return (
     <>
       <MyDrawer
@@ -806,17 +821,61 @@ function AddNewGarda({ open, onClose, isGard }) {
         rejFtn={() => applicationStatusUpdate("rejected")}
         add={handleSubmit}
         isGarda={isGard ? true : false}
-        isGardaCheckbx={isGard ? false : true}
+        isMultiple={{
+          isGardaCheckbx: !isGard,
+          value,
+          multipleFtn: (e) => {
+            const checked = e.target.checked;
+            setValue(checked);
+            if (checked) {
+              disableFtn(false);
+            }
+          },
+        }}
         status={InfData?.applicationStatus}
         draftFtn={saveToLocalStorage}
         isDisable={isDisable}
         width='1500px'>
-        <div className="drawer-main-cntainer " >
+        <div className="p-4" style={{ backgroundColor: '#f6f9fc' }} >
           <div>
-            <Row gutter={24}>
+            <Row
+              gutter={24}
+              className="p-3 ms-2 me-2"
+              style={{
+                backgroundColor: "#eef4ff",
+                borderRadius: "4px",
+
+              }}
+            >
               <Col span={24}>
-                <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Personal Information</h2>
+                <div className="d-flex align-items-center">
+                  <div
+                    style={{
+                      backgroundColor: "#e5edff",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      marginRight: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <MailOutlined style={{ color: "#2f6bff", fontSize: "18px" }} />
+                  </div>
+                  <h2
+                    style={{
+                      fontSize: "18px",
+                      margin: 0,
+                      fontWeight: 500,
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Personal Information
+                  </h2>
+                </div>
               </Col>
+            </Row>
+            <Row className="bg-white p-3 ms-2 me-2" gutter={24} style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
               <Col span={8}>
                 <CustomSelect
                   label="Title"
@@ -901,17 +960,41 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
               <Col span={12}></Col>
             </Row >
-            <Row gutter={24}>
-              <Col span={12}>
-                <div className="d-flex">
+            <Row gutter={24} className="p-3 ms-2 me-2 mt-3" style={{ backgroundColor: '#edfdf5' }}>
+              <Col span={24}>
+                <div className="d-flex align-items-center">
+                  <div
+                    style={{
+                      backgroundColor: "#e5edff",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      marginRight: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <EnvironmentOutlined style={{ color: "green", fontSize: "18px" }} />
+                  </div>
                   <div>
-                    <h2 style={{ fontSize: '22px', marginBottom: '20px', marginTop: '10px' }}>Correspondence Details</h2>
-                    <Checkbox>
-                      Consent to receive Correspondence from INMO
-                    </Checkbox>
+                    <h2
+                      style={{
+                        fontSize: "18px",
+                        margin: 0,
+                        fontWeight: 500,
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      Correspondence Details
+                    </h2>
                   </div>
                 </div>
+                <Checkbox>
+                  Consent to receive Correspondence from INMO
+                </Checkbox>
               </Col>
+            </Row>
+            <Row gutter={24} className="bg-white p-3 ms-2 me-2" style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
               <Col span={12}>
               </Col>
               <Col span={24} className="">
@@ -1093,12 +1176,37 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
             </Row>
           </div>
-          <Row gutter={24}>
+          <Row gutter={24} className="p-3 ms-2 me-2 mt-3" style={{backgroundColor:'#f7f4ff'}}>
             <Col span={24}>
-              <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Professional Details</h2>
+              {/* <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Professional Details</h2> */}
+              <div className="d-flex align-items-center">
+                  <div
+                    style={{
+                      backgroundColor: "#ede6fa",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      marginRight: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <IoBagRemoveOutline  style={{ color: "#bf86f3", fontSize: "18px" }} />
+                  </div>
+                  <h2
+                    style={{
+                      fontSize: "18px",
+                      margin: 0,
+                      fontWeight: 500,
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Professional Details
+                  </h2>
+                </div>
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row gutter={24} className="bg-white p-3 ms-2 me-2" style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
             <Col span={12}>
               <CustomSelect
                 label="Membership Category"
@@ -1127,7 +1235,7 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
           </Row>
           {InfData.membershipCategory === 'Undergraduate Student' && (
-            <Row gutter={24}>
+            <Row gutter={24} className="bg-white p-3 ms-2 me-2">
               <Col span={12}>
                 <CustomSelect
                   label="Study Location"
@@ -1160,7 +1268,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
             </Row>
           )}
-          <Row gutter={24}>
+          <Row className="bg-white p-3 ms-2 me-2" gutter={24}>
             <Col span={12}>
               <CustomSelect
                 label="Work Location"
@@ -1215,7 +1323,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row className="bg-white p-3 ms-2 me-2"  gutter={24}>
             <Col span={12}>
               <label className="my-input-label mt-4 my-input-wrapper">
                 Are you currently undertaking a nursing adaptation programme?
@@ -1241,7 +1349,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row className="bg-white p-3 ms-2 me-2" gutter={24}>
             <label className="my-input-label mt-4">Please tick one of the following</label>
             <Col span={24}>
               <Radio.Group
@@ -1263,7 +1371,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Radio.Group>
             </Col>
           </Row>
-          <Row>
+          <Row className="bg-white p-3 ms-2 me-2">
             <Col span={24}>
               <label className="my-input-label mt-4 mb-4">Please select the most appropriate option below</label>
               <Radio.Group
@@ -1291,7 +1399,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24} className="mt-3">
+          <Row className="bg-white p-3 ms-2 me-2" gutter={24} >
             <Col span={12}>
               <CustomSelect
                 label="Grade"
@@ -1351,10 +1459,36 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
           </Row>
 
-          <Row gutter={24}>
+          <Row className="p-3 ms-2 me-2 mt-3" gutter={24} style={{backgroundColor:'#fff9eb'}}>
             <Col span={24}>
-              <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Subscription Details</h2>
+              <div className="d-flex align-items-center">
+                  <div
+                    style={{
+                      backgroundColor: "#fad1b8ff",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      marginRight: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CiCreditCard1   style={{ color: "#ec6d28", fontSize: "18px" }} />
+                  </div>
+                  <h2
+                    style={{
+                      fontSize: "18px",
+                      margin: 0,
+                      fontWeight: 500,
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Subscription Details
+                  </h2>
+                </div> 
             </Col>
+            </Row>
+            <Row gutter={24} className="bg-white p-3 ms-2 me-2" >
             <Col span={12}>
               <CustomSelect
                 label="Payment Type"
@@ -1385,7 +1519,7 @@ function AddNewGarda({ open, onClose, isGard }) {
 
 
 
-          <Row gutter={24} >
+          <Row className="bg-white p-3 ms-2 me-2" gutter={24} >
             <Col span={12}>
               <div style={{ minHeight: '70px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                 <label className="my-input-label mt-4">
@@ -1414,16 +1548,16 @@ function AddNewGarda({ open, onClose, isGard }) {
                 onChange={(e) => handleInputChange('otherIrishTradeUnion', e.target?.value)}
                 className="my-input-wrapper "
                 disabled={isDisable}
-                
+
               >
                 <Radio value={true}>Yes</Radio>
                 <Radio value={false}>No</Radio>
               </Radio.Group>
               {/* </div> */}
             </Col>
-          </Row>
+          </Row >
 
-          <Row gutter={24} className="mt-3">
+          <Row gutter={24}  className="bg-white p-3 ms-2 me-2" >
             <Col span={12} gutter={24} >
               <MyInput
                 label="Recurited By"
@@ -1443,7 +1577,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row gutter={24} className="bg-white p-3 ms-2 me-2">
             <Col span={12}>
               <CustomSelect
                 label="Primary Section"
@@ -1474,7 +1608,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row gutter={24} className="bg-white p-3 ms-2 me-2">
             <Col span={12}>
               <CustomSelect
                 label="Secondary Section"
@@ -1503,7 +1637,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 hasError={!!errors?.otherSecondarySection}
               /></Col>
           </Row>
-          <Row gutter={24}>
+          <Row className="bg-white p-3 ms-2 me-2" gutter={24}>
             <Col span={12} >
               <Checkbox
                 checked={InfData?.incomeProtectionScheme}
@@ -1522,7 +1656,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Checkbox>
             </Col>
           </Row>
-          <Row gutter={24}>
+          <Row className="bg-white p-3 ms-2 me-2 mt-2 " style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }} gutter={24}>
             <Col span={12}>
               <Checkbox className="my-input-wrapper"
                 onChange={(e) => handleInputChange('valueAddedServices', e.target.checked)}

@@ -45,6 +45,7 @@ const Sms = lazy(() => import("./pages/Correspondences/sms"));
 const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
 const Popout = lazy(()=> import("../src/component/common/PopOut"))
+const Members = lazy(()=>import ('./pages/membership/Members'))
 
 function Entry() {
   const location = useLocation();
@@ -125,6 +126,7 @@ function Entry() {
                   <Route path="Notes" element={<Notes />} />
                   <Route path="CornMarket" element={<CornGrideSummary />} />
                   <Route path="Popout" element={ <Popout /> }/>
+                  <Route path="members" element = {<Members />} />
                 </Routes>
               </Suspense>
             </div>

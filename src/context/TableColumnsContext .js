@@ -296,8 +296,31 @@ Popout: [
     // { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
     // { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
   
-  ]
-};
+  ],
+  members: [
+  { dataIndex: "MembershipNo", title: "Membership No", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "FullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "Email", title: "Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "MobileNo", title: "Mobile No", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "MembershipStatus", title: "Membership Status", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "MembershipCategory", title: "Membership Category", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "WorkLocation", title: "Work Location", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "Branch", title: "Branch", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "Region", title: "Region", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "Grade", title: "Grade", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "SectionPrimary", title: "Section (Primary)", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "JoiningDate", title: "Joining Date", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "ExpiryDate", title: "Expiry Date", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "LastPaymentAmount", title: "Last Payment Amount", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "LastPaymentDate", title: "Last Payment Date", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "MembershipFee", title: "Membership Fee", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "OutstandingBalance", title: "Outstanding Balance", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "ReminderNo", title: "Reminder No", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "ReminderDate", title: "Reminder Date", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+  { dataIndex: "CancellationFlag", title: "Cancellation Flag", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
+]}
+
+;
 
 const staticSearchFilters = {
   Profile: [

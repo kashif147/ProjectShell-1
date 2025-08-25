@@ -311,7 +311,7 @@ function Header() {
           <FaRegUserCircle className="top-icon" />
           <FaArrowRightFromBracket
             style={{ marginRight: '30px', fontSize: '25px' }}  // also works
-            color="red"
+            color="#ff4d4f"
             onClick={() => {
               localStorage.removeItem('token');
               navigate('/');

@@ -129,7 +129,7 @@ function HeaderDetails() {
     },
   ];
   const [statusOperator, setStatusOperator] = useState("==");
-  const [statusValues, setStatusValues] = useState(["submitted","draft"]);
+  const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
   const handleApplyStatusFilter = () => {
     if (statusValues.length === 0) return;
@@ -583,6 +583,7 @@ function HeaderDetails() {
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Applications" ||
+            location?.pathname == "/members" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
             location?.pathname == "/CasesSummary"
@@ -689,14 +690,15 @@ function HeaderDetails() {
                       )
                     )}
                     <MultiFilterDropdown
+                      style={{ float: 'left' }}
                       label="Status"
-                      options={["submitted", "approved", "rejected", "in-progress","draft"]}
+                      options={["submitted", "approved", "rejected", "in-progress", "draft"]}
                       selectedValues={statusValues}
                       onChange={setStatusValues}
                       operator={statusOperator}
                       onOperatorChange={setStatusOperator}
                       onApply={handleApplyStatusFilter}
-                    /> 
+                    />
                     <div className="searchfilter- margin d-flex">
                       <SimpleMenu
                         title={
@@ -706,7 +708,7 @@ function HeaderDetails() {
                         }
                         isSearched={false}
                       />
-                    <SaveViewMenu />
+                      <SaveViewMenu />
                     </div>
                     <div>
                       <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>

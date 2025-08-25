@@ -29,7 +29,7 @@ const handleLogin = async () => {
 
     const tenantId = "39866a06-30bc-4a89-80c6-9dd9357dd453";
     const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
-    const redirectUri = "http://localhost:3000";
+    const redirectUri = "http://localhost:3000/Applications";
     const scopes = "openid profile email offline_access";
 
     const authUrl = new URL(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`);
@@ -79,7 +79,7 @@ const handleAuthRedirect = async () => {
         if (data.accessToken) {
            let  token = data.accessToken.replace(/^Bearer\s/, '');
             localStorage.setItem("token", token);
-            navigate("/Summary")
+            // navigate("/Summary")
         }
         if (data.refresh_token) {
             localStorage.setItem("refresh_token", data.refresh_token);

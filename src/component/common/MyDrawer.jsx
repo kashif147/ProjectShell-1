@@ -31,7 +31,7 @@ import { FaAngleRight } from "react-icons/fa";
 import MemberSearch from "../profile/MemberSearch";
 
 
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isGardaCheckbx, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData, nextFtn, PrevFtn, status }) {
+function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isMultiple, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData, nextFtn, PrevFtn, status }) {
   const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
   const { applications, applicationsLoading } = useSelector((state) => state.applications);
@@ -597,8 +597,8 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             }
 
             {
-              isGardaCheckbx && (
-                <Checkbox>Bulk Registration</Checkbox>
+              isMultiple?.isGardaCheckbx && (
+                <Checkbox value={isMultiple?.value} onChange={isMultiple?.multipleFtn}>Bulk Registration</Checkbox>
               )
             }
             {isAppRej && (
@@ -616,9 +616,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             )}
 
 
-            <Button className="butn secoundry-btn me-4" onClick={onClose}>
+            {/* <Button className="butn secoundry-btn me-4" onClick={onClose}>
               Close
-            </Button>
+            </Button> */}
             {
               !isGarda  && status ==="undefined"? (
                 <Button
