@@ -90,7 +90,7 @@ const TransactionHistory = () => {
   return (
     <div className="mt-4">
       {/* Top Cards */}
-      <Row gutter={16} className="">
+      {/* <Row gutter={16} className="">
         <Col xs={24} md={8}>
           <Card bordered className="shadow-sm">
             <h6>Total Debits</h6>
@@ -112,7 +112,7 @@ const TransactionHistory = () => {
             <small>Paid in full</small>
           </Card>
         </Col>
-      </Row>
+      </Row> */}
 
       {/* Filters */}
       <Card className="">

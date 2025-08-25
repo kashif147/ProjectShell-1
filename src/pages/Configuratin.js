@@ -3923,6 +3923,7 @@ function Configuratin() {
             () => resetCounteries('Provinces', dispatch(getAllLookups()))
           );
         }}
+        width="1100px"
         isEdit={isUpdateRec?.Provinces}
         update={async () => {
           if (!validateForm('Provinces')) return;
@@ -3935,67 +3936,74 @@ function Configuratin() {
           IsUpdateFtn('Provinces', false);
         }}
       >
-        <div className="drawer-main-cntainer">
-          <div className="mb-4 pb-4">
-            {/* Lookup Type */}
-            <CustomSelect
-              label="Type:"
-              placeholder="Province"
-              value={'Province'}
-              options={[{ label: "Province", value: 'Province' }]}
-              isSimple={true}
-              disabled={true}
-              required
-              hasError={!!errors?.lookuptypeId}
-            />
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <Row>
+            <Col span={24}>
+              <CustomSelect
+                label="Type:"
+                placeholder="Province"
+                value={'Province'}
+                options={[{ label: "Province", value: 'Province' }]}
+                isSimple={true}
+                disabled={true}
+                required
+                hasError={!!errors?.lookuptypeId}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Code:"
+                name="code"
+                value={drawerIpnuts?.Provinces?.code}
+                onChange={(e) => drawrInptChng('Provinces', 'code', e.target.value)}
+                placeholder="Enter code"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Provinces?.code}
+              />
+            </Col>
+            <Col span={12}>
+              <MyInput
+                label="Province:"
+                name="lookupname"
+                value={drawerIpnuts?.Provinces?.lookupname}
+                onChange={(e) => drawrInptChng('Provinces', 'lookupname', e.target.value)}
+                placeholder="Enter province"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Provinces?.lookupname}
+              />
 
-            {/* Code Field */}
-            <MyInput
-              label="Code:"
-              name="code"
-              value={drawerIpnuts?.Provinces?.code}
-              onChange={(e) => drawrInptChng('Provinces', 'code', e.target.value)}
-              placeholder="Enter code"
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Provinces?.code}
-            />
-
-            {/* Province Field */}
-            <MyInput
-              label="Province:"
-              name="lookupname"
-              value={drawerIpnuts?.Provinces?.lookupname}
-              onChange={(e) => drawrInptChng('Provinces', 'lookupname', e.target.value)}
-              placeholder="Enter province"
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Provinces?.lookupname}
-            />
-
-            {/* Display Name Field */}
-            <MyInput
-              label="Display Name:"
-              name="DisplayName"
-              value={drawerIpnuts?.Provinces?.DisplayName}
-              onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
-              placeholder="Enter display name"
-              disabled={isDisable}
-            />
-
-            {/* Active Checkbox */}
-            <Checkbox
-              disabled={isDisable}
-              onChange={(e) => drawrInptChng('Provinces', 'isactive', e.target.checked)}
-              checked={drawerIpnuts?.Provinces?.isactive}
-              style={{ marginTop: '16px' }}
-            >
-              Active
-            </Checkbox>
-          </div>
-
-          {/* Table */}
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Display Name:"
+                name="DisplayName"
+                value={drawerIpnuts?.Provinces?.DisplayName}
+                onChange={(e) => drawrInptChng('Provinces', 'DisplayName', e.target.value)}
+                placeholder="Enter display name"
+                disabled={isDisable}
+              />
+            </Col>
+            <Col span={12}>
+              <Checkbox
+                disabled={isDisable}
+                onChange={(e) => drawrInptChng('Provinces', 'isactive', e.target.checked)}
+                checked={drawerIpnuts?.Provinces?.isactive}
+                style={{ marginTop: '26px' }}
+              >
+                Active
+              </Checkbox>
+            </Col>
+          </Row>
           <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3">
+              Existing Provinces
+            </h6>
             <Table
               pagination={false}
               columns={columnProvince}

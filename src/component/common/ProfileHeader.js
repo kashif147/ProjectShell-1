@@ -37,7 +37,7 @@ function ProfileHeader() {
     };
 
     return (
-        <div className='d-flex flex-column ms-3 me-3' style={{ width: '20%', height: '88vh', backgroundColor:'#e6f8ff' }}>
+        <div className='d-flex flex-column ms-2 me-2 pe-2 ps-2 pt-2' style={{ width: '20%', height: '88vh', backgroundColor:'#e6f8ff' }}>
             <Card
                 style={{ borderRadius: 8, backgroundColor:'##e6f8ff' }}
                

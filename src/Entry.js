@@ -84,9 +84,9 @@ function Entry() {
           {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
 
           {/* Content area + resizable section */}
-          <div style={{ flex: 1, display: "flex", overflow: "hidden",  }}>
+          <div style={{ flex: 1, display: "flex",  }}>
             {/* Routes Content */}
-            <div style={{ flex: 1, overflowY: "hidden", }} className="main-main">
+            <div style={{ flex: 1, }} className="main-main">
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />
