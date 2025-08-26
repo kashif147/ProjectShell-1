@@ -335,6 +335,7 @@ function SimpleMenu({
             setFormData(prev => ({ ...prev, [field]: value }))
           }
           errors={errors}
+          isChangeCat={true}
         />
       )}
       <CareerBreakDrawer open={careerBreak} onClose={() => setcareerBreak(!careerBreak)} />

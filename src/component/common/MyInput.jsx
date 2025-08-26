@@ -1,9 +1,9 @@
 import React, { useState } from 'react';
-import '../../styles/MyInput.css'; // Or .scss if you're using SCSS
+import '../../styles/MyInput.css';
 
 const MyInput = ({
   label,
-  placeholder,
+  placeholder = 'Enter...',
   value,
   onChange,
   name,
@@ -11,8 +11,9 @@ const MyInput = ({
   required = false,
   hasError = false,
   errorMessage = 'Required',
-  disabled,
-  rows = 4
+  disabled = false,
+  rows = 4,
+  extra = null, // 🔹 new prop
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -26,31 +27,39 @@ const MyInput = ({
     onBlur: () => setIsFocused(false),
     className: 'my-input-field',
     disabled,
-
   };
 
   return (
     <div className="my-input-wrapper">
-      <label htmlFor={name} className={`my-input-label ${hasError ? 'error' : ''}`}>
-        {label}
-        {required && <span className="required-star"> *</span>}
-        {hasError && errorMessage && (
-          <span className="error-message"> ({errorMessage})</span>
-        )}
-      </label>
+      {/* 🔹 Label + Extra aligned like flex row */}
+      <div className="d-flex justify-content-between">
+        <label
+          htmlFor={name}
+          className={`my-input-label ${hasError ? 'error' : ''}`}
+        >
+          {label}
+          {required && <span className="required-star"> *</span>}
+          {hasError && errorMessage && (
+            <span className="error-message"> ({errorMessage})</span>
+          )}
+        </label>
+        {extra && <div className="ml-2">{extra}</div>}
+      </div>
 
-      <div className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''}`}>
+      {/* Input box */}
+      <div
+        className={`my-input-container ${hasError ? 'error' : ''} ${
+          isFocused ? 'focused' : ''
+        }`}
+      >
         {type === 'textarea' ? (
           <textarea {...commonProps} rows={rows} />
         ) : (
           <input type={type} {...commonProps} />
         )}
-        {hasError && (
-          <span className="error-icon">ⓘ</span>
-        )}
+        {hasError && <span className="error-icon">ⓘ</span>}
       </div>
     </div>
-
   );
 };
 

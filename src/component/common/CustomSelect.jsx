@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { AiOutlineExclamationCircle } from 'react-icons/ai';
 import '../../styles/MySelect.css';
 
 const CustomSelect = ({
@@ -14,26 +13,36 @@ const CustomSelect = ({
   disabled = false,
   placeholder = 'Select...',
   isMarginBtm = true,
+  extra = null, // 👈 extra (checkbox, info, etc.)
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
-      <label
-        htmlFor={name}
-        className={`my-input-label ${hasError ? 'error' : ''}`}
-      >
-        {label}
-        {required && <span className="required-star">*</span>}
-        {hasError && !disabled && (
-          <span className="error-message"> ({errorMessage})</span>
-        )}
-      </label>
+      {/* Label Row */}
+      <div className="d-flex justify-content-between align-items-center">
+        <div className="d-flex align-items-center gap-1">
+          <label
+            htmlFor={name}
+            className={`my-input-label ${hasError ? 'error' : ''} mb-0`}
+          >
+            {label}
+          </label>
+          {required && <span className="required-star">*</span>}
+          {hasError && !disabled && (
+            <span className="error-message">({errorMessage})</span>
+          )}
+        </div>
 
+        {/* Extra item on right */}
+        {extra && <div className="label-extra me-2">{extra}</div>}
+      </div>
+
+      {/* Select Field */}
       <div
-        className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''} ${
-          disabled ? 'disabled' : ''
-        }`}
+        className={`my-input-container ${hasError ? 'error' : ''} ${
+          isFocused ? 'focused' : ''
+        } ${disabled ? 'disabled' : ''}`}
       >
         <select
           name={name || 'Select'}
@@ -41,13 +50,18 @@ const CustomSelect = ({
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          // className={`my-input-field-select ${hasError ? 'error' : ''} `}
-          className={`my-input-field-select ${hasError ? 'error' : ''} ${disabled ? 'disabled-select' : ''}`}
-          // className={hasError ? 'placeholder-error' : ''}
+          className={`my-input-field-select ${hasError ? 'error' : ''} ${
+            disabled ? 'disabled-select' : ''
+          }`}
           disabled={disabled}
         >
           {placeholder && (
-            <option value="" disabled hidden className={hasError ? 'placeholder-error' : ''}>
+            <option
+              value=""
+              disabled
+              hidden
+              className={hasError ? 'placeholder-error' : ''}
+            >
               {placeholder}
             </option>
           )}
@@ -57,10 +71,6 @@ const CustomSelect = ({
             </option>
           ))}
         </select>
-
-        {/* {hasError && !disabled && (
-          <AiOutlineExclamationCircle className="error-icon" />
-        )} */}
       </div>
     </div>
   );

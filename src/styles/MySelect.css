@@ -10,11 +10,39 @@
   color: #a0a0a0;
   cursor: not-allowed;
 }
+.my-input-label-row {
+  display: flex;
+  justify-content: space-between; /* 👈 pushes title left, extra right */
+  align-items: center;
+}
+
+.my-input-extra {
+  display: flex;
+  
+  gap: 6px;
+  font-size: 14px;
+  color: #888;
+  cursor: pointer;
+}
+.my-input-label-row {
+  display: flex;
+  justify-content: space-between; /* 👈 pushes title left, extra right */
+  align-items: center;
+}
+
+.my-input-extra {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #888;
+  cursor: pointer;
+}
 
 .my-input-label {
   font-weight: 600;
   font-size: 14px;
-  display: block;
+  /* display: block; */
   margin-bottom: 6px;
   color: #212529;
 }

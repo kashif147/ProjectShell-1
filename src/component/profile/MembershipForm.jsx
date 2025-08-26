@@ -45,8 +45,9 @@ const MembershipForm = () => {
     joinRewards: false,
     allowPartnerContact: false,
     agreeDataProtection: false,
+    Reason: "",
+    telephoneNumber: '',
   });
-
   const lookupData = {
     titles: ["Mr", "Mrs", "Miss", "Dr"],
     genders: ["Male", "Female", "Other"],
@@ -60,11 +61,17 @@ const MembershipForm = () => {
     membershipCategory: ["Regular", "Premium", "VIP"],
     paymentTypes: ["Cash", "Cheque", "Bank Transfer"],
   };
-
   const handleChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
-
+  const NursingSpecializationSelectOptn = [
+    { label: "General Nurse", value: "general-nurse" },
+    { label: "Public Health Nurse", value: "public-health-nurse" },
+    { label: "Mental Health Nurse", value: "mental-health-nurse" },
+    { label: "Midwife", value: "midwife" },
+    { label: "Sick Children's Nurse", value: "sick-children-nurse" },
+    { label: "Registered Nurse for Intellectual Disability", value: "intellectual-disability-nurse" },
+  ];
   return (
     <div
       className="mt-2 pe-4 pb-4 mb-2"
@@ -88,7 +95,7 @@ const MembershipForm = () => {
               <div
                 style={{
                   backgroundColor: "#ede6fa",
-                  padding: "6px 8px",
+                  // padding: "6px 8px",
                   borderRadius: "6px",
                   marginRight: "8px",
                   display: "flex",
@@ -174,6 +181,18 @@ const MembershipForm = () => {
                 value={formData.personalEmail}
                 onChange={(e) => handleChange("personalEmail", e.target.value)}
               />
+              <MyInput
+                label="Work Email"
+                value={formData.workEmail}
+                onChange={(e) => handleChange("workEmail", e.target.value)}
+              />
+              <MyInput
+                label="Home / Work Tel Number"
+                name="telephoneNumber"
+                type="number"
+                value={formData.telephoneNumber}
+                onChange={(e) => handleChange("telephoneNumber", e.target.value)}
+              />
             </div>
           </div>
         </Col>
@@ -228,6 +247,7 @@ const MembershipForm = () => {
                 options={lookupData.workLocations}
                 value={formData.workLocation}
                 onChange={(val) => handleChange("workLocation", val)}
+                extra={"IRO Name"}
               />
               <CustomSelect
                 label="Branch"
@@ -251,6 +271,11 @@ const MembershipForm = () => {
                 label="Retired Date"
                 value={formData.retiredDate}
                 onChange={(date) => handleChange("retiredDate", date)}
+                extra={
+                  <span className="text-xs text-gray-500">
+                   <Checkbox>Retired</Checkbox>
+                  </span>
+                }
               />
               <MyInput
                 label="Pension Number"
@@ -273,23 +298,13 @@ const MembershipForm = () => {
                 value={formData.nmbiNumber}
                 onChange={(e) => handleChange("nmbiNumber", e.target.value)}
               />
-              <label className="my-input-label">Nursing Specialization</label>
-              <br />
-              {[
-                "General Nurse",
-                "Public Health Nurse",
-                "Mental Health Nurse",
-                "Midwife",
-                "Sick Children's Nurse",
-                "Registered Nurse for Intellectual Disability",
-              ].map((spec) => (
-                <Checkbox
-                  key={spec}
-                  checked={formData.nursingSpecialization.includes(spec)}
-                >
-                  {spec}
-                </Checkbox>
-              ))}
+              <CustomSelect
+                label="Nursing Specialization"
+                placeholder="Select specialization"
+                options={NursingSpecializationSelectOptn}
+                value={formData?.nursingSpecialization}
+              // onChange={onChange}
+              />
             </div>
           </div>
         </Col>
@@ -357,6 +372,12 @@ const MembershipForm = () => {
                 value={formData.expiryDate}
                 onChange={(date) => handleChange("expiryDate", date)}
               />
+              <MyInput
+                label="Reason"
+                value={formData.Reason}
+                onChange={(e) => handleChange("Reason", e.target.value)}
+                extra
+              />
               <CustomSelect
                 label="Payment Type"
                 options={lookupData.paymentTypes}
@@ -369,7 +390,7 @@ const MembershipForm = () => {
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
               />
               <p className="my-input-label">
-                Are you a member of another Trade Union? *
+                Are you a member of another Trade Union?
               </p>
               <Radio.Group
                 className="mb-2"
@@ -400,43 +421,57 @@ const MembershipForm = () => {
                 <Radio value="Yes">Yes</Radio>
                 <Radio value="No">No</Radio>
               </Radio.Group>
-              <h3 className="my-input-label mt-2">Additional Services</h3>
-              <Checkbox
-                className="mb-2"
-                checked={formData.joinINMOIncomeProtection}
-                onChange={(e) =>
-                  handleChange("joinINMOIncomeProtection", e.target.checked)
-                }
-              >
-                Tick here to join INMO Income Protection Scheme
-              </Checkbox>
-              <Checkbox
-                checked={formData.joinRewards}
-                onChange={(e) => handleChange("joinRewards", e.target.checked)}
-                className="mb-2"
-              >
-                Tick here to join Rewards for INMO members
-              </Checkbox>
-              <Checkbox
-                checked={formData.allowPartnerContact}
-                onChange={(e) =>
-                  handleChange("allowPartnerContact", e.target.checked)
-                }
-              >
-                Tick here to allow our partners to contact you about Value added
-                Services by Email and SMS
-              </Checkbox>
-              <Checkbox
-                checked={formData.agreeDataProtection}
-                onChange={(e) =>
-                  handleChange("agreeDataProtection", e.target.checked)
-                }
-              >
-                I have read and agree to the INMO Data Protection Statement, the
-                INMO Privacy Statement and the INMO Conditions of Membership *
-              </Checkbox>
+
             </div>
           </div>
+        </Col>
+      </Row>
+      <Row>
+
+      </Row>
+      <Row className="pb-4 mb-2" gutter={[8, 8]}>
+        <Col xs={24} sm={12}>
+          <Checkbox
+            checked={formData.joinINMOIncomeProtection}
+            onChange={(e) =>
+              handleChange("joinINMOIncomeProtection", e.target.checked)
+            }
+          >
+            Tick here to join INMO Income Protection Scheme
+          </Checkbox>
+        </Col>
+
+        <Col xs={24} sm={12}>
+          <Checkbox
+            checked={formData.joinRewards}
+            onChange={(e) => handleChange("joinRewards", e.target.checked)}
+          >
+            Tick here to join Rewards for INMO members
+          </Checkbox>
+        </Col>
+
+        <Col xs={24} sm={12}>
+          <Checkbox
+            checked={formData.allowPartnerContact}
+            onChange={(e) =>
+              handleChange("allowPartnerContact", e.target.checked)
+            }
+          >
+            Tick here to allow our partners to contact you about Value added
+            Services by Email and SMS
+          </Checkbox>
+        </Col>
+
+        <Col xs={24} sm={12}>
+          <Checkbox
+            checked={formData.agreeDataProtection}
+            onChange={(e) =>
+              handleChange("agreeDataProtection", e.target.checked)
+            }
+          >
+            I have read and agree to the INMO Data Protection Statement, the INMO
+            Privacy Statement and the INMO Conditions of Membership
+          </Checkbox>
         </Col>
       </Row>
     </div>

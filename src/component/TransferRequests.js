@@ -15,7 +15,7 @@ import dayjs from 'dayjs';
 
 const { Search } = Input;
 
-function TransferRequests({ open, onClose, isSearch }) {
+function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
   const onSearch = (value, _e, info) => console.log(info?.source, value);
 
   const [formData, setFormData] = useState({
@@ -139,46 +139,120 @@ function TransferRequests({ open, onClose, isSearch }) {
         memo: '',
       }
     )
-     setErrors({});
+    setErrors({});
   }
   const onSubmit = () => {
-  const requiredFields = [
-    'newWorkLocation',
-    'transferDate'
-  ];
-  
-  const newErrors = {};
-  requiredFields.forEach((field) => {
-    if (!formData[field] || formData[field].trim?.() === '') {
-      newErrors[field] = 'This field is required';
-    }
-  });
+    const requiredFields = [
+      'newWorkLocation',
+      'transferDate'
+    ];
 
-  if (Object.keys(newErrors).length > 0) {
-    setErrors(newErrors);
-    return;
-  }
-  console.log('Submitted data:', formData);
-};
+    const newErrors = {};
+    requiredFields.forEach((field) => {
+      if (!formData[field] || formData[field].trim?.() === '') {
+        newErrors[field] = 'This field is required';
+      }
+    });
+
+    if (Object.keys(newErrors).length > 0) {
+      setErrors(newErrors);
+      return;
+    }
+    console.log('Submitted data:', formData);
+  };
+ const columnHistory = [
+  {
+    title: "Transfer Date",
+    dataIndex: "transferDate",
+    key: "transferDate",
+  },
+  {
+    title: "Station From",
+    dataIndex: "stationFrom",
+    key: "stationFrom",
+  },
+  {
+    title: "Station To",
+    dataIndex: "stationTo",
+    key: "stationTo",
+  },
+  {
+    title: "Notes",
+    dataIndex: "notes",
+    key: "notes",
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    render: (text) => {
+      let color = "default";
+      if (text === "Approved") color = "green";
+      else if (text === "Rejected") color = "red";
+      else if (text === "Pending") color = "orange";
+      return <span style={{ color }}>{text}</span>;
+    },
+  },
+];
+
+  const historyData = [
+    {
+      key: "1",
+      transferDate: "10/06/2024",
+      stationFrom: "Dublin City University",
+      stationTo: "University College Dublin",
+      notes: "Requested transfer for further studies",
+      status: "Approved",
+    },
+    {
+      key: "2",
+      transferDate: "10/07/2024",
+      stationFrom: "Limerick Institute Of Technology",
+      stationTo: "Tus (Limerick)",
+      notes: "Institute merger adjustment",
+      status: "Approved",
+    },
+    {
+      key: "3",
+      transferDate: "10/08/2025",
+      stationFrom: "National University Ireland Galway",
+      stationTo: "Roscrea College",
+      notes: "Awaiting admin approval",
+      status: "Pending",
+    },
+    // {
+    //   key: "4",
+    //   transferDate: "2024-09-15",
+    //   stationFrom: "Trinity College",
+    //   stationTo: "Royal College Of Surgeons",
+    //   notes: "Rejected due to incomplete application",
+    //   status: "Rejected",
+    // },
+  ];
   return (
-    <MyDrawer title="Transfer Request" open={open} onClose={oncloseftn}
-    add={onSubmit}
+    <MyDrawer 
+    title={` ${isChangeCat?"Transfer Request":"Transfer History"}`}
+    open={open} onClose={oncloseftn}
+      add={onSubmit}
+      width={"1000px"}
     >
       <div>
-        {isSearch === true && (
+        {isSearch === true && isChangeCat && (
           <Search
             placeholder="Input search text "
             className='pb-4'
             onSearch={onSearch}
           />
         )}
-        {isSearch === false && (
+        {isSearch === false && isChangeCat && (
           <div className="details-drawer mb-4 mt-4">
             <p>{`${ProfileDetails?.forename}  ${ProfileDetails?.surname}`}</p>
             <p>{ProfileDetails?.regNo}</p>
             <p>{ProfileDetails?.duty}</p>
           </div>
         )}
+        {
+          isChangeCat &&(
         <div className="d-flex">
           {/* Current Section (Disabled) */}
           <div className="w-50">
@@ -214,7 +288,7 @@ function TransferRequests({ open, onClose, isSearch }) {
                 label="region"
                 name="currentRegion"
                 value={ProfileDetails?.region}
-                  options={allRegions.map(region => ({ value: region, label: region }))}
+                options={allRegions.map(region => ({ value: region, label: region }))}
                 disabled
               />
               <MyInput
@@ -252,7 +326,7 @@ function TransferRequests({ open, onClose, isSearch }) {
               <CustomSelect
                 label="Branch"
                 name="newBranch"
-                
+
                 disabled={true}
                 value={formData.newBranch}
                 options={allBranches.map(branch => ({
@@ -268,12 +342,12 @@ function TransferRequests({ open, onClose, isSearch }) {
                 placeholder="Select Region"
                 value={formData.newRegion}
                 onChange={(value) => handleChange('newRegion', value)}
-                
+
                 disabled={true}
                 options={allRegions.map(region => ({ value: region, label: region }))}
                 hasError={!!errors.newRegion}
               />
-              
+
               {/* <MyInput
                 label="Transfer Date"
                 name="transferDate"
@@ -294,20 +368,22 @@ function TransferRequests({ open, onClose, isSearch }) {
             </div>
           </div>
         </div>
+          )
+        }
 
         <div>
-          <h5>History</h5>
           <Table
             pagination={false}
-            columns={columnCountry}
+            columns={columnHistory}
+            dataSource={historyData}
             className="drawer-tbl"
             rowClassName={(record, index) =>
               index % 2 !== 0 ? 'odd-row' : 'even-row'
             }
-            rowSelection={{
-              type: selectionType,
-              ...rowSelection,
-            }}
+            // rowSelection={{
+            //   type: selectionType,
+            //   ...rowSelection,
+            // }}
             bordered
           />
         </div>

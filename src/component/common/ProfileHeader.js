@@ -2,16 +2,17 @@ import React, { useState } from 'react';
 import { FiUpload } from "react-icons/fi";
 import { useLocation } from 'react-router-dom';
 import { useTableColumns } from '../../context/TableColumnsContext ';
-import { Card, Avatar, Button, Tag, Divider } from "antd";
+import { Card, Avatar, Button, Tag, Divider, Tooltip } from "antd";
 import { UserOutlined } from "@ant-design/icons";
-// import { Repeat } from '@mui/icons-material';
-// import '../../styles/ProfileHeader.css'
+import { WarningOutlined } from "@ant-design/icons";
+
 function ProfileHeader() {
     const [imageUrl, setImageUrl] = useState("");
     const { ProfileDetails } = useTableColumns()
     const [loading, setLoading] = useState(false);
     const location = useLocation();
-
+    const reminderDate = "1/10/2025";
+    const reminder2 = "Second reminder";
     const customRequest = ({ file, onSuccess, onError }) => {
         setTimeout(() => {
             if (file) {
@@ -37,10 +38,10 @@ function ProfileHeader() {
     };
 
     return (
-        <div className='d-flex flex-column ms-2 me-2 pe-2 ps-2 pt-2' style={{ width: '20%', height: '88vh', backgroundColor:'#e6f8ff' }}>
+        <div className='d-flex flex-column ms-2 me-2 pe-2 ps-2 pt-2' style={{ width: '22%', height: '88vh', backgroundColor: '#e6f8ff' }}>
             <Card
-                style={{ borderRadius: 8, backgroundColor:'##e6f8ff' }}
-               
+                style={{ borderRadius: 8, backgroundColor: '##e6f8ff' }}
+
             >
                 <div style={{ textAlign: "center", marginBottom: 16 }}>
                     <Avatar size={64} style={{ backgroundColor: "#e6f7ff" }} icon={<UserOutlined />} />
@@ -64,11 +65,36 @@ function ProfileHeader() {
                     </div>
                     <div>
                         <Divider />
-                        <strong>Balance:</strong>{" "}
-                        <span style={{ color: "#52c41a", fontWeight: 600 }}>€200</span>
+                        <div
+                            style={{
+                                display: "flex",
+                                justifyContent: "space-between", // 👈 pushes icon to the opposite side
+                                alignItems: "center",
+                                // optional fixed width
+
+                            }}
+                        >
+                            <div>
+                                <strong>Balance:</strong>{" "}
+                                <span style={{ color: "#52c41a", fontWeight: 600 }}>€200</span>
+                            </div>
+                            <Tooltip
+                                title={
+                                    <div>
+                                        <div>Reminder Date: {reminderDate}</div>
+                                        <div>{reminder2}</div>
+                                    </div>
+                                }
+                                placement="topRight"
+                            >
+                                <WarningOutlined style={{ color: "orange", fontSize: 18, cursor: "pointer" }} />
+                            </Tooltip>
+                        </div>
                     </div>
                     <div>
-                        <strong>Last Payment:</strong> €74.7
+                        <strong>Last Payment:</strong> €74.7<br></br>
+                        <strong>Last Payment Date:</strong> 1/02/2025<br></br>
+                        <strong>Quick payment code  :</strong> MB-2025-001
                     </div>
                 </div>
                 <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
@@ -79,7 +105,7 @@ function ProfileHeader() {
             </Card>
 
             <Card className='mt-2'>
-                <div style={{ fontSize: 12, color: "#595959",  }}>
+                <div style={{ fontSize: 12, color: "#595959", }}>
                     <div>
                         <strong>Grade:</strong> General - All Grades
                     </div>

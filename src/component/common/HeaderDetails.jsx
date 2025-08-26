@@ -870,7 +870,7 @@ function HeaderDetails() {
       </Modal>
 
       <AddNewGarda open={isGardaDrwer} onClose={() => setisGardaDrwer(!isGardaDrwer)} />
-      <TransferRequests open={TransferDrawer} onClose={() => setTransferDrawer(!TransferDrawer)} isSearch={true} />
+      <TransferRequests open={TransferDrawer} onClose={() => setTransferDrawer(!TransferDrawer)} isSearch={true} isChangeCat={true} />
       <MyDrawer title='Add New Events' open={rosterDrawer} onClose={() => setrosterDrawer(!rosterDrawer)} isrecursion={true}>
         <div>
 
@@ -1019,6 +1019,7 @@ function HeaderDetails() {
       <ChangeCategoryDrawer
         open={isDrawerOpen}
         onClose={() => setisDrawerOpen(false)}
+        isChangeCat={true}
       />
       <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
 

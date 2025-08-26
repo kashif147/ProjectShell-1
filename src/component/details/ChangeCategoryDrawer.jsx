@@ -15,7 +15,8 @@ function CategoryChangeRequest({
   ProfileDetails,
   columnHistory,
   historyData = [],
-  isProfileDetails=false,
+  isProfileDetails = false,
+  isChangeCat
 }) {
   const initialFormData = {
     newCategory: '',
@@ -68,12 +69,11 @@ function CategoryChangeRequest({
   };
 
   return (
-    <MyDrawer title="Category Change Request" open={open} onClose={handleClose} add={handleSubmit}>
-      <div >
-        {isProfileDetails===false && (
+    <MyDrawer width="1000px" title={` ${isChangeCat?"Category Change Request":"Category Change History"}`} open={open} onClose={handleClose} add={handleSubmit}>
+      <div>
+        {isProfileDetails === false && isChangeCat && (
           <Search className='pb-4' placeholder="Input search text" />
         )}
-
         {isProfileDetails && (
           <div className="details-drawer mb-4 mt-4">
             <p>{ProfileDetails?.regNo}</p>
@@ -81,82 +81,83 @@ function CategoryChangeRequest({
             <p>{ProfileDetails?.duty}</p>
           </div>
         )}
+        {
+          isChangeCat && (
+            <div className="d-flex">
+              {/* Current Section */}
+              <div className="w-50">
+                <div
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    height: '35px',
+                    backgroundColor: '#215E97',
+                    color: 'white',
+                  }}
+                >
+                  <h3 className="text-center" style={{ fontSize: '15px', padding: '0px', margin: '0px' }}>Current</h3>
+                </div>
+                <div className="body-container">
+                  <CustomSelect
+                    label="Category"
+                    name="currentCategory"
+                    value={ProfileDetails?.category}
+                    options={CatOptions}
+                    disabled
+                  />
+                  <MyInput
+                    label="Remarks"
+                    name="currentRemarks"
+                    type="textarea"
+                    value={ProfileDetails?.remarks}
+                    disabled
+                  />
+                  <MyDatePicker
+                    label='Effective Date'
+                    name="Date"
+                    value={dayjs()}
+                    disabled={true}
+                  />
+                </div>
+              </div>
 
-        <div className="d-flex">
-          {/* Current Section */}
-          <div className="w-50">
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{
-                height: '35px',
-                backgroundColor: '#215E97',
-                color: 'white',
-              }}
-            >
-              <h3 className="text-center" style={{ fontSize: '15px', padding:'0px', margin:'0px' }}>Current</h3>
-            </div>
-            <div className="body-container">
-              <CustomSelect
-                label="Category"
-                name="currentCategory"
-                value={ProfileDetails?.category}
-                options={CatOptions}
-                disabled
-              />
-              <MyInput
-                label="Remarks"
-                name="currentRemarks"
-                type="textarea"
-                value={ProfileDetails?.remarks}
-                disabled
-              />
-              <MyDatePicker 
-              label='Effective Date'
-              name="Date"
-              value={dayjs()}
-              disabled={true}
-              />
-            </div>
-          </div>
-
-          {/* New Section */}
-          <div className="w-50 ms-4">
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{
-                height: '35px',
-                backgroundColor: '#215E97',
-                color: 'white',
-              }}
-            >
-              <h3 className="text-center" style={{ fontSize: '15px',padding:'0px', margin:'0px' }}>New</h3>
-            </div>
-            <div className="body-container">
-              <CustomSelect
-                label="Requested Category"
-                name="newCategory"
-                value={formData.newCategory}
-                onChange={(val) => handleChange('newCategory', val)}
-                required
-                hasError={!!errors.newCategory}
-                options={CatOptions}
-              />
-              <MyInput
-                label="Memo"
-                name="memo"
-                type="textarea"
-                placeholder="Enter memo"
-                value={formData.memo}
-                onChange={handleChange}
-              />
-            </div>
-          </div>
-        </div>
+              {/* New Section */}
+              <div className="w-50 ms-4">
+                <div
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    height: '35px',
+                    backgroundColor: '#215E97',
+                    color: 'white',
+                  }}
+                >
+                  <h3 className="text-center" style={{ fontSize: '15px', padding: '0px', margin: '0px' }}>New</h3>
+                </div>
+                <div className="body-container">
+                  <CustomSelect
+                    label="Requested Category"
+                    name="newCategory"
+                    value={formData.newCategory}
+                    onChange={(val) => handleChange('newCategory', val)}
+                    required
+                    hasError={!!errors.newCategory}
+                    options={CatOptions}
+                  />
+                  <MyInput
+                    label="Memo"
+                    name="memo"
+                    type="textarea"
+                    placeholder="Enter memo"
+                    value={formData.memo}
+                    onChange={handleChange}
+                  />
+                </div>
+              </div>
+            </div>)
+        }
 
         {/* History Table */}
         {columnHistory && (
           <div className="mt-4">
-            <h5>History</h5>
             <Table
               pagination={false}
               columns={columnHistory}
