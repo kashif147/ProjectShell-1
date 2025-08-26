@@ -7,6 +7,7 @@ import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
 import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
+import ProtectedRoute from "./Navigation/ProtectedRoute";
 
 // Lazy loaded components
 const Dummy = lazy(() => import("./component/common/Dummy"));
@@ -90,6 +91,7 @@ function Entry() {
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />
+                   
                   <Route path="Dummy" element={<Dummy />} />
                   <Route path="Details" element={<ProfileDetails />} />
                   <Route path="Summary" element={<ProfileSummary />} />
