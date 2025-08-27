@@ -1,13 +1,15 @@
-.my-input-container.disabled .ant-picker {
-  background-color: #f5f5f5; /* gray background */
-  color: #a0a0a0;
+.my-input-container.disabled .my-input-field-select {
+  background-color: #f5f5f5;
+  color: #bfbfbf;
   border-color: #d9d9d9;
+  box-shadow: none;
   cursor: not-allowed;
 }
 
-.my-input-container.disabled .ant-picker input {
+.my-input-field-select:disabled {
   background-color: #f5f5f5;
-  color: #a0a0a0;
+  color: #bfbfbf;
+  border-color: #d9d9d9;
   cursor: not-allowed;
 }
 .my-input-label-row {
@@ -18,7 +20,6 @@
 
 .my-input-extra {
   display: flex;
-  
   gap: 6px;
   font-size: 14px;
   color: #888;
@@ -43,7 +44,7 @@
   font-weight: 600;
   font-size: 14px;
   /* display: block; */
-  margin-bottom: 6px;
+  margin-bottom: 2px;
   color: #212529;
 }
 .my-input-container .ant-picker {
@@ -81,7 +82,6 @@
   width: 100%;
   padding: 10px 36px 10px 12px;
   font-size: 14px;
-  border-radius: 6px;
   border: 1px solid #ced4da;
   outline: none;
   color: #212529;
@@ -93,7 +93,7 @@
   background-repeat: no-repeat;
   background-position: right 12px center;
   background-size: 14px;
-  border-radius: 4px !important;
+  border-radius: 6px !important;
 }
 
 .my-input-container.focused .my-input-field {

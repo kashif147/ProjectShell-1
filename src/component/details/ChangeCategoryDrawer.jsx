@@ -105,7 +105,7 @@ function CategoryChangeRequest({
                     disabled
                   />
                   <MyInput
-                    label="Remarks"
+                    label="Reason"
                     name="currentRemarks"
                     type="textarea"
                     value={ProfileDetails?.remarks}

@@ -22,7 +22,7 @@ const MyDatePicker = ({
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
       {/* 🔹 Row with label on left + extra on right */}
-      <div className="d-flex justify-content-between mb-1">
+      <div className="d-flex justify-content-between">
         <div>
           <label
             htmlFor={name}

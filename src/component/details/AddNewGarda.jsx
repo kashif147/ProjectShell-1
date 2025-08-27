@@ -839,7 +839,7 @@ function AddNewGarda({ open, onClose, isGard }) {
         <div className="" style={{ backgroundColor: '#f6f9fc' }} >
           <div>
             <Row
-              gutter={24}
+              gutter={12}
               className="p-1 ms-1 me-1"
               style={{
                 backgroundColor: "#eef4ff",
@@ -875,7 +875,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 </div>
               </Col>
             </Row>
-            <Row className="bg-white p-1 ms-1 me-1 pt-2" gutter={24} style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
+            <Row className="bg-white p-1 ms-1 me-1 pt-2" gutter={12} style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
               <Col span={8}>
                 <CustomSelect
                   label="Title"
@@ -960,7 +960,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
               <Col span={12}></Col>
             </Row >
-            <Row gutter={24} className="p-1 ms-1 me-1 mt-1" style={{ backgroundColor: '#edfdf5' }}>
+            <Row gutter={12} className="p-1 ms-1 me-1 mt-1" style={{ backgroundColor: '#edfdf5' }}>
               <Col span={24}>
                 <div className="d-flex align-items-center pt-1 pb-1">
                   <div
@@ -987,8 +987,8 @@ function AddNewGarda({ open, onClose, isGard }) {
 
                       }}
                     >
-                      Correspondence Details<br></br>
-                      <Checkbox className="">
+                      Correspondence Details
+                      <Checkbox className="" style={{marginLeft:'7.5rem'}}>
                         Consent to receive Correspondence from INMO
                       </Checkbox>
                     </h2>
@@ -996,7 +996,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 </div>
               </Col>
             </Row>
-            <Row gutter={24} className="bg-white p-1 ms-1 me-1" style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
+            <Row gutter={12} className="bg-white p-1 ms-1 me-1" style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
               <Col span={12}>
               </Col>
               <Col span={24} className="">
@@ -1138,6 +1138,7 @@ function AddNewGarda({ open, onClose, isGard }) {
 
               {/* Preferred Email (Full Width) */}
               <Col span={12} className="mt-1 mb-3">
+              <div className="d-flex justify-content-between">
                 <label className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>Preferred Email<span className="text-danger ms-1">*</span></label>
                 <Radio.Group
                   onChange={(e) => handleInputChange("preferredEmail", e.target.value)}
@@ -1148,6 +1149,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   <Radio value="personal">Personal</Radio>
                   <Radio value="work">Work</Radio>
                 </Radio.Group>
+              </div>
               </Col>
               <Col span={12}></Col>
               <Col span={12}>
@@ -1178,7 +1180,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
             </Row>
           </div>
-          <Row gutter={24} className="p-1 ms-1 me-1 mt-1" style={{ backgroundColor: '#f7f4ff' }}>
+          <Row gutter={12} className="p-1 ms-1 me-1 mt-1" style={{ backgroundColor: '#f7f4ff' }}>
             <Col span={24}>
               {/* <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Professional Details</h2> */}
               <div className="d-flex pt-1 pb-1">
@@ -1208,7 +1210,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </div>
             </Col>
           </Row>
-          <Row gutter={24} className="bg-white ms-1 me-1 pt-2 " style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
+          <Row gutter={12} className="bg-white ms-1 me-1 pt-2 " style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)", }}>
             <Col span={12}>
               <CustomSelect
                 label="Membership Category"
@@ -1237,7 +1239,7 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
           </Row>
           {InfData.membershipCategory === 'Undergraduate Student' && (
-            <Row gutter={24} className="bg-white p-1 ms-1 me-1">
+            <Row gutter={12} className="bg-white p-1 ms-1 me-1">
               <Col span={12}>
                 <CustomSelect
                   label="Study Location"
@@ -1270,7 +1272,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </Col>
             </Row>
           )}
-          <Row className="bg-white p-1 ms-1 me-1" gutter={24}>
+          <Row className="bg-white p-1 ms-1 me-1" gutter={12}>
             <Col span={12}>
               <CustomSelect
                 label="Work Location"
@@ -1325,7 +1327,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row className="bg-white p-1 ms-1 me-1" gutter={24}>
+          <Row className="bg-white p-1 ms-1 me-1" gutter={12}>
             <Col span={12}>
               <label className="my-input-label mt-4 my-input-wrapper">
                 Are you currently undertaking a nursing adaptation programme?
@@ -1351,7 +1353,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row className="bg-white p-1 ms-1 me-1" gutter={24}>
+          <Row className="bg-white p-1 ms-1 me-1" gutter={12}>
             <label className="my-input-label mt-2">Please tick one of the following</label>
             <Col span={24}>
               <Radio.Group
@@ -1401,7 +1403,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row className="bg-white p-1 pt-3 ms-1 me-1" gutter={24} >
+          <Row className="bg-white p-1 pt-3 ms-1 me-1" gutter={12} >
             <Col span={12}>
               <CustomSelect
                 label="Grade"
@@ -1461,7 +1463,7 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
           </Row>
 
-          <Row className="p-1 ms-1 me-1 " style={{ backgroundColor: '#fff9eb' }} gutter={24} >
+          <Row className="p-1 ms-1 me-1 " style={{ backgroundColor: '#fff9eb' }} gutter={12} >
             <Col span={24}>
               <div className="d-flex  pt-1 pb-1" >
                 <div
@@ -1490,7 +1492,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               </div>
             </Col>
           </Row>
-          <Row gutter={24} className="bg-white p-1 ms-1 me-1" >
+          <Row gutter={12} className="bg-white p-1 ms-1 me-1" >
             <Col span={12}>
               <CustomSelect
                 label="Payment Type"
@@ -1521,7 +1523,7 @@ function AddNewGarda({ open, onClose, isGard }) {
 
 
 
-          <Row className="bg-white p-1 ms-2 me-2" gutter={24} >
+          <Row className="bg-white p-1 ms-2 me-2" gutter={12} >
             <Col span={12}>
               <div style={{ minHeight: '70px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}>
                 <label className="my-input-label">
@@ -1559,8 +1561,8 @@ function AddNewGarda({ open, onClose, isGard }) {
             </Col>
           </Row >
 
-          <Row gutter={24} className="bg-white p-1 ms-1 me-1 " >
-            <Col span={12} gutter={24} >
+          <Row gutter={12} className="bg-white p-1 ms-1 me-1 " >
+            <Col span={12} gutter={12} >
               <MyInput
                 label="Recurited By"
                 name="recuritedBy"
@@ -1579,7 +1581,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24} className="bg-white p-1 ms-1 me-1">
+          <Row gutter={12} className="bg-white p-1 ms-1 me-1">
             <Col span={12}>
               <CustomSelect
                 label="Primary Section"
@@ -1610,7 +1612,7 @@ function AddNewGarda({ open, onClose, isGard }) {
               />
             </Col>
           </Row>
-          <Row gutter={24} className="bg-white p-1 ms-1 me-1">
+          <Row gutter={12} className="bg-white p-1 ms-1 me-1">
             <Col span={12}>
               <CustomSelect
                 label="Secondary Section"
@@ -1639,7 +1641,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                 hasError={!!errors?.otherSecondarySection}
               /></Col>
           </Row>
-          <Row className="bg-white p-1 ms-1 me-1" gutter={24}>
+          <Row className="bg-white p-1 ms-1 me-1" gutter={12}>
             <Col span={12} >
               <Checkbox
                 checked={InfData?.incomeProtectionScheme}

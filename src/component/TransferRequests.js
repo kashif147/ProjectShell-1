@@ -167,12 +167,18 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
     key: "transferDate",
   },
   {
-    title: "Station From",
+    title: "Work Location From",
     dataIndex: "stationFrom",
     key: "stationFrom",
   },
   {
-    title: "Station To",
+    title: "Transfer reason",
+    dataIndex: "stationFrom",
+    key: "stationFrom",
+  },
+  
+  {
+    title: "Work Location To",
     dataIndex: "stationTo",
     key: "stationTo",
   },
@@ -292,7 +298,7 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
                 disabled
               />
               <MyInput
-                label="Description"
+                label="Transfer Reason"
                 name="currentDescription"
                 type="textarea"
                 value={ProfileDetails?.description}

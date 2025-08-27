@@ -129,9 +129,9 @@ function AppTabs() {
     key: "effectiveDate",
   },
   {
-    title: "Notes (Member Request)",
-    dataIndex: "notes",
-    key: "notes",
+    title: "Reason",
+    dataIndex: "Reason",
+    key: "Reason",
   },
   {
     title: "Remarks",

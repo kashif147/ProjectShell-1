@@ -39,7 +39,7 @@ const handleLogin = async () => {
     authUrl.searchParams.set("scope", scopes);
     authUrl.searchParams.set("code_challenge", codeChallenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
-    authUrl.searchParams.set("state", "12345");
+    authUrl.searchParams.set("state", "12345");     
     authUrl.searchParams.set("prompt", "login");
 
     // Redirect to Microsoft login
@@ -61,6 +61,7 @@ const handleAuthRedirect = async () => {
 
     try {
         // Send code + code_verifier to your backend
+
         const response = await fetch(
             "https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net/auth/azure-crm",
             {
@@ -75,8 +76,9 @@ const handleAuthRedirect = async () => {
         const data = await response.json();
         console.log("Token response from backend:", data);
 
-        // Save tokens to localStorage if present
-        if (data.accessToken) {
+        // Save tokens to localStorage if presents
+        if (data) {
+            debugger
            let  token = data.accessToken.replace(/^Bearer\s/, '');
             localStorage.setItem("token", token);
             // navigate("/Summary")
