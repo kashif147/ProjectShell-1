@@ -5,8 +5,12 @@ import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
+import { useSelector, useDispatch } from "react-redux";
 
 const MembershipForm = () => {
+  const { data: countryOptions, } = useSelector(
+    (state) => state.countries
+  );
   // Internal form state
   const [formData, setFormData] = useState({
     title: "",
@@ -72,7 +76,9 @@ const MembershipForm = () => {
     { label: "Sick Children's Nurse", value: "sick-children-nurse" },
     { label: "Registered Nurse for Intellectual Disability", value: "intellectual-disability-nurse" },
   ];
+
   return (
+
     <div
       className="mt-2 pe-4 pb-4 mb-2"
       style={{
@@ -159,6 +165,37 @@ const MembershipForm = () => {
                 label="Address Line 1"
                 value={formData.addressLine1}
                 onChange={(e) => handleChange("addressLine1", e.target.value)}
+              />
+              <MyInput
+                label="Address Line 2"
+                value={formData.addressLine1}
+                onChange={(e) => handleChange("addressLine1", e.target.value)}
+              />
+              <MyInput
+                label="Address Line "
+                value={formData.addressLine1}
+                onChange={(e) => handleChange("addressLine1", e.target.value)}
+              />
+              <MyInput
+                label="Address Line "
+                value={formData.addressLine1}
+                onChange={(e) => handleChange("addressLine1", e.target.value)}
+              />
+              <MyInput
+                label="Eircode"
+                name="Eircode"
+                placeholder="Enter Eircode"
+                value={formData?.eircode}
+              />
+              <CustomSelect
+                label="country"
+                name="country"
+                value={formData.country}
+                options={countryOptions}
+                required
+              // disabled={isDisable}
+              // onChange={(e) => handleInputChange("country", e.target.value)}
+              // hasError={!!errors?.country}
               />
               <MyInput
                 label="Town/City"
@@ -267,13 +304,17 @@ const MembershipForm = () => {
                 value={formData.grade}
                 onChange={(val) => handleChange("grade", val)}
               />
+              <MyInput
+                label="Other Grade"
+                name="otherGrade"
+              />
               <MyDatePicker
                 label="Retired Date"
                 value={formData.retiredDate}
                 onChange={(date) => handleChange("retiredDate", date)}
                 extra={
                   <span className="text-xs text-gray-500">
-                   <Checkbox>Retired</Checkbox>
+                    <Checkbox>Retired</Checkbox>
                   </span>
                 }
               />
@@ -304,6 +345,29 @@ const MembershipForm = () => {
                 options={NursingSpecializationSelectOptn}
                 value={formData?.nursingSpecialization}
               // onChange={onChange}
+              />
+              <CustomSelect
+                name="memberStatus"
+                label="Please select the most appropriate option below"
+                value={formData?.memberStatus || ''}
+                // onChange={(e) => handleInputChange(e)}
+                placeholder="Select option..."
+                options={[
+                  { key: 'new', label: 'You are a new member' },
+                  { key: 'graduate', label: 'You are newly graduated' },
+                  {
+                    key: 'rejoin',
+                    label: 'You were previously a member of the INMO, and are rejoining',
+                  },
+                  {
+                    key: 'careerBreak',
+                    label: 'You are returning from a career break',
+                  },
+                  {
+                    key: 'nursingAbroad',
+                    label: 'You are returning from nursing abroad',
+                  },
+                ]}
               />
             </div>
           </div>
@@ -421,7 +485,43 @@ const MembershipForm = () => {
                 <Radio value="Yes">Yes</Radio>
                 <Radio value="No">No</Radio>
               </Radio.Group>
-
+              <MyInput
+                label="Recurited By"
+                name="recuritedBy" />
+              <MyInput
+                label="Recurited By (Membership No)"
+                name="recuritedByMembershipNo" />
+              <CustomSelect
+                label="Primary Section"
+                name="primarySection"
+                options={[
+                  { value: 'section1', label: 'Section 1' },
+                  { value: 'section2', label: 'Section 2' },
+                  { value: 'section3', label: 'Section 3' },
+                  { value: 'section4', label: 'Section 4' },
+                  { value: 'section5', label: 'Section 5' },
+                  { value: 'other', label: 'Other' },
+                ]}
+              />
+              <MyInput
+                label="Other Primary Section"
+                name="otherPrimarySection"
+              />
+              <CustomSelect
+                label="Secondary Section"
+                name="secondarySection"
+                // value={InfData.secondarySection}
+                options={[
+                  { value: 'section1', label: 'Section 1' },
+                  { value: 'section2', label: 'Section 2' },
+                  { value: 'section3', label: 'Section 3' },
+                  { value: 'section4', label: 'Section 4' },
+                  { value: 'section5', label: 'Section 5' },
+                  { value: 'other', label: 'Other' },
+                ]} />
+                 <MyInput
+                label="Other Secondary Section"
+                name="otherSecondarySection" />
             </div>
           </div>
         </Col>
