@@ -93,7 +93,7 @@ const MembershipForm = () => {
       <Row gutter={32}>
         {/* Personal Information */}
         <Col span={8}>
-          <div style={{ border: "2px solid #f8f3f3ff" }}>
+          <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
             <div
               className="d-flex align-items-center p-2 mb-1 ps-2"
               style={{ backgroundColor: "#eef4ff" }}
@@ -236,7 +236,7 @@ const MembershipForm = () => {
 
         {/* Professional Details */}
         <Col span={8}>
-          <div style={{ border: "2px solid #f8f3f3ff" }}>
+          <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
             <div
               className="d-flex align-items-center p-2 ps-2 mb-1"
               style={{ backgroundColor: "#f7f4ff" }}
@@ -375,7 +375,7 @@ const MembershipForm = () => {
 
         {/* Subscription Details */}
         <Col span={8}>
-          <div style={{ border: "2px solid #f8f3f3ff" }}>
+          <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
             <div
               className="d-flex align-items-center p-2 ps-2 mb-1"
               style={{ backgroundColor: "#fad1b8ff" }}
@@ -519,7 +519,7 @@ const MembershipForm = () => {
                   { value: 'section5', label: 'Section 5' },
                   { value: 'other', label: 'Other' },
                 ]} />
-                 <MyInput
+              <MyInput
                 label="Other Secondary Section"
                 name="otherSecondarySection" />
             </div>
@@ -529,7 +529,7 @@ const MembershipForm = () => {
       <Row>
 
       </Row>
-      <Row className="pb-4 mb-2" gutter={[8, 8]}>
+      <Row className=" mt-3 ms-1 me-1 p-2" gutter={[8, 8]} style={{border: "2px solid #f8f3f3ff", marginBottom:'20px'}}>
         <Col xs={24} sm={12}>
           <Checkbox
             checked={formData.joinINMOIncomeProtection}

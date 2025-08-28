@@ -575,12 +575,12 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               </div>
             )
           }
- 
+
           <Space>
             {
-            title==="Registration Request"&&(
-              <MemberSearch />
-            )
+              title === "Registration Request" && (
+                <MemberSearch />
+              )
             }
             {
               isAss == true && (
@@ -621,7 +621,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               Close
             </Button> */}
             {
-              !isGarda  && status ==="undefined"? (
+              !isGarda && status === "undefined" ? (
                 <Button
                   className="butn primary-btn"
                   onClick={async () => {
@@ -649,14 +649,21 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                   }
                 </Button>
               ) : (
-                status === "Draft" && (
+                status === "Draft" ?
                   <Button
                     className="butn primary-btn"
                     onClick={add}
                   >
-                  Add
+                    Add
                   </Button>
-                )
+                  :
+                  <Button
+                    className="butn primary-btn"
+                    onClick={add}
+                  >
+                    Submit
+                  </Button>
+
               )
             }
 
@@ -678,18 +685,19 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
           {
             title === "Registration Request" &&
             <>
-            <Button className="butn primary-btn" onClick={draftFtn}>
-              Save
-            </Button>
-            <Button className="butn primary-btn" onClick={add}>
-              Add
-            </Button>
+              <Button className="butn primary-btn" onClick={draftFtn}>
+                Save
+              </Button>
+
+              {/* <Button className="butn primary-btn" onClick={add}>
+                Submit
+              </Button> */}
             </>
           }
         </div>
       }
     >
-      <div className="drawer-main-cntainer" style={{backgroundColor:'#f6f9fc'}}>
+      <div className="drawer-main-cntainer" style={{ backgroundColor: '#f6f9fc' }}>
 
         {children}
         {
@@ -711,191 +719,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
           )
         }
       </div>
-      {/* <Drawer open={contactDrawer}
-        onClose={() => setcontactDrawer(!contactDrawer)}
-        width="740px"
-        title="Contacts123"
-        extra={
-          <Space>
-            <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
-              Close
-            </Button>
 
-            <Button className="butn primary-btn"
-              onClick={isUpdate?.Contacts == true ? update : addFtn}
-              onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}>
-              {isUpdate?.Contacts == true ? "Save" : 'Add'}
-            <                                                                                                   /Button>
-          </Space>
-        }
-      >
-        <div className="drawer-main-cntainer">
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Lookup for</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <MySelect
-                  isSimple={true}
-                  placeholder={title}
-                  value={drawerIpnuts?.Solicitors?.ContactTypeID}
-                  options={selectLokups?.contactTypes}
-                />
-                <p className="error">{errors?.Solicitors?.ContactTypeID}</p>
-              </div>
-            </div>
-          </div>
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Contact Type :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <MySelect
-                  isSimple={true}
-                  placeholder="Select Contact type"
-                  value={drawerIpnuts?.Solicitors?.ContactTypeID}
-                  options={selectLokups?.contactTypes}
-                />
-                <p className="error">{errors?.Solicitors?.ContactTypeID}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Name :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  className="inp"
-                  value={drawerIpnuts?.Solicitors?.ContactName}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactName", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.ContactName}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Email :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  value={drawerIpnuts?.Solicitors?.ContactEmail}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactEmail", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.ContactEmail}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Phone :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  value={drawerIpnuts?.Solicitors?.ContactPhone}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactPhone", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.ContactPhone}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Building or House :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.BuildingOrHouse", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.["ContactAddress.BuildingOrHouse"]}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Street or Road :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.StreetOrRoad", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.["ContactAddress.StreetOrRoad"]}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>City, County or Postcode :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.CityCountyOrPostCode", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.["ContactAddress.CityCountyOrPostCode"]}</p>
-              </div>
-            </div>
-          </div>
-
-          <div className="drawer-inpts-container">
-            <div className="drawer-lbl-container" style={{ width: "25%" }}>
-              <p>Eircode :</p>
-            </div>
-            <div className="inpt-con">
-              <p className="star">*</p>
-              <div className="inpt-sub-con">
-                <Input
-                  value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-                  onChange={(e) => drawrInptChng("Solicitors", "ContactAddress.Eircode", e.target.value)}
-                />
-                <p className="error">{errors?.Solicitors?.["ContactAddress.Eircode"]}</p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 config-tbl-container">
-            <Table
-              pagination={false}
-              columns={solicitorColumns}
-              //  dataSource={lookups}
-              //  loading={lookupsloading}
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
-      </Drawer> */}
       <Drawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(!contactDrawer)}

@@ -106,7 +106,7 @@ const MemberSearch = () => {
         <Input
           size="large"
           prefix={<SearchOutlined />}
-          style={{ borderRadius: "3px", padding: '8px' }}
+          style={{ borderRadius: "px", padding: '6px 12px' }}
           placeholder="Enter email or name..."
         />
       </AutoComplete>
