@@ -1,6 +1,7 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
 import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio } from 'antd'
 import { Link, useLocation, useNavigate } from "react-router-dom";
+import { useView } from "../../context/ViewContext";
 import {
   RightOutlined,
   PlusOutlined,
@@ -71,6 +72,7 @@ function HeaderDetails() {
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const [aprove, setaprove] = useState("001")
   const [isDrawerOpen, setisDrawerOpen] = useState(false)
+  const { viewMode, toggleView } = useView();
 
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
@@ -662,7 +664,7 @@ function HeaderDetails() {
 
                     <Button className="me-1 gray-btn butn">Share</Button>
                     <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                    <Button className="me-1 gray-btn butn">Grid VIEW</Button>
+                    <Button className="me-1 gray-btn butn" onClick={toggleView}> {viewMode === "card" ? "Grid VIEW":"Card view"}</Button>
                     <ActionDropdown items={menuItems} />
                   </div>
                 </div>

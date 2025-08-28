@@ -656,7 +656,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
                   >
                     Add
                   </Button>
-                  :
+                  : 
                   <Button
                     className="butn primary-btn"
                     onClick={add}
@@ -753,14 +753,12 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               errorMessage={errors?.Solicitors?.ContactTypeID}
               style={{ width: "25%" }}
             />
-
             <CustomSelect
               label="Title:"
               placeholder="Select Title"
               options={lookupsForSelect?.Titles}
               style={{ width: "25%" }}
             />
-
             <MyInput
               label="Forename:"
               name="Forename"
@@ -772,7 +770,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               errorMessage={errors?.Solicitors?.Forename}
               style={{ width: "25%" }}
             />
-
             <MyInput
               label="Surname:"
               name="Surname"

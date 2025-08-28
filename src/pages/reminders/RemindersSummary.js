@@ -1,7 +1,10 @@
 import React from 'react'
 import TableComponent from '../../component/common/TableComponent'
+import { useView } from '../../context/ViewContext';
+import RemindersCard from '../../RemindersCard';
 
 function RemindersSummary() {
+  const { viewMode, toggleView } = useView();
        const tableData = [
             {
               "key": "1",
@@ -49,7 +52,12 @@ function RemindersSummary() {
           ];
   return (
     <div className='' style={{width:'95vw'}}>
+      {
+      viewMode === "card" ?
     <TableComponent data={tableData}  screenName="Reminders" />
+    :
+     <RemindersCard />
+      }
     </div>
   )
 }
