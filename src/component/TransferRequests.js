@@ -12,10 +12,11 @@ import { workLocationDetails } from '../Data';
 import { CatOptions } from '../Data';
 import "../styles/MyDetails.css";
 import dayjs from 'dayjs';
+import SubTableComp from './common/SubTableComp';
 
 const { Search } = Input;
 
-function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
+function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
   const onSearch = (value, _e, info) => console.log(info?.source, value);
 
   const [formData, setFormData] = useState({
@@ -87,44 +88,7 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
   };
 
   const { ProfileDetails } = useTableColumns();
-  const columnCountry = [
-    {
-      title: 'Transfer Date',
-      dataIndex: 'transferDate',
-      key: 'transferDate',
-    },
-    {
-      title: 'Station From',
-      dataIndex: 'stationFrom',
-      key: 'stationFrom',
-    },
-    {
-      title: 'Station To',
-      dataIndex: 'stationTo',
-      key: 'stationTo',
-    },
-    {
-      title: 'Notes',
-      dataIndex: 'notes',
-      key: 'notes',
-    },
-    {
-      title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
-        </Space>
-      ),
-    },
-  ];
+
 
   const oncloseftn = () => {
     onClose()
@@ -160,46 +124,46 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
     }
     console.log('Submitted data:', formData);
   };
- const columnHistory = [
-  {
-    title: "Transfer Date",
-    dataIndex: "transferDate",
-    key: "transferDate",
-  },
-  {
-    title: "Work Location From",
-    dataIndex: "stationFrom",
-    key: "stationFrom",
-  },
-  {
-    title: "Transfer reason",
-    dataIndex: "stationFrom",
-    key: "stationFrom",
-  },
-  
-  {
-    title: "Work Location To",
-    dataIndex: "stationTo",
-    key: "stationTo",
-  },
-  {
-    title: "Notes",
-    dataIndex: "notes",
-    key: "notes",
-  },
-  {
-    title: "Status",
-    dataIndex: "status",
-    key: "status",
-    render: (text) => {
-      let color = "default";
-      if (text === "Approved") color = "green";
-      else if (text === "Rejected") color = "red";
-      else if (text === "Pending") color = "orange";
-      return <span style={{ color }}>{text}</span>;
+  const columnHistory = [
+    {
+      title: "Transfer Date",
+      dataIndex: "transferDate",
+      key: "transferDate",
     },
-  },
-];
+    {
+      title: "Work Location From",
+      dataIndex: "stationFrom",
+      key: "stationFrom",
+    },
+    {
+      title: "Transfer reason",
+      dataIndex: "stationFrom",
+      key: "stationFrom",
+    },
+
+    {
+      title: "Work Location To",
+      dataIndex: "stationTo",
+      key: "stationTo",
+    },
+    {
+      title: "Notes",
+      dataIndex: "notes",
+      key: "notes",
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (text) => {
+        let color = "default";
+        if (text === "Approved") color = "green";
+        else if (text === "Rejected") color = "red";
+        else if (text === "Pending") color = "orange";
+        return <span style={{ color }}>{text}</span>;
+      },
+    },
+  ];
 
   const historyData = [
     {
@@ -236,9 +200,9 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
     // },
   ];
   return (
-    <MyDrawer 
-    title={` ${isChangeCat?"Transfer Request":"Transfer History"}`}
-    open={open} onClose={oncloseftn}
+    <MyDrawer
+      title={` ${isChangeCat ? "Transfer Request" : "Transfer History"}`}
+      open={open} onClose={oncloseftn}
       add={onSubmit}
       width={"1000px"}
     >
@@ -258,103 +222,103 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
           </div>
         )}
         {
-          isChangeCat &&(
-        <div className="d-flex">
-          {/* Current Section (Disabled) */}
-          <div className="w-50">
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{
-                height: '35px',
-                backgroundColor: '#215E97',
-                color: 'white',
-              }}
-            >
-              <h3 className="text-center" style={{ fontSize: '15px' }}>Current</h3>
-            </div>
-            <div className="body-container">
-              <CustomSelect
-                label="Work Location"
-                name="currentWorkLocation"
-                value={ProfileDetails?.worklocation}
-                options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
-                disabled
-              />
-              <CustomSelect
-                label="Branch"
-                name="currentBranch"
-                value={ProfileDetails?.branch}
-                disabled
-                options={allBranches.map(branch => ({
-                  value: branch,
-                  label: branch,
-                }))}
-              />
-              <CustomSelect
-                label="region"
-                name="currentRegion"
-                value={ProfileDetails?.region}
-                options={allRegions.map(region => ({ value: region, label: region }))}
-                disabled
-              />
-              <MyInput
-                label="Transfer Reason"
-                name="currentDescription"
-                type="textarea"
-                value={ProfileDetails?.description}
-                disabled
-              />
-            </div>
-          </div>
+          isChangeCat && (
+            <div className="d-flex">
+              {/* Current Section (Disabled) */}
+              <div className="w-50">
+                <div
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    height: '35px',
+                    backgroundColor: '#215E97',
+                    color: 'white',
+                  }}
+                >
+                  <h3 className="text-center" style={{ fontSize: '15px' }}>Current</h3>
+                </div>
+                <div className="body-container">
+                  <CustomSelect
+                    label="Work Location"
+                    name="currentWorkLocation"
+                    value={ProfileDetails?.worklocation}
+                    options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
+                    disabled
+                  />
+                  <CustomSelect
+                    label="Branch"
+                    name="currentBranch"
+                    value={ProfileDetails?.branch}
+                    disabled
+                    options={allBranches.map(branch => ({
+                      value: branch,
+                      label: branch,
+                    }))}
+                  />
+                  <CustomSelect
+                    label="region"
+                    name="currentRegion"
+                    value={ProfileDetails?.region}
+                    options={allRegions.map(region => ({ value: region, label: region }))}
+                    disabled
+                  />
+                  <MyInput
+                    label="Transfer Reason"
+                    name="currentDescription"
+                    type="textarea"
+                    value={ProfileDetails?.description}
+                    disabled
+                  />
+                </div>
+              </div>
 
-          {/* New Section (Editable) */}
-          <div className="w-50 ms-4">
-            <div
-              className="d-flex align-items-center justify-content-center"
-              style={{
-                height: '35px',
-                backgroundColor: '#215E97',
-                color: 'white',
-              }}
-            >
-              <h3 className="text-center" style={{ fontSize: '15px', margin: '0px' }}>New</h3>
-            </div>
-            <div className="body-container">
-              <CustomSelect
-                label="Work Location"
-                name="newWorkLocation"
-                value={formData.newWorkLocation}
-                onChange={handleChange}
-                required
-                options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
-                hasError={!!errors.newWorkLocation}
-              />
-              <CustomSelect
-                label="Branch"
-                name="newBranch"
+              {/* New Section (Editable) */}
+              <div className="w-50 ms-4">
+                <div
+                  className="d-flex align-items-center justify-content-center"
+                  style={{
+                    height: '35px',
+                    backgroundColor: '#215E97',
+                    color: 'white',
+                  }}
+                >
+                  <h3 className="text-center" style={{ fontSize: '15px', margin: '0px' }}>New</h3>
+                </div>
+                <div className="body-container">
+                  <CustomSelect
+                    label="Work Location"
+                    name="newWorkLocation"
+                    value={formData.newWorkLocation}
+                    onChange={handleChange}
+                    required
+                    options={[...workLocations.map(loc => ({ value: loc, label: loc })), { value: 'other', label: 'other' }]}
+                    hasError={!!errors.newWorkLocation}
+                  />
+                  <CustomSelect
+                    label="Branch"
+                    name="newBranch"
 
-                disabled={true}
-                value={formData.newBranch}
-                options={allBranches.map(branch => ({
-                  value: branch,
-                  label: branch,
-                }))}
-                onChange={(e) => handleChange('newBranch', e.target.value)}
-                hasError={!!errors.newBranch}
-              />
-              <CustomSelect
-                label="Region"
-                name="newRegion"
-                placeholder="Select Region"
-                value={formData.newRegion}
-                onChange={(value) => handleChange('newRegion', value)}
+                    disabled={true}
+                    value={formData.newBranch}
+                    options={allBranches.map(branch => ({
+                      value: branch,
+                      label: branch,
+                    }))}
+                    onChange={(e) => handleChange('newBranch', e.target.value)}
+                    hasError={!!errors.newBranch}
+                  />
+                  <CustomSelect
+                    label="Region"
+                    name="newRegion"
+                    placeholder="Select Region"
+                    value={formData.newRegion}
+                    onChange={(value) => handleChange('newRegion', value)}
 
-                disabled={true}
-                options={allRegions.map(region => ({ value: region, label: region }))}
-                hasError={!!errors.newRegion}
-              />
+                    disabled={true}
+                    options={allRegions.map(region => ({ value: region, label: region }))}
+                    hasError={!!errors.newRegion}
+                  />
 
-              {/* <MyInput
+                  {/* <MyInput
                 label="Transfer Date"
                 name="transferDate"
                 placeholder="DD/MM/YYYY"
@@ -363,25 +327,26 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
                 onChange={(e) => handleChange('transferDate', e.target.value)}
                 hasError={!!errors.transferDate}
               /> */}
-              <MyInput
-                label="Memo"
-                name="memo"
-                type="textarea"
-                placeholder="Enter memo"
-                value={formData.memo}
-                onChange={(e) => handleChange('memo', e.target.value)}
-              />
+                  <MyInput
+                    label="Memo"
+                    name="memo"
+                    type="textarea"
+                    placeholder="Enter memo"
+                    value={formData.memo}
+                    onChange={(e) => handleChange('memo', e.target.value)}
+                  />
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
           )
         }
 
         <div>
-          <Table
+          <SubTableComp columns={columnHistory}
+            dataSource={historyData} />
+          {/* <Table
             pagination={false}
-            columns={columnHistory}
-            dataSource={historyData}
+
             className="drawer-tbl"
             rowClassName={(record, index) =>
               index % 2 !== 0 ? 'odd-row' : 'even-row'
@@ -391,7 +356,7 @@ function TransferRequests({ open, onClose, isSearch,isChangeCat }) {
             //   ...rowSelection,
             // }}
             bordered
-          />
+          /> */}
         </div>
       </div>
     </MyDrawer>

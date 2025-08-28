@@ -529,7 +529,7 @@ const MembershipForm = () => {
       <Row>
 
       </Row>
-      <Row className=" mt-3 ms-1 me-1 p-2" gutter={[8, 8]} style={{border: "2px solid #f8f3f3ff", marginBottom:'20px'}}>
+      <Row className=" mt-3 p-2" gutter={[8, 8]} style={{border: "2px solid #f8f3f3ff", marginBottom:'20px',marginLeft:'2px'}}>
         <Col xs={24} sm={12}>
           <Checkbox
             checked={formData.joinINMOIncomeProtection}
