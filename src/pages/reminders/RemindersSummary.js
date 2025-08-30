@@ -51,12 +51,14 @@ function RemindersSummary() {
             }
           ];
   return (
-    <div className='' style={{width:'95vw'}}>
+    <div className='' >
       {
       viewMode === "card" ?
     <TableComponent data={tableData}  screenName="Reminders" />
     :
-     <RemindersCard />
+    <div className='me-4 ms-4 ps-1 pe-1'>
+      <RemindersCard />
+      </div>
       }
     </div>
   )

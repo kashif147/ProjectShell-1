@@ -7,6 +7,7 @@ import { CatOptions } from '../../Data';
 import MyDatePicker from '../common/MyDatePicker';
 import dayjs from 'dayjs';
 import moment from 'moment';
+import SubTableComp from '../common/SubTableComp';
 const { Search } = Input;
 
 function CategoryChangeRequest({
@@ -69,7 +70,7 @@ function CategoryChangeRequest({
   };
 
   return (
-    <MyDrawer width="1000px" title={` ${isChangeCat?"Category Change Request":"Category Change History"}`} open={open} onClose={handleClose} add={handleSubmit}>
+    <MyDrawer width="1000px" title={` ${isChangeCat ? "Category Change Request" : "Category Change History"}`} open={open} onClose={handleClose} add={handleSubmit}>
       <div>
         {isProfileDetails === false && isChangeCat && (
           <Search className='pb-4' placeholder="Input search text" />
@@ -158,7 +159,7 @@ function CategoryChangeRequest({
         {/* History Table */}
         {columnHistory && (
           <div className="mt-4">
-            <Table
+            {/* <Table
               pagination={false}
               columns={columnHistory}
               dataSource={historyData}
@@ -167,7 +168,10 @@ function CategoryChangeRequest({
                 index % 2 !== 0 ? 'odd-row' : 'even-row'
               }
               bordered
-            />
+            /> */}
+            <SubTableComp columns={columnHistory}
+              dataSource={historyData} />
+
           </div>
         )}
       </div>

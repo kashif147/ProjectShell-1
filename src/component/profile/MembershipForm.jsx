@@ -95,13 +95,13 @@ const MembershipForm = () => {
         <Col span={8}>
           <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
             <div
-              className="d-flex align-items-center p-2 mb-1 ps-2"
+              className="d-flex align-items-center p-2 ps-2 mb-1"
               style={{ backgroundColor: "#eef4ff" }}
             >
               <div
                 style={{
                   backgroundColor: "#ede6fa",
-                  // padding: "6px 8px",
+                  padding: "6px 8px",
                   borderRadius: "6px",
                   marginRight: "8px",
                   display: "flex",
@@ -165,6 +165,11 @@ const MembershipForm = () => {
                 label="Address Line 1"
                 value={formData.addressLine1}
                 onChange={(e) => handleChange("addressLine1", e.target.value)}
+                extra={
+                  <span className="text-xs text-gray-500">
+                    <Checkbox>NaTA</Checkbox>
+                  </span>
+                }
               />
               <MyInput
                 label="Address Line 2"
@@ -369,6 +374,42 @@ const MembershipForm = () => {
                   },
                 ]}
               />
+              <Checkbox
+                className="mb-3"
+                checked={formData.joinINMOIncomeProtection}
+                onChange={(e) =>
+                  handleChange("joinINMOIncomeProtection", e.target.checked)
+                }
+              >
+                Tick here to join INMO Income Protection Scheme
+              </Checkbox>
+              <Checkbox
+                className="mb-3"
+                checked={formData.joinRewards}
+                onChange={(e) => handleChange("joinRewards", e.target.checked)}
+              >
+                Tick here to join Rewards for INMO members
+              </Checkbox>
+              <Checkbox
+                className="mb-3"
+                checked={formData.allowPartnerContact}
+                onChange={(e) =>
+                  handleChange("allowPartnerContact", e.target.checked)
+                }
+              >
+                Tick here to allow our partners to contact you about Value added
+                Services by Email and SMS
+              </Checkbox>
+              <Checkbox
+                className="mb-3"
+                checked={formData.agreeDataProtection}
+                onChange={(e) =>
+                  handleChange("agreeDataProtection", e.target.checked)
+                }
+              >
+                I have read and agree to the INMO Data Protection Statement, the INMO
+                Privacy Statement and the INMO Conditions of Membership
+              </Checkbox>
             </div>
           </div>
         </Col>
@@ -526,54 +567,7 @@ const MembershipForm = () => {
           </div>
         </Col>
       </Row>
-      <Row>
-
-      </Row>
-      <Row className=" mt-3 p-2" gutter={[8, 8]} style={{border: "2px solid #f8f3f3ff", marginBottom:'20px',marginLeft:'2px'}}>
-        <Col xs={24} sm={12}>
-          <Checkbox
-            checked={formData.joinINMOIncomeProtection}
-            onChange={(e) =>
-              handleChange("joinINMOIncomeProtection", e.target.checked)
-            }
-          >
-            Tick here to join INMO Income Protection Scheme
-          </Checkbox>
-        </Col>
-
-        <Col xs={24} sm={12}>
-          <Checkbox
-            checked={formData.joinRewards}
-            onChange={(e) => handleChange("joinRewards", e.target.checked)}
-          >
-            Tick here to join Rewards for INMO members
-          </Checkbox>
-        </Col>
-
-        <Col xs={24} sm={12}>
-          <Checkbox
-            checked={formData.allowPartnerContact}
-            onChange={(e) =>
-              handleChange("allowPartnerContact", e.target.checked)
-            }
-          >
-            Tick here to allow our partners to contact you about Value added
-            Services by Email and SMS
-          </Checkbox>
-        </Col>
-
-        <Col xs={24} sm={12}>
-          <Checkbox
-            checked={formData.agreeDataProtection}
-            onChange={(e) =>
-              handleChange("agreeDataProtection", e.target.checked)
-            }
-          >
-            I have read and agree to the INMO Data Protection Statement, the INMO
-            Privacy Statement and the INMO Conditions of Membership
-          </Checkbox>
-        </Col>
-      </Row>
+     
     </div>
   );
 };

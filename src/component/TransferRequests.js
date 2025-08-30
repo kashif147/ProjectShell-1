@@ -173,6 +173,10 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
       stationTo: "University College Dublin",
       notes: "Requested transfer for further studies",
       status: "Approved",
+      insertedAtSystem: '01/12/2023 09:00 AM',
+      insertedBySystem: 'System',
+      insertedAtAdmin: '01/12/2023 10:30 AM',
+      insertedByAdmin: 'Admin User',
     },
     {
       key: "2",
@@ -181,6 +185,10 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
       stationTo: "Tus (Limerick)",
       notes: "Institute merger adjustment",
       status: "Approved",
+      insertedAtSystem: '01/12/2023 09:00 AM',
+      insertedBySystem: 'System',
+      insertedAtAdmin: '01/12/2023 10:30 AM',
+      insertedByAdmin: 'Admin User',
     },
     {
       key: "3",
@@ -189,6 +197,10 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
       stationTo: "Roscrea College",
       notes: "Awaiting admin approval",
       status: "Pending",
+      insertedAtSystem: '01/12/2023 09:00 AM',
+      insertedBySystem: 'System',
+      insertedAtAdmin: '01/12/2023 10:30 AM',
+      insertedByAdmin: 'Admin User',
     },
     // {
     //   key: "4",

@@ -86,59 +86,58 @@ function AppTabs() {
     { key: '12', label: 'Transfered History', icon: <FaHistory />, onClick: () => setTransferDrawer(true) },
     { key: '13', label: 'Membership Category', icon: <FaHistory />, onClick: () => setisDrawerOpen(true) },
     { key: '14', label: 'Reminders', icon: <FaHistory />, onClick: () => setIsReminder(true) }];
-  const historyData =[
+const historyData = [
   {
     key: '1',
     oldCategory: 'general',
     newCategory: 'postgraduate_student',
     effectiveDate: '01/12/2023',
-    notes: 'Member enrolled in postgraduate program',
+    reason: 'Member enrolled in postgraduate program',
     remarks: 'Approved by admin after verification',
+    insertedAtSystem: '01/12/2023 09:00 AM',
+    insertedBySystem: 'System',
+    insertedAtAdmin: '01/12/2023 10:30 AM',
+    insertedByAdmin: 'Admin User',
   },
   {
     key: '2',
     oldCategory: 'postgraduate_student',
     newCategory: 'affiliate_non_practicing',
-    effectiveDate: '01/12/2023',
-    notes: 'Requested due to career break',
+    effectiveDate: '15/03/2024',
+    reason: 'Requested due to career break',
     remarks: 'Confirmed with HR letter',
+    insertedAtSystem: '15/03/2024 08:45 AM',
+    insertedBySystem: 'System',
+    insertedAtAdmin: '16/03/2024 09:15 AM',
+    insertedByAdmin: 'Membership Officer',
   },
   {
     key: '3',
     oldCategory: 'affiliate_non_practicing',
     newCategory: 'retired_associate',
-    effectiveDate: '01/12/2023',
-    notes: 'Retirement request submitted',
+    effectiveDate: '01/08/2024',
+    reason: 'Retirement request submitted',
     remarks: 'Final approval granted',
+    insertedAtSystem: '01/08/2024 12:00 PM',
+    insertedBySystem: 'System',
+    insertedAtAdmin: '02/08/2024 01:00 PM',
+    insertedByAdmin: 'Super Admin',
   },
 ];
-  const columnHistory = [
-  {
-    title: "Old Category",
-    dataIndex: "oldCategory",
-    key: "oldCategory",
-  },
-  {
-    title: "New Category",
-    dataIndex: "newCategory",
-    key: "newCategory",
-  },
-  {
-    title: "Effective Date",
-    dataIndex: "effectiveDate",
-    key: "effectiveDate",
-  },
-  {
-    title: "Reason",
-    dataIndex: "Reason",
-    key: "Reason",
-  },
-  {
-    title: "Remarks",
-    dataIndex: "remarks",
-    key: "remarks",
-  },
+
+
+const columnHistory = [
+  { title: "Old Category", dataIndex: "oldCategory", key: "oldCategory" },
+  { title: "New Category", dataIndex: "newCategory", key: "newCategory" },
+  { title: "Effective Date", dataIndex: "effectiveDate", key: "effectiveDate" },
+  { title: "Reason", dataIndex: "reason", key: "reason" },
+  { title: "Remarks", dataIndex: "remarks", key: "remarks" },
+  { title: "Inserted At", dataIndex: "insertedAtSystem", key: "insertedAtSystem" },
+  { title: "Inserted By", dataIndex: "insertedBySystem", key: "insertedBySystem" },
+  { title: "Inserted At", dataIndex: "insertedAtAdmin", key: "insertedAtAdmin" },
+  { title: "Inserted By", dataIndex: "insertedByAdmin", key: "insertedByAdmin" },
 ];
+
 
   return (
     <div className='d-flex'>

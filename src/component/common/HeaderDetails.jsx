@@ -143,6 +143,7 @@ function HeaderDetails() {
   };
 
   function filterSearchableColumns(data) {
+    debugger
     if (data) {
       const filteredResults = globleFilters?.reduce((acc, i) => {
         const filteredColumns = data.filter(
@@ -150,9 +151,11 @@ function HeaderDetails() {
         );
         return [...acc, ...filteredColumns];
       }, []);
+
       console.log(data, "data")
       settrueFilters(filteredResults);
       console.log(filteredResults, "filteredResults")
+      debugger
     }
   }
   console.log(trueFilters, "trueFilters")
@@ -664,21 +667,15 @@ function HeaderDetails() {
 
                     <Button className="me-1 gray-btn butn">Share</Button>
                     <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                    <Button className="me-1 gray-btn butn" onClick={toggleView}> {viewMode === "card" ? "Grid VIEW":"Card view"}</Button>
+                    <Button className="me-1 gray-btn butn" onClick={toggleView}> {viewMode === "card" ? "Card view" : " Grid view"}</Button>
                     <ActionDropdown items={menuItems} />
                   </div>
                 </div>
-                <div className="d-flex search-fliters align-items-baseline">
-                  <Row className="align-items-baseline">
+                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                  <Row className="align-items-baseline w-100">
                     <Input
                       placeholder="Reg No or Surname"
-                      style={{
-                        width: "25%",
-                        // height: "31px",
-                        // border: "1px solid",
-                        color: "gray",
-                      }}
-                    // suffix={<SearchOutlined />}
+                      style={{ width: "25%", color: "gray" }}
                     />
                     {trueFilters?.map((item, index) =>
                       item?.titleColumn === "Date Of Birth" ? (
@@ -692,7 +689,7 @@ function HeaderDetails() {
                       )
                     )}
                     <MultiFilterDropdown
-                      style={{ float: 'left' }}
+                      style={{ float: "left" }}
                       label="Status"
                       options={["submitted", "approved", "rejected", "in-progress", "draft"]}
                       selectedValues={statusValues}
@@ -701,7 +698,8 @@ function HeaderDetails() {
                       onOperatorChange={setStatusOperator}
                       onApply={handleApplyStatusFilter}
                     />
-                    <div className="searchfilter- margin d-flex">
+
+                    <div className="searchfilter-margin d-flex searchfilter- ms-2">
                       <SimpleMenu
                         title={
                           <>
@@ -710,16 +708,25 @@ function HeaderDetails() {
                         }
                         isSearched={false}
                       />
-                      <SaveViewMenu />
+                   
                     </div>
+
                     <div>
                       <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>
                         Reset
                       </Button>
-                      <Button className="transparent bordr-less" onClick={showHidSavModal} >Save fliter</Button>
+                      {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
+                        Save filter
+                      </Button> */}
+                    </div>
+
+                    {/* 👇 Push this div to the right */}
+                    <div className="ms-auto searchfilter-">
+                      <SaveViewMenu />
                     </div>
                   </Row>
                 </div>
+
               </div>
             )}
         </div>

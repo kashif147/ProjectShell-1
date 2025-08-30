@@ -1,11 +1,13 @@
 import React from "react";
 import { Card, Button, Tag } from "antd";
 import { CalendarOutlined, UserOutlined, BarChartOutlined } from "@ant-design/icons";
+import BatchDrawer from "./component/reminders/BatchDrawer";
+import { useState } from "react";
 
 
 const campaigns = [
   {
-    title: "Monthly Payment Reminders - December 2024",
+    title: "Monthly Payment Reminders December 2024",
     date: "2024-12-15",
     user: "John Smith",
     selected: false,
@@ -26,20 +28,30 @@ const campaigns = [
     selected: false,
     stats: { R1: 85, R2: 52, R3: 28 },
   },
+  {
+    title: "Overdue Account Notifications",
+    date: "2024-12-08",
+    user: "Mike Davis",
+    selected: false,
+    stats: { R1: 85, R2: 52, R3: 28 },
+  },
 ];
 
 const RemindersCard = () => {
+   const [isbatchOpen, setisbatchOpen] = useState(false);
   return (
     <div className="mt-4">
       <div className="row">
         {campaigns.map((item, index) => (
-          <div key={index} className="col-md-4 mb-4">
+          <div key={index} className="col-md-3 mb-4">
             <Card
               className="shadow-sm"
               bordered
+              headStyle={{ padding: "8px 12px" }}   // 👈 reduce header padding
+              bodyStyle={{ padding: "12px" }}       // 👈 reduce body padding
               title={
                 <div className="d-flex justify-content-between align-items-center">
-                  <span>{item.title}</span>
+                  <span style={{ fontSize: "12px" }}>{item.title}</span>
                   <Tag color={item.selected ? "blue" : "default"}>
                     {item.selected ? "Selected" : "Unselected"}
                   </Tag>
@@ -80,13 +92,14 @@ const RemindersCard = () => {
               )}
 
               {/* View Details */}
-              <Button type="primary" block icon={<BarChartOutlined />}>
+              <Button  type="primary" onClick={()=>setisbatchOpen(!isbatchOpen)} block icon={<BarChartOutlined />}>
                 View Details
               </Button>
             </Card>
           </div>
         ))}
       </div>
+      <BatchDrawer open={isbatchOpen}  onClose={()=>setisbatchOpen(!isbatchOpen)}/>
     </div>
   );
 };
