@@ -1,4 +1,4 @@
-import React, { Suspense, lazy } from "react";
+import React, { Suspense, lazy, useEffect } from "react";
 import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
 import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
@@ -8,6 +8,7 @@ import ResizableComp from "./component/common/ResizableComp";
 import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
+import { generatePKCE } from "./utils/Utilities";
 
 // Lazy loaded components
 const Dummy = lazy(() => import("./component/common/Dummy"));
@@ -45,8 +46,8 @@ const NotDesignedYet = lazy(() => import("./pages/NotDesign"));
 const Sms = lazy(() => import("./pages/Correspondences/sms"));
 const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
-const Popout = lazy(()=> import("../src/component/common/PopOut"))
-const Members = lazy(()=>import ('./pages/membership/Members'))
+const Popout = lazy(() => import("../src/component/common/PopOut"))
+const Members = lazy(() => import('./pages/membership/Members'))
 
 function Entry() {
   const location = useLocation();
@@ -63,7 +64,7 @@ function Entry() {
     "/AddClaims", "/ClaimsById", "/Doucmnets"
   ];
   const showFooterRoutes = [
-    "/", 
+    "/",
   ];
 
   return (
@@ -85,13 +86,13 @@ function Entry() {
           {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
 
           {/* Content area + resizable section */}
-          <div style={{ flex: 1, display: "flex",  }}>
+          <div style={{ flex: 1, display: "flex", }}>
             {/* Routes Content */}
             <div style={{ flex: 1, }} className="main-main">
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />
-                   
+
                   <Route path="Dummy" element={<Dummy />} />
                   <Route path="Details" element={<ProfileDetails />} />
                   <Route path="Summary" element={<ProfileSummary />} />
@@ -127,8 +128,8 @@ function Entry() {
                   <Route path="Sms" element={<Sms />} />
                   <Route path="Notes" element={<Notes />} />
                   <Route path="CornMarket" element={<CornGrideSummary />} />
-                  <Route path="Popout" element={ <Popout /> }/>
-                  <Route path="members" element = {<Members />} />
+                  <Route path="Popout" element={<Popout />} />
+                  <Route path="members" element={<Members />} />
                 </Routes>
               </Suspense>
             </div>
@@ -140,11 +141,11 @@ function Entry() {
       </div>
 
       {/* Footer */}
-    {
-      location?.pathname === "/"? null : <MyFooter />
-    }
-        {/* <MyFooter /> */}
-    
+      {
+        location?.pathname === "/" ? null : <MyFooter />
+      }
+      {/* <MyFooter /> */}
+
     </div>
   );
 }
