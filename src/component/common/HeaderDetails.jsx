@@ -386,7 +386,12 @@ function HeaderDetails() {
       </>
     );
   };
-
+  const currentKey =
+    location.pathname === "/Cancallation"
+      ? "Cancallation"
+      : location.pathname === "/RemindersSummary"
+        ? "reminder"
+        : null;
   return (
     <div className="" style={{ width: '93vw' }}>
       <div
@@ -667,7 +672,9 @@ function HeaderDetails() {
 
                     <Button className="me-1 gray-btn butn">Share</Button>
                     <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                    <Button className="me-1 gray-btn butn" onClick={toggleView}> {viewMode === "card" ? "Card view" : " Grid view"}</Button>
+                    {currentKey && (
+                      <Button className="me-1 gray-btn butn" onClick={() => toggleView(currentKey)}>
+                        {viewMode[currentKey] === "card" ? "Card view" : "Grid view"}</Button>)}
                     <ActionDropdown items={menuItems} />
                   </div>
                 </div>
@@ -708,7 +715,7 @@ function HeaderDetails() {
                         }
                         isSearched={false}
                       />
-                   
+
                     </div>
 
                     <div>

@@ -5,12 +5,14 @@ const ViewContext = createContext();
 
 // Provider
 export const ViewProvider = ({ children }) => {
-  const [viewMode, setViewMode] = useState("grid"); // "card" | "grid"
+  const [viewMode, setViewMode] = useState({Cancallation:"grid",reminder:"grid"}); // "card" | "grid"
 
-  const toggleView = () => {
-    setViewMode((prev) => (prev === "card" ? "grid" : "card"));
-  };
-
+const toggleView = (key) => {
+  setViewMode((prev) => ({
+    ...prev,
+    [key]: prev[key] === "card" ? "grid" : "card",
+  }));
+};
   return (
     <ViewContext.Provider value={{ viewMode, setViewMode, toggleView }}>
       {children}

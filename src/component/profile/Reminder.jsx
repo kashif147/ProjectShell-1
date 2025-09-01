@@ -4,6 +4,7 @@ import { Table } from "antd";
 import { MailOutlined, FilePdfOutlined, FileTextOutlined } from "@ant-design/icons";
 import MyDrawer from "../common/MyDrawer";
 
+
 function Reminder({ open, onClose }) {
     const formatBatchName = (dateString) => {
         if (!dateString) return "-";

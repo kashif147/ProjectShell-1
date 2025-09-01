@@ -6,24 +6,35 @@ import {
   Card,
   Row,
   Col,
-  Tag,
   Progress,
+  Tag,
   Table,
-  Input,
 } from "antd";
 import {
   CalendarOutlined,
   UserOutlined,
-  MailOutlined,
-  BarChartOutlined,
+  PlayCircleOutlined,
 } from "@ant-design/icons";
 import Checkbox from "antd/es/checkbox/Checkbox";
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import ReminderSubCard from "./ReminderSubCard";
 
 const { TabPane } = Tabs;
 
 const BatchDrawer = ({ open, onClose }) => {
   const [activeTab, setActiveTab] = useState("summary");
+  const [tabChecks, setTabChecks] = useState({
+    summary: false,
+    reminder1: false,
+    reminder2: false,
+    reminder3: false,
+  });
+
+  const handleTabCheck = (key, e) => {
+    setTabChecks((prev) => ({
+      ...prev,
+      [key]: e.target.checked,
+    }));
+  };
 
   const columns = [
     {
@@ -33,25 +44,13 @@ const BatchDrawer = ({ open, onClose }) => {
       render: (_, record) => (
         <div>
           <div>{record.customer}</div>
-          <div style={{ fontSize: 12, color: "#888" }}>{record.email}</div>
+          {/* <div style={{ fontSize: 12, color: "#888" }}>{record.email}</div> */}
         </div>
       ),
     },
-    {
-      title: "Amount",
-      dataIndex: "amount",
-      key: "amount",
-    },
-    {
-      title: "Payment Method",
-      dataIndex: "method",
-      key: "method",
-    },
-    {
-      title: "Due Date",
-      dataIndex: "dueDate",
-      key: "dueDate",
-    },
+    { title: "Amount", dataIndex: "amount", key: "amount" },
+    { title: "Payment Method", dataIndex: "method", key: "method" },
+    { title: "Due Date", dataIndex: "dueDate", key: "dueDate" },
     {
       title: "Status",
       dataIndex: "status",
@@ -65,11 +64,7 @@ const BatchDrawer = ({ open, onClose }) => {
           <Tag color="red">Failed</Tag>
         ),
     },
-    {
-      title: "Last Sent",
-      dataIndex: "lastSent",
-      key: "lastSent",
-    },
+    { title: "Last Sent", dataIndex: "lastSent", key: "lastSent" },
   ];
 
   const data = [
@@ -95,28 +90,68 @@ const BatchDrawer = ({ open, onClose }) => {
     },
   ];
 
-  const data1 = [
-    { name: "Credit Card", value: 400 },
-    { name: "Debit Card", value: 300 },
-    { name: "Bank Transfer", value: 300 },
-    { name: "Cash", value: 200 },
+  const [selectedKeysMap, setSelectedKeysMap] = useState({
+    R1: [],
+    R2: [],
+    R3: [],
+  });
+
+  const getRowSelection = (reminderKey) => ({
+    selectedRowKeys: selectedKeysMap[reminderKey],
+    onChange: (selectedRowKeys) => {
+      setSelectedKeysMap((prev) => ({
+        ...prev,
+        [reminderKey]: selectedRowKeys,
+      }));
+    },
+  });
+
+  const handleExecute = (reminderKey, selectedRows) => {
+    console.log("Executing for", reminderKey, selectedRows);
+  };
+
+  const handleExport = (reminderKey) => {
+    console.log("Exporting for", reminderKey);
+  };
+
+  // ✅ Config for reminders
+  const reminders = [
+    {
+      key: "reminder1",
+      reminderKey: "R1",
+      title: "Reminder 1 Details",
+      count: 245,
+      stats: { sent: 73, pending: 77, failed: 95, total: "$135,957" },
+    },
+    {
+      key: "reminder2",
+      reminderKey: "R2",
+      title: "Reminder 2 Details",
+      count: 128,
+      stats: { sent: 50, pending: 30, failed: 20, total: "€99,000" },
+    },
+    {
+      key: "reminder3",
+      reminderKey: "R3",
+      title: "Reminder 3 Details",
+      count: 67,
+      stats: { sent: 20, pending: 10, failed: 15, total: "€55,000" },
+    },
   ];
+
   return (
     <Drawer
       title="Batch Management"
       width={1200}
       open={open}
       onClose={onClose}
-
-      extra={<Button type="primary">Trigger Batch</Button>}
+      extra={<Button className="btun primary-btn">Trigger Batch</Button>}
     >
       {/* Header Info */}
       <div className="p-3">
-
-        <Card style={{ marginBottom: 16 }} >
-
+        <Card style={{ marginBottom: 16 }}>
           <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-            <Checkbox></Checkbox>
+            <Checkbox />
             <CalendarOutlined />
             <span>2024-12-15</span>
             <UserOutlined />
@@ -126,63 +161,38 @@ const BatchDrawer = ({ open, onClose }) => {
 
         {/* Tabs */}
         <Tabs activeKey={activeTab} onChange={setActiveTab} className="pt-2">
-          <TabPane tab="Summary" key="summary">
+          {/* ✅ Summary Tab */}
+          <TabPane
+            key="summary"
+            tab={
+              <span>
+                {/* <Checkbox
+                  checked={tabChecks.summary}
+                  onChange={(e) => handleTabCheck("summary", e)}
+                  style={{ marginRight: 8 }}
+                /> */}
+                Summary
+              </span>
+            }
+          >
             <Row className="pt-2" gutter={16}>
               <Col span={6}>
-                <Card
-                  style={{
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div>Reminder 1</div>
-                  <h3>245</h3>
-                </Card>
+                <Card>Reminder 1 <h3>245</h3></Card>
               </Col>
               <Col span={6}>
-                <Card
-                  style={{
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div>Reminder 2</div>
-                  <h3>128</h3>
-                </Card>
+                <Card>Reminder 2 <h3>128</h3></Card>
               </Col>
               <Col span={6}>
-                <Card
-                  style={{
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div>Reminder 3</div>
-                  <h3>67</h3>
-                </Card>
+                <Card>Reminder 3 <h3>67</h3></Card>
               </Col>
               <Col span={6}>
-                <Card
-                  style={{
-                    border: "1px solid #f0f0f0",
-                    boxShadow: "0 2px 8px rgba(0, 0, 0, 0.15)",
-                    borderRadius: "8px",
-                  }}
-                >
-                  <div>Total Items</div>
-                  <h3>440</h3>
-                </Card>
+                <Card>Total Items <h3>440</h3></Card>
               </Col>
             </Row>
-
 
             <Row gutter={16} className="pt-2" style={{ marginTop: 16 }}>
               <Col span={12}>
                 <Card title="Payment Methods Distribution">
-                  {/* Pie/Chart placeholder */}
                   <Progress type="circle" percent={41} />
                 </Card>
               </Col>
@@ -197,242 +207,37 @@ const BatchDrawer = ({ open, onClose }) => {
             </Row>
           </TabPane>
 
-          <TabPane tab="Reminder 1 (245)" key="reminder1"  >
-            <Card className="mt-2">
-              <Row gutter={16} style={{ marginBottom: 16, textAlign: "center" }}>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#f6ffed",
-                      border: "1px solid #b7eb8f",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "green" }}>
-                      73
-                    </div>
-                    <div style={{ fontSize: "14px", color: "green" }}>Sent</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#fff7e6",
-                      border: "1px solid #ffd591",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "orange" }}>
-                      77
-                    </div>
-                    <div style={{ fontSize: "14px", color: "orange" }}>Pending</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#fff1f0",
-                      border: "1px solid #ffa39e",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "red" }}>
-                      95
-                    </div>
-                    <div style={{ fontSize: "14px", color: "red" }}>Failed</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#f0f5ff",
-                      border: "1px solid #adc6ff",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "#001529" }}>
-                      $135,957
-                    </div>
-                    <div style={{ fontSize: "14px", color: "#001529" }}>Total</div>
-                  </div>
-                </Col>
-              </Row>
-
-              <Input.Search
-                placeholder="Search customers or emails..."
-                style={{ marginBottom: 16 }}
+          {/* ✅ Dynamic Reminder Tabs */}
+          {reminders.map((rem) => (
+            <TabPane
+              key={rem.key}
+              tab={
+                <span>
+                  <Checkbox
+                    checked={tabChecks[rem.key]}
+                    onChange={(e) => handleTabCheck(rem.key, e)}
+                    style={{ marginRight: 8 }}
+                  />
+                  {`${rem.title.split(" ")[0]} (${rem.count})`}
+                </span>
+              }
+            >
+              <ReminderSubCard
+                reminderKey={rem.reminderKey}
+                title={rem.title}
+                totalItems={rem.count}
+                stats={rem.stats}
+                columns={columns}
+                data={data}
+                getRowSelection={getRowSelection}
+                selectedKeysMap={selectedKeysMap}
+                onExecute={handleExecute}
+                onExport={handleExport}
               />
-              <Table columns={columns} dataSource={data} pagination={false} />
-            </Card>
-
-          </TabPane>
-
-          <TabPane tab="Reminder 2 (128)" key="reminder2">
-            <Card className="mt-2">
-              <Row gutter={16} style={{ marginBottom: 16, textAlign: "center" }}>
-                <div>
-                  <h5>Reminder 1 Details</h5>
-                </div>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#f6ffed",
-                      border: "1px solid #b7eb8f",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "green" }}>
-                      73
-                    </div>
-                    <div style={{ fontSize: "14px", color: "green" }}>Sent</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#fff7e6",
-                      border: "1px solid #ffd591",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "orange" }}>
-                      77
-                    </div>
-                    <div style={{ fontSize: "14px", color: "orange" }}>Pending</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#fff1f0",
-                      border: "1px solid #ffa39e",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "red" }}>
-                      95
-                    </div>
-                    <div style={{ fontSize: "14px", color: "red" }}>Failed</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#f0f5ff",
-                      border: "1px solid #adc6ff",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "#001529" }}>
-                      $135,957
-                    </div>
-                    <div style={{ fontSize: "14px", color: "#001529" }}>Total</div>
-                  </div>
-                </Col>
-              </Row>
-
-              <Input.Search
-                placeholder="Search customers or emails..."
-                style={{ marginBottom: 16 }}
-              />
-              <Table columns={columns} dataSource={data} pagination={false} />
-            </Card>
-          </TabPane>
-          <TabPane tab="Reminder 3 (67)" key="reminder3">
-            <Card className="mt-2">
-              <Row gutter={16} style={{ marginBottom: 16, textAlign: "center" }}>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#f6ffed",
-                      border: "1px solid #b7eb8f",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "green" }}>
-                      73
-                    </div>
-                    <div style={{ fontSize: "14px", color: "green" }}>Sent</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#fff7e6",
-                      border: "1px solid #ffd591",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "orange" }}>
-                      77
-                    </div>
-                    <div style={{ fontSize: "14px", color: "orange" }}>Pending</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#fff1f0",
-                      border: "1px solid #ffa39e",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "red" }}>
-                      95
-                    </div>
-                    <div style={{ fontSize: "14px", color: "red" }}>Failed</div>
-                  </div>
-                </Col>
-                <Col span={6}>
-                  <div
-                    style={{
-                      background: "#f0f5ff",
-                      border: "1px solid #adc6ff",
-                      borderRadius: "8px",
-                      padding: "16px",
-                      boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                    }}
-                  >
-                    <div style={{ fontSize: "22px", fontWeight: "bold", color: "#001529" }}>
-                      $135,957
-                    </div>
-                    <div style={{ fontSize: "14px", color: "#001529" }}>Total</div>
-                  </div>
-                </Col>
-              </Row>
-
-              <Input.Search
-                placeholder="Search customers or emails..."
-                style={{ marginBottom: 16 }}
-              />
-              <Table columns={columns} dataSource={data} pagination={false} />
-            </Card>
-          </TabPane>
+            </TabPane>
+          ))}
         </Tabs>
       </div>
-
     </Drawer>
   );
 };

@@ -4,7 +4,7 @@ import { useView } from '../../context/ViewContext';
 import RemindersCard from '../../RemindersCard';
 
 function RemindersSummary() {
-  const { viewMode, toggleView } = useView();
+  const { viewMode } = useView();
        const tableData = [
             {
               "key": "1",
@@ -53,12 +53,14 @@ function RemindersSummary() {
   return (
     <div className='' >
       {
-      viewMode === "card" ?
+      viewMode?.reminder === "card" ?
     <TableComponent data={tableData}  screenName="Reminders" />
     :
+     viewMode?.reminder === "grid"?
     <div className='me-4 ms-4 ps-1 pe-1'>
       <RemindersCard />
       </div>
+      :null
       }
     </div>
   )

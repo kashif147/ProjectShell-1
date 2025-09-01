@@ -3,7 +3,7 @@ import { Card, Button, Tag } from "antd";
 import { CalendarOutlined, UserOutlined, BarChartOutlined } from "@ant-design/icons";
 import BatchDrawer from "./component/reminders/BatchDrawer";
 import { useState } from "react";
-
+import { useView } from "./context/ViewContext";
 
 const campaigns = [
   {
@@ -38,7 +38,7 @@ const campaigns = [
 ];
 
 const RemindersCard = () => {
-   const [isbatchOpen, setisbatchOpen] = useState(false);
+  const [isbatchOpen, setisbatchOpen] = useState(false);
   return (
     <div className="mt-4">
       <div className="row">
@@ -47,26 +47,33 @@ const RemindersCard = () => {
             <Card
               className="shadow-sm"
               bordered
-              headStyle={{ padding: "8px 12px" }}   // 👈 reduce header padding
-              bodyStyle={{ padding: "12px" }}       // 👈 reduce body padding
+              headStyle={{
+                padding: "8px 12px",
+                backgroundColor: item.triggered ? "#adf368ff" : "#f5f5f5", // 👈 header bg only
+              }}
+              bodyStyle={{ padding: "12px" }}
               title={
+                <div>
                 <div className="d-flex justify-content-between align-items-center">
-                  <span style={{ fontSize: "12px" }}>{item.title}</span>
+                  <span style={{ fontSize: "13px" }}>{item.title}</span>
                   <Tag color={item.selected ? "blue" : "default"}>
                     {item.selected ? "Selected" : "Unselected"}
                   </Tag>
                 </div>
+                  {
+                    item?.triggered &&
+                    <p style={{ fontSize: "11px", margin:'0px' }}>{`${item?.triggered} Jack Smith`}</p>
+                  }
+
+                </div>
               }
             >
-              {/* Date + User */}
               <div className="d-flex mb-3 text-muted" style={{ fontSize: "14px" }}>
                 <CalendarOutlined className="me-2" /> {item.date}
                 <span className="ms-3">
                   <UserOutlined className="me-2" /> {item.user}
                 </span>
               </div>
-
-              {/* Stats */}
               <div className="d-flex justify-content-between mb-3">
                 <div className="text-center bg-light p-2 rounded flex-fill me-2">
                   <div className="fw-bold text-primary">{item.stats.R1}</div>
@@ -81,25 +88,14 @@ const RemindersCard = () => {
                   <small className="text-muted">R3</small>
                 </div>
               </div>
-
-              {/* Triggered Info */}
-              {item.triggered && (
-                <div className="p-2 mb-3 rounded text-center" style={{ backgroundColor: "#eaffea" }}>
-                  <small className="text-success">
-                    Triggered at {item.triggered} <br /> by {item.user}
-                  </small>
-                </div>
-              )}
-
-              {/* View Details */}
-              <Button  type="primary" onClick={()=>setisbatchOpen(!isbatchOpen)} block icon={<BarChartOutlined />}>
+              <Button className="primary-btn"  onClick={() => setisbatchOpen(!isbatchOpen)} block icon={<BarChartOutlined />}>
                 View Details
               </Button>
             </Card>
           </div>
         ))}
       </div>
-      <BatchDrawer open={isbatchOpen}  onClose={()=>setisbatchOpen(!isbatchOpen)}/>
+      <BatchDrawer open={isbatchOpen} onClose={() => setisbatchOpen(!isbatchOpen)} />
     </div>
   );
 };
