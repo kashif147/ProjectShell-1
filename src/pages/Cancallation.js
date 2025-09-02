@@ -58,7 +58,7 @@ const { viewMode} = useView()
           <TableComponent data={tableData} screenName="Cancallation" />
           :
           viewMode?.Cancallation === "grid" ?
-            <div className='me-4 ms-4 ps-1 pe-1 mt-4'>
+            <div className='me-4 ms-4 ps-1 pe-1 mt-4 overflow-auto pb-4 mb-4 ' style={{height:'80vh',backgroundColor:'rgba(253, 253, 253, 1)'}}>
               <CancallationCard />
             </div>
             : null

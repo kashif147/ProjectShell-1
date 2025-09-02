@@ -57,7 +57,7 @@ function RemindersSummary() {
     <TableComponent data={tableData}  screenName="Reminders" />
     :
      viewMode?.reminder === "grid"?
-    <div className='me-4 ms-4 ps-1 pe-1'>
+    <div className='me-4 ms-4 ps-1 pe-1 pb-4 mb-2 overflow-auto' style={{height:'80vh',backgroundColor:'rgba(253, 253, 253, 1)'}}>
       <RemindersCard />
       </div>
       :null

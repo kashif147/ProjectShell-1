@@ -47,7 +47,7 @@ const CustomMenu = styled(Menu)`
   }
 `;
 
-const MyMenu = ({ items }) => {
+const MyMenu = ({ items,disabled }) => {
   const menu = (
     <CustomMenu>
       {items?.map((item) => (
@@ -60,7 +60,7 @@ const MyMenu = ({ items }) => {
 
   return (
     <MenuContainer>
-      <Dropdown overlay={menu} trigger={['click']}>
+      <Dropdown overlay={menu} trigger={['click']} disabled={disabled} >
         <DropdownIcon />
       </Dropdown>
     </MenuContainer>

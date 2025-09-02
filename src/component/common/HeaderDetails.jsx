@@ -11,6 +11,7 @@ import {
 import { usePDF } from "react-to-pdf";
 import { FaUser, } from "react-icons/fa6";
 import { BsSliders, BsThreeDots } from "react-icons/bs";
+import dayjs from "dayjs";
 import { FaAngleRight } from "react-icons/fa";
 import {
   SearchOutlined,
@@ -73,6 +74,10 @@ function HeaderDetails() {
   const [aprove, setaprove] = useState("001")
   const [isDrawerOpen, setisDrawerOpen] = useState(false)
   const { viewMode, toggleView } = useView();
+  const [value, setValue] = useState(dayjs("2025", "YYYY"));
+  const handleDateChange = (val) => {
+    setValue(val);// val is a dayjs or null
+  };
 
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
@@ -678,61 +683,85 @@ function HeaderDetails() {
                     <ActionDropdown items={menuItems} />
                   </div>
                 </div>
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                    <Input
-                      placeholder="Reg No or Surname"
-                      style={{ width: "25%", color: "gray" }}
-                    />
-                    {trueFilters?.map((item, index) =>
-                      item?.titleColumn === "Date Of Birth" ? (
-                        <DateRang key={index} title={item?.titleColumn} />
-                      ) : (
-                        <JiraLikeMenu
-                          key={index}
-                          title={item?.titleColumn}
-                          data={item?.lookups}
+                {
+                  nav == "/RemindersSummary" || nav == "/Cancallation" ?
+
+
+                    <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                      <Row className="align-items-baseline w-100">
+                        <DatePicker
+                          picker="year"
+                          format="YYYY"
+                          value={value}
+                          onChange={(e) => handleDateChange(e)}
+                          inputReadOnly={false}   // allow typing
+                          allowClear={false}      // keep a value always; set true if you want clear
+                          style={{ width: 220 }}  // compact width for year
+                          placeholder="Select year"
                         />
-                      )
-                    )}
-                    <MultiFilterDropdown
-                      style={{ float: "left" }}
-                      label="Status"
-                      options={["submitted", "approved", "rejected", "in-progress", "draft"]}
-                      selectedValues={statusValues}
-                      onChange={setStatusValues}
-                      operator={statusOperator}
-                      onOperatorChange={setStatusOperator}
-                      onApply={handleApplyStatusFilter}
-                    />
-
-                    <div className="searchfilter-margin d-flex searchfilter- ms-2">
-                      <SimpleMenu
-                        title={
-                          <>
-                            More <PlusOutlined style={{ marginLeft: "-2px" }} />
-                          </>
-                        }
-                        isSearched={false}
-                      />
-
+                      </Row>
                     </div>
 
-                    <div>
-                      <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>
-                        Reset
-                      </Button>
-                      {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
+                    :
+
+                    <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                      <Row className="align-items-baseline w-100">
+                        <Input
+                          placeholder="Reg No or Surname"
+                          style={{ width: "25%", color: "gray" }}
+                        />
+                        {trueFilters?.map((item, index) =>
+                          item?.titleColumn === "Date Of Birth" ? (
+                            <DateRang key={index} title={item?.titleColumn} />
+                          ) : (
+                            <JiraLikeMenu
+                              key={index}
+                              title={item?.titleColumn}
+                              data={item?.lookups}
+                            />
+                          )
+                        )}
+                        <MultiFilterDropdown
+                          style={{ float: "left" }}
+                          label="Status"
+                          options={["submitted", "approved", "rejected", "in-progress", "draft"]}
+                          selectedValues={statusValues}
+                          onChange={setStatusValues}
+                          operator={statusOperator}
+                          onOperatorChange={setStatusOperator}
+                          onApply={handleApplyStatusFilter}
+                        />
+
+                        <div className="searchfilter-margin d-flex searchfilter- ms-2">
+                          <SimpleMenu
+                            title={
+                              <>
+                                More <PlusOutlined style={{ marginLeft: "-2px" }} />
+                              </>
+                            }
+                            isSearched={false}
+                          />
+
+                        </div>
+
+                        <div>
+                          <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>
+                            Reset
+                          </Button>
+                          {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
                         Save filter
                       </Button> */}
+                        </div>
+
+                        {/* 👇 Push this div to the right */}
+                        <div className="ms-auto searchfilter-">
+                          <SaveViewMenu />
+                        </div>
+                      </Row>
                     </div>
 
-                    {/* 👇 Push this div to the right */}
-                    <div className="ms-auto searchfilter-">
-                      <SaveViewMenu />
-                    </div>
-                  </Row>
-                </div>
+
+                }
 
               </div>
             )}

@@ -4,41 +4,16 @@ import { CalendarOutlined, UserOutlined, BarChartOutlined } from "@ant-design/ic
 import BatchDrawer from "./component/reminders/BatchDrawer";
 import { useState } from "react";
 import { useView } from "./context/ViewContext";
+import { useReminders } from "./context/CampaignDetailsProvider";
+import { campaigns } from "./Data";
 
-const campaigns = [
-  {
-    title: "Monthly Payment Reminders December 2024",
-    date: "2024-12-15",
-    user: "John Smith",
-    selected: false,
-    stats: { R1: 245, R2: 128, R3: 67 },
-  },
-  {
-    title: "Quarterly Invoice Reminders - Q4 2024",
-    date: "2024-12-10",
-    user: "Sarah Johnson",
-    selected: true,
-    stats: { R1: 180, R2: 95, R3: 42 },
-    triggered: "2024-12-10 14:30:00",
-  },
-  {
-    title: "Overdue Account Notifications",
-    date: "2024-12-08",
-    user: "Mike Davis",
-    selected: false,
-    stats: { R1: 85, R2: 52, R3: 28 },
-  },
-  {
-    title: "Overdue Account Notifications",
-    date: "2024-12-08",
-    user: "Mike Davis",
-    selected: false,
-    stats: { R1: 85, R2: 52, R3: 28 },
-  },
-];
+
 
 const RemindersCard = () => {
+  const {getRemindersById} = useReminders()
   const [isbatchOpen, setisbatchOpen] = useState(false);
+  const [isDisable, setIsDisable] = useState(false);
+
   return (
     <div className="mt-4">
       <div className="row">
@@ -46,6 +21,11 @@ const RemindersCard = () => {
           <div key={index} className="col-md-3 mb-4">
             <Card
               className="shadow-sm"
+              style={{
+                boxShadow: "0 2px 8px rgba(0,0,0,0.15)", // stronger shadow
+                border: "1px solid #d9d9d9",            // AntD default border
+                borderRadius: "8px",                    // optional rounded corners
+              }}
               bordered
               headStyle={{
                 padding: "8px 12px",
@@ -54,15 +34,15 @@ const RemindersCard = () => {
               bodyStyle={{ padding: "12px" }}
               title={
                 <div>
-                <div className="d-flex justify-content-between align-items-center">
-                  <span style={{ fontSize: "13px" }}>{item.title}</span>
-                  <Tag color={item.selected ? "blue" : "default"}>
-                    {item.selected ? "Selected" : "Unselected"}
-                  </Tag>
-                </div>
+                  <div className="d-flex justify-content-between align-items-center">
+                    <span style={{ fontSize: "13px" }}>{item.title}</span>
+                    {/* <Tag color={item.selected ? "blue" : "default"}>
+                      {item.selected ? "Selected" : "Unselected"}
+                    </Tag> */}
+                  </div>
                   {
                     item?.triggered &&
-                    <p style={{ fontSize: "11px", margin:'0px' }}>{`${item?.triggered} Jack Smith`}</p>
+                    <p style={{ fontSize: "11px", margin: '0px' }}>{`${item?.triggered} Jack Smith`}</p>
                   }
 
                 </div>
@@ -88,14 +68,21 @@ const RemindersCard = () => {
                   <small className="text-muted">R3</small>
                 </div>
               </div>
-              <Button className="primary-btn"  onClick={() => setisbatchOpen(!isbatchOpen)} block icon={<BarChartOutlined />}>
+              <Button className="primary-btn mt-2" onClick={() => {
+                setisbatchOpen(!isbatchOpen)
+                getRemindersById(item?.id)
+                if (item?.selected === true) {
+                  setIsDisable(!isDisable)
+                }
+              }
+              } block icon={<BarChartOutlined />}>
                 View Details
               </Button>
             </Card>
           </div>
         ))}
       </div>
-      <BatchDrawer open={isbatchOpen} onClose={() => setisbatchOpen(!isbatchOpen)} />
+      <BatchDrawer open={isbatchOpen} onClose={() => setisbatchOpen(!isbatchOpen)} isDisable={isDisable} />
     </div>
   );
 };

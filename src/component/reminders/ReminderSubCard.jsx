@@ -1,14 +1,14 @@
 // ReminderCard.jsx
 import React from "react";
 import { Card, Row, Col, Button, Table } from "antd";
-import { PlayCircleOutlined, CloseOutlined  } from "@ant-design/icons";
+import { PlayCircleOutlined, CloseOutlined } from "@ant-design/icons";
 import MySearchInput from "../common/MySearchInput";
 
 const ReminderSubCard = ({
-    reminderKey, // e.g. "R1", "R2", "R3"
+    reminderKey,
     title,
     totalItems,
-    stats = {}, // { sent: 0, pending: 0, failed: 0, total: 0 }
+    stats = {},
     columns,
     data,
     getRowSelection,
@@ -17,8 +17,8 @@ const ReminderSubCard = ({
     onExecute,
 }) => {
     return (
-        <div className="mt-1 ms-2 me-2 w-100">
-            <Card className="mb-2">
+        <div className="mt-1 ms-1 me-1 w-100">
+            <Card className="mb-2 ">
                 {/* Header */}
                 <div className="d-flex justify-content-between" style={{ marginBottom: "24px" }}>
                     <h5 className="m-0">{title}</h5>
@@ -30,11 +30,11 @@ const ReminderSubCard = ({
                 {/* Search + Actions */}
                 <div className="d-flex align-items-center pb-2">
                     <div className="flex-grow-1 me-2">
-                        <MySearchInput placeholder="Search by name, email or membership no." />
+
                     </div>
 
                     {/* Execute Button */}
-                    {selectedKeysMap?.[reminderKey]?.length > 0 && (
+                    {/* {selectedKeysMap?.[reminderKey]?.length > 0 && (
                         <>
                         <Button
                         
@@ -54,16 +54,10 @@ const ReminderSubCard = ({
                             Execute ({selectedKeysMap[reminderKey].length})
                         </Button>
                         </>
-                    )}
+                    )} */}
 
                     {/* Export Button */}
-                    <Button
-                        className="butn primary-btn"
-                        style={{ height: "40px" }}
-                        onClick={() => onExport(reminderKey)}
-                    >
-                        Export
-                    </Button>
+
                 </div>
 
                 {/* Stats Row */}
@@ -134,8 +128,12 @@ const ReminderSubCard = ({
                     </Col>
                 </Row>
             </Card>
+            <div className="pt-2 pb-2 w-50">
+                <MySearchInput placeholder="Search by name, email or membership no." className="w-50" />
+
+            </div>
             <Table
-            className="claims-table"
+                className="claims-table"
                 rowSelection={getRowSelection(reminderKey)}
                 columns={columns}
                 dataSource={data}

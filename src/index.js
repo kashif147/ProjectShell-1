@@ -9,6 +9,7 @@ import { ExcelProvider } from './context/ExcelContext';
 import { ViewProvider } from './context/ViewContext';
 import {Provider }from 'react-redux'
 import store from './store/Store';
+import { RemindersProvider } from './context/CampaignDetailsProvider';
 
 
 
@@ -19,11 +20,13 @@ root.render(
   <Provider store={store}>
     <Router>
       <ExcelProvider>
+        <RemindersProvider>
         <ViewProvider>
         <TableColumnsProvider>
           <App />
         </TableColumnsProvider>
         </ViewProvider>
+        </RemindersProvider>
       </ExcelProvider>
     </Router>
   </Provider>

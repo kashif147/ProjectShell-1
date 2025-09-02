@@ -9,7 +9,7 @@ import MyMenu from '../MyMenu';
 const { TabPane } = Tabs;
 
 function CancallationDrawer({ isOpen, onClose, }) {
-  const filename="my-data.csv"
+  const filename = "my-data.csv"
   const convertToCSV = (data) => {
     const header = Object.keys(data[0]).join(",") + "\n"; // Create CSV header
     const rows = data.map(row => Object.values(row).join(",")).join("\n"); // Create CSV rows
@@ -133,7 +133,7 @@ function CancallationDrawer({ isOpen, onClose, }) {
       createdBy: "Admin",
       Count: 25,
     },
-     ];
+  ];
 
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [activeKey, setactiveKey] = useState(1);
@@ -159,25 +159,25 @@ function CancallationDrawer({ isOpen, onClose, }) {
         <div className="d-flex gap-2 mb-3">
           <div style={{ width: '50%' }}>
             <label className='custom-label'>Batch Name</label>
-          <Input placeholder="Batch A" style={{}} disabled={true} value={"Batch A"} />
-    
+            <Input placeholder="Batch A" style={{}} disabled={true} value={"Batch A"} />
+
           </div>
-          
+
           <div style={{ width: '50%' }}>
             <label className='custom-label'>Batch Name</label>
-          <Input placeholder="2024-03-01" style={{  }} disabled={true} value={"2024-03-01" } />
-          {/* <Input placeholder="Draft" style={{ width: 200 }} disabled={true} />
+            <Input placeholder="2024-03-01" style={{}} disabled={true} value={"2024-03-01"} />
+            {/* <Input placeholder="Draft" style={{ width: 200 }} disabled={true} />
           <Input placeholder="25" style={{ width: 200 }} disabled={true} /> */}
           </div>
         </div>
         <div className="d-flex gap-2 mb-3">
-        <div style={{ width: '50%' }}>
+          <div style={{ width: '50%' }}>
             <label className='custom-label'>Batch Status</label>
-          <Input placeholder="Batch A" style={{}} disabled={true} value={"Draft"} />
+            <Input placeholder="Batch A" style={{}} disabled={true} value={"Draft"} />
           </div>
-        <div style={{ width: '50%' }}>
+          <div style={{ width: '50%' }}>
             <label className='custom-label'>Count</label>
-          <Input placeholder="" style={{}} disabled={true} value={"25"} />
+            <Input placeholder="" style={{}} disabled={true} value={"25"} />
           </div>
         </div>
         <Tabs
@@ -193,30 +193,30 @@ function CancallationDrawer({ isOpen, onClose, }) {
                 <Button className="butn secoundry-btn me-2 mb-2" onClick={() => setIsModalOpen(true)}>
                   Exclude Member
                 </Button>
-                <MyMenu 
-                                items={[
-                                  {
-                                      key: '2',
-                                      label: 'Export as CSV',
-                                      icon: <BsFiletypeXls style={{
-                                          fontSize: "12px",
-                                          marginRight: "10px",
-                                          color: "#45669d",
-                                        }} />,
-                                        onClick: () => {
-                                          downloadCSV()
-                                        }
-                                  },
-                                  {
-                                      key: '1',
-                                      label: 'Export as CSV',
-                                      icon: <BsFiletypeXls style={{
-                                          fontSize: "12px",
-                                          marginRight: "10px",
-                                          color: "#45669d",
-                                        }} />,
-                                  }
-                              ]} />
+                <MyMenu
+                  items={[
+                    {
+                      key: '2',
+                      label: 'Export as CSV',
+                      icon: <BsFiletypeXls style={{
+                        fontSize: "12px",
+                        marginRight: "10px",
+                        color: "#45669d",
+                      }} />,
+                      onClick: () => {
+                        downloadCSV()
+                      }
+                    },
+                    {
+                      key: '1',
+                      label: 'Export as CSV',
+                      icon: <BsFiletypeXls style={{
+                        fontSize: "12px",
+                        marginRight: "10px",
+                        color: "#45669d",
+                      }} />,
+                    }
+                  ]} />
               </>
             )
           }

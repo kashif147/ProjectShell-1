@@ -1,11 +1,17 @@
 import React, { useState } from "react";
-import { Drawer, Button, Tabs, Card, Row, Col, Tag, Table, Checkbox } from "antd";
+import { Drawer, Button, Tabs, Card, Row, Col, Tag, Table, Checkbox, Modal } from "antd";
+import CustomSelect from "../common/CustomSelect";
 import { CalendarOutlined, UserOutlined } from "@ant-design/icons";
+import MyMenu from "../common/MyMenu";
+import { BsFiletypeXls } from "react-icons/bs";
+import { useReminders } from "../../context/CampaignDetailsProvider";
 
 const { TabPane } = Tabs;
 
 const CancellationDrawer = ({ open, onClose }) => {
-    const [activeTab, setActiveTab] = useState("summary");
+    const { cancallationbyId, getCancellationById } = useReminders()
+    const [activeTab, setActiveTab] = useState("cancellations");
+    console.log(cancallationbyId, "console")
 
     const columns = [
         {
@@ -55,6 +61,7 @@ const CancellationDrawer = ({ open, onClose }) => {
             status: "Cancelled",
         },
     ];
+    const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
         <Drawer
@@ -77,67 +84,48 @@ const CancellationDrawer = ({ open, onClose }) => {
                 </Card>
 
                 {/* Tabs */}
-                <Tabs activeKey={activeTab} onChange={setActiveTab}>
+                <Tabs activeKey={activeTab} onChange={setActiveTab} tabBarExtraContent={
+                    activeTab !== "summary" && (
+                        <>
+                            <Button className="butn secoundry-btn me-2 mb-2" onClick={() => setIsModalOpen(true)}>
+                                + Add Member
+                            </Button>
+                            <Button className="butn secoundry-btn me-2 mb-2">
+                                Exclude Member
+                            </Button>
+                            <MyMenu
+                                items={[
+                                    {
+                                        key: '2',
+                                        label: 'Export as CSV',
+                                        icon: <BsFiletypeXls style={{
+                                            fontSize: "12px",
+                                            marginRight: "10px",
+                                            color: "#45669d",
+                                        }} />,
+                                        onClick: () => {
+                                            // downloadCSV()
+                                        }
+                                    },
+                                    {
+                                        key: '1',
+                                        label: 'Export as CSV',
+                                        icon: <BsFiletypeXls style={{
+                                            fontSize: "12px",
+                                            marginRight: "10px",
+                                            color: "#45669d",
+                                        }} />,
+                                    }
+                                ]} />
+                        </>
+                    )
+                }
+                >
                     {/* ✅ Summary Tab */}
-                    <TabPane key="summary" tab="Summary">
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "center", 
-                                alignItems: "center", 
-                                width: "100%",
-                                marginTop: "40px",
-                            }}
-                        >
-                            <Card
-                                style={{
-                                    width: 220,
-                                    textAlign: "center",
-                                    border: "1px solid #f0f0f0",
-                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                    borderRadius: "10px",
-                                }}
-                                bodyStyle={{ padding: "20px" }}
-                            >
-                                <UserOutlined
-                                    style={{
-                                        fontSize: "30px",
-                                        color: "#ff4d4f",
-                                        marginBottom: "8px",
-                                    }}
-                                />
-                                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#333" }}>
-                                    25
-                                </div>
-                                <div style={{ fontSize: "14px", color: "#888" }}>Total Members</div>
-                            </Card>
-                            <Card
-                                style={{
-                                    width: 220,
-                                    textAlign: "center",
-                                    border: "1px solid #f0f0f0",
-                                    boxShadow: "0 4px 12px rgba(0,0,0,0.1)",
-                                    borderRadius: "10px",
-                                }}
-                                bodyStyle={{ padding: "20px" }}
-                            >
-                                <UserOutlined
-                                    style={{
-                                        fontSize: "30px",
-                                        color: "#ff4d4f",
-                                        marginBottom: "8px",
-                                    }}
-                                />
-                                <div style={{ fontSize: "24px", fontWeight: "bold", color: "#333" }}>
-                                    25
-                                </div>
-                                <div style={{ fontSize: "14px", color: "#888" }}>Total Members</div>
-                            </Card>
-                        </div>
-                    </TabPane>
+
 
                     {/* ✅ Cancellation Tab */}
-                    <TabPane key="cancellations" tab="Cancellations">
+                    <TabPane key="cancellations" tab="Cancellations" className="mt-2">
                         <Table
                             columns={columns}
                             dataSource={data}
@@ -146,6 +134,15 @@ const CancellationDrawer = ({ open, onClose }) => {
                     </TabPane>
                 </Tabs>
             </div>
+            <Modal
+                className="right-modal"
+                open={isModalOpen}
+                title="Add Member"
+                onOk={() => setIsModalOpen(false)}
+                onCancel={() => setIsModalOpen(false)}
+            >
+                <CustomSelect placeholder="Select a memeber" />
+            </Modal>
         </Drawer>
     );
 };
