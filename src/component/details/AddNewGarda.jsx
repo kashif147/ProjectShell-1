@@ -366,19 +366,7 @@ function AddNewGarda({ open, onClose, isGard }) {
             workEmail: InfData.WorkEmail,
             consent: InfData.termsAndConditions || false,
           },
-          // meta: {
-          //   createdBy: localStorage.getItem("userId") || "system",
-          //   userType: "CRM",
-          //   deleted: false,
-          //   isActive: true,
-          // },
-          // _id: 'test',
-          // userId: null,
           applicationStatus: "submitted",
-          // ApplicationId: applicationId,
-          // createdAt: now,
-          // updatedAt: now,
-          // __v: 0,
         },
         professionalDetails: {
           membershipCategory: InfData.membershipCategory,
@@ -506,7 +494,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       setInfData((prev) => ({ ...prev, ...newdata }));
     }
   }, [application]);
-
+  console.log(application, "bonai")
   const handleSubmit = () => {
     const requiredFields = [
       "title",
@@ -553,7 +541,6 @@ function AddNewGarda({ open, onClose, isGard }) {
     }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      debugger
       return;
     }
     setErrors({});
@@ -783,21 +770,17 @@ function AddNewGarda({ open, onClose, isGard }) {
   };
 
   function navigateApplication(direction) {
-    debugger
     const index = applications.findIndex(app => app.ApplicationId === application?.applicationId);
     if (index === -1) return;
     let newIndex = index;
-    debugger
     if (direction === "prev") {
       // newIndex = index === 0 ? applications.length - 1 : index - 1;
       newIndex = newIndex - 1;
     } else if (direction === "next") {
       newIndex = newIndex + 1;
     }
-    debugger
     const newdata = mapApplicationDetailToInfData(applications[newIndex]);
     setInfData((prev) => ({ ...prev, ...newdata }));
-    debugger
   }
 
   return (
@@ -972,7 +955,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                       display: "flex",
                       alignItems: "center",
                       justifyContent: "center",
-                      
+
                     }}
                   >
                     <EnvironmentOutlined style={{ color: "green", fontSize: "18px" }} />
@@ -988,7 +971,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                       }}
                     >
                       Correspondence Details
-                      <Checkbox className="" style={{marginLeft:'7.5rem'}}>
+                      <Checkbox className="" style={{ marginLeft: '7.5rem' }}>
                         Consent to receive Correspondence from INMO
                       </Checkbox>
                     </h2>
@@ -1051,7 +1034,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   disabled={isDisable}
                   onChange={handleInputChange}
                   hasError={!!errors?.buildingOrHouse}
-                
+
                 />
               </Col>
 
@@ -1139,18 +1122,18 @@ function AddNewGarda({ open, onClose, isGard }) {
 
               {/* Preferred Email (Full Width) */}
               <Col span={12} className="mt-1 mb-3">
-              <div className="d-flex justify-content-between">
-                <label className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>Preferred Email<span className="text-danger ms-1">*</span></label>
-                <Radio.Group
-                  onChange={(e) => handleInputChange("preferredEmail", e.target.value)}
-                  value={InfData?.preferredEmail}
-                  disabled={isDisable}
-                  className={errors?.preferredEmail ? 'radio-error' : ''}
-                >
-                  <Radio value="personal">Personal</Radio>
-                  <Radio value="work">Work</Radio>
-                </Radio.Group>
-              </div>
+                <div className="d-flex justify-content-between">
+                  <label className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>Preferred Email<span className="text-danger ms-1">*</span></label>
+                  <Radio.Group
+                    onChange={(e) => handleInputChange("preferredEmail", e.target.value)}
+                    value={InfData?.preferredEmail}
+                    disabled={isDisable}
+                    className={errors?.preferredEmail ? 'radio-error' : ''}
+                  >
+                    <Radio value="personal">Personal</Radio>
+                    <Radio value="work">Work</Radio>
+                  </Radio.Group>
+                </div>
               </Col>
               <Col span={12}></Col>
               <Col span={12}>

@@ -179,3 +179,35 @@ export async function generatePKCE() {
 
   return { codeVerifier, codeChallenge };
 }
+
+export function generateJsonPatch(original, updated, path = "") {
+  let patches = [];
+
+  // Loop through keys in updated object
+  for (const key in updated) {
+    const newPath = path + "/" + key;
+
+    if (typeof updated[key] === "object" && updated[key] !== null && !Array.isArray(updated[key])) {
+      // Recursive check for nested objects
+      patches = patches.concat(generateJsonPatch(original[key] || {}, updated[key], newPath));
+    } else {
+      if (original[key] !== updated[key]) {
+        if (original[key] === undefined) {
+          patches.push({ op: "add", path: newPath, value: updated[key] });
+        } else {
+          patches.push({ op: "replace", path: newPath, value: updated[key] });
+        }
+      }
+    }
+  }
+
+  // Handle keys removed from updated
+  for (const key in original) {
+    if (!(key in updated)) {
+      patches.push({ op: "remove", path: path + "/" + key });
+    }
+  }
+
+  return patches;
+}
+

@@ -35,6 +35,7 @@ import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { set } from "react-hook-form";
+import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 const EditableContext = React.createContext(null);
 
 
@@ -71,7 +72,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false)
   const { applications, applicationsLoading } = useSelector((state) => state.applications);
   const [manualPayment, setmanualPayment] = useState(false)
-  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn, ColumnProp } = useTableColumns();
+  const { columns, gridData, setGridData, getProfile, profilNextBtnFtn, ColumnProp, disableFtn } = useTableColumns();
   const [dataSource, setdataSource] = useState(data)
   useEffect(() => {
     setdataSource(data);
@@ -313,16 +314,15 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
                 // to="/AproveMembersip"
                 onClick={() => {
                   const { applicationStatus, ApplicationId } = record || {};
-
                   if (applicationStatus === "Draft") {
                     dispatch(getApplicationById({ id: "draft", draftId: ApplicationId }));
-                    setAddNewGardaDrwr(true);
+                    setAddNewGardaDrwr(true)
                   }
                   else if (applicationStatus === "submitted") {
                     dispatch(getApplicationById({ id: ApplicationId }));
                     setAddNewGardaDrwr(true);
+                    disableFtn(false)
                   }
-  
                 }}
 
                 state={{
@@ -685,7 +685,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           </th>
         )}
       </DragOverlay>
-      <AddNewGarda open={AddNewGardaDrwr} onClose={() => setAddNewGardaDrwr(!AddNewGardaDrwr)} isGard={true} />
+      <ApplicationMgtDrawer open={AddNewGardaDrwr} onClose={() => setAddNewGardaDrwr(!AddNewGardaDrwr)} isEdit={true} title="Registration Request" />
       <TrigerReminderDrawer isOpen={TriggerReminderDrawer} onClose={() => setTriggerReminderDrawer(!TriggerReminderDrawer)} />
       <CancallationDrawer isOpen={iscancellationOpen} onClose={() => setIscancellationOpen(!iscancellationOpen)} />
       <TrigerBatchMemberDrawer isOpen={isBatchmemberOpen} onClose={() => setIsBatchmemberOpen(!isBatchmemberOpen)} />

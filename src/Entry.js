@@ -48,6 +48,7 @@ const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
 const Popout = lazy(() => import("../src/component/common/PopOut"))
 const Members = lazy(() => import('./pages/membership/Members'))
+const ReminderDetails = lazy(()=> import('./pages/reminders/RemindersDetails'))
 
 function Entry() {
   const location = useLocation();
@@ -87,12 +88,11 @@ function Entry() {
 
           {/* Content area + resizable section */}
           <div style={{ flex: 1, display: "flex", }}>
-            {/* Routes Content */}
             <div style={{ flex: 1, }} className="main-main">
               <Suspense fallback={<div>Loading...</div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />
-
+                  {/* <Route element={<ProtectedRoute />} > */}
                   <Route path="Dummy" element={<Dummy />} />
                   <Route path="Details" element={<ProfileDetails />} />
                   <Route path="Summary" element={<ProfileSummary />} />
@@ -130,6 +130,8 @@ function Entry() {
                   <Route path="CornMarket" element={<CornGrideSummary />} />
                   <Route path="Popout" element={<Popout />} />
                   <Route path="members" element={<Members />} />
+                  <Route path="reminderDetails" element={<ReminderDetails />} />
+                  {/* </Route> */}
                 </Routes>
               </Suspense>
             </div>

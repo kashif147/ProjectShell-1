@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Drawer, Button, Tabs, Card, Row, Col, Tag, Table, Checkbox, Modal } from "antd";
+import { Drawer, Button, Tabs, Card, Row, Col, Tag, Table, Checkbox, Modal,Progress } from "antd";
 import CustomSelect from "../common/CustomSelect";
 import { CalendarOutlined, UserOutlined } from "@ant-design/icons";
 import MyMenu from "../common/MyMenu";
@@ -9,67 +9,158 @@ import { useReminders } from "../../context/CampaignDetailsProvider";
 const { TabPane } = Tabs;
 
 const CancellationDrawer = ({ open, onClose }) => {
-    const { cancallationbyId, getCancellationById } = useReminders()
-    const [activeTab, setActiveTab] = useState("cancellations");
-    console.log(cancallationbyId, "console")
 
+    const { cancallationbyId, getCancellationById } = useReminders()
+    const [activeTab, setActiveTab] = useState("summary");
+    console.log(cancallationbyId, "console")
+    const [isDisable, setIsDisable] = useState(false);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+
+    const getRowSelection = {
+        selectedRowKeys,
+        onChange: (newSelectedRowKeys, selectedRows) => {
+            console.log("Selected Keys: ", newSelectedRowKeys);
+            console.log("Selected Rows: ", selectedRows);
+
+            setSelectedRowKeys(newSelectedRowKeys);
+
+        },
+    };
     const columns = [
         {
-            title: "Member",
-            dataIndex: "member",
-            key: "member",
-            render: (_, record) => (
-                <div>
-                    <div>{record.member}</div>
-                    <div style={{ fontSize: 12, color: "#888" }}>{record.email}</div>
-                </div>
-            ),
+            title: "Membership No",
+            dataIndex: "membershipNo",
+            key: "membershipNo",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
         },
-        { title: "Join Date", dataIndex: "joinDate", key: "joinDate" },
-        { title: "Cancelled On", dataIndex: "cancelDate", key: "cancelDate" },
-        { title: "Reason", dataIndex: "reason", key: "reason" },
         {
-            title: "Status",
-            dataIndex: "status",
-            key: "status",
-            render: (status) =>
-                status === "Cancelled" ? (
-                    <Tag color="red">Cancelled</Tag>
-                ) : (
-                    <Tag color="orange">Pending</Tag>
-                ),
+            title: "Full Name",
+            dataIndex: "fullName",
+            key: "fullName",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Email",
+            dataIndex: "email",
+            key: "email",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Mobile No",
+            dataIndex: "mobileNo",
+            key: "mobileNo",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Membership Status",
+            dataIndex: "membershipStatus",
+            key: "membershipStatus",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Membership Category",
+            dataIndex: "membershipCategory",
+            key: "membershipCategory",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Work Location",
+            dataIndex: "workLocation",
+            key: "workLocation",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Branch",
+            dataIndex: "branch",
+            key: "branch",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Region",
+            dataIndex: "region",
+            key: "region",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Grade",
+            dataIndex: "grade",
+            key: "grade",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Section (Primary)",
+            dataIndex: "section",
+            key: "section",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Joining Date",
+            dataIndex: "joiningDate",
+            key: "joiningDate",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Expiry Date",
+            dataIndex: "expiryDate",
+            key: "expiryDate",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Last Payment Amount",
+            dataIndex: "lastPaymentAmount",
+            key: "lastPaymentAmount",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Last Payment Date",
+            dataIndex: "lastPaymentDate",
+            key: "lastPaymentDate",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Membership Fee",
+            dataIndex: "membershipFee",
+            key: "membershipFee",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Outstanding Balance",
+            dataIndex: "outstandingBalance",
+            key: "outstandingBalance",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Reminder No",
+            dataIndex: "reminderNo",
+            key: "reminderNo",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Reminder Date",
+            dataIndex: "reminderDate",
+            key: "reminderDate",
+            render: (text) => <span style={{ whiteSpace: "nowrap" }}>{text}</span>,
+        },
+        {
+            title: "Cancellation Flag",
+            dataIndex: "cancellationFlag",
+            key: "cancellationFlag",
+            render: (value) => (
+                <span style={{ whiteSpace: "nowrap" }}>{value ? "Yes" : "No"}</span>
+            ),
         },
     ];
 
-    const data = [
-        {
-            key: 1,
-            member: "John Doe",
-            email: "john@example.com",
-            joinDate: "01/02/2022",
-            cancelDate: "15/01/2025",
-            reason: "Relocation",
-            status: "Cancelled",
-        },
-        {
-            key: 2,
-            member: "Jane Smith",
-            email: "jane@example.com",
-            joinDate: "10/06/2023",
-            cancelDate: "20/01/2025",
-            reason: "Financial",
-            status: "Cancelled",
-        },
-    ];
+    const data = cancallationbyId?.members
     const [isModalOpen, setIsModalOpen] = useState(false);
 
     return (
         <Drawer
-            title="Membership Cancellation - January 2025"
+            title={cancallationbyId?.title}
             width={1000}
             open={open}
             onClose={onClose}
-            extra={<Button className="btun primary-btn">Export Report</Button>}
+            extra={<Button className="btun primary-btn">Trigger Batch</Button>}
         >
             <div className="p-4">
                 {/* Header Info */}
@@ -77,9 +168,9 @@ const CancellationDrawer = ({ open, onClose }) => {
                     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
                         <Checkbox></Checkbox>
                         <CalendarOutlined />
-                        <span>2025-01-20</span>
+                        <span>{cancallationbyId?.date}</span>
                         <UserOutlined />
-                        <span>Processed by Admin</span>
+                        <span>Processed by {cancallationbyId?.user}</span>
                     </div>
                 </Card>
 
@@ -121,15 +212,31 @@ const CancellationDrawer = ({ open, onClose }) => {
                     )
                 }
                 >
-                    {/* ✅ Summary Tab */}
-
-
-                    {/* ✅ Cancellation Tab */}
+                    <TabPane key="summary" tab="Summary" className="mt-2">
+                        <Row gutter={16} className="pt-2" style={{ marginTop: 16 }}>
+                            <Col span={12}>
+                                <Card title="Payment Methods Distribution">
+                                    <Progress type="circle" percent={41} />
+                                </Card>
+                            </Col>
+                            <Col span={12}>
+                                <Card title="Payment Breakdown">
+                                    <p>Credit Card: 180 (40.9%)</p>
+                                    <p>Debit Card: 145 (33.0%)</p>
+                                    <p>Bank Card: 95 (21.6%)</p>
+                                    <p>Cash: 20 (4.5%)</p>
+                                </Card>
+                            </Col>
+                        </Row>
+                    </TabPane>
                     <TabPane key="cancellations" tab="Cancellations" className="mt-2">
                         <Table
+                            className="claims-table"
                             columns={columns}
                             dataSource={data}
                             pagination={{ pageSize: 5 }}
+                            bordered
+                            rowSelection={getRowSelection}
                         />
                     </TabPane>
                 </Tabs>

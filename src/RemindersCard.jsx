@@ -1,6 +1,7 @@
 import React from "react";
 import { Card, Button, Tag } from "antd";
 import { CalendarOutlined, UserOutlined, BarChartOutlined } from "@ant-design/icons";
+import { useNavigate } from "react-router-dom";
 import BatchDrawer from "./component/reminders/BatchDrawer";
 import { useState } from "react";
 import { useView } from "./context/ViewContext";
@@ -13,6 +14,7 @@ const RemindersCard = () => {
   const {getRemindersById} = useReminders()
   const [isbatchOpen, setisbatchOpen] = useState(false);
   const [isDisable, setIsDisable] = useState(false);
+  const navigate = useNavigate()
 
   return (
     <div className="mt-4">
@@ -69,7 +71,8 @@ const RemindersCard = () => {
                 </div>
               </div>
               <Button className="primary-btn mt-2" onClick={() => {
-                setisbatchOpen(!isbatchOpen)
+                // setisbatchOpen(!isbatchOpen)
+                navigate('/reminderDetails')
                 getRemindersById(item?.id)
                 if (item?.selected === true) {
                   setIsDisable(!isDisable)

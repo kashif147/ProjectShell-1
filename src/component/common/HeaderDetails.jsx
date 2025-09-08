@@ -52,6 +52,7 @@ import ActionDropdown from "./ActionDropdown";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
+import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -913,8 +914,8 @@ function HeaderDetails() {
       }}>Save</Button ><Button onClick={showHidSavModal}>Close</Button></>} title="Report" open={isSaveModalOpen} onOk={showHidSavModal} onCancel={showHidSavModal}>
         <Input onChange={(e) => setReportName(e.target.value)} value={ReportName} placeholder="Enter Name For Report" />
       </Modal>
-
-      <AddNewGarda open={isGardaDrwer} onClose={() => setisGardaDrwer(!isGardaDrwer)} />
+  <ApplicationMgtDrawer open={isGardaDrwer} onClose={() => setisGardaDrwer(!isGardaDrwer)}/>
+      {/* <AddNewGarda  /> */}
       <TransferRequests open={TransferDrawer} onClose={() => setTransferDrawer(!TransferDrawer)} isSearch={true} isChangeCat={true} />
       <MyDrawer title='Add New Events' open={rosterDrawer} onClose={() => setrosterDrawer(!rosterDrawer)} isrecursion={true}>
         <div>

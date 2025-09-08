@@ -9,24 +9,20 @@ import { Spin } from 'antd';
 function MembershipApplication() {
   const dispatch = useDispatch();
   const { applications, applicationsLoading } = useSelector((state) => state.applications);
-
-
-    const handleAuthRedirect = async () => {
-      const urlParams = new URLSearchParams(window.location.search);
-      const code = urlParams.get("code");
-      debugger
-
+  const handleAuthRedirect = async () => {
+    debugger
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    debugger
     if (!code) return; // No code means user hasn't logged in yet
-
     const codeVerifier = sessionStorage.getItem("pkce_code_verifier");
+    debugger
     if (!codeVerifier) {
       console.error("Missing PKCE code_verifier from sessionStorage");
       return;
     }
-
     try {
       // Send code + code_verifier to your backend
-
       const response = await fetch(
         "https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net/auth/azure-crm",
         {
@@ -40,7 +36,7 @@ function MembershipApplication() {
       );
       const data = await response.json();
       console.log("Token response from backend:", data);
-
+      debugger
       // Save tokens to localStorage if presents
       if (data) {
         debugger
@@ -70,7 +66,7 @@ function MembershipApplication() {
     handleAuthRedirect();
   }, []);
   useEffect(() => {
-    dispatch(getAllApplications(['submitted','draft']));
+    dispatch(getAllApplications(['submitted', 'draft']));
   }, [dispatch]);
   console.log(applications, "ptdc")
 
