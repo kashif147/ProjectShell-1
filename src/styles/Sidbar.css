@@ -15,10 +15,10 @@
   justify-content: center;
   align-items: center;
   height: auto !important;
-  padding: 10px !important;   /* Inner padding inside item */
-  margin: 8px !important;      /* Space between items */
-  border-radius: 8px;          /* Rounded corners */
-  background: transparent;     /* Default transparent */
+  padding: 10px !important; /* Inner padding inside item */
+  margin: 8px !important; /* Space between items */
+  border-radius: 8px; /* Rounded corners */
+  background: transparent; /* Default transparent */
   color: white;
   border: none;
   transition: background-color 0.3s, box-shadow 0.3s, transform 0.3s;
@@ -26,9 +26,11 @@
 
 /* Active (selected) item */
 .sidebar-menu .ant-menu-item-selected {
-  background-color: #1677ff !important; /* Blue background */
-  color: white;
-  box-shadow: 0 0 8px rgba(22, 119, 255, 0.5); /* Soft glow effect */
+  background-color: var(
+    --secoundry-bg-color
+  ) !important; /* Light blue background */
+  color: var(--primary-color);
+  box-shadow: 0 0 8px rgba(33, 94, 151, 0.3); /* Soft glow effect */
 }
 
 /* Optional: subtle hover effect */
@@ -46,6 +48,10 @@
   color: #f2f5f8 !important; /* Change icon color on hover */
 }
 
+/* Selected item icon styling */
+.sidebar-menu .ant-menu-item-selected .icon {
+  color: var(--primary-color) !important;
+}
 
 /* Label styling */
 .sidebar-label {
@@ -53,12 +59,17 @@
   margin-top: 4px;
   text-align: center;
   max-width: 80px;
-  white-space: normal !important;  /* Allow wrapping */
-  overflow: visible !important;    /* Don't clip overflow */
+  white-space: normal !important; /* Allow wrapping */
+  overflow: visible !important; /* Don't clip overflow */
   text-overflow: unset !important; /* Disable ellipsis */
   color: white;
   word-wrap: break-word;
   line-height: 1.2;
+}
+
+/* Selected item label styling */
+.sidebar-menu .ant-menu-item-selected .sidebar-label {
+  color: var(--primary-color) !important;
 }
 
 /* Remove default margin between icon and text */

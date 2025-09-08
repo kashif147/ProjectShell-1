@@ -1,4 +1,3 @@
-
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -6,17 +5,16 @@
   --mainBlue: #215e97;
   --second: #c97a2f; /*#ad8135 */
   --FontsColor: #123c63;
-  --borderColor: #D9D9D9;
+  --borderColor: #d9d9d9;
   --fontFamily: "Roboto", sans-serif;
   --labelColor: #393b3d;
   --table-row: #fafafa;
   --btn-hover: #dcdfe4;
-  --gray:  rgba(9, 30, 66, 0.04); 
+  --gray: rgba(9, 30, 66, 0.04);
 }
-.input-container{
-   
+.input-container {
 }
-.custom-icon{
+.custom-icon {
   width: 60px;
   height: 60px;
 }
@@ -24,9 +22,9 @@
 .ant-modal-confirm .ant-btn-primary.custom-confirm-ok-button {
   background-color: var(--FontsColor) !important;
 }
-.bordr-less{
+.bordr-less {
   border: none;
-  box-shadow: none; 
+  box-shadow: none;
   color: var(--mainBlue) !important;
 }
 /* Center the tick in the Ant Design checkbox */
@@ -34,28 +32,27 @@
   /* --bs-gutter-x: 0rem !important; 
   --bs-gutter-y: 0rem !important;  */
 }
-.bordr-less :hover{
-background: transparent !important;
+.bordr-less :hover {
+  background: transparent !important;
 }
 .bordr-less .ant-btn:active {
-  box-shadow: none; 
-  outline: none; 
-  background:transparent !important;
-}
-.bordr-less .ant-btn:focus {
-  box-shadow: none; 
+  box-shadow: none;
   outline: none;
   background: transparent !important;
 }
-.ant-input:focus, 
-.ant-textarea:focus, 
-.ant-select:focus
-.ant-btn:focus{
-  background-color: #edf1fd; 
-  border:1.5px solid var(--mainBlue) ;     
-  outline: none;             
+.bordr-less .ant-btn:focus {
+  box-shadow: none;
+  outline: none;
+  background: transparent !important;
 }
-.star{
+.ant-input:focus,
+.ant-textarea:focus,
+.ant-select:focus .ant-btn:focus {
+  background-color: #edf1fd;
+  border: 1.5px solid var(--mainBlue);
+  outline: none;
+}
+.star {
   color: red;
   font-weight: 600;
   margin-left: 5px;
@@ -63,15 +60,13 @@ background: transparent !important;
   margin-bottom: 0px;
   font-size: 14px;
 }
-.ant-radio-button-wrapper-checked{
+.ant-radio-button-wrapper-checked {
   background-color: var(--mainBlue) !important;
   border-radius: 3px !important;
   font-size: 14px;
-  
-
 }
-.star-white{
-  color: #F5F5F5;
+.star-white {
+  color: #f5f5f5;
   font-weight: 600;
   margin-left: 5px;
   font-size: 14px;
@@ -79,14 +74,18 @@ background: transparent !important;
   margin-bottom: 0px !important;
 }
 .ant-checkbox-wrapper {
-  margin-right:6px !important; /* Change this value to your desired margin */
+  margin-right: 6px !important; /* Change this value to your desired margin */
 }
 .ant-select-selector {
   border-radius: 3px !important; /* Set your desired border-radius */
 }
 .ant-checkbox-checked .ant-checkbox-inner {
-  background-color: var( --secoundry-color) !important; /* Set your desired color */
-  border-color: var( --secoundry-color)  !important;     /* Match border to background */
+  background-color: var(
+    --secoundry-color
+  ) !important; /* Set your desired color */
+  border-color: var(
+    --secoundry-color
+  ) !important; /* Match border to background */
 }
 .ant-checkbox-checked .ant-checkbox-inner::after {
   border-color: white; /* Optional: Change the checkmark color */
@@ -142,12 +141,12 @@ select {
   font-weight: 500;
   font-size: 14px !important;
 }
-.primary-btn{
+.primary-btn {
   background-color: var(--mainBlue);
   color: white;
   font-weight: 400;
 }
-.secoundry-btn{
+.secoundry-btn {
   background-color: var(--gray);
   color: var(--mainBlue);
   font-weight: 400;
@@ -180,7 +179,7 @@ body {
   border-bottom: 2px solid white; /* Border color for the active link */
   font-weight: bold;
 }
-.checkbox{
+.checkbox {
   font-size: 14px;
   font-weight: 500;
 }
@@ -198,11 +197,11 @@ body {
   padding-bottom: 0.5rem;
 }
 
-.bg{
+.bg {
   background-color: var(--mainBlue);
 }
 
-.top-search  input{
+.top-search input {
   height: 32px;
   /* border-radius: 50px !important; */
   border-top-left-radius: 4px !important;
@@ -210,13 +209,11 @@ body {
   padding-left: 15px;
 }
 
-
 .details-header {
   padding-top: 10px;
   padding-left: 30px;
   padding-right: 30px;
   width: 100%;
-
 }
 .ant-table {
   display: flex;
@@ -279,7 +276,6 @@ body {
 .editable-cell input {
   display: none; /* Hide input by default */
   width: 100%; /* Full width for the input */
-  
 }
 
 .editable-cell:hover input {
@@ -324,7 +320,7 @@ body {
   display: flex;
   justify-content: center !important;
   align-items: center !important;
-  background-color: #E6F7FF;
+  background-color: #e6f7ff;
   color: var(--second) !important;
   padding: 0.6rem;
   border-radius: 7%;
@@ -381,7 +377,7 @@ body {
   background-color: rebeccapurple !important;
 }
 .ant-table-thead > tr > th {
-  /* padding: 6px 10px !important;  Adjust the value as needed */ 
+  /* padding: 6px 10px !important;  Adjust the value as needed */
   padding: 4px 8px !important;
   white-space: nowrap; /* Prevent text from wrapping */
   overflow: hidden; /* Hide overflow text */
@@ -418,7 +414,6 @@ body {
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-input-outlined {
   border: 1.5px solid var(--borderColor) !important;
-  
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-select-single {
   height: 29px !important;
@@ -430,10 +425,9 @@ body {
 .navbar-nav a {
   text-decoration: none !important;
 }
-.custom-highlight  {
-  background-color:#1677ff !important; 
-  color: white !important
-  
+.custom-highlight {
+  background-color: #1677ff !important;
+  color: white !important;
 }
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item,
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
@@ -536,7 +530,7 @@ body {
 }
 .Project-table .ant-table-tbody > tr > td {
   border-bottom: 1px solid #d9d9d9 !important;
-  
+
   /* Add border to table rows */
 }
 :where(.css-dev-only-do-not-override-1uq9j6g)[class^="ant-table"] {
@@ -545,16 +539,16 @@ body {
   overflow: hidden !important;
   border-collapse: collapse !important;
 }
-.custom-header{
+.custom-header {
   border: none !important;
 }
-.ant-table-cell{
+.ant-table-cell {
   border-inline-end: 2px solid #f0f0f0 !important;
   padding: 8px 12px !important;
   color: var(--mainBlue) !important;
 }
 .ant-table-wrapper {
-  overflow-x: auto;  
+  overflow-x: auto;
 }
 .ant-table {
   border-radius: 2px !important; /* Adjust the radius as needed */
@@ -682,7 +676,7 @@ tr {
 .last-chalid-search-filter {
 }
 .configuration-main {
-  margin-top: 2rem;
+  margin-top: 0.5rem;
 }
 .sid-nav-main .ant-menu > li:first-child {
   background-color: transparent;
@@ -699,7 +693,7 @@ tr {
 .ant-menu .ant-menu-item {
   border-radius: 3px !important;
   width: auto;
-  background:none;
+  background: none;
   margin: 12px 0px !important;
 }
 .hover-col {
@@ -708,16 +702,15 @@ tr {
   align-items: center;
   transition: background-color 0.3s ease;
 }
-.custom-select{
-  background-color: #215E97 !important;
+.custom-select {
+  background-color: #215e97 !important;
 }
 
 .hover-col:hover {
   background-color: var(--secoundry-bg-color);
   cursor: pointer;
 }
-.drawer-tbl
-.ant-table-thead > tr > th {
+.drawer-tbl .ant-table-thead > tr > th {
   background-color: #45669d !important;
   color: #ffffff !important;
   font-weight: bold;
@@ -819,7 +812,7 @@ tr {
 .ant-input:focus {
   background-color: #f0f8ff; /* Change this to your desired background color */
   outline: none; /* Optional: Remove the default outline */
-  border-color:2px #40a9ff !important; /* Optional: Change border color on focus */
+  border-color: 2px #40a9ff !important; /* Optional: Change border color on focus */
 }
 
 .transparent-bg:hover,
@@ -838,7 +831,7 @@ tr {
 .icon-align {
   vertical-align: baseline;
 }
-.deatil-header-icon{
+.deatil-header-icon {
   font-size: 13px !important;
   font-weight: 500;
   margin-left: 4px;
@@ -854,31 +847,31 @@ tr {
   align-items: center;
   text-align: center;
   border: 4px solid var(--mainBlue);
-  position: relative; 
+  position: relative;
   cursor: pointer;
 }
 .upload-icon {
   position: absolute;
-  font-size: 60px; 
+  font-size: 60px;
   color: var(--mainBlue);
-  opacity: 0.3; 
+  opacity: 0.3;
 }
 
 h1 {
-  position: relative; 
+  position: relative;
   z-index: 1;
 }
-.padding-bottom{
+.padding-bottom {
   padding-bottom: 20px;
 }
-.btn-main-con{
+.btn-main-con {
   margin: 1rem 0rem;
   float: right;
 }
-.sid-nav-main{
+.sid-nav-main {
   background-color: var(--mainBlue);
 }
-.profil-container-main{
+.profil-container-main {
   width: 15%;
   padding-top: 40px !important;
   padding: 5px 0px;
@@ -891,29 +884,38 @@ h1 {
 .ant-table-header {
   position: sticky;
   top: 0;
-  z-index: 1; 
-  background-color: #fff; 
+  z-index: 1;
+  background-color: #fff;
 }
-th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last{
+th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   z-index: 300;
- }
+}
 .common-table .ant-table-thead > tr > th {
-  background-color: #45669d; 
+  background-color: #45669d;
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 480;
 }
-.details-header{
- 
+.details-header {
 }
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item-group > .ant-menu-item-group-list > .ant-menu-item,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-item-group > .ant-menu-item-group-list > .ant-menu-submenu > .ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed > .ant-menu-submenu > .ant-menu-submenu-title {
-    text-align: center;
-    padding-inline: 0; /* Optional: remove padding if needed */
-    text-overflow: clip;
-    /* background: none; */
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title {
+  text-align: center;
+  padding-inline: 0; /* Optional: remove padding if needed */
+  text-overflow: clip;
+  /* background: none; */
 }
 .ant-menu-item {
   display: flex;
@@ -932,43 +934,86 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last{
   justify-content: center; /* Center the icons */
 }
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .anticon +span, :where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed >.ant-menu-submenu>.ant-menu-submenu-title .anticon +span {
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-item
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item
+  .anticon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-item
+  .anticon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .anticon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .anticon
+  + span {
   display: none !important;
 }
-.common-table table tr th{
-background-color: var(--mainBlue) !important;
-color: white ;
-padding: 4px 12px;
-font-weight: 600;
-position: sticky !important;
-z-index: 10;
-top:0
+.common-table table tr th {
+  background-color: var(--mainBlue) !important;
+  color: white;
+  padding: 4px 12px;
+  font-weight: 600;
+  position: sticky !important;
+  z-index: 10;
+  top: 0;
 }
-.common-table table tr td{
-padding: 4px 12px;
-font-weight: 400;
-color: var(--mainBlue) !important;
+.common-table table tr td {
+  padding: 4px 12px;
+  font-weight: 400;
+  color: var(--mainBlue) !important;
 }
 .table-wrapper {
-  max-height: 430px; 
-  overflow-y: auto;  
-  overflow-x: auto;  
-  white-space: nowrap; 
-  width: 100%;        
+  max-height: 430px;
+  overflow-y: auto;
+  overflow-x: auto;
+  white-space: nowrap;
+  width: 100%;
 }
 
 .table {
-  width: 100%;        
-  min-width: 1200px;  
+  width: 100%;
+  min-width: 1200px;
 }
-.tbl-footer{
+.tbl-footer {
   background-color: #fafafa !important;
   border-top: none;
 }
-.header-detail-main icon{
-color: red !important;
+.header-detail-main icon {
+  color: red !important;
 }
-.bred-cram-main p{
+.bred-cram-main p {
   margin-bottom: 0px !important;
 }
 /* Custom styles for AG Grid header */
@@ -988,55 +1033,21 @@ color: red !important;
   border-right: 0.5px solid var(--borderColor) !important;
 }
 
-.ag-cell-label-container{
+.ag-cell-label-container {
   background-color: var(--mainBlue) !important;
   color: white;
   border-right: 0.5px solid var(--borderColor) !important;
   padding-left: 10px !important;
 }
-.ag-theme-alpine{
+.ag-theme-alpine {
   --ag-header-column-resize-handle-width: 1px !important;
-    --ag-header-column-resize-handle-height: 100% !important;
+  --ag-header-column-resize-handle-height: 100% !important;
 }
-.sort-icon{
+.sort-icon {
   color: white !important;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 /* table .editable-cell */
-
 
 /* .editable-cell {
   position: relative;
@@ -1053,95 +1064,83 @@ color: red !important;
   border-radius: 2px;
 } */
 
-
-
-
-
-
 /* claims table */
-  .claims-table .ant-table-thead > tr > th {
-    background-color: #45669d; 
-    color: white !important;
-    font-family: var(--fontFamily) !important;
-    font-weight: 480;
-    padding: 12px 12px !important;
-  }
-  .heading-tbl .ant-table-thead > tr > th {
-    background-color: #45669d !important; 
-    color: white !important;
-    font-family: var(--fontFamily) !important;
-    font-weight: 400;
-    padding: 8px 8px !important;
-  }
-  .ant-drawer {
-    /* z-index: 9999; or any high value */
-  }
-  
+.claims-table .ant-table-thead > tr > th {
+  background-color: #45669d;
+  color: white !important;
+  font-family: var(--fontFamily) !important;
+  font-weight: 480;
+  padding: 12px 12px !important;
+}
+.heading-tbl .ant-table-thead > tr > th {
+  background-color: #45669d !important;
+  color: white !important;
+  font-family: var(--fontFamily) !important;
+  font-weight: 400;
+  padding: 8px 8px !important;
+}
+.ant-drawer {
+  /* z-index: 9999; or any high value */
+}
 
+.claims-table {
+  margin-top: 20px;
+}
 
+.form-section {
+  margin-bottom: 20px; /* Increased margin for better spacing */
+  padding: 20px;
+  background-color: #f7f7f7; /* Light background color for contrast */
+  border-radius: 3px; /* Rounded corners for softer appearance */
+  border: 1px solid #d9d9d9; /* Light border for visual separation */
+}
 
+.form-label {
+  display: block;
+  font-size: 14px;
+  font-weight: 600; /* Slightly bolder font */
+  margin-bottom: 8px; /* Increased spacing below labels */
+  color: #333; /* Darker color for better readability */
+}
 
-  .claims-table{
-    margin-top: 20px;
-  }
-
-
-
-
-
-
-
-  .form-section {
-    margin-bottom: 20px; /* Increased margin for better spacing */
-    padding: 20px;
-    background-color: #f7f7f7; /* Light background color for contrast */
-    border-radius: 3px; /* Rounded corners for softer appearance */
-    border: 1px solid #d9d9d9; /* Light border for visual separation */
-  }
-  
-  .form-label {
-    display: block;
-    font-size: 14px;
-    font-weight: 600; /* Slightly bolder font */
-    margin-bottom: 8px; /* Increased spacing below labels */
-    color: #333; /* Darker color for better readability */
-  }
-  
-  .form-input {
-    width: 100%;
-    margin-bottom: 16px;
-    padding: 10px; /* Added padding for better touch targets */
-    border-radius: 3px;
-    border: 1px solid #d9d9d9;
-    transition: all 0.3s ease;
-  }
-  /* .form-input:hover, 
+.form-input {
+  width: 100%;
+  margin-bottom: 16px;
+  padding: 10px; /* Added padding for better touch targets */
+  border-radius: 3px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+}
+/* .form-input:hover, 
   .form-input:focus {
     border-color: #40a9ff; 
     box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.2);
   } */
-  .form-checkbox {
-    margin-left: 8px;
-    font-size: 14px; /* Consistent font size for the checkbox */
-  }
-  
-  .form-button {
-    margin-right: 10px; /* Spacing between buttons */
-    border-radius: 4px;
-    padding: 8px 16px; /* Increased padding for better touch targets */
-    font-size: 14px; /* Consistent font size for buttons */
-  }
-  :where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-left, :where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-right {
-    z-index: 300;
+.form-checkbox {
+  margin-left: 8px;
+  font-size: 14px; /* Consistent font size for the checkbox */
+}
+
+.form-button {
+  margin-right: 10px; /* Spacing between buttons */
+  border-radius: 4px;
+  padding: 8px 16px; /* Increased padding for better touch targets */
+  font-size: 14px; /* Consistent font size for buttons */
+}
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper
+  .ant-table-cell-fix-left,
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper
+  .ant-table-cell-fix-right {
+  z-index: 300;
 }
 .ant-table-filter-trigger {
-  color: white !important; 
+  color: white !important;
   margin-right: 5px !important;
 }
 
 /* Apply watermark only to specific components or pages */
 .watermark {
-  background-image: url('/public/img1.png');
+  background-image: url("/public/img1.png");
   background-repeat: no-repeat;
   background-size: 300px;
   background-position: center center;

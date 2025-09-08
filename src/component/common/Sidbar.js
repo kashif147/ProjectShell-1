@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from 'react';
-import { Menu } from 'antd';
+import React, { useEffect, useMemo } from "react";
+import { Menu } from "antd";
 import {
   subscriptionItems,
   financeItems,
@@ -8,25 +8,25 @@ import {
   profileItems,
   reportItems,
   issuesItems,
-  eventsItems
-} from '../../constants/SideNav';
-import { useSelector } from 'react-redux';
-import '../../styles/Sidbar.css';
+  eventsItems,
+} from "../../constants/SideNav";
+import { useSelector } from "react-redux";
+import "../../styles/Sidbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import ProfileHeader from './ProfileHeader';
+import ProfileHeader from "./ProfileHeader";
 
 const Sidbar = () => {
-  // state 
+  // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
 
- // Used to determine which module is currently active.
+  // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
- 
+
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = {
-    'Subscriptions & Rewards': subscriptionItems,
+    "Subscriptions & Rewards": subscriptionItems,
     Finance: financeItems,
     Correspondence: correspondenceItems,
     Configuration: configurationItems,
@@ -40,127 +40,165 @@ const Sidbar = () => {
   const menuItems = itemsMap[activeKey] || [];
 
   const routeKeyMap = {
-    '/Summary': 'Profiles',
-    '/ClaimSummary': 'Claims',
-    '/ClaimsById': 'Claims',
-    '/CasesSummary': 'Cases',
-    '/CasesById': 'Cases',
-    '/CorrespondencesSummary': 'Correspondences',
-    '/Transfers': 'Transfer Requests',
-    '/Configuratin': 'System Configuration',
-    '/RosterSummary': 'Roster',
-    '/Batches': 'Batches',
-    '/Applications': 'Applications',
-    '/RemindersSummary': 'Reminders',
-    '/Cancallation': 'Cancellations',
-    '/ChangCateSumm': 'Change Category',
-    '/Import': 'Imports',
-    '/Email': 'Email',
-    '/Sms': 'SMS',
-    '/Notes': 'Notes & Letters',
-    '/Letters': 'Notes & Letters',
-    '/CorspndncDetail': 'Communication History',
-    '/members': 'Membership',
+    "/Summary": "Profiles",
+    "/ClaimSummary": "Claims",
+    "/ClaimsById": "Claims",
+    "/CasesSummary": "Cases",
+    "/CasesById": "Cases",
+    "/CorrespondencesSummary": "Correspondences",
+    "/Transfers": "Transfer Requests",
+    "/Configuratin": "System Configuration",
+    "/RosterSummary": "Roster",
+    "/Batches": "Batches",
+    "/Applications": "Applications",
+    "/RemindersSummary": "Reminders",
+    "/Cancallation": "Cancellations",
+    "/ChangCateSumm": "Change Category",
+    "/Import": "Imports",
+    "/Email": "Email",
+    "/Sms": "SMS",
+    "/Notes": "Notes & Letters",
+    "/Letters": "Notes & Letters",
+    "/CorspndncDetail": "Communication History",
+    "/members": "Membership",
+    "/TenantManagement": "Tenant Management",
+    "/RoleManagement": "Role Management",
+    "/UserManagement": "User Management",
+    "/PermissionManagement": "Permission Management",
   };
 
   const selectedKey = useMemo(() => {
-    const currentPath = Object.keys(routeKeyMap).find(route => location.pathname.startsWith(route));
-    return routeKeyMap[currentPath] || '';
+    const currentPath = Object.keys(routeKeyMap).find((route) =>
+      location.pathname.startsWith(route)
+    );
+    return routeKeyMap[currentPath] || "";
   }, [location.pathname]);
 
   const handleClick = ({ key }) => {
     switch (key) {
-      case 'Profiles':
-        navigate("/Summary", { state: { search: 'Profile' } });
+      case "Profiles":
+        navigate("/Summary", { state: { search: "Profile" } });
         break;
-      case 'Claims':
-        navigate("/ClaimSummary", { state: { search: 'Claims' } });
+      case "Claims":
+        navigate("/ClaimSummary", { state: { search: "Claims" } });
         break;
-      case 'Cases':
-        navigate("/CasesSummary", { state: { search: 'Cases' } });
+      case "Cases":
+        navigate("/CasesSummary", { state: { search: "Cases" } });
         break;
-      case 'Correspondences':
-        navigate("/CorrespondencesSummary", { state: { search: '' } });
+      case "Correspondences":
+        navigate("/CorrespondencesSummary", { state: { search: "" } });
         break;
-      case 'Transfer Requests':
-        navigate("/Transfers", { state: { search: 'Transfers' } });
+      case "Transfer Requests":
+        navigate("/Transfers", { state: { search: "Transfers" } });
         break;
-      case 'System Configuration':
-        navigate("/Configuratin", { state: { search: '' } });
+      case "System Configuration":
+        navigate("/Configuratin", { state: { search: "" } });
         break;
-      case 'Roster':
-        navigate("/RosterSummary", { state: { search: 'Rosters' } });
+      case "Roster":
+        navigate("/RosterSummary", { state: { search: "Rosters" } });
         break;
-      case 'Batches':
-        navigate("/Batches", { state: { search: 'Batches' } });
+      case "Batches":
+        navigate("/Batches", { state: { search: "Batches" } });
         break;
-      case 'Applications':
-        navigate("/Applications", { state: { search: 'Applications' } });
+      case "Applications":
+        navigate("/Applications", { state: { search: "Applications" } });
         break;
-      case 'Membership':
-        navigate("/members", { state: { search: 'members' } });
+      case "Membership":
+        navigate("/members", { state: { search: "members" } });
         break;
-      case 'Reminders':
-        navigate("/RemindersSummary", { state: { search: 'Reminders' } });
+      case "Reminders":
+        navigate("/RemindersSummary", { state: { search: "Reminders" } });
         break;
-      case 'Cancellations':
-        navigate("/Cancallation", { state: { search: 'Cancallation' } });
+      case "Cancellations":
+        navigate("/Cancallation", { state: { search: "Cancallation" } });
         break;
-      case 'Trainings':
-        alert('Trainings clicked');
+      case "Trainings":
+        alert("Trainings clicked");
         break;
-      case 'Change Category':
-        navigate("/ChangCateSumm", { state: { search: 'Change Category Summary' } });
+      case "Change Category":
+        navigate("/ChangCateSumm", {
+          state: { search: "Change Category Summary" },
+        });
         break;
-      case 'Imports':
-        navigate("/Import", { state: { search: 'Imports' } });
+      case "Imports":
+        navigate("/Import", { state: { search: "Imports" } });
         break;
-      case 'Email':
-        navigate("/Email", { state: { search: 'Email' } });
+      case "Email":
+        navigate("/Email", { state: { search: "Email" } });
         break;
-      case 'SMS':
-        navigate("/Sms", { state: { search: 'Sms' } });
+      case "SMS":
+        navigate("/Sms", { state: { search: "Sms" } });
         break;
-      case 'Notes & Letters':
-        navigate("/Notes", { state: { search: 'Notes' } });
+      case "Notes & Letters":
+        navigate("/Notes", { state: { search: "Notes" } });
         break;
-      case 'Communication History':
-        navigate("/CorrespondencesSummary", { state: { search: 'CorrespondencesSummary' } });
+      case "Communication History":
+        navigate("/CorrespondencesSummary", {
+          state: { search: "CorrespondencesSummary" },
+        });
         break;
-      case 'CornMarket':
-        navigate("/CornMarket", { state: { search: 'CornMarket' } });
+      case "CornMarket":
+        navigate("/CornMarket", { state: { search: "CornMarket" } });
+        break;
+      case "Tenant Management":
+        navigate("/TenantManagement", {
+          state: { search: "TenantManagement" },
+        });
+        break;
+      case "Role Management":
+        navigate("/RoleManagement", {
+          state: { search: "RoleManagement" },
+        });
+        break;
+      case "User Management":
+        navigate("/UserManagement", {
+          state: { search: "UserManagement" },
+        });
+        break;
+      case "Permission Management":
+        navigate("/PermissionManagement", {
+          state: { search: "PermissionManagement" },
+        });
         break;
       default:
-        navigate('/NotDesignedYet');
+        navigate("/NotDesignedYet");
     }
   };
 
   useEffect(() => {
     if (menuLblState["Subscriptions & Rewards"]) {
-      navigate("/Applications", { state: { search: 'Applications' } });
+      navigate("/Applications", { state: { search: "Applications" } });
     } else if (menuLblState["Finance"]) {
-      navigate("/Batches", { state: { search: 'Batches' } });
+      navigate("/Batches", { state: { search: "Batches" } });
     } else if (menuLblState["Correspondence"]) {
-      navigate("/Email", { state: { search: 'Email' } });
+      navigate("/Email", { state: { search: "Email" } });
     } else if (menuLblState["Configuration"]) {
-      navigate("/Configuratin", { state: { search: '' } });
+      navigate("/Configuratin", { state: { search: "" } });
     }
   }, [menuLblState]);
 
   const showProfileHeaderRoutes = [
-    "/ClaimsDetails", "/CasesDetails", "/ClaimsById",
-    "/CasesById", "/AddNewProfile", "/AddClaims", ,
-    "/Doucmnets", "/Roster"
+    "/ClaimsDetails",
+    "/CasesDetails",
+    "/ClaimsById",
+    "/CasesById",
+    "/AddNewProfile",
+    "/AddClaims",
+    ,
+    "/Doucmnets",
+    "/Roster",
   ];
 
-  const sideBarWidth = showProfileHeaderRoutes.includes(location.pathname) ? '19vw' : '7vw';
+  const sideBarWidth = showProfileHeaderRoutes.includes(location.pathname)
+    ? "19vw"
+    : "7vw";
 
   return (
-    <div className='d-flex' style={{ width: sideBarWidth }}>
+    <div className="d-flex" style={{ width: sideBarWidth }}>
       <Menu
         mode="inline"
         selectedKeys={[selectedKey]}
-        style={{ width: '7vw', borderRight: 0 }}
+        style={{ width: "7vw", borderRight: 0 }}
         items={menuItems}
         className="sidebar-menu"
         onClick={handleClick}
