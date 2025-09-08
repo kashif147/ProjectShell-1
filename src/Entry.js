@@ -65,6 +65,9 @@ const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
 const Popout = lazy(() => import("../src/component/common/PopOut"));
 const Members = lazy(() => import("./pages/membership/Members"));
+const MembershipDashboard = lazy(() =>
+  import("./pages/membership/MembershipDashboard")
+);
 const TenantManagement = lazy(() => import("./pages/TenantManagement"));
 const RoleManagement = lazy(() => import("./pages/RoleManagement"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
@@ -190,6 +193,10 @@ function Entry() {
                   <Route path="CornMarket" element={<CornGrideSummary />} />
                   <Route path="Popout" element={<Popout />} />
                   <Route path="members" element={<Members />} />
+                  <Route
+                    path="MembershipDashboard"
+                    element={<MembershipDashboard />}
+                  />
                   <Route
                     path="TenantManagement"
                     element={<TenantManagement />}

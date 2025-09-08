@@ -200,6 +200,15 @@ export const profileItems = [
 
 export const subscriptionItems = [
   {
+    key: "MembershipDashboard",
+    icon: (
+      <div className="icon">
+        <FaChartBar />
+      </div>
+    ),
+    label: <div className="sidebar-label">Membership Dashboard</div>,
+  },
+  {
     key: "Profiles",
     icon: (
       <div className="icon">
@@ -216,15 +225,6 @@ export const subscriptionItems = [
       </div>
     ),
     label: <div className="sidebar-label">Applications</div>,
-  },
-  {
-    key: "Membership",
-    icon: (
-      <div className="icon">
-        <FaUserAlt />
-      </div>
-    ),
-    label: <div className="sidebar-label">Membership</div>,
   },
   {
     key: "Reminders",

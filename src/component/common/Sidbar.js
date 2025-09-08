@@ -61,6 +61,7 @@ const Sidbar = () => {
     "/Letters": "Notes & Letters",
     "/CorspndncDetail": "Communication History",
     "/members": "Membership",
+    "/MembershipDashboard": "MembershipDashboard",
     "/TenantManagement": "Tenant Management",
     "/RoleManagement": "Role Management",
     "/UserManagement": "User Management",
@@ -105,6 +106,11 @@ const Sidbar = () => {
         break;
       case "Membership":
         navigate("/members", { state: { search: "members" } });
+        break;
+      case "MembershipDashboard":
+        navigate("/MembershipDashboard", {
+          state: { search: "Membership Dashboard" },
+        });
         break;
       case "Reminders":
         navigate("/RemindersSummary", { state: { search: "Reminders" } });
@@ -167,7 +173,9 @@ const Sidbar = () => {
 
   useEffect(() => {
     if (menuLblState["Subscriptions & Rewards"]) {
-      navigate("/Applications", { state: { search: "Applications" } });
+      navigate("/MembershipDashboard", {
+        state: { search: "Membership Dashboard" },
+      });
     } else if (menuLblState["Finance"]) {
       navigate("/Batches", { state: { search: "Batches" } });
     } else if (menuLblState["Correspondence"]) {
