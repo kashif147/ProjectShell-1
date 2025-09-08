@@ -1,0 +1,166 @@
+.membership-dashboard {
+  background-color: #f5f5f5;
+  min-height: 100vh;
+  overflow-y: auto;
+  height: calc(100vh - 120px);
+  scroll-behavior: smooth;
+  position: relative;
+}
+
+/* Ensure the main content area allows scrolling */
+.main-main {
+  overflow-y: auto;
+  height: calc(100vh - 120px);
+}
+
+.membership-dashboard::-webkit-scrollbar {
+  width: 8px;
+}
+
+.membership-dashboard::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.membership-dashboard::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.membership-dashboard::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.dashboard-card {
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+}
+
+.dashboard-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+.dashboard-card .ant-card-head {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 8px 8px 0 0;
+}
+
+.dashboard-card .ant-card-head-title {
+  color: white;
+  font-weight: 600;
+}
+
+.dashboard-card .ant-card-extra {
+  color: white;
+}
+
+.dashboard-card .ant-card-extra .ant-btn {
+  color: white;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.dashboard-card .ant-card-extra .ant-btn:hover {
+  background-color: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.ant-statistic-title {
+  font-weight: 500;
+  color: #666;
+}
+
+.ant-statistic-content {
+  font-size: 24px;
+  font-weight: 600;
+}
+
+/* Comparison data styling */
+.ant-statistic-suffix {
+  margin-top: 8px;
+}
+
+.comparison-data {
+  font-size: 12px;
+  color: #666;
+  margin-top: 4px;
+  line-height: 1.4;
+}
+
+.comparison-data .ytd {
+  color: #1890ff;
+  font-weight: 500;
+}
+
+.comparison-data .monthly {
+  color: #52c41a;
+  font-weight: 500;
+}
+
+.comparison-data .positive {
+  color: #52c41a;
+}
+
+.comparison-data .negative {
+  color: #ff4d4f;
+}
+
+.recharts-tooltip-wrapper {
+  background-color: rgba(0, 0, 0, 0.8);
+  border-radius: 6px;
+  padding: 8px;
+}
+
+.recharts-tooltip-label {
+  color: white;
+  font-weight: 600;
+}
+
+.recharts-tooltip-item {
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .membership-dashboard {
+    padding: 16px;
+    height: calc(100vh - 100px);
+  }
+
+  .main-main {
+    height: calc(100vh - 100px);
+  }
+
+  .dashboard-card {
+    margin-bottom: 16px;
+  }
+
+  .ant-statistic-content {
+    font-size: 20px;
+  }
+}
+
+/* Modal styling */
+.ant-modal-content {
+  border-radius: 12px;
+}
+
+.ant-modal-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px 12px 0 0;
+}
+
+.ant-modal-title {
+  color: white;
+  font-weight: 600;
+}
+
+.ant-modal-close {
+  color: white;
+}
+
+.ant-modal-close:hover {
+  color: rgba(255, 255, 255, 0.8);
+}

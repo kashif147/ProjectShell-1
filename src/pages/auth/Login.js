@@ -1,24 +1,24 @@
 import { React, useState, useEffect } from 'react'
 import "../../styles/Login.css"
 // import loginImg from "../../assets/images/img1.png"
-import loginImg from "../../assets/images/gra_logo.png"
+import loginImg from "../../assets/images/gra_logo.png";
 // import { WindowsFilled } from '@ant-design/icons';
-import { Button, Checkbox, Divider, Input } from 'antd';
-import { Link } from 'react-router-dom';
-import { AiFillEye, AiFillEyeInvisible } from 'react-icons/ai';
-import { useNavigate } from 'react-router-dom';
-import { useMsal } from '@azure/msal-react';
-import { InteractionStatus } from '@azure/msal-browser';
-import { useDispatch, useSelector } from 'react-redux';
-import { loginUser } from '../../features/AuthSlice';
-import { generatePKCE } from '../../utils/Utilities';
+import { Button, Checkbox, Divider, Input } from "antd";
+import { Link } from "react-router-dom";
+import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
+import { useNavigate } from "react-router-dom";
+import { useMsal } from "@azure/msal-react";
+import { InteractionStatus } from "@azure/msal-browser";
+import { useDispatch, useSelector } from "react-redux";
+import { loginUser } from "../../features/AuthSlice";
+import { generatePKCE } from "../../utils/Utilities";
 
 const Login = () => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-    const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
-    const navigate = useNavigate(); // Use the useHistory hook
-    const { loading, } = useSelector((state) => state.auth);
+  const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+  const navigate = useNavigate(); // Use the useHistory hook
+  const { loading } = useSelector((state) => state.auth);
 
     // Step 1: Login button click
     const handleLogin = async () => {
@@ -29,7 +29,7 @@ const Login = () => {
         debugger
         const tenantId = "39866a06-30bc-4a89-80c6-9dd9357dd453";
         const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
-        const redirectUri = "http://localhost:3000/Applications";
+        const redirectUri = "http://localhost:3000";
         const scopes = "openid profile email offline_access";
         const authUrl = new URL(`https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`);
         authUrl.searchParams.set("client_id", clientId);
@@ -232,6 +232,3 @@ const Login = () => {
 }
 
 export default Login;
-
-
-

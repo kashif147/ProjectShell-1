@@ -1,0 +1,432 @@
+/* Role Management Styles */
+.role-management {
+  padding: 20px;
+  background-color: #f6f9fc;
+  min-height: 100vh;
+}
+
+.role-management h4 {
+  color: var(--primary-color);
+  font-weight: 600;
+  margin-bottom: 8px;
+}
+
+.role-management .text-muted {
+  color: #6c757d;
+  font-size: 14px;
+}
+
+/* Filter Card */
+.filter-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.filter-card .ant-card-body {
+  padding: 20px;
+}
+
+.filter-item {
+  margin-bottom: 0;
+}
+
+.filter-label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 500;
+  color: var(--primary-color);
+  font-size: 14px;
+}
+
+/* Stats Cards */
+.stat-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+  transition: all 0.3s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+}
+
+.stat-card .ant-card-body {
+  padding: 20px;
+}
+
+.stat-content {
+  text-align: center;
+}
+
+.stat-number {
+  font-size: 32px;
+  font-weight: 700;
+  color: var(--primary-color);
+  margin-bottom: 8px;
+}
+
+.stat-label {
+  font-size: 14px;
+  color: #6c757d;
+  font-weight: 500;
+}
+
+/* Table Styles */
+.drawer-tbl {
+  background: white;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.drawer-tbl .ant-table-thead > tr > th {
+  background-color: var(--secoundry-bg-color);
+  color: var(--primary-color);
+  font-weight: 600;
+  border-bottom: 2px solid var(--primary-color);
+  padding: 16px 12px;
+}
+
+.drawer-tbl .ant-table-tbody > tr > td {
+  padding: 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.drawer-tbl .even-row {
+  background-color: #fafafa;
+}
+
+.drawer-tbl .odd-row {
+  background-color: white;
+}
+
+.drawer-tbl .ant-table-tbody > tr:hover > td {
+  background-color: rgba(33, 94, 151, 0.05);
+}
+
+/* Tags */
+.tenant-tag {
+  background-color: rgba(33, 94, 151, 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(33, 94, 151, 0.2);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+.permission-count-tag {
+  background-color: rgba(33, 94, 151, 0.1);
+  color: var(--primary-color);
+  border: 1px solid rgba(33, 94, 151, 0.2);
+  border-radius: 4px;
+  font-weight: 500;
+}
+
+/* Role Form Drawer */
+.role-form-drawer .ant-drawer-header {
+  background: var(--secoundry-bg-color);
+  border-bottom: none;
+}
+
+.role-form-drawer .ant-drawer-title {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.role-form-drawer .ant-drawer-close {
+  color: var(--primary-color);
+}
+
+.role-form-drawer .ant-drawer-close:hover {
+  color: rgba(33, 94, 151, 0.8);
+}
+
+.role-form-drawer .ant-drawer-body {
+  padding: 0px;
+  background-color: #f6f9fc;
+}
+
+.drawer-main-cntainer {
+  padding: 24px;
+}
+
+.role-form .ant-form-item-label > label {
+  color: var(--primary-color);
+  font-weight: 500;
+}
+
+.role-form .ant-input,
+.role-form .ant-select-selector {
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+}
+
+.role-form .ant-input:focus,
+.role-form .ant-select-focused .ant-select-selector {
+  border-color: var(--primary-color);
+  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2);
+}
+
+.form-help {
+  background-color: rgba(33, 94, 151, 0.05);
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid var(--primary-color);
+  margin-top: 24px;
+}
+
+.form-help h5 {
+  color: var(--primary-color);
+  margin-bottom: 12px;
+}
+
+.form-help ul {
+  margin-bottom: 0;
+  padding-left: 20px;
+}
+
+.form-help li {
+  color: #6c757d;
+  margin-bottom: 8px;
+}
+
+/* Role Permissions Drawer */
+.role-permissions-drawer .ant-drawer-header {
+  background: var(--secoundry-bg-color);
+  border-bottom: none;
+}
+
+.role-permissions-drawer .ant-drawer-title {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.role-permissions-drawer .ant-drawer-close {
+  color: var(--primary-color);
+}
+
+.role-permissions-drawer .ant-drawer-close:hover {
+  color: rgba(33, 94, 151, 0.8);
+}
+
+.role-permissions-drawer .ant-drawer-body {
+  padding: 0px;
+  background-color: #f6f9fc;
+}
+
+.role-permissions-content {
+  padding: 24px;
+}
+
+.selected-permissions-card {
+  background: linear-gradient(
+    135deg,
+    rgba(33, 94, 151, 0.05) 0%,
+    rgba(33, 94, 151, 0.1) 100%
+  );
+  border: 1px solid rgba(33, 94, 151, 0.2);
+  border-radius: 8px;
+}
+
+.selected-permissions-card .ant-card-body {
+  padding: 16px;
+}
+
+.permission-category-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  border: none;
+}
+
+.permission-category-card .ant-card-body {
+  padding: 20px;
+}
+
+.category-header {
+  margin-bottom: 16px;
+}
+
+.category-tag {
+  font-weight: 600;
+  font-size: 14px;
+  padding: 4px 12px;
+  border-radius: 6px;
+}
+
+.permission-item {
+  background: #fafafa;
+  border-radius: 6px;
+  padding: 12px;
+  border: 1px solid #e8e8e8;
+  transition: all 0.3s ease;
+}
+
+.permission-item:hover {
+  background: rgba(33, 94, 151, 0.05);
+  border-color: rgba(33, 94, 151, 0.2);
+}
+
+.permission-content {
+  margin-left: 8px;
+}
+
+.permission-name {
+  font-weight: 600;
+  color: var(--primary-color);
+  margin-bottom: 4px;
+}
+
+.permission-string {
+  margin-bottom: 4px;
+}
+
+.permission-string code {
+  background: rgba(33, 94, 151, 0.1);
+  color: var(--primary-color);
+  padding: 2px 6px;
+  border-radius: 4px;
+  font-size: 12px;
+  font-weight: 500;
+}
+
+.permission-description {
+  font-size: 12px;
+  color: #6c757d;
+  line-height: 1.4;
+}
+
+/* Search Input Styling */
+.role-management .ant-input-affix-wrapper {
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.role-management .ant-input-affix-wrapper .ant-input-prefix {
+  font-size: 18px;
+  color: #999;
+}
+
+.role-management .ant-input-affix-wrapper .ant-input-prefix svg {
+  width: 18px;
+  height: 18px;
+}
+
+.role-permissions-content .ant-input-affix-wrapper {
+  height: 40px;
+  border-radius: 4px;
+  border: 1px solid #d9d9d9;
+  transition: all 0.3s ease;
+  padding-left: 12px;
+  padding-right: 12px;
+}
+
+.role-permissions-content .ant-input-affix-wrapper .ant-input-prefix {
+  font-size: 18px;
+  color: #999;
+}
+
+.role-permissions-content .ant-input-affix-wrapper .ant-input-prefix svg {
+  width: 18px;
+  height: 18px;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .role-management {
+    padding: 16px;
+  }
+
+  .stat-number {
+    font-size: 24px;
+  }
+
+  .drawer-main-cntainer {
+    padding: 16px;
+  }
+
+  .role-permissions-content {
+    padding: 16px;
+  }
+}
+
+/* Table Scrolling */
+.drawer-tbl {
+  overflow: auto;
+}
+
+.drawer-tbl .ant-table-body {
+  overflow-x: auto;
+  overflow-y: auto;
+}
+
+.drawer-tbl .ant-table-thead > tr > th {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background-color: #45669d !important;
+  color: white !important;
+}
+
+/* Pagination Styling */
+.ant-pagination {
+  margin-top: 16px;
+  text-align: center;
+}
+
+.ant-pagination .ant-pagination-item {
+  border-radius: 4px;
+}
+
+.ant-pagination .ant-pagination-item-active {
+  background-color: var(--primary-color);
+  border-color: var(--primary-color);
+}
+
+.ant-pagination .ant-pagination-item-active a {
+  color: white;
+}
+
+/* Scrollbar Styling */
+.drawer-tbl::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.drawer-tbl::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+.drawer-tbl::-webkit-scrollbar-thumb {
+  background: var(--primary-color);
+  border-radius: 4px;
+}
+
+.drawer-tbl::-webkit-scrollbar-thumb:hover {
+  background: #1e4a7a;
+}
+
+/* Animation */
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.role-management .stat-card,
+.role-management .filter-card,
+.role-management .drawer-tbl {
+  animation: fadeIn 0.5s ease-out;
+}

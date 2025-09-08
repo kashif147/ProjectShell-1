@@ -1,5 +1,10 @@
 import React, { Suspense, lazy, useEffect } from "react";
-import { BrowserRouter as Router, Route, Routes, useLocation } from "react-router-dom";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
 import Sidbar from "./component/common/Sidbar";
@@ -23,32 +28,50 @@ const ClaimsById = lazy(() => import("./pages/Claims/ClaimsById"));
 const CasesById = lazy(() => import("./pages/Cases/CasesById"));
 const Filter = lazy(() => import("./pages/Filters/Filter"));
 const TransferSummary = lazy(() => import("./pages/Transfers/TransferSummary"));
-const CorrespondencesSummary = lazy(() => import("./pages/Correspondences/CorrespondencesSummary"));
+const CorrespondencesSummary = lazy(() =>
+  import("./pages/Correspondences/CorrespondencesSummary")
+);
 const AddNewProfile = lazy(() => import("./pages/Profiles/AddNewProfile"));
 const AddClaims = lazy(() => import("./pages/Claims/AddClaims"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const LandingPage = lazy(() => import("./component/msft/LandingPage"));
 const Reports = lazy(() => import("./pages/repots/Reports"));
-const CorspndncDetail = lazy(() => import("./pages/Correspondences/CorspndncDetail"));
+const CorspndncDetail = lazy(() =>
+  import("./pages/Correspondences/CorspndncDetail")
+);
 const Doucmnets = lazy(() => import("./pages/Doucmnets"));
 const RosterDetails = lazy(() => import("./pages/roster/RosterDetails"));
 const RusterSummary = lazy(() => import("./pages/roster/RusterSummary"));
-const MembershipApplication = lazy(() => import("./pages/application/MembershipApplication"));
-const ApproveMembership = lazy(() => import("./pages/application/ApproveMembership"));
+const MembershipApplication = lazy(() =>
+  import("./pages/application/MembershipApplication")
+);
+const ApproveMembership = lazy(() =>
+  import("./pages/application/ApproveMembership")
+);
 const ChangCateSumm = lazy(() => import("./pages/Category/ChangCateSumm"));
 const CateById = lazy(() => import("./pages/Category/CateById"));
-const RemindersSummary = lazy(() => import("./pages/reminders/RemindersSummary"));
+const RemindersSummary = lazy(() =>
+  import("./pages/reminders/RemindersSummary")
+);
 const Cancallation = lazy(() => import("./pages/Cancallation"));
 const Batches = lazy(() => import("./pages/finance/Batches"));
 const Import = lazy(() => import("./pages/finance/Import"));
-const BatchMemberSummary = lazy(() => import("./pages/finance/BatchMemberSummary"));
+const BatchMemberSummary = lazy(() =>
+  import("./pages/finance/BatchMemberSummary")
+);
 const NotDesignedYet = lazy(() => import("./pages/NotDesign"));
 const Sms = lazy(() => import("./pages/Correspondences/sms"));
 const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
-const Popout = lazy(() => import("../src/component/common/PopOut"))
-const Members = lazy(() => import('./pages/membership/Members'))
-const ReminderDetails = lazy(()=> import('./pages/reminders/RemindersDetails'))
+const Popout = lazy(() => import("../src/component/common/PopOut"));
+const Members = lazy(() => import("./pages/membership/Members"));
+const MembershipDashboard = lazy(() =>
+  import("./pages/membership/MembershipDashboard")
+);
+const TenantManagement = lazy(() => import("./pages/TenantManagement"));
+const RoleManagement = lazy(() => import("./pages/RoleManagement"));
+const UserManagement = lazy(() => import("./pages/UserManagement"));
+const PermissionManagement = lazy(() => import("./pages/PermissionManagement"));
 
 function Entry() {
   const location = useLocation();
@@ -56,20 +79,37 @@ function Entry() {
   const showSidebar = location.pathname !== "/";
   const showHeaderDetails = showSidebar;
   const showProfileHeaderRoutes = [
-    "/Details", "/ClaimsDetails", "/CasesDetails", "/ClaimsById",
-    "/CasesById", "/AddNewProfile", "/AddClaims", "/CorspndncDetail",
-    "/Doucmnets", "/Roster"
+    "/Details",
+    "/ClaimsDetails",
+    "/CasesDetails",
+    "/ClaimsById",
+    "/CasesById",
+    "/AddNewProfile",
+    "/AddClaims",
+    "/CorspndncDetail",
+    "/Doucmnets",
+    "/Roster",
   ];
   const showResizableCompRoutes = [
-    "/ClaimsDetails", "/CasesDetails", "/AddNewProfile",
-    "/AddClaims", "/ClaimsById", "/Doucmnets"
+    "/ClaimsDetails",
+    "/CasesDetails",
+    "/AddNewProfile",
+    "/AddClaims",
+    "/ClaimsById",
+    "/Doucmnets",
   ];
-  const showFooterRoutes = [
-    "/",
-  ];
+  const showFooterRoutes = ["/"];
 
   return (
-    <div style={{ height: "100vh", width: "100vw", display: "flex", flexDirection: "column", overflow: "hidden" }}>
+    <div
+      style={{
+        height: "100vh",
+        width: "100vw",
+        display: "flex",
+        flexDirection: "column",
+        overflow: "hidden",
+      }}
+    >
       {/* Header */}
       {showSidebar && <Header />}
 
@@ -79,7 +119,14 @@ function Entry() {
         {showSidebar && <Sidbar />}
 
         {/* Main content column */}
-        <div style={{ flex: 1, display: "flex", flexDirection: "column", overflow: "hidden" }}>
+        <div
+          style={{
+            flex: 1,
+            display: "flex",
+            flexDirection: "column",
+            overflow: "hidden",
+          }}
+        >
           {/* Header Details */}
           {showHeaderDetails && <HeaderDetails />}
 
@@ -107,22 +154,37 @@ function Entry() {
                   <Route path="AddNewProfile" element={<AddNewProfile />} />
                   <Route path="Transfers" element={<TransferSummary />} />
                   <Route path="AddClaims" element={<AddClaims />} />
-                  <Route path="CorrespondencesSummary" element={<CorrespondencesSummary />} />
+                  <Route
+                    path="CorrespondencesSummary"
+                    element={<CorrespondencesSummary />}
+                  />
                   <Route path="LandingPage" element={<LandingPage />} />
                   <Route path="Reports" element={<Reports />} />
                   <Route path="CorspndncDetail" element={<CorspndncDetail />} />
                   <Route path="RosterSummary" element={<RusterSummary />} />
                   <Route path="Doucmnets" element={<Doucmnets />} />
                   <Route path="Roster" element={<RosterDetails />} />
-                  <Route path="Applications" element={<MembershipApplication />} />
-                  <Route path="AproveMembersip" element={<ApproveMembership />} />
+                  <Route
+                    path="Applications"
+                    element={<MembershipApplication />}
+                  />
+                  <Route
+                    path="AproveMembersip"
+                    element={<ApproveMembership />}
+                  />
                   <Route path="ChangCateSumm" element={<ChangCateSumm />} />
                   <Route path="ChangeCatById" element={<CateById />} />
-                  <Route path="RemindersSummary" element={<RemindersSummary />} />
+                  <Route
+                    path="RemindersSummary"
+                    element={<RemindersSummary />}
+                  />
                   <Route path="Cancallation" element={<Cancallation />} />
                   <Route path="Batches" element={<Batches />} />
                   <Route path="Import" element={<Import />} />
-                  <Route path="BatchMemberSummary" element={<BatchMemberSummary />} />
+                  <Route
+                    path="BatchMemberSummary"
+                    element={<BatchMemberSummary />}
+                  />
                   <Route path="NotDesignedYet" element={<NotDesignedYet />} />
                   <Route path="Email" element={<Email />} />
                   <Route path="Sms" element={<Sms />} />
@@ -130,24 +192,35 @@ function Entry() {
                   <Route path="CornMarket" element={<CornGrideSummary />} />
                   <Route path="Popout" element={<Popout />} />
                   <Route path="members" element={<Members />} />
-                  <Route path="reminderDetails" element={<ReminderDetails />} />
-                  {/* </Route> */}
+                  <Route
+                    path="MembershipDashboard"
+                    element={<MembershipDashboard />}
+                  />
+                  <Route
+                    path="TenantManagement"
+                    element={<TenantManagement />}
+                  />
+                  <Route path="RoleManagement" element={<RoleManagement />} />
+                  <Route path="UserManagement" element={<UserManagement />} />
+                  <Route
+                    path="PermissionManagement"
+                    element={<PermissionManagement />}
+                  />
                 </Routes>
               </Suspense>
             </div>
 
             {/* Optional right-side component */}
-            {showResizableCompRoutes.includes(location.pathname) && <ResizableComp />}
+            {showResizableCompRoutes.includes(location.pathname) && (
+              <ResizableComp />
+            )}
           </div>
         </div>
       </div>
 
       {/* Footer */}
-      {
-        location?.pathname === "/" ? null : <MyFooter />
-      }
+      {location?.pathname === "/" ? null : <MyFooter />}
       {/* <MyFooter /> */}
-
     </div>
   );
 }

@@ -10,15 +10,18 @@ import lookupsReducer from "../features/LookupsSlice";
 import regionTypeReducer from "../features/RegionTypeSlice";
 import partnerReducer from "../features/PartnersSlice";
 import childrenReducer from "../features/ChildrenSlice";
-import refreshReducer from '../features/RefreshSlice';
+import refreshReducer from "../features/RefreshSlice";
 import contactTypeReducer from "../features/ContactTypeSlice";
-import contactReducer from "../features/ContactSlice"
+import contactReducer from "../features/ContactSlice";
 // import countriesReducer from './countrySlice';
-import countriesReducer from '../features/CountrySlice';
-import menuLblReducer from '../features/MenuLblSlice'
-import applicationReducer from '../features/ApplicationSlice'
-import applicationDetailsReducer  from '../features/ApplicationDetailsSlice'
-
+import countriesReducer from "../features/CountrySlice";
+import menuLblReducer from "../features/MenuLblSlice";
+import applicationReducer from "../features/ApplicationSlice";
+import applicationDetailsReducer from "../features/ApplicationDetailsSlice";
+import tenantReducer from "../features/TenantSlice";
+import userReducer from "../features/UserSlice";
+import roleReducer from "../features/RoleSlice";
+import permissionReducer from "../features/PermissionSlice";
 
 const store = configureStore({
   reducer: {
@@ -28,7 +31,7 @@ const store = configureStore({
     lookupsTypes: lookupsTypeReducer,
     regionTypes: regionTypeReducer,
     partner: partnerReducer,
-    children: childrenReducer, 
+    children: childrenReducer,
     refresh: refreshReducer,
     contactType: contactTypeReducer,
     contact: contactReducer,
@@ -36,12 +39,11 @@ const store = configureStore({
     countries: countriesReducer,
     applications: applicationReducer,
     applicationDetails: applicationDetailsReducer,
-
+    tenants: tenantReducer,
+    users: userReducer,
+    roles: roleReducer,
+    permissions: permissionReducer,
   },
 });
 
-
-
 export default store;
-
-
