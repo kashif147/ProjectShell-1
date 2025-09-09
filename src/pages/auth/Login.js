@@ -14,12 +14,27 @@ import { loginUser } from "../../features/AuthSlice";
 import { generatePKCE } from "../../utils/Utilities";
 
 const Login = () => {
-  const dispatch = useDispatch();
+    const dispatch = useDispatch();
 
-  const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
-  const navigate = useNavigate(); // Use the useHistory hook
-  const { loading } = useSelector((state) => state.auth);
+    const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+    const navigate = useNavigate(); // Use the useHistory hook
+    const { loading } = useSelector((state) => state.auth);
+    function decodeToken(token) {
+        try {
+            const base64Url = token.split(".")[1]; // get payload part
+            const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+            const jsonPayload = decodeURIComponent(
+                atob(base64)
+                    .split("")
+                    .map(c => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+                    .join("")
+            );
 
+            return JSON.parse(jsonPayload);
+        } catch (e) {
+            return null;
+        }
+    }
     // Step 1: Login button click
     const handleLogin = async () => {
         const { codeVerifier, codeChallenge } = await generatePKCE();
@@ -44,6 +59,9 @@ const Login = () => {
         // Redirect to Microsoft login
         window.location.href = authUrl.toString();
     };
+       useEffect(() => {
+        handleAuthRedirect();
+    }, []);
 
     // Step 2: Handle redirect after Microsoft login
     const handleAuthRedirect = async () => {
@@ -73,22 +91,24 @@ const Login = () => {
                     }),
                 }
             );
-             debugger
-             const data = await response.json();
-             console.log("Token response from backend:", data);
-             debugger
+            debugger
+            const data = await response.json();
+            console.log("Token response from backend:", data);
+            debugger
 
             // Save tokens to localStorage if presents
             if (data) {
                 debugger
                 let token = data.accessToken.replace(/^Bearer\s/, '');
                 localStorage.setItem("token", token);
-                navigate("/Applications")
+                let decode = decodeToken(token);
+                localStorage.setItem("userdata",decode)
+                debugger
+                navigate("/MembershipDashboard")
             }
             if (data.refresh_token) {
                 localStorage.setItem("refresh_token", data.refresh_token);
             }
-            // Optional: store expiration time
             if (data.expires_in) {
                 const expiryTime = Date.now() + data.expires_in * 1000;
                 localStorage.setItem("token_expiry", expiryTime.toString());
@@ -103,9 +123,7 @@ const Login = () => {
     };
 
     // Run on page load
-    useEffect(() => {
-        // handleAuthRedirect();
-    }, []);
+ 
 
 
 
