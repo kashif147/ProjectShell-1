@@ -102,7 +102,7 @@ const Login = () => {
                 let token = data.accessToken.replace(/^Bearer\s/, '');
                 localStorage.setItem("token", token);
                 let decode = decodeToken(token);
-                localStorage.setItem("userdata",decode)
+                localStorage.setItem("userdata",JSON.stringify(decode))
                 debugger
                 navigate("/MembershipDashboard")
             }

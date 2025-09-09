@@ -4,8 +4,10 @@ import { Card, Tag, Button } from "antd";
 import CancellationDrawer from './CancellationDrawer';
 import { cancellations } from '../../Data';
 import { useReminders } from '../../context/CampaignDetailsProvider';
+import { useNavigate } from 'react-router-dom';
 
 function CancallationCard() {
+  const navigate = useNavigate()
   const [isCancellationOpen, setIsCancellationOpen] = useState(false);
   const {cancallationbyId, getCancellationById} = useReminders()
 
@@ -51,8 +53,9 @@ function CancallationCard() {
                 Members
               </small>
             </Card>
-            <Button onClick={() => {setIsCancellationOpen(!isCancellationOpen)
+            <Button onClick={() => {
              getCancellationById(item?.id)
+             navigate('/CancellationDetail')
             }} className="primary-btn mt-1" block icon={<BarChartOutlined />} >
               View Details
             </Button>

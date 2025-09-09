@@ -40,6 +40,7 @@ const Reports = lazy(() => import("./pages/repots/Reports"));
 const CorspndncDetail = lazy(() =>
   import("./pages/Correspondences/CorspndncDetail")
 );
+
 const Doucmnets = lazy(() => import("./pages/Doucmnets"));
 const RosterDetails = lazy(() => import("./pages/roster/RosterDetails"));
 const RusterSummary = lazy(() => import("./pages/roster/RusterSummary"));
@@ -55,6 +56,7 @@ const RemindersSummary = lazy(() =>
   import("./pages/reminders/RemindersSummary")
 );
 const Cancallation = lazy(() => import("./pages/Cancallation"));
+const CancellationDetail = lazy(()=>import('./pages/cancellation/CancellationDetail'))
 const Batches = lazy(() => import("./pages/finance/Batches"));
 const Import = lazy(() => import("./pages/finance/Import"));
 const BatchMemberSummary = lazy(() =>
@@ -195,6 +197,7 @@ function Entry() {
                   <Route path="Popout" element={<Popout />} />
                   <Route path="members" element={<Members />} />
                   <Route path="RemindersDetails" element={<RemindersDetails />} />
+                  <Route path="CancellationDetail" element={<CancellationDetail />} />
                   <Route
                     path="MembershipDashboard"
                     element={<MembershipDashboard />}
