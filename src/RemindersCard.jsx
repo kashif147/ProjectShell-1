@@ -6,14 +6,16 @@ import BatchDrawer from "./component/reminders/BatchDrawer";
 import { useState } from "react";
 import { useView } from "./context/ViewContext";
 import { useReminders } from "./context/CampaignDetailsProvider";
+import { useTableColumns } from "./context/TableColumnsContext ";
 import { campaigns } from "./Data";
 
 
 
 const RemindersCard = () => {
   const {getRemindersById} = useReminders()
+  const {disableFtn,isDisable} = useTableColumns()
   const [isbatchOpen, setisbatchOpen] = useState(false);
-  const [isDisable, setIsDisable] = useState(false);
+  // const [isDisable, setIsDisable] = useState(false);
   const navigate = useNavigate()
 
   return (
@@ -71,12 +73,15 @@ const RemindersCard = () => {
                 </div>
               </div>
               <Button className="primary-btn mt-2" onClick={() => {
-                // setisbatchOpen(!isbatchOpen)
-                navigate('/reminderDetails')
+                navigate('/RemindersDetails')
+                console.log(item)
+   
                 getRemindersById(item?.id)
-                if (item?.selected === true) {
-                  setIsDisable(!isDisable)
+                if (item?.isSelected === true) {
+     
+                 disableFtn(true)
                 }
+                else disableFtn(false)
               }
               } block icon={<BarChartOutlined />}>
                 View Details

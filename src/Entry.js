@@ -14,6 +14,7 @@ import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
 import { generatePKCE } from "./utils/Utilities";
+// import RemindersDetails from "./pages/reminders/RemindersDetails";
 
 // Lazy loaded components
 const Dummy = lazy(() => import("./component/common/Dummy"));
@@ -65,6 +66,7 @@ const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
 const Popout = lazy(() => import("../src/component/common/PopOut"));
 const Members = lazy(() => import("./pages/membership/Members"));
+const RemindersDetails = lazy(() => import("./pages/reminders/RemindersDetails"));
 const MembershipDashboard = lazy(() =>
   import("./pages/membership/MembershipDashboard")
 );
@@ -192,6 +194,7 @@ function Entry() {
                   <Route path="CornMarket" element={<CornGrideSummary />} />
                   <Route path="Popout" element={<Popout />} />
                   <Route path="members" element={<Members />} />
+                  <Route path="RemindersDetails" element={<RemindersDetails />} />
                   <Route
                     path="MembershipDashboard"
                     element={<MembershipDashboard />}
