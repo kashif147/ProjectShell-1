@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect } from 'react'
 import { Drawer, Row, Col, Checkbox, Radio, Button, Spin } from 'antd'
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { observe, generate } from 'fast-json-patch';
 import axios from 'axios';
 import CustomSelect from '../common/CustomSelect';
 import { useTableColumns } from '../../context/TableColumnsContext ';
@@ -130,6 +131,13 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
             setInfData(mapApiToState(application))
         }
     }, [open, application])
+    useEffect(() => {
+        // Start observing InfData on first render
+        if (!observer) {
+            const obs = observe(InfData);
+            setObserver(obs);
+        }
+    }, []);
     const inputValue = {
         personalInfo: {
             title: "",
@@ -190,7 +198,9 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
         }
     }
     const [InfData, setInfData] = useState(inputValue);
-    console.log(InfData, "aziz")
+    const [observer, setObserver] = useState(null);
+    const [patches, setPatches] = useState([]);
+    console.log(patches, "aziz")
 
     const validateForm = () => {
 
@@ -380,6 +390,8 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                     [field]: value,
                 },
             };
+
+            // Example: auto update branch & region based on workLocation
             if (field === "workLocation" && workLocationDetails?.[value]) {
                 updated = {
                     ...updated,
@@ -392,8 +404,17 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                 };
             }
 
+            // Generate patch from observer
+            if (observer) {
+                const newPatches = generate(observer);
+                debugger
+                setPatches((prevPatches) => [...prevPatches, ...newPatches]);
+            }
+
             return updated;
         });
+
+        // Clear errors if any
         setErrors((prevErrors) => {
             if (prevErrors?.[field]) {
                 const { [field]: removed, ...rest } = prevErrors;
@@ -641,7 +662,9 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
         if (name === "Bulk" && checked === true) {
         }
         if (name === "Approve" && checked === true) {
-            // const  validateForm()
+            const isValid = validateForm();
+            if (!isValid) return;
+            console.log(patches,"testinh")
             disableFtn(false)
 
         }
