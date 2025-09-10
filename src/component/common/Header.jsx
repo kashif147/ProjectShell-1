@@ -346,7 +346,7 @@ function Header() {
 
   return (
     <div
-      className="Header-border overflow-y-hidden bg pt-2 pb-2"
+      className="Header-border overflow-y-hidden bg pt-0 pb-0"
       style={{ borderBottom: "2px solid #dcdfe4", width: "100vw" }}
     >
       <div className="d-flex justify-content-between align-items-center ">

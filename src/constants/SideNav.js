@@ -14,8 +14,6 @@ import {
   FaRegListAlt,
   FaUsersCog,
   FaShieldAlt,
-} from "react-icons/fa";
-import {
   FaBan,
   FaBalanceScale,
   FaClipboardCheck,
@@ -27,6 +25,50 @@ import {
   FaUserEdit,
   FaUserTimes,
   FaUserLock,
+  // New improved icons
+  FaSms,
+  FaStickyNote,
+  FaExchangeAlt,
+  FaUserCheck,
+  FaUserSlash,
+  FaBuilding,
+  FaMapMarkerAlt,
+  FaUsers,
+  FaCog,
+  FaDatabase,
+  FaFileImport,
+  FaFileExport,
+  FaClipboardList,
+  FaExclamationTriangle,
+  FaGavel,
+  FaCalendarCheck,
+  FaUserFriends,
+  FaUserShield,
+  FaChartLine,
+  FaChartPie,
+  FaFileInvoiceDollar,
+  FaReceipt,
+  FaHandshake,
+  FaGift,
+  FaGlobe,
+  FaServer,
+  FaKey,
+  FaUserCog,
+  FaLayerGroup,
+  FaTags,
+  FaBox,
+  FaFileCode,
+  FaWrench,
+  FaHome,
+  FaBriefcase,
+  FaFlag,
+  FaBook,
+  FaGraduationCap,
+  FaTicketAlt,
+  FaBullhorn,
+  FaQuestionCircle,
+  FaFolderOpen,
+  FaClipboard,
 } from "react-icons/fa";
 export const correspondenceItems = [
   {
@@ -42,7 +84,7 @@ export const correspondenceItems = [
     key: "SMS",
     icon: (
       <div className="icon">
-        <FaCommentDots />
+        <FaSms />
       </div>
     ),
     label: <div className="sidebar-label">SMS</div>,
@@ -51,7 +93,7 @@ export const correspondenceItems = [
     key: "Notes & Letters",
     icon: (
       <div className="icon">
-        <FaFileAlt />
+        <FaStickyNote />
       </div>
     ),
     label: <div className="sidebar-label">Notes & Letters</div>,
@@ -72,7 +114,7 @@ export const financeItems = [
     key: "Batches",
     icon: (
       <div className="icon">
-        <FaCashRegister />
+        <FaClipboardList />
       </div>
     ),
     label: <div className="sidebar-label">Batches</div>,
@@ -90,7 +132,7 @@ export const financeItems = [
     key: "DD",
     icon: (
       <div className="icon">
-        <FaRegFileAlt />
+        <FaExchangeAlt />
       </div>
     ),
     label: <div className="sidebar-label">DD</div>,
@@ -99,7 +141,7 @@ export const financeItems = [
     key: "Authorisations",
     icon: (
       <div className="icon">
-        <FaUserAlt />
+        <FaUserCheck />
       </div>
     ),
     label: <div className="sidebar-label">Authorisations</div>,
@@ -117,7 +159,7 @@ export const financeItems = [
     key: "Salary",
     icon: (
       <div className="icon">
-        <FaCreditCard />
+        <FaFileInvoiceDollar />
       </div>
     ),
     label: <div className="sidebar-label">Salary</div>,
@@ -126,7 +168,7 @@ export const financeItems = [
     key: "Deductions",
     icon: (
       <div className="icon">
-        <FaRegFileAlt />
+        <FaReceipt />
       </div>
     ),
     label: <div className="sidebar-label">Deductions</div>,
@@ -135,7 +177,7 @@ export const financeItems = [
     key: "DAS",
     icon: (
       <div className="icon">
-        <FaUserAlt />
+        <FaDatabase />
       </div>
     ),
     label: <div className="sidebar-label">DAS</div>,
@@ -144,7 +186,7 @@ export const financeItems = [
     key: "DAS Authorisations",
     icon: (
       <div className="icon">
-        <FaCashRegister />
+        <FaUserShield />
       </div>
     ),
     label: <div className="sidebar-label">DAS Authorisations</div>,
@@ -153,7 +195,7 @@ export const financeItems = [
     key: "Imports",
     icon: (
       <div className="icon">
-        <FaCreditCard />
+        <FaFileImport />
       </div>
     ),
     label: <div className="sidebar-label">Imports</div>,
@@ -164,7 +206,7 @@ export const profileItems = [
     key: "Non Members",
     icon: (
       <div className="icon">
-        <FaUserAlt />
+        <FaUserSlash />
       </div>
     ),
     label: <div className="sidebar-label">Non Members</div>,
@@ -173,7 +215,7 @@ export const profileItems = [
     key: "Members",
     icon: (
       <div className="icon">
-        <FaCashRegister />
+        <FaUsers />
       </div>
     ),
     label: <div className="sidebar-label">Members</div>,
@@ -182,7 +224,7 @@ export const profileItems = [
     key: "Leavers",
     icon: (
       <div className="icon">
-        <FaCreditCard />
+        <FaUserMinus />
       </div>
     ),
     label: <div className="sidebar-label">Leavers</div>,
@@ -191,7 +233,7 @@ export const profileItems = [
     key: "Joiners",
     icon: (
       <div className="icon">
-        <FaRegFileAlt />
+        <FaUserPlus />
       </div>
     ),
     label: <div className="sidebar-label">Joiners</div>,
@@ -203,7 +245,7 @@ export const subscriptionItems = [
     key: "MembershipDashboard",
     icon: (
       <div className="icon">
-        <FaChartBar />
+        <FaChartLine />
       </div>
     ),
     label: <div className="sidebar-label">Membership Dashboard</div>,
@@ -212,7 +254,7 @@ export const subscriptionItems = [
     key: "Profiles",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaUserCog />
       </div>
     ),
     label: <div className="sidebar-label">Profiles</div>,
@@ -221,7 +263,7 @@ export const subscriptionItems = [
     key: "Applications",
     icon: (
       <div className="icon">
-        <FaRegListAlt />
+        <FaClipboardList />
       </div>
     ),
     label: <div className="sidebar-label">Applications</div>,
@@ -239,7 +281,7 @@ export const subscriptionItems = [
     key: "Cancellations",
     icon: (
       <div className="icon">
-        <FaRegFileAlt />
+        <FaBan />
       </div>
     ),
     label: <div className="sidebar-label">Cancellations</div>,
@@ -248,7 +290,7 @@ export const subscriptionItems = [
     key: "Transfer Requests",
     icon: (
       <div className="icon">
-        <FaRegHandshake />
+        <FaExchangeAlt />
       </div>
     ),
     label: <div className="sidebar-label">Transfer Requests</div>,
@@ -257,7 +299,7 @@ export const subscriptionItems = [
     key: "Change Category",
     icon: (
       <div className="icon">
-        <FaRegListAlt />
+        <FaTags />
       </div>
     ),
     label: <div className="sidebar-label">Change Category</div>,
@@ -266,7 +308,7 @@ export const subscriptionItems = [
     key: "CornMarket",
     icon: (
       <div className="icon">
-        <FaRegListAlt />
+        <FaBuilding />
       </div>
     ),
     label: <div className="sidebar-label">CornMarket</div>,
@@ -275,7 +317,7 @@ export const subscriptionItems = [
     key: "Recruit a Friend",
     icon: (
       <div className="icon">
-        <FaRegHandshake />
+        <FaUserFriends />
       </div>
     ),
     label: <div className="sidebar-label">Recruit a Friend</div>,
@@ -284,7 +326,7 @@ export const subscriptionItems = [
     key: "LandingPage",
     icon: (
       <div className="icon">
-        <FaRegHandshake />
+        <FaGlobe />
       </div>
     ),
     label: <div className="sidebar-label">LandingPage</div>,
@@ -295,7 +337,7 @@ export const configurationItems = [
     key: "Organistaion Groups",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaLayerGroup />
       </div>
     ),
     label: <div className="sidebar-label">Organistaion Groups</div>,
@@ -304,7 +346,7 @@ export const configurationItems = [
     key: "Work Location Branches",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaMapMarkerAlt />
       </div>
     ),
     label: <div className="sidebar-label">Work Location Branches</div>,
@@ -313,7 +355,7 @@ export const configurationItems = [
     key: "Region Committees",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaFlag />
       </div>
     ),
     label: <div className="sidebar-label">Region Committees</div>,
@@ -322,7 +364,7 @@ export const configurationItems = [
     key: "Sections",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaBriefcase />
       </div>
     ),
     label: <div className="sidebar-label">Sections</div>,
@@ -331,7 +373,7 @@ export const configurationItems = [
     key: "Rate Categories Youth Fourms",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaGraduationCap />
       </div>
     ),
     label: <div className="sidebar-label">Rate Categories Youth Fourms</div>,
@@ -340,7 +382,7 @@ export const configurationItems = [
     key: "Subscription Products",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaBox />
       </div>
     ),
     label: <div className="sidebar-label">Subscription Products</div>,
@@ -349,7 +391,7 @@ export const configurationItems = [
     key: "Templetes",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaFileCode />
       </div>
     ),
     label: <div className="sidebar-label">Templetes</div>,
@@ -358,7 +400,7 @@ export const configurationItems = [
     key: "System Configuration",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaWrench />
       </div>
     ),
     label: <div className="sidebar-label">System Configuration</div>,
@@ -367,7 +409,7 @@ export const configurationItems = [
     key: "Tenant Management",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaServer />
       </div>
     ),
     label: <div className="sidebar-label">Tenant Management</div>,
@@ -376,7 +418,7 @@ export const configurationItems = [
     key: "Role Management",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaUserCog />
       </div>
     ),
     label: <div className="sidebar-label">Role Management</div>,
@@ -385,7 +427,7 @@ export const configurationItems = [
     key: "User Management",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaUsers />
       </div>
     ),
     label: <div className="sidebar-label">User Management</div>,
@@ -394,7 +436,7 @@ export const configurationItems = [
     key: "Permission Management",
     icon: (
       <div className="icon">
-        <FaShieldAlt />
+        <FaKey />
       </div>
     ),
     label: <div className="sidebar-label">Permission Management</div>,
@@ -405,7 +447,7 @@ export const reportItems = [
     key: "Cancelled Members Report",
     icon: (
       <div className="icon">
-        <FaBan />
+        <FaUserTimes />
       </div>
     ),
     label: <div className="sidebar-label">Cancelled Members Report</div>,
@@ -432,7 +474,7 @@ export const reportItems = [
     key: "Deferred Income",
     icon: (
       <div className="icon">
-        <FaMoneyCheckAlt />
+        <FaFileInvoiceDollar />
       </div>
     ),
     label: <div className="sidebar-label">Deferred Income</div>,
@@ -441,7 +483,7 @@ export const reportItems = [
     key: "End of Year Reports",
     icon: (
       <div className="icon">
-        <FaCalendarAlt />
+        <FaCalendarCheck />
       </div>
     ),
     label: <div className="sidebar-label">End of Year Reports</div>,
@@ -450,7 +492,7 @@ export const reportItems = [
     key: "Executive Council Report",
     icon: (
       <div className="icon">
-        <FaUsersCog />
+        <FaGavel />
       </div>
     ),
     label: (
@@ -481,7 +523,7 @@ export const reportItems = [
     key: "Live Stats",
     icon: (
       <div className="icon">
-        <FaChartBar />
+        <FaChartPie />
       </div>
     ),
     label: <div className="sidebar-label">Live Stats</div>,
@@ -499,7 +541,7 @@ export const reportItems = [
     key: "Resigned Members Report",
     icon: (
       <div className="icon">
-        <FaUserTimes />
+        <FaUserSlash />
       </div>
     ),
     label: <div className="sidebar-label">Resigned Members Report</div>,
@@ -519,7 +561,7 @@ export const issuesItems = [
     key: "Issues",
     icon: (
       <div className="icon">
-        <FaUserAlt />
+        <FaExclamationTriangle />
       </div>
     ),
     label: <div className="sidebar-label">Issues</div>,
@@ -528,7 +570,7 @@ export const issuesItems = [
     key: "Cases",
     icon: (
       <div className="icon">
-        <FaUserAlt />
+        <FaFolderOpen />
       </div>
     ),
     label: <div className="sidebar-label">Cases</div>,
@@ -539,7 +581,7 @@ export const eventsItems = [
     key: "Manage Events",
     icon: (
       <div className="icon">
-        <FaUserAlt />
+        <FaCalendarAlt />
       </div>
     ),
     label: <div className="sidebar-label">Manage Events</div>,

@@ -1,5 +1,5 @@
-import React, { useEffect, useMemo } from "react";
-import { Menu } from "antd";
+import React, { useEffect, useMemo, useState } from "react";
+import { Menu, Tooltip, Button } from "antd";
 import {
   subscriptionItems,
   financeItems,
@@ -14,12 +14,24 @@ import { useSelector } from "react-redux";
 import "../../styles/Sidbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader";
+import {
+  PushpinOutlined,
+  PushpinFilled,
+  MenuFoldOutlined,
+  MenuUnfoldOutlined,
+} from "@ant-design/icons";
 
 const Sidbar = () => {
   // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
+
+  // Pin/unpin state management
+  const [isPinned, setIsPinned] = useState(() => {
+    const saved = localStorage.getItem("sidebar-pinned");
+    return saved ? JSON.parse(saved) : false;
+  });
 
   // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
@@ -38,6 +50,31 @@ const Sidbar = () => {
 
   // Displays the currently active module selected from the top menu and passes it to the menu component and  make it ready to pass to the menu.
   const menuItems = itemsMap[activeKey] || [];
+
+  // Transform menu items for collapsed/expanded view
+  const transformedMenuItems = useMemo(() => {
+    return menuItems.map((item) => {
+      if (isPinned) {
+        // Collapsed view: show only icon with tooltip
+        return {
+          ...item,
+          icon: (
+            <Tooltip
+              title={item.label.props.children}
+              placement="right"
+              overlayClassName="sidebar-tooltip"
+            >
+              <div className="icon-only-item">{item.icon}</div>
+            </Tooltip>
+          ),
+          label: null, // Hide label in collapsed state
+        };
+      } else {
+        // Expanded view: show icon with label
+        return item;
+      }
+    });
+  }, [menuItems, isPinned]);
 
   const routeKeyMap = {
     "/Summary": "Profiles",
@@ -66,6 +103,7 @@ const Sidbar = () => {
     "/RoleManagement": "Role Management",
     "/UserManagement": "User Management",
     "/PermissionManagement": "Permission Management",
+    "/CancelledMembersReport": "Cancelled Members Report",
   };
 
   const selectedKey = useMemo(() => {
@@ -166,6 +204,11 @@ const Sidbar = () => {
           state: { search: "PermissionManagement" },
         });
         break;
+      case "Cancelled Members Report":
+        navigate("/CancelledMembersReport", {
+          state: { search: "Cancelled Members Report" },
+        });
+        break;
       default:
         navigate("/NotDesignedYet");
     }
@@ -197,26 +240,55 @@ const Sidbar = () => {
     "/Roster",
   ];
 
+  // Handle pin/unpin toggle
+  const handlePinToggle = () => {
+    const newPinnedState = !isPinned;
+    setIsPinned(newPinnedState);
+    localStorage.setItem("sidebar-pinned", JSON.stringify(newPinnedState));
+  };
+
   const sideBarWidth = showProfileHeaderRoutes.includes(location.pathname)
     ? "19vw"
-    : "7vw";
+    : isPinned
+    ? "80px"
+    : "200px";
 
   return (
-    <div className="d-flex" style={{ width: sideBarWidth }}>
+    <div
+      className={`sidebar-container ${isPinned ? "pinned" : "unpinned"}`}
+      style={{ width: sideBarWidth }}
+    >
+      {/* Pin/Unpin Toggle Button */}
+      <div className="sidebar-toggle-container">
+        <Tooltip
+          title={isPinned ? "Unpin sidebar" : "Pin sidebar"}
+          placement="right"
+        >
+          <Button
+            type="text"
+            icon={isPinned ? <PushpinFilled /> : <PushpinOutlined />}
+            onClick={handlePinToggle}
+            className="sidebar-toggle-btn"
+            size="small"
+          />
+        </Tooltip>
+      </div>
+
       <Menu
         mode="inline"
         selectedKeys={[selectedKey]}
-        
         style={{
-          width: "7vw",
+          width: isPinned ? "80px" : "200px",
           borderRight: 0,
-          maxHeight: "91vh",    // limit height
-          overflowY: "auto",    // scroll only when needed
+          maxHeight: "91vh",
+          overflowY: "auto",
           overflowX: "hidden",
-          scrollbarWidth: 'none',
+          scrollbarWidth: "none",
         }}
-        items={menuItems}
-        className="sidebar-menu hide-scroll-webkit"
+        items={transformedMenuItems}
+        className={`sidebar-menu hide-scroll-webkit ${
+          isPinned ? "collapsed" : "expanded"
+        }`}
         onClick={handleClick}
       />
     </div>

@@ -57,7 +57,9 @@ const RemindersSummary = lazy(() =>
   import("./pages/reminders/RemindersSummary")
 );
 const Cancallation = lazy(() => import("./pages/Cancallation"));
-const CancellationDetail = lazy(() => import('./pages/cancellation/CancellationDetail'))
+const CancellationDetail = lazy(() =>
+  import("./pages/cancellation/CancellationDetail")
+);
 const Batches = lazy(() => import("./pages/finance/Batches"));
 const Import = lazy(() => import("./pages/finance/Import"));
 const BatchMemberSummary = lazy(() =>
@@ -69,7 +71,9 @@ const Email = lazy(() => import("./pages/Correspondences/Emails"));
 const Notes = lazy(() => import("./pages/Correspondences/Notes"));
 const Popout = lazy(() => import("../src/component/common/PopOut"));
 const Members = lazy(() => import("./pages/membership/Members"));
-const RemindersDetails = lazy(() => import("./pages/reminders/RemindersDetails"));
+const RemindersDetails = lazy(() =>
+  import("./pages/reminders/RemindersDetails")
+);
 const MembershipDashboard = lazy(() =>
   import("./pages/membership/MembershipDashboard")
 );
@@ -77,6 +81,9 @@ const TenantManagement = lazy(() => import("./pages/TenantManagement"));
 const RoleManagement = lazy(() => import("./pages/RoleManagement"));
 const UserManagement = lazy(() => import("./pages/UserManagement"));
 const PermissionManagement = lazy(() => import("./pages/PermissionManagement"));
+const CancelledMembersReport = lazy(() =>
+  import("./pages/reports/CancelledMembersReport")
+);
 
 function Entry() {
   const location = useLocation();
@@ -139,19 +146,26 @@ function Entry() {
           {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
 
           {/* Content area + resizable section */}
-          <div style={{ flex: 1, display: "flex", }}>
-            <div style={{ flex: 1, scrollbarWidth: 'none',}} className="main-main ">
-              <Suspense fallback={<div
-                style={{
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center",
-                  height: "100vh", // full screen height
-                  width: "100%",   // full width
-                }}
+          <div style={{ flex: 1, display: "flex" }}>
+            <div
+              style={{ flex: 1, scrollbarWidth: "none" }}
+              className="main-main "
+            >
+              <Suspense
+                fallback={
+                  <div
+                    style={{
+                      display: "flex",
+                      justifyContent: "center",
+                      alignItems: "center",
+                      height: "100vh", // full screen height
+                      width: "100%", // full width
+                    }}
+                  >
+                    <Spin size="large" />
+                  </div>
+                }
               >
-                <Spin size='large' />
-              </div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />
                   {/* <Route element={<ProtectedRoute />} > */}
@@ -207,8 +221,14 @@ function Entry() {
                   <Route path="CornMarket" element={<CornGrideSummary />} />
                   <Route path="Popout" element={<Popout />} />
                   <Route path="members" element={<Members />} />
-                  <Route path="RemindersDetails" element={<RemindersDetails />} />
-                  <Route path="CancellationDetail" element={<CancellationDetail />} />
+                  <Route
+                    path="RemindersDetails"
+                    element={<RemindersDetails />}
+                  />
+                  <Route
+                    path="CancellationDetail"
+                    element={<CancellationDetail />}
+                  />
                   <Route
                     path="MembershipDashboard"
                     element={<MembershipDashboard />}
@@ -222,6 +242,10 @@ function Entry() {
                   <Route
                     path="PermissionManagement"
                     element={<PermissionManagement />}
+                  />
+                  <Route
+                    path="CancelledMembersReport"
+                    element={<CancelledMembersReport />}
                   />
                 </Routes>
               </Suspense>
