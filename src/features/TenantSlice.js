@@ -16,30 +16,30 @@ export const getAllTenants = createAsyncThunk(
           verifiedDomains: ["organization.com", "main.org"],
           connections: [
             { type: "entra", clientId: "client1", tenantId: "tenant1" },
-            { type: "b2c", clientId: "client2", tenantId: "tenant2" }
+            { type: "b2c", clientId: "client2", tenantId: "tenant2" },
           ],
           createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-15T10:30:00Z"
+          updatedAt: "2024-01-15T10:30:00Z",
         },
         {
           _id: "tenant2",
           name: "Audit Department",
           verifiedDomains: ["audit.com"],
           connections: [
-            { type: "entra", clientId: "client3", tenantId: "tenant3" }
+            { type: "entra", clientId: "client3", tenantId: "tenant3" },
           ],
           createdAt: "2024-01-02T00:00:00Z",
-          updatedAt: "2024-01-14T09:15:00Z"
+          updatedAt: "2024-01-14T09:15:00Z",
         },
         {
           _id: "tenant3",
           name: "Finance Division",
           verifiedDomains: ["finance.org", "fin.com"],
           connections: [
-            { type: "b2c", clientId: "client4", tenantId: "tenant4" }
+            { type: "b2c", clientId: "client4", tenantId: "tenant4" },
           ],
           createdAt: "2024-01-03T00:00:00Z",
-          updatedAt: "2024-01-13T14:20:00Z"
+          updatedAt: "2024-01-13T14:20:00Z",
         },
         {
           _id: "tenant4",
@@ -47,14 +47,14 @@ export const getAllTenants = createAsyncThunk(
           verifiedDomains: ["hr.org"],
           connections: [
             { type: "entra", clientId: "client5", tenantId: "tenant5" },
-            { type: "b2c", clientId: "client6", tenantId: "tenant6" }
+            { type: "b2c", clientId: "client6", tenantId: "tenant6" },
           ],
           createdAt: "2024-01-04T00:00:00Z",
-          updatedAt: "2024-01-12T11:45:00Z"
-        }
+          updatedAt: "2024-01-12T11:45:00Z",
+        },
       ];
       return sampleTenants;
-      
+
       // Uncomment below when API is ready
       // const token = localStorage.getItem("token");
       // const response = await axios.get(`${baseURL}/tenants`, {
@@ -90,7 +90,7 @@ export const addTenant = createAsyncThunk(
         }, 500)
       );
       return response.data;
-      
+
       // Uncomment below when API is ready
       // const token = localStorage.getItem("token");
       // const response = await axios.post(`${baseURL}/tenants`, newTenant, {
@@ -225,4 +225,3 @@ const tenantSlice = createSlice({
 
 export const { clearTenantError } = tenantSlice.actions;
 export default tenantSlice.reducer;
-

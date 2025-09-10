@@ -1,10 +1,10 @@
 :root {
-  --primary-color: #215E97;
-  --secoundry-color: #C97A2F;
-  --secoundry-bg-color: #E6F7FF;
+  --primary-color: #215e97;
+  --secoundry-color: #c97a2f;
+  --secoundry-bg-color: #e6f7ff;
   --gray: rgba(9, 30, 66, 0.04);
 }
-.ant-drawer-body{
+.ant-drawer-body {
   padding: 0px !important;
 }
 .ant-tabs-nav {
@@ -86,7 +86,6 @@
   /* Reset margin for the checkbox */
 }
 
-
 .status-item.active {
   background-color: var(--primary-color);
   /* Blue background for active */
@@ -107,33 +106,4 @@
   font-weight: 500;
 }
 
-.app-launcher-menu {
-  display: grid;
-  grid-template-columns: repeat(3, 80px);
-  gap: 16px;
-  padding: 16px;
-  width: 260px;
-  background: white;
-}
-
-.app-item {
-  text-align: center;
-  cursor: pointer;
-  border-radius: 8px;
-  padding: 10px;
-  transition: background 0.3s ease;
-}
-
-.app-item:hover {
-  background-color: #f5f5f5;
-}
-
-.app-icon {
-  font-size: 24px;
-}
-
-.app-name {
-  margin-top: 6px;
-  font-size: 12px;
-  color: #333;
-}
+/* App launcher styles moved to AppLauncher.css for better organization */
