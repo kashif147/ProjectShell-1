@@ -31,16 +31,17 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
     const { application, loading } = useSelector((state) => state.applicationDetails);
     const { applications, applicationsLoading } = useSelector((state) => state.applications);
     // let index = applications.findIndex(app => app.ApplicationId === application?.applicationId) + 1;
-
-    function getApplicationIndex() {
-        setIndex(applications.findIndex(
-            (app) => app.ApplicationId === application?.applicationId
-        ) + 1);
-    }
     const [index, setIndex] = useState()
     useEffect(() => {
-        getApplicationIndex()
-    }, [])
+        if (application && applications?.length) {
+            const newIndex =
+                applications.findIndex(
+                    (app) => app.ApplicationId === application?.applicationId
+                ) + 1;
+
+            setIndex(newIndex);
+        }
+    }, [open, application, applications]);
     const showLoader = applicationsLoading || loading;
     const {
         lookupsForSelect,
@@ -52,7 +53,7 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
     const { data: countryOptions, } = useSelector(
         (state) => state.countries
     );
-    const nextPrevData = { total: applications?.length, currentApp: index }
+    const nextPrevData = { total: applications?.length, }
     const mapApiToState = (apiData) => {
         if (!apiData) return inputValue;
         return {
@@ -640,7 +641,7 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
         if (name === "Bulk" && checked === true) {
         }
         if (name === "Approve" && checked === true) {
-            // validateForm()
+            // const  validateForm()
             disableFtn(false)
 
         }
@@ -652,10 +653,10 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
 
         if (index === -1) return;
         let newIndex = index;
-     
+
         if (direction === "prev") {
             newIndex = newIndex - 1;
-               setIndex(newIndex)
+            setIndex(newIndex)
         } else if (direction === "next") {
             newIndex = newIndex + 1;
             setIndex(newIndex)
@@ -680,7 +681,7 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                                     <Button className="me-1 gray-btn butn" onClick={() => navigateApplication("prev")}>
                                         <FaAngleLeft className="deatil-header-icon" />
                                     </Button>
-                                    <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{nextPrevData?.currentApp} of {nextPrevData?.total}</p>
+                                    <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{index} of {nextPrevData?.total}</p>
                                     <Button className="me-1 gray-btn butn" onClick={() => navigateApplication("next")}>
                                         <FaAngleRight className="deatil-header-icon" />
                                     </Button>

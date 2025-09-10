@@ -526,7 +526,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               <div className="mx-auto" style={{ marginRight: '80%' }}>
                 <Button onClick={() => setcontactDrawer(!contactDrawer)}
                   className="butn" style={{ color: '#215E97', marginRight: '250px' }}>
-                  Add Contact
+                  Add IRO
                 </Button>
               </div>
             )

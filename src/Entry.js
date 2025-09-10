@@ -13,6 +13,7 @@ import ResizableComp from "./component/common/ResizableComp";
 import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
+import { Spin } from "antd";
 import { generatePKCE } from "./utils/Utilities";
 // import RemindersDetails from "./pages/reminders/RemindersDetails";
 
@@ -56,7 +57,7 @@ const RemindersSummary = lazy(() =>
   import("./pages/reminders/RemindersSummary")
 );
 const Cancallation = lazy(() => import("./pages/Cancallation"));
-const CancellationDetail = lazy(()=>import('./pages/cancellation/CancellationDetail'))
+const CancellationDetail = lazy(() => import('./pages/cancellation/CancellationDetail'))
 const Batches = lazy(() => import("./pages/finance/Batches"));
 const Import = lazy(() => import("./pages/finance/Import"));
 const BatchMemberSummary = lazy(() =>
@@ -139,8 +140,18 @@ function Entry() {
 
           {/* Content area + resizable section */}
           <div style={{ flex: 1, display: "flex", }}>
-            <div style={{ flex: 1, }} className="main-main">
-              <Suspense fallback={<div>Loading...</div>}>
+            <div style={{ flex: 1, scrollbarWidth: 'none',}} className="main-main ">
+              <Suspense fallback={<div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                  height: "100vh", // full screen height
+                  width: "100%",   // full width
+                }}
+              >
+                <Spin size='large' />
+              </div>}>
                 <Routes>
                   <Route path="/" element={<Login />} />
                   {/* <Route element={<ProtectedRoute />} > */}

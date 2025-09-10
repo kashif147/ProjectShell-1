@@ -206,12 +206,19 @@ const Sidbar = () => {
       <Menu
         mode="inline"
         selectedKeys={[selectedKey]}
-        style={{ width: "7vw", borderRight: 0 }}
+        
+        style={{
+          width: "7vw",
+          borderRight: 0,
+          maxHeight: "91vh",    // limit height
+          overflowY: "auto",    // scroll only when needed
+          overflowX: "hidden",
+          scrollbarWidth: 'none',
+        }}
         items={menuItems}
-        className="sidebar-menu"
+        className="sidebar-menu hide-scroll-webkit"
         onClick={handleClick}
       />
-      {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
     </div>
   );
 };

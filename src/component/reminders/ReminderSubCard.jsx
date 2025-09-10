@@ -18,9 +18,9 @@ const ReminderSubCard = ({
 }) => {
     return (
         <div className="mt-1 ms-1 me-1 w-100">
-            <Card className="mb-2 ">
+            <Card className="">
                 {/* Header */}
-                <div className="d-flex justify-content-between" style={{ marginBottom: "24px" }}>
+                <div className="d-flex justify-content-between">
                     <h5 className="m-0">{title}</h5>
                     <div className="p-2 rounded-pill bg-light shadow-sm fw-semibold">
                         <p className="m-0">{totalItems} Items</p>
@@ -28,7 +28,7 @@ const ReminderSubCard = ({
                 </div>
 
                 {/* Search + Actions */}
-                <div className="d-flex align-items-center pb-2">
+                <div className="d-flex align-items-center ">
                     <div className="flex-grow-1 me-2">
 
                     </div>
@@ -61,72 +61,7 @@ const ReminderSubCard = ({
                 </div>
 
                 {/* Stats Row */}
-                <Row gutter={16} style={{ marginBottom: 16, textAlign: "center" }}>
-                    <Col span={6}>
-                        <div
-                            style={{
-                                background: "#f6ffed",
-                                border: "1px solid #b7eb8f",
-                                borderRadius: "8px",
-                                padding: "16px",
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "green" }}>
-                                {stats.sent}
-                            </div>
-                            <div style={{ fontSize: "14px", color: "green" }}>Sent</div>
-                        </div>
-                    </Col>
-                    <Col span={6}>
-                        <div
-                            style={{
-                                background: "#fff7e6",
-                                border: "1px solid #ffd591",
-                                borderRadius: "8px",
-                                padding: "16px",
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "orange" }}>
-                                {stats.pending}
-                            </div>
-                            <div style={{ fontSize: "14px", color: "orange" }}>Pending</div>
-                        </div>
-                    </Col>
-                    <Col span={6}>
-                        <div
-                            style={{
-                                background: "#fff1f0",
-                                border: "1px solid #ffa39e",
-                                borderRadius: "8px",
-                                padding: "16px",
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "red" }}>
-                                {stats.failed}
-                            </div>
-                            <div style={{ fontSize: "14px", color: "red" }}>Failed</div>
-                        </div>
-                    </Col>
-                    <Col span={6}>
-                        <div
-                            style={{
-                                background: "#f0f5ff",
-                                border: "1px solid #adc6ff",
-                                borderRadius: "8px",
-                                padding: "16px",
-                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
-                            }}
-                        >
-                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "#001529" }}>
-                                {stats.total}
-                            </div>
-                            <div style={{ fontSize: "14px", color: "#001529" }}>Total</div>
-                        </div>
-                    </Col>
-                </Row>
+              
             </Card>
             <div className="pt-2 pb-2 w-50">
                 <MySearchInput placeholder="Search by name, email or membership no." className="w-50" />

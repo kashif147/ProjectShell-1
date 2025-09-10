@@ -27,8 +27,6 @@ const { TabPane } = Tabs;
 function RemindersDetails() {
     const { selectedId } = useReminders()
     const { isDisable } = useTableColumns()
-
-    console.log(selectedId, "selectedId")
     const [activeTab, setActiveTab] = useState("summary");
     const [tabChecks, setTabChecks] = useState({
         summary: false,
@@ -42,6 +40,12 @@ function RemindersDetails() {
     const total = totalR1 + totalR2 + totalR3
     const date = selectedId?.date
     const user = selectedId?.user
+    const btchsmry = [{
+        sent: selectedId?.stats?.sent,
+        pending: selectedId?.stats?.pending,
+        failed: selectedId?.stats?.failed,
+        total: selectedId?.stats?.total
+    }]
 
     const handleTabCheck = (key, e) => {
         setTabChecks((prev) => ({
@@ -296,14 +300,92 @@ function RemindersDetails() {
             <div className="p-3">
                 <Card style={{ marginBottom: 16 }}>
                     <div style={{ display: "flex", alignItems: "center", gap: 16 }}>
-                        <Checkbox disabled={isDisable} />
-                        <CalendarOutlined />
+                        {/* Left section (info) */}
+                        <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
+                            <Checkbox disabled={isDisable} />
+                            <CalendarOutlined />
+                            <span>{date}</span>
+                            <UserOutlined />
+                            <span>Created by {user}</span>
+                        </div>
 
-                        <span>{date}</span>
-                        <UserOutlined />
-                        <span>Created by {user}</span>
+                        {/* Right section (stats) */}
+                        <div style={{ flex: 1 }}>
+                            {btchsmry.map((stats, idx) => (
+                                <Row key={idx} gutter={16} style={{ textAlign: "center" }}>
+                                    <Col span={6}>
+                                        <div
+                                            style={{
+                                                background: "#f6ffed",
+                                                border: "1px solid #b7eb8f",
+                                                borderRadius: "8px",
+                                                padding: "16px",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                                            }}
+                                        >
+                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "green" }}>
+                                                {stats.sent}
+                                            </div>
+                                            <div style={{ fontSize: "14px", color: "green" }}>Sent</div>
+                                        </div>
+                                    </Col>
+
+                                    <Col span={6}>
+                                        <div
+                                            style={{
+                                                background: "#fff7e6",
+                                                border: "1px solid #ffd591",
+                                                borderRadius: "8px",
+                                                padding: "16px",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                                            }}
+                                        >
+                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "orange" }}>
+                                                {stats.pending}
+                                            </div>
+                                            <div style={{ fontSize: "14px", color: "orange" }}>Pending</div>
+                                        </div>
+                                    </Col>
+
+                                    <Col span={6}>
+                                        <div
+                                            style={{
+                                                background: "#fff1f0",
+                                                border: "1px solid #ffa39e",
+                                                borderRadius: "8px",
+                                                padding: "16px",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                                            }}
+                                        >
+                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "red" }}>
+                                                {stats.failed}
+                                            </div>
+                                            <div style={{ fontSize: "14px", color: "red" }}>Failed</div>
+                                        </div>
+                                    </Col>
+
+                                    <Col span={6}>
+                                        <div
+                                            style={{
+                                                background: "#f0f5ff",
+                                                border: "1px solid #adc6ff",
+                                                borderRadius: "8px",
+                                                padding: "16px",
+                                                boxShadow: "0 2px 6px rgba(0,0,0,0.08)",
+                                            }}
+                                        >
+                                            <div style={{ fontSize: "22px", fontWeight: "bold", color: "#001529" }}>
+                                                {stats.total}
+                                            </div>
+                                            <div style={{ fontSize: "14px", color: "#001529" }}>Total</div>
+                                        </div>
+                                    </Col>
+                                </Row>
+                            ))}
+                        </div>
                     </div>
                 </Card>
+
                 <Tabs
                     activeKey={activeTab}
                     onChange={setActiveTab}
@@ -388,7 +470,7 @@ function RemindersDetails() {
                                         style={{ marginRight: 8 }}
                                         disabled={isDisable}
                                     />
-                                    {`${rem.title.split(" ")[0]} (${rem.count})`}
+                                    {rem.title.split(" ").slice(0, 2).join(" ")}
                                 </span>
                             }
                         >
