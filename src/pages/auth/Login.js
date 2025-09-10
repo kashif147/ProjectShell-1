@@ -14,19 +14,34 @@ import { loginUser } from "../../features/AuthSlice";
 import { generatePKCE } from "../../utils/Utilities";
 
 const Login = () => {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
 
-    const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
-    const navigate = useNavigate(); // Use the useHistory hook
-    const { loading } = useSelector((state) => state.auth);
+  const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+  const navigate = useNavigate(); // Use the useHistory hook
+  const { loading } = useSelector((state) => state.auth);
 
+  function decodeToken(token) {
+    try {
+      const base64Url = token.split(".")[1]; // get payload part
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+
+      return JSON.parse(jsonPayload);
+    } catch (e) {
+      return null;
+    }
+  }
+  const [authLoading, setAuthLoading] = useState(false);
   // Step 1: Login button click
   const handleLogin = async () => {
     const { codeVerifier, codeChallenge } = await generatePKCE();
-    debugger;
     // Save codeVerifier for later token exchange
     localStorage.setItem("pkce_code_verifier", codeVerifier);
-    debugger;
     const tenantId = "39866a06-30bc-4a89-80c6-9dd9357dd453";
     const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
     const redirectUri = "http://localhost:3000";
@@ -46,24 +61,18 @@ const Login = () => {
     // Redirect to Microsoft login
     window.location.href = authUrl.toString();
   };
-
-  // Step 2: Handle redirect after Microsoft login
   const handleAuthRedirect = async () => {
+    setAuthLoading(true);
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
-    debugger;
-    if (!code) return; // No code means user hasn't logged in yet
-
+    if (!code) return setAuthLoading(false);
+    // return;
     const codeVerifier = localStorage.getItem("pkce_code_verifier");
-    debugger;
     if (!codeVerifier) {
       console.error("Missing PKCE code_verifier from sessionStorage");
       return;
     }
-
     try {
-      // Send code + code_verifier to your backend
-
       const response = await fetch(
         "https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net/auth/azure-crm",
         {
@@ -75,22 +84,21 @@ const Login = () => {
           }),
         }
       );
-      debugger;
+
       const data = await response.json();
       console.log("Token response from backend:", data);
-      debugger;
-
       // Save tokens to localStorage if presents
       if (data) {
-        debugger;
         let token = data.accessToken.replace(/^Bearer\s/, "");
         localStorage.setItem("token", token);
-        navigate("/Applications");
+        let decode = decodeToken(token);
+        localStorage.setItem("userdata", JSON.stringify(decode));
+        navigate("/MembershipDashboard");
+        setAuthLoading(!authLoading);
       }
       if (data.refresh_token) {
         localStorage.setItem("refresh_token", data.refresh_token);
       }
-      // Optional: store expiration time
       if (data.expires_in) {
         const expiryTime = Date.now() + data.expires_in * 1000;
         localStorage.setItem("token_expiry", expiryTime.toString());
@@ -102,11 +110,13 @@ const Login = () => {
       console.error("Token exchange failed:", err);
     }
   };
+  useEffect(() => {
+    handleAuthRedirect();
+  }, []);
+
+  // Step 2: Handle redirect after Microsoft login
 
   // Run on page load
-  useEffect(() => {
-    // handleAuthRedirect();
-  }, []);
 
   // const handleLogout = () => {
   //     instance.logoutPopup().catch(e => {
@@ -142,134 +152,141 @@ const Login = () => {
 
   return (
     <main role="main" className="login-body">
-      <div className="login-wrapper main-container">
-        <div></div>
-        <div className="imag-con" style={{ opacity: 0.5 }}>
-          <img className="login-image" src={loginImg} alt="Logo" />
-        </div>
-
-        <div
-          className="login-con"
-          style={{
-            width: "50%",
-            padding: "20px",
-            display: "flex",
-            flexDirection: "column",
-            justifycontent: "center",
-          }}
-        >
-          {/* <h1 className='login-welcom'>Welcome Back</h1> */}
-          <h1 className="login-heading">
-            Login with Microsoft or enter your details
-          </h1>
-          <div
-            style={{ paddingTop: "10px", paddingBottom: "10px" }}
-            className="d-flex justify-content-center my-2"
-          >
-            <button
-              onClick={handleLogin}
-              style={{
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                gap: "10px",
-                padding: "8px 16px",
-                border: "1px solid #ccc",
-                borderRadius: "6px",
-                backgroundColor: "rgb(33, 94, 151)",
-                color: "#fff",
-                cursor: "pointer",
-                fontSize: "14px",
-                // fontWeight: 500,
-                width: "100%",
-              }}
-            >
-              {/* Microsoft SVG Icon */}
-              <svg
-                xmlns="http://www.w3.org/2000/svg"
-                viewBox="0 0 48 48"
-                width="23px"
-                height="23px"
-              >
-                <rect width="22" height="22" x="2" y="2" fill="#F25022" />
-                <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
-                <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
-                <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
-              </svg>
-              {inProgress === InteractionStatus.None
-                ? "Login with Microsoft"
-                : "Logging in..."}
-              {/* <span>Sign in with Microsoft</span> */}
-            </button>
+      {authLoading === true ? (
+        <Spin size="large" />
+      ) : (
+        <div className="login-wrapper main-container">
+          <div></div>
+          <div className="imag-con" style={{ opacity: 0.5 }}>
+            <img className="login-image" src={loginImg} alt="Logo" />
           </div>
-          <Divider
-            orientation="center"
-            style={{ fontWeight: "400", fontSize: "12px" }}
+
+          <div
+            className="login-con"
+            style={{
+              width: "50%",
+              padding: "20px",
+              display: "flex",
+              flexDirection: "column",
+              justifycontent: "center",
+            }}
           >
-            Or
-          </Divider>
-          <form className="login-form">
-            <div className="form-group">
-              <label>Username</label>
-              <Input
-                className="login-form-input"
-                onChange={(e) => handleInputChange("user", e.target.value)}
-                value={credentials.user}
-              />
+            {/* <h1 className='login-welcom'>Welcome Back</h1> */}
+            <h1 className="login-heading">
+              Login with Microsoft or enter your details
+            </h1>
+            <div
+              style={{ paddingTop: "10px", paddingBottom: "10px" }}
+              className="d-flex justify-content-center my-2"
+            >
+              <button
+                onClick={handleLogin}
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center",
+                  gap: "10px",
+                  padding: "8px 16px",
+                  border: "1px solid #ccc",
+                  borderRadius: "6px",
+                  backgroundColor: "rgb(33, 94, 151)",
+                  color: "#fff",
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  // fontWeight: 500,
+                  width: "100%",
+                }}
+              >
+                {/* Microsoft SVG Icon */}
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  viewBox="0 0 48 48"
+                  width="23px"
+                  height="23px"
+                >
+                  <rect width="22" height="22" x="2" y="2" fill="#F25022" />
+                  <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
+                  <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
+                  <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
+                </svg>
+                {inProgress === InteractionStatus.None
+                  ? "Login with Microsoft"
+                  : "Logging in..."}
+                {/* <span>Sign in with Microsoft</span> */}
+              </button>
             </div>
-            <div className="mb-3 position-relative">
-              <label>Password</label>
-              <div className="d-flex align-items-center">
+            <Divider
+              orientation="center"
+              style={{ fontWeight: "400", fontSize: "12px" }}
+            >
+              Or
+            </Divider>
+            <form className="login-form">
+              <div className="form-group">
+                <label>Username</label>
                 <Input
-                  onChange={(e) => handleInputChange("pwd", e.target.value)}
                   className="login-form-input"
-                  value={credentials?.pwd}
-                  type={showPassword ? "text" : "password"}
-                  suffix={
-                    showPassword ? (
-                      <AiFillEye size={20} onClick={togglePasswordVisibility} />
-                    ) : (
-                      <AiFillEyeInvisible
-                        size={20}
-                        onClick={togglePasswordVisibility}
-                      />
-                    )
-                  }
+                  onChange={(e) => handleInputChange("user", e.target.value)}
+                  value={credentials.user}
                 />
               </div>
-            </div>
+              <div className="mb-3 position-relative">
+                <label>Password</label>
+                <div className="d-flex align-items-center">
+                  <Input
+                    onChange={(e) => handleInputChange("pwd", e.target.value)}
+                    className="login-form-input"
+                    value={credentials?.pwd}
+                    type={showPassword ? "text" : "password"}
+                    suffix={
+                      showPassword ? (
+                        <AiFillEye
+                          size={20}
+                          onClick={togglePasswordVisibility}
+                        />
+                      ) : (
+                        <AiFillEyeInvisible
+                          size={20}
+                          onClick={togglePasswordVisibility}
+                        />
+                      )
+                    }
+                  />
+                </div>
+              </div>
 
-            <div className="d-flex justify-content-between">
-              <Checkbox>Remember me</Checkbox>
-              <Link href="/reset-password" className="font-color-12">
-                Forgot Password?
-              </Link>
-            </div>
-            {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
-            <Button
-              loading={loading}
-              style={{
-                backgroundColor: "#215e97",
-                color: "white",
-                borderRadius: "3px",
-                width: "100%",
-                marginTop: "20px",
-                marginBottom: "10px",
-              }}
-              classNames="login-btn"
-              onClick={(e) => {
-                //
-                handleLoginWithCredentional(e);
-              }}
-            >
-              Log in
-            </Button>
-          </form>
-          <p className="font-color-12 text-center">
-            Don't have an account? <a href="/contact-us">Request access</a>
-          </p>
+              <div className="d-flex justify-content-between">
+                <Checkbox>Remember me</Checkbox>
+                <Link href="/reset-password" className="font-color-12">
+                  Forgot Password?
+                </Link>
+              </div>
+              {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
+              <Button
+                loading={loading}
+                style={{
+                  backgroundColor: "#215e97",
+                  color: "white",
+                  borderRadius: "3px",
+                  width: "100%",
+                  marginTop: "20px",
+                  marginBottom: "10px",
+                }}
+                classNames="login-btn"
+                onClick={(e) => {
+                  //
+                  handleLoginWithCredentional(e);
+                }}
+              >
+                Log in
+              </Button>
+            </form>
+            <p className="font-color-12 text-center">
+              Don't have an account? <a href="/contact-us">Request access</a>
+            </p>
+          </div>
         </div>
-      </div>
+      )}
     </main>
   );
 };
