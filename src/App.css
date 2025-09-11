@@ -1,6 +1,11 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+/* Import Unified Theme */
+@import "./styles/Theme.css";
+
+/* Legacy CSS Variables - Maintained for backward compatibility */
 :root {
   --mainBlue: #215e97;
   --second: #c97a2f; /*#ad8135 */
