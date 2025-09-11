@@ -149,7 +149,6 @@ function HeaderDetails() {
   };
 
   function filterSearchableColumns(data) {
-    debugger
     if (data) {
       const filteredResults = globleFilters?.reduce((acc, i) => {
         const filteredColumns = data.filter(
@@ -161,7 +160,6 @@ function HeaderDetails() {
       console.log(data, "data")
       settrueFilters(filteredResults);
       console.log(filteredResults, "filteredResults")
-      debugger
     }
   }
   console.log(trueFilters, "trueFilters")

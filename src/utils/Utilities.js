@@ -180,34 +180,50 @@ export async function generatePKCE() {
   return { codeVerifier, codeChallenge };
 }
 
-export function generateJsonPatch(original, updated, path = "") {
+export function generatePatch(original = {}, updated = {}, path = "") {
   let patches = [];
 
-  // Loop through keys in updated object
-  for (const key in updated) {
-    const newPath = path + "/" + key;
+  const allKeys = new Set([
+    ...Object.keys(original),
+    ...Object.keys(updated),
+  ]);
 
-    if (typeof updated[key] === "object" && updated[key] !== null && !Array.isArray(updated[key])) {
-      // Recursive check for nested objects
-      patches = patches.concat(generateJsonPatch(original[key] || {}, updated[key], newPath));
-    } else {
-      if (original[key] !== updated[key]) {
-        if (original[key] === undefined) {
-          patches.push({ op: "add", path: newPath, value: updated[key] });
-        } else {
-          patches.push({ op: "replace", path: newPath, value: updated[key] });
-        }
-      }
-    }
-  }
+  allKeys.forEach((key) => {
+    const oldValue = original[key];
+    const newValue = updated[key];
+    const currentPath = `${path}/${key}`;
 
-  // Handle keys removed from updated
-  for (const key in original) {
-    if (!(key in updated)) {
-      patches.push({ op: "remove", path: path + "/" + key });
+    // Case 1: Add
+    if ((oldValue === undefined || oldValue === "") && newValue !== "" && newValue !== undefined) {
+      patches.push({ op: "add", path: currentPath, value: newValue });
     }
-  }
+    // Case 2: Remove
+    else if (oldValue !== undefined && oldValue !== "" && (newValue === "" || newValue === undefined)) {
+      patches.push({ op: "remove", path: currentPath });
+    }
+    // Case 3: Recurse into nested objects
+    else if (
+      typeof oldValue === "object" &&
+      oldValue !== null &&
+      typeof newValue === "object" &&
+      newValue !== null
+    ) {
+      patches = patches.concat(generatePatch(oldValue, newValue, currentPath));
+    }
+    // Case 4: Replace
+    else if (
+      oldValue !== newValue &&
+      newValue !== undefined &&
+      !(oldValue === "" && newValue === "")
+    ) {
+      patches.push({ op: "replace", path: currentPath, value: newValue });
+    }
+  });
 
   return patches;
 }
+
+
+
+
 
