@@ -1,31 +1,42 @@
 import React, { useState } from "react";
 import { AutoComplete, Input, Button } from "antd";
-import { MailOutlined, SearchOutlined } from "@ant-design/icons";
+import { SearchOutlined } from "@ant-design/icons";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
-import { useDispatch, useSelector } from "react-redux";
+import { useDispatch } from "react-redux";
+// import { useTableColumns } from "../../context/TableColumnsContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
+// Mock data extended for UI demo
 const mockMembers = [
   {
-    id: 'e2c16ea2-c6b6-4579-9ff6-febfab4e5bf5',
+    id: "e2c16ea2-c6b6-4579-9ff6-febfab4e5bf5",
     name: "John Smith",
     email: "john.smith@email.com",
-  },
-  {
-    id: "30020826-cd75-4c14-99ea-8b9971e5b7c2",
-    name: "John Smith1",
+    phone: "+44 7123 456789",
+    dob: "1985-03-12",
+    address: "12 River St, London, UK",
+    membership: "General – Full Member",
+    status: "Active",
+    expiry: "2025-12-31",
   },
   {
     id: "2e1d0f2b-ad56-45e2-b712-69862183b97b",
     name: "Peter Smith",
     email: "peter.smith@email.com",
+    phone: "+44 7123 987654",
+    dob: "1990-07-22",
+    address: "10 Downing St, London, UK",
+    membership: "General – Full Member",
+    status: "Active",
+    expiry: "2025-12-31",
   },
 ];
 
 const MemberSearch = () => {
-  const { disableFtn, isDisable } = useTableColumns();
+  const { disableFtn } = useTableColumns();
   const [options, setOptions] = useState([]);
   const [searchValue, setSearchValue] = useState("");
+  const dispatch = useDispatch();
 
   const handleSearch = (value) => {
     setSearchValue(value);
@@ -38,7 +49,8 @@ const MemberSearch = () => {
     const filtered = mockMembers.filter(
       (m) =>
         m.name.toLowerCase().includes(value.toLowerCase()) ||
-        (m.email && m.email.toLowerCase().includes(value.toLowerCase()))
+        (m.email && m.email.toLowerCase().includes(value.toLowerCase())) ||
+        (m.phone && m.phone.includes(value))
     );
 
     if (filtered.length > 0) {
@@ -46,55 +58,75 @@ const MemberSearch = () => {
         filtered.map((member) => ({
           value: member.email || member.name,
           label: (
-            <div style={{ padding: "8px" }}>
-              <strong>{member.name}</strong>
-              {member.email && (
-                <div>
-                  <MailOutlined /> {member.email}
-                </div>
-              )}
+            <div style={{ padding: "8px 0" }}>
+              {/* Row 1: Name, email, phone */}
+              <div style={{ fontWeight: "600" }}>
+                {member.name}{" "}
+                <span style={{ color: "#555", fontWeight: "normal" }}>
+                  • {member.email} • {member.phone}
+                </span>
+              </div>
+
+              {/* Row 2: DOB + Address */}
+              <div style={{ fontSize: "13px", color: "#555" }}>
+                DOB: {member.dob} • {member.address}
+              </div>
+
+              {/* Row 3: membership, status, expiry */}
+              <div style={{ fontSize: "13px", marginTop: "2px" }}>
+                <span>📘 {member.membership}</span> •{" "}
+                <span>☑ {member.status}</span> •{" "}
+                <span>⏳ {member.expiry}</span>
+              </div>
             </div>
           ),
           memberId: member.id,
         }))
       );
     } else {
-      // No match found
       setOptions([
         {
-          value: "__no_match__", // dummy value
+          value: "__no_match__",
           label: (
-            <div style={{ padding: "8px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div
+              style={{
+                padding: "8px",
+                display: "flex",
+                justifyContent: "space-between",
+                alignItems: "center",
+              }}
+            >
               <span>No Member Found</span>
-              <Button size="small" className="butn primary-btn" onClick={() => handleAdd(searchValue)}>
+              <Button
+                size="small"
+                type="primary"
+                onClick={() => handleAdd(searchValue)}
+              >
                 Add
               </Button>
             </div>
           ),
-          disabled: true, // prevent selection
+          disabled: true,
         },
       ]);
     }
   };
 
-  const dispatch = useDispatch();
   const handleSelect = (value, option) => {
     if (option.memberId) {
       dispatch(getApplicationById({ id: option.memberId }));
-      disableFtn(false)
+      disableFtn(false);
     }
   };
 
   const handleAdd = () => {
     disableFtn(false);
-
-    // Close dropdown and clear input
     setSearchValue("");
     setOptions([]);
   };
 
   return (
-    <div style={{ width: "27rem" }}>
+    <div style={{ width: "30rem" }}>
       <AutoComplete
         style={{ width: "100%" }}
         options={options}
@@ -102,12 +134,14 @@ const MemberSearch = () => {
         onSelect={handleSelect}
         value={searchValue}
         onChange={setSearchValue}
+        dropdownMatchSelectWidth={true}
       >
         <Input
           size="large"
           prefix={<SearchOutlined />}
-          style={{ borderRadius: "px", padding: '6px 12px' }}
-          placeholder="Enter email or name..."
+          placeholder="Search Member by Email or Mobile Number"
+          // style={}
+          className="p-2"
         />
       </AutoComplete>
     </div>

@@ -4,6 +4,45 @@
   --secoundry-bg-color: #e6f7ff;
   --gray: rgba(9, 30, 66, 0.04);
 }
+/* Full header section */
+/* Remove default header spacing */
+/* Force remove header spacing and style */
+.ant-modal-content{
+padding: 0 !important;
+}
+.ant-modal .ant-modal-header {
+  margin: 0 !important;
+  padding: 0 !important;
+  background: rgb(18, 60, 99) !important;
+  border-bottom: none !important;
+  border-radius: 8px 8px 0 0 !important;
+}
+.drawer-main-container{
+  padding-top: 16px !important;
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+}
+.ant-modal-footer{
+  padding-left: 16px !important;
+  padding-right: 16px !important;
+  padding-bottom: 16px !important;
+}
+
+/* Title with padding */
+.ant-modal .ant-modal-header .ant-modal-title {
+  padding: 12px 16px !important;
+  display: block !important;
+  color: #fff !important;
+  font-weight: 600 !important;
+}
+
+/* Close (X) button */
+.ant-modal .ant-modal-close {
+  top: 12px !important;
+  right: 12px !important;
+  color: #fff !important;
+}
+
 .ant-drawer-body {
   padding: 0px !important;
 }

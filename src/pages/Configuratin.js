@@ -42,6 +42,7 @@ import {
   Phone,
   HelpCircle,
   Users,
+  search
 } from "lucide-react";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
@@ -3824,7 +3825,7 @@ function Configuratin() {
     setCurrent(page);
     setPageSize(size);
   };
-  const { Search } = Input;
+  // const { Search } = Input;
   const sections = [
     {
       title: "Lookups Configuration",
@@ -3951,7 +3952,8 @@ function Configuratin() {
         }, // emerald-400
         {
           key: "Lookup",
-          icon: <Search size={24} color="#fb7185" />,
+          icon: <Search 
+ size={24} color="#fb7185" />,
           label: "Lookup",
         }, // rose-400
         {

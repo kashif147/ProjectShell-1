@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Drawer, Row, Col, Checkbox, Radio, Button, Spin } from 'antd'
+import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal } from 'antd'
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import axios from 'axios';
 import CustomSelect from '../common/CustomSelect';
@@ -33,6 +33,11 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
     const { applications, applicationsLoading } = useSelector((state) => state.applications);
     // let index = applications.findIndex(app => app.ApplicationId === application?.applicationId) + 1;
     const [index, setIndex] = useState()
+    const [rejectionData, setRejectionData] = useState({
+        reason: "",
+        note: "",
+    });
+    const [rejectModal, setRejectModal] = useState(false)
     useEffect(() => {
         if (application && applications?.length) {
             const newIndex =
@@ -50,6 +55,22 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
         disableFtn
 
     } = useTableColumns();
+
+    const handleReject = async () => {
+        if (!rejectionData.reason) {
+            //   message.error("Please select a reason before rejecting.");
+            return;
+        }
+
+        try {
+            //   await api.patch(`/applications/${applicationId}/reject`, rejectionData);
+            //   message.success("Application rejected successfully");
+            onClose();
+            setRejectionData({ reason: "", note: "" });
+        } catch (err) {
+            //   message.error("Failed to reject application");
+        }
+    };
     const dispatch = useDispatch()
     const { data: countryOptions, } = useSelector(
         (state) => state.countries
@@ -653,12 +674,12 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
 
     const handleChange = (e) => {
         const { name, checked } = e.target;
-        if (name !== "Approve") {
-            setSelected((prev) => ({
-                ...prev,
-                [name]: checked,
-            }));
-        }
+        // if (name !== "Approve") {
+        //     setSelected((prev) => ({
+        //         ...prev,
+        //         [name]: checked,
+        //     }));
+        // }
         if (name === "Bulk" && checked === false) {
             disableFtn(true)
             setErrors({})
@@ -677,7 +698,13 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
 
         }
         if (name === "Reject" && checked === true) {
-
+            const isValid = validateForm();
+            if (!isValid) return;
+              setSelected((prev) => ({
+                ...prev,
+                Reject: checked,
+            }));
+            setRejectModal(true)
         }
     };
     function navigateApplication(direction) {
@@ -706,19 +733,7 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                 title={title}
                 extra={
                     <div className="d-flex space-evenly gap-3 align-items-baseline" >
-                        {
-                            isEdit && (
-                                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
-                                    <Button className="me-1 gray-btn butn" onClick={() => navigateApplication("prev")}>
-                                        <FaAngleLeft className="deatil-header-icon" />
-                                    </Button>
-                                    <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{index} of {nextPrevData?.total}</p>
-                                    <Button className="me-1 gray-btn butn" onClick={() => navigateApplication("next")}>
-                                        <FaAngleRight className="deatil-header-icon" />
-                                    </Button>
-                                </div>
-                            )
-                        }
+                       
                         {
                             !isEdit && (
                                 <>
@@ -759,6 +774,19 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                                 <Button onClick={() => handleSubmit()} className="butn primary-btn">
                                     Submit
                                 </Button>
+                            )
+                        }
+                         {
+                            isEdit && (
+                                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+                                    <Button className="me-1 gray-btn butn" onClick={() => navigateApplication("prev")}>
+                                        <FaAngleLeft className="deatil-header-icon" />
+                                    </Button>
+                                    <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{index} of {nextPrevData?.total}</p>
+                                    <Button className="me-1 gray-btn butn" onClick={() => navigateApplication("next")}>
+                                        <FaAngleRight className="deatil-header-icon" />
+                                    </Button>
+                                </div>
                             )
                         }
 
@@ -1647,6 +1675,45 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                     )}
                 </div>
             </Drawer>
+            <Modal
+                title="Reject Application"
+                open={rejectModal}
+                onCancel={() => setRejectModal(false)}
+                onOk={handleReject}
+                okText="Reject"
+                okButtonProps={{ danger: true }}
+            >
+                <div className="drawer-main-container">
+                    <CustomSelect
+                        label="Reason"
+                        name="Reason"
+                        required
+                        placeholder="Select reason"
+                        value={rejectionData.reason}
+                        onChange={(val) =>
+                            setRejectionData((prev) => ({ ...prev, reason: val }))
+                        }
+                        options={[
+                            { label: "Incomplete documents", value: "incomplete_documents" },
+                            { label: "Invalid information", value: "invalid_information" },
+                            { label: "Duplicate application", value: "duplicate" },
+                            { label: "Other", value: "other" },
+                        ]}
+                    />
+                    <MyInput
+                        name="Note (optional)"
+                        label="Note (optional)"
+                        placeholder="Enter note"
+                        value={rejectionData.note}
+                        onChange={(e) =>
+                            setRejectionData((prev) => ({ ...prev, note: e.target.value }))
+                        }
+                        textarea
+                    />
+
+                </div>
+            </Modal>
+
         </div>
     )
 }
