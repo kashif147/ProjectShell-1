@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from 'react'
-import { Drawer, Row, Col, Checkbox, Radio, Button, Spin } from 'antd'
+import { Drawer, Row, Col, Checkbox, Radio, Button, Spin,Modal } from 'antd'
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import { observe, generate } from 'fast-json-patch';
 import axios from 'axios';
@@ -423,7 +423,30 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
             return prevErrors;
         });
     };
+    const [rejectionData, setRejectionData] = useState({
+        reason: "",
+        note: "",
+    });
+    const handleReject = async () => {
+        const newErrors = {};
 
+        if (!rejectionData.reason) {
+            newErrors.reason = "Please select a reason";
+        }
+
+        setErrors(newErrors);
+
+        if (Object.keys(newErrors).length > 0) return; // stop if validation fails
+
+        // try {
+        //     await api.patch(`/applications/${applicationId}/reject`, rejectionData);
+        //     onClose();
+        //     setRejectionData({ reason: "", note: "" });
+        //     setErrors({});
+        // } catch (err) {
+        //     setErrors({ api: "Failed to reject application" });
+        // }
+    };
     const inputRef = useRef(null);
     const libraries = ['places', 'maps'];
     const handlePlacesChanged = () => {
@@ -664,7 +687,7 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
         if (name === "Approve" && checked === true) {
             const isValid = validateForm();
             if (!isValid) return;
-            console.log(patches,"testinh")
+            console.log(patches, "testinh")
             disableFtn(false)
 
         }
@@ -1639,6 +1662,14 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
                     )}
                 </div>
             </Drawer>
+            <Modal
+                title="Reject Application"
+                open={open}
+                onCancel={onClose}
+                onOk={handleReject}
+                okText="Reject"
+                okButtonProps={{ danger: true }}
+            ></Modal>
         </div>
     )
 }
