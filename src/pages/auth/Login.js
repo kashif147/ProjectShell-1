@@ -1,9 +1,6 @@
 import { React, useState, useEffect } from "react";
 import "../../styles/Login.css";
-// import loginImg from "../../assets/images/img1.png"
-import loginImg from "../../assets/images/gra_logo.png";
-// import { WindowsFilled } from '@ant-design/icons';
-import { Button, Checkbox, Divider, Input, Spin } from "antd";
+import { Button, Checkbox, Divider, Input, Spin, Card, Typography } from "antd";
 import { Link } from "react-router-dom";
 import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
@@ -12,6 +9,17 @@ import { InteractionStatus } from "@azure/msal-browser";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../features/AuthSlice";
 import { generatePKCE } from "../../utils/Utilities";
+import {
+  UserOutlined,
+  LockOutlined,
+  LoginOutlined,
+  ArrowLeftOutlined,
+} from "@ant-design/icons";
+// Using a professional business image from Unsplash
+const loginImage =
+  "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
+
+const { Title, Text } = Typography;
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -37,6 +45,7 @@ const Login = () => {
     }
   }
   const [authLoading, setAuthLoading] = useState(false);
+  const [showTraditionalLogin, setShowTraditionalLogin] = useState(false);
   // Step 1: Login button click
   const handleLogin = async () => {
     const { codeVerifier, codeChallenge } = await generatePKCE();
@@ -112,6 +121,14 @@ const Login = () => {
   };
   useEffect(() => {
     handleAuthRedirect();
+
+    // Add class to body to prevent scrolling
+    document.body.classList.add("login-page");
+
+    // Cleanup function to remove class when component unmounts
+    return () => {
+      document.body.classList.remove("login-page");
+    };
   }, []);
 
   // Step 2: Handle redirect after Microsoft login
@@ -153,138 +170,181 @@ const Login = () => {
   return (
     <main role="main" className="login-body">
       {authLoading === true ? (
-        <Spin size="large" />
+        <div className="login-loading">
+          <Spin size="large" />
+          <Text style={{ marginTop: "16px", color: "var(--font-color)" }}>
+            Authenticating...
+          </Text>
+        </div>
       ) : (
-        <div className="login-wrapper main-container">
-          <div></div>
-          <div className="imag-con" style={{ opacity: 0.5 }}>
-            <img className="login-image" src={loginImg} alt="Logo" />
-          </div>
-
-          <div
-            className="login-con"
-            style={{
-              width: "50%",
-              padding: "20px",
-              display: "flex",
-              flexDirection: "column",
-              justifycontent: "center",
-            }}
-          >
-            {/* <h1 className='login-welcom'>Welcome Back</h1> */}
-            <h1 className="login-heading">
-              Login with Microsoft or enter your details
-            </h1>
-            <div
-              style={{ paddingTop: "10px", paddingBottom: "10px" }}
-              className="d-flex justify-content-center my-2"
-            >
-              <button
-                onClick={handleLogin}
-                style={{
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                  gap: "10px",
-                  padding: "8px 16px",
-                  border: "1px solid #ccc",
-                  borderRadius: "6px",
-                  backgroundColor: "rgb(33, 94, 151)",
-                  color: "#fff",
-                  cursor: "pointer",
-                  fontSize: "14px",
-                  // fontWeight: 500,
-                  width: "100%",
-                }}
-              >
-                {/* Microsoft SVG Icon */}
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  viewBox="0 0 48 48"
-                  width="23px"
-                  height="23px"
-                >
-                  <rect width="22" height="22" x="2" y="2" fill="#F25022" />
-                  <rect width="22" height="22" x="24" y="2" fill="#7FBA00" />
-                  <rect width="22" height="22" x="2" y="24" fill="#00A4EF" />
-                  <rect width="22" height="22" x="24" y="24" fill="#FFB900" />
-                </svg>
-                {inProgress === InteractionStatus.None
-                  ? "Login with Microsoft"
-                  : "Logging in..."}
-                {/* <span>Sign in with Microsoft</span> */}
-              </button>
+        <div className="login-container">
+          <div className="login-image-section">
+            <img src={loginImage} alt="Welcome" className="login-hero-image" />
+            <div className="image-overlay">
+              <Title level={1} className="hero-title">
+                Welcome to Our Platform
+              </Title>
+              <Text className="hero-subtitle">
+                Secure access to your membership platform
+              </Text>
             </div>
-            <Divider
-              orientation="center"
-              style={{ fontWeight: "400", fontSize: "12px" }}
-            >
-              Or
-            </Divider>
-            <form className="login-form">
-              <div className="form-group">
-                <label>Username</label>
-                <Input
-                  className="login-form-input"
-                  onChange={(e) => handleInputChange("user", e.target.value)}
-                  value={credentials.user}
-                />
-              </div>
-              <div className="mb-3 position-relative">
-                <label>Password</label>
-                <div className="d-flex align-items-center">
-                  <Input
-                    onChange={(e) => handleInputChange("pwd", e.target.value)}
-                    className="login-form-input"
-                    value={credentials?.pwd}
-                    type={showPassword ? "text" : "password"}
-                    suffix={
-                      showPassword ? (
-                        <AiFillEye
-                          size={20}
-                          onClick={togglePasswordVisibility}
-                        />
-                      ) : (
-                        <AiFillEyeInvisible
-                          size={20}
-                          onClick={togglePasswordVisibility}
-                        />
-                      )
-                    }
-                  />
-                </div>
-              </div>
-
-              <div className="d-flex justify-content-between">
-                <Checkbox>Remember me</Checkbox>
-                <Link href="/reset-password" className="font-color-12">
-                  Forgot Password?
-                </Link>
-              </div>
-              {/* <Button style={{ backgroundColor: "#215e97", color: "white", borderRadius: "3px", width: "100%", marginTop: "20px", marginBottom: "10px" }} classNames="login-btn" onClick={() => navigate("/Summary")}>Log in</Button> */}
-              <Button
-                loading={loading}
-                style={{
-                  backgroundColor: "#215e97",
-                  color: "white",
-                  borderRadius: "3px",
-                  width: "100%",
-                  marginTop: "20px",
-                  marginBottom: "10px",
-                }}
-                classNames="login-btn"
-                onClick={(e) => {
-                  //
-                  handleLoginWithCredentional(e);
-                }}
-              >
-                Log in
-              </Button>
-            </form>
-            <p className="font-color-12 text-center">
-              Don't have an account? <a href="/contact-us">Request access</a>
-            </p>
           </div>
+
+          <Card className="login-card">
+            <div className="login-header">
+              <div className="login-icon">
+                <UserOutlined />
+              </div>
+              <Title level={2} className="login-title">
+                {showTraditionalLogin ? "Sign In" : "Welcome Back"}
+              </Title>
+              <Text className="login-subtitle">
+                {showTraditionalLogin
+                  ? "Enter your credentials to continue"
+                  : "Choose your preferred sign-in method"}
+              </Text>
+            </div>
+
+            <div className="login-content">
+              {!showTraditionalLogin ? (
+                // Step 1: Microsoft Login (Primary)
+                <>
+                  <Button
+                    className="theme-btn theme-btn-primary microsoft-btn"
+                    onClick={handleLogin}
+                    size="large"
+                    block
+                  >
+                    <svg
+                      xmlns="http://www.w3.org/2000/svg"
+                      viewBox="0 0 48 48"
+                      width="20px"
+                      height="20px"
+                      style={{ marginRight: "8px" }}
+                    >
+                      <rect width="22" height="22" x="2" y="2" fill="#F25022" />
+                      <rect
+                        width="22"
+                        height="22"
+                        x="24"
+                        y="2"
+                        fill="#7FBA00"
+                      />
+                      <rect
+                        width="22"
+                        height="22"
+                        x="2"
+                        y="24"
+                        fill="#00A4EF"
+                      />
+                      <rect
+                        width="22"
+                        height="22"
+                        x="24"
+                        y="24"
+                        fill="#FFB900"
+                      />
+                    </svg>
+                    {inProgress === InteractionStatus.None
+                      ? "Sign in with Microsoft"
+                      : "Signing in..."}
+                  </Button>
+
+                  <Divider className="login-divider">Or</Divider>
+
+                  <Button
+                    className="theme-btn theme-btn-secondary"
+                    onClick={() => setShowTraditionalLogin(true)}
+                    size="large"
+                    block
+                    icon={<LoginOutlined />}
+                  >
+                    Sign in with Username & Password
+                  </Button>
+                </>
+              ) : (
+                // Step 2: Traditional Login Form
+                <>
+                  <Button
+                    className="back-button"
+                    onClick={() => setShowTraditionalLogin(false)}
+                    icon={<ArrowLeftOutlined />}
+                    type="text"
+                  >
+                    Back to Sign-in Options
+                  </Button>
+
+                  <form className="login-form">
+                    <div className="form-group">
+                      <label className="form-label">
+                        <UserOutlined className="label-icon" />
+                        Username
+                      </label>
+                      <Input
+                        className="theme-input"
+                        placeholder="Enter your username"
+                        prefix={<UserOutlined />}
+                        onChange={(e) =>
+                          handleInputChange("user", e.target.value)
+                        }
+                        value={credentials.user}
+                        size="large"
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label className="form-label">
+                        <LockOutlined className="label-icon" />
+                        Password
+                      </label>
+                      <Input.Password
+                        className="theme-input"
+                        placeholder="Enter your password"
+                        prefix={<LockOutlined />}
+                        onChange={(e) =>
+                          handleInputChange("pwd", e.target.value)
+                        }
+                        value={credentials?.pwd}
+                        size="large"
+                        visibilityToggle={{
+                          visible: showPassword,
+                          onVisibleChange: setShowPassword,
+                        }}
+                      />
+                    </div>
+
+                    <div className="login-options">
+                      <Checkbox className="remember-checkbox">
+                        Remember me
+                      </Checkbox>
+                      <Link to="/reset-password" className="forgot-link">
+                        Forgot Password?
+                      </Link>
+                    </div>
+
+                    <Button
+                      className="theme-btn theme-btn-primary login-submit-btn"
+                      loading={loading}
+                      onClick={handleLoginWithCredentional}
+                      size="large"
+                      block
+                    >
+                      Sign In
+                    </Button>
+                  </form>
+                </>
+              )}
+
+              <div className="login-footer">
+                <Text className="signup-text">
+                  Don't have an account?{" "}
+                  <Link to="/contact-us" className="signup-link">
+                    Request access
+                  </Link>
+                </Text>
+              </div>
+            </div>
+          </Card>
         </div>
       )}
     </main>
