@@ -223,8 +223,8 @@ class PolicyClient {
 
           return await response.json();
         } else {
-          // Fallback for Node.js environments without fetch
-          return await this.makeNodeRequest(url, options);
+          // Fallback for browser environments without fetch
+          return await this.makeBrowserRequest(url, options);
         }
       } catch (error) {
         lastError = error;
@@ -238,57 +238,40 @@ class PolicyClient {
   }
 
   /**
-   * Node.js HTTP request fallback
+   * Browser-compatible HTTP request fallback
    * @private
    */
-  async makeNodeRequest(url, options) {
+  async makeBrowserRequest(url, options) {
     return new Promise((resolve, reject) => {
-      // Dynamic import to avoid issues in browser environments
-      const urlModule = require("url");
-      const parsedUrl = new urlModule.URL(url);
-      const isHttps = parsedUrl.protocol === "https:";
-      const httpModule = isHttps ? require("https") : require("http");
+      const xhr = new XMLHttpRequest();
 
-      const requestOptions = {
-        hostname: parsedUrl.hostname,
-        port: parsedUrl.port || (isHttps ? 443 : 80),
-        path: parsedUrl.pathname + parsedUrl.search,
-        method: options.method || "GET",
-        headers: options.headers || {},
-        timeout: this.timeout,
+      xhr.timeout = this.timeout;
+
+      xhr.onload = () => {
+        try {
+          if (xhr.status >= 200 && xhr.status < 300) {
+            resolve(JSON.parse(xhr.responseText));
+          } else {
+            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
+          }
+        } catch (error) {
+          reject(new Error("Invalid JSON response"));
+        }
       };
 
-      const req = httpModule.request(requestOptions, (res) => {
-        let data = "";
+      xhr.onerror = () => reject(new Error("Network error"));
+      xhr.ontimeout = () => reject(new Error("Request timeout"));
 
-        res.on("data", (chunk) => {
-          data += chunk;
+      xhr.open(options.method || "GET", url);
+
+      // Set headers
+      if (options.headers) {
+        Object.entries(options.headers).forEach(([key, value]) => {
+          xhr.setRequestHeader(key, value);
         });
-
-        res.on("end", () => {
-          try {
-            if (res.statusCode >= 200 && res.statusCode < 300) {
-              resolve(JSON.parse(data));
-            } else {
-              reject(new Error(`HTTP ${res.statusCode}: ${res.statusMessage}`));
-            }
-          } catch (error) {
-            reject(new Error("Invalid JSON response"));
-          }
-        });
-      });
-
-      req.on("error", reject);
-      req.on("timeout", () => {
-        req.destroy();
-        reject(new Error("Request timeout"));
-      });
-
-      if (options.body) {
-        req.write(options.body);
       }
 
-      req.end();
+      xhr.send(options.body || null);
     });
   }
 
@@ -319,12 +302,19 @@ class PolicyClient {
 }
 
 // Support both CommonJS and ES modules
-module.exports = PolicyClient;
-module.exports.default = PolicyClient;
-module.exports.PolicyClient = PolicyClient;
+if (typeof module !== "undefined" && module.exports) {
+  // CommonJS environment
+  module.exports = PolicyClient;
+  module.exports.default = PolicyClient;
+  module.exports.PolicyClient = PolicyClient;
+}
 
-// For environments that support ES modules
+// ES modules support
 if (typeof exports !== "undefined") {
   exports.default = PolicyClient;
   exports.PolicyClient = PolicyClient;
 }
+
+// Default export for ES modules
+export default PolicyClient;
+export { PolicyClient };

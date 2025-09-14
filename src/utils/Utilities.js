@@ -1,102 +1,110 @@
 import axios from "axios";
 import MyAlert from "../component/common/MyAlert";
 import { notificationsMsg } from "../Data";
-import dayjs from 'dayjs';
+import dayjs from "dayjs";
 import moment from "moment";
-import { PolicyClient } from "./node-policy-client";
+import PolicyClient from "./node-policy-client";
 let token;
-export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
+export const baseURL = process.env.REACT_APP_BASE_URL_DEV;
 // export const  baseURL = "http://localhost:3500"
 
-
-export const insertDataFtn = async (apiURL=baseURL,url, data, successNotification, failureNotification,callback) => {
-// const  apiURL = process.env.REACT_APP_BASE_URL_DEV
-debugger  
-const token = localStorage.getItem('token'); // Explicit declaration with const
+export const insertDataFtn = async (
+  apiURL = baseURL,
+  url,
+  data,
+  successNotification,
+  failureNotification,
+  callback
+) => {
+  // const  apiURL = process.env.REACT_APP_BASE_URL_DEV
+  debugger;
+  const token = localStorage.getItem("token"); // Explicit declaration with const
   try {
     const response = await axios.post(`${apiURL}${url}`, data, {
       headers: {
-        'Content-Type': 'application/json',
+        "Content-Type": "application/json",
         maxBodyLength: Infinity,
-        Authorization: `Bearer ${token}`, 
-    },
-    });  
-    if (response.status === 201) { // Strict equality check
-      MyAlert('success', successNotification);
-      callback()
-      return
-      
+        Authorization: `Bearer ${token}`,
+      },
+    });
+    if (response.status === 201) {
+      // Strict equality check
+      MyAlert("success", successNotification);
+      callback();
+      return;
     }
     // if (response.status === 201 || response.status ) { // Strict equality check
-      
+
     //   MyAlert('success', successNotification);
     //   callback()
     //   return
-      
+
     // }
-    
     else {
-      return MyAlert('error', `${failureNotification}`,response?.data?.error);
+      return MyAlert("error", `${failureNotification}`, response?.data?.error);
     }
   } catch (error) {
-    console.error(error?.response,'222');
-    MyAlert('error', failureNotification,error?.response?.data?.error); 
-
+    console.error(error?.response, "222");
+    MyAlert("error", failureNotification, error?.response?.data?.error);
   }
 };
 
-export const deleteFtn = async (url,id, callback)=>{
-  token = localStorage.getItem('token')
+export const deleteFtn = async (url, id, callback) => {
+  token = localStorage.getItem("token");
   const data = JSON.stringify({ id });
   const config = {
-    method: 'delete',
+    method: "delete",
     // maxBodyLength: Infinity,
     url: url,
     headers: {
-        'Content-Type': 'application/json',
-        'Authorization': `Bearer ${token}`, // Use Bearer token for authorization
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${token}`, // Use Bearer token for authorization
     },
     data: data,
-};
-try {
-  const response = await axios.request(config);
- MyAlert('success','You Have Successfully Deleted.')
- if (callback && typeof callback === 'function' && response?.data) {
-  callback(); 
-}
-  return response.data; 
-} catch (error) {
-  console.error('Error deleting region:', error);
- return  MyAlert('error','Please Try Again'); 
-}
-
-}
-
-export const updateFtn = async (apiURL=baseURL,endPoint, data1, callback,msg=notificationsMsg?.updating?.sucess) => {
+  };
   try {
-    token=   localStorage.getItem('token');
+    const response = await axios.request(config);
+    MyAlert("success", "You Have Successfully Deleted.");
+    if (callback && typeof callback === "function" && response?.data) {
+      callback();
+    }
+    return response.data;
+  } catch (error) {
+    console.error("Error deleting region:", error);
+    return MyAlert("error", "Please Try Again");
+  }
+};
+
+export const updateFtn = async (
+  apiURL = baseURL,
+  endPoint,
+  data1,
+  callback,
+  msg = notificationsMsg?.updating?.sucess
+) => {
+  try {
+    token = localStorage.getItem("token");
     const response = await axios.put(`${apiURL}${endPoint}`, data1, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
     });
-    MyAlert('success', notificationsMsg?.updating?.sucess)
-    callback()
+    MyAlert("success", notificationsMsg?.updating?.sucess);
+    callback();
     return response.data;
   } catch (error) {
-    MyAlert('error', notificationsMsg?.updating?.falier)
-  
+    MyAlert("error", notificationsMsg?.updating?.falier);
   }
 };
 
 export const calculateAgeFtn = (input) => {
-  const dob = dayjs(input);  // Create Day.js object
-  if (!dob.isValid()) return '';
+  const dob = dayjs(input); // Create Day.js object
+  if (!dob.isValid()) return "";
   const today = dayjs();
-  console.log("DOB:", dob.format('YYYY-MM-DD'));
-  console.log("Today:", today.format('YYYY-MM-DD'));
-  console.log("Age:", today.diff(dob, 'year'));  // diff in years
-  return today.diff(dob, 'year');
+  console.log("DOB:", dob.format("YYYY-MM-DD"));
+  console.log("Today:", today.format("YYYY-MM-DD"));
+  console.log("Age:", today.diff(dob, "year")); // diff in years
+  return today.diff(dob, "year");
 };
 
 export const mapApplicationDetailToInfData = (applicationDetail) => {
@@ -144,7 +152,11 @@ export const cleanPayload = (obj) => {
         const cleaned = cleanPayload(v);
         // also drop empty objects/arrays
         if (
-          !(typeof cleaned === "object" && cleaned !== null && Object.keys(cleaned).length === 0) &&
+          !(
+            typeof cleaned === "object" &&
+            cleaned !== null &&
+            Object.keys(cleaned).length === 0
+          ) &&
           !(Array.isArray(cleaned) && cleaned.length === 0)
         ) {
           acc[k] = cleaned;
@@ -156,15 +168,16 @@ export const cleanPayload = (obj) => {
 };
 
 export function convertToLocalTime(utcDateString) {
-  console.log(utcDateString,'ity')
-  return moment.utc(utcDateString).local().format('DD/MM/YYYY HH:mm');
+  console.log(utcDateString, "ity");
+  return moment.utc(utcDateString).local().format("DD/MM/YYYY HH:mm");
 }
 
 function base64URLEncode(buffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)))
-    .replace(/\+/g, "-").replace(/\//g, "_").replace(/=+$/, "");
+    .replace(/\+/g, "-")
+    .replace(/\//g, "_")
+    .replace(/=+$/, "");
 }
-
 
 export async function generatePKCE() {
   // Generate random code verifier
@@ -184,10 +197,7 @@ export async function generatePKCE() {
 export function generatePatch(original = {}, updated = {}, path = "") {
   let patches = [];
 
-  const allKeys = new Set([
-    ...Object.keys(original),
-    ...Object.keys(updated),
-  ]);
+  const allKeys = new Set([...Object.keys(original), ...Object.keys(updated)]);
 
   allKeys.forEach((key) => {
     const oldValue = original[key];
@@ -195,11 +205,19 @@ export function generatePatch(original = {}, updated = {}, path = "") {
     const currentPath = `${path}/${key}`;
 
     // Case 1: Add
-    if ((oldValue === undefined || oldValue === "") && newValue !== "" && newValue !== undefined) {
+    if (
+      (oldValue === undefined || oldValue === "") &&
+      newValue !== "" &&
+      newValue !== undefined
+    ) {
       patches.push({ op: "add", path: currentPath, value: newValue });
     }
     // Case 2: Remove
-    else if (oldValue !== undefined && oldValue !== "" && (newValue === "" || newValue === undefined)) {
+    else if (
+      oldValue !== undefined &&
+      oldValue !== "" &&
+      (newValue === "" || newValue === undefined)
+    ) {
       patches.push({ op: "remove", path: currentPath });
     }
     // Case 3: Recurse into nested objects
@@ -234,7 +252,3 @@ const policy = new PolicyClient(
 );
 
 export default policy;
-
-
-
-

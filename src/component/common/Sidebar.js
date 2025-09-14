@@ -9,13 +9,17 @@ import {
   reportItems,
   issuesItems,
   eventsItems,
-} from "../../constants/SideNav";
+} from "../../constants/SideNav.js";
 import { useSelector } from "react-redux";
-import "../../styles/Sidbar.css";
+import "../../styles/Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import ProfileHeader from "./ProfileHeader"; 
-// import policy from "";
-import policy from "../../utils/Utilities.js";
+import ProfileHeader from "./ProfileHeader.js";
+import PolicyClient from "../../utils/node-policy-client.js";
+import {
+  usePolicyClient,
+  useAuthorization,
+  usePermissions,
+} from "../../utils/react-policy-hooks";
 import {
   PushpinOutlined,
   PushpinFilled,
@@ -24,12 +28,29 @@ import {
 } from "@ant-design/icons";
 // import policy from "../../utils/react-policy-client";
 
-const Sidbar = () => {
+const Sidebar = () => {
   // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token")
+  const token = localStorage.getItem("token");
+
+  // Create policy client instance
+  const policyClient = usePolicyClient(
+    PolicyClient,
+    process.env.REACT_APP_POLICY_SERVICE_URL || "http://localhost:3000"
+  );
+
+  // Check permissions
+  const { loading, authorized: canRead } = useAuthorization(
+    policyClient,
+    token,
+    "user",
+    "read"
+  );
+  const { permissions } = usePermissions(policyClient, token, "user");
+  const canEdit = permissions.includes("user:write");
+  console.log(permissions, "testin");
 
   //  console.log(canDelete,"permission")
   const [isPinned, setIsPinned] = useState(() => {
@@ -300,4 +321,4 @@ const Sidbar = () => {
   );
 };
 
-export default Sidbar;
+export default Sidebar;

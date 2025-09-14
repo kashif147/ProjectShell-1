@@ -7,7 +7,7 @@ import {
 } from "react-router-dom";
 import Header from "./component/common/Header";
 import HeaderDetails from "./component/common/HeaderDetails";
-import Sidbar from "./component/common/Sidbar";
+import Sidebar from "./component/common/Sidebar";
 import ProfileHeader from "./component/common/ProfileHeader";
 import ResizableComp from "./component/common/ResizableComp";
 import MyFooter from "./component/common/MyFooter";
@@ -136,7 +136,7 @@ function Entry() {
       {/* Main layout body */}
       <div style={{ display: "flex", flex: 1, overflow: "hidden" }}>
         {/* Sidebar */}
-        {showSidebar && <Sidbar />}
+        {showSidebar && <Sidebar />}
 
         {/* Main content column */}
         <div
