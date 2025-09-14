@@ -13,21 +13,25 @@ import {
 import { useSelector } from "react-redux";
 import "../../styles/Sidbar.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import ProfileHeader from "./ProfileHeader";
+import ProfileHeader from "./ProfileHeader"; 
+// import policy from "";
+import policy from "../../utils/Utilities.js";
 import {
   PushpinOutlined,
   PushpinFilled,
   MenuFoldOutlined,
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
+// import policy from "../../utils/react-policy-client";
 
 const Sidbar = () => {
   // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
+  const token = localStorage.getItem("token")
 
-  // Pin/unpin state management
+  //  console.log(canDelete,"permission")
   const [isPinned, setIsPinned] = useState(() => {
     const saved = localStorage.getItem("sidebar-pinned");
     return saved ? JSON.parse(saved) : false;

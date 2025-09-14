@@ -446,30 +446,7 @@ function ApplicationMgtDrawer({ open, onClose, title = "Registration Request", i
             return prevErrors;
         });
     };
-    const [rejectionData, setRejectionData] = useState({
-        reason: "",
-        note: "",
-    });
-    const handleReject = async () => {
-        const newErrors = {};
-
-        if (!rejectionData.reason) {
-            newErrors.reason = "Please select a reason";
-        }
-
-        setErrors(newErrors);
-
-        if (Object.keys(newErrors).length > 0) return; // stop if validation fails
-
-        // try {
-        //     await api.patch(`/applications/${applicationId}/reject`, rejectionData);
-        //     onClose();
-        //     setRejectionData({ reason: "", note: "" });
-        //     setErrors({});
-        // } catch (err) {
-        //     setErrors({ api: "Failed to reject application" });
-        // }
-    };
+   
     const inputRef = useRef(null);
     const libraries = ['places', 'maps'];
     const handlePlacesChanged = () => {

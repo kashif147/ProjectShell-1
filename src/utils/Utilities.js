@@ -3,6 +3,7 @@ import MyAlert from "../component/common/MyAlert";
 import { notificationsMsg } from "../Data";
 import dayjs from 'dayjs';
 import moment from "moment";
+import { PolicyClient } from "./node-policy-client";
 let token;
 export const  baseURL = process.env.REACT_APP_BASE_URL_DEV
 // export const  baseURL = "http://localhost:3500"
@@ -222,7 +223,17 @@ export function generatePatch(original = {}, updated = {}, path = "") {
 
   return patches;
 }
+const policy = new PolicyClient(
+  process.env.REACT_APP_POLICY_SERVICE_URL || "http://localhost:3000",
+  {
+    onTokenExpired: () => {
+      // Redirect to login when token expires
+      window.location.href = "/login";
+    },
+  }
+);
 
+export default policy;
 
 
 
