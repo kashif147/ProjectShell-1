@@ -1,5 +1,5 @@
 import React from "react";
-import TenantManagement from "../component/tenant/TenantManagement";
+import TenantManagement from "./components/TenantManagement";
 
 const TenantManagementPage = () => {
   return (

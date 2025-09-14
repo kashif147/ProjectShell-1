@@ -1,5 +1,5 @@
 import React from "react";
-import PermissionManagement from "../component/permission/PermissionManagement";
+import PermissionManagement from "./components/PermissionManagement";
 
 const PermissionManagementPage = () => {
   return (

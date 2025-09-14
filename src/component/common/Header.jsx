@@ -58,7 +58,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
 
   const appItems = [
     {
-      name: "Subscriptions & Rewards",
+      name: "Membership",
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
     },

@@ -31,15 +31,15 @@ import {
   setSearchQuery,
   setSelectedCategory,
   setSelectedAction,
-} from "../../features/PermissionSlice";
+} from "../../../features/PermissionSlice";
 import {
   getAllPermissionsList,
   PERMISSION_CATEGORIES,
   PERMISSION_ACTIONS,
-} from "../../constants/Permissions";
-import MyConfirm from "../common/MyConfirm";
+} from "../../../constants/Permissions";
+import MyConfirm from "../../../component/common/MyConfirm";
 import PermissionForm from "./PermissionForm";
-import "../../styles/PermissionManagement.css";
+import "../../../styles/PermissionManagement.css";
 
 const { Option } = Select;
 
@@ -365,40 +365,6 @@ const PermissionManagement = ({ onClose }) => {
           </Col>
         </Row>
       </Card>
-
-      {/* Stats */}
-      <div className="mb-4">
-        <Row gutter={16}>
-          <Col xs={24} sm={8}>
-            <Card className="stat-card">
-              <div className="stat-content">
-                <div className="stat-number">{filteredPermissions.length}</div>
-                <div className="stat-label">Total Permissions</div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card className="stat-card">
-              <div className="stat-content">
-                <div className="stat-number">
-                  {new Set(filteredPermissions.map((p) => p.category)).size}
-                </div>
-                <div className="stat-label">Categories</div>
-              </div>
-            </Card>
-          </Col>
-          <Col xs={24} sm={8}>
-            <Card className="stat-card">
-              <div className="stat-content">
-                <div className="stat-number">
-                  {new Set(filteredPermissions.map((p) => p.action)).size}
-                </div>
-                <div className="stat-label">Actions</div>
-              </div>
-            </Card>
-          </Col>
-        </Row>
-      </div>
 
       {/* Table */}
       <div className="bg-white rounded shadow-sm">

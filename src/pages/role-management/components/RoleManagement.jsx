@@ -34,17 +34,17 @@ import {
   setSelectedTenant,
   setSelectedStatus,
   setSelectedCategory,
-} from "../../features/RoleSlice";
+} from "../../../features/RoleSlice";
 import {
   getAllRolesList,
   getTenantsList,
   ROLE_STATUSES,
   ROLE_CATEGORIES,
-} from "../../constants/Roles";
-import MyConfirm from "../common/MyConfirm";
+} from "../../../constants/Roles";
+import MyConfirm from "../../../component/common/MyConfirm";
 import RoleForm from "./RoleForm";
 import RolePermissions from "./RolePermissions";
-import "../../styles/RoleManagement.css";
+import "../../../styles/RoleManagement.css";
 
 const { Option } = Select;
 

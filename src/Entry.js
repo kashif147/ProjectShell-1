@@ -77,10 +77,18 @@ const RemindersDetails = lazy(() =>
 const MembershipDashboard = lazy(() =>
   import("./pages/membership/MembershipDashboard")
 );
-const TenantManagement = lazy(() => import("./pages/TenantManagement"));
-const RoleManagement = lazy(() => import("./pages/RoleManagement"));
-const UserManagement = lazy(() => import("./pages/UserManagement"));
-const PermissionManagement = lazy(() => import("./pages/PermissionManagement"));
+const TenantManagement = lazy(() =>
+  import("./pages/tenant-management/TenantManagement")
+);
+const RoleManagement = lazy(() =>
+  import("./pages/role-management/RoleManagement")
+);
+const UserManagement = lazy(() =>
+  import("./pages/user-management/UserManagement")
+);
+const PermissionManagement = lazy(() =>
+  import("./pages/permission-management/PermissionManagement")
+);
 const CancelledMembersReport = lazy(() =>
   import("./pages/reports/CancelledMembersReport")
 );

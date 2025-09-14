@@ -19,7 +19,25 @@ export const getAllRoles = createAsyncThunk(
       }
 
       const data = await response.json();
-      return data;
+
+      // Debug: Log the API response
+      console.log("API Response:", data);
+
+      // Handle different response formats
+      if (data.status === "success") {
+        // If API returns success message but no actual data, return empty array
+        // This will trigger the fallback to sample data in the component
+        console.log("API returned success status, data:", data.data);
+        return data.data && Array.isArray(data.data) ? data.data : [];
+      } else if (Array.isArray(data)) {
+        // If API returns roles array directly
+        console.log("API returned roles array directly:", data);
+        return data;
+      } else {
+        // Fallback for other response formats
+        console.log("API returned unexpected format, using fallback");
+        return [];
+      }
     } catch (error) {
       return rejectWithValue(error.message);
     }

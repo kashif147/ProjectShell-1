@@ -1,5 +1,5 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
-import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio } from 'antd'
+import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
@@ -9,7 +9,7 @@ import {
   MenuUnfoldOutlined,
 } from "@ant-design/icons";
 import { usePDF } from "react-to-pdf";
-import { FaUser, } from "react-icons/fa6";
+import { FaUser } from "react-icons/fa6";
 import { BsSliders, BsThreeDots } from "react-icons/bs";
 import dayjs from "dayjs";
 import { FaAngleRight } from "react-icons/fa";
@@ -37,8 +37,8 @@ import { LuArrowLeftRight } from "react-icons/lu";
 import { FaMoneyCheckAlt } from "react-icons/fa";
 import DateRang from "./DateRang";
 import CreateBatchPayment from "./CreateBatchPayment";
-import '../../styles/HeaderDetails.css'
-import { useDispatch, useSelector, shallowEqual } from 'react-redux';
+import "../../styles/HeaderDetails.css";
+import { useDispatch, useSelector, shallowEqual } from "react-redux";
 import { fetchRegions } from "../../features/RegionSlice";
 import AddNewGarda from "../details/AddNewGarda";
 import TransferRequests from "../TransferRequests";
@@ -53,6 +53,7 @@ import { getAllApplications } from "../../features/ApplicationSlice";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
+import Breadcrumb from "./Breadcrumb";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -63,21 +64,21 @@ function HeaderDetails() {
   const nav = location?.pathname || "";
   const formattedNav = nav.replace(/^\//, " ");
   const [isSideNav, setisSideNav] = useState(true);
-  const [ReportName, setReportName] = useState(null)
+  const [ReportName, setReportName] = useState(null);
   const [imageUrl, setImageUrl] = useState("");
   const [checkboxes, setCheckboxes] = useState();
   const [trueFilters, settrueFilters] = useState();
   const [create, setCreate] = useState(false);
   const [isSaveModalOpen, setIsSaveModalOpen] = useState(false);
-  const [TransferDrawer, setTransferDrawer] = useState(false)
-  const [rosterDrawer, setrosterDrawer] = useState(false)
+  const [TransferDrawer, setTransferDrawer] = useState(false);
+  const [rosterDrawer, setrosterDrawer] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
-  const [aprove, setaprove] = useState("001")
-  const [isDrawerOpen, setisDrawerOpen] = useState(false)
+  const [aprove, setaprove] = useState("001");
+  const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const handleDateChange = (val) => {
-    setValue(val);// val is a dayjs or null
+    setValue(val); // val is a dayjs or null
   };
 
   const showHidSavModal = () => {
@@ -85,55 +86,77 @@ function HeaderDetails() {
   };
   const navigate = useNavigate();
   const inputRef = useRef(null);
-  const { searchFilters, lookupsForSelect, filterGridDataFtn, handlClaimDrawerChng, claimsDrawer, ProfileDetails, resetFilters, handleSave, report, isSaveChng, ReportsTitle, profilNextBtnFtn, profilPrevBtnFtn, gridData, rowIndex, resetFtn, globleFilters, } = useTableColumns();
+  const {
+    searchFilters,
+    lookupsForSelect,
+    filterGridDataFtn,
+    handlClaimDrawerChng,
+    claimsDrawer,
+    ProfileDetails,
+    resetFilters,
+    handleSave,
+    report,
+    isSaveChng,
+    ReportsTitle,
+    profilNextBtnFtn,
+    profilPrevBtnFtn,
+    gridData,
+    rowIndex,
+    resetFtn,
+    globleFilters,
+  } = useTableColumns();
 
-  const plainOptions = ['Approve', 'Reject'];
-  const screenName = location?.state?.search
-  const format = 'HH:mm';
+  const plainOptions = ["Approve", "Reject"];
+  const screenName = location?.state?.search;
+  const format = "HH:mm";
   const column = [
     {
-      title: 'Title',
-      dataIndex: 'Title',
-      key: 'Title',
+      title: "Title",
+      dataIndex: "Title",
+      key: "Title",
     },
     {
-      title: 'Invite Attendies',
-      dataIndex: 'Invite Attendies',
-      key: 'Invite Attendies',
+      title: "Invite Attendies",
+      dataIndex: "Invite Attendies",
+      key: "Invite Attendies",
     },
     {
-      title: 'Start Time',
-      dataIndex: 'Start Time',
-      key: 'Start Time',
+      title: "Start Time",
+      dataIndex: "Start Time",
+      key: "Start Time",
     },
     {
-      title: 'End Time',
-      dataIndex: 'End Time',
-      key: 'End Time',
+      title: "End Time",
+      dataIndex: "End Time",
+      key: "End Time",
     },
     {
-      title: 'Description',
-      dataIndex: 'Description',
-      key: 'Description',
+      title: "Description",
+      dataIndex: "Description",
+      key: "Description",
     },
-  ]
+  ];
   const handleAction = (label, e) => {
     console.log("Label:", label);
     console.log("Event type:", e?.type); // now safe
   };
-  const [contactDrawer, setcontactDrawer] = useState(false)
+  const [contactDrawer, setcontactDrawer] = useState(false);
 
   const menuItems = [
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
-    { label: "Generate Bulk NFC Tag", onClick: (e) => handleAction("Generate Bulk NFC Tag", e) },
+    {
+      label: "Generate Bulk NFC Tag",
+      onClick: (e) => handleAction("Generate Bulk NFC Tag", e),
+    },
     { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
     { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
     {
-      label: "Assign IRO", onClick: (e) => {
+      label: "Assign IRO",
+      onClick: (e) => {
         e?.domEvent?.stopPropagation();
-        setcontactDrawer((prev) => !prev)
-      }
+        setcontactDrawer((prev) => !prev);
+      },
     },
   ];
   const [statusOperator, setStatusOperator] = useState("==");
@@ -142,9 +165,10 @@ function HeaderDetails() {
   const handleApplyStatusFilter = () => {
     if (statusValues.length === 0) return;
     const allStatuses = ["submitted", "approved", "rejected", "in-progress"];
-    const finalStatuses = statusOperator === '=='
-      ? statusValues
-      : allStatuses.filter((status) => !statusValues.includes(status));
+    const finalStatuses =
+      statusOperator === "=="
+        ? statusValues
+        : allStatuses.filter((status) => !statusValues.includes(status));
     dispatch(getAllApplications(finalStatuses));
   };
 
@@ -157,12 +181,12 @@ function HeaderDetails() {
         return [...acc, ...filteredColumns];
       }, []);
 
-      console.log(data, "data")
+      console.log(data, "data");
       settrueFilters(filteredResults);
-      console.log(filteredResults, "filteredResults")
+      console.log(filteredResults, "filteredResults");
     }
   }
-  console.log(trueFilters, "trueFilters")
+  console.log(trueFilters, "trueFilters");
   const currentSearchFilters = useMemo(() => {
     return searchFilters[screenName];
   }, [screenName, searchFilters]);
@@ -306,23 +330,23 @@ function HeaderDetails() {
   ];
   const columns = [
     {
-      title: 'Name',
-      dataIndex: 'name',   // The key in the data object corresponding to the name
-      key: 'name',         // A unique key for this column
+      title: "Name",
+      dataIndex: "name", // The key in the data object corresponding to the name
+      key: "name", // A unique key for this column
     },
     {
-      title: 'Reg Number',
-      dataIndex: 'regNumber', // The key in the data object corresponding to the registration number
-      key: 'regNumber',       // A unique key for this column
+      title: "Reg Number",
+      dataIndex: "regNumber", // The key in the data object corresponding to the registration number
+      key: "regNumber", // A unique key for this column
     },
   ];
   const exportbtn = { "Export PDF": true, "Export CSV": true };
-  const [isGardaDrwer, setisGardaDrwer] = useState(false)
+  const [isGardaDrwer, setisGardaDrwer] = useState(false);
   const topThreeDots = {
     BulkChnages: "false",
   };
   const [selectedValue, setSelectedValue] = useState(null);
-  const [selectedValue1, setSelectedValue1] = useState('');
+  const [selectedValue1, setSelectedValue1] = useState("");
   const handleChangeCheckBox = (checkedValues) => {
     // Only keep the last selected option
     const latest = checkedValues[checkedValues.length - 1];
@@ -380,13 +404,13 @@ function HeaderDetails() {
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
           location?.pathname === "/CasesSummary") && (
-            <FaClipboardList
-              style={{
-                fontSize: "15px",
-                color: "#45669d",
-              }}
-            />
-          )}
+          <FaClipboardList
+            style={{
+              fontSize: "15px",
+              color: "#45669d",
+            }}
+          />
+        )}
       </>
     );
   };
@@ -394,530 +418,480 @@ function HeaderDetails() {
     location.pathname === "/Cancallation"
       ? "Cancallation"
       : location.pathname === "/RemindersSummary"
-        ? "reminder"
-        : null;
+      ? "reminder"
+      : null;
   return (
-    <div className="" style={{ width: '93vw' }}>
+    <div className="" style={{ width: "93vw" }}>
+      {/* New Breadcrumb Component */}
+      <Breadcrumb />
+
       <div
-        className={`details-header d-flex w-100% overflow-hidden ${(location?.pathname == "/Details"
-          || location?.pathname == "/CasesById"
-          || location?.pathname == "/AddNewProfile"
-          || location?.pathname == "/ClaimsById"
-          || location?.pathname == "/AddClaims"
-          || location?.pathname == "/Doucmnets"
-        ) ? "Header-border" : ""
-          }`}
+        className={`details-header d-flex w-100% overflow-hidden ${
+          location?.pathname == "/Details" ||
+          location?.pathname == "/CasesById" ||
+          location?.pathname == "/AddNewProfile" ||
+          location?.pathname == "/ClaimsById" ||
+          location?.pathname == "/AddClaims" ||
+          location?.pathname == "/Doucmnets"
+            ? "Header-border"
+            : ""
+        }`}
       >
         <div style={{ width: "100%" }}>
-          <div className="d-flex justify-content-between align-items-baseline">
-            <div className="bred-cram-main d-flex align-items-center" onClick={goBack}>
-              <>
-                {location?.state?.search === "Profile" && (
-                  <FaUser
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center", // Align icon vertically
-                    }}
+          {/* Action buttons for detail pages */}
+          {(location?.pathname == "/Details" ||
+            location?.pathname == "/CasesById" ||
+            location?.pathname == "/AddNewProfile" ||
+            location?.pathname == "/ClaimsById" ||
+            location?.pathname == "/AddClaims" ||
+            location?.pathname == "/Doucmnets" ||
+            location?.pathname == "/AproveMembersip" ||
+            location?.pathname == "/ChangeCatById") && (
+            <div className="d-flex justify-content-end align-items-baseline mb-3">
+              <div className="d-flex align-items-baseline">
+                {location?.pathname == "/AproveMembersip" ||
+                location?.pathname == "/ChangeCatById" ? (
+                  <Radio.Group
+                    style={{ marginRight: "10px" }}
+                    options={plainOptions}
+                    value={selectedValue1}
+                    onChange={handleChangeCheckBox}
+                    optionType="button"
+                    buttonStyle="solid"
                   />
-                )}
-                {location?.state?.search === "Cases" && (
-                  <FaListCheck
+                ) : (
+                  <Button
                     style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
+                      marginRight: "50px",
+                      color: "white",
+                      borderRadius: "3px",
+                      backgroundColor: "#45669d",
                     }}
-                  />
-                )}
-                {location?.state?.search === "Rouster" && (
-                  <FaCalendarDays
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
+                    onClick={() => {
+                      if (nav == "/ClaimsById") handlClaimDrawerChng();
                     }}
-                  />
+                  >
+                    Create
+                  </Button>
                 )}
-                {location?.state?.search === "Transfers" && (
-                  <LuArrowLeftRight
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
-                    }}
-                  />
-                )}
-                {location?.state?.search === "Correspondence" && (
-                  <FaEnvelopesBulk
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
-                    }}
-                  />
-                )}
-                <p>{location?.state?.search}</p>
-                <p>&nbsp;{location?.pathname === "/Configuratin" ? "" : "/"}&nbsp;{iconFtn()}&nbsp;</p>
-                {location?.pathname === "/ClaimsById" && (
-                  <FaMoneyCheckAlt
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
-                    }}
-                  />
-                )}
-                {location?.pathname === "/Details" && (
-                  <FaUser
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
-                    }}
-                  />
-                )}
-                {location?.pathname === "/CasesById" && (
-                  <FaListCheck
-                    style={{
-                      fontSize: "16px",
-                      marginRight: "5px",
-                      color: "#45669d",
-                      display: "inline-flex",
-                      alignSelf: "center",
-                    }}
-                  />
-                )}
-                {
-                  nav === '/CorrespondencesSummary'
-                    || nav === '/Sms' || nav === '/Email'
-                    || nav === '/Notes'
-                    || nav === '/RosterSummary' || nav === '/Transfers' ?
-                    <p>Summary</p> :
-                    nav === '/Configuratin' ?
-                      <>
-                        {/* <IoSettingsOutline style={{
-                          fontSize: "15px",
-                          color: "#45669d",
-                          marginRight: '2px'
-                        }} /> */}
-                        <p style={{}}></p>
-                      </>
-                      :
-                      <p>{formattedNav}</p>
-                }
-
-                {location?.state?.code && (
-                  <>
-                    <p>&nbsp;/&nbsp;</p>
-                    <p>{location.state.code}</p>
-                  </>
-                )}
-              </>
+                <Button onClick={goBack} className="me-1 gray-btn butn">
+                  Return to summary
+                </Button>
+                <Button onClick={goBack} className="me-1 gray-btn butn">
+                  Print
+                </Button>
+                <Button
+                  disabled={rowIndex == 0}
+                  onClick={profilPrevBtnFtn}
+                  className="me-1 gray-btn butn"
+                >
+                  <FaAngleLeft className="deatil-header-icon" />
+                </Button>
+                <p
+                  className=""
+                  style={{
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    marginLeft: "4px",
+                  }}
+                >
+                  {rowIndex + 1} of {gridData?.length}
+                </p>
+                <Button
+                  disabled={rowIndex == gridData?.length - 1}
+                  onClick={profilNextBtnFtn}
+                  className="me-1 gray-btn butn"
+                  style={{ marginLeft: "8px" }}
+                >
+                  <FaAngleRight className="deatil-header-icon" />
+                </Button>
+              </div>
             </div>
-            {(location?.pathname == "/Details"
-              || location?.pathname == "/CasesById"
-              || location?.pathname == "/AddNewProfile"
-              || location?.pathname == "/ClaimsById"
-              || location?.pathname == "/AddClaims"
-              || location?.pathname == "/Doucmnets"
-              || location?.pathname == "/AproveMembersip"
-              || location?.pathname == "/ChangeCatById"
-              // || location?.pathname == "/ChangCateSumm"
-            ) && (
-                <div className="d-flex align-items-baseline">
-                  {location?.pathname == "/AproveMembersip"
-                    || location?.pathname == "/ChangeCatById"
-                    ?
-                    //   <MySelect
-                    //   options={[{key:'001',
-                    //     label:'Aprove'
-                    //   },
-                    //   {key:'002',
-                    //     label:'Reject'
-                    //   }
-                    // ]}
-                    // value={aprove}
-                    // onChange={(e)=>setaprove(e)}
-                    //   />
-
-                    // <Checkbox.Group
-                    //   style={{ marginRight: '10px' }}
-                    //   options={plainOptions}
-                    //   value={selectedValue1}
-                    //   onChange={handleChangeCheckBox}
-                    // />
-                    <Radio.Group
-                      style={{ marginRight: '10px' }}
-                      options={plainOptions}
-                      value={selectedValue1}
-                      onChange={handleChangeCheckBox}
-                      optionType='button'
-                      buttonStyle='solid'
-                    />
-                    :
-                    <Button style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} onClick={() => {
-                      if (nav == "/ClaimsById")
-                        handlClaimDrawerChng()
-                    }}>
-                      Create
-                    </Button>
-                  }
-                  <Button onClick={goBack} className="me-1 gray-btn butn" >
-                    Return to summary
-                  </Button>
-                  <Button onClick={goBack} className="me-1 gray-btn butn">
-                    Print
-                  </Button>
-                  <Button disabled={rowIndex == 0} onClick={profilPrevBtnFtn} className="me-1 gray-btn butn" >
-                    <FaAngleLeft className="deatil-header-icon" />
-                  </Button>
-                  <p className="" style={{ fontWeight: "500", fontSize: "14px", marginLeft: "4px" }}>{rowIndex + 1} of {gridData?.length}</p>
-                  <Button disabled={rowIndex == gridData?.length - 1} onClick={profilNextBtnFtn} className="me-1 gray-btn butn" style={{ marginLeft: "8px" }}>
-                    <FaAngleRight className="deatil-header-icon" />
-                  </Button>
-
-                </div>
-              )}
-          </div>
+          )}
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Applications" ||
             location?.pathname == "/members" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
-            location?.pathname == "/CasesSummary"
-            || location?.pathname == "/Transfers"
-            || location?.pathname == "/CorrespondencesSummary"
-            || location?.pathname == "/Reports"
-            || location?.pathname == "/RosterSummary"
-            || location?.pathname == "/ChangCateSumm"
-            || location?.pathname == "/RemindersSummary"
-            || location?.pathname == "/Cancallation"
-            || location?.pathname == "/CornMarket"
-            || location?.pathname == "/Batches"
-            || location?.pathname == "/Sms"
-            || location?.pathname == "/Email"
-            || location?.pathname == "/Notes"
-            || location?.pathname == "/Popout"
-          ) && (
-              <div className="search-main">
-                <div className="title d-flex justify-content-between ">
-                  <h2 className="title-main">
-                    {nav == "/" && location?.state == null
-                      ? `Profile`
-                      : ` ${location?.state?.search}`}
-                  </h2>
+            location?.pathname == "/CasesSummary" ||
+            location?.pathname == "/Transfers" ||
+            location?.pathname == "/CorrespondencesSummary" ||
+            location?.pathname == "/Reports" ||
+            location?.pathname == "/RosterSummary" ||
+            location?.pathname == "/ChangCateSumm" ||
+            location?.pathname == "/RemindersSummary" ||
+            location?.pathname == "/Cancallation" ||
+            location?.pathname == "/CornMarket" ||
+            location?.pathname == "/Batches" ||
+            location?.pathname == "/Sms" ||
+            location?.pathname == "/Email" ||
+            location?.pathname == "/Notes" ||
+            location?.pathname == "/Popout") && (
+            <div className="search-main">
+              <div className="title d-flex justify-content-between ">
+                <h2 className="title-main">
+                  {nav == "/" && location?.state == null
+                    ? `Profile`
+                    : ` ${location?.state?.search}`}
+                </h2>
 
-
-
-                  <div className="d-flex">{
-                    nav === '/CorrespondencesSummary' || nav === "/Sms" || nav === "/Emails" ?
-                      <div style={{ marginRight: '50px' }}>
-                        <New />
-                      </div>
-                      :
-                      nav === '/ClaimSummary' ?
-                        <CreateClaim />
-                        :
-                        <Button onClick={() => {
-                          if (nav == "/Applications") {
-                            setisGardaDrwer(!isGardaDrwer)
-
-                          } else if (nav == "/ClaimSummary") {
-                            handlClaimDrawerChng()
-                          }
-                          else if (nav == "/Transfers")
-                            setTransferDrawer(!TransferDrawer)
-                          else if (nav === "/RosterSummary")
-                            setrosterDrawer(!rosterDrawer)
-                          else if (nav === "/Summary")
-                            setisGardaDrwer(!isGardaDrwer)
-                          else if (nav === "/RemindersSummary" || nav === "/Cancallation" || nav === "/Batches" || nav === "/CornMarket") {
-                            setIsBatchOpen(!isBatchOpen);
-                          }
-                          else if (nav === "/ChangCateSumm") {
-                            setisDrawerOpen(!isDrawerOpen)
-
-                          }
+                <div className="d-flex">
+                  {nav === "/CorrespondencesSummary" ||
+                  nav === "/Sms" ||
+                  nav === "/Emails" ? (
+                    <div style={{ marginRight: "50px" }}>
+                      <New />
+                    </div>
+                  ) : nav === "/ClaimSummary" ? (
+                    <CreateClaim />
+                  ) : (
+                    <Button
+                      onClick={() => {
+                        if (nav == "/Applications") {
+                          setisGardaDrwer(!isGardaDrwer);
+                        } else if (nav == "/ClaimSummary") {
+                          handlClaimDrawerChng();
+                        } else if (nav == "/Transfers")
+                          setTransferDrawer(!TransferDrawer);
+                        else if (nav === "/RosterSummary")
+                          setrosterDrawer(!rosterDrawer);
+                        else if (nav === "/Summary")
+                          setisGardaDrwer(!isGardaDrwer);
+                        else if (
+                          nav === "/RemindersSummary" ||
+                          nav === "/Cancallation" ||
+                          nav === "/Batches" ||
+                          nav === "/CornMarket"
+                        ) {
+                          setIsBatchOpen(!isBatchOpen);
+                        } else if (nav === "/ChangCateSumm") {
+                          setisDrawerOpen(!isDrawerOpen);
                         }
+                      }}
+                      style={{
+                        marginRight: "50px",
+                        color: "white",
+                        borderRadius: "3px",
+                        backgroundColor: "#45669d",
+                      }}
+                      className="butn"
+                    >
+                      Create
+                    </Button>
+                  )}
+                  <SimpleMenu
+                    title={
+                      <>
+                        <Button className="me-1 gray-btn butn">Export</Button>
+                      </>
+                    }
+                    data={exportbtn}
+                    isSearched={true}
+                    isCheckBox={false}
+                    actions={genaratePdf}
+                  />
 
-                        }
-                          style={{ marginRight: "50px", color: 'white', borderRadius: "3px", backgroundColor: "#45669d" }} className="butn" >
-                          Create
-                        </Button>
-                  }
-                    <SimpleMenu
-                      title={
-                        <>
-
-                          <Button className="me-1 gray-btn butn">Export</Button>
-                        </>
-                      }
-                      data={exportbtn}
-                      isSearched={true}
-                      isCheckBox={false}
-                      actions={genaratePdf}
+                  <Button className="me-1 gray-btn butn">Share</Button>
+                  <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
+                  {currentKey && (
+                    <Button
+                      className="me-1 gray-btn butn"
+                      onClick={() => toggleView(currentKey)}
+                    >
+                      {viewMode[currentKey] === "card"
+                        ? "Card view"
+                        : "Grid view"}
+                    </Button>
+                  )}
+                  <ActionDropdown items={menuItems} />
+                </div>
+              </div>
+              {nav == "/RemindersSummary" || nav == "/Cancallation" ? (
+                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                  <Row className="align-items-baseline w-100">
+                    <DatePicker
+                      picker="year"
+                      format="YYYY"
+                      value={value}
+                      onChange={(e) => handleDateChange(e)}
+                      inputReadOnly={false} // allow typing
+                      allowClear={false} // keep a value always; set true if you want clear
+                      style={{ width: 220 }} // compact width for year
+                      placeholder="Select year"
+                    />
+                  </Row>
+                </div>
+              ) : (
+                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                  <Row className="align-items-baseline w-100">
+                    <Input
+                      placeholder="Reg No or Surname"
+                      style={{ width: "25%", color: "gray" }}
+                    />
+                    {trueFilters?.map((item, index) =>
+                      item?.titleColumn === "Date Of Birth" ? (
+                        <DateRang key={index} title={item?.titleColumn} />
+                      ) : (
+                        <JiraLikeMenu
+                          key={index}
+                          title={item?.titleColumn}
+                          data={item?.lookups}
+                        />
+                      )
+                    )}
+                    <MultiFilterDropdown
+                      style={{ float: "left" }}
+                      label="Status"
+                      options={[
+                        "submitted",
+                        "approved",
+                        "rejected",
+                        "in-progress",
+                        "draft",
+                      ]}
+                      selectedValues={statusValues}
+                      onChange={setStatusValues}
+                      operator={statusOperator}
+                      onOperatorChange={setStatusOperator}
+                      onApply={handleApplyStatusFilter}
                     />
 
-                    <Button className="me-1 gray-btn butn">Share</Button>
-                    <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                    {currentKey && (
-                      <Button className="me-1 gray-btn butn" onClick={() => toggleView(currentKey)}>
-                        {viewMode[currentKey] === "card" ? "Card view" : "Grid view"}</Button>)}
-                    <ActionDropdown items={menuItems} />
-                  </div>
-                </div>
-                {
-                  nav == "/RemindersSummary" || nav == "/Cancallation" ?
-
-
-                    <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                      <Row className="align-items-baseline w-100">
-                        <DatePicker
-                          picker="year"
-                          format="YYYY"
-                          value={value}
-                          onChange={(e) => handleDateChange(e)}
-                          inputReadOnly={false}   // allow typing
-                          allowClear={false}      // keep a value always; set true if you want clear
-                          style={{ width: 220 }}  // compact width for year
-                          placeholder="Select year"
-                        />
-                      </Row>
+                    <div className="searchfilter-margin d-flex searchfilter- ms-2">
+                      <SimpleMenu
+                        title={
+                          <>
+                            More <PlusOutlined style={{ marginLeft: "-2px" }} />
+                          </>
+                        }
+                        isSearched={false}
+                      />
                     </div>
 
-                    :
-
-                    <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                      <Row className="align-items-baseline w-100">
-                        <Input
-                          placeholder="Reg No or Surname"
-                          style={{ width: "25%", color: "gray" }}
-                        />
-                        {trueFilters?.map((item, index) =>
-                          item?.titleColumn === "Date Of Birth" ? (
-                            <DateRang key={index} title={item?.titleColumn} />
-                          ) : (
-                            <JiraLikeMenu
-                              key={index}
-                              title={item?.titleColumn}
-                              data={item?.lookups}
-                            />
-                          )
-                        )}
-                        <MultiFilterDropdown
-                          style={{ float: "left" }}
-                          label="Status"
-                          options={["submitted", "approved", "rejected", "in-progress", "draft"]}
-                          selectedValues={statusValues}
-                          onChange={setStatusValues}
-                          operator={statusOperator}
-                          onOperatorChange={setStatusOperator}
-                          onApply={handleApplyStatusFilter}
-                        />
-
-                        <div className="searchfilter-margin d-flex searchfilter- ms-2">
-                          <SimpleMenu
-                            title={
-                              <>
-                                More <PlusOutlined style={{ marginLeft: "-2px" }} />
-                              </>
-                            }
-                            isSearched={false}
-                          />
-
-                        </div>
-
-                        <div>
-                          <Button className="transparent bordr-less" style={{ color: "#333333" }} onClick={() => resetFtn()}>
-                            Reset
-                          </Button>
-                          {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
+                    <div>
+                      <Button
+                        className="transparent bordr-less"
+                        style={{ color: "#333333" }}
+                        onClick={() => resetFtn()}
+                      >
+                        Reset
+                      </Button>
+                      {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
                         Save filter
                       </Button> */}
-                        </div>
-
-                        {/* 👇 Push this div to the right */}
-                        <div className="ms-auto searchfilter-">
-                          <SaveViewMenu />
-                        </div>
-                      </Row>
                     </div>
 
-
-                }
-
-              </div>
-            )}
+                    {/* 👇 Push this div to the right */}
+                    <div className="ms-auto searchfilter-">
+                      <SaveViewMenu />
+                    </div>
+                  </Row>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
-      <MyDrawer title={`${nav === "/CasesById"
-        ? "Enter Cases"
-        : nav == "/ClaimSummary" ? "Enter Claims"
-          : nav === "/ClaimsById"
+      <MyDrawer
+        title={`${
+          nav === "/CasesById"
+            ? "Enter Cases"
+            : nav == "/ClaimSummary"
+            ? "Enter Claims"
+            : nav === "/ClaimsById"
             ? "Enter Claims"
             : nav === "/Details"
-              ? "Enter Profile"
-              : ""}`}
-        open={claimsDrawer} onClose={() => handlClaimDrawerChng()} width={600} >
-        {
-          nav == "/ClaimSummary" && (
-            <div className="mb-4 pb-4">
-              {/* Claim Date */}
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Claim Date:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <MyDatePicker className="inp" />
-                  </div>
-                  <p className="error"></p>
-                </div>
+            ? "Enter Profile"
+            : ""
+        }`}
+        open={claimsDrawer}
+        onClose={() => handlClaimDrawerChng()}
+        width={600}
+      >
+        {nav == "/ClaimSummary" && (
+          <div className="mb-4 pb-4">
+            {/* Claim Date */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Claim Date:</p>
               </div>
-              {/* Claim Type */}
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Claim Type:</p>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <MyDatePicker className="inp" />
                 </div>
-                <div className="inpt-con">
-                  <p className="star">*</p>
-                  <div className="inpt-sub-con">
-                    <MySelect isSimple={true} />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-
-              {/* Start Date */}
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Start Date:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <MyDatePicker className="inp" />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-
-              {/* End Date */}
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>End Date:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <MyDatePicker className="inp" />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-
-              {/* Is Approved */}
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Is Approved:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <Checkbox className="inp"></Checkbox>
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-
-              {/* Number of Days */}
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Number of Days:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" type="number" placeholder="Enter number of days" />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Pay Amount:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" type="number" placeholder="Enter pay amount" />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-              <div className="drawer-inpts-container">
-                <div className="drawer-lbl-container">
-                  <p>Cheque No:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <Input className="inp" placeholder="Enter cheque number" />
-                  </div>
-                  <p className="error"></p>
-                </div>
-              </div>
-
-              <div className="drawer-inpts-container" style={{ height: '120px' }}>
-                <div className="drawer-lbl-container">
-                  <p>Description:</p>
-                </div>
-                <div className="inpt-con">
-                  <p className="star-white">*</p>
-                  <div className="inpt-sub-con">
-                    <TextArea className="inp" rows={4} placeholder="Enter description" />
-                  </div>
-                  <p className="error"></p>
-                </div>
+                <p className="error"></p>
               </div>
             </div>
-          )
-        }
-      </MyDrawer>
-      <Modal footer={<><Button onClick={async () => {
-        try {
-          await isSaveChng(true);
-          await handleSave(ReportName);
-          showHidSavModal()
-        } catch (error) {
-          console.error("Error saving changes:", error);
-        }
-      }}>Save</Button ><Button onClick={showHidSavModal}>Close</Button></>} title="Report" open={isSaveModalOpen} onOk={showHidSavModal} onCancel={showHidSavModal}>
-        <Input onChange={(e) => setReportName(e.target.value)} value={ReportName} placeholder="Enter Name For Report" />
-      </Modal>
-  <ApplicationMgtDrawer open={isGardaDrwer} onClose={() => setisGardaDrwer(!isGardaDrwer)}/>
-      {/* <AddNewGarda  /> */}
-      <TransferRequests open={TransferDrawer} onClose={() => setTransferDrawer(!TransferDrawer)} isSearch={true} isChangeCat={true} />
-      <MyDrawer title='Add New Events' open={rosterDrawer} onClose={() => setrosterDrawer(!rosterDrawer)} isrecursion={true}>
-        <div>
+            {/* Claim Type */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Claim Type:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star">*</p>
+                <div className="inpt-sub-con">
+                  <MySelect isSimple={true} />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
 
+            {/* Start Date */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Start Date:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <MyDatePicker className="inp" />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            {/* End Date */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>End Date:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <MyDatePicker className="inp" />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            {/* Is Approved */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Is Approved:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Checkbox className="inp"></Checkbox>
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            {/* Number of Days */}
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Number of Days:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    type="number"
+                    placeholder="Enter number of days"
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Pay Amount:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input
+                    className="inp"
+                    type="number"
+                    placeholder="Enter pay amount"
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+            <div className="drawer-inpts-container">
+              <div className="drawer-lbl-container">
+                <p>Cheque No:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <Input className="inp" placeholder="Enter cheque number" />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+
+            <div className="drawer-inpts-container" style={{ height: "120px" }}>
+              <div className="drawer-lbl-container">
+                <p>Description:</p>
+              </div>
+              <div className="inpt-con">
+                <p className="star-white">*</p>
+                <div className="inpt-sub-con">
+                  <TextArea
+                    className="inp"
+                    rows={4}
+                    placeholder="Enter description"
+                  />
+                </div>
+                <p className="error"></p>
+              </div>
+            </div>
+          </div>
+        )}
+      </MyDrawer>
+      <Modal
+        footer={
+          <>
+            <Button
+              onClick={async () => {
+                try {
+                  await isSaveChng(true);
+                  await handleSave(ReportName);
+                  showHidSavModal();
+                } catch (error) {
+                  console.error("Error saving changes:", error);
+                }
+              }}
+            >
+              Save
+            </Button>
+            <Button onClick={showHidSavModal}>Close</Button>
+          </>
+        }
+        title="Report"
+        open={isSaveModalOpen}
+        onOk={showHidSavModal}
+        onCancel={showHidSavModal}
+      >
+        <Input
+          onChange={(e) => setReportName(e.target.value)}
+          value={ReportName}
+          placeholder="Enter Name For Report"
+        />
+      </Modal>
+      <ApplicationMgtDrawer
+        open={isGardaDrwer}
+        onClose={() => setisGardaDrwer(!isGardaDrwer)}
+      />
+      {/* <AddNewGarda  /> */}
+      <TransferRequests
+        open={TransferDrawer}
+        onClose={() => setTransferDrawer(!TransferDrawer)}
+        isSearch={true}
+        isChangeCat={true}
+      />
+      <MyDrawer
+        title="Add New Events"
+        open={rosterDrawer}
+        onClose={() => setrosterDrawer(!rosterDrawer)}
+        isrecursion={true}
+      >
+        <div>
           <div className="drawer-inpts-container">
             <div className="drawer-lbl-container">
               <p></p>
@@ -925,9 +899,7 @@ function HeaderDetails() {
             <div className="inpt-con">
               <p className="star-white">*</p>
               <div className="inpt-sub-con">
-                <Search className="inp"
-
-                />
+                <Search className="inp" />
                 <h1 className="error-text"></h1>
               </div>
               <p className="error"></p>
@@ -940,9 +912,10 @@ function HeaderDetails() {
             <div className="inpt-con">
               <p className="star">*</p>
               <div className="inpt-sub-con">
-                <Input className="inp"
-                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                // value={drawerIpnuts?.LookupType?.code}  
+                <Input
+                  className="inp"
+                  // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                  // value={drawerIpnuts?.LookupType?.code}
                 />
                 <h1 className="error-text"></h1>
               </div>
@@ -956,9 +929,10 @@ function HeaderDetails() {
             <div className="inpt-con">
               <p className="star">*</p>
               <div className="inpt-sub-con">
-                <Input className="inp"
-                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                // value={drawerIpnuts?.LookupType?.code}  
+                <Input
+                  className="inp"
+                  // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                  // value={drawerIpnuts?.LookupType?.code}
                 />
                 <h1 className="error-text"></h1>
               </div>
@@ -972,22 +946,23 @@ function HeaderDetails() {
             <div className="inpt-con">
               <p className="star-white">*</p>
               <div className="inpt-sub-con">
-                <TimePicker.RangePicker format={format} style={{ width: '100%', borderRadius: '3px' }} />
+                <TimePicker.RangePicker
+                  format={format}
+                  style={{ width: "100%", borderRadius: "3px" }}
+                />
                 <h1 className="error-text"></h1>
               </div>
               <p className="error"></p>
             </div>
           </div>
-          <div className="drawer-inpts-container" style={{ height: 'auto', }}>
+          <div className="drawer-inpts-container" style={{ height: "auto" }}>
             <div className="drawer-lbl-container">
               <p>Description </p>
             </div>
             <div className="inpt-con">
               <p className="star-white">*</p>
               <div className="inpt-sub-con">
-                <TextArea
-                  rows={7}
-                />
+                <TextArea rows={7} />
                 <h1 className="error-text"></h1>
               </div>
               <p className="error"></p>
@@ -996,7 +971,6 @@ function HeaderDetails() {
           <Table
             pagination={false}
             columns={column}
-
             className="drawer-tbl"
             // rowClassName={(record, index) =>
             //     index % 2 !== 0 ? "odd-row" : "even-row"
@@ -1007,66 +981,78 @@ function HeaderDetails() {
             // }}
             bordered
           />
-
         </div>
       </MyDrawer>
-      <MyDrawer isPagination={false} width='1300px'
-        title={`${nav === "/RemindersSummary" ? "Batch" : nav === "/Batches" ? "" : nav === "/CancellationBatch" ? "Cancellation Batch" : nav === "/CornMarket" ? "Corn Market Batch" : ""}`}
-        open={isBatchOpen} onClose={() => {
-          setIsBatchOpen(!isBatchOpen)
-
+      <MyDrawer
+        isPagination={false}
+        width="1300px"
+        title={`${
+          nav === "/RemindersSummary"
+            ? "Batch"
+            : nav === "/Batches"
+            ? ""
+            : nav === "/CancellationBatch"
+            ? "Cancellation Batch"
+            : nav === "/CornMarket"
+            ? "Corn Market Batch"
+            : ""
+        }`}
+        open={isBatchOpen}
+        onClose={() => {
+          setIsBatchOpen(!isBatchOpen);
         }}
         add={() => {
-          navigate("/BatchMemberSummary", { state: { search: "BatchMemberSummary" } })
-          setIsBatchOpen(!isBatchOpen)
+          navigate("/BatchMemberSummary", {
+            state: { search: "BatchMemberSummary" },
+          });
+          setIsBatchOpen(!isBatchOpen);
         }}
       >
-        {
-          nav === "/Batches" ? (
-            <CreateBatchPayment />
-          ) : (
-            <div className="drawer-main-container">
-              <MyInput
-                label="Batch Name"
-                name="batchName"
-                required
-                hasError={false} // Set to true if validation fails
-                errorMessage="Batch name is required"
-              />
+        {nav === "/Batches" ? (
+          <CreateBatchPayment />
+        ) : (
+          <div className="drawer-main-container">
+            <MyInput
+              label="Batch Name"
+              name="batchName"
+              required
+              hasError={false} // Set to true if validation fails
+              errorMessage="Batch name is required"
+            />
 
-              <MyDatePicker
-                label="Batch Date"
-                name="batchDate"
-                required
-                hasError={false}
-                errorMessage="Batch date is required"
-              />
+            <MyDatePicker
+              label="Batch Date"
+              name="batchDate"
+              required
+              hasError={false}
+              errorMessage="Batch date is required"
+            />
 
-              <CustomSelect
-                label="Status"
-                name="status"
-                value="001"
-                options={[
-                  { value: "001", label: "Draft" },
-                  { value: "002", label: "Inactive" },
-                ]}
-                disabled
-                required
-                hasError={false}
-                errorMessage="Status is required"
-              />
-            </div>
-
-          )
-        }
+            <CustomSelect
+              label="Status"
+              name="status"
+              value="001"
+              options={[
+                { value: "001", label: "Draft" },
+                { value: "002", label: "Inactive" },
+              ]}
+              disabled
+              required
+              hasError={false}
+              errorMessage="Status is required"
+            />
+          </div>
+        )}
       </MyDrawer>
       <ChangeCategoryDrawer
         open={isDrawerOpen}
         onClose={() => setisDrawerOpen(false)}
         isChangeCat={true}
       />
-      <ContactDrawer open={contactDrawer} onClose={() => setcontactDrawer(false)} />
-
+      <ContactDrawer
+        open={contactDrawer}
+        onClose={() => setcontactDrawer(false)}
+      />
     </div>
   );
 }

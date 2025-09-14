@@ -15,11 +15,11 @@ import {
   deleteTenant,
   addTenant,
   updateTenant,
-} from "../../features/TenantSlice";
-import { insertDataFtn, deleteFtn, baseURL } from "../../utils/Utilities";
-import MyConfirm from "../common/MyConfirm";
+} from "../../../features/TenantSlice";
+import { insertDataFtn, deleteFtn, baseURL } from "../../../utils/Utilities";
+import MyConfirm from "../../../component/common/MyConfirm";
 import TenantForm from "./TenantForm";
-import "../../styles/TenantManagement.css";
+import "../../../styles/TenantManagement.css";
 
 const TenantManagement = ({ onClose }) => {
   const dispatch = useDispatch();

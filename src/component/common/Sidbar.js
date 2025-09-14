@@ -43,6 +43,7 @@ const Sidbar = () => {
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = {
     "Subscriptions & Rewards": subscriptionItems,
+    Membership: subscriptionItems, // Map Membership to subscriptionItems
     Finance: financeItems,
     Correspondence: correspondenceItems,
     Configuration: configurationItems,
@@ -219,7 +220,7 @@ const Sidbar = () => {
   };
 
   useEffect(() => {
-    if (menuLblState["Subscriptions & Rewards"]) {
+    if (menuLblState["Subscriptions & Rewards"] || menuLblState["Membership"]) {
       navigate("/MembershipDashboard", {
         state: { search: "Membership Dashboard" },
       });

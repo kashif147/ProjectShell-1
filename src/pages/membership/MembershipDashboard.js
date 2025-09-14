@@ -483,6 +483,8 @@ const MembershipDashboard = () => {
 
   return (
     <div className="membership-dashboard">
+      {/* Breadcrumb */}
+
       <div style={{ padding: "24px", minHeight: "100vh" }}>
         <h1
           style={{ marginBottom: "24px", fontSize: "28px", fontWeight: "bold" }}
@@ -1321,11 +1323,13 @@ const MembershipDashboard = () => {
                 : []
             }
             pagination={{
-              pageSize: 10,
+              pageSize: 100,
               showSizeChanger: true,
-              showQuickJumper: true,
+              showQuickJumper: false,
               showTotal: (total, range) =>
                 `${range[0]}-${range[1]} of ${total} items`,
+              pageSizeOptions: ["50", "100", "200", "500"],
+              defaultPageSize: 100,
             }}
             scroll={{ x: 800 }}
             size="small"

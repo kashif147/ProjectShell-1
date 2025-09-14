@@ -1,5 +1,5 @@
 import React from "react";
-import RoleManagement from "../component/role/RoleManagement";
+import RoleManagement from "./components/RoleManagement";
 
 const RoleManagementPage = () => {
   return (

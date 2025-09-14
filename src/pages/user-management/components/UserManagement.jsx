@@ -33,7 +33,7 @@ import {
   setSelectedUserType,
   setSelectedStatus,
   setSelectedRole,
-} from "../../features/UserSlice";
+} from "../../../features/UserSlice";
 import {
   getAllUsersList,
   getTenantsList,
@@ -41,11 +41,11 @@ import {
   USER_STATUSES,
   getUserStatusBadge,
   formatLastLogin,
-} from "../../constants/Users";
-import MyConfirm from "../common/MyConfirm";
+} from "../../../constants/Users";
+import MyConfirm from "../../../component/common/MyConfirm";
 import UserRoleAssignment from "./UserRoleAssignment";
 import UserDetails from "./UserDetails";
-import "../../styles/UserManagement.css";
+import "../../../styles/UserManagement.css";
 
 const { Option } = Select;
 
