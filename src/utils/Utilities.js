@@ -178,7 +178,9 @@ function base64URLEncode(buffer) {
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
-
+export const getpermission = ()=>{
+ return localStorage.getItem("userdata")
+}
 export async function generatePKCE() {
   // Generate random code verifier
   const array = new Uint8Array(32);

@@ -29,6 +29,8 @@ import {
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
+  const permission = localStorage.getItem('userdata')
+  
   // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
@@ -50,7 +52,7 @@ const Sidebar = () => {
   );
   const { permissions } = usePermissions(policyClient, token, "user");
   const canEdit = permissions.includes("user:write");
-  console.log(permissions, "testin");
+  console.log(permissions, "testing");
 
   //  console.log(canDelete,"permission")
   const [isPinned, setIsPinned] = useState(() => {
