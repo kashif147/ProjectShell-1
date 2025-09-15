@@ -50,6 +50,11 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
   const menuLbl = useSelector((state) => state.menuLbl);
   const [searchTerm, setSearchTerm] = useState("");
+  let userdata = localStorage.getItem('userdata')
+  userdata = JSON.parse(userdata)
+  const permission = userdata?.permissions
+  console.log(permission,"userdata")
+
 
   const handleUpdate = (key, value) => {
     dispatch(updateMenuLbl({ key, value }));
@@ -61,6 +66,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       name: "Membership",
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
+      permission:
     },
     { name: "Finance", icon: FaRegMoneyBillAlt, bgColor: "#4CAF50" },
     { name: "Correspondence", icon: FaRegClipboard, bgColor: "#FF7043" },
