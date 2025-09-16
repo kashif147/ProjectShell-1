@@ -12,6 +12,7 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
   useEffect(() => {
     if (role) {
       form.setFieldsValue({
+        code: role.code,
         name: role.name,
         description: role.description,
         tenantId: role.tenantId,
@@ -29,6 +30,7 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
       const values = await form.validateFields();
 
       const roleData = {
+        code: values.code,
         name: values.name,
         description: values.description,
         tenantId: values.tenantId,
@@ -85,6 +87,23 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
     >
       <div className="drawer-main-cntainer">
         <Form form={form} layout="vertical" className="role-form">
+          <Form.Item
+            label="Role Code"
+            name="code"
+            rules={[
+              { required: true, message: "Please enter role code" },
+              { min: 2, message: "Code must be at least 2 characters" },
+              { max: 10, message: "Code must not exceed 10 characters" },
+              {
+                pattern: /^[A-Z0-9_-]+$/,
+                message:
+                  "Code must contain only uppercase letters, numbers, underscores, and hyphens",
+              },
+            ]}
+          >
+            <Input placeholder="Enter role code (e.g., SU, MO, GS)" />
+          </Form.Item>
+
           <Form.Item
             label="Role Name"
             name="name"
@@ -161,6 +180,10 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
           <div className="form-help">
             <h5>Role Guidelines:</h5>
             <ul>
+              <li>
+                Enter a unique role code (2-10 characters, uppercase letters,
+                numbers, underscores, hyphens)
+              </li>
               <li>
                 Choose a descriptive name that clearly identifies the role's
                 purpose

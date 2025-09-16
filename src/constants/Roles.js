@@ -53,6 +53,7 @@ export const ROLES = {
 export const SAMPLE_ROLES = [
   {
     id: "SU",
+    code: "SU",
     name: "Super User",
     description: "Full system access with all administrative permissions",
     tenantId: "tenant1",
@@ -91,6 +92,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "AI",
+    code: "AI",
     name: "AI Agent",
     description: "Automated system agent with limited administrative access",
     tenantId: "tenant1",
@@ -114,6 +116,7 @@ export const SAMPLE_ROLES = [
   // Portal Roles
   {
     id: "MEMBER",
+    code: "MEMBER",
     name: "Member",
     description: "Registered member with portal access",
     tenantId: "tenant1",
@@ -135,6 +138,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "NON-MEMBER",
+    code: "NON-MEMBER",
     name: "Non-Member",
     description: "Non-member with limited portal access",
     tenantId: "tenant1",
@@ -155,6 +159,7 @@ export const SAMPLE_ROLES = [
   // CRM Management Roles
   {
     id: "GS",
+    code: "GS",
     name: "General Secretary",
     description: "Highest management level with full organizational access",
     tenantId: "tenant1",
@@ -190,6 +195,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "DGS",
+    code: "DGS",
     name: "Deputy General Secretary",
     description:
       "Deputy management level with comprehensive organizational access",
@@ -225,6 +231,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "DIR",
+    code: "DIR",
     name: "Director Industrial Relations",
     description: "Director level access for industrial relations management",
     tenantId: "tenant1",
@@ -257,6 +264,7 @@ export const SAMPLE_ROLES = [
   // CRM Officer Roles
   {
     id: "MO",
+    code: "MO",
     name: "Membership Officer",
     description: "Officer responsible for membership management and processing",
     tenantId: "tenant1",
@@ -285,6 +293,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "AMO",
+    code: "AMO",
     name: "Assistant Membership Officer",
     description: "Assistant officer supporting membership operations",
     tenantId: "tenant1",
@@ -310,6 +319,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "AM",
+    code: "AM",
     name: "Accounts Manager",
     description: "Manager responsible for financial accounts and transactions",
     tenantId: "tenant1",
@@ -342,6 +352,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "IRO",
+    code: "IRO",
     name: "Industrial Relations Officer",
     description: "Officer handling industrial relations and member support",
     tenantId: "tenant1",
@@ -371,6 +382,7 @@ export const SAMPLE_ROLES = [
   // CRM Specialized Roles
   {
     id: "HLS",
+    code: "HLS",
     name: "Head Library Services",
     description: "Head of library services with full library management access",
     tenantId: "tenant1",
@@ -396,6 +408,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "LS",
+    code: "LS",
     name: "Librarian",
     description: "Librarian with library service management access",
     tenantId: "tenant1",
@@ -419,6 +432,7 @@ export const SAMPLE_ROLES = [
   },
   {
     id: "CC",
+    code: "CC",
     name: "Course Coordinator",
     description: "Coordinator responsible for course management and delivery",
     tenantId: "tenant1",
@@ -445,6 +459,7 @@ export const SAMPLE_ROLES = [
   // CRM Access Roles
   {
     id: "REO",
+    code: "REO",
     name: "Read Only",
     description: "Read-only access for viewing system data",
     tenantId: "tenant1",

@@ -13,6 +13,7 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
     if (role) {
       form.setFieldsValue({
         name: role.name,
+        code: role.code,
         description: role.description,
         tenantId: role.tenantId,
         category: role.category,
@@ -30,6 +31,7 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
 
       const roleData = {
         name: values.name,
+        code: values.code,
         description: values.description,
         tenantId: values.tenantId,
         tenantName: tenants.find((t) => t.id === values.tenantId)?.name || "",
@@ -95,7 +97,22 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
           >
             <Input placeholder="Enter role name" />
           </Form.Item>
-
+          <Form.Item
+            label="Role Code"
+            name="code"
+            rules={[
+              { required: true, message: "Please enter role code" },
+              { min: 2, message: "Code must be at least 2 characters" },
+              { max: 10, message: "Code must not exceed 10 characters" },
+              {
+                pattern: /^[A-Z0-9_-]+$/,
+                message:
+                  "Code must contain only uppercase letters, numbers, underscores, and hyphens",
+              },
+            ]}
+          >
+            <Input placeholder="Enter role code (e.g., SU, MO, GS)" />
+          </Form.Item>
           <Form.Item
             label="Description"
             name="description"
@@ -161,6 +178,10 @@ const RoleForm = ({ role, onClose, onSubmit }) => {
           <div className="form-help">
             <h5>Role Guidelines:</h5>
             <ul>
+              <li>
+                Enter a unique role code (2-10 characters, uppercase letters,
+                numbers, underscores, hyphens)
+              </li>
               <li>
                 Choose a descriptive name that clearly identifies the role's
                 purpose

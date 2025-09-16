@@ -85,6 +85,7 @@ const RoleManagement = ({ onClose }) => {
   const filteredRoles = roles.filter((role) => {
     const matchesSearch =
       role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      role.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.tenantName.toLowerCase().includes(searchQuery.toLowerCase());
 
@@ -198,6 +199,18 @@ const RoleManagement = ({ onClose }) => {
       key: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text) => <span className="fw-medium">{text}</span>,
+    },
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      width: 80,
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      render: (text) => (
+        <Tag color="orange" className="code-tag">
+          {text}
+        </Tag>
+      ),
     },
     {
       title: "Description",
@@ -366,7 +379,7 @@ const RoleManagement = ({ onClose }) => {
             <div className="filter-item">
               <label className="filter-label">Search</label>
               <Input
-                placeholder="Search roles..."
+                placeholder="Search roles by name, code, description..."
                 prefix={<SearchOutlined />}
                 value={localSearchQuery}
                 onChange={handleSearchChange}

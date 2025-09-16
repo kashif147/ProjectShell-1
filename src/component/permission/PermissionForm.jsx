@@ -1,5 +1,15 @@
 import React, { useState, useEffect } from "react";
-import { Drawer, Form, Input, Select, Button, Space, message } from "antd";
+import {
+  Drawer,
+  Form,
+  Input,
+  Select,
+  Button,
+  Space,
+  message,
+  Switch,
+  InputNumber,
+} from "antd";
 import { useAuthorization } from "../../context/AuthorizationContext";
 
 const { Option } = Select;
@@ -10,15 +20,23 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
 
-  // Generate categories and actions from API data
+  // Backend schema categories
   const PERMISSION_CATEGORIES = [
-    { value: "all", label: "All Categories" },
-    ...Array.from(new Set(permissionDefinitions.map((p) => p.category))).map(
-      (cat) => ({
-        value: cat,
-        label: cat.charAt(0).toUpperCase() + cat.slice(1),
-      })
-    ),
+    { value: "GENERAL", label: "General" },
+    { value: "USER", label: "User" },
+    { value: "ROLE", label: "Role" },
+    { value: "TENANT", label: "Tenant" },
+    { value: "ACCOUNT", label: "Account" },
+    { value: "PORTAL", label: "Portal" },
+    { value: "CRM", label: "CRM" },
+    { value: "ADMIN", label: "Admin" },
+    { value: "API", label: "API" },
+    { value: "AUDIT", label: "Audit" },
+    { value: "SUBSCRIPTION", label: "Subscription" },
+    { value: "PROFILE", label: "Profile" },
+    { value: "FINANCIAL", label: "Financial" },
+    { value: "INVOICE", label: "Invoice" },
+    { value: "RECEIPT", label: "Receipt" },
   ];
 
   const PERMISSION_ACTIONS = [
@@ -35,10 +53,14 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     if (permission) {
       form.setFieldsValue({
         name: permission.name,
-        permission: permission.permission,
-        category: permission.category.toLowerCase(),
-        action: permission.action.toLowerCase(),
+        code: permission.code,
         description: permission.description,
+        resource: permission.resource,
+        action: permission.action,
+        category: permission.category,
+        level: permission.level,
+        isSystemPermission: permission.isSystemPermission,
+        isActive: permission.isActive,
       });
     } else {
       form.resetFields();
@@ -52,11 +74,14 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
 
       const permissionData = {
         name: values.name,
-        permission: values.permission,
-        category:
-          values.category.charAt(0).toUpperCase() + values.category.slice(1),
-        action: values.action.toLowerCase(),
+        code: values.code,
         description: values.description,
+        resource: values.resource,
+        action: values.action,
+        category: values.category,
+        level: values.level,
+        isSystemPermission: values.isSystemPermission || false,
+        isActive: values.isActive !== undefined ? values.isActive : true,
       };
 
       await onSubmit(permissionData);
@@ -78,32 +103,41 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     onClose();
   };
 
-  const generatePermissionString = (category, action) => {
-    if (category && action) {
-      return `${category.toLowerCase()}:${action.toLowerCase()}`;
+  const generateCode = (category, action, resource) => {
+    if (category && action && resource) {
+      return `${category.toUpperCase()}_${resource.toUpperCase()}_${action.toUpperCase()}`;
     }
     return "";
   };
 
   const handleCategoryChange = (value) => {
     const currentAction = form.getFieldValue("action");
-    if (currentAction) {
-      const generatedPermission = generatePermissionString(
-        value,
-        currentAction
-      );
-      form.setFieldsValue({ permission: generatedPermission });
+    const currentResource = form.getFieldValue("resource");
+    if (currentAction && currentResource) {
+      const generatedCode = generateCode(value, currentAction, currentResource);
+      form.setFieldsValue({ code: generatedCode });
     }
   };
 
   const handleActionChange = (value) => {
     const currentCategory = form.getFieldValue("category");
-    if (currentCategory) {
-      const generatedPermission = generatePermissionString(
+    const currentResource = form.getFieldValue("resource");
+    if (currentCategory && currentResource) {
+      const generatedCode = generateCode(
         currentCategory,
-        value
+        value,
+        currentResource
       );
-      form.setFieldsValue({ permission: generatedPermission });
+      form.setFieldsValue({ code: generatedCode });
+    }
+  };
+
+  const handleResourceChange = (value) => {
+    const currentCategory = form.getFieldValue("category");
+    const currentAction = form.getFieldValue("action");
+    if (currentCategory && currentAction) {
+      const generatedCode = generateCode(currentCategory, currentAction, value);
+      form.setFieldsValue({ code: generatedCode });
     }
   };
 
@@ -147,6 +181,27 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
           </Form.Item>
 
           <Form.Item
+            label="Code"
+            name="code"
+            rules={[
+              { required: true, message: "Please enter permission code" },
+              {
+                pattern: /^[A-Z_]+$/,
+                message: "Code must be uppercase letters and underscores only",
+              },
+            ]}
+          >
+            <Input
+              placeholder="e.g., USER_READ"
+              disabled={
+                form.getFieldValue("category") &&
+                form.getFieldValue("action") &&
+                form.getFieldValue("resource")
+              }
+            />
+          </Form.Item>
+
+          <Form.Item
             label="Category"
             name="category"
             rules={[{ required: true, message: "Please select a category" }]}
@@ -156,54 +211,75 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
               onChange={handleCategoryChange}
               allowClear
             >
-              {PERMISSION_CATEGORIES.filter((cat) => cat.value !== "all").map(
-                (category) => (
-                  <Option key={category.value} value={category.value}>
-                    {category.label}
-                  </Option>
-                )
-              )}
-            </Select>
-          </Form.Item>
-
-          <Form.Item
-            label="Action"
-            name="action"
-            rules={[{ required: true, message: "Please select an action" }]}
-          >
-            <Select
-              placeholder="Select action"
-              onChange={handleActionChange}
-              allowClear
-            >
-              {PERMISSION_ACTIONS.filter(
-                (action) => action.value !== "all"
-              ).map((action) => (
-                <Option key={action.value} value={action.value}>
-                  {action.label}
+              {PERMISSION_CATEGORIES.map((category) => (
+                <Option key={category.value} value={category.value}>
+                  {category.label}
                 </Option>
               ))}
             </Select>
           </Form.Item>
 
           <Form.Item
-            label="Permission String"
-            name="permission"
+            label="Resource"
+            name="resource"
+            rules={[{ required: true, message: "Please enter resource" }]}
+          >
+            <Input
+              placeholder="e.g., user, account, profile"
+              onChange={(e) => handleResourceChange(e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Action"
+            name="action"
+            rules={[{ required: true, message: "Please enter action" }]}
+          >
+            <Input
+              placeholder="e.g., read, write, create, delete"
+              onChange={(e) => handleActionChange(e.target.value)}
+            />
+          </Form.Item>
+
+          <Form.Item
+            label="Level"
+            name="level"
             rules={[
-              { required: true, message: "Please enter permission string" },
+              { required: true, message: "Please enter permission level" },
               {
-                pattern: /^[a-z]+:[a-z_]+$/,
-                message: "Permission must follow format: category:action",
+                type: "number",
+                min: 1,
+                max: 100,
+                message: "Level must be between 1 and 100",
               },
             ]}
           >
-            <Input
-              placeholder="e.g., user:read"
-              disabled={
-                form.getFieldValue("category") && form.getFieldValue("action")
-              }
+            <InputNumber
+              placeholder="1-100"
+              min={1}
+              max={100}
+              style={{ width: "100%" }}
             />
           </Form.Item>
+
+          <div style={{ display: "flex", gap: "16px" }}>
+            <Form.Item
+              label="System Permission"
+              name="isSystemPermission"
+              valuePropName="checked"
+              style={{ flex: 1 }}
+            >
+              <Switch />
+            </Form.Item>
+            <Form.Item
+              label="Active"
+              name="isActive"
+              valuePropName="checked"
+              style={{ flex: 1 }}
+            >
+              <Switch />
+            </Form.Item>
+          </div>
 
           <Form.Item
             label="Description"
@@ -225,16 +301,19 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
           </Form.Item>
 
           <div className="form-help">
-            <h5>Permission Format Guidelines:</h5>
+            <h5>Permission Schema Guidelines:</h5>
             <ul>
               <li>
-                Format: <code>category:action</code>
+                Code Format: <code>CATEGORY_RESOURCE_ACTION</code>
               </li>
               <li>
-                Examples: <code>user:read</code>, <code>account:write</code>
+                Examples: <code>USER_READ</code>, <code>ACCOUNT_WRITE</code>
               </li>
-              <li>Use lowercase letters and underscores only</li>
-              <li>Be descriptive and consistent</li>
+              <li>
+                Code is auto-generated from category, resource, and action
+              </li>
+              <li>Level determines permission hierarchy (1-100)</li>
+              <li>System permissions are protected from deletion</li>
             </ul>
           </div>
         </Form>
