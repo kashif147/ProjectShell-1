@@ -44,10 +44,12 @@ import { Dropdown } from "antd";
 import { PiDotsNineLight } from "react-icons/pi";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { useDispatch, useSelector } from "react-redux";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import "../../styles/AppLauncher.css";
 
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
+  const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
   const [searchTerm, setSearchTerm] = useState("");
   let userdata = localStorage.getItem('userdata')
@@ -67,21 +69,104 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
     },
-    { name: "Finance", icon: FaRegMoneyBillAlt, bgColor: "#4CAF50" },
-    { name: "Correspondence", icon: FaRegClipboard, bgColor: "#FF7043" },
-    { name: "Events", icon: FaCalendarAlt, bgColor: "#EF5350" },
-    { name: "Courses", icon: LuCalendarClock, bgColor: "#7E57C2" },
+    {
+      name: "Finance",
+      icon: FaRegMoneyBillAlt,
+      bgColor: "#4CAF50",
+      permissions: ["USER_READ", "USER_WRITE"],
+      roles: ["AM", "DAM", "GS", "DGS", "ASU", "SU"],
+    },
+    {
+      name: "Correspondence",
+      icon: FaRegClipboard,
+      bgColor: "#FF7043",
+      permissions: ["crm:access"],
+      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+    },
+    {
+      name: "Events",
+      icon: FaCalendarAlt,
+      bgColor: "#EF5350",
+      permissions: ["crm:access"],
+      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+    },
+    {
+      name: "Courses",
+      icon: LuCalendarClock,
+      bgColor: "#7E57C2",
+      permissions: ["crm:access"],
+      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+    },
     {
       name: "Professional Development",
       icon: MdOutlineWork,
       bgColor: "#3F51B5",
+      permissions: ["crm:access"],
+      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
     },
-    { name: "Settings", icon: IoSettingsOutline, bgColor: "#3F51B5" },
-    { name: "Configuration", icon: FaCogs, bgColor: "#5E35B1" },
-    { name: "Reports", icon: TbReportAnalytics, bgColor: "#A63D2F" },
+    {
+      name: "Settings",
+      icon: IoSettingsOutline,
+      bgColor: "#3F51B5",
+      permissions: ["portal:settings:read"],
+      roles: ["MEMBER", "MO", "AMO", "GS", "DGS", "SU"],
+    },
+    {
+      name: "Configuration",
+      icon: FaCogs,
+      bgColor: "#5E35B1",
+      permissions: ["user:read", "role:read"],
+      roles: ["SU", "GS", "DGS"],
+    },
+    {
+      name: "Reports",
+      icon: TbReportAnalytics,
+      bgColor: "#A63D2F",
+      permissions: ["crm:reports:read"],
+      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+    },
   ];
 
-  const filteredItems = appItems.filter((app) =>
+  // Filter app items based on user permissions and roles
+  const accessibleApps = appItems.filter((app) => {
+    // Debug logging
+    console.log(`Checking access for ${app.name}:`, {
+      requiredPermissions: app.permissions,
+      requiredRoles: app.roles,
+      userPermissions: permissions,
+      userRoles: roles,
+    });
+
+    // If no permissions/roles required, show the app
+    if (!app.permissions?.length && !app.roles?.length) {
+      return true;
+    }
+
+    // Check if user has wildcard permission (grants all permissions)
+    const hasWildcardPermission = permissions.includes("*");
+
+    // Check permissions
+    const hasRequiredPermission =
+      hasWildcardPermission ||
+      !app.permissions?.length ||
+      app.permissions.some((permission) => permissions.includes(permission));
+
+    // Check roles
+    const hasRequiredRole =
+      !app.roles?.length || app.roles.some((role) => roles.includes(role));
+
+    const hasAccess = hasRequiredPermission && hasRequiredRole;
+    console.log(`${app.name} access:`, {
+      hasWildcardPermission,
+      hasRequiredPermission,
+      hasRequiredRole,
+      hasAccess,
+    });
+
+    return hasAccess;
+  });
+
+  const filteredItems = accessibleApps.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -95,7 +180,21 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       />
       <div className="app-launcher-menu">
         {filteredItems.map((app) => {
-          const isActive = menuLbl[app.name];
+          // Map app names to correct menu label keys that exist in sidebar itemsMap
+          const menuLabelMap = {
+            Membership: "Subscriptions & Rewards", // Maps to subscriptionItems
+            Finance: "Finance", // Maps to financeItems
+            Correspondence: "Correspondence", // Maps to correspondenceItems
+            Events: "Events", // Maps to eventsItems
+            Courses: "Events", // Map Courses to Events for now
+            "Professional Development": "Events", // Map Professional Development to Events for now
+            Settings: "Configuration", // Map Settings to Configuration
+            Configuration: "Configuration", // Maps to configurationItems
+            Reports: "Reports", // Maps to reportItems
+          };
+
+          const menuKey = menuLabelMap[app.name] || app.name;
+          const isActive = menuLbl[menuKey];
           const Icon = app.icon;
 
           return (
@@ -184,6 +283,9 @@ function Header() {
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("");
   const navigate = useNavigate();
+
+  // Debug logging
+  console.log("Header Debug - Component rendered");
   const {
     filterByRegNo,
     topSearchData,

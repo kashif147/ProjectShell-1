@@ -112,6 +112,8 @@ const initialState = {
   searchQuery: "",
   selectedCategory: "all",
   selectedAction: "all",
+  selectedLevel: "all",
+  selectedStatus: "all",
 };
 
 const permissionSlice = createSlice({
@@ -126,6 +128,12 @@ const permissionSlice = createSlice({
     },
     setSelectedAction: (state, action) => {
       state.selectedAction = action.payload;
+    },
+    setSelectedLevel: (state, action) => {
+      state.selectedLevel = action.payload;
+    },
+    setSelectedStatus: (state, action) => {
+      state.selectedStatus = action.payload;
     },
     clearError: (state) => {
       state.error = null;
@@ -202,6 +210,8 @@ export const {
   setSearchQuery,
   setSelectedCategory,
   setSelectedAction,
+  setSelectedLevel,
+  setSelectedStatus,
   clearError,
 } = permissionSlice.actions;
 export default permissionSlice.reducer;

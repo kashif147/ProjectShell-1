@@ -9,17 +9,13 @@ import {
   reportItems,
   issuesItems,
   eventsItems,
-} from "../../constants/SideNav.js";
+  filterMenuItemsByAuth,
+} from "../../constants/SideNavWithAuth.js";
 import { useSelector } from "react-redux";
 import "../../styles/Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader.js";
-import PolicyClient from "../../utils/node-policy-client.js";
-import {
-  usePolicyClient,
-  useAuthorization,
-  usePermissions,
-} from "../../utils/react-policy-hooks";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   PushpinOutlined,
   PushpinFilled,
@@ -35,26 +31,11 @@ const Sidebar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
-  const token = localStorage.getItem("token");
+  const { permissions, roles } = useAuthorization();
 
-  // Create policy client instance
-  const policyClient = usePolicyClient(
-    PolicyClient,
-    process.env.REACT_APP_POLICY_SERVICE_URL || "http://localhost:3000"
-  );
-
-  // Check permissions
-  const { loading, authorized: canRead } = useAuthorization(
-    policyClient,
-    token,
-    "user",
-    "read"
-  );
-  const { permissions } = usePermissions(policyClient, token, "user");
-  const canEdit = permissions.includes("user:write");
-  console.log(permissions, "testing");
-
-  //  console.log(canDelete,"permission")
+  // Debug logging
+  console.log("Sidebar Debug - menuLblState:", menuLblState);
+  console.log("Sidebar Debug - location.pathname:", location.pathname);
   const [isPinned, setIsPinned] = useState(() => {
     const saved = localStorage.getItem("sidebar-pinned");
     return saved ? JSON.parse(saved) : false;
@@ -62,6 +43,10 @@ const Sidebar = () => {
 
   // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
+
+  // Debug: Log menu label state changes
+  console.log("Sidebar Debug - menuLblState:", menuLblState);
+  console.log("Sidebar Debug - activeKey:", activeKey);
 
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = {
@@ -76,12 +61,54 @@ const Sidebar = () => {
     Events: eventsItems,
   };
 
-  // Displays the currently active module selected from the top menu and passes it to the menu component and  make it ready to pass to the menu.
-  const menuItems = itemsMap[activeKey] || [];
+  // Debug: Log available itemsMap keys
+  console.log(
+    "Sidebar Debug - Available itemsMap keys:",
+    Object.keys(itemsMap)
+  );
+
+  // Get the base menu items for the active module
+  const baseMenuItems = itemsMap[activeKey] || [];
+
+  // Filter menu items based on user permissions and roles
+  const menuItems = useMemo(() => {
+    // Debug: Log current permissions and roles
+    console.log("Sidebar Debug - Current permissions:", permissions);
+    console.log("Sidebar Debug - Current roles:", roles);
+    console.log("Sidebar Debug - Active key:", activeKey);
+    console.log("Sidebar Debug - Base menu items:", baseMenuItems);
+    console.log(
+      "Sidebar Debug - Base menu items length:",
+      baseMenuItems.length
+    );
+
+    // Debug each menu item's requirements
+    console.log("Sidebar Debug - Checking each menu item:");
+    baseMenuItems.forEach((item, index) => {
+      console.log(`Item ${index}: ${item.key}`, {
+        requiredPermissions: item.permissions,
+        requiredRoles: item.roles,
+        userPermissions: permissions,
+        userRoles: roles,
+        hasPermission:
+          item.permissions?.some((p) => permissions.includes(p)) || true,
+        hasRole: item.roles?.some((r) => roles.includes(r)) || true,
+      });
+    });
+
+    const filtered = filterMenuItemsByAuth(baseMenuItems, permissions, roles);
+    console.log("Sidebar Debug - Filtered menu items:", filtered);
+    console.log("Sidebar Debug - Filtered menu items length:", filtered.length);
+
+    return filtered;
+  }, [baseMenuItems, permissions, roles]);
 
   // Transform menu items for collapsed/expanded view
   const transformedMenuItems = useMemo(() => {
-    return menuItems.map((item) => {
+    console.log("Sidebar Debug - Transforming menu items:", menuItems);
+    console.log("Sidebar Debug - isPinned:", isPinned);
+
+    const transformed = menuItems.map((item) => {
       if (isPinned) {
         // Collapsed view: show only icon with tooltip
         return {
@@ -102,6 +129,14 @@ const Sidebar = () => {
         return item;
       }
     });
+
+    console.log("Sidebar Debug - Transformed menu items:", transformed);
+    console.log(
+      "Sidebar Debug - Transformed menu items length:",
+      transformed.length
+    );
+
+    return transformed;
   }, [menuItems, isPinned]);
 
   const routeKeyMap = {
@@ -280,6 +315,13 @@ const Sidebar = () => {
     : isPinned
     ? "80px"
     : "200px";
+
+  console.log("Sidebar Debug - Rendering sidebar with:", {
+    sideBarWidth,
+    isPinned,
+    transformedMenuItemsLength: transformedMenuItems.length,
+    selectedKey,
+  });
 
   return (
     <div

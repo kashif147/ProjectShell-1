@@ -18,7 +18,7 @@ import {
   CheckOutlined,
   CloseOutlined,
 } from "@ant-design/icons";
-import { getAllPermissionsList } from "../../constants/Permissions";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import { useDispatch } from "react-redux";
 import { assignPermissionsToRole } from "../../features/RoleSlice";
 
@@ -26,6 +26,7 @@ const { Search } = Input;
 
 const RolePermissions = ({ role, onClose }) => {
   const dispatch = useDispatch();
+  const { permissionDefinitions } = useAuthorization();
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
@@ -36,7 +37,15 @@ const RolePermissions = ({ role, onClose }) => {
     }
   }, [role]);
 
-  const allPermissions = getAllPermissionsList();
+  // Use API permissions instead of static permissions
+  const allPermissions = permissionDefinitions.map((permission) => ({
+    id: permission.key,
+    name: permission.name,
+    category: permission.category,
+    action: permission.action,
+    description: permission.description,
+    permission: permission.key,
+  }));
   const groupedPermissions = allPermissions.reduce((acc, permission) => {
     const category = permission.category;
     if (!acc[category]) {

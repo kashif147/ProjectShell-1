@@ -32,11 +32,7 @@ import {
   setSelectedCategory,
   setSelectedAction,
 } from "../../features/PermissionSlice";
-import {
-  getAllPermissionsList,
-  PERMISSION_CATEGORIES,
-  PERMISSION_ACTIONS,
-} from "../../constants/Permissions";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import MyConfirm from "../common/MyConfirm";
 import PermissionForm from "./PermissionForm";
 import "../../styles/PermissionManagement.css";
@@ -45,6 +41,7 @@ const { Option } = Select;
 
 const PermissionManagement = ({ onClose }) => {
   const dispatch = useDispatch();
+  const { permissionDefinitions } = useAuthorization();
   const {
     permissions,
     permissionsLoading,
@@ -58,28 +55,74 @@ const PermissionManagement = ({ onClose }) => {
   const [editingPermission, setEditingPermission] = useState(null);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
-  // Initialize with sample data if no permissions exist
+  // Use API permissions instead of static permissions
+  const allPermissions = permissionDefinitions.map((permission) => ({
+    id: permission.key,
+    name: permission.name,
+    code: permission.code,
+    description: permission.description,
+    resource: permission.resource,
+    action: permission.action,
+    category: permission.category,
+    level: permission.level,
+    isSystemPermission: permission.isSystemPermission,
+    isActive: permission.isActive,
+  }));
+
+  // Backend schema categories
+  const PERMISSION_CATEGORIES = [
+    { value: "all", label: "All Categories" },
+    { value: "GENERAL", label: "General" },
+    { value: "USER", label: "User" },
+    { value: "ROLE", label: "Role" },
+    { value: "TENANT", label: "Tenant" },
+    { value: "ACCOUNT", label: "Account" },
+    { value: "PORTAL", label: "Portal" },
+    { value: "CRM", label: "CRM" },
+    { value: "ADMIN", label: "Admin" },
+    { value: "API", label: "API" },
+    { value: "AUDIT", label: "Audit" },
+    { value: "SUBSCRIPTION", label: "Subscription" },
+    { value: "PROFILE", label: "Profile" },
+    { value: "FINANCIAL", label: "Financial" },
+    { value: "INVOICE", label: "Invoice" },
+    { value: "RECEIPT", label: "Receipt" },
+  ];
+
+  const PERMISSION_ACTIONS = [
+    { value: "all", label: "All Actions" },
+    ...Array.from(new Set(permissionDefinitions.map((p) => p.action))).map(
+      (action) => ({
+        value: action,
+        label: action.charAt(0).toUpperCase() + action.slice(1),
+      })
+    ),
+  ];
+
+  // Initialize with API data if no permissions exist
   useEffect(() => {
-    if (permissions.length === 0) {
-      const samplePermissions = getAllPermissionsList();
-      // Initialize Redux state with sample data for demo purposes
+    if (permissions.length === 0 && allPermissions.length > 0) {
+      // Initialize Redux state with API data
       dispatch({
         type: "permissions/getAllPermissions/fulfilled",
-        payload: samplePermissions,
+        payload: allPermissions,
       });
     }
-  }, [dispatch, permissions.length]);
+  }, [dispatch, permissions.length, allPermissions]);
 
   // Filter permissions based on search query and filters
   const filteredPermissions = permissions.filter((permission) => {
     const matchesSearch =
       permission.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      permission.permission.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      permission.description.toLowerCase().includes(searchQuery.toLowerCase());
+      permission.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      permission.description
+        .toLowerCase()
+        .includes(searchQuery.toLowerCase()) ||
+      permission.resource.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      permission.action.toLowerCase().includes(searchQuery.toLowerCase());
 
     const matchesCategory =
-      selectedCategory === "all" ||
-      permission.category.toLowerCase() === selectedCategory.toLowerCase();
+      selectedCategory === "all" || permission.category === selectedCategory;
 
     const matchesAction =
       selectedAction === "all" ||
@@ -148,15 +191,21 @@ const PermissionManagement = ({ onClose }) => {
 
   const getCategoryColor = (category) => {
     const colors = {
-      General: "blue",
-      User: "green",
-      Role: "purple",
-      Account: "orange",
-      Portal: "cyan",
-      CRM: "magenta",
-      Audit: "red",
-      Subscription: "gold",
-      Profile: "lime",
+      GENERAL: "blue",
+      USER: "green",
+      ROLE: "purple",
+      TENANT: "orange",
+      ACCOUNT: "cyan",
+      PORTAL: "magenta",
+      CRM: "red",
+      ADMIN: "gold",
+      API: "lime",
+      AUDIT: "volcano",
+      SUBSCRIPTION: "geekblue",
+      PROFILE: "purple",
+      FINANCIAL: "green",
+      INVOICE: "blue",
+      RECEIPT: "orange",
     };
     return colors[category] || "default";
   };
@@ -190,10 +239,10 @@ const PermissionManagement = ({ onClose }) => {
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
-      title: "Permission String",
-      dataIndex: "permission",
-      key: "permission",
-      sorter: (a, b) => a.permission.localeCompare(b.permission),
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => a.code.localeCompare(b.code),
       render: (text) => <code className="permission-string">{text}</code>,
     },
     {
@@ -208,6 +257,13 @@ const PermissionManagement = ({ onClose }) => {
       ),
     },
     {
+      title: "Resource",
+      dataIndex: "resource",
+      key: "resource",
+      sorter: (a, b) => a.resource.localeCompare(b.resource),
+      render: (text) => <span className="fw-medium">{text}</span>,
+    },
+    {
       title: "Action",
       dataIndex: "action",
       key: "action",
@@ -216,6 +272,29 @@ const PermissionManagement = ({ onClose }) => {
         <Tag color={getActionColor(action)} className="action-tag">
           {action.toUpperCase()}
         </Tag>
+      ),
+    },
+    {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+      sorter: (a, b) => a.level - b.level,
+      render: (level) => (
+        <Tag color={level >= 50 ? "red" : level >= 25 ? "orange" : "green"}>
+          {level}
+        </Tag>
+      ),
+    },
+    {
+      title: "Status",
+      key: "status",
+      render: (_, record) => (
+        <Space>
+          {record.isSystemPermission && <Tag color="purple">System</Tag>}
+          <Tag color={record.isActive ? "green" : "red"}>
+            {record.isActive ? "Active" : "Inactive"}
+          </Tag>
+        </Space>
       ),
     },
     {
@@ -257,8 +336,14 @@ const PermissionManagement = ({ onClose }) => {
           <Tooltip title="Delete Permission">
             <AiFillDelete
               size={16}
-              style={{ cursor: "pointer", color: "#ff4d4f" }}
-              onClick={() => handleDelete(record.id)}
+              style={{
+                cursor: "pointer",
+                color: record.isSystemPermission ? "#ccc" : "#ff4d4f",
+                opacity: record.isSystemPermission ? 0.5 : 1,
+              }}
+              onClick={() =>
+                !record.isSystemPermission && handleDelete(record.id)
+              }
             />
           </Tooltip>
         </Space>

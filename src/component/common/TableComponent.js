@@ -140,12 +140,6 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
 
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
-  const onSelectChange = (key) => {
-    const newSelectedRowKeys = selectedRowKeys.includes(key)
-      ? selectedRowKeys.filter((k) => k !== key)
-      : [...selectedRowKeys, key];
-    setSelectedRowKeys(newSelectedRowKeys);
-  };
   const reorderColumns = (list, startIndex, endIndex) => {
     const result = Array.from(list);
     const [removed] = result.splice(startIndex, 1);
@@ -191,11 +185,14 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
     {
       title: () => (
         <Checkbox
-          // style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', height: '100%' }}
           style={{ marginLeft: "9px" }}
           indeterminate={
             selectedRowKeys.length > 0 &&
             selectedRowKeys.length < dataSource.length
+          }
+          checked={
+            selectedRowKeys.length === dataSource.length &&
+            dataSource.length > 0
           }
           onChange={(e) => {
             const checked = e.target.checked;
@@ -211,7 +208,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       render: (text, record) => (
         <Checkbox
           checked={selectedRowKeys.includes(record.key)}
-          onChange={() => onSelectChange(record.key)}
+          onChange={() => {
+            const newSelectedRowKeys = selectedRowKeys.includes(record.key)
+              ? selectedRowKeys.filter((k) => k !== record.key)
+              : [...selectedRowKeys, record.key];
+            setSelectedRowKeys(newSelectedRowKeys);
+          }}
         />
       ),
     },
@@ -651,7 +653,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       >
         <div
           className="common-table "
-          style={{ paddingLeft: "34px", paddingRight: "34px", width: "93vw" }}
+          style={{
+            paddingLeft: "34px",
+            paddingRight: "34px",
+            width: "100%",
+            overflow: "hidden",
+          }}
         >
           <Table
             rowClassName={() => ""}
@@ -662,9 +669,8 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
             pagination={false}
             style={{ tableLayout: "fixed" }}
             bordered
-            virtual
-            scroll={{ x: "100%", y: 800 }}
-            sticky
+            scroll={{ x: 1500, y: 800 }}
+            size="small"
           />
           <div
             className="d-flex justify-content-between align-items-center tbl-footer"

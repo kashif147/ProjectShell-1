@@ -300,8 +300,17 @@ const RoleForm = ({ isEdit, onClose, role }) => {
           <div className="form-help">
             <h5>Role Guidelines:</h5>
             <ul>
-              <li>Choose a descriptive name that clearly identifies the role's purpose</li>
-              <li>Provide a detailed description of what this role is intended for</li>
+              <li>
+                Enter a unique role code (2-10 characters, uppercase letters,
+                numbers, underscores, hyphens)
+              </li>
+              <li>
+                Choose a descriptive name that clearly identifies the role's
+                purpose
+              </li>
+              <li>
+                Provide a detailed description of what this role is intended for
+              </li>
               <li>Select the appropriate tenant for this role</li>
               <li>Set the initial status (Active, Inactive, or Suspended)</li>
               <li>Permissions can be assigned after creating the role</li>

@@ -37,9 +37,9 @@ const TenantManagement = ({ onClose }) => {
   const filteredTenants = tenants.filter(
     (tenant) =>
       tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      tenant.verifiedDomains.some((domain) =>
-        domain.toLowerCase().includes(searchQuery.toLowerCase())
-      )
+      tenant.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.domain.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      tenant.contactEmail.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleEdit = (tenant) => {
@@ -94,36 +94,85 @@ const TenantManagement = ({ onClose }) => {
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
-      title: "Verified Domains",
-      dataIndex: "verifiedDomains",
-      key: "verifiedDomains",
-      render: (domains) => (
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      render: (text) => <Tag color="blue">{text}</Tag>,
+    },
+    {
+      title: "Domain",
+      dataIndex: "domain",
+      key: "domain",
+      sorter: (a, b) => a.domain.localeCompare(b.domain),
+      render: (text) => <span className="text-muted">{text}</span>,
+    },
+    {
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      sorter: (a, b) => a.status.localeCompare(b.status),
+      render: (status) => {
+        const colorMap = {
+          ACTIVE: "green",
+          INACTIVE: "red",
+          SUSPENDED: "orange",
+          PENDING: "blue",
+        };
+        return <Tag color={colorMap[status] || "default"}>{status}</Tag>;
+      },
+    },
+    {
+      title: "Plan",
+      dataIndex: ["subscription", "plan"],
+      key: "plan",
+      sorter: (a, b) =>
+        a.subscription?.plan?.localeCompare(b.subscription?.plan),
+      render: (plan) => {
+        const colorMap = {
+          FREE: "default",
+          BASIC: "blue",
+          PREMIUM: "purple",
+          ENTERPRISE: "gold",
+        };
+        return <Tag color={colorMap[plan] || "default"}>{plan}</Tag>;
+      },
+    },
+    {
+      title: "Max Users",
+      dataIndex: ["settings", "maxUsers"],
+      key: "maxUsers",
+      sorter: (a, b) =>
+        (a.settings?.maxUsers || 0) - (b.settings?.maxUsers || 0),
+      render: (maxUsers) => <span>{maxUsers || 100}</span>,
+    },
+    {
+      title: "Auth Connections",
+      dataIndex: "authenticationConnections",
+      key: "authenticationConnections",
+      render: (connections) => (
         <div>
-          {domains.map((domain, index) => (
-            <Tag key={index} color="blue" className="mb-1">
-              {domain}
+          {connections?.map((conn, index) => (
+            <Tag
+              key={index}
+              color={
+                conn.connectionType === "Entra ID (Azure AD)"
+                  ? "green"
+                  : "orange"
+              }
+              className="mb-1"
+            >
+              {conn.connectionType === "Entra ID (Azure AD)" ? "Entra" : "B2C"}
             </Tag>
           ))}
         </div>
       ),
     },
     {
-      title: "Connections",
-      dataIndex: "connections",
-      key: "connections",
-      render: (connections) => (
-        <div>
-          {connections.map((conn, index) => (
-            <Tag
-              key={index}
-              color={conn.type === "entra" ? "green" : "orange"}
-              className="mb-1"
-            >
-              {conn.type.toUpperCase()}
-            </Tag>
-          ))}
-        </div>
-      ),
+      title: "Contact Email",
+      dataIndex: "contactEmail",
+      key: "contactEmail",
+      render: (email) => <span className="text-muted">{email}</span>,
     },
     {
       title: "Created At",
@@ -191,7 +240,7 @@ const TenantManagement = ({ onClose }) => {
       {/* Search */}
       <div className="mb-4">
         <Input
-          placeholder="Search tenants by name or domain..."
+          placeholder="Search tenants by name, code, domain, or email..."
           prefix={<SearchOutlined />}
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
@@ -225,7 +274,7 @@ const TenantManagement = ({ onClose }) => {
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
-          scroll={{ x: 1000, y: 600 }}
+          scroll={{ x: 1400, y: 600 }}
         />
       </div>
 
