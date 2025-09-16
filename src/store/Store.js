@@ -22,6 +22,7 @@ import tenantReducer from "../features/TenantSlice";
 import userReducer from "../features/UserSlice";
 import roleReducer from "../features/RoleSlice";
 import permissionReducer from "../features/PermissionSlice";
+import roleByIdReducer from "../features/PermissionSlice";
 
 const store = configureStore({
   reducer: {
@@ -43,6 +44,7 @@ const store = configureStore({
     users: userReducer,
     roles: roleReducer,
     permissions: permissionReducer,
+     roleById: roleByIdReducer,
   },
 });
 

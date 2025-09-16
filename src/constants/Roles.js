@@ -467,10 +467,10 @@ export const SAMPLE_ROLES = [
 ];
 
 export const SAMPLE_TENANTS = [
-  { id: "tenant1", name: "Main Organization" },
-  { id: "tenant2", name: "Audit Department" },
-  { id: "tenant3", name: "Finance Division" },
-  { id: "tenant4", name: "HR Department" },
+  { id: "68c873a5a4fc86b2dedd9ff5", name: "Main Organization" },
+  { id: "68c6ad211ae58311ab994f6d", name: "Audit Department" },
+  // { id: "68c873a5a4fc86b2dedd9ff5", name: "Finance Division" },
+  // { id: "68c873a5a4fc86b2dedd9ff5", name: "HR Department" },
 ];
 
 export const ROLE_STATUSES = [
@@ -510,8 +510,8 @@ export const getRolesByCategory = () => {
 };
 
 export const ROLE_CATEGORIES = [
-  { value: "SYSTEM", label: "System Roles" },
-  { value: "PORTAL", label: "Portal Roles" },
+  { value: "SYSTEM", label: "system Roles" },
+  { value: "PORTAL", label: "portal Roles" },
   { value: "CRM_MANAGEMENT", label: "CRM Management" },
   { value: "CRM_OFFICERS", label: "CRM Officers" },
   { value: "CRM_SPECIALIZED", label: "CRM Specialized" },

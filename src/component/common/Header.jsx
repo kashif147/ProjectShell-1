@@ -66,7 +66,6 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       name: "Membership",
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
-      permission:
     },
     { name: "Finance", icon: FaRegMoneyBillAlt, bgColor: "#4CAF50" },
     { name: "Correspondence", icon: FaRegClipboard, bgColor: "#FF7043" },

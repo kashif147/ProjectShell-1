@@ -21,6 +21,7 @@ import {
   UserOutlined,
   SettingOutlined,
 } from "@ant-design/icons";
+import { getRoleById } from "../../../features/RolesPermission/roleByIdSlice";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
@@ -42,14 +43,17 @@ import {
   ROLE_CATEGORIES,
 } from "../../../constants/Roles";
 import MyConfirm from "../../../component/common/MyConfirm";
-import RoleForm from "./RoleForm";
+import RoleForm from "../../../component/role/RoleForm";
 import RolePermissions from "./RolePermissions";
 import "../../../styles/RoleManagement.css";
+import { deleteFtn } from "../../../utils/Utilities";
+
 
 const { Option } = Select;
 
 const RoleManagement = ({ onClose }) => {
   const dispatch = useDispatch();
+  const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL;
   const {
     roles,
     rolesLoading,
@@ -61,6 +65,7 @@ const RoleManagement = ({ onClose }) => {
   } = useSelector((state) => state.roles);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
+  const [role, setRole] = useState({});
   const [isPermissionsOpen, setIsPermissionsOpen] = useState(false);
   const [editingRole, setEditingRole] = useState(null);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
@@ -101,9 +106,12 @@ const RoleManagement = ({ onClose }) => {
     return matchesSearch && matchesTenant && matchesCategory && matchesStatus;
   });
 
-  const handleEdit = (role) => {
-    setEditingRole(role);
+  const handleEdit = (data) => {
+    if (!data) return
+    // dispatch(getRoleById(id))
     setIsFormOpen(true);
+    setIsEdit(true);
+    setRole(data);
   };
 
   const handleDelete = (roleId) => {
@@ -111,14 +119,17 @@ const RoleManagement = ({ onClose }) => {
       title: "Confirm Deletion",
       message:
         "Are you sure you want to delete this role? This action cannot be undone.",
-      onConfirm: async () => {
-        await dispatch(deleteRole(roleId));
+      onConfirm: () => {
+        if (!roleId) return
+        deleteFtn(`${baseURL}/api/roles/${roleId}`, () => {
+          dispatch(getAllRoles());
+        });
       },
     });
   };
-
+const [isEdit, setIsEdit] = useState(false)
   const handleAddNew = () => {
-    setEditingRole(null);
+    setIsEdit(false);
     setIsFormOpen(true);
   };
 
@@ -307,7 +318,7 @@ const RoleManagement = ({ onClose }) => {
             <AiFillDelete
               size={16}
               style={{ cursor: "pointer", color: "#ff4d4f" }}
-              onClick={() => handleDelete(record.id)}
+              onClick={() => handleDelete(record?._id)}
             />
           </Tooltip>
         </Space>
@@ -463,8 +474,9 @@ const RoleManagement = ({ onClose }) => {
       {/* Role Form Drawer */}
       {isFormOpen && (
         <RoleForm
-          role={editingRole}
+          isEdit={isEdit}
           onClose={handleFormClose}
+          role={role}
           onSubmit={handleFormSubmit}
         />
       )}

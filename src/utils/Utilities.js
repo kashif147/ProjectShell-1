@@ -17,7 +17,6 @@ export const insertDataFtn = async (
   callback
 ) => {
   // const  apiURL = process.env.REACT_APP_BASE_URL_DEV
-  debugger;
   const token = localStorage.getItem("token"); // Explicit declaration with const
   try {
     const response = await axios.post(`${apiURL}${url}`, data, {
@@ -27,7 +26,7 @@ export const insertDataFtn = async (
         Authorization: `Bearer ${token}`,
       },
     });
-    if (response.status === 201) {
+    if (response.status === 201 || response.status === 200) {
       // Strict equality check
       MyAlert("success", successNotification);
       callback();
@@ -49,9 +48,9 @@ export const insertDataFtn = async (
   }
 };
 
-export const deleteFtn = async (url, id, callback) => {
+export const deleteFtn = async (url, callback) => {
   token = localStorage.getItem("token");
-  const data = JSON.stringify({ id });
+  // const data = JSON.stringify({  });
   const config = {
     method: "delete",
     // maxBodyLength: Infinity,
@@ -60,12 +59,13 @@ export const deleteFtn = async (url, id, callback) => {
       "Content-Type": "application/json",
       Authorization: `Bearer ${token}`, // Use Bearer token for authorization
     },
-    data: data,
+    // data: data,
   };
   try {
     const response = await axios.request(config);
     MyAlert("success", "You Have Successfully Deleted.");
     if (callback && typeof callback === "function" && response?.data) {
+      debugger
       callback();
     }
     return response.data;
@@ -75,6 +75,7 @@ export const deleteFtn = async (url, id, callback) => {
   }
 };
 
+
 export const updateFtn = async (
   apiURL = baseURL,
   endPoint,
@@ -83,19 +84,37 @@ export const updateFtn = async (
   msg = notificationsMsg?.updating?.sucess
 ) => {
   try {
-    token = localStorage.getItem("token");
-    const response = await axios.put(`${apiURL}${endPoint}`, data1, {
+    const token = localStorage.getItem("token");
+
+    // ✅ If `id` exists in data1 but not in URL, append it
+    let finalEndPoint = endPoint;
+    if (data1?.id && !endPoint.includes(data1.id)) {
+      finalEndPoint = `${endPoint}/${data1.id}`;
+    }
+
+    // ✅ Remove id from body if it was moved to URL
+    const { id, ...finalData } = data1;
+
+    const response = await axios.put(`${apiURL}${finalEndPoint}`, finalData, {
       headers: {
         Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
       },
     });
-    MyAlert("success", notificationsMsg?.updating?.sucess);
-    callback();
+    
+// if(response?.data)
+    MyAlert("success", msg);
+
+    if (callback) callback();
+
     return response.data;
   } catch (error) {
+    console.error("API Error:", error.response?.data || error.message);
     MyAlert("error", notificationsMsg?.updating?.falier);
+    throw error;
   }
 };
+
 
 export const calculateAgeFtn = (input) => {
   const dob = dayjs(input); // Create Day.js object

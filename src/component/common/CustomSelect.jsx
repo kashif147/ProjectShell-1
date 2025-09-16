@@ -40,9 +40,8 @@ const CustomSelect = ({
 
       {/* Select Field */}
       <div
-        className={`my-input-container ${hasError ? 'error' : ''} ${
-          isFocused ? 'focused' : ''
-        } ${disabled ? 'disabled' : ''}`}
+        className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''
+          } ${disabled ? 'disabled' : ''}`}
       >
         <select
           name={name || 'Select'}
@@ -50,9 +49,8 @@ const CustomSelect = ({
           onChange={onChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
-          className={`my-input-field-select ${hasError ? 'error' : ''} ${
-            disabled ? 'disabled-select' : ''
-          }`}
+          className={`my-input-field-select ${hasError ? 'error' : ''} ${disabled ? 'disabled-select' : ''
+            }`}
           disabled={disabled}
         >
           {placeholder && (
@@ -65,11 +63,16 @@ const CustomSelect = ({
               {placeholder}
             </option>
           )}
-          {options.map((opt) => (
-            <option key={opt.key || opt.label} value={opt.label}>
-              {opt.label}
-            </option>
-          ))}
+          {options.map((opt) => {
+            // 👈 stops execution every time an option renders
+            console.log("Rendering option:", opt); // 👈 logs option object
+            return (
+              <option key={opt.key || opt.label} value={opt.value}>
+                {opt.label}
+              </option>
+            );
+          })}
+
         </select>
       </div>
     </div>

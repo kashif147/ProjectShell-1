@@ -1,5 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { insertDataFtn, deleteFtn, baseURL } from "../utils/Utilities";
+import { insertDataFtn, deleteFtn } from "../utils/Utilities";
+
+const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL
 
 // Async thunks
 export const getAllRoles = createAsyncThunk(
