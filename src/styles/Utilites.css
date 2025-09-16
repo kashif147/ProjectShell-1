@@ -7,8 +7,8 @@
 /* Full header section */
 /* Remove default header spacing */
 /* Force remove header spacing and style */
-.ant-modal-content{
-padding: 0 !important;
+.ant-modal-content {
+  padding: 0 !important;
 }
 .ant-modal .ant-modal-header {
   margin: 0 !important;
@@ -17,12 +17,12 @@ padding: 0 !important;
   border-bottom: none !important;
   border-radius: 8px 8px 0 0 !important;
 }
-.drawer-main-container{
+.drawer-main-container {
   padding-top: 16px !important;
   padding-left: 16px !important;
   padding-right: 16px !important;
 }
-.ant-modal-footer{
+.ant-modal-footer {
   padding-left: 16px !important;
   padding-right: 16px !important;
   padding-bottom: 16px !important;
@@ -92,37 +92,46 @@ padding: 0 !important;
 }
 
 /* Center the checkbox vertically and horizontally */
-/* Full centering for Antd 5.24.4 selection checkbox */
-
-/* Ensuring the selection column's checkbox is fully centered */
-
+/* Simple checkbox column styling */
 .ant-table-selection-column {
   padding: 0 !important;
-  /* Remove extra padding */
   padding-left: 4px !important;
   display: flex;
-  /* Use flexbox */
   justify-content: center;
-  /* Center horizontally */
   align-items: center;
-  /* Center vertically */
 }
 
 .ant-table-selection-column .ant-table-cell-content {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .ant-table-selection-column .ant-checkbox-wrapper {
   display: flex;
   justify-content: center;
   align-items: center;
+  width: 100%;
 }
 
 .ant-table-selection-column .ant-checkbox {
   margin: 0;
-  /* Reset margin for the checkbox */
+}
+
+/* Clean CSS for Ant Design fixed columns */
+.common-table .ant-table-cell-fix-left {
+  position: sticky !important;
+  z-index: 1 !important;
+}
+
+.common-table .ant-table-thead .ant-table-cell-fix-left {
+  z-index: 2 !important;
+  background-color: var(--mainBlue) !important;
+}
+
+.common-table .ant-table-tbody .ant-table-cell-fix-left {
+  background-color: white !important;
 }
 
 .status-item.active {

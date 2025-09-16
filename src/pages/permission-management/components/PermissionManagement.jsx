@@ -32,11 +32,7 @@ import {
   setSelectedCategory,
   setSelectedAction,
 } from "../../../features/PermissionSlice";
-import {
-  getAllPermissionsList,
-  PERMISSION_CATEGORIES,
-  PERMISSION_ACTIONS,
-} from "../../../constants/Permissions";
+import { useAuthorization } from "../../../context/AuthorizationContext";
 import MyConfirm from "../../../component/common/MyConfirm";
 import PermissionForm from "./PermissionForm";
 import "../../../styles/PermissionManagement.css";
@@ -45,6 +41,7 @@ const { Option } = Select;
 
 const PermissionManagement = ({ onClose }) => {
   const dispatch = useDispatch();
+  const { permissionDefinitions } = useAuthorization();
   const {
     permissions,
     permissionsLoading,
@@ -58,17 +55,47 @@ const PermissionManagement = ({ onClose }) => {
   const [editingPermission, setEditingPermission] = useState(null);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
-  // Initialize with sample data if no permissions exist
+  // Use API permissions instead of static permissions
+  const allPermissions = permissionDefinitions.map((permission) => ({
+    id: permission.key,
+    name: permission.name,
+    category: permission.category,
+    action: permission.action,
+    description: permission.description,
+    permission: permission.key,
+  }));
+
+  // Generate categories and actions from API data
+  const PERMISSION_CATEGORIES = [
+    { value: "all", label: "All Categories" },
+    ...Array.from(new Set(permissionDefinitions.map((p) => p.category))).map(
+      (cat) => ({
+        value: cat,
+        label: cat.charAt(0).toUpperCase() + cat.slice(1),
+      })
+    ),
+  ];
+
+  const PERMISSION_ACTIONS = [
+    { value: "all", label: "All Actions" },
+    ...Array.from(new Set(permissionDefinitions.map((p) => p.action))).map(
+      (action) => ({
+        value: action,
+        label: action.charAt(0).toUpperCase() + action.slice(1),
+      })
+    ),
+  ];
+
+  // Initialize with API data if no permissions exist
   useEffect(() => {
-    if (permissions.length === 0) {
-      const samplePermissions = getAllPermissionsList();
-      // Initialize Redux state with sample data for demo purposes
+    if (permissions.length === 0 && allPermissions.length > 0) {
+      // Initialize Redux state with API data
       dispatch({
         type: "permissions/getAllPermissions/fulfilled",
-        payload: samplePermissions,
+        payload: allPermissions,
       });
     }
-  }, [dispatch, permissions.length]);
+  }, [dispatch, permissions.length, allPermissions]);
 
   // Filter permissions based on search query and filters
   const filteredPermissions = permissions.filter((permission) => {

@@ -8,7 +8,9 @@ import { useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
 import { useDispatch, useSelector } from "react-redux";
 import { loginUser } from "../../features/AuthSlice";
+import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { generatePKCE } from "../../utils/Utilities";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   UserOutlined,
   LockOutlined,
@@ -23,10 +25,39 @@ const { Title, Text } = Typography;
 
 const Login = () => {
   const dispatch = useDispatch();
+  const { setUserData } = useAuthorization();
+
+  // Function to set appropriate menu label based on user role
+  const setMenuLabelForRole = (roleCodes) => {
+    if (roleCodes.includes("SU")) {
+      // Super User - show Configuration module
+      dispatch(updateMenuLbl({ key: "Configuration", value: true }));
+    } else if (roleCodes.includes("GS") || roleCodes.includes("DGS")) {
+      // General Secretary roles - show Configuration module
+      dispatch(updateMenuLbl({ key: "Configuration", value: true }));
+    } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
+      // Membership Officer roles - show Subscriptions & Rewards
+      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+    } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+      // Account Manager roles - show Finance
+      dispatch(updateMenuLbl({ key: "Finance", value: true }));
+    } else if (roleCodes.includes("IRO")) {
+      // Industrial Relations Officer - show Issue Management
+      dispatch(updateMenuLbl({ key: "Issue Management", value: true }));
+    } else if (roleCodes.includes("MEMBER")) {
+      // Regular member - show Subscriptions & Rewards
+      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+    } else {
+      // Default fallback
+      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+    }
+  };
 
   const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
   const navigate = useNavigate(); // Use the useHistory hook
-  const { loading } = useSelector((state) => state.auth);
+  const { loading, user, roles, permissions } = useSelector(
+    (state) => state.auth
+  );
 
   function decodeToken(token) {
     try {
@@ -102,7 +133,36 @@ const Login = () => {
         localStorage.setItem("token", token);
         let decode = decodeToken(token);
         localStorage.setItem("userdata", JSON.stringify(decode));
-        navigate("/MembershipDashboard");
+
+        // Extract roles and permissions from the decoded JWT token
+        const userRoles = decode.roles || [];
+        const userPermissions = decode.permissions || [];
+
+        // Convert role objects to role codes for authorization
+        const roleCodes = userRoles.map((role) => {
+          if (typeof role === "string") return role;
+          return role.code || role.name || role;
+        });
+
+        console.log("Extracted from JWT token:", {
+          userRoles,
+          userPermissions,
+          roleCodes,
+          decodedToken: decode,
+        });
+
+        // Set user data in authorization context
+        await setUserData(decode, roleCodes, userPermissions);
+
+        // Set appropriate menu label based on user role
+        setMenuLabelForRole(roleCodes);
+
+        // Navigate based on user role
+        if (roleCodes.includes("SU")) {
+          navigate("/Configuratin");
+        } else {
+          navigate("/MembershipDashboard");
+        }
         setAuthLoading(!authLoading);
       }
       if (data.refresh_token) {
@@ -159,12 +219,52 @@ const Login = () => {
 
   const handleLoginWithCredentional = async (e) => {
     // e.preventDefault();
-    await dispatch(loginUser(credentials));
-    navigate("/Summary", {
-      state: {
-        search: "Profile",
-      },
-    });
+    const result = await dispatch(loginUser(credentials));
+
+    // Check if login was successful and set user data
+    if (result.payload && result.payload.accessToken) {
+      // Decode the token to extract roles and permissions
+      const token = result.payload.accessToken.replace(/^Bearer\s/, "");
+      const decodedToken = decodeToken(token);
+
+      const userRoles = decodedToken?.roles || result.payload.roles || [];
+      const userPermissions =
+        decodedToken?.permissions || result.payload.permissions || [];
+
+      // Convert role objects to role codes for authorization
+      const roleCodes = userRoles.map((role) => {
+        if (typeof role === "string") return role;
+        return role.code || role.name || role;
+      });
+
+      console.log("Traditional login - extracted from JWT token:", {
+        userRoles,
+        userPermissions,
+        roleCodes,
+        decodedToken,
+      });
+
+      // Set user data in authorization context
+      await setUserData(
+        decodedToken || result.payload,
+        roleCodes,
+        userPermissions
+      );
+
+      // Set appropriate menu label based on user role
+      setMenuLabelForRole(roleCodes);
+
+      // Navigate based on user role
+      if (roleCodes.includes("SU")) {
+        navigate("/Configuratin");
+      } else {
+        navigate("/Summary", {
+          state: {
+            search: "Profile",
+          },
+        });
+      }
+    }
   };
 
   return (

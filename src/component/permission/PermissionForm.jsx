@@ -1,16 +1,35 @@
 import React, { useState, useEffect } from "react";
 import { Drawer, Form, Input, Select, Button, Space, message } from "antd";
-import {
-  PERMISSION_CATEGORIES,
-  PERMISSION_ACTIONS,
-} from "../../constants/Permissions";
+import { useAuthorization } from "../../context/AuthorizationContext";
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 const PermissionForm = ({ permission, onClose, onSubmit }) => {
+  const { permissionDefinitions } = useAuthorization();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
+  // Generate categories and actions from API data
+  const PERMISSION_CATEGORIES = [
+    { value: "all", label: "All Categories" },
+    ...Array.from(new Set(permissionDefinitions.map((p) => p.category))).map(
+      (cat) => ({
+        value: cat,
+        label: cat.charAt(0).toUpperCase() + cat.slice(1),
+      })
+    ),
+  ];
+
+  const PERMISSION_ACTIONS = [
+    { value: "all", label: "All Actions" },
+    ...Array.from(new Set(permissionDefinitions.map((p) => p.action))).map(
+      (action) => ({
+        value: action,
+        label: action.charAt(0).toUpperCase() + action.slice(1),
+      })
+    ),
+  ];
 
   useEffect(() => {
     if (permission) {
