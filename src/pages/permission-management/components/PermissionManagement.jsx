@@ -100,18 +100,13 @@ const PermissionManagement = ({ onClose }) => {
   ];
 
   // Initialize with API data if no permissions exist
-  useEffect(() => {
-    if (permissions.length === 0 && allPermissions.length > 0) {
-      // Initialize Redux state with API data
-      dispatch({
-        type: "permissions/getAllPermissions/fulfilled",
-        payload: allPermissions,
-      });
-    }
-  }, [dispatch, permissions.length, allPermissions]);
+useEffect(() => {
+  dispatch(getAllPermissions());
+}, [dispatch]);
 
   // Filter permissions based on search query and filters
-  const filteredPermissions = permissions.filter((permission) => {
+  
+  const filteredPermissions = permissions?.filter((permission) => {
     const matchesSearch =
       permission.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       permission.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -232,7 +227,7 @@ const PermissionManagement = ({ onClose }) => {
 
   const columns = [
     {
-      title: "Permission Name",
+      title: "Permission Name123",
       dataIndex: "name",
       key: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),

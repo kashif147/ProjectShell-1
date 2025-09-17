@@ -7,24 +7,24 @@ export const getAllUsers = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       // For now, return sample data since API might not be available
-      const { getAllUsersList } = await import("../constants/Users");
-      return getAllUsersList();
+      // const { getAllUsersList } = await import("../constants/Users");
+      // return getAllUsersList();
 
       // Uncomment below when API is ready
-      // const token = localStorage.getItem("token");
-      // const response = await fetch(`${baseURL}/api/users`, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
+      const token = localStorage.getItem("token");
+      const response = await fetch(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/users`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
-      // if (!response.ok) {
-      //   throw new Error("Failed to fetch users");
-      // }
+      if (!response.ok) {
+        throw new Error("Failed to fetch users");
+      }
 
-      // const data = await response.json();
-      // return data;
+      const data = await response.json();
+      return data;
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -155,7 +155,7 @@ const userSlice = createSlice({
       })
       .addCase(getAllUsers.fulfilled, (state, action) => {
         state.usersLoading = false;
-        state.users = action.payload;
+        state.users = action.payload.data;
       })
       .addCase(getAllUsers.rejected, (state, action) => {
         state.usersLoading = false;

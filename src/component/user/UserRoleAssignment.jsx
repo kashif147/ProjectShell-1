@@ -18,12 +18,14 @@ import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { getAllRolesList } from "../../constants/Roles";
 import { useDispatch } from "react-redux";
 import { assignRolesToUser } from "../../features/UserSlice";
+import { getAllRoles } from "../../features/RoleSlice";
 
 const { Search } = Input;
 
 const UserRoleAssignment = ({ user, onClose }) => {
   const dispatch = useDispatch();
   const [selectedRoles, setSelectedRoles] = useState([]);
+  console.log("User in Drawer:", selectedRoles);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
@@ -32,6 +34,9 @@ const UserRoleAssignment = ({ user, onClose }) => {
       setSelectedRoles(user.roles?.map((role) => role._id) || []);
     }
   }, [user]);
+  useEffect(() => {
+    dispatch(getAllRoles())
+  }, [dispatch])
 
   const allRoles = getAllRolesList();
   const groupedRoles = allRoles.reduce((acc, role) => {
@@ -128,9 +133,8 @@ const UserRoleAssignment = ({ user, onClose }) => {
   };
 
   const getUserInitials = (user) => {
-    return `${user.userFirstName?.[0] || ""}${
-      user.userLastName?.[0] || ""
-    }`.toUpperCase();
+    return `${user.userFirstName?.[0] || ""}${user.userLastName?.[0] || ""
+      }`.toUpperCase();
   };
 
   return (
@@ -174,6 +178,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
                 }}
               >
                 {getUserInitials(user)}
+               
               </Avatar>
               <div className="ml-3">
                 <h5 className="mb-1">{user?.userFullName}</h5>

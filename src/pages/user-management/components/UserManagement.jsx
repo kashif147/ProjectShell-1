@@ -43,7 +43,7 @@ import {
   formatLastLogin,
 } from "../../../constants/Users";
 import MyConfirm from "../../../component/common/MyConfirm";
-import UserRoleAssignment from "./UserRoleAssignment";
+import UserRoleAssignment from "../../../component/user/UserRoleAssignment";
 import UserDetails from "./UserDetails";
 import "../../../styles/UserManagement.css";
 
@@ -69,10 +69,8 @@ const UserManagement = ({ onClose }) => {
 
   // Initialize with sample data if no users exist
   useEffect(() => {
-    if (users.length === 0) {
-      dispatch(getAllUsers());
-    }
-  }, [dispatch, users.length]);
+    dispatch(getAllUsers());
+  }, [dispatch]);
 
   // Filter users based on search query and filters
   const filteredUsers = users.filter((user) => {
@@ -186,7 +184,7 @@ const UserManagement = ({ onClose }) => {
 
   const columns = [
     {
-      title: "User",
+      title: "User12",
       key: "user",
       width: 180,
       render: (_, record) => (
@@ -348,7 +346,7 @@ const UserManagement = ({ onClose }) => {
         <div>
           <h4 className="mb-1">User Management</h4>
           <p className="text-muted mb-0">
-            Manage users, assign roles, and control access across tenants
+            Manage users, assign roles, and control access across tenants001
           </p>
         </div>
         <div className="d-flex align-items-center gap-3">

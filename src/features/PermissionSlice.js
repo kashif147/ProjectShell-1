@@ -1,8 +1,11 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import { insertDataFtn, deleteFtn, baseURL } from "../utils/Utilities";
+import { insertDataFtn, deleteFtn, } from "../utils/Utilities";
 
 // Async thunks
+const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL
 export const getAllPermissions = createAsyncThunk(
+
+
   "permissions/getAllPermissions",
   async (_, { rejectWithValue }) => {
     try {
@@ -12,7 +15,7 @@ export const getAllPermissions = createAsyncThunk(
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-      });
+      })
 
       if (!response.ok) {
         throw new Error("Failed to fetch permissions");
@@ -31,7 +34,7 @@ export const addPermission = createAsyncThunk(
   async (permissionData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/permissions`, {
+      const response = await fetch(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/permissions`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -148,7 +151,7 @@ const permissionSlice = createSlice({
       })
       .addCase(getAllPermissions.fulfilled, (state, action) => {
         state.permissionsLoading = false;
-        state.permissions = action.payload;
+        state.permissions = action.payload?.data;
       })
       .addCase(getAllPermissions.rejected, (state, action) => {
         state.permissionsLoading = false;

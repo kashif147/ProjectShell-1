@@ -7,10 +7,16 @@ import {
   Button,
   Space,
   message,
+  Row, Col,
   Switch,
   InputNumber,
 } from "antd";
 import { useAuthorization } from "../../../context/AuthorizationContext";
+import MyInput from "../../../component/common/MyInput"
+import CustomSelect from "../../../component/common/CustomSelect"
+import { insertDataFtn } from "../../../utils/Utilities";
+import { getAllPermissions } from "../../../features/PermissionSlice";
+
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -19,6 +25,7 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
   const { permissionDefinitions } = useAuthorization();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
+
 
   // Backend schema categories
   const PERMISSION_CATEGORIES = [
@@ -49,54 +56,6 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     ),
   ];
 
-  useEffect(() => {
-    if (permission) {
-      form.setFieldsValue({
-        name: permission.name,
-        code: permission.code,
-        description: permission.description,
-        resource: permission.resource,
-        action: permission.action,
-        category: permission.category,
-        level: permission.level,
-        isSystemPermission: permission.isSystemPermission,
-        isActive: permission.isActive,
-      });
-    } else {
-      form.resetFields();
-    }
-  }, [permission, form]);
-
-  const handleSubmit = async () => {
-    try {
-      setLoading(true);
-      const values = await form.validateFields();
-
-      const permissionData = {
-        name: values.name,
-        code: values.code,
-        description: values.description,
-        resource: values.resource,
-        action: values.action,
-        category: values.category,
-        level: values.level,
-        isSystemPermission: values.isSystemPermission || false,
-        isActive: values.isActive !== undefined ? values.isActive : true,
-      };
-
-      await onSubmit(permissionData);
-      message.success(
-        permission
-          ? "Permission updated successfully"
-          : "Permission created successfully"
-      );
-    } catch (error) {
-      console.error("Form validation failed:", error);
-      message.error("Please fill in all required fields");
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleCancel = () => {
     form.resetFields();
@@ -140,7 +99,41 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       form.setFieldsValue({ code: generatedCode });
     }
   };
+  const [data, setData] = useState({isSystemPermission:false,tenantId:'39866a06-30bc-4a89-80c6-9dd9357dd453'})
+  const [errors, setErrors] = useState({});
+  const handleChange = (field, value) => {
+    setData((prev) => ({ ...prev, [field]: value }));
+    setErrors((prev) => ({ ...prev, [field]: "" })); // clear error on change
+  };
+  const validate = () => {
+    let newErrors = {};
 
+    if (!data.name?.trim()) newErrors.name = true;
+
+    if (!data.code?.trim()) newErrors.code = true;
+
+    if (!data.category) newErrors.category = true;
+    if (!data.resource?.trim()) newErrors.resource = true;
+    if (!data.action?.trim()) newErrors.action = true;
+    if (!data.description?.trim()) newErrors.description = true;
+
+    if (!data.level) newErrors.level = true;
+
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
+  const url = process.env.REACT_APP_POLICY_SERVICE_URL
+  const handleSubmit = () => {
+    if (!validate()) return;
+    console.log("✅ Valid Permission Data:", data);
+    insertDataFtn(url,"/api/permissions",data,"Data inserted successfully", "Error inserting data",()=>{
+      getAllPermissions()
+      onClose()
+      setErrors({})
+      setData({})
+    })
+
+  };
   return (
     <Drawer
       title={permission ? "Edit Permission" : "Add New Permission"}
@@ -151,16 +144,17 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       className="permission-form-drawer configuration-main"
       extra={
         <Space>
-          <Button onClick={handleCancel}>Cancel</Button>
+          {/* <Button onClick={handleCancel}>Cancel</Button> */}
           <Button
-            type="primary"
+            className="btun primary-btn"
+            // type="primary"
             onClick={handleSubmit}
             loading={loading}
-            style={{
-              backgroundColor: "var(--primary-color)",
-              borderColor: "var(--primary-color)",
-              borderRadius: "4px",
-            }}
+          // style={{
+          //   backgroundColor: "var(--primary-color)",
+          //   borderColor: "var(--primary-color)",
+          //   borderRadius: "4px",
+          // }}
           >
             {permission ? "Update" : "Create"}
           </Button>
@@ -168,137 +162,102 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       }
     >
       <div className="drawer-main-cntainer">
-        <Form form={form} layout="vertical" className="permission-form">
-          <Form.Item
+          <MyInput
             label="Permission Name"
-            name="name"
-            rules={[
-              { required: true, message: "Please enter permission name" },
-              { min: 2, message: "Name must be at least 2 characters" },
-            ]}
-          >
-            <Input placeholder="Enter permission name" />
-          </Form.Item>
+            placeholder="Enter permission name"
+            value={data.name}
+            onChange={(e) => handleChange("name", e.target.value)}
+            required
+            hasError={errors.name}
+          />
 
-          <Form.Item
+          <MyInput
             label="Code"
-            name="code"
-            rules={[
-              { required: true, message: "Please enter permission code" },
-              {
-                pattern: /^[A-Z_]+$/,
-                message: "Code must be uppercase letters and underscores only",
-              },
-            ]}
-          >
-            <Input
-              placeholder="e.g., USER_READ"
-              disabled={
-                form.getFieldValue("category") &&
-                form.getFieldValue("action") &&
-                form.getFieldValue("resource")
-              }
-            />
-          </Form.Item>
+            placeholder="e.g., USER_READ"
+            value={data.code}
 
-          <Form.Item
+            onChange={(e) => handleChange("code", e.target.value)}
+            required
+            hasError={errors.code}
+          />
+
+          <CustomSelect
             label="Category"
-            name="category"
-            rules={[{ required: true, message: "Please select a category" }]}
-          >
-            <Select
-              placeholder="Select category"
-              onChange={handleCategoryChange}
-              allowClear
-            >
-              {PERMISSION_CATEGORIES.map((category) => (
-                <Option key={category.value} value={category.value}>
-                  {category.label}
-                </Option>
-              ))}
-            </Select>
-          </Form.Item>
+            placeholder="Select category"
+            options={PERMISSION_CATEGORIES.map((c) => ({
+              value: c.value,
+              label: c.label,
+            }))}
+            value={data.category}
+            onChange={(val) => handleChange("category", val.target.value)}
+            allowClear
+            required
+            hasError={errors.category}
+          />
 
-          <Form.Item
+          <MyInput
             label="Resource"
-            name="resource"
-            rules={[{ required: true, message: "Please enter resource" }]}
-          >
-            <Input
-              placeholder="e.g., user, account, profile"
-              onChange={(e) => handleResourceChange(e.target.value)}
-            />
-          </Form.Item>
+            placeholder="e.g., user, account, profile"
+            value={data.resource}
+            onChange={(e) => handleChange("resource", e.target.value)}
+            required
+            hasError={errors.resource}
+          />
 
-          <Form.Item
+          <MyInput
             label="Action"
-            name="action"
-            rules={[{ required: true, message: "Please enter action" }]}
-          >
-            <Input
-              placeholder="e.g., read, write, create, delete"
-              onChange={(e) => handleActionChange(e.target.value)}
-            />
-          </Form.Item>
+            placeholder="e.g., read, write, create, delete"
+            value={data.action}
+            onChange={(e) => handleChange("action", e.target.value)}
+            required
+            hasError={errors.action}
+          />
 
-          <Form.Item
+          <MyInput
             label="Level"
-            name="level"
-            rules={[
-              { required: true, message: "Please enter permission level" },
-              {
-                type: "number",
-                min: 1,
-                max: 100,
-                message: "Level must be between 1 and 100",
-              },
-            ]}
-          >
-            <InputNumber
-              placeholder="1-100"
-              min={1}
-              max={100}
-              style={{ width: "100%" }}
-            />
-          </Form.Item>
-
-          <div style={{ display: "flex", gap: "16px" }}>
-            <Form.Item
-              label="System Permission"
-              name="isSystemPermission"
-              valuePropName="checked"
-              style={{ flex: 1 }}
-            >
-              <Switch />
-            </Form.Item>
-            <Form.Item
-              label="Active"
-              name="isActive"
-              valuePropName="checked"
-              style={{ flex: 1 }}
-            >
-              <Switch />
-            </Form.Item>
-          </div>
-
-          <Form.Item
+            type="number"
+            placeholder="1-100"
+            value={data.level}
+            min={1}
+            max={100}
+            onChange={(e) => handleChange("level", e.target.value)}
+            required
+            hasError={errors.level}
+          />
+          <Row className="mb-3">
+            <Col span={12}>
+              <label className="my-input-label mb-2">System Permission</label>
+              <Switch
+                checked={data?.isSystemPermission}
+                onChange={(checked) => handleChange("isSystemPermission", checked)}
+              />
+            </Col>
+            <Col span={12}>
+              <label className="my-input-label mb-2">Active</label>
+              <Switch
+                // checked={data.isActive}
+                // onChange={(checked) => handleChange("isActive", checked)}
+              />
+            </Col>
+          </Row>
+          <MyInput
             label="Description"
-            name="description"
+            name="           "
+            placeholder="Enter permission description"
+            type="textarea"
+            rows={4}
+            maxLength={200}
+            required
+            value={data?.description}
+            onChange={(e) => handleChange("description", e.target.value)}
+            showCount
             rules={[
               { required: true, message: "Please enter description" },
-              {
-                min: 10,
-                message: "Description must be at least 10 characters",
-              },
+              { min: 10, message: "Description must be at least 10 characters" },
             ]}
-          >
-            <TextArea
-              rows={4}
-              placeholder="Enter permission description"
-              maxLength={200}
-              showCount
+            hasError={errors.description}
             />
-          </Form.Item>
+
 
           <div className="form-help">
             <h5>Permission Schema Guidelines:</h5>
@@ -316,7 +275,6 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
               <li>System permissions are protected from deletion</li>
             </ul>
           </div>
-        </Form>
       </div>
     </Drawer>
   );
