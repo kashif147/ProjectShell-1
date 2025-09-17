@@ -1073,24 +1073,27 @@ export const TableColumnsProvider = ({ children }) => {
   }, [regionLookups, transformLookupData]);
 
   // General lookups processing
-  useEffect(() => {
-    if (lookups && Array.isArray(lookups)) {
-      const lookupTypes = {
-        gender: '67f58a2d17f0ecf3dbf79cfe',
-        Duties: '67f6351b17f0ecf3dbf7a018',
-        MaritalStatus: '67f590d017f0ecf3dbf79d57',
-        Titles: '67f57de817f0ecf3dbf79cc2',
-        Ranks: '67f6344d17f0ecf3dbf79fff',
-      };
+useEffect(() => {
+  if (lookups && Array.isArray(lookups)) {
+    const lookupTypes = {
+      gender: "68c85f21302e5600dc8477da",
+      Duties: "68c85f22302e5600dc847805",
+      MaritalStatus: "68c85f21302e5600dc8477e1",
+      Titles: "68c85f21302e5600dc8477d6",
+      Ranks: "68c85f22302e5600dc847809",
+    };
 
-      const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
-        acc[key] = lookups.filter(item => item.lookuptypeId?._id === lookupTypes[key]);
-        return acc;
-      }, {});
+    const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
+      acc[key] = lookups.filter(
+        (item) => item?.lookuptypeId?._id === lookupTypes[key]
+      );
+      return acc;
+    }, {});
 
-      setLookupsData(prevState => ({ ...prevState, ...updatedLookups }));
-    }
-  }, [lookups]);
+    setLookupsData((prevState) => ({ ...prevState, ...updatedLookups }));
+  }
+}, [lookups]);
+
 
   useEffect(() => {
     if (lookupsData) {
