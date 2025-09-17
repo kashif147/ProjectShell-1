@@ -157,11 +157,20 @@ const Login = () => {
         // Set appropriate menu label based on user role
         setMenuLabelForRole(roleCodes);
 
-        // Navigate based on user role
-        if (roleCodes.includes("SU")) {
-          navigate("/Configuratin");
+        // Navigate based on user role, but preserve current route if it's not the login page
+        const currentPath = window.location.pathname;
+        const isLoginPage = currentPath === "/" || currentPath === "/login";
+
+        if (isLoginPage) {
+          // Only redirect to default pages if we're on the login page
+          if (roleCodes.includes("SU")) {
+            navigate("/Configuratin");
+          } else {
+            navigate("/MembershipDashboard");
+          }
         } else {
-          navigate("/MembershipDashboard");
+          // If we're on any other page, stay on that page (this handles page refresh)
+          navigate(currentPath, { replace: true });
         }
         setAuthLoading(!authLoading);
       }
