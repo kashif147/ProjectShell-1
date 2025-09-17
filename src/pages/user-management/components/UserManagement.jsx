@@ -184,7 +184,7 @@ const UserManagement = ({ onClose }) => {
 
   const columns = [
     {
-      title: "User12",
+      title: "User",
       key: "user",
       width: 180,
       render: (_, record) => (

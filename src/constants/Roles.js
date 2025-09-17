@@ -482,8 +482,8 @@ export const SAMPLE_ROLES = [
 ];
 
 export const SAMPLE_TENANTS = [
-  { id: "68c873a5a4fc86b2dedd9ff5", name: "Main Organization" },
-  { id: "68c6ad211ae58311ab994f6d", name: "Audit Department" },
+  { id: "39866a06-30bc-4a89-80c6-9dd9357dd453", name: "Main Organization" },
+  { id: "39866a06-30bc-4a89-80c6-9dd9357dd453", name: "Audit Department" },
   // { id: "68c873a5a4fc86b2dedd9ff5", name: "Finance Division" },
   // { id: "68c873a5a4fc86b2dedd9ff5", name: "HR Department" },
 ];
