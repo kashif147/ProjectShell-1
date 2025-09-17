@@ -37,7 +37,7 @@ import {
   setSelectedCategory,
 } from "../../../features/RoleSlice";
 import {
-  getAllRolesList,
+  // getAllRolesList,
   getTenantsList,
   ROLE_STATUSES,
   ROLE_CATEGORIES,
@@ -74,17 +74,6 @@ const RoleManagement = ({ onClose }) => {
     dispatch(getAllRoles());
   }, [dispatch]);
 
-  // Initialize with sample data if no roles exist after API call
-  useEffect(() => {
-    if (roles.length === 0 && !rolesLoading && error) {
-      console.log("API failed, using sample data:", error);
-      const sampleRoles = getAllRolesList();
-      dispatch({
-        type: "roles/getAllRoles/fulfilled",
-        payload: sampleRoles,
-      });
-    }
-  }, [dispatch, roles.length, rolesLoading, error]);
 
   // Filter roles based on search query and filters
   const filteredRoles = roles.filter((role) => {

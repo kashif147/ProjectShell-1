@@ -9,7 +9,7 @@ export const getAllRegionTypes = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${baseURL}/regiontype`, {
+            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/lookuptype`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',

@@ -170,6 +170,7 @@ function Configuratin() {
   const dispatch = useDispatch();
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+
   const { lookupsTypes, lookupsTypesloading } = useSelector(
     (state) => state.lookupsTypes
   );
@@ -216,7 +217,7 @@ function Configuratin() {
     Divisions: [],
     Districts: [],
   });
-  console.log(selectLokups, "6565");
+  console.log(data, "6565");
   const [lookupsData, setlookupsData] = useState({
     Duties: [],
     MaritalStatus: [],
@@ -306,42 +307,44 @@ function Configuratin() {
     });
     setlookupTypSlct(arr);
   }, [lookupsTypes]);
+useEffect(() => {
+  if (!lookups || !Array.isArray(lookups)) return;
 
-  useEffect(() => {
-    if (!lookups || !Array.isArray(lookups)) return;
+  // ✅ use the real IDs from your backend
+  const lookupFilters = [
+    { key: "gender", id: "68c85f21302e5600dc8477da" },
+    { key: "Titles", id: "68c85f21302e5600dc8477d6" },
+    { key: "ProjectTypes", id: "68c85f22302e5600dc8477fc" },
+    { key: "Duties", id: "68c85f22302e5600dc847805" },
+    { key: "MaritalStatus", id: "68c85f21302e5600dc8477dd" },
+    { key: "county", id: "68c85f22302e5600dc8477e4" },
+    { key: "Divisions", id: "68c85f22302e5600dc8477e7" },
+    { key: "Cities", id: "68c85f22302e5600dc8477ed" },
+    { key: "Boards", id: "68c85f22302e5600dc8477f3" },
+    { key: "Councils", id: "68c85f22302e5600dc8477f6" },
+    { key: "CorrespondenceType", id: "68c85f22302e5600dc84780b" },
+    { key: "Stations", id: "68c85f22302e5600dc8477f0" },
+    { key: "DocumentType", id: "68c85f22302e5600dc84780e" },
+    { key: "ClaimType", id: "68c85f22302e5600dc847811" },
+    { key: "Schemes", id: "68c85f22302e5600dc847814" },
+    { key: "Reasons", id: "68c85f22302e5600dc847817" },
+    { key: "Provinces", id: "68c85f21302e5600dc8477e0" },
+    { key: "Districts", id: "68c85f22302e5600dc8477ea" },
+    { key: "SpokenLanguages", id: "68c85f22302e5600dc8477f9" },
+    { key: "Trainings", id: "68c85f22302e5600dc8477ff" },
+    { key: "Ranks", id: "68c85f22302e5600dc847802" },
+    { key: "RosterType", id: "68c85f22302e5600dc847808" },
+  ];
 
-    const lookupFilters = [
-      { key: "gender", id: "67f58a2d17f0ecf3dbf79cfe" },
-      { key: "Titles", id: "67f57de817f0ecf3dbf79cc2" },
-      { key: "ProjectTypes", id: "67f6319a17f0ecf3dbf79fbc" },
-      { key: "Duties", id: "67f6351b17f0ecf3dbf7a018" },
-      { key: "MaritalStatus", id: "67f590d017f0ecf3dbf79d57" },
-      { key: "county", id: "67f5971f17f0ecf3dbf79df6" },
-      { key: "Divisions", id: "67f5990b17f0ecf3dbf79e35" },
-      { key: "Cities", id: "67f6282f17f0ecf3dbf79ef8" },
-      { key: "Boards", id: "67f62cbc17f0ecf3dbf79f5a" },
-      { key: "Councils", id: "67f62fb517f0ecf3dbf79f86" },
-      { key: "CorrespondenceType", id: "67f68bee17f0ecf3dbf7a088" },
-      { key: "Stations", id: "67f6297617f0ecf3dbf79f12" },
-      { key: "DocumentType", id: "67f68ee617f0ecf3dbf7a0bc" },
-      { key: "ClaimType", id: "67f6906617f0ecf3dbf7a0fe" },
-      { key: "Schemes", id: "67f691ef17f0ecf3dbf7a135" },
-      { key: "Reasons", id: "67f6956817f0ecf3dbf7a189" },
-      { key: "Provinces", id: "67f5945517f0ecf3dbf79db4" },
-      { key: "Districts", id: "67f626ed17f0ecf3dbf79ed1" },
-      { key: "SpokenLanguages", id: "67f6308417f0ecf3dbf79fa3" },
-      { key: "Trainings", id: "67f6329f17f0ecf3dbf79fd3" },
-      { key: "Ranks", id: "67f6344d17f0ecf3dbf79fff" },
-      { key: "RosterType", id: "67f652cf17f0ecf3dbf7a048" },
-    ];
+  const filteredData = lookupFilters.reduce((acc, { key, id }) => {
+    acc[key] = lookups.filter((item) => item?.lookuptypeId?._id === id);
+    return acc;
+  }, {});
 
-    const filteredData = lookupFilters.reduce((acc, { key, id }) => {
-      acc[key] = lookups.filter((item) => item?.lookuptypeId?._id === id);
-      return acc;
-    }, {});
+  setdata((prevState) => ({ ...prevState, ...filteredData }));
+}, [lookups]);
 
-    setdata((prevState) => ({ ...prevState, ...filteredData }));
-  }, [lookups]);
+
 
   useMemo(() => {
     if (regions && Array.isArray(regions)) {

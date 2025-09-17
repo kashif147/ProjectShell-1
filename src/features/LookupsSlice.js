@@ -10,7 +10,7 @@ export const getAllLookups = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${baseURL}/lookup`, {
+            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/lookup`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
