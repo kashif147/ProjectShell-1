@@ -65,7 +65,7 @@ export const deleteFtn = async (url, callback) => {
     const response = await axios.request(config);
     MyAlert("success", "You Have Successfully Deleted.");
     if (callback && typeof callback === "function" && response?.data) {
-      debugger
+      debugger;
       callback();
     }
     return response.data;
@@ -74,7 +74,6 @@ export const deleteFtn = async (url, callback) => {
     return MyAlert("error", "Please Try Again");
   }
 };
-
 
 export const updateFtn = async (
   apiURL = baseURL,
@@ -101,8 +100,8 @@ export const updateFtn = async (
         "Content-Type": "application/json",
       },
     });
-    
-// if(response?.data)
+
+    // if(response?.data)
     MyAlert("success", msg);
 
     if (callback) callback();
@@ -114,7 +113,6 @@ export const updateFtn = async (
     throw error;
   }
 };
-
 
 export const calculateAgeFtn = (input) => {
   const dob = dayjs(input); // Create Day.js object
@@ -197,9 +195,9 @@ function base64URLEncode(buffer) {
     .replace(/\//g, "_")
     .replace(/=+$/, "");
 }
-export const getpermission = ()=>{
- return localStorage.getItem("userdata")
-}
+export const getpermission = () => {
+  return localStorage.getItem("userData");
+};
 export async function generatePKCE() {
   // Generate random code verifier
   const array = new Uint8Array(32);

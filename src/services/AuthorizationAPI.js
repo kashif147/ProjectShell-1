@@ -1,33 +1,85 @@
-// API service for authorization-related calls
+// API service for authorization-related calls using existing JWT and policy endpoints
 const API_BASE_URL = process.env.REACT_APP_BASE_URL_DEV;
 
 class AuthorizationAPI {
-  // Fetch all permission definitions from the API
+  // Decode JWT token to extract user data
+  static decodeToken(token) {
+    try {
+      const base64Url = token.split(".")[1];
+      const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+      const jsonPayload = decodeURIComponent(
+        atob(base64)
+          .split("")
+          .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+          .join("")
+      );
+      return JSON.parse(jsonPayload);
+    } catch (error) {
+      console.error("Error decoding token:", error);
+      return null;
+    }
+  }
+
+  // Extract permissions and roles from JWT token
+  static extractUserData(token) {
+    const decodedToken = this.decodeToken(token);
+    if (!decodedToken) {
+      return { permissions: [], roles: [], user: null };
+    }
+
+    const rawRoles = decodedToken.roles || [];
+    const rawPermissions = decodedToken.permissions || [];
+
+    // Convert role objects to role codes
+    const roles = rawRoles.map((role) => {
+      if (typeof role === "string") return role;
+      return role.code || role.name || role;
+    });
+
+    return {
+      permissions: rawPermissions,
+      roles: roles,
+      user: {
+        id: decodedToken.sub || decodedToken.id,
+        email: decodedToken.email,
+        userType: decodedToken.userType,
+        tenantId: decodedToken.tenantId,
+      },
+    };
+  }
+
+  // Fetch all permission definitions from the API (using policy endpoint)
   static async fetchPermissionDefinitions(token) {
     try {
-      const response = await fetch(`${API_BASE_URL}/permissions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Use policy endpoint to get effective permissions for a general resource
+      const response = await fetch(
+        `${API_BASE_URL}/policy/permissions/system`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to fetch permissions: ${response.status}`);
       }
 
       const data = await response.json();
-      return data.permissions || data; // Handle different response formats
+      return data.permissions || data.definitions || []; // Handle different response formats
     } catch (error) {
       console.error("Error fetching permission definitions:", error);
-      throw error;
+      // Fallback: return empty array if policy endpoint fails
+      return [];
     }
   }
 
-  // Fetch all role definitions from the API
+  // Fetch all role definitions from the API (using policy endpoint)
   static async fetchRoleDefinitions(token) {
     try {
-      const response = await fetch(`${API_BASE_URL}/roles`, {
+      // Use policy endpoint to get role information
+      const response = await fetch(`${API_BASE_URL}/policy/permissions/roles`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -39,96 +91,81 @@ class AuthorizationAPI {
       }
 
       const data = await response.json();
-      return data.roles || data; // Handle different response formats
+      return data.roles || data.definitions || []; // Handle different response formats
     } catch (error) {
       console.error("Error fetching role definitions:", error);
-      throw error;
+      // Fallback: return empty array if policy endpoint fails
+      return [];
     }
   }
 
-  // Fetch user's specific permissions and roles
+  // Fetch user's specific permissions and roles (from JWT token)
   static async fetchUserPermissions(token) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/permissions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to fetch user permissions: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return {
-        permissions: data.permissions || [],
-        roles: data.roles || [],
-        user: data.user || null,
-      };
+      // Extract data directly from JWT token instead of making API call
+      const userData = this.extractUserData(token);
+      return userData;
     } catch (error) {
       console.error("Error fetching user permissions:", error);
-      throw error;
+      return { permissions: [], roles: [], user: null };
     }
   }
 
-  // Check if user has specific permission
+  // Check if user has specific permission (using policy endpoint)
   static async checkPermission(token, permission) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/check-permission`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ permission }),
-      });
+      // Parse permission format (e.g., "users:read" -> resource="users", action="read")
+      const [resource, action] = permission.includes(":")
+        ? permission.split(":")
+        : [permission, "read"];
+
+      const response = await fetch(
+        `${API_BASE_URL}/policy/check/${resource}/${action}`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(`Failed to check permission: ${response.status}`);
       }
 
       const data = await response.json();
-      return data.hasPermission || false;
+      return data.success || false;
     } catch (error) {
       console.error("Error checking permission:", error);
       return false;
     }
   }
 
-  // Check if user has specific role
+  // Check if user has specific role (from JWT token)
   static async checkRole(token, role) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/check-role`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ role }),
-      });
-
-      if (!response.ok) {
-        throw new Error(`Failed to check role: ${response.status}`);
-      }
-
-      const data = await response.json();
-      return data.hasRole || false;
+      // Extract roles from JWT token
+      const userData = this.extractUserData(token);
+      return userData.roles.includes(role);
     } catch (error) {
       console.error("Error checking role:", error);
       return false;
     }
   }
 
-  // Fetch route permissions configuration from API
+  // Fetch route permissions configuration from API (using policy endpoint)
   static async fetchRoutePermissions(token) {
     try {
-      const response = await fetch(`${API_BASE_URL}/route-permissions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Use policy endpoint to get route-specific permissions
+      const response = await fetch(
+        `${API_BASE_URL}/policy/permissions/routes`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       if (!response.ok) {
         throw new Error(
@@ -137,68 +174,99 @@ class AuthorizationAPI {
       }
 
       const data = await response.json();
-      return data.routePermissions || data; // Handle different response formats
+      return data.routePermissions || data.permissions || {}; // Handle different response formats
     } catch (error) {
       console.error("Error fetching route permissions:", error);
-      throw error;
+      // Fallback: return empty object if policy endpoint fails
+      return {};
     }
   }
 
   // Consolidated API call to fetch all authorization data
   static async fetchAllAuthorizationData(token) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/all-permissions`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      // Extract user data from JWT token
+      const userData = this.extractUserData(token);
 
-      if (!response.ok) {
-        throw new Error(
-          `Failed to fetch authorization data: ${response.status}`
-        );
-      }
+      // Fetch permission and role definitions using policy endpoints
+      const [permissionDefinitions, roleDefinitions, routePermissions] =
+        await Promise.allSettled([
+          this.fetchPermissionDefinitions(token),
+          this.fetchRoleDefinitions(token),
+          this.fetchRoutePermissions(token),
+        ]);
 
-      const data = await response.json();
       return {
-        permissions: data.permissions || [],
-        roles: data.roles || [],
-        permissionDefinitions: data.permissionDefinitions || [],
-        roleDefinitions: data.roleDefinitions || [],
-        routePermissions: data.routePermissions || {},
-        user: data.user || null,
+        permissions: userData.permissions || [],
+        roles: userData.roles || [],
+        permissionDefinitions:
+          permissionDefinitions.status === "fulfilled"
+            ? permissionDefinitions.value
+            : [],
+        roleDefinitions:
+          roleDefinitions.status === "fulfilled" ? roleDefinitions.value : [],
+        routePermissions:
+          routePermissions.status === "fulfilled" ? routePermissions.value : {},
+        user: userData.user || null,
       };
     } catch (error) {
       console.error("Error fetching all authorization data:", error);
-      throw error;
+      // Return minimal data structure on error
+      const userData = this.extractUserData(token);
+      return {
+        permissions: userData.permissions || [],
+        roles: userData.roles || [],
+        permissionDefinitions: [],
+        roleDefinitions: [],
+        routePermissions: {},
+        user: userData.user || null,
+      };
     }
   }
 
   // Refresh user's permissions (useful after role changes)
   static async refreshUserPermissions(token) {
     try {
-      const response = await fetch(`${API_BASE_URL}/auth/refresh-permissions`, {
+      // Since permissions are in JWT token, we just need to re-extract them
+      // In a real scenario, you might need to refresh the token itself
+      const userData = this.extractUserData(token);
+      return {
+        permissions: userData.permissions || [],
+        roles: userData.roles || [],
+        user: userData.user || null,
+      };
+    } catch (error) {
+      console.error("Error refreshing user permissions:", error);
+      return { permissions: [], roles: [], user: null };
+    }
+  }
+
+  // Policy evaluation method using existing policy endpoint
+  static async evaluatePolicy(token, resource, action, context = {}) {
+    try {
+      const response = await fetch(`${API_BASE_URL}/policy/evaluate`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
+        body: JSON.stringify({ token, resource, action, context }),
       });
 
       if (!response.ok) {
-        throw new Error(`Failed to refresh permissions: ${response.status}`);
+        throw new Error(`Failed to evaluate policy: ${response.status}`);
       }
 
       const data = await response.json();
-      return {
-        permissions: data.permissions || [],
-        roles: data.roles || [],
-        user: data.user || null,
-      };
+      return data;
     } catch (error) {
-      console.error("Error refreshing user permissions:", error);
-      throw error;
+      console.error("Error evaluating policy:", error);
+      return {
+        success: false,
+        decision: "DENY",
+        reason: "NETWORK_ERROR",
+        error: error.message,
+      };
     }
   }
 }

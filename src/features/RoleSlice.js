@@ -1,7 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import { insertDataFtn, deleteFtn } from "../utils/Utilities";
 
-const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL
+const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL;
 
 // Async thunks
 export const getAllRoles = createAsyncThunk(
@@ -41,6 +41,7 @@ export const getAllRoles = createAsyncThunk(
         return [];
       }
     } catch (error) {
+      console.error("Error fetching roles:", error);
       return rejectWithValue(error.message);
     }
   }

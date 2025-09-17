@@ -48,7 +48,6 @@ import RolePermissions from "./RolePermissions";
 import "../../../styles/RoleManagement.css";
 import { deleteFtn } from "../../../utils/Utilities";
 
-
 const { Option } = Select;
 
 const RoleManagement = ({ onClose }) => {
@@ -77,14 +76,15 @@ const RoleManagement = ({ onClose }) => {
 
   // Initialize with sample data if no roles exist after API call
   useEffect(() => {
-    if (roles.length === 0 && !rolesLoading) {
+    if (roles.length === 0 && !rolesLoading && error) {
+      console.log("API failed, using sample data:", error);
       const sampleRoles = getAllRolesList();
       dispatch({
         type: "roles/getAllRoles/fulfilled",
         payload: sampleRoles,
       });
     }
-  }, [dispatch, roles.length, rolesLoading]);
+  }, [dispatch, roles.length, rolesLoading, error]);
 
   // Filter roles based on search query and filters
   const filteredRoles = roles.filter((role) => {
@@ -108,7 +108,7 @@ const RoleManagement = ({ onClose }) => {
   });
 
   const handleEdit = (data) => {
-    if (!data) return
+    if (!data) return;
     // dispatch(getRoleById(id))
     setIsFormOpen(true);
     setIsEdit(true);
@@ -121,14 +121,14 @@ const RoleManagement = ({ onClose }) => {
       message:
         "Are you sure you want to delete this role? This action cannot be undone.",
       onConfirm: () => {
-        if (!roleId) return
+        if (!roleId) return;
         deleteFtn(`${baseURL}/api/roles/${roleId}`, () => {
           dispatch(getAllRoles());
         });
       },
     });
   };
-const [isEdit, setIsEdit] = useState(false)
+  const [isEdit, setIsEdit] = useState(false);
   const handleAddNew = () => {
     setIsEdit(false);
     setIsFormOpen(true);

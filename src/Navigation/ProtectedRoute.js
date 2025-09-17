@@ -24,6 +24,7 @@ const ProtectedRoute = ({
     hasAnyRole,
     hasAllRoles,
     loading,
+    isInitialized,
   } = useAuthorization();
 
   const token = localStorage.getItem("token");
@@ -32,6 +33,23 @@ const ProtectedRoute = ({
   console.log("ProtectedRoute Debug - token:", token ? "exists" : "missing");
   console.log("ProtectedRoute Debug - isAuthenticated:", isAuthenticated);
   console.log("ProtectedRoute Debug - loading:", loading);
+  console.log("ProtectedRoute Debug - isInitialized:", isInitialized);
+
+  // Wait for initialization to complete
+  if (!isInitialized) {
+    return (
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "100vh",
+        }}
+      >
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   // Check authentication
   if (!token || !isAuthenticated) {

@@ -21,6 +21,7 @@ const AUTH_ACTIONS = {
   CLEAR_AUTH: "CLEAR_AUTH",
   SET_LOADING: "SET_LOADING",
   SET_ERROR: "SET_ERROR",
+  SET_INITIALIZED: "SET_INITIALIZED",
 };
 
 // Initial state
@@ -34,6 +35,7 @@ const initialState = {
   loading: false,
   error: null,
   isAuthenticated: false,
+  isInitialized: false, // Track if auth context has been initialized
 };
 
 // Reducer
@@ -97,6 +99,7 @@ const authReducer = (state, action) => {
     case AUTH_ACTIONS.CLEAR_AUTH:
       return {
         ...initialState,
+        isInitialized: true, // Keep initialized true even after clearing auth
       };
     case AUTH_ACTIONS.SET_LOADING:
       return {
@@ -108,6 +111,11 @@ const authReducer = (state, action) => {
         ...state,
         error: action.payload,
         loading: false,
+      };
+    case AUTH_ACTIONS.SET_INITIALIZED:
+      return {
+        ...state,
+        isInitialized: action.payload,
       };
     default:
       return state;
@@ -166,6 +174,8 @@ export const AuthorizationProvider = ({ children }) => {
     localStorage.removeItem("userData");
     localStorage.removeItem("userRoles");
     localStorage.removeItem("userPermissions");
+    localStorage.removeItem("token_expiry");
+    localStorage.removeItem("refresh_token");
   };
 
   // Initialize auth state from localStorage on mount
@@ -177,18 +187,62 @@ export const AuthorizationProvider = ({ children }) => {
     const userData = localStorage.getItem("userData");
     const userRoles = localStorage.getItem("userRoles");
     const userPermissions = localStorage.getItem("userPermissions");
+    const tokenExpiry = localStorage.getItem("token_expiry");
 
     console.log("AuthorizationContext - LocalStorage Debug:", {
       token: token ? "exists" : "missing",
       userData: userData ? "exists" : "missing",
       userRoles: userRoles ? "exists" : "missing",
       userPermissions: userPermissions ? "exists" : "missing",
+      tokenExpiry: tokenExpiry ? "exists" : "missing",
       allKeys: Object.keys(localStorage),
       allLocalStorageData: Object.keys(localStorage).reduce((acc, key) => {
         acc[key] = localStorage.getItem(key);
         return acc;
       }, {}),
     });
+
+    // Check if token is expired
+    if (tokenExpiry) {
+      const expiryTime = parseInt(tokenExpiry);
+      const currentTime = Date.now();
+      if (currentTime >= expiryTime) {
+        console.log("AuthorizationContext - Token expired, clearing auth");
+        clearAuth();
+        return;
+      }
+    }
+
+    // Also check JWT token expiry as backup
+    if (token) {
+      try {
+        const base64Url = token.split(".")[1];
+        const base64 = base64Url.replace(/-/g, "+").replace(/_/g, "/");
+        const jsonPayload = decodeURIComponent(
+          atob(base64)
+            .split("")
+            .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
+            .join("")
+        );
+        const decodedToken = JSON.parse(jsonPayload);
+
+        if (decodedToken.exp) {
+          const tokenExpiryTime = decodedToken.exp * 1000; // Convert to milliseconds
+          const currentTime = Date.now();
+          if (currentTime >= tokenExpiryTime) {
+            console.log(
+              "AuthorizationContext - JWT token expired, clearing auth"
+            );
+            clearAuth();
+            return;
+          }
+        }
+      } catch (error) {
+        console.error("AuthorizationContext - Error decoding token:", error);
+        clearAuth();
+        return;
+      }
+    }
 
     if (token && userData) {
       try {
@@ -280,6 +334,9 @@ export const AuthorizationProvider = ({ children }) => {
         clearAuth();
       }
     }
+
+    // Mark initialization as complete
+    dispatch({ type: AUTH_ACTIONS.SET_INITIALIZED, payload: true });
   }, [loadAllAuthorizationData]);
 
   // Load permission definitions from API (fallback)
@@ -402,6 +459,30 @@ export const AuthorizationProvider = ({ children }) => {
     return hasPermission(permission) || hasPermission("read:all");
   };
 
+  // Policy-based authorization check using existing policy endpoint
+  const canAccessWithPolicy = async (
+    resource,
+    action = "read",
+    context = {}
+  ) => {
+    const token = localStorage.getItem("token");
+    if (!token) return false;
+
+    try {
+      const result = await AuthorizationAPI.evaluatePolicy(
+        token,
+        resource,
+        action,
+        context
+      );
+      return result.success || false;
+    } catch (error) {
+      console.error("Policy evaluation failed:", error);
+      // Fallback to simple permission check
+      return canAccess(resource, action);
+    }
+  };
+
   // Get permission definition by key
   const getPermissionDefinition = (permissionKey) => {
     return state.permissionDefinitions.find((p) => p.key === permissionKey);
@@ -474,6 +555,7 @@ export const AuthorizationProvider = ({ children }) => {
     hasAllRoles,
     getPermissionsByCategory,
     canAccess,
+    canAccessWithPolicy,
     getPermissionDefinition,
     getRoleDefinition,
     getPermissionsByCategoryFromAPI,

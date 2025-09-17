@@ -132,7 +132,7 @@ const Login = () => {
         let token = data.accessToken.replace(/^Bearer\s/, "");
         localStorage.setItem("token", token);
         let decode = decodeToken(token);
-        localStorage.setItem("userdata", JSON.stringify(decode));
+        localStorage.setItem("userData", JSON.stringify(decode));
 
         // Extract roles and permissions from the decoded JWT token
         const userRoles = decode.roles || [];
