@@ -171,15 +171,15 @@
 
 .form-help {
   background-color: rgba(33, 94, 151, 0.05);
-  padding: 16px;
+  padding: 12px;
   border-radius: 8px;
   border-left: 4px solid var(--primary-color);
-  margin-top: 24px;
+  margin-top: 8px;
 }
 
 .form-help h5 {
   color: var(--primary-color);
-  margin-bottom: 12px;
+  margin-bottom: 8px;
 }
 
 .form-help ul {
@@ -189,7 +189,7 @@
 
 .form-help li {
   color: #6c757d;
-  margin-bottom: 8px;
+  margin-bottom: 0px;
 }
 
 /* Role Permissions Drawer */
