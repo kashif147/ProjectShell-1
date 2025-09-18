@@ -11,7 +11,8 @@ import {
   eventsItems,
   filterMenuItemsByAuth,
 } from "../../constants/SideNavWithAuth.js";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
+import { updateMenuLbl } from "../../features/MenuLblSlice";
 import "../../styles/Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
 import ProfileHeader from "./ProfileHeader.js";
@@ -25,12 +26,13 @@ import {
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
-  const permission = localStorage.getItem('userdata')
-  
+  const permission = localStorage.getItem("userdata");
+
   // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const { permissions, roles } = useAuthorization();
 
   // Debug logging
@@ -277,19 +279,9 @@ const Sidebar = () => {
     }
   };
 
-  useEffect(() => {
-    if (menuLblState["Subscriptions & Rewards"] || menuLblState["Membership"]) {
-      navigate("/MembershipDashboard", {
-        state: { search: "Membership Dashboard" },
-      });
-    } else if (menuLblState["Finance"]) {
-      navigate("/Batches", { state: { search: "Batches" } });
-    } else if (menuLblState["Correspondence"]) {
-      navigate("/Email", { state: { search: "Email" } });
-    } else if (menuLblState["Configuration"]) {
-      navigate("/Configuratin", { state: { search: "" } });
-    }
-  }, [menuLblState]);
+  // Remove the route-based menu setting logic
+  // This was preventing users from switching between different app launcher modules
+  // Users should be able to manually switch modules using the app launcher buttons
 
   const showProfileHeaderRoutes = [
     "/ClaimsDetails",

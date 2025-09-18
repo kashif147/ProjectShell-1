@@ -1,5 +1,5 @@
 import React from "react";
-import { Navigate, Outlet } from "react-router-dom";
+import { Navigate, Outlet, useLocation } from "react-router-dom";
 import IdleModal from "../component/common/IdleModal";
 import { useAuthorization } from "../context/AuthorizationContext";
 import { Spin, Result, Button } from "antd";
@@ -27,6 +27,7 @@ const ProtectedRoute = ({
     isInitialized,
   } = useAuthorization();
 
+  const location = useLocation();
   const token = localStorage.getItem("token");
 
   // Debug logging
@@ -35,8 +36,9 @@ const ProtectedRoute = ({
   console.log("ProtectedRoute Debug - loading:", loading);
   console.log("ProtectedRoute Debug - isInitialized:", isInitialized);
 
-  // Wait for initialization to complete
+  // Wait for initialization to complete before checking authentication
   if (!isInitialized) {
+    console.log("ProtectedRoute Debug - Waiting for initialization...");
     return (
       <div
         style={{
@@ -51,9 +53,12 @@ const ProtectedRoute = ({
     );
   }
 
-  // Check authentication
+  // Check authentication only after initialization is complete
   if (!token || !isAuthenticated) {
     console.log("ProtectedRoute Debug - Redirecting to:", redirectTo);
+    console.log("ProtectedRoute Debug - Current pathname:", location.pathname);
+    console.log("ProtectedRoute Debug - Token exists:", !!token);
+    console.log("ProtectedRoute Debug - isAuthenticated:", isAuthenticated);
     return <Navigate to={redirectTo} replace />;
   }
 

@@ -105,11 +105,25 @@ const Login = () => {
     setAuthLoading(true);
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
-    if (!code) return setAuthLoading(false);
-    // return;
+
+    console.log("handleAuthRedirect - URL params:", window.location.search);
+    console.log("handleAuthRedirect - Code:", code);
+
+    if (!code) {
+      console.log("handleAuthRedirect - No code found, ending auth redirect");
+      setAuthLoading(false);
+      return;
+    }
+
     const codeVerifier = localStorage.getItem("pkce_code_verifier");
+    console.log(
+      "handleAuthRedirect - Code verifier:",
+      codeVerifier ? "exists" : "missing"
+    );
+
     if (!codeVerifier) {
       console.error("Missing PKCE code_verifier from sessionStorage");
+      setAuthLoading(false);
       return;
     }
     try {
@@ -125,10 +139,23 @@ const Login = () => {
         }
       );
 
+      if (!response.ok) {
+        console.error(
+          "Backend authentication failed:",
+          response.status,
+          response.statusText
+        );
+        setAuthLoading(false);
+        return;
+      }
+
       const data = await response.json();
       console.log("Token response from backend:", data);
+      console.log("Response status:", response.status);
+      console.log("Response ok:", response.ok);
+
       // Save tokens to localStorage if presents
-      if (data) {
+      if (data && data.accessToken) {
         let token = data.accessToken.replace(/^Bearer\s/, "");
         localStorage.setItem("token", token);
         let decode = decodeToken(token);
@@ -157,39 +184,78 @@ const Login = () => {
         // Set appropriate menu label based on user role
         setMenuLabelForRole(roleCodes);
 
-        // Navigate based on user role, but preserve current route if it's not the login page
-        const currentPath = window.location.pathname;
-        const isLoginPage = currentPath === "/" || currentPath === "/login";
-
-        if (isLoginPage) {
-          // Only redirect to default pages if we're on the login page
-          if (roleCodes.includes("SU")) {
-            navigate("/Configuratin");
-          } else {
-            navigate("/MembershipDashboard");
-          }
+        // Navigate based on user role for default login behavior
+        console.log("Login Debug - roleCodes:", roleCodes);
+        if (roleCodes.includes("SU")) {
+          navigate("/Configuratin");
         } else {
-          // If we're on any other page, stay on that page (this handles page refresh)
-          navigate(currentPath, { replace: true });
+          navigate("/MembershipDashboard");
         }
-        setAuthLoading(!authLoading);
-      }
-      if (data.refresh_token) {
-        localStorage.setItem("refresh_token", data.refresh_token);
-      }
-      if (data.expires_in) {
-        const expiryTime = Date.now() + data.expires_in * 1000;
-        localStorage.setItem("token_expiry", expiryTime.toString());
-      }
 
-      // Clean up URL so code isn’t visible
-      window.history.replaceState({}, document.title, "/");
+        if (data.refresh_token) {
+          localStorage.setItem("refresh_token", data.refresh_token);
+        }
+        if (data.expires_in) {
+          const expiryTime = Date.now() + data.expires_in * 1000;
+          localStorage.setItem("token_expiry", expiryTime.toString());
+        }
+
+        // Clean up URL so code isn't visible
+        window.history.replaceState({}, document.title, "/");
+      } else {
+        console.error("No data received from backend");
+        setAuthLoading(false);
+        return;
+      }
     } catch (err) {
       console.error("Token exchange failed:", err);
+      setAuthLoading(false);
+      return;
     }
+
+    setAuthLoading(false);
   };
   useEffect(() => {
-    handleAuthRedirect();
+    // Check if user is already authenticated before running auth redirect
+    const token = localStorage.getItem("token");
+    const userData = localStorage.getItem("userData");
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+
+    console.log("Login useEffect - token exists:", !!token);
+    console.log("Login useEffect - userData exists:", !!userData);
+    console.log("Login useEffect - URL code:", code);
+    console.log("Login useEffect - Current URL:", window.location.href);
+
+    // Check if we're coming back from Azure AD authentication
+    if (code) {
+      console.log(
+        "Login useEffect - Azure AD redirect detected, running handleAuthRedirect"
+      );
+      handleAuthRedirect();
+    } else if (!token || !userData) {
+      console.log(
+        "Login useEffect - No authentication found, staying on login page"
+      );
+      // Don't call handleAuthRedirect if there's no code - just stay on login page
+    } else {
+      console.log(
+        "Login useEffect - User already authenticated, redirecting to dashboard"
+      );
+      // User is already authenticated, redirect to appropriate page
+      const decodedUserData = JSON.parse(userData);
+      const userRoles = decodedUserData.roles || [];
+      const roleCodes = userRoles.map((role) => {
+        if (typeof role === "string") return role;
+        return role.code || role.name || role;
+      });
+
+      if (roleCodes.includes("SU")) {
+        navigate("/Configuratin");
+      } else {
+        navigate("/MembershipDashboard");
+      }
+    }
 
     // Add class to body to prevent scrolling
     document.body.classList.add("login-page");

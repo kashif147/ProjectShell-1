@@ -52,11 +52,10 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
   const [searchTerm, setSearchTerm] = useState("");
-  let userdata = localStorage.getItem('userdata')
-  userdata = JSON.parse(userdata)
-  const permission = userdata?.permissions
-  console.log(permission,"userdata")
-
+  let userdata = localStorage.getItem("userdata");
+  userdata = JSON.parse(userdata);
+  const permission = userdata?.permissions;
+  console.log(permission, "userdata");
 
   const handleUpdate = (key, value) => {
     dispatch(updateMenuLbl({ key, value }));
@@ -201,7 +200,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             <div
               key={app.name}
               className={`app-item ${isActive ? "active-item" : ""}`}
-              onClick={() => handleUpdate(app.name, true)}
+              onClick={() => handleUpdate(menuKey, true)}
             >
               <div
                 className="icon-circle"
