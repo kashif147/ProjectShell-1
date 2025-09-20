@@ -93,6 +93,7 @@ const authReducer = (state, action) => {
         roleDefinitions: action.payload.roleDefinitions || [],
         routePermissions: action.payload.routePermissions || {},
         user: action.payload.user || state.user,
+        isAuthenticated: !!(action.payload.user || state.user), // Ensure isAuthenticated is set
         loading: false,
         error: null,
       };
@@ -333,9 +334,13 @@ export const AuthorizationProvider = ({ children }) => {
         console.error("Error parsing stored auth data:", error);
         clearAuth();
       }
+    } else {
+      console.log(
+        "AuthorizationContext - No token or userData found, user not authenticated"
+      );
     }
 
-    // Mark initialization as complete
+    // Mark initialization as complete after processing (whether authenticated or not)
     dispatch({ type: AUTH_ACTIONS.SET_INITIALIZED, payload: true });
   }, [loadAllAuthorizationData]);
 

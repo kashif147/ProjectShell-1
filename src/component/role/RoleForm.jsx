@@ -4,7 +4,7 @@ import { getTenantsList, ROLE_CATEGORIES } from "../../constants/Roles";
 import CustomSelect from "../common/CustomSelect";
 import MyInput from "../common/MyInput";
 import { getAllRoles } from "../../features/RoleSlice";
-import { useDispatch } from 'react-redux';
+import { useDispatch } from "react-redux";
 import { insertDataFtn } from "../../utils/Utilities";
 import { useSelector } from "react-redux";
 import { updateFtn } from "../../utils/Utilities";
@@ -13,9 +13,9 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 const RoleForm = ({ isEdit, onClose, role }) => {
-  const dispatch = useDispatch()
+  const dispatch = useDispatch();
 
-  const [data, setData] = useState({});
+  const [data, setData] = useState({ level: 1 });
   const [originalData, setOriginalData] = useState({});
   const [form] = Form.useForm();
   // const { role, roleLoading, error } = useSelector((state) => state.roleById);
@@ -28,13 +28,13 @@ const RoleForm = ({ isEdit, onClose, role }) => {
       tenantId: role?.tenantId || "",
       category: role?.category || "",
       status: role?.status || "",
+      level: role?.level || 1,
     };
     setData(mapped);
     setOriginalData(mapped); // save original snapshot
   }, [role, isEdit]);
 
-  console.log(data, "data1")
-
+  console.log(data, "data1");
 
   const [errors, setErrors] = useState({});
   const validate = () => {
@@ -44,11 +44,13 @@ const RoleForm = ({ isEdit, onClose, role }) => {
     if (!data?.description?.trim()) newErrors.description = true;
     if (!data?.tenantId?.trim()) newErrors.tenantId = true;
     if (!data?.code?.trim()) newErrors.code = true;
+    if (!data?.level || data?.level < 1 || data?.level > 100)
+      newErrors.level = true;
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0; // ✅ return true if no errors
   };
-  const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL
+  const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL;
   const getChangedFields = (newData, oldData) => {
     const changed = {};
     Object.keys(newData).forEach((key) => {
@@ -58,7 +60,6 @@ const RoleForm = ({ isEdit, onClose, role }) => {
     });
     return changed;
   };
-
 
   const handleSubmit = async () => {
     if (!validate()) {
@@ -76,7 +77,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
       updateFtn(
         baseURL,
         `/api/roles/${role._id}`,
-        { ...changedFields, },
+        { ...changedFields },
 
         () => {
           setData({});
@@ -84,7 +85,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
           dispatch(getAllRoles());
           onClose();
         },
-        "You have successfully Updated",
+        "You have successfully Updated"
       );
     } else {
       try {
@@ -113,7 +114,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
 
   const [loading, setLoading] = useState(false);
   const handleChange = (field, value) => {
-    setData(prev => ({
+    setData((prev) => ({
       ...prev,
       [field]: value,
     }));
@@ -206,7 +207,6 @@ const RoleForm = ({ isEdit, onClose, role }) => {
     >
       <div className="drawer-main-cntainer">
         <div className="drawer-main-cntainer">
-
           {/* Role Name */}
           <MyInput
             label="Role Name"
@@ -214,22 +214,41 @@ const RoleForm = ({ isEdit, onClose, role }) => {
             placeholder="Enter role name"
             required
             hasError={errors?.name}
-            rules={[
-              { min: 2, message: "Name must be at least 2 characters" },
-            ]}
-            onChange={(e) => handleChange('name', e.target.value)}
+            rules={[{ min: 2, message: "Name must be at least 2 characters" }]}
+            onChange={(e) => handleChange("name", e.target.value)}
             value={data?.name}
           />
           <MyInput
             label="Code"
             name="Code"
             placeholder="Enter Code"
-            onChange={(e) => handleChange('code', e.target.value)}
+            onChange={(e) => handleChange("code", e.target.value)}
             required
             value={data?.code}
             hasError={errors?.code}
+            rules={
+              [
+                // { min: 2, message: "Name must be at least 2 characters" },
+              ]
+            }
+          />
+
+          <MyInput
+            label="Level"
+            name="level"
+            type="number"
+            placeholder="1-100"
+            min={1}
+            max={100}
+            onChange={(e) =>
+              handleChange("level", parseInt(e.target.value) || 1)
+            }
+            required
+            value={data?.level}
+            hasError={errors?.level}
             rules={[
-              // { min: 2, message: "Name must be at least 2 characters" },
+              { min: 1, message: "Level must be at least 1" },
+              { max: 100, message: "Level must be at most 100" },
             ]}
           />
 
@@ -241,9 +260,12 @@ const RoleForm = ({ isEdit, onClose, role }) => {
             rows={4}
             placeholder="Enter role description"
             required
-            onChange={(e) => handleChange('description', e.target.value)}
+            onChange={(e) => handleChange("description", e.target.value)}
             rules={[
-              { min: 10, message: "Description must be at least 10 characters" },
+              {
+                min: 10,
+                message: "Description must be at least 10 characters",
+              },
             ]}
             value={data?.description}
             hasError={errors?.description}
@@ -261,8 +283,8 @@ const RoleForm = ({ isEdit, onClose, role }) => {
               label: category.label,
               value: category.value,
             }))}
-          // value={data?.category}
-          // onChange={}
+            // value={data?.category}
+            // onChange={}
           />
           <MyInput
             label="Level"
@@ -283,9 +305,8 @@ const RoleForm = ({ isEdit, onClose, role }) => {
             hasError={errors?.tenantId}
             required
             onChange={(e) => {
-              handleChange('tenantId', e.target.value)
-            }
-            }
+              handleChange("tenantId", e.target.value);
+            }}
             value={data?.tenantId}
             options={tenants.map((tenant) => ({
               label: tenant.name,
@@ -298,7 +319,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
             name="status"
             placeholder="Select status"
             value={data?.Status}
-            onChange={(e) => handleChange('Status', e.target.value)}
+            onChange={(e) => handleChange("Status", e.target.value)}
             options={[
               { label: "Active", value: "active" },
               { label: "Inactive", value: "inactive" },
@@ -319,6 +340,20 @@ const RoleForm = ({ isEdit, onClose, role }) => {
                 purpose
               </li>
               <li>
+                Set role level (1-100) to determine hierarchy and access control
+                <ul>
+                  <li>Level 100: CEO/President (Ultimate authority)</li>
+                  <li>Level 90: C-Level Executives (Executive authority)</li>
+                  <li>Level 80: Department Heads (Senior management)</li>
+                  <li>Level 70: Managers (Middle management)</li>
+                  <li>Level 60: Supervisors (Operational management)</li>
+                  <li>Level 50: Senior Staff (Experienced employees)</li>
+                  <li>Level 30: Staff (Regular employees)</li>
+                  <li>Level 10: Junior Staff (Entry level)</li>
+                  <li>Level 1: Interns/Visitors (Basic access)</li>
+                </ul>
+              </li>
+              <li>
                 Provide a detailed description of what this role is intended for
               </li>
               <li>Select the appropriate tenant for this role</li>
@@ -327,7 +362,6 @@ const RoleForm = ({ isEdit, onClose, role }) => {
             </ul>
           </div>
         </div>
-
       </div>
     </Drawer>
   );

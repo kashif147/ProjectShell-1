@@ -74,14 +74,14 @@ const RoleManagement = ({ onClose }) => {
     dispatch(getAllRoles());
   }, [dispatch]);
 
-
   // Filter roles based on search query and filters
   const filteredRoles = roles.filter((role) => {
     const matchesSearch =
       role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
       role.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.tenantName.toLowerCase().includes(searchQuery.toLowerCase());
+      role.tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (role.level && role.level.toString().includes(searchQuery));
 
     const matchesTenant =
       selectedTenant === "all" || role.tenantId === selectedTenant;
@@ -211,6 +211,27 @@ const RoleManagement = ({ onClose }) => {
           {text}
         </Tag>
       ),
+    },
+    {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+      width: 80,
+      sorter: (a, b) => (a.level || 1) - (b.level || 1),
+      render: (level) => {
+        const levelValue = level || 1;
+        let color = "default";
+        if (levelValue <= 10) color = "green";
+        else if (levelValue <= 50) color = "blue";
+        else if (levelValue <= 80) color = "orange";
+        else color = "red";
+
+        return (
+          <Tag color={color} className="level-tag">
+            {levelValue}
+          </Tag>
+        );
+      },
     },
     {
       title: "Description",
@@ -390,7 +411,7 @@ const RoleManagement = ({ onClose }) => {
             <div className="filter-item">
               <label className="filter-label">Search</label>
               <Input
-                placeholder="Search roles by name, code, description..."
+                placeholder="Search roles by name, code, level, description..."
                 prefix={<SearchOutlined />}
                 value={localSearchQuery}
                 onChange={handleSearchChange}

@@ -7,17 +7,17 @@ import {
   Button,
   Space,
   message,
-  Row, Col,
+  Row,
+  Col,
   Switch,
   InputNumber,
 } from "antd";
 import { useAuthorization } from "../../../context/AuthorizationContext";
-import MyInput from "../../../component/common/MyInput"
-import CustomSelect from "../../../component/common/CustomSelect"
+import MyInput from "../../../component/common/MyInput";
+import CustomSelect from "../../../component/common/CustomSelect";
 import { insertDataFtn } from "../../../utils/Utilities";
 import { getAllPermissions } from "../../../features/PermissionSlice";
 import {useDispatch} from "react-redux"
-
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -27,7 +27,6 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
   const { permissionDefinitions } = useAuthorization();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
-
 
   // Backend schema categories
   const PERMISSION_CATEGORIES = [
@@ -57,7 +56,6 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       })
     ),
   ];
-
 
   const handleCancel = () => {
     form.resetFields();
@@ -101,7 +99,10 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       form.setFieldsValue({ code: generatedCode });
     }
   };
-  const [data, setData] = useState({isSystemPermission:false,tenantId:'39866a06-30bc-4a89-80c6-9dd9357dd453'})
+  const [data, setData] = useState({
+    isSystemPermission: false,
+    tenantId: "39866a06-30bc-4a89-80c6-9dd9357dd453",
+  });
   const [errors, setErrors] = useState({});
   const handleChange = (field, value) => {
     setData((prev) => ({ ...prev, [field]: value }));
@@ -124,7 +125,7 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-  const url = process.env.REACT_APP_POLICY_SERVICE_URL
+  const url = process.env.REACT_APP_POLICY_SERVICE_URL;
   const handleSubmit = () => {
     if (!validate()) return;
     console.log("✅ Valid Permission Data:", data);
@@ -152,11 +153,11 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
             // type="primary"
             onClick={handleSubmit}
             loading={loading}
-          // style={{
-          //   backgroundColor: "var(--primary-color)",
-          //   borderColor: "var(--primary-color)",
-          //   borderRadius: "4px",
-          // }}
+            // style={{
+            //   backgroundColor: "var(--primary-color)",
+            //   borderColor: "var(--primary-color)",
+            //   borderRadius: "4px",
+            // }}
           >
             {permission ? "Update" : "Create"}
           </Button>
@@ -164,119 +165,127 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       }
     >
       <div className="drawer-main-cntainer">
-          <MyInput
-            label="Permission Name"
-            placeholder="Enter permission name"
-            value={data.name}
-            onChange={(e) => handleChange("name", e.target.value)}
-            required
-            hasError={errors.name}
-          />
+        <MyInput
+          label="Permission Name"
+          placeholder="Enter permission name"
+          value={data.name}
+          onChange={(e) => handleChange("name", e.target.value)}
+          required
+          hasError={errors.name}
+        />
 
-          <MyInput
-            label="Code"
-            placeholder="e.g., USER_READ"
-            value={data.code}
+        <MyInput
+          label="Code"
+          placeholder="e.g., USER_READ"
+          value={data.code}
+          onChange={(e) => handleChange("code", e.target.value)}
+          required
+          hasError={errors.code}
+        />
 
-            onChange={(e) => handleChange("code", e.target.value)}
-            required
-            hasError={errors.code}
-          />
+        <CustomSelect
+          label="Category"
+          placeholder="Select category"
+          options={PERMISSION_CATEGORIES.map((c) => ({
+            value: c.value,
+            label: c.label,
+          }))}
+          value={data.category}
+          onChange={(val) => handleChange("category", val.target.value)}
+          allowClear
+          required
+          hasError={errors.category}
+        />
 
-          <CustomSelect
-            label="Category"
-            placeholder="Select category"
-            options={PERMISSION_CATEGORIES.map((c) => ({
-              value: c.value,
-              label: c.label,
-            }))}
-            value={data.category}
-            onChange={(val) => handleChange("category", val.target.value)}
-            allowClear
-            required
-            hasError={errors.category}
-          />
+        <MyInput
+          label="Resource"
+          placeholder="e.g., user, account, profile"
+          value={data.resource}
+          onChange={(e) => handleChange("resource", e.target.value)}
+          required
+          hasError={errors.resource}
+        />
 
-          <MyInput
-            label="Resource"
-            placeholder="e.g., user, account, profile"
-            value={data.resource}
-            onChange={(e) => handleChange("resource", e.target.value)}
-            required
-            hasError={errors.resource}
-          />
+        <MyInput
+          label="Action"
+          placeholder="e.g., read, write, create, delete"
+          value={data.action}
+          onChange={(e) => handleChange("action", e.target.value)}
+          required
+          hasError={errors.action}
+        />
 
-          <MyInput
-            label="Action"
-            placeholder="e.g., read, write, create, delete"
-            value={data.action}
-            onChange={(e) => handleChange("action", e.target.value)}
-            required
-            hasError={errors.action}
-          />
-
-          <MyInput
-            label="Level"
-            type="number"
-            placeholder="1-100"
-            value={data.level}
-            min={1}
-            max={100}
-            onChange={(e) => handleChange("level", e.target.value)}
-            required
-            hasError={errors.level}
-          />
-          <Row className="mb-3">
-            <Col span={12}>
-              <label className="my-input-label mb-2">System Permission</label>
-              <Switch
-                checked={data?.isSystemPermission}
-                onChange={(checked) => handleChange("isSystemPermission", checked)}
-              />
-            </Col>
-            <Col span={12}>
-              <label className="my-input-label mb-2">Active</label>
-              <Switch
-                // checked={data.isActive}
-                // onChange={(checked) => handleChange("isActive", checked)}
-              />
-            </Col>
-          </Row>
-          <MyInput
-            label="Description"
-            name="           "
-            placeholder="Enter permission description"
-            type="textarea"
-            rows={4}
-            maxLength={200}
-            required
-            value={data?.description}
-            onChange={(e) => handleChange("description", e.target.value)}
-            showCount
-            rules={[
-              { required: true, message: "Please enter description" },
-              { min: 10, message: "Description must be at least 10 characters" },
-            ]}
-            hasError={errors.description}
+        <MyInput
+          label="Level"
+          type="number"
+          placeholder="1-100"
+          value={data.level}
+          min={1}
+          max={100}
+          onChange={(e) => handleChange("level", e.target.value)}
+          required
+          hasError={errors.level}
+        />
+        <Row className="mb-3">
+          <Col span={12}>
+            <label className="my-input-label mb-2">System Permission</label>
+            <Switch
+              checked={data?.isSystemPermission}
+              onChange={(checked) =>
+                handleChange("isSystemPermission", checked)
+              }
             />
+          </Col>
+          <Col span={12}>
+            <label className="my-input-label mb-2">Active</label>
+            <Switch
+            // checked={data.isActive}
+            // onChange={(checked) => handleChange("isActive", checked)}
+            />
+          </Col>
+        </Row>
+        <MyInput
+          label="Description"
+          name="           "
+          placeholder="Enter permission description"
+          type="textarea"
+          rows={4}
+          maxLength={200}
+          required
+          value={data?.description}
+          onChange={(e) => handleChange("description", e.target.value)}
+          showCount
+          rules={[
+            { required: true, message: "Please enter description" },
+            { min: 10, message: "Description must be at least 10 characters" },
+          ]}
+          hasError={errors.description}
+        />
 
-
-          <div className="form-help">
-            <h5>Permission Schema Guidelines:</h5>
+        <div className="form-help">
+          <h5>Permission Schema Guidelines:</h5>
+          <ul>
+            <li>
+              Code Format: <code>CATEGORY_RESOURCE_ACTION</code>
+            </li>
+            <li>
+              Examples: <code>USER_READ</code>, <code>ACCOUNT_WRITE</code>
+            </li>
+            <li>Code is auto-generated from category, resource, and action</li>
+            <li>Level determines permission hierarchy (1-100) </li>
             <ul>
+              <li>Level 1-10: Basic read permissions (low sensitivity)</li>
               <li>
-                Code Format: <code>CATEGORY_RESOURCE_ACTION</code>
+                Level 30-50: Write/update permissions (medium sensitivity)
               </li>
               <li>
-                Examples: <code>USER_READ</code>, <code>ACCOUNT_WRITE</code>
+                Level 60-80: Administrative permissions (high sensitivity)
               </li>
-              <li>
-                Code is auto-generated from category, resource, and action
-              </li>
-              <li>Level determines permission hierarchy (1-100)</li>
-              <li>System permissions are protected from deletion</li>
+              <li>Level 90-100: Critical permissions (maximum sensitivity)</li>
             </ul>
-          </div>
+            <li>System permissions are protected from deletion</li>
+          </ul>
+        </div>
       </div>
     </Drawer>
   );
