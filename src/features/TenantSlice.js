@@ -1,69 +1,24 @@
 // tenantSlice.js
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-import { baseURL } from "../utils/Utilities";
+import MyAlert from "../component/common/MyAlert";
+// import { baseURL } from "../utils/Utilities";
+const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL
 
 // Fetch all tenants
 export const getAllTenants = createAsyncThunk(
   "tenants/getAllTenants",
   async (_, { rejectWithValue }) => {
     try {
-      // For now, return sample data since API might not be available
-      const sampleTenants = [
-        {
-          _id: "tenant1",
-          name: "Main Organization",
-          verifiedDomains: ["organization.com", "main.org"],
-          connections: [
-            { type: "entra", clientId: "client1", tenantId: "tenant1" },
-            { type: "b2c", clientId: "client2", tenantId: "tenant2" },
-          ],
-          createdAt: "2024-01-01T00:00:00Z",
-          updatedAt: "2024-01-15T10:30:00Z",
+      const token = localStorage.getItem("token"); // 🔹 assumes token is stored
+      const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/tenants`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
         },
-        {
-          _id: "tenant2",
-          name: "Audit Department",
-          verifiedDomains: ["audit.com"],
-          connections: [
-            { type: "entra", clientId: "client3", tenantId: "tenant3" },
-          ],
-          createdAt: "2024-01-02T00:00:00Z",
-          updatedAt: "2024-01-14T09:15:00Z",
-        },
-        {
-          _id: "tenant3",
-          name: "Finance Division",
-          verifiedDomains: ["finance.org", "fin.com"],
-          connections: [
-            { type: "b2c", clientId: "client4", tenantId: "tenant4" },
-          ],
-          createdAt: "2024-01-03T00:00:00Z",
-          updatedAt: "2024-01-13T14:20:00Z",
-        },
-        {
-          _id: "tenant4",
-          name: "HR Department",
-          verifiedDomains: ["hr.org"],
-          connections: [
-            { type: "entra", clientId: "client5", tenantId: "tenant5" },
-            { type: "b2c", clientId: "client6", tenantId: "tenant6" },
-          ],
-          createdAt: "2024-01-04T00:00:00Z",
-          updatedAt: "2024-01-12T11:45:00Z",
-        },
-      ];
-      return sampleTenants;
+      });
 
-      // Uncomment below when API is ready
-      // const token = localStorage.getItem("token");
-      // const response = await axios.get(`${baseURL}/tenants`, {
-      //   headers: {
-      //     Authorization: `Bearer ${token}`,
-      //     "Content-Type": "application/json",
-      //   },
-      // });
-      // return response.data;
+      return response.data; // 🔹 API response
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch tenants"
@@ -71,7 +26,6 @@ export const getAllTenants = createAsyncThunk(
     }
   }
 );
-
 // Add new tenant
 export const addTenant = createAsyncThunk(
   "tenants/addTenant",
@@ -111,10 +65,11 @@ export const addTenant = createAsyncThunk(
 export const updateTenant = createAsyncThunk(
   "tenants/updateTenant",
   async ({ id, updatedTenant }, { rejectWithValue }) => {
+    debugger
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${baseURL}/tenants/${id}`,
+        `${baseURL}/api/tenants/${id}`,
         updatedTenant,
         {
           headers: {
@@ -137,16 +92,22 @@ export const deleteTenant = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      await axios.delete(`${baseURL}/tenants/${id}`, {
+      const res = await axios.delete(`${baseURL}/api/tenants/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
       });
-      return id; // returning the id for filtering in the reducer
-    } catch (error) {
-      return rejectWithValue(
-        error.response?.data?.message || "Failed to delete tenant"
-      );
+      if (res.status === 200) {
+         MyAlert("success","You have successfully deleted.")
+         getAllTenants()
+        }
+        return id; // returning the id for filtering in the reducer
+      } catch (error) {
+        return rejectWithValue(
+          // error.response?.data?.message || "Failed to delete tenant"
+          MyAlert("error","Failed to delete. Please try again later")
+          
+          );
     }
   }
 );
@@ -171,7 +132,7 @@ const tenantSlice = createSlice({
       })
       .addCase(getAllTenants.fulfilled, (state, action) => {
         state.tenantsLoading = false;
-        state.tenants = action.payload;
+        state.tenants = action.payload.data;
       })
       .addCase(getAllTenants.rejected, (state, action) => {
         state.tenantsLoading = false;

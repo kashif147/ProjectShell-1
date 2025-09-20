@@ -77,14 +77,14 @@ const RoleForm = ({ isEdit, onClose, role }) => {
         baseURL,
         `/api/roles/${role._id}`,
         { ...changedFields, },
-       
+
         () => {
           setData({});
           setErrors({});
           dispatch(getAllRoles());
           onClose();
         },
-         "You have successfully Updated",
+        "You have successfully Updated",
       );
     } else {
       try {
@@ -264,7 +264,17 @@ const RoleForm = ({ isEdit, onClose, role }) => {
           // value={data?.category}
           // onChange={}
           />
-
+          <MyInput
+            label="Level"
+            type="number"
+            placeholder="1-100"
+            value={data.level}
+            min={1}
+            max={100}
+            onChange={(e) => handleChange("level", e.target.value)}
+            required
+            hasError={errors.level}
+          />
           {/* Tenant */}
           <CustomSelect
             label="Tenant"

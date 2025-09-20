@@ -227,7 +227,7 @@ useEffect(() => {
 
   const columns = [
     {
-      title: "Permission Name123",
+      title: "Permission Name",
       dataIndex: "name",
       key: "name",
       sorter: (a, b) => a.name.localeCompare(b.name),

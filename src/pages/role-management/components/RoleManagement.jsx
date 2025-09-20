@@ -240,6 +240,17 @@ const RoleManagement = ({ onClose }) => {
       },
     },
     {
+      title: "Level",
+      dataIndex: "level",
+      key: "level",
+      sorter: (a, b) => a.level - b.level,
+      render: (level) => (
+        <Tag color={level >= 50 ? "red" : level >= 25 ? "orange" : "green"}>
+          {level}
+        </Tag>
+      ),
+    },
+    {
       title: "Tenant",
       dataIndex: "tenantName",
       key: "tenantName",

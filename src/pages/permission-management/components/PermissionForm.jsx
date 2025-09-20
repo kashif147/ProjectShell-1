@@ -16,12 +16,14 @@ import MyInput from "../../../component/common/MyInput"
 import CustomSelect from "../../../component/common/CustomSelect"
 import { insertDataFtn } from "../../../utils/Utilities";
 import { getAllPermissions } from "../../../features/PermissionSlice";
+import {useDispatch} from "react-redux"
 
 
 const { Option } = Select;
 const { TextArea } = Input;
 
 const PermissionForm = ({ permission, onClose, onSubmit }) => {
+  const dispatch = useDispatch()
   const { permissionDefinitions } = useAuthorization();
   const [form] = Form.useForm();
   const [loading, setLoading] = useState(false);
@@ -127,7 +129,7 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     if (!validate()) return;
     console.log("✅ Valid Permission Data:", data);
     insertDataFtn(url,"/api/permissions",data,"Data inserted successfully", "Error inserting data",()=>{
-      getAllPermissions()
+      dispatch(getAllPermissions())
       onClose()
       setErrors({})
       setData({})

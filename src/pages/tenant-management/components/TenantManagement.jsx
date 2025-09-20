@@ -18,7 +18,8 @@ import {
 } from "../../../features/TenantSlice";
 import { insertDataFtn, deleteFtn, baseURL } from "../../../utils/Utilities";
 import MyConfirm from "../../../component/common/MyConfirm";
-import TenantForm from "./TenantForm";
+// import TenantForm from "./TenantForm";
+import TenantForm from "../../../component/tenant/TenantForm";
 import "../../../styles/TenantManagement.css";
 
 const TenantManagement = ({ onClose }) => {
@@ -34,7 +35,7 @@ const TenantManagement = ({ onClose }) => {
     dispatch(getAllTenants());
   }, [dispatch]);
 
-  const filteredTenants = tenants.filter(
+  const filteredTenants = tenants?.filter(
     (tenant) =>
       tenant.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       tenant.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -284,6 +285,7 @@ const TenantManagement = ({ onClose }) => {
           tenant={editingTenant}
           onClose={handleFormClose}
           onSubmit={handleFormSubmit}
+          open={isFormOpen}
         />
       )}
     </div>

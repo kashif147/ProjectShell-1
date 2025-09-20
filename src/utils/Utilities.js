@@ -8,6 +8,7 @@ let token;
 export const baseURL = process.env.REACT_APP_BASE_URL_DEV;
 // export const  baseURL = "http://localhost:3500"
 
+
 export const insertDataFtn = async (
   apiURL = baseURL,
   url,
@@ -16,8 +17,8 @@ export const insertDataFtn = async (
   failureNotification,
   callback
 ) => {
-  // const  apiURL = process.env.REACT_APP_BASE_URL_DEV
-  const token = localStorage.getItem("token"); // Explicit declaration with const
+  const token = localStorage.getItem("token");
+
   try {
     const response = await axios.post(`${apiURL}${url}`, data, {
       headers: {
@@ -26,25 +27,31 @@ export const insertDataFtn = async (
         Authorization: `Bearer ${token}`,
       },
     });
-    if (response.status === 201 || response.status === 200) {
-      // Strict equality check
+
+    console.log("Response status:", response.status);
+    console.log("Response data:", response.data);
+
+    // ✅ Accept any 2xx status as success
+    if (response.status >= 200 && response.status < 300) {
       MyAlert("success", successNotification);
-      callback();
-      return;
-    }
-    // if (response.status === 201 || response.status ) { // Strict equality check
-
-    //   MyAlert('success', successNotification);
-    //   callback()
-    //   return
-
-    // }
-    else {
-      return MyAlert("error", `${failureNotification}`, response?.data?.error);
+      if (callback && typeof callback === "function") callback();
+      return response.data;
+    } else {
+      MyAlert(
+        "error",
+        failureNotification,
+        response?.data?.error || "Unknown error"
+      );
+      return null;
     }
   } catch (error) {
-    console.error(error?.response, "222");
-    MyAlert("error", failureNotification, error?.response?.data?.error);
+    console.error("Axios Error:", error?.response || error);
+    MyAlert(
+      "error",
+      failureNotification,
+      error?.response?.data?.error || error.message
+    );
+    return null;
   }
 };
 
@@ -84,14 +91,12 @@ export const updateFtn = async (
 ) => {
   try {
     const token = localStorage.getItem("token");
-
     // ✅ If `id` exists in data1 but not in URL, append it
     let finalEndPoint = endPoint;
     if (data1?.id && !endPoint.includes(data1.id)) {
       finalEndPoint = `${endPoint}/${data1.id}`;
     }
 
-    // ✅ Remove id from body if it was moved to URL
     const { id, ...finalData } = data1;
 
     const response = await axios.put(`${apiURL}${finalEndPoint}`, finalData, {
@@ -101,18 +106,22 @@ export const updateFtn = async (
       },
     });
 
-    // if(response?.data)
-    MyAlert("success", msg);
-
-    if (callback) callback();
-
-    return response.data;
+    if (response?.status === 200) {
+      MyAlert("success", msg);
+      if (typeof callback === "function") {
+        await callback(); // wait in case it's async
+      }
+      return response.data;
+    } else {
+      MyAlert("error", notificationsMsg?.updating?.falier);
+     
+    }
   } catch (error) {
     console.error("API Error:", error.response?.data || error.message);
-    MyAlert("error", notificationsMsg?.updating?.falier);
     throw error;
   }
 };
+
 
 export const calculateAgeFtn = (input) => {
   const dob = dayjs(input); // Create Day.js object
