@@ -1,0 +1,174 @@
+/* Policy Client Example Page Styles */
+.policy-client-container {
+  padding: 24px;
+  max-width: 1200px;
+  margin: 0 auto;
+  height: 100vh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+  /* Prevent layout shifts */
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* Webkit scrollbar styles for better appearance */
+.policy-client-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.policy-client-container::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 4px;
+}
+
+.policy-client-container::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 4px;
+}
+
+.policy-client-container::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Smooth scrolling */
+.policy-client-container {
+  scroll-behavior: smooth;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .policy-client-container {
+    padding: 16px;
+    height: calc(100vh - 60px); /* Account for mobile header */
+  }
+}
+
+/* Card spacing improvements */
+.policy-client-container .ant-card {
+  margin-bottom: 16px;
+}
+
+.policy-client-container .ant-space {
+  width: 100%;
+}
+
+/* Pre-formatted text styling */
+.policy-client-container pre {
+  max-height: 300px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #d1d5db #f3f4f6;
+}
+
+.policy-client-container pre::-webkit-scrollbar {
+  width: 6px;
+}
+
+.policy-client-container pre::-webkit-scrollbar-track {
+  background: #f3f4f6;
+  border-radius: 3px;
+}
+
+.policy-client-container pre::-webkit-scrollbar-thumb {
+  background: #d1d5db;
+  border-radius: 3px;
+}
+
+.policy-client-container pre::-webkit-scrollbar-thumb:hover {
+  background: #9ca3af;
+}
+
+/* Prevent flickering during state changes */
+.policy-client-container .ant-card {
+  transition: opacity 0.3s ease-in-out, transform 0.2s ease-in-out;
+  will-change: opacity, transform;
+}
+
+.policy-client-container .ant-spin {
+  transition: opacity 0.3s ease-in-out;
+  will-change: opacity;
+}
+
+/* Loading state styles */
+.policy-client-container.loading {
+  opacity: 0.8;
+}
+
+/* Prevent content jumping */
+.policy-client-container .ant-space {
+  min-height: 40px;
+}
+
+/* Stable card heights */
+.policy-client-container .ant-card-body {
+  min-height: 100px;
+}
+
+/* Smooth fade-in for content */
+.policy-client-container .ant-card {
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeInUp 0.4s ease-out forwards;
+}
+
+.policy-client-container .ant-card:nth-child(1) {
+  animation-delay: 0.1s;
+}
+.policy-client-container .ant-card:nth-child(2) {
+  animation-delay: 0.2s;
+}
+.policy-client-container .ant-card:nth-child(3) {
+  animation-delay: 0.3s;
+}
+.policy-client-container .ant-card:nth-child(4) {
+  animation-delay: 0.4s;
+}
+.policy-client-container .ant-card:nth-child(5) {
+  animation-delay: 0.5s;
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Prevent layout shifts during loading */
+.policy-client-container {
+  contain: layout style;
+}
+
+/* Smooth transitions for state changes */
+.policy-client-container .ant-alert {
+  transition: all 0.3s ease-in-out;
+}
+
+.policy-client-container .ant-button {
+  transition: all 0.2s ease-in-out;
+}
+
+/* Stable loading spinner */
+.policy-client-container .ant-spin-container {
+  min-height: 200px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Smooth status transitions */
+.policy-client-container .ant-card .ant-typography {
+  transition: opacity 0.3s ease-in-out;
+}
+
+/* Prevent flickering in status cards */
+.policy-client-container .ui-status-card {
+  min-height: 120px;
+  transition: all 0.3s ease-in-out;
+}
+
+.policy-client-container .ui-status-card .ant-spin {
+  transition: opacity 0.2s ease-in-out;
+}

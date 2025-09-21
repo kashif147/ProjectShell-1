@@ -95,6 +95,7 @@ const DynamicPermissionsExample = lazy(() =>
 const DynamicRoutePermissionsExample = lazy(() =>
   import("./pages/DynamicRoutePermissionsExample")
 );
+const PolicyClientExample = lazy(() => import("./pages/PolicyClientExample"));
 
 function Entry() {
   const location = useLocation();
@@ -619,6 +620,15 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <DynamicRoutePermissionsExample />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="PolicyClientExample"
+                      element={
+                        <ProtectedRoute>
+                          <PolicyClientExample />
                         </ProtectedRoute>
                       }
                     />

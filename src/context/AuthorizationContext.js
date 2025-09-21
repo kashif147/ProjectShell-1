@@ -6,6 +6,8 @@ import React, {
   useCallback,
 } from "react";
 import AuthorizationAPI from "../services/AuthorizationAPI";
+import PolicyClient from "../utils/node-policy-client";
+import { usePolicyClient } from "../utils/react-policy-hooks";
 
 const AuthorizationContext = createContext();
 
@@ -126,6 +128,17 @@ const authReducer = (state, action) => {
 // Provider component
 export const AuthorizationProvider = ({ children }) => {
   const [state, dispatch] = useReducer(authReducer, initialState);
+
+  // Initialize policy client
+  const policyClient = usePolicyClient(
+    PolicyClient,
+    process.env.REACT_APP_POLICY_SERVICE_URL || "http://localhost:5001",
+    {
+      timeout: 30000, // Increased to 30 seconds for Azure
+      retries: 3,
+      cacheTimeout: 300000, // 5 minutes
+    }
+  );
 
   // Load all authorization data from API in one call
   const loadAllAuthorizationData = useCallback(async (token) => {
@@ -342,6 +355,7 @@ export const AuthorizationProvider = ({ children }) => {
 
     // Mark initialization as complete after processing (whether authenticated or not)
     dispatch({ type: AUTH_ACTIONS.SET_INITIALIZED, payload: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loadAllAuthorizationData]);
 
   // Load permission definitions from API (fallback)
@@ -464,7 +478,7 @@ export const AuthorizationProvider = ({ children }) => {
     return hasPermission(permission) || hasPermission("read:all");
   };
 
-  // Policy-based authorization check using existing policy endpoint
+  // Policy-based authorization check using centralized policy client
   const canAccessWithPolicy = async (
     resource,
     action = "read",
@@ -474,7 +488,7 @@ export const AuthorizationProvider = ({ children }) => {
     if (!token) return false;
 
     try {
-      const result = await AuthorizationAPI.evaluatePolicy(
+      const result = await policyClient.evaluate(
         token,
         resource,
         action,
@@ -550,6 +564,7 @@ export const AuthorizationProvider = ({ children }) => {
 
   const value = {
     ...state,
+    policyClient, // Expose policy client for direct use
     setUserData,
     clearAuth,
     hasPermission,

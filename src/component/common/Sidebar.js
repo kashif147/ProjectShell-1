@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Menu, Tooltip, Button } from "antd";
 import {
   subscriptionItems,
@@ -11,28 +11,18 @@ import {
   eventsItems,
   filterMenuItemsByAuth,
 } from "../../constants/SideNavWithAuth.js";
-import { useSelector, useDispatch } from "react-redux";
-import { updateMenuLbl } from "../../features/MenuLblSlice";
+import { useSelector } from "react-redux";
 import "../../styles/Sidebar.css";
 import { useNavigate, useLocation } from "react-router-dom";
-import ProfileHeader from "./ProfileHeader.js";
 import { useAuthorization } from "../../context/AuthorizationContext";
-import {
-  PushpinOutlined,
-  PushpinFilled,
-  MenuFoldOutlined,
-  MenuUnfoldOutlined,
-} from "@ant-design/icons";
+import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
-  const permission = localStorage.getItem("userdata");
-
   // state
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
-  const dispatch = useDispatch();
   const { permissions, roles } = useAuthorization();
 
   // Debug logging
@@ -51,17 +41,20 @@ const Sidebar = () => {
   console.log("Sidebar Debug - activeKey:", activeKey);
 
   // These are the menu links for various modules, imported from a constants file
-  const itemsMap = {
-    "Subscriptions & Rewards": subscriptionItems,
-    Membership: subscriptionItems, // Map Membership to subscriptionItems
-    Finance: financeItems,
-    Correspondence: correspondenceItems,
-    Configuration: configurationItems,
-    Profiles: profileItems,
-    Reports: reportItems,
-    "Issue Management": issuesItems,
-    Events: eventsItems,
-  };
+  const itemsMap = useMemo(
+    () => ({
+      "Subscriptions & Rewards": subscriptionItems,
+      Membership: subscriptionItems, // Map Membership to subscriptionItems
+      Finance: financeItems,
+      Correspondence: correspondenceItems,
+      Configuration: configurationItems,
+      Profiles: profileItems,
+      Reports: reportItems,
+      "Issue Management": issuesItems,
+      Events: eventsItems,
+    }),
+    []
+  );
 
   // Debug: Log available itemsMap keys
   console.log(
@@ -69,11 +62,10 @@ const Sidebar = () => {
     Object.keys(itemsMap)
   );
 
-  // Get the base menu items for the active module
-  const baseMenuItems = itemsMap[activeKey] || [];
-
   // Filter menu items based on user permissions and roles
   const menuItems = useMemo(() => {
+    // Get the base menu items for the active module
+    const baseMenuItems = itemsMap[activeKey] || [];
     // Debug: Log current permissions and roles
     console.log("Sidebar Debug - Current permissions:", permissions);
     console.log("Sidebar Debug - Current roles:", roles);
@@ -103,7 +95,7 @@ const Sidebar = () => {
     console.log("Sidebar Debug - Filtered menu items length:", filtered.length);
 
     return filtered;
-  }, [baseMenuItems, permissions, roles]);
+  }, [itemsMap, activeKey, permissions, roles]);
 
   // Transform menu items for collapsed/expanded view
   const transformedMenuItems = useMemo(() => {
@@ -141,37 +133,38 @@ const Sidebar = () => {
     return transformed;
   }, [menuItems, isPinned]);
 
-  const routeKeyMap = {
-    "/Summary": "Profiles",
-    "/ClaimSummary": "Claims",
-    "/ClaimsById": "Claims",
-    "/CasesSummary": "Cases",
-    "/CasesById": "Cases",
-    "/CorrespondencesSummary": "Correspondences",
-    "/Transfers": "Transfer Requests",
-    "/Configuratin": "System Configuration",
-    "/RosterSummary": "Roster",
-    "/Batches": "Batches",
-    "/Applications": "Applications",
-    "/RemindersSummary": "Reminders",
-    "/Cancallation": "Cancellations",
-    "/ChangCateSumm": "Change Category",
-    "/Import": "Imports",
-    "/Email": "Email",
-    "/Sms": "SMS",
-    "/Notes": "Notes & Letters",
-    "/Letters": "Notes & Letters",
-    "/CorspndncDetail": "Communication History",
-    "/members": "Membership",
-    "/MembershipDashboard": "MembershipDashboard",
-    "/TenantManagement": "Tenant Management",
-    "/RoleManagement": "Role Management",
-    "/UserManagement": "User Management",
-    "/PermissionManagement": "Permission Management",
-    "/CancelledMembersReport": "Cancelled Members Report",
-  };
-
   const selectedKey = useMemo(() => {
+    const routeKeyMap = {
+      "/Summary": "Profiles",
+      "/ClaimSummary": "Claims",
+      "/ClaimsById": "Claims",
+      "/CasesSummary": "Cases",
+      "/CasesById": "Cases",
+      "/CorrespondencesSummary": "Correspondences",
+      "/Transfers": "Transfer Requests",
+      "/Configuratin": "System Configuration",
+      "/RosterSummary": "Roster",
+      "/Batches": "Batches",
+      "/Applications": "Applications",
+      "/RemindersSummary": "Reminders",
+      "/Cancallation": "Cancellations",
+      "/ChangCateSumm": "Change Category",
+      "/Import": "Imports",
+      "/Email": "Email",
+      "/Sms": "SMS",
+      "/Notes": "Notes & Letters",
+      "/Letters": "Notes & Letters",
+      "/CorspndncDetail": "Communication History",
+      "/members": "Membership",
+      "/MembershipDashboard": "MembershipDashboard",
+      "/TenantManagement": "Tenant Management",
+      "/RoleManagement": "Role Management",
+      "/UserManagement": "User Management",
+      "/PermissionManagement": "Permission Management",
+      "/CancelledMembersReport": "Cancelled Members Report",
+      "/PolicyClientExample": "Policy Client Example",
+    };
+
     const currentPath = Object.keys(routeKeyMap).find((route) =>
       location.pathname.startsWith(route)
     );
@@ -274,6 +267,11 @@ const Sidebar = () => {
           state: { search: "Cancelled Members Report" },
         });
         break;
+      case "Policy Client Example":
+        navigate("/PolicyClientExample", {
+          state: { search: "Policy Client Example" },
+        });
+        break;
       default:
         navigate("/NotDesignedYet");
     }
@@ -290,7 +288,6 @@ const Sidebar = () => {
     "/CasesById",
     "/AddNewProfile",
     "/AddClaims",
-    ,
     "/Doucmnets",
     "/Roster",
   ];

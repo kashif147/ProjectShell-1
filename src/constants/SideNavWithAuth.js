@@ -1,26 +1,17 @@
 // Enhanced sidebar items with permission requirements
 import {
   FaEnvelope,
-  FaCommentDots,
-  FaFileAlt,
   FaHistory,
-  FaUserAlt,
   FaCashRegister,
   FaCreditCard,
-  FaRegFileAlt,
-  FaRegHandshake,
   FaRegClock,
-  FaRegListAlt,
-  FaUsersCog,
   FaShieldAlt,
   FaBan,
   FaBalanceScale,
   FaClipboardCheck,
-  FaMoneyCheckAlt,
   FaCalendarAlt,
   FaUserPlus,
   FaUserMinus,
-  FaChartBar,
   FaUserEdit,
   FaUserTimes,
   FaUserLock,
@@ -32,10 +23,8 @@ import {
   FaBuilding,
   FaMapMarkerAlt,
   FaUsers,
-  FaCog,
   FaDatabase,
   FaFileImport,
-  FaFileExport,
   FaClipboardList,
   FaExclamationTriangle,
   FaGavel,
@@ -46,8 +35,6 @@ import {
   FaChartPie,
   FaFileInvoiceDollar,
   FaReceipt,
-  FaHandshake,
-  FaGift,
   FaGlobe,
   FaServer,
   FaKey,
@@ -57,16 +44,10 @@ import {
   FaBox,
   FaFileCode,
   FaWrench,
-  FaHome,
   FaBriefcase,
   FaFlag,
-  FaBook,
   FaGraduationCap,
-  FaTicketAlt,
-  FaBullhorn,
-  FaQuestionCircle,
   FaFolderOpen,
-  FaClipboard,
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
@@ -371,6 +352,13 @@ export const configurationItems = [
     ["role:read", "role:write"],
     ["SU", "GS"]
   ),
+  createMenuItem(
+    "Policy Client Example",
+    <FaShieldAlt />,
+    "Policy Client Example",
+    ["admin:read", "user:read"],
+    ["SU", "GS", "DGS"]
+  ),
 ];
 
 export const reportItems = [
@@ -529,7 +517,7 @@ export const filterMenuItemsByAuth = (
   });
 };
 
-export default {
+const SideNavWithAuth = {
   correspondenceItems,
   financeItems,
   profileItems,
@@ -540,3 +528,5 @@ export default {
   eventsItems,
   filterMenuItemsByAuth,
 };
+
+export default SideNavWithAuth;

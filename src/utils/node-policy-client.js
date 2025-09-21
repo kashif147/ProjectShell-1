@@ -159,7 +159,7 @@ class PolicyClient {
 
         if (result.success) {
           req.user = result.user;
-          req.tenantId = result.user.tenantId;
+          req.tenantId = result.user?.tenantId;
           next();
         } else {
           res.status(403).json({
@@ -205,27 +205,22 @@ class PolicyClient {
 
     for (let i = 0; i < this.retries; i++) {
       try {
-        // Use fetch if available (Node 18+, browsers), otherwise use http/https modules
-        if (typeof fetch !== "undefined") {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), this.timeout);
+        // Always use fetch in browser environments
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), this.timeout);
 
-          const response = await fetch(url, {
-            ...options,
-            signal: controller.signal,
-          });
+        const response = await fetch(url, {
+          ...options,
+          signal: controller.signal,
+        });
 
-          clearTimeout(timeoutId);
+        clearTimeout(timeoutId);
 
-          if (!response.ok) {
-            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
-          }
-
-          return await response.json();
-        } else {
-          // Fallback for browser environments without fetch
-          return await this.makeBrowserRequest(url, options);
+        if (!response.ok) {
+          throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
+
+        return await response.json();
       } catch (error) {
         lastError = error;
         if (i < this.retries - 1) {
@@ -241,38 +236,12 @@ class PolicyClient {
    * Browser-compatible HTTP request fallback
    * @private
    */
-  async makeBrowserRequest(url, options) {
-    return new Promise((resolve, reject) => {
-      const xhr = new XMLHttpRequest();
-
-      xhr.timeout = this.timeout;
-
-      xhr.onload = () => {
-        try {
-          if (xhr.status >= 200 && xhr.status < 300) {
-            resolve(JSON.parse(xhr.responseText));
-          } else {
-            reject(new Error(`HTTP ${xhr.status}: ${xhr.statusText}`));
-          }
-        } catch (error) {
-          reject(new Error("Invalid JSON response"));
-        }
-      };
-
-      xhr.onerror = () => reject(new Error("Network error"));
-      xhr.ontimeout = () => reject(new Error("Request timeout"));
-
-      xhr.open(options.method || "GET", url);
-
-      // Set headers
-      if (options.headers) {
-        Object.entries(options.headers).forEach(([key, value]) => {
-          xhr.setRequestHeader(key, value);
-        });
-      }
-
-      xhr.send(options.body || null);
-    });
+  async makeNodeRequest(url, options) {
+    // In browser environments, we should always use fetch
+    // This method is kept for compatibility but should not be called
+    throw new Error(
+      "Node.js HTTP modules not available in browser environment. Use fetch instead."
+    );
   }
 
   /**
@@ -302,19 +271,12 @@ class PolicyClient {
 }
 
 // Support both CommonJS and ES modules
-if (typeof module !== "undefined" && module.exports) {
-  // CommonJS environment
-  module.exports = PolicyClient;
-  module.exports.default = PolicyClient;
-  module.exports.PolicyClient = PolicyClient;
-}
+module.exports = PolicyClient;
+module.exports.default = PolicyClient;
+module.exports.PolicyClient = PolicyClient;
 
-// ES modules support
+// For environments that support ES modules
 if (typeof exports !== "undefined") {
   exports.default = PolicyClient;
   exports.PolicyClient = PolicyClient;
 }
-
-// Default export for ES modules
-export default PolicyClient;
-export { PolicyClient };

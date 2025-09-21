@@ -24,7 +24,7 @@ export function usePolicyClient(PolicyClientClass, baseUrl, options = {}) {
       );
     }
     return new PolicyClientClass(baseUrl, options);
-  }, [PolicyClientClass, baseUrl, JSON.stringify(options)]);
+  }, [PolicyClientClass, baseUrl, options]);
 }
 
 /**
@@ -46,7 +46,7 @@ export function useAutoDetectPolicyClient(baseUrl, options = {}) {
     throw new Error(
       "Auto-detection failed. Please use usePolicyClient with explicit PolicyClient class import"
     );
-  }, [baseUrl, JSON.stringify(options)]);
+  }, [baseUrl, options]);
 }
 
 /**
@@ -115,7 +115,7 @@ export function useAuthorization(
     return () => {
       cancelled = true;
     };
-  }, [policyClient, token, resource, action, JSON.stringify(context)]);
+  }, [policyClient, token, resource, action, context]);
 
   const recheck = useCallback(() => {
     if (policyClient && token && resource && action) {
@@ -243,7 +243,7 @@ export function useBatchAuthorization(policyClient, requests) {
     return () => {
       cancelled = true;
     };
-  }, [policyClient, JSON.stringify(requests)]);
+  }, [policyClient, requests]);
 
   return state;
 }
@@ -279,12 +279,23 @@ export function useMultiplePermissions(policyClient, token, permissionChecks) {
     error: null,
   });
 
+  // Memoize permission checks to prevent unnecessary re-renders
+  const memoizedPermissionChecks = useMemo(() => {
+    if (!permissionChecks || !Array.isArray(permissionChecks)) return [];
+    return permissionChecks.map((check) => ({
+      key: `${check.resource}_${check.action}_${JSON.stringify(
+        check.context || {}
+      )}`,
+      ...check,
+    }));
+  }, [permissionChecks]);
+
   useEffect(() => {
     if (
       !policyClient ||
       !token ||
-      !permissionChecks ||
-      permissionChecks.length === 0
+      !memoizedPermissionChecks ||
+      memoizedPermissionChecks.length === 0
     ) {
       setState({
         loading: false,
@@ -311,13 +322,14 @@ export function useMultiplePermissions(policyClient, token, permissionChecks) {
           permissions[`${resource}_${action}`] = result.success;
           completed++;
 
-          if (completed === permissionChecks.length) {
-            setState({
+          if (completed === memoizedPermissionChecks.length) {
+            setState((prevState) => ({
+              ...prevState,
               loading: false,
               permissions,
               allLoaded: true,
               error: null,
-            });
+            }));
           }
         }
       } catch (error) {
@@ -325,27 +337,31 @@ export function useMultiplePermissions(policyClient, token, permissionChecks) {
           permissions[`${resource}_${action}`] = false;
           completed++;
 
-          if (completed === permissionChecks.length) {
-            setState({
+          if (completed === memoizedPermissionChecks.length) {
+            setState((prevState) => ({
+              ...prevState,
               loading: false,
               permissions,
               allLoaded: true,
               error: error.message,
-            });
+            }));
           }
         }
       }
     };
 
-    // Start all permission checks
-    permissionChecks.forEach(({ resource, action, context }) => {
-      checkPermission(resource, action, context);
-    });
+    // Start all permission checks with a small delay to prevent rapid state changes
+    const timer = setTimeout(() => {
+      memoizedPermissionChecks.forEach(({ resource, action, context }) => {
+        checkPermission(resource, action, context);
+      });
+    }, 10);
 
     return () => {
       cancelled = true;
+      clearTimeout(timer);
     };
-  }, [policyClient, token, JSON.stringify(permissionChecks)]);
+  }, [policyClient, token, memoizedPermissionChecks]);
 
   return state;
 }
