@@ -73,35 +73,42 @@ const UserManagement = ({ onClose }) => {
   }, [dispatch]);
 
   // Filter users based on search query and filters
-  const filteredUsers = users.filter((user) => {
-    const matchesSearch =
-      user.userFullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userEmail.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      user.userMemberNumber.toLowerCase().includes(searchQuery.toLowerCase());
+ const filteredUsers = users.filter((user) => {
+  const matchesSearch =
+    (user.userFullName ?? "")
+      .toLowerCase()
+      .includes((searchQuery ?? "").toLowerCase()) ||
+    (user.userEmail ?? "")
+      .toLowerCase()
+      .includes((searchQuery ?? "").toLowerCase()) ||
+    (user.userMemberNumber ?? "")
+      .toLowerCase()
+      .includes((searchQuery ?? "").toLowerCase());
 
-    const matchesTenant =
-      selectedTenant === "all" || user.tenantId === selectedTenant;
+  const matchesTenant =
+    selectedTenant === "all" || user.tenantId === selectedTenant;
 
-    const matchesUserType =
-      selectedUserType === "all" || user.userType === selectedUserType;
+  const matchesUserType =
+    selectedUserType === "all" || user.userType === selectedUserType;
 
-    const matchesStatus =
-      selectedStatus === "all" ||
-      (selectedStatus === "active" && user.isActive) ||
-      (selectedStatus === "inactive" && !user.isActive);
+  const matchesStatus =
+    selectedStatus === "all" ||
+    (selectedStatus === "active" && user.isActive) ||
+    (selectedStatus === "inactive" && !user.isActive);
 
-    const matchesRole =
-      selectedRole === "all" ||
-      user.roles.some((role) => role._id === selectedRole);
+  const matchesRole =
+    selectedRole === "all" ||
+    user.roles?.some((role) => role._id === selectedRole);
 
-    return (
-      matchesSearch &&
-      matchesTenant &&
-      matchesUserType &&
-      matchesStatus &&
-      matchesRole
-    );
-  });
+  return (
+    matchesSearch &&
+    matchesTenant &&
+    matchesUserType &&
+    matchesStatus &&
+    matchesRole
+  );
+});
+
 
   const handleStatusToggle = (user) => {
     const newStatus = !user.isActive;
@@ -138,11 +145,11 @@ const UserManagement = ({ onClose }) => {
     setSelectedUser(null);
   };
 
-  const handleSearchChange = (e) => {
-    const value = e.target.value;
-    setLocalSearchQuery(value);
-    dispatch(setSearchQuery(value));
-  };
+const handleSearchChange = (e) => {
+  const value = e?.target?.value ?? "";
+  setLocalSearchQuery(value);
+  dispatch(setSearchQuery(value));
+};
 
   const handleTenantChange = (value) => {
     dispatch(setSelectedTenant(value));
@@ -416,7 +423,7 @@ const UserManagement = ({ onClose }) => {
                 placeholder="Select user type"
               >
                 {USER_TYPES.map((type) => (
-                  <Option key={type.value} value={type.value}>
+                  <Option key={type.value} value={type.label}>
                     {type.label}
                   </Option>
                 ))}

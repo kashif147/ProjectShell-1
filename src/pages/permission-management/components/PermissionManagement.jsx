@@ -36,7 +36,7 @@ import { useAuthorization } from "../../../context/AuthorizationContext";
 import MyConfirm from "../../../component/common/MyConfirm";
 import PermissionForm from "./PermissionForm";
 import "../../../styles/PermissionManagement.css";
-
+import { deleteFtn } from "../../../utils/Utilities";
 const { Option } = Select;
 
 const PermissionManagement = ({ onClose }) => {
@@ -99,13 +99,10 @@ const PermissionManagement = ({ onClose }) => {
     ),
   ];
 
-  // Initialize with API data if no permissions exist
-useEffect(() => {
-  dispatch(getAllPermissions());
-}, [dispatch]);
+  useEffect(() => {
+    dispatch(getAllPermissions());
+  }, [dispatch]);
 
-  // Filter permissions based on search query and filters
-  
   const filteredPermissions = permissions?.filter((permission) => {
     const matchesSearch =
       permission.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -137,7 +134,9 @@ useEffect(() => {
       message:
         "Are you sure you want to delete this permission? This action cannot be undone.",
       onConfirm: async () => {
-        await dispatch(deletePermission(permissionId));
+        await deleteFtn(process.env.REACT_APP_POLICY_SERVICE_URL, "/api/permissions", permissionId, () => {
+          dispatch(getAllPermissions());
+        });
       },
     });
   };
@@ -157,7 +156,7 @@ useEffect(() => {
       if (editingPermission) {
         await dispatch(
           updatePermission({
-            id: editingPermission.id,
+            id: editingPermission._id,
             updatedPermission: permissionData,
           })
         );
@@ -337,7 +336,7 @@ useEffect(() => {
                 opacity: record.isSystemPermission ? 0.5 : 1,
               }}
               onClick={() =>
-                !record.isSystemPermission && handleDelete(record.id)
+                !record.isSystemPermission && handleDelete(record._id)
               }
             />
           </Tooltip>

@@ -243,9 +243,9 @@ export const SAMPLE_USERS = [
 ];
 
 export const USER_TYPES = [
-  { value: "all", label: "All User Types" },
-  { value: "PORTAL", label: "Portal User" },
-  { value: "CRM", label: "CRM User" },
+  { value: "all", label: "all" },
+  { value: "PORTAL", label: "PORTAL" },
+  { value: "CRM", label: "CRM" },
 ];
 
 export const USER_STATUSES = [
