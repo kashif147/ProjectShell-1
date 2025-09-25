@@ -15,7 +15,7 @@ import {
 import { useAuthorization } from "../../../context/AuthorizationContext";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
-import { insertDataFtn } from "../../../utils/Utilities";
+import { insertDataFtn, updateFtn } from "../../../utils/Utilities";
 import { getAllPermissions } from "../../../features/PermissionSlice";
 import {useDispatch} from "react-redux"
 
@@ -23,6 +23,7 @@ const { Option } = Select;
 const { TextArea } = Input;
 
 const PermissionForm = ({ permission, onClose, onSubmit }) => {
+  console.log("Editing Permission:", permission);
   const dispatch = useDispatch()
   const { permissionDefinitions } = useAuthorization();
   const [form] = Form.useForm();
@@ -99,11 +100,14 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       form.setFieldsValue({ code: generatedCode });
     }
   };
+
   const [data, setData] = useState({
     isSystemPermission: false,
     tenantId: "39866a06-30bc-4a89-80c6-9dd9357dd453",
   });
+
   const [errors, setErrors] = useState({});
+
   const handleChange = (field, value) => {
     setData((prev) => ({ ...prev, [field]: value }));
     setErrors((prev) => ({ ...prev, [field]: "" })); // clear error on change
@@ -126,17 +130,69 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     return Object.keys(newErrors).length === 0;
   };
   const url = process.env.REACT_APP_POLICY_SERVICE_URL;
-  const handleSubmit = () => {
-    if (!validate()) return;
-    console.log("✅ Valid Permission Data:", data);
-    insertDataFtn(url,"/api/permissions",data,"Data inserted successfully", "Error inserting data",()=>{
-      dispatch(getAllPermissions())
-      onClose()
-      setErrors({})
-      setData({})
-    })
+ const handleSubmit = () => {
+  if (!validate()) return;
 
-  };
+  // if we are editing (permission exists)
+  if (permission ) {
+    // find only the changed fields
+    const updatedFields = Object.keys(data).reduce((acc, key) => {
+      if (data[key] !== permission[key]) {
+        acc[key] = data[key];
+      }
+      console.log('testiny',acc)
+      return acc;
+    }, {});
+    if (Object.keys(updatedFields).length === 0) {
+      message.info("No changes detected");
+      return;
+    }
+    updateFtn(
+      url,
+      `/api/permissions/${permission._id}`, // usually update endpoint
+      updatedFields,
+      () => {
+        dispatch(getAllPermissions());
+        onClose();
+        setErrors({});
+        setData({});
+      },
+      "Permission updated successfully",
+    );
+    
+  } else {
+    // create new
+    insertDataFtn(
+      url,
+      "/api/permissions",
+      data,
+      "Permission created successfully",
+      "Error creating permission",
+      () => {
+        dispatch(getAllPermissions());
+        onClose();
+        setErrors({});
+        setData({});
+      }
+    );
+  }
+};
+
+ useEffect(() => {
+  if (permission) {
+    setData({
+      name: permission.name || "",
+      code: permission.code || "",
+      category: permission.category || "",
+      resource: permission.resource || "",
+      action: permission.action || "",
+      level: permission.level || 0,
+      isSystemPermission: permission.isSystemPermission ?? false,
+      isActive: permission.isActive ?? true,
+      description: permission.description || "",
+    });
+  }
+}, [permission]);
   return (
     <Drawer
       title={permission ? "Edit Permission" : "Add New Permission"}

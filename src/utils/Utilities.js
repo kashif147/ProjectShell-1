@@ -6,8 +6,6 @@ import moment from "moment";
 import PolicyClient from "./node-policy-client";
 let token;
 export const baseURL = process.env.REACT_APP_BASE_URL_DEV;
-// export const  baseURL = "http://localhost:3500"
-
 
 export const insertDataFtn = async (
   apiURL = baseURL,
@@ -105,8 +103,9 @@ export const updateFtn = async (
         "Content-Type": "application/json",
       },
     });
-
+console.log("Update Response:", response);
     if (response?.status === 200) {
+
       MyAlert("success", msg);
       if (typeof callback === "function") {
         await callback(); // wait in case it's async
@@ -117,7 +116,7 @@ export const updateFtn = async (
      
     }
   } catch (error) {
-    console.error("API Error:", error.response?.data || error.message);
+    // console.error("API Error:", error.response?.data || error.message);
     throw error;
   }
 };

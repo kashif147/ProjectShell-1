@@ -15,7 +15,7 @@ const { TextArea } = Input;
 const RoleForm = ({ isEdit, onClose, role }) => {
   const dispatch = useDispatch();
 
-  const [data, setData] = useState({ level: 1 });
+  const [data, setData] = useState({ });
   const [originalData, setOriginalData] = useState({});
   const [form] = Form.useForm();
   // const { role, roleLoading, error } = useSelector((state) => state.roleById);
