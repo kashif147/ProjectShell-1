@@ -96,6 +96,12 @@ const DynamicRoutePermissionsExample = lazy(() =>
   import("./pages/DynamicRoutePermissionsExample")
 );
 const PolicyClientExample = lazy(() => import("./pages/PolicyClientExample"));
+const ProductTypesManagement = lazy(() =>
+  import("./pages/product-management/ProductTypesManagement")
+);
+const ProductManagementDemo = lazy(() =>
+  import("./pages/product-management/ProductManagementDemo")
+);
 
 function Entry() {
   const location = useLocation();
@@ -575,6 +581,24 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <PermissionManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="ProductTypesManagement"
+                      element={
+                        <ProtectedRoute>
+                          <ProductTypesManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="ProductManagementDemo"
+                      element={
+                        <ProtectedRoute>
+                          <ProductManagementDemo />
                         </ProtectedRoute>
                       }
                     />

@@ -441,6 +441,15 @@ export const configurationItems = [
     ),
     label: <div className="sidebar-label">Permission Management</div>,
   },
+  {
+    key: "Product Management",
+    icon: (
+      <div className="icon">
+        <FaBox />
+      </div>
+    ),
+    label: <div className="sidebar-label">Product Management</div>,
+  },
 ];
 export const reportItems = [
   {

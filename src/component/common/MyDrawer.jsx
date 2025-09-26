@@ -1,5 +1,14 @@
 import { React, useState, useEffect, useContext } from "react";
-import { Button, Drawer, Space, Pagination, Input, Table, Checkbox, Radio, } from "antd";
+import {
+  Button,
+  Drawer,
+  Space,
+  Pagination,
+  Input,
+  Table,
+  Checkbox,
+  Radio,
+} from "antd";
 import MySelect from "./MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
@@ -9,9 +18,9 @@ import MyDatePicker from "./MyDatePicker";
 import TextArea from "antd/es/input/TextArea";
 import { FaUserAlt } from "react-icons/fa";
 import { BiRefresh } from "react-icons/bi";
-import { useDispatch, useSelector } from 'react-redux';
-import '../../styles/MyDrawer.css'
-import { useTableColumns } from '../../context/TableColumnsContext ';
+import { useDispatch, useSelector } from "react-redux";
+import "../../styles/MyDrawer.css";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 import { ExcelContext } from "../../context/ExcelContext";
 import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
@@ -24,19 +33,64 @@ import { baseURL } from "../../utils/Utilities";
 import { useNavigate, useLocation } from "react-router-dom";
 import CustomSelect from "./CustomSelect";
 import MyInput from "./MyInput";
-import {
-  FaAngleLeft,
-} from "react-icons/fa6";
+import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import MemberSearch from "../profile/MemberSearch";
-import '../../styles/Configuration.css'
+import "../../styles/Configuration.css";
 
-
-function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader = false, isPagination = false, isContact = false, isEdit, update, isPyment = false, isAss = false, InfData, pymntAddFtn, pymentCloseFtn, isAddMemeber = false, isAprov = false, isrecursion = false, total, onChange, pageSize, showSizeChanger = true, showQuickJumper = true, isGarda, isAppRej, isMultiple, isManual, infoDataChk, isLoading, handleChangeApprove, rejFtn, draftFtn, nextPrevData, nextFtn, PrevFtn, status }) {
-  const { selectLokups, lookupsForSelect, contactTypes, disableFtn, isDisable } = useTableColumns();
-  const { excelData, selectedRowIndex, selectedRowData } = useContext(ExcelContext);
-  const { applications, applicationsLoading } = useSelector((state) => state.applications);
-  const dispatch = useDispatch()
+function MyDrawer({
+  title,
+  open,
+  onClose,
+  children,
+  add,
+  width = 900,
+  isHeader = false,
+  isPagination = false,
+  isContact = false,
+  isEdit,
+  update,
+  isPyment = false,
+  isAss = false,
+  InfData,
+  pymntAddFtn,
+  pymentCloseFtn,
+  isAddMemeber = false,
+  isAprov = false,
+  isrecursion = false,
+  total,
+  onChange,
+  pageSize,
+  showSizeChanger = true,
+  showQuickJumper = true,
+  isGarda,
+  isAppRej,
+  isMultiple,
+  isManual,
+  infoDataChk,
+  isLoading,
+  handleChangeApprove,
+  rejFtn,
+  draftFtn,
+  nextPrevData,
+  nextFtn,
+  PrevFtn,
+  status,
+  extra,
+}) {
+  const {
+    selectLokups,
+    lookupsForSelect,
+    contactTypes,
+    disableFtn,
+    isDisable,
+  } = useTableColumns();
+  const { excelData, selectedRowIndex, selectedRowData } =
+    useContext(ExcelContext);
+  const { applications, applicationsLoading } = useSelector(
+    (state) => state.applications
+  );
+  const dispatch = useDispatch();
   const drawerInputsInitalValues = {
     Solicitors: {
       ContactName: "",
@@ -47,28 +101,28 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
         StreetOrRoad: "",
         AreaOrTown: "",
         CityCountyOrPostCode: "",
-        Eircode: ""
+        Eircode: "",
       },
       ContactTypeID: "",
-      isDeleted: false
+      isDeleted: false,
     },
-  }
-  const [contactDrawer, setcontactDrawer] = useState(false)
+  };
+  const [contactDrawer, setcontactDrawer] = useState(false);
   useEffect(() => {
     if (contactDrawer) {
       dispatch(getContactTypes());
     }
   }, [contactDrawer]);
-  const Navigate = useNavigate()
+  const Navigate = useNavigate();
   const location = useLocation();
-  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues)
-  const [isPayment, setisPayment] = useState(false)
-  const [isAproved, setisAproved] = useState(false)
-  const [isRecursion, setisRecursion] = useState(false)
-  const [selectionType, setSelectionType] = useState('checkbox');
+  const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
+  const [isPayment, setisPayment] = useState(false);
+  const [isAproved, setisAproved] = useState(false);
+  const [isRecursion, setisRecursion] = useState(false);
+  const [selectionType, setSelectionType] = useState("checkbox");
   const [recData, setrecData] = useState({
-    timeDur: 'Day'
-  })
+    timeDur: "Day",
+  });
   const [contact, setContact] = useState({
     Surname: "",
     Forename: "",
@@ -99,13 +153,17 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       },
     }));
   };
-  const [isEndDate, setisEndDate] = useState(true)
+  const [isEndDate, setisEndDate] = useState(true);
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
+      console.log(
+        `selectedRowKeys: ${selectedRowKeys}`,
+        "selectedRows: ",
+        selectedRows
+      );
     },
     getCheckboxProps: (record) => ({
-      disabled: record.name === 'Disabled User',
+      disabled: record.name === "Disabled User",
       name: record.name,
     }),
   };
@@ -171,29 +229,35 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
 
   const CriticalIllnessSchemePaymentsClm = [
     {
-      title: 'File Reference',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      title: "File Reference",
+      dataIndex: "RegionCode",
+      key: "RegionCode",
     },
     {
-      title: 'Amount',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      title: "Amount",
+      dataIndex: "RegionName",
+      key: "RegionName",
     },
     {
-      title: 'Payment Date',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      title: "Payment Date",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
     {
-      title: 'Cheque No',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      title: "Cheque No",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
 
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
           Action
         </div>
@@ -201,7 +265,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
         </Space>
@@ -210,39 +274,45 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
   ];
   const Clm = [
     {
-      title: 'Meeting Type',
-      dataIndex: 'RegionCode',
-      key: 'RegionCode',
+      title: "Meeting Type",
+      dataIndex: "RegionCode",
+      key: "RegionCode",
     },
     {
-      title: 'Meeting',
-      dataIndex: 'RegionName',
-      key: 'RegionName',
+      title: "Meeting",
+      dataIndex: "RegionName",
+      key: "RegionName",
     },
     {
-      title: 'Meeting Date',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      title: "Meeting Date",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
     {
-      title: 'Meeting APL',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      title: "Meeting APL",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
     {
-      title: 'APL Date',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      title: "APL Date",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
     {
-      title: 'Status',
-      dataIndex: 'DisplayName',
-      key: 'DisplayName',
+      title: "Status",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
 
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
           Action
         </div>
@@ -250,7 +320,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
+        <Space size="middle">
           <FaEdit size={16} style={{ marginRight: "10px" }} />
           <AiFillDelete size={16} />
         </Space>
@@ -363,18 +433,16 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
     { key: "Day", label: "Day" },
     { key: "Week", label: "Week" },
     { key: "Month", label: "Month" },
-    { key: "Year", label: "Year" }
-  ]
+    { key: "Year", label: "Year" },
+  ];
   const updateTimeDur = (name, value) => {
     setrecData((prevData) => ({
       ...prevData, // Spread the previous state to retain other properties
       [name]: value, // Update only the `timeDur` property
     }));
   };
-  const { contactsLoading, } = useSelector(
-    (state) => state.contactType
-  );
-  const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false })
+  const { contactsLoading } = useSelector((state) => state.contactType);
+  const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false });
   const addIdKeyToLookup = (idValue, drawer) => {
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
@@ -389,27 +457,30 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
   };
   const [data, setdata] = useState({
     Solicitors: [],
-  })
+  });
   const IsUpdateFtn = (drawer, value, data) => {
     if (value == false) {
       setisUpdateRec((prev) => ({
         ...prev,
         [drawer]: false,
       }));
-      resetCounteries(drawer)
-      return
+      resetCounteries(drawer);
+      return;
     }
     setisUpdateRec((prev) => ({
       ...prev,
       [drawer]: value,
     }));
 
-    const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce((acc, key) => {
-      if (data.hasOwnProperty(key)) {
-        acc[key] = data[key];
-      }
-      return acc;
-    }, {});
+    const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce(
+      (acc, key) => {
+        if (data.hasOwnProperty(key)) {
+          acc[key] = data[key];
+        }
+        return acc;
+      },
+      {}
+    );
 
     setdrawerIpnuts((prev) => ({
       ...prev,
@@ -467,7 +538,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
     },
     {
       title: (
-        <div style={{ display: "flex", alignItems: "center", justifyContent: "center" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
           <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
           Action
         </div>
@@ -475,21 +552,28 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       key: "action",
       align: "center",
       render: (_, record) => (
-        <Space size="middle" >
-          <FaEdit size={16} style={{ marginRight: "10px" }} onClick={() => {
-            IsUpdateFtn('Solicitors', !isUpdateRec?.Solicitors, record)
-            addIdKeyToLookup(record?._id, "Solicitors")
-          }} />
-          <AiFillDelete size={16} onClick={() =>
-            MyConfirm({
-              title: 'Confirm Deletion',
-              message: 'Do You Want To Delete This Item?',
-              onConfirm: async () => {
-                await deleteFtn(`${baseURL}/contact`, record?._id,);
-                dispatch(getContacts())
-              },
-            })
-          } />
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn("Solicitors", !isUpdateRec?.Solicitors, record);
+              addIdKeyToLookup(record?._id, "Solicitors");
+            }}
+          />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/contact`, record?._id);
+                  dispatch(getContacts());
+                },
+              })
+            }
+          />
         </Space>
       ),
     },
@@ -499,18 +583,22 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
     }));
-    if (callback & typeof callback === 'function') {
-      callback()
+    if (callback & (typeof callback === "function")) {
+      callback();
     }
   };
   const addFtn = () => {
-    if (!validateSolicitors('Solicitors')) return;
-    insertDataFtn(`/contact`, drawerIpnuts?.Solicitors,
-      'Data inserted successfully:', 'Data did not insert:', () => {
-        resetCounteries('Solicitors')
-      })
-  }
-
+    if (!validateSolicitors("Solicitors")) return;
+    insertDataFtn(
+      `/contact`,
+      drawerIpnuts?.Solicitors,
+      "Data inserted successfully:",
+      "Data did not insert:",
+      () => {
+        resetCounteries("Solicitors");
+      }
+    );
+  };
 
   return (
     <Drawer
@@ -520,204 +608,207 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
       onClose={onClose}
       open={open}
       extra={
-        <div className="d-flex space-evenly gap-3" >
-          {
-            isContact && (
-              <div className="mx-auto" style={{ marginRight: '80%' }}>
-                <Button onClick={() => setcontactDrawer(!contactDrawer)}
-                  className="butn" style={{ color: '#215E97', marginRight: '250px' }}>
+        extra || (
+          <div className="d-flex space-evenly gap-3">
+            {isContact && (
+              <div className="mx-auto" style={{ marginRight: "80%" }}>
+                <Button
+                  onClick={() => setcontactDrawer(!contactDrawer)}
+                  className="butn"
+                  style={{ color: "#215E97", marginRight: "250px" }}
+                >
                   Add IRO
                 </Button>
               </div>
-            )
-          }
-          {
-            isAddMemeber && (
+            )}
+            {isAddMemeber && (
               <div className="mx-auto" style={{}}>
-                <Button onClick={() => setcontactDrawer(!contactDrawer)}
-                  className="butn" style={{ color: '#215E97', marginLeft: '-80%' }}>
+                <Button
+                  onClick={() => setcontactDrawer(!contactDrawer)}
+                  className="butn"
+                  style={{ color: "#215E97", marginLeft: "-80%" }}
+                >
                   <FaUserAlt />
                   Add Member
                 </Button>
               </div>
-            )
-          }
-          {
-            isPyment && (
-              <div className="" style={{ marginRight: '' }}>
-                <Button onClick={() => setisPayment(!isPayment)}
-                  className="butn secondary me-2" style={{ color: '#215E97', marginRight: '' }}>
+            )}
+            {isPyment && (
+              <div className="" style={{ marginRight: "" }}>
+                <Button
+                  onClick={() => setisPayment(!isPayment)}
+                  className="butn secondary me-2"
+                  style={{ color: "#215E97", marginRight: "" }}
+                >
                   Add Payment
                 </Button>
               </div>
-            )
-          }
-          {
-            isAprov && (
-              <div className="mx-auto" style={{ marginRight: '', color: '#215E97', }}>
-                <Button onClick={() => setisAproved(!isAproved)} className="butn secondary me-2" style={{ color: '#215E97', }}
-
+            )}
+            {isAprov && (
+              <div
+                className="mx-auto"
+                style={{ marginRight: "", color: "#215E97" }}
+              >
+                <Button
+                  onClick={() => setisAproved(!isAproved)}
+                  className="butn secondary me-2"
+                  style={{ color: "#215E97" }}
                 >
                   Approvals
-
                 </Button>
               </div>
-            )
-          }
-          {
-            isrecursion && (
-              <div className="mx-auto" style={{ marginRight: '', color: '#215E97', }}>
-                <Button onClick={() => setisRecursion(!isRecursion)} className="butn secondary me-2" style={{ color: '#215E97', }}
+            )}
+            {isrecursion && (
+              <div
+                className="mx-auto"
+                style={{ marginRight: "", color: "#215E97" }}
+              >
+                <Button
+                  onClick={() => setisRecursion(!isRecursion)}
+                  className="butn secondary me-2"
+                  style={{ color: "#215E97" }}
                 >
                   Recursion
                   <BiRefresh style={{ fontSize: "24px" }} />
                 </Button>
               </div>
-            )
-          }
+            )}
 
-          <Space>
-            {
-              title === "Registration Request" && (
-                <MemberSearch />
-              )
-            }
-            {
-              isAss == true && (
+            <Space>
+              {title === "Registration Request" && <MemberSearch />}
+              {isAss == true && (
                 <>
                   <Button className="gray-btn butn" onClick={onClose}>
                     <FaFile />
                     NOK
                   </Button>
-                  <Button className="gray-btn butn" >
+                  <Button className="gray-btn butn">
                     <FaFile />
                     Ins.Co.
                   </Button>
                 </>
-              )
-            }
+              )}
 
-            {
-              isMultiple?.isGardaCheckbx && (
-                <Checkbox value={isMultiple?.value} onChange={isMultiple?.multipleFtn}>Bulk Registration</Checkbox>
-              )
-            }
-            {isAppRej && (
-              <Radio.Group value={""}>
-                <Radio value="approved" onClick={handleChangeApprove} >
-                  Approve
-                </Radio>
-                <CommonPopConfirm
-                  title="Are you sure you want to reject?"
-                  onConfirm={rejFtn}
+              {isMultiple?.isGardaCheckbx && (
+                <Checkbox
+                  value={isMultiple?.value}
+                  onChange={isMultiple?.multipleFtn}
                 >
-                  <Radio value="rejected">Reject</Radio>
-                </CommonPopConfirm>
-              </Radio.Group>
-            )}
+                  Bulk Registration
+                </Checkbox>
+              )}
+              {isAppRej && (
+                <Radio.Group value={""}>
+                  <Radio value="approved" onClick={handleChangeApprove}>
+                    Approve
+                  </Radio>
+                  <CommonPopConfirm
+                    title="Are you sure you want to reject?"
+                    onConfirm={rejFtn}
+                  >
+                    <Radio value="rejected">Reject</Radio>
+                  </CommonPopConfirm>
+                </Radio.Group>
+              )}
 
-
-            {/* <Button className="butn secoundry-btn me-4" onClick={onClose}>
+              {/* <Button className="butn secoundry-btn me-4" onClick={onClose}>
               Close
             </Button> */}
-            {
-              !isGarda && status === "undefined" ? (
+              {!isGarda && status === "undefined" ? (
                 <Button
                   className="butn primary-btn"
                   onClick={async () => {
                     if (isDisable && location?.pathname !== "/Batches") {
                       disableFtn(false);
-                    }
-                    else if (!isEdit && location?.pathname !== "/Batches") {
+                    } else if (!isEdit && location?.pathname !== "/Batches") {
                       add();
-                    }
-                    else if (location?.pathname === "/Batches") {
+                    } else if (location?.pathname === "/Batches") {
                       await Navigate("/BatchMemberSummary", {
                         state: { search: "BatchMemberSummary" },
                       });
                       onClose();
-                    }
-                    else {
+                    } else {
                       update();
                     }
                   }}
                 >
-                  {
-                    !isDisable && !isManual && title !== "Bulk Registration" && title !== "Registration Request"
-                      ? "Add"
-                      : "Save"
-                  }
+                  {!isDisable &&
+                  !isManual &&
+                  title !== "Bulk Registration" &&
+                  title !== "Registration Request"
+                    ? "Add"
+                    : "Save"}
+                </Button>
+              ) : status === "Draft" ? (
+                <Button className="butn primary-btn" onClick={add}>
+                  Add
                 </Button>
               ) : (
-                status === "Draft" ?
-                  <Button
-                    className="butn primary-btn"
-                    onClick={add}
-                  >
-                    Add
-                  </Button>
-                  : 
-                  <Button
-                    className="butn primary-btn"
-                    onClick={add}
-                  >
-                    Submit
-                  </Button>
+                <Button className="butn primary-btn" onClick={add}>
+                  Submit
+                </Button>
+              )}
 
-              )
-            }
-
-            {
-              (isGarda || isManual) && (
-                <div style={{ display: "flex", justifyContent: "center", alignItems: "center" }}>
+              {(isGarda || isManual) && (
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "center",
+                    alignItems: "center",
+                  }}
+                >
                   <Button className="me-1 gray-btn butn" onClick={PrevFtn}>
                     <FaAngleLeft className="deatil-header-icon" />
                   </Button>
-                  <p style={{ fontWeight: "500", fontSize: "14px", margin: "0 8px" }}>{nextPrevData?.currentApp} of {nextPrevData?.total}</p>
+                  <p
+                    style={{
+                      fontWeight: "500",
+                      fontSize: "14px",
+                      margin: "0 8px",
+                    }}
+                  >
+                    {nextPrevData?.currentApp} of {nextPrevData?.total}
+                  </p>
                   <Button className="me-1 gray-btn butn" onClick={nextFtn}>
                     <FaAngleRight className="deatil-header-icon" />
                   </Button>
                 </div>
-              )
-            }
+              )}
+            </Space>
+            {title === "Registration Request" && (
+              <>
+                <Button className="butn primary-btn" onClick={draftFtn}>
+                  Save
+                </Button>
 
-          </Space>
-          {
-            title === "Registration Request" &&
-            <>
-              <Button className="butn primary-btn" onClick={draftFtn}>
-                Save
-              </Button>
-
-              {/* <Button className="butn primary-btn" onClick={add}>
+                {/* <Button className="butn primary-btn" onClick={add}>
                 Submit
               </Button> */}
-            </>
-          }
-        </div>
+              </>
+            )}
+          </div>
+        )
       }
     >
-      <div className="drawer-main-cntainer" style={{ backgroundColor: '#f6f9fc' }}>
-
+      <div
+        className="drawer-main-cntainer"
+        style={{ backgroundColor: "#f6f9fc" }}
+      >
         {children}
-        {
-          isPagination &&
-          (
-            <div style={{ width: '100%', backgroundColor: 'red' }}>
-              <div className="bottom-div">
-                <Pagination
-                  total={total}
-                  showSizeChanger={showSizeChanger}
-                  showQuickJumper={showQuickJumper}
-                  showTotal={(total) => `Total ${total} items`}
-                  onChange={onChange}
-                  pageSize={pageSize}
-                />
-
-              </div>
+        {isPagination && (
+          <div style={{ width: "100%", backgroundColor: "red" }}>
+            <div className="bottom-div">
+              <Pagination
+                total={total}
+                showSizeChanger={showSizeChanger}
+                showQuickJumper={showQuickJumper}
+                showTotal={(total) => `Total ${total} items`}
+                onChange={onChange}
+                pageSize={pageSize}
+              />
             </div>
-          )
-        }
+          </div>
+        )}
       </div>
 
       <Drawer
@@ -727,15 +818,21 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
         title="Contacts"
         extra={
           <Space>
-            <Button className="butn secoundry-btn" onClick={() => setcontactDrawer(!contactDrawer)}>
+            <Button
+              className="butn secoundry-btn"
+              onClick={() => setcontactDrawer(!contactDrawer)}
+            >
               Close
             </Button>
             <Button
               className="butn primary-btn"
               onClick={isUpdate?.Contacts == true ? update : addFtn}
-              onKeyDown={(event) => event.key === "Enter" && (isUpdate?.Contacts ? update() : addFtn())}
+              onKeyDown={(event) =>
+                event.key === "Enter" &&
+                (isUpdate?.Contacts ? update() : addFtn())
+              }
             >
-              {isUpdate?.Contacts == true ? "Save" : 'Add'}
+              {isUpdate?.Contacts == true ? "Save" : "Add"}
             </Button>
           </Space>
         }
@@ -747,7 +844,7 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               placeholder="Select Contact type"
               options={selectLokups?.contactTypes}
               value={drawerIpnuts?.Solicitors?.ContactTypeID}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactTypeID', e)}
+              onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
               required
               hasError={!!errors?.Solicitors?.ContactTypeID}
               errorMessage={errors?.Solicitors?.ContactTypeID}
@@ -764,7 +861,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="Forename"
               placeholder="Enter forename"
               value={drawerIpnuts?.Solicitors?.Forename}
-              onChange={(e) => drawrInptChng('Solicitors', 'Forename', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "Forename", e.target.value)
+              }
               required
               hasError={!!errors?.Solicitors?.Forename}
               errorMessage={errors?.Solicitors?.Forename}
@@ -775,7 +874,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="Surname"
               placeholder="Enter surname"
               value={drawerIpnuts?.Solicitors?.Surname}
-              onChange={(e) => drawrInptChng('Solicitors', 'Surname', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "Surname", e.target.value)
+              }
               required
               hasError={!!errors?.Solicitors?.Surname}
               errorMessage={errors?.Solicitors?.Surname}
@@ -788,7 +889,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               type="email"
               placeholder="Enter email"
               value={drawerIpnuts?.Solicitors?.ContactEmail}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactEmail', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "ContactEmail", e.target.value)
+              }
               required
               hasError={!!errors?.Solicitors?.ContactEmail}
               errorMessage={errors?.Solicitors?.ContactEmail}
@@ -800,7 +903,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="ContactPhone"
               placeholder="Enter mobile number"
               value={drawerIpnuts?.Solicitors?.ContactPhone}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactPhone', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "ContactPhone", e.target.value)
+              }
               required
               hasError={!!errors?.Solicitors?.ContactPhone}
               errorMessage={errors?.Solicitors?.ContactPhone}
@@ -812,7 +917,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="BuildingOrHouse"
               placeholder="Enter building/house"
               value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.BuildingOrHouse', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.BuildingOrHouse",
+                  e.target.value
+                )
+              }
               required
               hasError={!!errors?.Solicitors?.BuildingOrHouse}
               errorMessage={errors?.Solicitors?.BuildingOrHouse}
@@ -824,7 +935,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="StreetOrRoad"
               placeholder="Enter street/road"
               value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.StreetOrRoad', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.StreetOrRoad",
+                  e.target.value
+                )
+              }
               style={{ width: "25%" }}
             />
 
@@ -833,7 +950,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="AreaOrTown"
               placeholder="Enter area/town"
               value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.AreaOrTown', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.AreaOrTown",
+                  e.target.value
+                )
+              }
               required
               hasError={!!errors?.Solicitors?.AreaOrTown}
               errorMessage={errors?.Solicitors?.AreaOrTown}
@@ -844,8 +967,16 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               label="County, City or Postcode:"
               name="CityCountyOrPostCode"
               placeholder="Enter county/city/postcode"
-              value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.CityCountyOrPostCode', e.target.value)}
+              value={
+                drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode
+              }
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.CityCountyOrPostCode",
+                  e.target.value
+                )
+              }
               style={{ width: "25%" }}
             />
 
@@ -854,7 +985,13 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               name="Eircode"
               placeholder="Enter Eircode"
               value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-              onChange={(e) => drawrInptChng('Solicitors', 'ContactAddress.Eircode', e.target.value)}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.Eircode",
+                  e.target.value
+                )
+              }
               style={{ width: "25%" }}
             />
           </div>
@@ -878,133 +1015,138 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
           </div>
         </div>
       </Drawer>
-      <Drawer open={isRecursion}
+      <Drawer
+        open={isRecursion}
         onClose={() => setisRecursion(!isRecursion)}
         width="526px"
         title="Repeat"
         extra={
           <Space>
-            <Button className="butn secoundry-btn" onClick={() => setisRecursion(!isRecursion)}>
+            <Button
+              className="butn secoundry-btn"
+              onClick={() => setisRecursion(!isRecursion)}
+            >
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={() => setisRecursion(!isRecursion)}>
+            <Button
+              className="butn primary-btn"
+              onClick={() => setisRecursion(!isRecursion)}
+            >
               Add
             </Button>
-
           </Space>
         }
-
       >
-        <div className='transfer-main-cont'>
+        <div className="transfer-main-cont">
           <div className="details-drawer mb-4">
             <p>{InfData?.gardaRegNo}45217A</p>
             <p>{InfData?.fullname}Jack Smith</p>
             <p>Garda</p>
           </div>
           <div className="row">
-            <div className="col-md-2">
-              Start
-            </div>
+            <div className="col-md-2">Start</div>
             <div className="col-md-10">
               <MyDatePicker />
             </div>
           </div>
           <div className="row mt-4">
             <div className="col-md-2">
-              <BiRefresh style={{ fontSize: '24px' }} />
+              <BiRefresh style={{ fontSize: "24px" }} />
             </div>
             <div className="col-md-10">
               <div className="d-flex align-items-baseline">
-                <div className="w-25 me-2">
-                  Repeat Every
-                </div>
-                <div className="w-10 me-2" >
+                <div className="w-25 me-2">Repeat Every</div>
+                <div className="w-10 me-2">
                   <MySelect options={optionForSelect} />
                 </div>
-                <div className="w-25 me-2" >
-                  <MySelect onChange={(e) => updateTimeDur('timeDur', e)} options={optionForyearorday} value={recData?.timeDur} />
+                <div className="w-25 me-2">
+                  <MySelect
+                    onChange={(e) => updateTimeDur("timeDur", e)}
+                    options={optionForyearorday}
+                    value={recData?.timeDur}
+                  />
                 </div>
               </div>
-              {
-                (recData?.timeDur === "Week" || recData?.timeDur === "Day") && (
-                  <div>
-
-                    <div className="d-flex mt-4 align-items-baseline">
-                      <div className="day-con ">
-                        M
-                      </div>
-                      <div className="day-con">
-                        T
-                      </div>
-                      <div className="day-con">
-                        W
-                      </div>
-                      <div className="day-con">
-                        T
-                      </div>
-                      <div className="day-con">
-                        F
-                      </div>
-                      <div className="day-con">
-                        S
-                      </div>
-                      <div className="day-con">
-                        S
-                      </div>
-                    </div>
-                    <div className="pt-3 d-flex flex-column ">
-                      <p>
-                        Occurs every Tuesday until{
-                          isEndDate === true && (recData?.timeDur === "Week" || recData?.timeDur === "Day") && (
-                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer", color: '#215E97' }}> Choose an end date</span>
-                          )
-                        }
-                      </p>
-                      {
-                        isEndDate === false && (recData?.timeDur === "Week" || recData?.timeDur === "Day") &&
-                        (
-                          <div className="d-flex ">
-                            <div style={{ width: '50%' }} className="me-4">
-                              <MyDatePicker />
-                            </div>
-                            <p style={{ cursor: 'pointer', color: '#215E97' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
-                          </div>)
-                      }
-                    </div>
+              {(recData?.timeDur === "Week" || recData?.timeDur === "Day") && (
+                <div>
+                  <div className="d-flex mt-4 align-items-baseline">
+                    <div className="day-con ">M</div>
+                    <div className="day-con">T</div>
+                    <div className="day-con">W</div>
+                    <div className="day-con">T</div>
+                    <div className="day-con">F</div>
+                    <div className="day-con">S</div>
+                    <div className="day-con">S</div>
                   </div>
-                )}{
-                (recData?.timeDur === "Year" || recData?.timeDur === "Month") &&
-                (
-                  <div className="d-flex flex-column pt-4">
-                    <Checkbox>
-                      On December 16
-                    </Checkbox>
-                    <Checkbox>
-                      On third Monday of December
-                    </Checkbox>
-                    <div className="pt-3 d-flex flex-column">
-                      <p>
-                        Occur on day 16 of every month{
-                          isEndDate === true && (recData?.timeDur === "Year" || recData?.timeDur === "Month") && (
-                            <span onClick={() => setisEndDate(false)} style={{ cursor: "pointer", color: '#215E97' }}> Choose an end date</span>
-                          )
-                        }
-                      </p>
-                      {
-                        isEndDate === false && (
-                          <div className="d-flex ">
-                            <div style={{ width: '50%' }} className="me-4">
-                              <MyDatePicker />
-                            </div>
-                            <p style={{ cursor: 'pointer', color: '#215E97' }} onClick={() => setisEndDate(true)}>Remove end Date</p>
+                  <div className="pt-3 d-flex flex-column ">
+                    <p>
+                      Occurs every Tuesday until
+                      {isEndDate === true &&
+                        (recData?.timeDur === "Week" ||
+                          recData?.timeDur === "Day") && (
+                          <span
+                            onClick={() => setisEndDate(false)}
+                            style={{ cursor: "pointer", color: "#215E97" }}
+                          >
+                            {" "}
+                            Choose an end date
+                          </span>
+                        )}
+                    </p>
+                    {isEndDate === false &&
+                      (recData?.timeDur === "Week" ||
+                        recData?.timeDur === "Day") && (
+                        <div className="d-flex ">
+                          <div style={{ width: "50%" }} className="me-4">
+                            <MyDatePicker />
                           </div>
-                        )
-                      }
-                    </div>
+                          <p
+                            style={{ cursor: "pointer", color: "#215E97" }}
+                            onClick={() => setisEndDate(true)}
+                          >
+                            Remove end Date
+                          </p>
+                        </div>
+                      )}
                   </div>
-
-                )
-              }
+                </div>
+              )}
+              {(recData?.timeDur === "Year" ||
+                recData?.timeDur === "Month") && (
+                <div className="d-flex flex-column pt-4">
+                  <Checkbox>On December 16</Checkbox>
+                  <Checkbox>On third Monday of December</Checkbox>
+                  <div className="pt-3 d-flex flex-column">
+                    <p>
+                      Occur on day 16 of every month
+                      {isEndDate === true &&
+                        (recData?.timeDur === "Year" ||
+                          recData?.timeDur === "Month") && (
+                          <span
+                            onClick={() => setisEndDate(false)}
+                            style={{ cursor: "pointer", color: "#215E97" }}
+                          >
+                            {" "}
+                            Choose an end date
+                          </span>
+                        )}
+                    </p>
+                    {isEndDate === false && (
+                      <div className="d-flex ">
+                        <div style={{ width: "50%" }} className="me-4">
+                          <MyDatePicker />
+                        </div>
+                        <p
+                          style={{ cursor: "pointer", color: "#215E97" }}
+                          onClick={() => setisEndDate(true)}
+                        >
+                          Remove end Date
+                        </p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
               {/* <div>
                 {
                   isEndDate === false && (
@@ -1020,42 +1162,41 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             </div>
           </div>
         </div>
-
       </Drawer>
-      <Drawer open={isPayment}
+      <Drawer
+        open={isPayment}
         onClose={() => setisPayment(!isPayment)}
         width="526px"
         title="Critical Illness Scheme Payments"
         extra={
           <Space>
-            <Button className="butn secoundry-btn" onClick={() => setisPayment(!isPayment)}>
+            <Button
+              className="butn secoundry-btn"
+              onClick={() => setisPayment(!isPayment)}
+            >
               Close
             </Button>
             <Button className="butn primary-btn" onClick={pymntAddFtn}>
               Add
             </Button>
-
           </Space>
         }
-
       >
-        <div className='transfer-main-cont'>
+        <div className="transfer-main-cont">
           <div className="details-drawer mb-4">
             <p>{InfData?.gardaRegNo}</p>
             <p>{InfData?.fullname}</p>
             <p>Garda</p>
           </div>
-          <div className='w-100'>
-
+          <div className="w-100">
             <div className="drawer-inpts-container ">
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>File Reference :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
+                <div className="inpt-sub-con">
                   <Input />
-
                 </div>
                 <p className="error"></p>
               </div>
@@ -1064,11 +1205,10 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Payment Amount :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
+                <div className="inpt-sub-con">
                   <Input placeholder="0.00" type="number" />
-
                 </div>
                 <p className="error"></p>
               </div>
@@ -1077,9 +1217,9 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Payment Date :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
+                <div className="inpt-sub-con">
                   <MyDatePicker />
                 </div>
                 <p className="error"></p>
@@ -1089,11 +1229,10 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Cheque # :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
+                <div className="inpt-sub-con">
                   <Input />
-
                 </div>
                 <p className="error"></p>
               </div>
@@ -1102,11 +1241,10 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Refund Amount :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
+                <div className="inpt-sub-con">
                   <Input placeholder="0.00" disabled={true} />
-
                 </div>
                 <p className="error"></p>
               </div>
@@ -1115,29 +1253,32 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Refund Date :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
+                <div className="inpt-sub-con">
                   <MyDatePicker />
-
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container " style={{ height: '100px' }}>
+            <div
+              className="drawer-inpts-container "
+              style={{ height: "100px" }}
+            >
               <div className="drawer-lbl-container" style={{ width: "33%" }}>
                 <p>Memo :</p>
               </div>
-              <div className="inpt-con" >
+              <div className="inpt-con">
                 <p className="star-white">*</p>
-                <div className="inpt-sub-con" >
-                  <TextArea rows={4} placeholder="Autosize height based on content lines" />
-
+                <div className="inpt-sub-con">
+                  <TextArea
+                    rows={4}
+                    placeholder="Autosize height based on content lines"
+                  />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-
           </div>
           <h5>History</h5>
           <Table
@@ -1154,42 +1295,49 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             bordered
           />
         </div>
-
       </Drawer>
-      <Drawer open={isAproved}
+      <Drawer
+        open={isAproved}
         onClose={() => setisAproved(!isAproved)}
         width="867px"
         title="Approvals"
         extra={
           <Space>
-            <Button className="butn secoundry-btn" onClick={() => setisAproved(!isAproved)}>
+            <Button
+              className="butn secoundry-btn"
+              onClick={() => setisAproved(!isAproved)}
+            >
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={() => { }}>
+            <Button className="butn primary-btn" onClick={() => {}}>
               Add
             </Button>
-
           </Space>
         }
-
       >
-        <div className='transfer-main-cont'>
+        <div className="transfer-main-cont">
           <div className="details-drawer mb-4">
             <p>{InfData?.gardaRegNo}</p>
             <p>{InfData?.fullname}</p>
             <p>Garda</p>
           </div>
-          <div className='w-100'>
+          <div className="w-100">
             <div className="row">
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Meeting Type :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star">*</p>
-                    <div className="inpt-sub-con" >
-                      <MySelect placeholder="Select Meeting Type" isSimple={true} />
+                    <div className="inpt-sub-con">
+                      <MySelect
+                        placeholder="Select Meeting Type"
+                        isSimple={true}
+                      />
                     </div>
                     <p className="error"></p>
                   </div>
@@ -1197,30 +1345,36 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               </div>
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p></p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star-white">*</p>
-                    <div className="inpt-sub-con" >
-
-                    </div>
+                    <div className="inpt-sub-con"></div>
                     <p className="error"></p>
                   </div>
                 </div>
               </div>
-
             </div>
             <div className="row">
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Meeting Date :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star">*</p>
-                    <div className="inpt-sub-con" >
-                      <MySelect placeholder="Select Meeting Type" isSimple={true} />
+                    <div className="inpt-sub-con">
+                      <MySelect
+                        placeholder="Select Meeting Type"
+                        isSimple={true}
+                      />
                     </div>
                     <p className="error"></p>
                   </div>
@@ -1228,31 +1382,35 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               </div>
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Meeting Date APL :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star-white">*</p>
-                    <div className="inpt-sub-con" >
+                    <div className="inpt-sub-con">
                       <MyDatePicker />
                     </div>
                     <p className="error"></p>
                   </div>
                 </div>
-
               </div>
-
             </div>
 
             <div className="row">
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Meeting Outcome :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star">*</p>
-                    <div className="inpt-sub-con" >
+                    <div className="inpt-sub-con">
                       <Input />
                     </div>
                     <p className="error"></p>
@@ -1261,30 +1419,34 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               </div>
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Meeting APL Outcome :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star-white">*</p>
-                    <div className="inpt-sub-con" >
+                    <div className="inpt-sub-con">
                       <MyDatePicker />
                     </div>
                     <p className="error"></p>
                   </div>
                 </div>
-
               </div>
-
             </div>
             <div className="row">
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Meeting Status :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star">*</p>
-                    <div className="inpt-sub-con" >
+                    <div className="inpt-sub-con">
                       <Input />
                     </div>
                     <p className="error"></p>
@@ -1293,24 +1455,22 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
               </div>
               <div className="col-md-6">
                 <div className="drawer-inpts-container " style={{}}>
-                  <div className="drawer-lbl-container" style={{ width: "40%", }}>
+                  <div
+                    className="drawer-lbl-container"
+                    style={{ width: "40%" }}
+                  >
                     <p>Authorised Amount :</p>
                   </div>
-                  <div className="inpt-con" style={{ width: '60%', }} >
+                  <div className="inpt-con" style={{ width: "60%" }}>
                     <p className="star-white">*</p>
-                    <div className="inpt-sub-con" >
+                    <div className="inpt-sub-con">
                       <Input placeholder="0.00" disabled={true} />
                     </div>
                     <p className="error"></p>
                   </div>
                 </div>
-
               </div>
-
             </div>
-
-
-
           </div>
           <h5>History</h5>
           <Table
@@ -1327,7 +1487,6 @@ function MyDrawer({ title, open, onClose, children, add, width = 900, isHeader =
             bordered
           />
         </div>
-
       </Drawer>
     </Drawer>
   );

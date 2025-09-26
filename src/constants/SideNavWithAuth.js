@@ -353,6 +353,13 @@ export const configurationItems = [
     ["SU", "GS"]
   ),
   createMenuItem(
+    "Product Management",
+    <FaBox />,
+    "Product Management",
+    ["user:read", "user:write"],
+    ["SU", "GS", "DGS"]
+  ),
+  createMenuItem(
     "Policy Client Example",
     <FaShieldAlt />,
     "Policy Client Example",

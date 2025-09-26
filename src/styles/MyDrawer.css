@@ -1,14 +1,51 @@
-.body-container{
-
+.body-container {
 }
-.day-con{
-    width: 40px;
-    height: 40px;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    background-color: var(--primary-color);
-    color: white;
-    margin-right: 4px;
-    font-size: 22;
+
+/* Drawer Input Container Styles */
+.drawer-inpts-container {
+  display: flex;
+  justify-content: flex-start;
+  height: 46px;
+  align-items: center;
+  margin-bottom: 16px;
+  gap: 16px;
+}
+
+.drawer-lbl-container {
+  display: flex;
+  justify-content: flex-end;
+  width: 25%;
+  min-width: 120px;
+}
+
+.drawer-lbl-container p {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--labelColor);
+  margin-bottom: 0px !important;
+  margin-right: 8px;
+}
+
+.inpt-con {
+  width: 70%;
+  display: flex;
+  flex-direction: row;
+}
+
+.inpt-sub-con {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+.day-con {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background-color: var(--primary-color);
+  color: white;
+  margin-right: 4px;
+  font-size: 22;
 }

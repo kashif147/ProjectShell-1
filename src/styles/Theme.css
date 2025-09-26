@@ -661,3 +661,298 @@ body {
     display: none !important;
   }
 }
+
+/* ========================================
+   NOTIFICATION MODAL STYLES
+   ======================================== */
+
+/* Ant Design Notification Override */
+.ant-notification {
+  padding: 16px !important;
+  margin: 16px !important;
+  border-radius: 8px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Center notification positioning */
+.ant-message {
+  top: 20vh !important;
+  left: 50% !important;
+  transform: translateX(-50%) !important;
+  text-align: center !important;
+}
+
+.ant-message-notice {
+  text-align: center !important;
+  margin: 0 auto !important;
+}
+
+.ant-notification-notice {
+  padding: 16px 20px !important;
+  margin: 8px 0 !important;
+  border-radius: 8px !important;
+  border: 1px solid var(--border-color) !important;
+  background: var(--background-primary) !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
+}
+
+.ant-notification-notice-message {
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  font-size: var(--font-size-base) !important;
+  font-weight: 600 !important;
+  color: var(--font-color) !important;
+}
+
+.ant-notification-notice-description {
+  margin: 0 !important;
+  padding: 0 !important;
+  font-size: var(--font-size-sm) !important;
+  color: var(--font-color-light) !important;
+  line-height: 1.5 !important;
+}
+
+.ant-notification-notice-close {
+  top: 16px !important;
+  right: 16px !important;
+  color: var(--font-color-lighter) !important;
+}
+
+.ant-notification-notice-close:hover {
+  color: var(--font-color) !important;
+}
+
+/* Success Notification */
+.ant-notification-notice-success {
+  border-left: 4px solid var(--success-color) !important;
+}
+
+.ant-notification-notice-success .ant-notification-notice-message {
+  color: var(--success-color) !important;
+}
+
+/* Error Notification */
+.ant-notification-notice-error {
+  border-left: 4px solid var(--error-color) !important;
+}
+
+.ant-notification-notice-error .ant-notification-notice-message {
+  color: var(--error-color) !important;
+}
+
+/* Warning Notification */
+.ant-notification-notice-warning {
+  border-left: 4px solid var(--warning-color) !important;
+}
+
+.ant-notification-notice-warning .ant-notification-notice-message {
+  color: var(--warning-color) !important;
+}
+
+/* Info Notification */
+.ant-notification-notice-info {
+  border-left: 4px solid var(--info-color) !important;
+}
+
+.ant-notification-notice-info .ant-notification-notice-message {
+  color: var(--info-color) !important;
+}
+
+/* Notification Icon Styling */
+.ant-notification-notice-icon {
+  margin-right: 12px !important;
+  font-size: 20px !important;
+}
+
+/* Notification Content Container */
+.ant-notification-notice-content {
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+  .ant-notification {
+    padding: 12px !important;
+    margin: 12px !important;
+  }
+
+  .ant-notification-notice {
+    padding: 12px 16px !important;
+    margin: 6px 0 !important;
+  }
+
+  .ant-notification-notice-message {
+    font-size: var(--font-size-sm) !important;
+  }
+
+  .ant-notification-notice-description {
+    font-size: var(--font-size-xs) !important;
+  }
+}
+
+/* ========================================
+   MODAL CONFIRMATION STYLES
+   ======================================== */
+
+/* Ant Design Modal Override */
+.ant-modal {
+  padding: 0 !important;
+  margin: 0 !important;
+}
+
+.ant-modal-content {
+  padding: 32px !important;
+  margin: 0 !important;
+  border-radius: 12px !important;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.15) !important;
+  background: var(--background-primary) !important;
+}
+
+.ant-modal-header {
+  padding: 0 0 24px 0 !important;
+  margin: 0 0 24px 0 !important;
+  border-bottom: 1px solid var(--border-color-light) !important;
+  background: transparent !important;
+}
+
+.ant-modal-title {
+  font-size: var(--font-size-xl) !important;
+  font-weight: 600 !important;
+  color: var(--font-color) !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.4 !important;
+}
+
+.ant-modal-body {
+  padding: 0 0 32px 0 !important;
+  margin: 0 !important;
+  font-size: var(--font-size-base) !important;
+  color: var(--font-color-light) !important;
+  line-height: 1.6 !important;
+}
+
+.ant-modal-footer {
+  padding: 24px 0 0 0 !important;
+  margin: 0 !important;
+  border-top: 1px solid var(--border-color-light) !important;
+  background: transparent !important;
+  text-align: right !important;
+}
+
+/* Modal positioning and spacing */
+.ant-modal-wrap {
+  padding: 40px !important;
+}
+
+.ant-modal {
+  top: 40px !important;
+  left: 40px !important;
+  right: 40px !important;
+  bottom: 40px !important;
+  max-width: calc(100vw - 80px) !important;
+  max-height: calc(100vh - 80px) !important;
+}
+
+.ant-modal-centered .ant-modal {
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
+  max-width: calc(100vw - 80px) !important;
+  max-height: calc(100vh - 80px) !important;
+}
+
+.ant-modal-footer .ant-btn {
+  margin-left: 12px !important;
+  padding: 12px 24px !important;
+  border-radius: 8px !important;
+  font-weight: 500 !important;
+  min-width: 100px !important;
+  font-size: var(--font-size-base) !important;
+  height: auto !important;
+}
+
+.ant-modal-footer .ant-btn-primary {
+  background: var(--error-color) !important;
+  border-color: var(--error-color) !important;
+  color: white !important;
+}
+
+.ant-modal-footer .ant-btn-primary:hover {
+  background: #dc2626 !important;
+  border-color: #dc2626 !important;
+}
+
+.ant-modal-footer .ant-btn-default {
+  background: var(--background-primary) !important;
+  border-color: var(--border-color) !important;
+  color: var(--font-color) !important;
+}
+
+.ant-modal-footer .ant-btn-default:hover {
+  background: var(--background-tertiary) !important;
+  border-color: var(--primary-blue) !important;
+  color: var(--primary-blue) !important;
+}
+
+.ant-modal-close {
+  top: 16px !important;
+  right: 16px !important;
+  color: var(--font-color-lighter) !important;
+}
+
+.ant-modal-close:hover {
+  color: var(--font-color) !important;
+}
+
+/* Modal Mask */
+.ant-modal-mask {
+  background: rgba(0, 0, 0, 0.45) !important;
+}
+
+/* Responsive Modal Design */
+@media (max-width: 768px) {
+  .ant-modal-wrap {
+    padding: 24px !important;
+  }
+
+  .ant-modal {
+    top: 24px !important;
+    left: 24px !important;
+    right: 24px !important;
+    bottom: 24px !important;
+    max-width: calc(100vw - 48px) !important;
+    max-height: calc(100vh - 48px) !important;
+  }
+
+  .ant-modal-centered .ant-modal {
+    max-width: calc(100vw - 48px) !important;
+    max-height: calc(100vh - 48px) !important;
+  }
+
+  .ant-modal-content {
+    padding: 24px !important;
+  }
+
+  .ant-modal-header {
+    padding: 0 0 20px 0 !important;
+    margin: 0 0 20px 0 !important;
+  }
+
+  .ant-modal-body {
+    padding: 0 0 24px 0 !important;
+    font-size: var(--font-size-sm) !important;
+  }
+
+  .ant-modal-footer {
+    padding: 20px 0 0 0 !important;
+  }
+
+  .ant-modal-footer .ant-btn {
+    padding: 10px 20px !important;
+    font-size: var(--font-size-sm) !important;
+    min-width: 90px !important;
+    margin-left: 10px !important;
+  }
+}

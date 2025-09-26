@@ -42,7 +42,8 @@ import {
   Phone,
   HelpCircle,
   Users,
-  search
+  search,
+  Briefcase,
 } from "lucide-react";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
@@ -134,6 +135,7 @@ function Configuratin() {
     RosterType: [],
     Solicitors: [],
     MaritalStatus: [],
+    Sections: [],
   });
 
   const [searchQuery, setSearchQuery] = useState("");
@@ -210,6 +212,7 @@ function Configuratin() {
     Schemes: false,
     Reasons: false,
     RosterType: false,
+    Sections: false,
   });
   const [selectLokups, setselectLokups] = useState({
     Provinces: [],
@@ -250,6 +253,7 @@ function Configuratin() {
     Reasons: false,
     RosterType: false,
     Solicitors: false,
+    Sections: false,
   });
 
   useMemo(() => {
@@ -307,44 +311,42 @@ function Configuratin() {
     });
     setlookupTypSlct(arr);
   }, [lookupsTypes]);
-useEffect(() => {
-  if (!lookups || !Array.isArray(lookups)) return;
+  useEffect(() => {
+    if (!lookups || !Array.isArray(lookups)) return;
 
-  // ✅ use the real IDs from your backend
-  const lookupFilters = [
-    { key: "gender", id: "68c85f21302e5600dc8477da" },
-    { key: "Titles", id: "68c85f21302e5600dc8477d6" },
-    { key: "ProjectTypes", id: "68c85f22302e5600dc8477fc" },
-    { key: "Duties", id: "68c85f22302e5600dc847805" },
-    { key: "MaritalStatus", id: "68c85f21302e5600dc8477dd" },
-    { key: "county", id: "68c85f22302e5600dc8477e4" },
-    { key: "Divisions", id: "68c85f22302e5600dc8477e7" },
-    { key: "Cities", id: "68c85f22302e5600dc8477ed" },
-    { key: "Boards", id: "68c85f22302e5600dc8477f3" },
-    { key: "Councils", id: "68c85f22302e5600dc8477f6" },
-    { key: "CorrespondenceType", id: "68c85f22302e5600dc84780b" },
-    { key: "Stations", id: "68c85f22302e5600dc8477f0" },
-    { key: "DocumentType", id: "68c85f22302e5600dc84780e" },
-    { key: "ClaimType", id: "68c85f22302e5600dc847811" },
-    { key: "Schemes", id: "68c85f22302e5600dc847814" },
-    { key: "Reasons", id: "68c85f22302e5600dc847817" },
-    { key: "Provinces", id: "68c85f21302e5600dc8477e0" },
-    { key: "Districts", id: "68c85f22302e5600dc8477ea" },
-    { key: "SpokenLanguages", id: "68c85f22302e5600dc8477f9" },
-    { key: "Trainings", id: "68c85f22302e5600dc8477ff" },
-    { key: "Ranks", id: "68c85f22302e5600dc847802" },
-    { key: "RosterType", id: "68c85f22302e5600dc847808" },
-  ];
+    // ✅ use the real IDs from your backend
+    const lookupFilters = [
+      { key: "gender", id: "68c85f21302e5600dc8477da" },
+      { key: "Titles", id: "68c85f21302e5600dc8477d6" },
+      { key: "ProjectTypes", id: "68c85f22302e5600dc8477fc" },
+      { key: "Duties", id: "68c85f22302e5600dc847805" },
+      { key: "MaritalStatus", id: "68c85f21302e5600dc8477dd" },
+      { key: "county", id: "68c85f22302e5600dc8477e4" },
+      { key: "Divisions", id: "68c85f22302e5600dc8477e7" },
+      { key: "Cities", id: "68c85f22302e5600dc8477ed" },
+      { key: "Boards", id: "68c85f22302e5600dc8477f3" },
+      { key: "Councils", id: "68c85f22302e5600dc8477f6" },
+      { key: "CorrespondenceType", id: "68c85f22302e5600dc84780b" },
+      { key: "Stations", id: "68c85f22302e5600dc8477f0" },
+      { key: "DocumentType", id: "68c85f22302e5600dc84780e" },
+      { key: "ClaimType", id: "68c85f22302e5600dc847811" },
+      { key: "Schemes", id: "68c85f22302e5600dc847814" },
+      { key: "Reasons", id: "68c85f22302e5600dc847817" },
+      { key: "Provinces", id: "68c85f21302e5600dc8477e0" },
+      { key: "Districts", id: "68c85f22302e5600dc8477ea" },
+      { key: "SpokenLanguages", id: "68c85f22302e5600dc8477f9" },
+      { key: "Trainings", id: "68c85f22302e5600dc8477ff" },
+      { key: "Ranks", id: "68c85f22302e5600dc847802" },
+      { key: "RosterType", id: "68c85f22302e5600dc847808" },
+    ];
 
-  const filteredData = lookupFilters.reduce((acc, { key, id }) => {
-    acc[key] = lookups.filter((item) => item?.lookuptypeId?._id === id);
-    return acc;
-  }, {});
+    const filteredData = lookupFilters.reduce((acc, { key, id }) => {
+      acc[key] = lookups.filter((item) => item?.lookuptypeId?._id === id);
+      return acc;
+    }, {});
 
-  setdata((prevState) => ({ ...prevState, ...filteredData }));
-}, [lookups]);
-
-
+    setdata((prevState) => ({ ...prevState, ...filteredData }));
+  }, [lookups]);
 
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
@@ -698,6 +700,16 @@ useEffect(() => {
       DisplayName: "",
       isDeleted: false,
       isactive: true,
+    },
+    Sections: {
+      lookuptypeId: "67f6344d17f0ecf3dbf79fff",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
     },
   };
 
@@ -1809,6 +1821,71 @@ useEffect(() => {
                   await deleteFtn(`${baseURL}/Lookup`, record?._id);
                   dispatch(getAllLookups());
                   resetCounteries("Ranks");
+                },
+              })
+            }
+          />
+        </Space>
+      ),
+    },
+  ];
+  const columnSections = [
+    {
+      title: "code",
+      dataIndex: "code",
+      key: "code",
+      sorter: (a, b) => a.code.localeCompare(b.code),
+      sortDirections: ["ascend", "descend"],
+    },
+    {
+      title: " Lookup Type ",
+      dataIndex: "lookuptype",
+      key: "lookuptype",
+      render: (index, record) => <>{record?.lookuptypeId?.lookuptype}</>,
+    },
+    {
+      title: " Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
+    },
+    {
+      title: "Section Name",
+      dataIndex: "lookupname",
+      key: "lookupname",
+    },
+    {
+      title: "Active",
+      dataIndex: "isactive",
+      key: "isactive",
+      render: (index, record) => (
+        <Checkbox checked={record?.isactive}></Checkbox>
+      ),
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn("Sections", !IsUpdateFtn?.Sections, record);
+              addIdKeyToLookup(record?._id, "Sections");
+            }}
+          />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
+                  dispatch(getAllLookups());
+                  resetCounteries("Sections");
                 },
               })
             }
@@ -3645,7 +3722,7 @@ useEffect(() => {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => { },
+    onChange: (selectedRowKeys, selectedRows) => {},
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -3746,17 +3823,17 @@ useEffect(() => {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => { };
+  const addmembershipFtn = () => {};
 
-  const AddpartnershipFtn = () => { };
+  const AddpartnershipFtn = () => {};
 
-  const AddprofileModalFtn = () => { };
+  const AddprofileModalFtn = () => {};
 
-  const AddRegionTypeModalFtn = () => { };
+  const AddRegionTypeModalFtn = () => {};
 
-  const AddContactTypeModalFtn = () => { };
+  const AddContactTypeModalFtn = () => {};
 
-  const AddSubscriptionsFtn = () => { };
+  const AddSubscriptionsFtn = () => {};
   const columnClaimType = [
     {
       title: "Code",
@@ -3831,7 +3908,47 @@ useEffect(() => {
   // const { Search } = Input;
   const sections = [
     {
-      title: "Lookups Configuration",
+      title: "Geographic & Location",
+      items: [
+        {
+          key: "Countries",
+          icon: <Globe size={24} color="#ef4444" />,
+          label: "Countries",
+        }, // red-500
+        {
+          key: "Provinces",
+          icon: <Map size={24} color="#22c55e" />,
+          label: "Provinces",
+        }, // green-500
+        {
+          key: "Districts",
+          icon: <MapPinned size={24} color="#eab308" />,
+          label: "Branch",
+        }, // yellow-500
+        {
+          key: "Divisions",
+          icon: <Building2 size={24} color="#6366f1" />,
+          label: "Region",
+        }, // indigo-500
+        {
+          key: "Cities",
+          icon: <Building2 size={24} color="#10b981" />,
+          label: "Cities",
+        }, // emerald-500
+        {
+          key: "Station",
+          icon: <MapPin size={24} color="#f97316" />,
+          label: "Work Location",
+        }, // orange-500
+        {
+          key: "PostCode",
+          icon: <Mail size={24} color="#0ea5e9" />,
+          label: "Post Codes",
+        }, // sky-500
+      ],
+    },
+    {
+      title: "Personal & Demographics",
       items: [
         {
           key: "Title",
@@ -3849,65 +3966,15 @@ useEffect(() => {
           label: "Marital Status",
         }, // purple-400
         {
-          key: "Provinces",
-          icon: <Map size={24} color="#22c55e" />,
-          label: "Provinces",
-        }, // green-500
-        {
-          key: "Countries",
-          icon: <Globe size={24} color="#ef4444" />,
-          label: "Countries",
-        }, // red-500
-        {
-          key: "Divisions",
-          icon: <Building2 size={24} color="#6366f1" />,
-          label: "Region",
-        }, // indigo-500
-        {
-          key: "Districts",
-          icon: <MapPinned size={24} color="#eab308" />,
-          label: "Branch",
-        }, // yellow-500
-        {
-          key: "Cities",
-          icon: <Building2 size={24} color="#10b981" />,
-          label: "Cities",
-        }, // emerald-500
-        {
-          key: "Station",
-          icon: <MapPin size={24} color="#f97316" />,
-          label: "Work Location",
-        }, // orange-500
-        {
-          key: "PostCode",
-          icon: <Mail size={24} color="#0ea5e9" />,
-          label: "Post Codes",
-        }, // sky-500
-        {
-          key: "Boards",
-          icon: <Layout size={24} color="#14b8a6" />,
-          label: "Boards",
-        }, // teal-500
-        {
-          key: "Councils",
-          icon: <Landmark size={24} color="#8b5cf6" />,
-          label: "Councils",
-        }, // violet-500
-        {
           key: "SpokenLanguages",
           icon: <Languages size={24} color="#f43f5e" />,
           label: "Spoken Languages",
         }, // rose-500
-        {
-          key: "ProjectTypes",
-          icon: <FolderKanban size={24} color="#f59e0b" />,
-          label: "Project Types",
-        }, // amber-500
-        {
-          key: "Trainings",
-          icon: <Lightbulb size={24} color="#84cc16" />,
-          label: "Trainings",
-        }, // lime-500
+      ],
+    },
+    {
+      title: "Professional & Organizational",
+      items: [
         {
           key: "Ranks",
           icon: <BarChart3 size={24} color="#6b7280" />,
@@ -3919,15 +3986,60 @@ useEffect(() => {
           label: "Duties",
         }, // blue-400
         {
+          key: "RosterType",
+          icon: <Calendar size={24} color="#06b6d4" />,
+          label: "Roster Type",
+        }, // cyan-500
+        {
+          key: "Boards",
+          icon: <Layout size={24} color="#14b8a6" />,
+          label: "Boards",
+        }, // teal-500
+        {
+          key: "Councils",
+          icon: <Landmark size={24} color="#8b5cf6" />,
+          label: "Councils",
+        }, // violet-500
+        {
+          key: "Committees",
+          icon: <Users size={24} color="#ec4899" />,
+          label: "Committees",
+        }, // pink-500
+        {
           key: "Solicitors",
           icon: <Gavel size={24} color="#64748b" />,
           label: "Solicitors",
         }, // slate-500
         {
-          key: "RosterType",
-          icon: <Calendar size={24} color="#06b6d4" />,
-          label: "Roster Type",
-        }, // cyan-500
+          key: "Sections",
+          icon: <Briefcase size={24} color="#8b5cf6" />,
+          label: "Sections",
+        }, // violet-500
+      ],
+    },
+    {
+      title: "Projects & Training",
+      items: [
+        {
+          key: "ProjectTypes",
+          icon: <FolderKanban size={24} color="#f59e0b" />,
+          label: "Project Types",
+        }, // amber-500
+        {
+          key: "Trainings",
+          icon: <Lightbulb size={24} color="#84cc16" />,
+          label: "Trainings",
+        }, // lime-500
+      ],
+    },
+    {
+      title: "Communication & Documentation",
+      items: [
+        {
+          key: "ContactTypes",
+          icon: <Phone size={24} color="#a855f7" />,
+          label: "Contact Types",
+        }, // purple-500
         {
           key: "CorrespondenceType",
           icon: <MessageSquare size={24} color="#4ade80" />,
@@ -3938,6 +4050,11 @@ useEffect(() => {
           icon: <File size={24} color="#818cf8" />,
           label: "Document Type",
         }, // indigo-400
+      ],
+    },
+    {
+      title: "Claims & Benefits",
+      items: [
         {
           key: "ClaimType",
           icon: <Shield size={24} color="#f472b6" />,
@@ -3949,49 +4066,39 @@ useEffect(() => {
           label: "Schemes",
         }, // yellow-400
         {
+          key: "Reasons",
+          icon: <HelpCircle size={24} color="#fb923c" />,
+          label: "Reasons",
+        }, // orange-400
+      ],
+    },
+    {
+      title: "System Lookups",
+      items: [
+        {
           key: "LookupType",
           icon: <Search size={24} color="#34d399" />,
           label: "Lookup Type",
         }, // emerald-400
         {
           key: "Lookup",
-          icon: <Search 
- size={24} color="#fb7185" />,
+          icon: <Search size={24} color="#fb7185" />,
           label: "Lookup",
         }, // rose-400
-        {
-          key: "ContactTypes",
-          icon: <Phone size={24} color="#a855f7" />,
-          label: "Contact Types",
-        }, // purple-500
-        {
-          key: "Reasons",
-          icon: <HelpCircle size={24} color="#fb923c" />,
-          label: "Reasons",
-        }, // orange-400
-        {
-          key: "Committees",
-          icon: <Users size={24} color="#ec4899" />,
-          label: "Committees",
-        }, // pink-500
       ],
-    },
-    {
-      title: "System Configuration",
-      items: [],
     },
   ];
 
   return (
-    <div className="bg-gray-50 mb-4">
+    <div className="bg-gray-50 mb-4 configuration-main">
       {/* <div className="text-center mb-4">
         <h1 className="fw-bold mb-1">Configuration</h1>
         <p className="text-muted mb-0">System configuration and lookup management</p>
       </div> */}
       {/* Search Bar */}
       <div
-        className="d-flex flex-column mb-4 pb-4 hide-scroll-webkit"
-        style={{ height: "100vh", overflow: "hidden", scrollbarWidth: 'none', }}
+        className="d-flex flex-column mb-4 pb-4"
+        style={{ minHeight: "100vh" }}
       >
         <div
           className="text-center "
@@ -4013,7 +4120,16 @@ useEffect(() => {
             </div>
           </div>
         </div>
-        <div className="bg-white rounded shadow-sm p-4 flex-grow-1 overflow-auto hide-scroll-webkit" style={{ scrollbarWidth: 'none', }}>
+        <div
+          className="bg-white rounded shadow-sm p-4 flex-grow-1 hide-scroll-webkit"
+          style={{
+            overflowY: "auto",
+            maxHeight: "calc(100vh - 200px)",
+            paddingBottom: "100px",
+            scrollbarWidth: "none",
+            msOverflowStyle: "none",
+          }}
+        >
           {sections.map((section, idx) => {
             const filteredItems = section.items.filter((item) =>
               item.label.toLowerCase().includes(searchQuery.toLowerCase())
@@ -4021,14 +4137,16 @@ useEffect(() => {
 
             return (
               <div key={`${section.title}-${idx}`} className="mb-5">
-                {/* <h5 className="fw-semibold mb-4">{section.title}</h5> */}
+                <h5 className="fw-semibold mb-4 text-primary">
+                  {section.title}
+                </h5>
 
                 {filteredItems.length > 0 ? (
                   <div className="row gx-3 gy-3">
                     {filteredItems.map((item) => (
                       <div
                         key={item.key}
-                        className="col-6 col-sm-4 col-md-2 d-flex"
+                        className="col-6 col-sm-4 col-md-3 col-lg-1-5 d-flex"
                       >
                         <div
                           onClick={() => openCloseDrawerFtn(item.key)}
@@ -4946,7 +5064,7 @@ useEffect(() => {
             </Col>
           </Row>
           <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3">Existing Provinces</h6>
+            <h6 className=" mb-3 text-primary">Existing Provinces</h6>
             <Table
               pagination={false}
               columns={columnProvince}
@@ -5185,7 +5303,9 @@ useEffect(() => {
                 label="Code:"
                 name="code"
                 value={drawerIpnuts?.PostCode?.code || ""}
-                onChange={(e) => drawrInptChng("PostCode", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("PostCode", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -5197,7 +5317,9 @@ useEffect(() => {
                 label="Post Code:"
                 name="postcode"
                 value={drawerIpnuts?.PostCode?.postcode || ""}
-                onChange={(e) => drawrInptChng("PostCode", "postcode", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("PostCode", "postcode", e.target.value)
+                }
                 placeholder="Enter post code"
                 disabled={isDisable}
                 required
@@ -5254,7 +5376,7 @@ useEffect(() => {
 
           {/* Existing Post Codes Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Post Codes</h6>
+            <h6 className="mb-3 text-primary">Existing Post Codes</h6>
             <Table
               pagination={false}
               columns={columnPostCode}
@@ -5384,7 +5506,9 @@ useEffect(() => {
                 {/* Button with fake label for alignment */}
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {/* empty label space to match CustomSelect */}
-                  <label style={{ height: 20, visibility: "hidden" }}>label</label>
+                  <label style={{ height: 20, visibility: "hidden" }}>
+                    label
+                  </label>
                   <Button
                     className="butn primary-btn detail-btn"
                     style={{ height: 40 }}
@@ -5395,8 +5519,6 @@ useEffect(() => {
                 </div>
               </div>
             </Col>
-
-
           </Row>
           <Row>
             <Col span={12}>
@@ -5414,7 +5536,7 @@ useEffect(() => {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Branches</h6>
+            <h6 className="mb-3 text-primary">Existing Branches</h6>
             <Table
               columns={columnDistricts}
               loading={lookupsloading}
@@ -5554,7 +5676,7 @@ useEffect(() => {
             </Row>
 
             <div className="mt-4 config-tbl-container">
-              <h6 className="mb-3">Existing Regions</h6>
+              <h6 className="mb-3 text-primary">Existing Regions</h6>
               <Table
                 pagination={{ pageSize: 10 }}
                 columns={columnDivisions}
@@ -5604,7 +5726,7 @@ useEffect(() => {
           IsUpdateFtn("Divisions", false);
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
             <Col span={24}>
               <CustomSelect
@@ -5623,11 +5745,12 @@ useEffect(() => {
                 label="Code"
                 required
                 value={drawerIpnuts?.Divisions?.code}
-                onChange={(e) => drawrInptChng("Divisions", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Divisions", "code", e.target.value)
+                }
                 disabled={isDisable}
                 hasError={!!errors?.Divisions?.code}
               />
-
             </Col>
             <Col span={12}>
               <MyInput
@@ -5662,14 +5785,13 @@ useEffect(() => {
                 isSimple
                 options={selectLokups?.Counteries}
                 value={drawerIpnuts?.Divisions?.Parentlookupid}
-                onChange={(e) => drawrInptChng("Divisions", "Parentlookupid", e)}
+                onChange={(e) =>
+                  drawrInptChng("Divisions", "Parentlookupid", e)
+                }
                 hasError={!!errors?.Divisions?.parentLookup}
               />
             </Col>
           </Row>
-
-
-
 
           <Checkbox
             disabled={isDisable}
@@ -5682,6 +5804,7 @@ useEffect(() => {
           </Checkbox>
 
           <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Regions</h6>
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnDivisions}
@@ -5729,7 +5852,7 @@ useEffect(() => {
           IsUpdateFtn("Station", false);
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
             <Row gutter={24}>
               <Col span={24}>
@@ -5749,7 +5872,9 @@ useEffect(() => {
                   label="Work Location Name"
                   name="lookupname"
                   value={drawerIpnuts?.Station?.lookupname}
-                  onChange={(val) => drawrInptChng("Station", "lookupname", val)}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "lookupname", val)
+                  }
                   disabled={isDisable}
                   hasError={!!errors?.Station?.lookupname}
                   errorMessage={errors?.Station?.lookupname}
@@ -5776,7 +5901,9 @@ useEffect(() => {
                   label="Display Name"
                   name="DisplayName"
                   value={drawerIpnuts?.Station?.DisplayName}
-                  onChange={(val) => drawrInptChng("Station", "DisplayName", val)}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "DisplayName", val)
+                  }
                   disabled={isDisable}
                 />
               </Col>
@@ -5801,7 +5928,9 @@ useEffect(() => {
                   {/* Button with fake label for alignment */}
                   <div style={{ display: "flex", flexDirection: "column" }}>
                     {/* empty label space to match CustomSelect */}
-                    <label style={{ height: 20, visibility: "hidden" }}>label</label>
+                    <label style={{ height: 20, visibility: "hidden" }}>
+                      label
+                    </label>
                     <Button
                       className="butn primary-btn detail-btn"
                       style={{ height: 40 }}
@@ -5812,7 +5941,6 @@ useEffect(() => {
                   </div>
                 </div>
               </Col>
-
             </Row>
 
             <Row gutter={24}>
@@ -5831,7 +5959,13 @@ useEffect(() => {
           </div>
 
           {/* Popout Btn aligned right and bottom with inputs */}
-          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "flex-end" }}>
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "flex-end",
+            }}
+          >
             <Button
               style={{ height: 40, marginBottom: 4 }}
               onClick={() =>
@@ -5843,6 +5977,7 @@ useEffect(() => {
           </div>
 
           <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Work Locations</h6>
             <Table
               pagination={false}
               columns={columnStations}
@@ -5879,7 +6014,7 @@ useEffect(() => {
           );
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
             <Row gutter={24}>
               <Col span={12}>
@@ -5887,7 +6022,9 @@ useEffect(() => {
                   label="Code"
                   name="RegionCode"
                   value={drawerIpnuts?.ContactType?.RegionCode}
-                  onChange={(val) => drawrInptChng("ContactType", "RegionCode", val)}
+                  onChange={(val) =>
+                    drawrInptChng("ContactType", "RegionCode", val)
+                  }
                   disabled={isDisable}
                   hasError={!!errors?.ContactType?.RegionCode}
                   errorMessage={errors?.ContactType?.RegionCode}
@@ -5900,7 +6037,9 @@ useEffect(() => {
                   label="Contact Type"
                   name="ContactType"
                   value={drawerIpnuts?.ContactType?.ContactType}
-                  onChange={(val) => drawrInptChng("ContactType", "ContactType", val)}
+                  onChange={(val) =>
+                    drawrInptChng("ContactType", "ContactType", val)
+                  }
                   disabled={isDisable}
                   hasError={!!errors?.ContactType?.ContactType}
                   errorMessage={errors?.ContactType?.ContactType}
@@ -5915,7 +6054,9 @@ useEffect(() => {
                   label="Display Name"
                   name="DisplayName"
                   value={drawerIpnuts?.ContactType?.DisplayName}
-                  onChange={(val) => drawrInptChng("ContactType", "DisplayName", val)}
+                  onChange={(val) =>
+                    drawrInptChng("ContactType", "DisplayName", val)
+                  }
                   disabled={isDisable}
                   hasError={!!errors?.ContactType?.DisplayName}
                   errorMessage={errors?.ContactType?.DisplayName}
@@ -5939,6 +6080,7 @@ useEffect(() => {
 
           {/* Table Section */}
           <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Contact Types</h6>
             <Table
               pagination={false}
               columns={contactType}
@@ -5980,7 +6122,8 @@ useEffect(() => {
             { ...drawerIpnuts?.LookupType, userid: "67f3f9d812b014a0a7a94081" },
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("LookupType", () => dispatch(getLookupTypes()))
+            () =>
+              resetCounteries("LookupType", () => dispatch(getLookupTypes()))
           );
           dispatch(getLookupTypes());
         }}
@@ -6008,7 +6151,9 @@ useEffect(() => {
                 label="Code"
                 name="code"
                 value={drawerIpnuts?.LookupType?.code || ""}
-                onChange={(e) => drawrInptChng("LookupType", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("LookupType", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -6020,7 +6165,9 @@ useEffect(() => {
                 label="Display Name"
                 name="DisplayName"
                 value={drawerIpnuts?.LookupType?.DisplayName || ""}
-                onChange={(e) => drawrInptChng("LookupType", "DisplayName", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("LookupType", "DisplayName", e.target.value)
+                }
                 placeholder="Enter display name"
                 disabled={isDisable}
                 hasError={!!errors?.LookupType?.DisplayName}
@@ -6032,7 +6179,9 @@ useEffect(() => {
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
-                onChange={(e) => drawrInptChng("LookupType", "isactive", e.target.checked)}
+                onChange={(e) =>
+                  drawrInptChng("LookupType", "isactive", e.target.checked)
+                }
                 checked={drawerIpnuts?.LookupType?.isactive}
                 style={{ marginTop: "26px" }}
               >
@@ -6042,13 +6191,15 @@ useEffect(() => {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Lookup Types</h6>
+            <h6 className="mb-3 text-primary">Existing Lookup Types</h6>
             <Table
               pagination={false}
               columns={columnLookupType}
               dataSource={lookupsTypes}
               className="drawer-tbl"
-              rowClassName={(record, index) => (index % 2 !== 0 ? "odd-row" : "even-row")}
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
               rowSelection={{ type: selectionType, ...rowSelection }}
               bordered
               scroll={{ y: 270 }}
@@ -6259,7 +6410,9 @@ useEffect(() => {
                 label="Code"
                 name="code"
                 value={drawerIpnuts?.Lookup?.code || ""}
-                onChange={(e) => drawrInptChng("Lookup", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -6271,7 +6424,9 @@ useEffect(() => {
                 label="Lookup Name"
                 name="lookupname"
                 value={drawerIpnuts?.Lookup?.lookupname || ""}
-                onChange={(e) => drawrInptChng("Lookup", "lookupname", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "lookupname", e.target.value)
+                }
                 placeholder="Enter lookup name"
                 disabled={isDisable}
                 required
@@ -6286,7 +6441,9 @@ useEffect(() => {
                 label="Display Name"
                 name="DisplayName"
                 value={drawerIpnuts?.Lookup?.DisplayName || ""}
-                onChange={(e) => drawrInptChng("Lookup", "DisplayName", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "DisplayName", e.target.value)
+                }
                 placeholder="Enter display name"
                 disabled={isDisable}
                 hasError={!!errors?.Lookup?.DisplayName}
@@ -6297,7 +6454,9 @@ useEffect(() => {
                 label="Parent Lookup"
                 name="ParentLookup"
                 value={drawerIpnuts?.Lookup?.ParentLookup || ""}
-                onChange={(e) => drawrInptChng("Lookup", "ParentLookup", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Lookup", "ParentLookup", e.target.value)
+                }
                 placeholder="Parent lookup"
                 disabled={isDisable}
               />
@@ -6371,7 +6530,7 @@ useEffect(() => {
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           {/* Lookup Type */}
-          <Row >
+          <Row>
             <Col span={24}>
               <CustomSelect
                 label="Type:"
@@ -6449,7 +6608,7 @@ useEffect(() => {
 
           {/* Existing Gender Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Gender</h6>
+            <h6 className="mb-3 text-primary">Existing Gender</h6>
             <Table
               pagination={false}
               columns={columnGender}
@@ -6468,7 +6627,6 @@ useEffect(() => {
           </div>
         </div>
       </MyDrawer>
-
 
       <MyDrawer
         title="City"
@@ -6523,7 +6681,9 @@ useEffect(() => {
                 label="Code:"
                 name="code"
                 value={drawerIpnuts?.Cities?.code || ""}
-                onChange={(e) => drawrInptChng("Cities", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Cities", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -6535,7 +6695,9 @@ useEffect(() => {
                 label="City Name:"
                 name="lookupname"
                 value={drawerIpnuts?.Cities?.lookupname || ""}
-                onChange={(e) => drawrInptChng("Cities", "lookupname", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Cities", "lookupname", e.target.value)
+                }
                 placeholder="Enter city name"
                 disabled={isDisable}
                 required
@@ -6565,7 +6727,9 @@ useEffect(() => {
                 name="Parentlookupid"
                 value={drawerIpnuts?.Cities?.Parentlookupid || ""}
                 options={selectLokups?.Counteries || []}
-                onChange={(val) => drawrInptChng("Cities", "Parentlookupid", val)}
+                onChange={(val) =>
+                  drawrInptChng("Cities", "Parentlookupid", val)
+                }
                 isSimple={true}
                 disabled={isDisable}
                 required
@@ -6592,7 +6756,7 @@ useEffect(() => {
 
           {/* Existing Cities Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Cities</h6>
+            <h6 className="mb-3 text-primary">Existing Cities</h6>
             <Table
               pagination={false}
               columns={columnCity}
@@ -6677,7 +6841,9 @@ useEffect(() => {
                 label="Title Name:"
                 name="lookupname"
                 value={drawerIpnuts?.Title?.lookupname || ""}
-                onChange={(e) => drawrInptChng("Title", "lookupname", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Title", "lookupname", e.target.value)
+                }
                 placeholder="Enter title name"
                 disabled={isDisable}
                 required
@@ -6717,7 +6883,7 @@ useEffect(() => {
 
           {/* Existing Titles Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Titles</h6>
+            <h6 className="mb-3 text-primary">Existing Titles</h6>
             <Table
               pagination={false}
               columns={columntTitles}
@@ -6765,7 +6931,7 @@ useEffect(() => {
           IsUpdateFtn("RosterType", false);
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
             {/* Row 1: Lookup Type */}
             <Row gutter={24}>
@@ -6821,7 +6987,9 @@ useEffect(() => {
               <Col span={12}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {/* fake label for alignment */}
-                  <label style={{ height: 24, visibility: "hidden" }}>label</label>
+                  <label style={{ height: 24, visibility: "hidden" }}>
+                    label
+                  </label>
                   <Checkbox
                     disabled={isDisable}
                     checked={drawerIpnuts?.RosterType?.isactive}
@@ -6837,8 +7005,8 @@ useEffect(() => {
           </div>
 
           {/* History Table */}
-          <p className="section-title">History</p>
-          <div className="config-tbl-container">
+          <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Roster Types</h6>
             <Table
               pagination={false}
               columns={columnRosterTypes}
@@ -6889,7 +7057,7 @@ useEffect(() => {
           IsUpdateFtn("MaritalStatus", false);
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
             <Col span={24}>
               <CustomSelect
@@ -6931,7 +7099,6 @@ useEffect(() => {
                 hasError={!!errors?.MaritalStatus?.lookupname}
                 required
               />
-
             </Col>
           </Row>
           <Row gutter={24}>
@@ -6957,16 +7124,15 @@ useEffect(() => {
               >
                 Active
               </Checkbox>
-
             </Col>
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Titles</h6>
+            <h6 className="mb-3 text-primary">Existing Marital Status</h6>
             <Table
               pagination={false}
               columns={columnGender}
-              dataSource={data?.gender}
+              dataSource={data?.MaritalStatus}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6981,7 +7147,6 @@ useEffect(() => {
           </div>
         </div>
       </MyDrawer>
-
 
       <MyDrawer
         title="Project Types"
@@ -7093,7 +7258,7 @@ useEffect(() => {
 
           {/* Existing Project Types Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Project Types</h6>
+            <h6 className="mb-3 text-primary">Existing Project Types</h6>
             <Table
               pagination={false}
               columns={ProjectTypesColumns}
@@ -7283,7 +7448,8 @@ useEffect(() => {
             drawerIpnuts?.DocumentType,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("DocumentType", () => dispatch(getAllLookups()))
+            () =>
+              resetCounteries("DocumentType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
         }}
@@ -7377,7 +7543,7 @@ useEffect(() => {
 
           {/* Existing Document Types Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Document Types</h6>
+            <h6 className="mb-3 text-primary">Existing Document Types</h6>
             <Table
               pagination={false}
               columns={columnDocumentType}
@@ -7408,7 +7574,12 @@ useEffect(() => {
         }}
         add={async () => {
           if (!validateForm("ClaimType")) return;
-          await insertDataFtn(`/lookup`, drawerIpnuts?.ClaimType, "Data inserted successfully", "Data did not insert");
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.ClaimType,
+            "Data inserted successfully",
+            "Data did not insert"
+          );
           resetCounteries("ClaimType", () => dispatch(getAllLookups()));
         }}
         isEdit={isUpdateRec?.ClaimType}
@@ -7443,7 +7614,9 @@ useEffect(() => {
                 label="Code"
                 name="code"
                 value={drawerIpnuts?.ClaimType?.code || ""}
-                onChange={(e) => drawrInptChng("ClaimType", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("ClaimType", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -7455,7 +7628,9 @@ useEffect(() => {
                 label="Claim Type"
                 name="lookupname"
                 value={drawerIpnuts?.ClaimType?.lookupname || ""}
-                onChange={(e) => drawrInptChng("ClaimType", "lookupname", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("ClaimType", "lookupname", e.target.value)
+                }
                 placeholder="Enter claim type"
                 disabled={isDisable}
                 required
@@ -7470,7 +7645,9 @@ useEffect(() => {
                 label="Display Name"
                 name="DisplayName"
                 value={drawerIpnuts?.ClaimType?.DisplayName || ""}
-                onChange={(e) => drawrInptChng("ClaimType", "DisplayName", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("ClaimType", "DisplayName", e.target.value)
+                }
                 placeholder="Enter display name"
                 disabled={isDisable}
                 hasError={!!errors?.ClaimType?.DisplayName}
@@ -7479,7 +7656,9 @@ useEffect(() => {
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
-                onChange={(e) => drawrInptChng("ClaimType", "isactive", e.target.checked)}
+                onChange={(e) =>
+                  drawrInptChng("ClaimType", "isactive", e.target.checked)
+                }
                 checked={drawerIpnuts?.ClaimType?.isactive}
                 style={{ marginTop: "26px" }}
               >
@@ -7489,14 +7668,16 @@ useEffect(() => {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Claim Types</h6>
+            <h6 className="mb-3 text-primary">Existing Claim Types</h6>
             <Table
               pagination={false}
               columns={columnClaimType}
               dataSource={data?.ClaimType}
               loading={lookupsloading}
               className="drawer-tbl"
-              rowClassName={(record, index) => (index % 2 !== 0 ? "odd-row" : "even-row")}
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
               rowSelection={{ type: selectionType, ...rowSelection }}
               bordered
             />
@@ -7515,8 +7696,12 @@ useEffect(() => {
         }}
         add={async () => {
           if (!validateForm("Schemes")) return;
-          await insertDataFtn(`/lookup`, drawerIpnuts?.Schemes, "Data inserted successfully", "Data did not insert", () =>
-            resetCounteries("Schemes", () => dispatch(getAllLookups()))
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Schemes,
+            "Data inserted successfully",
+            "Data did not insert",
+            () => resetCounteries("Schemes", () => dispatch(getAllLookups()))
           );
         }}
         isEdit={isUpdateRec?.Schemes}
@@ -7551,7 +7736,9 @@ useEffect(() => {
                 label="Code"
                 name="code"
                 value={drawerIpnuts?.Schemes?.code || ""}
-                onChange={(e) => drawrInptChng("Schemes", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Schemes", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -7563,7 +7750,9 @@ useEffect(() => {
                 label="Schemes"
                 name="lookupname"
                 value={drawerIpnuts?.Schemes?.lookupname || ""}
-                onChange={(e) => drawrInptChng("Schemes", "lookupname", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Schemes", "lookupname", e.target.value)
+                }
                 placeholder="Enter scheme name"
                 disabled={isDisable}
                 required
@@ -7578,7 +7767,9 @@ useEffect(() => {
                 label="Display Name"
                 name="DisplayName"
                 value={drawerIpnuts?.Schemes?.DisplayName || ""}
-                onChange={(e) => drawrInptChng("Schemes", "DisplayName", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Schemes", "DisplayName", e.target.value)
+                }
                 placeholder="Enter display name"
                 disabled={isDisable}
                 hasError={!!errors?.Schemes?.DisplayName}
@@ -7587,7 +7778,9 @@ useEffect(() => {
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
-                onChange={(e) => drawrInptChng("Schemes", "isactive", e.target.checked)}
+                onChange={(e) =>
+                  drawrInptChng("Schemes", "isactive", e.target.checked)
+                }
                 checked={drawerIpnuts?.Schemes?.isactive}
                 style={{ marginTop: "26px" }}
               >
@@ -7597,14 +7790,16 @@ useEffect(() => {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Schemes</h6>
+            <h6 className="mb-3 text-primary">Existing Schemes</h6>
             <Table
               pagination={false}
               columns={columnSchemes}
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
-              rowClassName={(record, index) => (index % 2 !== 0 ? "odd-row" : "even-row")}
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
               rowSelection={{ type: selectionType, ...rowSelection }}
               bordered
             />
@@ -7623,8 +7818,12 @@ useEffect(() => {
         }}
         add={async () => {
           if (!validateForm("Reasons")) return;
-          await insertDataFtn(`/lookup`, drawerIpnuts?.Reasons, "Data inserted successfully", "Data did not insert", () =>
-            resetCounteries("Reasons", () => dispatch(getAllLookups()))
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Reasons,
+            "Data inserted successfully",
+            "Data did not insert",
+            () => resetCounteries("Reasons", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
         }}
@@ -7660,7 +7859,9 @@ useEffect(() => {
                 label="Code"
                 name="code"
                 value={drawerIpnuts?.Reasons?.code || ""}
-                onChange={(e) => drawrInptChng("Reasons", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Reasons", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -7672,7 +7873,9 @@ useEffect(() => {
                 label="Reasons"
                 name="lookupname"
                 value={drawerIpnuts?.Reasons?.lookupname || ""}
-                onChange={(e) => drawrInptChng("Reasons", "lookupname", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Reasons", "lookupname", e.target.value)
+                }
                 placeholder="Enter reason"
                 disabled={isDisable}
                 required
@@ -7687,7 +7890,9 @@ useEffect(() => {
                 label="Display Name"
                 name="DisplayName"
                 value={drawerIpnuts?.Reasons?.DisplayName || ""}
-                onChange={(e) => drawrInptChng("Reasons", "DisplayName", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Reasons", "DisplayName", e.target.value)
+                }
                 placeholder="Enter display name"
                 disabled={isDisable}
                 hasError={!!errors?.Reasons?.DisplayName}
@@ -7696,7 +7901,9 @@ useEffect(() => {
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
-                onChange={(e) => drawrInptChng("Reasons", "isactive", e.target.checked)}
+                onChange={(e) =>
+                  drawrInptChng("Reasons", "isactive", e.target.checked)
+                }
                 checked={drawerIpnuts?.Reasons?.isactive}
                 style={{ marginTop: "26px" }}
               >
@@ -7706,14 +7913,16 @@ useEffect(() => {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Reasons</h6>
+            <h6 className="mb-3 text-primary">Existing Reasons</h6>
             <Table
               pagination={false}
               columns={columnReasons}
               dataSource={data?.Reasons}
               loading={lookupsloading}
               className="drawer-tbl"
-              rowClassName={(record, index) => (index % 2 !== 0 ? "odd-row" : "even-row")}
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
               rowSelection={{ type: selectionType, ...rowSelection }}
               bordered
             />
@@ -7824,7 +8033,7 @@ useEffect(() => {
           IsUpdateFtn("Duties", false);
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
             {/* Row 1: Lookup Type */}
             <Row gutter={24}>
@@ -7870,14 +8079,18 @@ useEffect(() => {
                   label="Display Name"
                   disabled={isDisable}
                   value={drawerIpnuts?.Duties?.DisplayName}
-                  onChange={(val) => drawrInptChng("Duties", "DisplayName", val)}
+                  onChange={(val) =>
+                    drawrInptChng("Duties", "DisplayName", val)
+                  }
                 />
               </Col>
 
               <Col span={12}>
                 <div style={{ display: "flex", flexDirection: "column" }}>
                   {/* Fake label space to align with MyInput label */}
-                  <label style={{ height: 24, visibility: "hidden" }}>label</label>
+                  <label style={{ height: 24, visibility: "hidden" }}>
+                    label
+                  </label>
                   <Checkbox
                     disabled={isDisable}
                     checked={drawerIpnuts?.Duties?.isactive}
@@ -7890,12 +8103,11 @@ useEffect(() => {
                 </div>
               </Col>
             </Row>
-
           </div>
 
           {/* History Table */}
-          <p className="section-title">History</p>
-          <div className="config-tbl-container">
+          <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Duties</h6>
             <Table
               pagination={false}
               columns={columnDuties}
@@ -7914,10 +8126,6 @@ useEffect(() => {
           </div>
         </div>
       </MyDrawer>
-
-
-
-
 
       <MyDrawer
         title="Grade"
@@ -7948,7 +8156,7 @@ useEffect(() => {
           IsUpdateFtn("Ranks", false);
         }}
       >
-        <div className="drawer-main-cntainer">
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-4 pb-4">
             {/* Row 1: Lookup Type */}
             <Row gutter={24}>
@@ -8018,8 +8226,8 @@ useEffect(() => {
           </div>
 
           {/* History Table */}
-          <p className="section-title">History</p>
-          <div className="config-tbl-container">
+          <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Grades</h6>
             <Table
               pagination={false}
               columns={columnRanks}
@@ -8092,7 +8300,9 @@ useEffect(() => {
                 label="Code:"
                 name="code"
                 value={drawerIpnuts?.Boards?.code || ""}
-                onChange={(e) => drawrInptChng("Boards", "code", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Boards", "code", e.target.value)
+                }
                 placeholder="Enter code"
                 disabled={isDisable}
                 required
@@ -8146,7 +8356,7 @@ useEffect(() => {
 
           {/* Existing Boards Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Boards</h6>
+            <h6 className="mb-3 text-primary">Existing Boards</h6>
             <Table
               pagination={false}
               columns={columnBoards}
@@ -8275,7 +8485,7 @@ useEffect(() => {
 
           {/* Existing Councils Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Councils</h6>
+            <h6 className="mb-3 text-primary">Existing Councils</h6>
             <Table
               pagination={false}
               columns={columnCouncils}
@@ -8295,7 +8505,6 @@ useEffect(() => {
         </div>
       </MyDrawer>
 
-
       <MyDrawer
         title="Correspondence Type"
         open={drawerOpen?.CorrespondenceType}
@@ -8311,7 +8520,10 @@ useEffect(() => {
             drawerIpnuts?.CorrespondenceType,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("CorrespondenceType", () => dispatch(getAllLookups()))
+            () =>
+              resetCounteries("CorrespondenceType", () =>
+                dispatch(getAllLookups())
+              )
           );
           dispatch(getAllLookups());
         }}
@@ -8319,7 +8531,9 @@ useEffect(() => {
         update={async () => {
           if (!validateForm("CorrespondenceType")) return;
           await updateFtn("/lookup", drawerIpnuts?.CorrespondenceType, () =>
-            resetCounteries("CorrespondenceType", () => dispatch(getAllLookups()))
+            resetCounteries("CorrespondenceType", () =>
+              dispatch(getAllLookups())
+            )
           );
           dispatch(getAllLookups());
           IsUpdateFtn("CorrespondenceType", false);
@@ -8333,7 +8547,12 @@ useEffect(() => {
                 label="Lookup Type"
                 name="lookuptypeId"
                 value="Correspondence Type"
-                options={[{ label: "Correspondence Type", value: "Correspondence Type" }]}
+                options={[
+                  {
+                    label: "Correspondence Type",
+                    value: "Correspondence Type",
+                  },
+                ]}
                 isSimple={true}
                 disabled={true}
                 required
@@ -8364,7 +8583,11 @@ useEffect(() => {
                 name="lookupname"
                 value={drawerIpnuts?.CorrespondenceType?.lookupname || ""}
                 onChange={(e) =>
-                  drawrInptChng("CorrespondenceType", "lookupname", e.target.value)
+                  drawrInptChng(
+                    "CorrespondenceType",
+                    "lookupname",
+                    e.target.value
+                  )
                 }
                 placeholder="Enter correspondence type"
                 disabled={isDisable}
@@ -8382,7 +8605,11 @@ useEffect(() => {
                 name="DisplayName"
                 value={drawerIpnuts?.CorrespondenceType?.DisplayName || ""}
                 onChange={(e) =>
-                  drawrInptChng("CorrespondenceType", "DisplayName", e.target.value)
+                  drawrInptChng(
+                    "CorrespondenceType",
+                    "DisplayName",
+                    e.target.value
+                  )
                 }
                 placeholder="Enter display name"
                 disabled={isDisable}
@@ -8393,7 +8620,11 @@ useEffect(() => {
               <Checkbox
                 disabled={isDisable}
                 onChange={(e) =>
-                  drawrInptChng("CorrespondenceType", "isactive", e.target.checked)
+                  drawrInptChng(
+                    "CorrespondenceType",
+                    "isactive",
+                    e.target.checked
+                  )
                 }
                 checked={drawerIpnuts?.CorrespondenceType?.isactive}
                 style={{ marginTop: "26px" }}
@@ -8405,7 +8636,7 @@ useEffect(() => {
 
           {/* Existing Correspondence Types Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Correspondence Types</h6>
+            <h6 className="mb-3 text-primary">Existing Correspondence Types</h6>
             <Table
               pagination={false}
               columns={columnCorrespondenceType}
@@ -8441,7 +8672,9 @@ useEffect(() => {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("SpokenLanguages", () => dispatch(getAllLookups()))
+              resetCounteries("SpokenLanguages", () =>
+                dispatch(getAllLookups())
+              )
           );
           dispatch(getAllLookups());
         }}
@@ -8463,7 +8696,9 @@ useEffect(() => {
                 label="Type:"
                 name="lookuptypeId"
                 value="Spoken Languages"
-                options={[{ label: "Spoken Languages", value: "Spoken Languages" }]}
+                options={[
+                  { label: "Spoken Languages", value: "Spoken Languages" },
+                ]}
                 isSimple={true}
                 disabled={true}
                 required
@@ -8512,7 +8747,11 @@ useEffect(() => {
                 name="DisplayName"
                 value={drawerIpnuts?.SpokenLanguages?.DisplayName || ""}
                 onChange={(e) =>
-                  drawrInptChng("SpokenLanguages", "DisplayName", e.target.value)
+                  drawrInptChng(
+                    "SpokenLanguages",
+                    "DisplayName",
+                    e.target.value
+                  )
                 }
                 placeholder="Enter display name"
                 disabled={isDisable}
@@ -8535,7 +8774,7 @@ useEffect(() => {
 
           {/* Existing Spoken Languages Table */}
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3">Existing Spoken Languages</h6>
+            <h6 className="mb-3 text-primary">Existing Spoken Languages</h6>
             <Table
               pagination={false}
               columns={SLColumns}
@@ -8554,8 +8793,6 @@ useEffect(() => {
           </div>
         </div>
       </MyDrawer>
-
-
 
       <MyDrawer
         title="Solicitors"
@@ -8903,8 +9140,8 @@ useEffect(() => {
                   <Input
                     disabled={isDisable}
                     className="inp"
-                  //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
-                  // value={drawerIpnuts?.Lookup?.RegionCode}
+                    //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
+                    // value={drawerIpnuts?.Lookup?.RegionCode}
                   />
                 </div>
                 <p className="error"></p>
@@ -8920,8 +9157,8 @@ useEffect(() => {
                   <Input
                     disabled={isDisable}
                     className="inp"
-                  // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
-                  // value={drawerIpnuts?.Lookup?.RegionName}
+                    // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
+                    // value={drawerIpnuts?.Lookup?.RegionName}
                   />
                 </div>
                 <p className="error"></p>
@@ -8995,6 +9232,130 @@ useEffect(() => {
               pagination={false}
               columns={Committeescolumns}
               // dataSource={lookups}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+
+      <MyDrawer
+        title="Sections"
+        open={drawerOpen?.Sections}
+        isPagination={true}
+        onClose={() => {
+          openCloseDrawerFtn("Sections");
+          IsUpdateFtn("Sections", false);
+        }}
+        add={async () => {
+          if (!validateForm("Sections")) return;
+          await insertDataFtn(
+            `/lookup`,
+            drawerIpnuts?.Sections,
+            "Data inserted successfully",
+            "Data did not insert",
+            () => resetCounteries("Sections", () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+        }}
+        isEdit={isUpdateRec?.Sections}
+        update={async () => {
+          if (!validateForm("Sections")) return;
+          await updateFtn("/lookup", drawerIpnuts?.Sections, () =>
+            resetCounteries("Sections", () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Sections", false);
+        }}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <div className="mb-4 pb-4">
+            {/* Row 1: Lookup Type */}
+            <Row gutter={24}>
+              <Col span={24}>
+                <CustomSelect
+                  label="Lookup Type"
+                  placeholder="Sections"
+                  options={lookupsType}
+                  disabled={true}
+                  value="Sections"
+                />
+              </Col>
+            </Row>
+
+            {/* Row 2: Code + Section Name */}
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Code"
+                  required
+                  disabled={isDisable}
+                  value={drawerIpnuts?.Sections?.code}
+                  onChange={(val) => drawrInptChng("Sections", "code", val)}
+                  error={errors?.Sections?.code}
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Section Name"
+                  required
+                  disabled={isDisable}
+                  value={drawerIpnuts?.Sections?.lookupname}
+                  onChange={(val) =>
+                    drawrInptChng("Sections", "lookupname", val)
+                  }
+                  error={errors?.Sections?.lookupname}
+                />
+              </Col>
+            </Row>
+
+            {/* Row 3: Display Name + Active */}
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Display Name"
+                  disabled={isDisable}
+                  value={drawerIpnuts?.Sections?.DisplayName}
+                  onChange={(val) =>
+                    drawrInptChng("Sections", "DisplayName", val)
+                  }
+                />
+              </Col>
+
+              <Col span={12}>
+                <div className="drawer-checkbox-wrapper">
+                  <label className="input-label">&nbsp;</label>
+                  <div className="checkbox-container">
+                    <Checkbox
+                      disabled={isDisable}
+                      onChange={(e) =>
+                        drawrInptChng("Sections", "isactive", e.target.checked)
+                      }
+                      checked={drawerIpnuts?.Sections?.isactive}
+                    >
+                      Active
+                    </Checkbox>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+          </div>
+
+          {/* History Table */}
+          <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Sections</h6>
+            <Table
+              pagination={false}
+              columns={columnSections}
+              dataSource={data?.Sections}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>

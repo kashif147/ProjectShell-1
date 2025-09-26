@@ -270,13 +270,6 @@ class PolicyClient {
   }
 }
 
-// Support both CommonJS and ES modules
-module.exports = PolicyClient;
-module.exports.default = PolicyClient;
-module.exports.PolicyClient = PolicyClient;
-
-// For environments that support ES modules
-if (typeof exports !== "undefined") {
-  exports.default = PolicyClient;
-  exports.PolicyClient = PolicyClient;
-}
+// ES6 module exports only
+export default PolicyClient;
+export { PolicyClient };

@@ -262,6 +262,11 @@ const Sidebar = () => {
           state: { search: "PermissionManagement" },
         });
         break;
+      case "Product Management":
+        navigate("/ProductTypesManagement", {
+          state: { search: "Product Management" },
+        });
+        break;
       case "Cancelled Members Report":
         navigate("/CancelledMembersReport", {
           state: { search: "Cancelled Members Report" },
