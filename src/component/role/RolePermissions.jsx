@@ -21,24 +21,28 @@ import {
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { useDispatch } from "react-redux";
 import { assignPermissionsToRole } from "../../features/RoleSlice";
+import { getAllPermissions } from "../../features/PermissionSlice";
 
 const { Search } = Input;
 
 const RolePermissions = ({ role, onClose }) => {
   const dispatch = useDispatch();
-  const { permissionDefinitions } = useAuthorization();
+
   const [selectedPermissions, setSelectedPermissions] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     if (role) {
+      debugger
       setSelectedPermissions(role.permissions || []);
     }
   }, [role]);
+  useEffect(() => {
+    dispatch(getAllPermissions())
+  }, [dispatch])
 
-  // Use API permissions instead of static permissions
-  const allPermissions = permissionDefinitions.map((permission) => ({
+  const allPermissions = permissions.map((permission) => ({
     id: permission.key,
     name: permission.name,
     category: permission.category,
@@ -146,7 +150,7 @@ const RolePermissions = ({ role, onClose }) => {
 
   return (
     <Drawer
-      title={`Manage Permissions - ${role?.name}`}
+      title={`Manage Permissions 001- ${role?.name}`}
       width="50%"
       placement="right"
       onClose={onClose}

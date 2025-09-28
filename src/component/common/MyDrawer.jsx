@@ -601,195 +601,149 @@ function MyDrawer({
   };
 
   return (
-    <Drawer
-      width={width}
-      title={title}
-      placement="right"
-      onClose={onClose}
-      open={open}
-      extra={
-        extra || (
-          <div className="d-flex space-evenly gap-3">
-            {isContact && (
-              <div className="mx-auto" style={{ marginRight: "80%" }}>
-                <Button
-                  onClick={() => setcontactDrawer(!contactDrawer)}
-                  className="butn"
-                  style={{ color: "#215E97", marginRight: "250px" }}
-                >
-                  Add IRO
-                </Button>
-              </div>
-            )}
-            {isAddMemeber && (
-              <div className="mx-auto" style={{}}>
-                <Button
-                  onClick={() => setcontactDrawer(!contactDrawer)}
-                  className="butn"
-                  style={{ color: "#215E97", marginLeft: "-80%" }}
-                >
-                  <FaUserAlt />
-                  Add Member
-                </Button>
-              </div>
-            )}
-            {isPyment && (
-              <div className="" style={{ marginRight: "" }}>
-                <Button
-                  onClick={() => setisPayment(!isPayment)}
-                  className="butn secondary me-2"
-                  style={{ color: "#215E97", marginRight: "" }}
-                >
-                  Add Payment
-                </Button>
-              </div>
-            )}
-            {isAprov && (
-              <div
-                className="mx-auto"
-                style={{ marginRight: "", color: "#215E97" }}
-              >
-                <Button
-                  onClick={() => setisAproved(!isAproved)}
-                  className="butn secondary me-2"
-                  style={{ color: "#215E97" }}
-                >
-                  Approvals
-                </Button>
-              </div>
-            )}
-            {isrecursion && (
-              <div
-                className="mx-auto"
-                style={{ marginRight: "", color: "#215E97" }}
-              >
-                <Button
-                  onClick={() => setisRecursion(!isRecursion)}
-                  className="butn secondary me-2"
-                  style={{ color: "#215E97" }}
-                >
-                  Recursion
-                  <BiRefresh style={{ fontSize: "24px" }} />
-                </Button>
-              </div>
-            )}
+  <Drawer
+  width={width}
+  title={title}
+  placement="right"
+  onClose={onClose}
+  open={open}
+  extra={
+    extra || (
+      <div className="d-flex flex-wrap align-items-center gap-3">
+        {/* Contact Button */}
+        {isContact && (
+          <Button
+            onClick={() => setcontactDrawer(!contactDrawer)}
+            className="butn"
+            style={{ color: "#215E97" }}
+          >
+            Add IRO
+          </Button>
+        )}
 
-            <Space>
-              {title === "Registration Request" && <MemberSearch />}
-              {isAss == true && (
-                <>
-                  <Button className="gray-btn butn" onClick={onClose}>
-                    <FaFile />
-                    NOK
-                  </Button>
-                  <Button className="gray-btn butn">
-                    <FaFile />
-                    Ins.Co.
-                  </Button>
-                </>
-              )}
+        {/* Add Member */}
+        {isAddMemeber && (
+          <Button
+            onClick={() => setcontactDrawer(!contactDrawer)}
+            className="butn"
+            style={{ color: "#215E97" }}
+          >
+            <FaUserAlt /> Add Member
+          </Button>
+        )}
 
-              {isMultiple?.isGardaCheckbx && (
-                <Checkbox
-                  value={isMultiple?.value}
-                  onChange={isMultiple?.multipleFtn}
-                >
-                  Bulk Registration
-                </Checkbox>
-              )}
-              {isAppRej && (
-                <Radio.Group value={""}>
-                  <Radio value="approved" onClick={handleChangeApprove}>
-                    Approve
-                  </Radio>
-                  <CommonPopConfirm
-                    title="Are you sure you want to reject?"
-                    onConfirm={rejFtn}
-                  >
-                    <Radio value="rejected">Reject</Radio>
-                  </CommonPopConfirm>
-                </Radio.Group>
-              )}
+        {/* Payment */}
+        {isPyment && (
+          <Button
+            onClick={() => setisPayment(!isPayment)}
+            className="butn secondary"
+            style={{ color: "#215E97" }}
+          >
+            Add Payment
+          </Button>
+        )}
 
-              {/* <Button className="butn secoundry-btn me-4" onClick={onClose}>
-              Close
-            </Button> */}
-              {!isGarda && status === "undefined" ? (
-                <Button
-                  className="butn primary-btn"
-                  onClick={async () => {
-                    if (isDisable && location?.pathname !== "/Batches") {
-                      disableFtn(false);
-                    } else if (!isEdit && location?.pathname !== "/Batches") {
-                      add();
-                    } else if (location?.pathname === "/Batches") {
-                      await Navigate("/BatchMemberSummary", {
-                        state: { search: "BatchMemberSummary" },
-                      });
-                      onClose();
-                    } else {
-                      update();
-                    }
-                  }}
-                >
-                  {!isDisable &&
-                  !isManual &&
-                  title !== "Bulk Registration" &&
-                  title !== "Registration Request"
-                    ? "Add"
-                    : "Save"}
-                </Button>
-              ) : status === "Draft" ? (
-                <Button className="butn primary-btn" onClick={add}>
-                  Add
-                </Button>
-              ) : (
-                <Button className="butn primary-btn" onClick={add}>
-                  Submit
-                </Button>
-              )}
+        {/* Approvals */}
+        {isAprov && (
+          <Button
+            onClick={() => setisAproved(!isAproved)}
+            className="butn secondary"
+            style={{ color: "#215E97" }}
+          >
+            Approvals
+          </Button>
+        )}
 
-              {(isGarda || isManual) && (
-                <div
-                  style={{
-                    display: "flex",
-                    justifyContent: "center",
-                    alignItems: "center",
-                  }}
-                >
-                  <Button className="me-1 gray-btn butn" onClick={PrevFtn}>
-                    <FaAngleLeft className="deatil-header-icon" />
-                  </Button>
-                  <p
-                    style={{
-                      fontWeight: "500",
-                      fontSize: "14px",
-                      margin: "0 8px",
-                    }}
-                  >
-                    {nextPrevData?.currentApp} of {nextPrevData?.total}
-                  </p>
-                  <Button className="me-1 gray-btn butn" onClick={nextFtn}>
-                    <FaAngleRight className="deatil-header-icon" />
-                  </Button>
-                </div>
-              )}
-            </Space>
-            {title === "Registration Request" && (
-              <>
-                <Button className="butn primary-btn" onClick={draftFtn}>
-                  Save
-                </Button>
+        {/* Recursion */}
+        {isrecursion && (
+          <Button
+            onClick={() => setisRecursion(!isRecursion)}
+            className="butn secondary"
+            style={{ color: "#215E97" }}
+          >
+            Recursion <BiRefresh style={{ fontSize: "18px" }} />
+          </Button>
+        )}
 
-                {/* <Button className="butn primary-btn" onClick={add}>
-                Submit
-              </Button> */}
-              </>
-            )}
+        {/* Member Search for Registration */}
+        {title === "Registration Request" && <MemberSearch />}
+
+        {/* NOK & Insurance */}
+        {isAss && (
+          <>
+            <Button className="gray-btn butn" onClick={onClose}>
+              <FaFile /> NOK
+            </Button>
+            <Button className="gray-btn butn">
+              <FaFile /> Ins.Co.
+            </Button>
+          </>
+        )}
+
+        {/* Bulk Registration */}
+        {isMultiple?.isGardaCheckbx && (
+          <Checkbox
+            value={isMultiple?.value}
+            onChange={isMultiple?.multipleFtn}
+          >
+            Bulk Registration
+          </Checkbox>
+        )}
+
+        {/* Approval / Rejection */}
+        {isAppRej && (
+          <Radio.Group value="">
+            <Radio value="approved" onClick={handleChangeApprove}>
+              Approve
+            </Radio>
+            <CommonPopConfirm
+              title="Are you sure you want to reject?"
+              onConfirm={rejFtn}
+            >
+              <Radio value="rejected">Reject</Radio>
+            </CommonPopConfirm>
+          </Radio.Group>
+        )}
+
+        {/* Add / Update / Submit */}
+        {isDisable ? (
+          <Button className="butn primary-btn" onClick={() => disableFtn(false)}>
+            Add
+          </Button>
+        ) : (
+          <Button
+            className="butn primary-btn"
+            onClick={() => {
+              if (!isEdit) {
+                add();
+              } else {
+                update();
+              }
+            }}
+          >
+            {isEdit ? "Update" : "Submit"}
+          </Button>
+        )}
+
+        {/* Prev / Next Navigation */}
+        {(isGarda || isManual) && (
+          <div className="d-flex align-items-center">
+            <Button className="gray-btn butn me-1" onClick={PrevFtn}>
+              <FaAngleLeft className="deatil-header-icon" />
+            </Button>
+            <p className="m-0" style={{ fontWeight: 500, fontSize: "14px" }}>
+              {nextPrevData?.currentApp} of {nextPrevData?.total}
+            </p>
+            <Button className="gray-btn butn ms-1" onClick={nextFtn}>
+              <FaAngleRight className="deatil-header-icon" />
+            </Button>
           </div>
-        )
-      }
-    >
+        )}
+      </div>
+    )
+  }
+>
+
       <div
         className="drawer-main-cntainer"
         style={{ backgroundColor: "#f6f9fc" }}

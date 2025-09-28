@@ -77,6 +77,7 @@ function HeaderDetails() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
+  
   const handleDateChange = (val) => {
     setValue(val); // val is a dayjs or null
   };
@@ -94,7 +95,7 @@ function HeaderDetails() {
     claimsDrawer,
     ProfileDetails,
     resetFilters,
-    handleSave,
+    handleSave, 
     report,
     isSaveChng,
     ReportsTitle,

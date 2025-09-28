@@ -16,29 +16,43 @@ import {
 } from "antd";
 import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { getAllRolesList } from "../../constants/Roles";
-import { useDispatch } from "react-redux";
+import { useDispatch,useSelector } from "react-redux";
 import { assignRolesToUser } from "../../features/UserSlice";
 import { getAllRoles } from "../../features/RoleSlice";
+
 
 const { Search } = Input;
 
 const UserRoleAssignment = ({ user, onClose }) => {
   const dispatch = useDispatch();
+   const {
+    roles,
+    rolesLoading,
+    error,
+    // searchQuery,
+    selectedTenant,
+    selectedStatus,
+    selectedCategory,
+  } = useSelector((state) => state.roles);
+
   const [selectedRoles, setSelectedRoles] = useState([]);
   console.log("User in Drawer:", selectedRoles);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-
+const [initialPermissions, setInitialPermissions] = useState([]);
   useEffect(() => {
     if (user) {
       setSelectedRoles(user.roles?.map((role) => role._id) || []);
+      setInitialPermissions(user.roles?.map((role) => role._id) || []);
     }
   }, [user]);
+  console.log("Selected Roles:", selectedRoles);
   useEffect(() => {
     dispatch(getAllRoles())
   }, [dispatch])
 
-  const allRoles = getAllRolesList();
+  const allRoles = roles;
+  debugger
   const groupedRoles = allRoles.reduce((acc, role) => {
     const category = role.category;
     if (!acc[category]) {
@@ -47,8 +61,8 @@ const UserRoleAssignment = ({ user, onClose }) => {
     acc[category].push(role);
     return acc;
   }, {});
-
   const filteredRoles = Object.keys(groupedRoles).reduce((acc, category) => {
+
     const categoryRoles = groupedRoles[category].filter(
       (role) =>
         role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -59,7 +73,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
     }
     return acc;
   }, {});
-
+debugger
   const handleRoleToggle = (roleId, checked) => {
     if (checked) {
       setSelectedRoles([...selectedRoles, roleId]);
@@ -233,6 +247,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
             {Object.keys(filteredRoles).map((category) => {
               const categoryRoles = filteredRoles[category];
               const isFullySelected = isCategoryFullySelected(categoryRoles);
+          debugger
               const isPartiallySelected =
                 isCategoryPartiallySelected(categoryRoles);
 
@@ -278,7 +293,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
                         <Col xs={24} sm={12} md={8} key={role.id}>
                           <div className="role-item">
                             <Checkbox
-                              checked={selectedRoles.includes(role.id)}
+                              checked={selectedRoles.includes(role._id)}
                               onChange={(e) =>
                                 handleRoleToggle(role.id, e.target.checked)
                               }

@@ -517,7 +517,7 @@ const RoleManagement = ({ onClose }) => {
 
       {/* Role Permissions Drawer */}
       {isPermissionsOpen && (
-        <RolePermissions role={editingRole} onClose={handlePermissionsClose} />
+        <RolePermissions role={editingRole} onClose={handlePermissionsClose} open={isPermissionsOpen}/>
       )}
     </div>
   );

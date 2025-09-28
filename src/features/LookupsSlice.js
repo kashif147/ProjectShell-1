@@ -1,5 +1,5 @@
 // lookupsSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
+import { createSlice, createAsyncThunk,createSelector  } from '@reduxjs/toolkit';
 import axios from 'axios';
 import { baseURL } from '../utils/Utilities';
 
@@ -10,7 +10,7 @@ export const getAllLookups = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/lookup`, {
+            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookup`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -78,6 +78,7 @@ export const deleteLookup = createAsyncThunk(
     }
 );
 
+
 const lookupsSlice = createSlice({
     name: 'lookups',
     initialState: {
@@ -142,5 +143,17 @@ const lookupsSlice = createSlice({
             });
     },
 });
+export const selectLookups = (state) => state.lookups.lookups;
+
+export const selectGroupedLookups = createSelector(
+  [selectLookups],
+  (lookups) =>
+    lookups.reduce((acc, item) => {
+      const key = item.lookuptypeId?.lookuptype || 'Unknown';
+      if (!acc[key]) acc[key] = [];
+      acc[key].push(item);
+      return acc;
+    }, {})
+);
 
 export default lookupsSlice.reducer;

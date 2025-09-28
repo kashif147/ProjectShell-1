@@ -5,7 +5,7 @@ import dayjs from "dayjs";
 import moment from "moment";
 import PolicyClient from "./node-policy-client";
 let token;
-export const baseURL = process.env.REACT_APP_BASE_URL_DEV;
+export const baseURL = `${process.env.REACT_APP_POLICY_SERVICE_URL}`;
 
 export const insertDataFtn = async (
   apiURL = baseURL,
@@ -16,6 +16,7 @@ export const insertDataFtn = async (
   callback
 ) => {
   const token = localStorage.getItem("token");
+  debugger 
 
   try {
     const response = await axios.post(`${apiURL}${url}`, data, {

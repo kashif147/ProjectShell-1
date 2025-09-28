@@ -1,350 +1,269 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import {
   Drawer,
-  Form,
-  Input,
-  Select,
+  Checkbox,
   Button,
   Space,
   message,
+  Card,
   Row,
   Col,
-  Switch,
-  InputNumber,
+  Input,
+  Tag,
+  Divider,
+  Badge,
 } from "antd";
+import { SearchOutlined } from "@ant-design/icons";
 import { useAuthorization } from "../../../context/AuthorizationContext";
-import MyInput from "../../../component/common/MyInput";
-import CustomSelect from "../../../component/common/CustomSelect";
-import { insertDataFtn, updateFtn } from "../../../utils/Utilities";
-import { getAllPermissions } from "../../../features/PermissionSlice";
-import {useDispatch} from "react-redux"
+import { useDispatch } from "react-redux";
+import { assignPermissionsToRole } from "../../../features/RoleSlice";
 
-const { Option } = Select;
-const { TextArea } = Input;
+const { Search } = Input;
 
-const PermissionForm = ({ permission, onClose, onSubmit }) => {
-  console.log("Editing Permission:", permission);
-  const dispatch = useDispatch()
-  const { permissionDefinitions } = useAuthorization();
-  const [form] = Form.useForm();
+const RolePermissions = ({ role, onClose }) => {
+  const dispatch = useDispatch();
+  const { permissionDefinitions = [] } = useAuthorization() || {};
+
+  const [selectedPermissions, setSelectedPermissions] = useState([]);
+  const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
 
-  // Backend schema categories
-  const PERMISSION_CATEGORIES = [
-    { value: "GENERAL", label: "General" },
-    { value: "USER", label: "User" },
-    { value: "ROLE", label: "Role" },
-    { value: "TENANT", label: "Tenant" },
-    { value: "ACCOUNT", label: "Account" },
-    { value: "PORTAL", label: "Portal" },
-    { value: "CRM", label: "CRM" },
-    { value: "ADMIN", label: "Admin" },
-    { value: "API", label: "API" },
-    { value: "AUDIT", label: "Audit" },
-    { value: "SUBSCRIPTION", label: "Subscription" },
-    { value: "PROFILE", label: "Profile" },
-    { value: "FINANCIAL", label: "Financial" },
-    { value: "INVOICE", label: "Invoice" },
-    { value: "RECEIPT", label: "Receipt" },
-  ];
-
-  const PERMISSION_ACTIONS = [
-    { value: "all", label: "All Actions" },
-    ...Array.from(new Set(permissionDefinitions.map((p) => p.action))).map(
-      (action) => ({
-        value: action,
-        label: action.charAt(0).toUpperCase() + action.slice(1),
-      })
-    ),
-  ];
-
-  const handleCancel = () => {
-    form.resetFields();
-    onClose();
-  };
-
-  const generateCode = (category, action, resource) => {
-    if (category && action && resource) {
-      return `${category.toUpperCase()}_${resource.toUpperCase()}_${action.toUpperCase()}`;
+  // 👉 Always pre-select role’s current permissions
+  useEffect(() => {
+    if (role) {
+      setSelectedPermissions(role.permissions || []);
     }
-    return "";
-  };
+  }, [role]);
 
-  const handleCategoryChange = (value) => {
-    const currentAction = form.getFieldValue("action");
-    const currentResource = form.getFieldValue("resource");
-    if (currentAction && currentResource) {
-      const generatedCode = generateCode(value, currentAction, currentResource);
-      form.setFieldsValue({ code: generatedCode });
-    }
-  };
+  // Normalize API permissions
+  const allPermissions = useMemo(() => {
+    return (permissionDefinitions || []).map((p) => ({
+      id: p.key ?? p.id,
+      name: p.name ?? p.key,
+      category: p.category ?? "Uncategorized",
+      description: p.description ?? "",
+      permission: p.key ?? p.permission ?? "",
+    }));
+  }, [permissionDefinitions]);
 
-  const handleActionChange = (value) => {
-    const currentCategory = form.getFieldValue("category");
-    const currentResource = form.getFieldValue("resource");
-    if (currentCategory && currentResource) {
-      const generatedCode = generateCode(
-        currentCategory,
-        value,
-        currentResource
-      );
-      form.setFieldsValue({ code: generatedCode });
-    }
-  };
-
-  const handleResourceChange = (value) => {
-    const currentCategory = form.getFieldValue("category");
-    const currentAction = form.getFieldValue("action");
-    if (currentCategory && currentAction) {
-      const generatedCode = generateCode(currentCategory, currentAction, value);
-      form.setFieldsValue({ code: generatedCode });
-    }
-  };
-
-  const [data, setData] = useState({
-    isSystemPermission: false,
-    tenantId: "39866a06-30bc-4a89-80c6-9dd9357dd453",
-  });
-
-  const [errors, setErrors] = useState({});
-
-  const handleChange = (field, value) => {
-    setData((prev) => ({ ...prev, [field]: value }));
-    setErrors((prev) => ({ ...prev, [field]: "" })); // clear error on change
-  };
-  const validate = () => {
-    let newErrors = {};
-
-    if (!data.name?.trim()) newErrors.name = true;
-
-    if (!data.code?.trim()) newErrors.code = true;
-
-    if (!data.category) newErrors.category = true;
-    if (!data.resource?.trim()) newErrors.resource = true;
-    if (!data.action?.trim()) newErrors.action = true;
-    if (!data.description?.trim()) newErrors.description = true;
-
-    if (!data.level) newErrors.level = true;
-
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
-  const url = process.env.REACT_APP_POLICY_SERVICE_URL;
- const handleSubmit = () => {
-  if (!validate()) return;
-
-  // if we are editing (permission exists)
-  if (permission ) {
-    // find only the changed fields
-    const updatedFields = Object.keys(data).reduce((acc, key) => {
-      if (data[key] !== permission[key]) {
-        acc[key] = data[key];
-      }
-      console.log('testiny',acc)
+  // Group by category
+  const groupedPermissions = useMemo(() => {
+    return allPermissions.reduce((acc, permission) => {
+      const category = permission.category || "Uncategorized";
+      if (!acc[category]) acc[category] = [];
+      acc[category].push(permission);
       return acc;
     }, {});
-    if (Object.keys(updatedFields).length === 0) {
-      message.info("No changes detected");
-      return;
-    }
-    updateFtn(
-      url,
-      `/api/permissions/${permission._id}`, // usually update endpoint
-      updatedFields,
-      () => {
-        dispatch(getAllPermissions());
-        onClose();
-        setErrors({});
-        setData({});
-      },
-      "Permission updated successfully",
-    );
-    
-  } else {
-    // create new
-    insertDataFtn(
-      url,
-      "/api/permissions",
-      data,
-      "Permission created successfully",
-      "Error creating permission",
-      () => {
-        dispatch(getAllPermissions());
-        onClose();
-        setErrors({});
-        setData({});
-      }
-    );
-  }
-};
+  }, [allPermissions]);
 
- useEffect(() => {
-  if (permission) {
-    setData({
-      name: permission.name || "",
-      code: permission.code || "",
-      category: permission.category || "",
-      resource: permission.resource || "",
-      action: permission.action || "",
-      level: permission.level || 0,
-      isSystemPermission: permission.isSystemPermission ?? false,
-      isActive: permission.isActive ?? true,
-      description: permission.description || "",
-    });
-  }
-}, [permission]);
+  // Filtered by search (but keep all if query is empty)
+  const filteredPermissions = useMemo(() => {
+    const q = (searchQuery || "").trim().toLowerCase();
+    if (!q) return groupedPermissions;
+
+    return Object.keys(groupedPermissions).reduce((acc, category) => {
+      const categoryPermissions = groupedPermissions[category].filter((p) => {
+        return (
+          (p.name || "").toLowerCase().includes(q) ||
+          (p.permission || "").toLowerCase().includes(q) ||
+          (p.description || "").toLowerCase().includes(q)
+        );
+      });
+      if (categoryPermissions.length > 0) acc[category] = categoryPermissions;
+      return acc;
+    }, {});
+  }, [groupedPermissions, searchQuery]);
+
+  // Helpers
+  const isCategoryFullySelected = (categoryPermissions) =>
+    categoryPermissions.every((p) => selectedPermissions.includes(p.id));
+
+  const isCategoryPartiallySelected = (categoryPermissions) => {
+    const selectedCount = categoryPermissions.filter((p) =>
+      selectedPermissions.includes(p.id)
+    ).length;
+    return selectedCount > 0 && selectedCount < categoryPermissions.length;
+  };
+
+  const handlePermissionToggle = (permissionId, checked) => {
+    setSelectedPermissions((prev) =>
+      checked ? [...prev, permissionId] : prev.filter((id) => id !== permissionId)
+    );
+  };
+
+  const handleSelectAll = (categoryPermissions, checked) => {
+    const ids = categoryPermissions.map((p) => p.id);
+    setSelectedPermissions((prev) =>
+      checked ? Array.from(new Set([...prev, ...ids])) : prev.filter((id) => !ids.includes(id))
+    );
+  };
+
+  const handleSave = async () => {
+    try {
+      setLoading(true);
+      await dispatch(
+        assignPermissionsToRole({
+          roleId: role.id,
+          permissionIds: selectedPermissions,
+        })
+      );
+      message.success("Permissions updated successfully");
+      onClose();
+    } catch (error) {
+      message.error("Failed to update permissions");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCategoryColor = (category) => {
+    const colors = {
+      General: "blue",
+      User: "green",
+      Role: "purple",
+      Account: "orange",
+      Portal: "cyan",
+      CRM: "magenta",
+      Audit: "red",
+      Subscription: "gold",
+      Profile: "lime",
+    };
+    return colors[category] || "default";
+  };
+
   return (
     <Drawer
-      title={permission ? "Edit Permission" : "Add New Permission"}
-      width="33%"
+      title={`Manage Permissions 2 - ${role?.name ?? "Role"}`}
+      width="50%"
       placement="right"
-      onClose={handleCancel}
+      onClose={onClose}
       open={true}
-      className="permission-form-drawer configuration-main"
+      className="role-permissions-drawer configuration-main"
       extra={
         <Space>
-          {/* <Button onClick={handleCancel}>Cancel</Button> */}
+          <Button onClick={onClose}>Close</Button>
           <Button
-            className="btun primary-btn"
-            // type="primary"
-            onClick={handleSubmit}
+            type="primary"
+            onClick={handleSave}
             loading={loading}
-            // style={{
-            //   backgroundColor: "var(--primary-color)",
-            //   borderColor: "var(--primary-color)",
-            //   borderRadius: "4px",
-            // }}
+            style={{
+              backgroundColor: "var(--primary-color)",
+              borderColor: "var(--primary-color)",
+              borderRadius: "4px",
+            }}
           >
-            {permission ? "Update" : "Create"}
+            Save Permissions
           </Button>
         </Space>
       }
     >
       <div className="drawer-main-cntainer">
-        <MyInput
-          label="Permission Name"
-          placeholder="Enter permission name"
-          value={data.name}
-          onChange={(e) => handleChange("name", e.target.value)}
-          required
-          hasError={errors.name}
-        />
-
-        <MyInput
-          label="Code"
-          placeholder="e.g., USER_READ"
-          value={data.code}
-          onChange={(e) => handleChange("code", e.target.value)}
-          required
-          hasError={errors.code}
-        />
-
-        <CustomSelect
-          label="Category"
-          placeholder="Select category"
-          options={PERMISSION_CATEGORIES.map((c) => ({
-            value: c.value,
-            label: c.label,
-          }))}
-          value={data.category}
-          onChange={(val) => handleChange("category", val.target.value)}
-          allowClear
-          required
-          hasError={errors.category}
-        />
-
-        <MyInput
-          label="Resource"
-          placeholder="e.g., user, account, profile"
-          value={data.resource}
-          onChange={(e) => handleChange("resource", e.target.value)}
-          required
-          hasError={errors.resource}
-        />
-
-        <MyInput
-          label="Action"
-          placeholder="e.g., read, write, create, delete"
-          value={data.action}
-          onChange={(e) => handleChange("action", e.target.value)}
-          required
-          hasError={errors.action}
-        />
-
-        <MyInput
-          label="Level"
-          type="number"
-          placeholder="1-100"
-          value={data.level}
-          min={1}
-          max={100}
-          onChange={(e) => handleChange("level", e.target.value)}
-          required
-          hasError={errors.level}
-        />
-        <Row className="mb-3">
-          <Col span={12}>
-            <label className="my-input-label mb-2">System Permission</label>
-            <Switch
-              checked={data?.isSystemPermission}
-              onChange={(checked) =>
-                handleChange("isSystemPermission", checked)
-              }
+        <div className="role-permissions-content">
+          {/* Search */}
+          <div className="mb-4">
+            <Search
+              placeholder="Search permissions..."
+              prefix={<SearchOutlined />}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              style={{
+                height: "40px",
+                borderRadius: "4px",
+                border: "1px solid #d9d9d9",
+              }}
             />
-          </Col>
-          <Col span={12}>
-            <label className="my-input-label mb-2">Active</label>
-            <Switch
-            // checked={data.isActive}
-            // onChange={(checked) => handleChange("isActive", checked)}
-            />
-          </Col>
-        </Row>
-        <MyInput
-          label="Description"
-          name="           "
-          placeholder="Enter permission description"
-          type="textarea"
-          rows={4}
-          maxLength={200}
-          required
-          value={data?.description}
-          onChange={(e) => handleChange("description", e.target.value)}
-          showCount
-          rules={[
-            { required: true, message: "Please enter description" },
-            { min: 10, message: "Description must be at least 10 characters" },
-          ]}
-          hasError={errors.description}
-        />
+          </div>
 
-        <div className="form-help">
-          <h5>Permission Schema Guidelines:</h5>
-          <ul>
-            <li>
-              Code Format: <code>CATEGORY_RESOURCE_ACTION</code>
-            </li>
-            <li>
-              Examples: <code>USER_READ</code>, <code>ACCOUNT_WRITE</code>
-            </li>
-            <li>Code is auto-generated from category, resource, and action</li>
-            <li>Level determines permission hierarchy (1-100) </li>
-            <ul>
-              <li>Level 1-10: Basic read permissions (low sensitivity)</li>
-              <li>
-                Level 30-50: Write/update permissions (medium sensitivity)
-              </li>
-              <li>
-                Level 60-80: Administrative permissions (high sensitivity)
-              </li>
-              <li>Level 90-100: Critical permissions (maximum sensitivity)</li>
-            </ul>
-            <li>System permissions are protected from deletion</li>
-          </ul>
+          {/* Selected Count */}
+          <div className="mb-4">
+            <Card className="selected-permissions-card">
+              <div className="d-flex justify-content-between align-items-center">
+                <div>
+                  <h5 className="mb-1">Selected Permissions</h5>
+                  <p className="text-muted mb-0">
+                    {selectedPermissions.length} of {allPermissions.length} permissions selected
+                  </p>
+                </div>
+                <Badge
+                  count={selectedPermissions.length}
+                  showZero
+                  color="var(--primary-color)"
+                >
+                  <Tag color="var(--primary-color)" className="permission-count-tag">
+                    {selectedPermissions.length}
+                  </Tag>
+                </Badge>
+              </div>
+            </Card>
+          </div>
+
+          {/* Permissions by Category */}
+          <div className="permissions-categories">
+            {Object.keys(filteredPermissions).map((category) => {
+              const categoryPermissions = filteredPermissions[category];
+              return (
+                <Card key={category} className="permission-category-card mb-3">
+                  <div className="category-header">
+                    <div className="d-flex justify-content-between align-items-center">
+                      <div className="d-flex align-items-center">
+                        <Checkbox
+                          checked={isCategoryFullySelected(categoryPermissions)}
+                          indeterminate={isCategoryPartiallySelected(categoryPermissions)}
+                          onChange={(e) => handleSelectAll(categoryPermissions, e.target.checked)}
+                        />
+                        <Tag color={getCategoryColor(category)} className="category-tag ml-2">
+                          {category}
+                        </Tag>
+                        <span className="ml-2 text-muted">
+                          ({categoryPermissions.length} permissions)
+                        </span>
+                      </div>
+                      <Badge
+                        count={categoryPermissions.filter((p) =>
+                          selectedPermissions.includes(p.id)
+                        ).length}
+                        showZero
+                        color="var(--primary-color)"
+                      />
+                    </div>
+                  </div>
+
+                  <Divider className="my-3" />
+
+                  <div className="permissions-list">
+                    <Row gutter={[16, 16]}>
+                      {categoryPermissions.map((permission) => (
+                        <Col xs={24} sm={12} md={8} key={permission.id}>
+                          <div className="permission-item">
+                            <Checkbox
+                              checked={selectedPermissions.includes(permission.id)}
+                              onChange={(e) =>
+                                handlePermissionToggle(permission.id, e.target.checked)
+                              }
+                            >
+                              <div className="permission-content">
+                                <div className="permission-name">{permission.name}</div>
+                                <div className="permission-string">
+                                  <code>{permission.permission}</code>
+                                </div>
+                                <div className="permission-description">
+                                  {permission.description}
+                                </div>
+                              </div>
+                            </Checkbox>
+                          </div>
+                        </Col>
+                      ))}
+                    </Row>
+                  </div>
+                </Card>
+              );
+            })}
+          </div>
         </div>
       </div>
     </Drawer>
   );
 };
 
-export default PermissionForm;
+export default RolePermissions;

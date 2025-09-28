@@ -46,7 +46,7 @@ import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import "../../styles/AppLauncher.css";
-
+import axios from "axios";
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
   const { permissions, roles } = useAuthorization();
@@ -61,6 +61,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     dispatch(updateMenuLbl({ key, value }));
     closeDropdown();
   };
+
 
   const appItems = [
     {
@@ -449,7 +450,28 @@ function Header() {
         ),
       };
     }) || [];
+  const logout = async () => {
+    try {
+      const token = localStorage.getItem("token");
 
+      await axios.post(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/logout`,
+        {}, // empty body
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Logout successful");
+      localStorage.removeItem("token");
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+    }
+  };
   return (
     <div
       className="Header-border overflow-y-hidden bg pt-0 pb-0"
@@ -516,8 +538,9 @@ function Header() {
             style={{ marginRight: "30px", fontSize: "25px" }} // also works
             color="#ff4d4f"
             onClick={() => {
-              localStorage.removeItem("token");
-              navigate("/");
+              // localStorage.removeItem("token");
+              // navigate("/");
+              logout();
             }}
           />
         </div>

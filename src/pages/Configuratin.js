@@ -3,6 +3,7 @@ import { SiActigraph } from "react-icons/si";
 import { FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
+import { selectGroupedLookups } from "../features/LookupsSlice";
 import {
   Input,
   Table,
@@ -91,10 +92,11 @@ import { PiGavelThin } from "react-icons/pi";
 import { LuAlarmClock } from "react-icons/lu";
 import { SlEnvelopeOpen } from "react-icons/sl";
 import CustomSelect from "../component/common/CustomSelect";
+import MyAlert from "../component/common/MyAlert";
 // import '../styles/Configuratin.css'
 import "../styles/Configuration.css";
 import MySelect from "../component/common/MySelect";
-import { deleteFtn, insertDataFtn, updateFtn } from "../utils/Utilities";
+import { deleteFtn, updateFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
 import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
@@ -110,6 +112,113 @@ import { useNavigate } from "react-router-dom";
 // i have different drwers for configuration of lookups for the system
 
 function Configuratin() {
+  const insertDataFtn = async (
+    // apiURL = baseURL,
+    url,
+    data,
+    successNotification,
+    failureNotification,
+    callback
+  ) => {
+    const token = localStorage.getItem("token");
+
+    try {
+      const response = await axios.post(`${baseURL}${url}`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          maxBodyLength: Infinity,
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+
+      // ✅ Accept any 2xx status as success
+      if (response.status >= 200 && response.status < 300) {
+        MyAlert("success", successNotification);
+        if (callback && typeof callback === "function") callback();
+        return response.data;
+      } else {
+        MyAlert(
+          "error",
+          failureNotification,
+          response?.data?.error || "Unknown error"
+        );
+        return null;
+      }
+    } catch (error) {
+      console.error("Axios Error:", error?.response || error);
+      MyAlert(
+        "error",
+        failureNotification,
+        error?.response?.data?.error || error.message
+      );
+      return null;
+    }
+  };
+  const updateFtn = async (
+    // apiURL = baseURL,
+    endPoint,
+    data1,
+    callback,
+    msg = "updated successfully",
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+      // ✅ If `id` exists in data1 but not in URL, append it
+      let finalEndPoint = endPoint;
+      if (data1?.id && !endPoint.includes(data1.id)) {
+        finalEndPoint = `${endPoint}/${data1.id}`;
+      }
+
+      const { id, ...finalData } = data1;
+
+      const response = await axios.put(`${baseURL}${finalEndPoint}`, finalData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("Update Response:", response);
+      if (response?.status === 200) {
+
+        MyAlert("success", msg);
+        if (typeof callback === "function") {
+          await callback(); // wait in case it's async
+        }
+        return response.data;
+      } else {
+        MyAlert("error", "notificationsMsg?.updating?.falier");
+
+      }
+    } catch (error) {
+      // console.error("API Error:", error.response?.data || error.message);
+      throw error;
+    }
+  };
+  const deleteFtn = async (url1, callback) => {
+    const token = localStorage.getItem("token");
+    // const data = JSON.stringify({  });
+    const config = {
+      method: "delete",
+      // maxBodyLength: Infinity,
+      url: `${baseURL}/api/${url1}`,
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`, // Use Bearer token for authorization
+      },
+    };
+    try {
+      const response = await axios.request(config);
+      MyAlert("success", "You Have Successfully Deleted.");
+      if (callback && typeof callback === "function" && response?.data) {
+        callback();
+      }
+      return response.data;
+    } catch (error) {
+      console.error("Error deleting region:", error);
+      return MyAlert("error", "Please Try Again");
+    }
+  };
   const navigate = useNavigate();
   const [data, setdata] = useState({
     gender: [],
@@ -137,6 +246,8 @@ function Configuratin() {
     MaritalStatus: [],
     Sections: [],
   });
+
+  const groupedLookups = useSelector(selectGroupedLookups);
 
   const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
@@ -172,6 +283,7 @@ function Configuratin() {
   const dispatch = useDispatch();
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+  console.log(lookups, "lok")
 
   const { lookupsTypes, lookupsTypesloading } = useSelector(
     (state) => state.lookupsTypes
@@ -314,39 +426,42 @@ function Configuratin() {
   useEffect(() => {
     if (!lookups || !Array.isArray(lookups)) return;
 
-    // ✅ use the real IDs from your backend
-    const lookupFilters = [
-      { key: "gender", id: "68c85f21302e5600dc8477da" },
-      { key: "Titles", id: "68c85f21302e5600dc8477d6" },
-      { key: "ProjectTypes", id: "68c85f22302e5600dc8477fc" },
-      { key: "Duties", id: "68c85f22302e5600dc847805" },
-      { key: "MaritalStatus", id: "68c85f21302e5600dc8477dd" },
-      { key: "county", id: "68c85f22302e5600dc8477e4" },
-      { key: "Divisions", id: "68c85f22302e5600dc8477e7" },
-      { key: "Cities", id: "68c85f22302e5600dc8477ed" },
-      { key: "Boards", id: "68c85f22302e5600dc8477f3" },
-      { key: "Councils", id: "68c85f22302e5600dc8477f6" },
-      { key: "CorrespondenceType", id: "68c85f22302e5600dc84780b" },
-      { key: "Stations", id: "68c85f22302e5600dc8477f0" },
-      { key: "DocumentType", id: "68c85f22302e5600dc84780e" },
-      { key: "ClaimType", id: "68c85f22302e5600dc847811" },
-      { key: "Schemes", id: "68c85f22302e5600dc847814" },
-      { key: "Reasons", id: "68c85f22302e5600dc847817" },
-      { key: "Provinces", id: "68c85f21302e5600dc8477e0" },
-      { key: "Districts", id: "68c85f22302e5600dc8477ea" },
-      { key: "SpokenLanguages", id: "68c85f22302e5600dc8477f9" },
-      { key: "Trainings", id: "68c85f22302e5600dc8477ff" },
-      { key: "Ranks", id: "68c85f22302e5600dc847802" },
-      { key: "RosterType", id: "68c85f22302e5600dc847808" },
+    // ✅ List the keys you want to extract
+    const lookupKeys = [
+      "gender",
+      "Titles",
+      "ProjectTypes",
+      "Duties",
+      "MaritalStatus",
+      "county",
+      "Divisions",
+      "Cities",
+      "Boards",
+      "Councils",
+      "CorrespondenceType",
+      "Stations",
+      "DocumentType",
+      "ClaimType",
+      "Schemes",
+      "Reasons",
+      "Provinces",
+      "Districts",
+      "SpokenLanguages",
+      "Trainings",
+      "Ranks",
+      "RosterType",
     ];
 
-    const filteredData = lookupFilters.reduce((acc, { key, id }) => {
-      acc[key] = lookups.filter((item) => item?.lookuptypeId?._id === id);
+    const filteredData = lookupKeys.reduce((acc, key) => {
+      acc[key] = lookups.filter(
+        (item) => item?.lookuptypeId?.key === key // ✅ filter by key instead of ID
+      );
       return acc;
     }, {});
 
     setdata((prevState) => ({ ...prevState, ...filteredData }));
   }, [lookups]);
+
 
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
@@ -360,9 +475,9 @@ function Configuratin() {
   }, [regions]);
 
   useEffect(() => {
-    dispatch(getContacts());
+    // dispatch(getContacts());
     dispatch(getAllRegionTypes());
-    dispatch(getContactTypes());
+    // dispatch(getContactTypes());
     dispatch(getLookupTypes());
     dispatch(getAllLookups());
   }, [dispatch]);
@@ -985,7 +1100,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                 },
               })
@@ -1055,7 +1170,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                 },
               });
@@ -1177,7 +1292,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                 },
               });
@@ -1246,7 +1361,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                 },
               });
@@ -1316,7 +1431,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                 },
               });
@@ -1381,7 +1496,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                 },
               });
@@ -2419,9 +2534,11 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Title");
+                  await deleteFtn(`${baseURL}/Lookup`, record?._id, () => {
+                    dispatch(getAllLookups())
+                    resetCounteries("Title")
+                  });
+
                 },
               })
             }
@@ -2660,7 +2777,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookup`, record?._id);
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
                   dispatch(getAllLookups());
                   resetCounteries("Lookup");
                 },
@@ -3722,7 +3839,7 @@ function Configuratin() {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => {},
+    onChange: (selectedRowKeys, selectedRows) => { },
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -3823,17 +3940,17 @@ function Configuratin() {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => {};
+  const addmembershipFtn = () => { };
 
-  const AddpartnershipFtn = () => {};
+  const AddpartnershipFtn = () => { };
 
-  const AddprofileModalFtn = () => {};
+  const AddprofileModalFtn = () => { };
 
-  const AddRegionTypeModalFtn = () => {};
+  const AddRegionTypeModalFtn = () => { };
 
-  const AddContactTypeModalFtn = () => {};
+  const AddContactTypeModalFtn = () => { };
 
-  const AddSubscriptionsFtn = () => {};
+  const AddSubscriptionsFtn = () => { };
   const columnClaimType = [
     {
       title: "Code",
@@ -4860,7 +4977,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Counteries")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Counteries,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -4869,7 +4986,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Counteries")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Counteries, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Counteries, () =>
             resetCounteries("Counteries", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -4974,7 +5091,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Provinces")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Provinces,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -4985,7 +5102,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Provinces}
         update={async () => {
           if (!validateForm("Provinces")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Provinces, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Provinces, () =>
             resetCounteries("Provinces", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5069,7 +5186,7 @@ function Configuratin() {
               pagination={false}
               columns={columnProvince}
               loading={lookupsloading}
-              dataSource={data?.Provinces}
+              dataSource={groupedLookups?.Provinces}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -5092,7 +5209,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Cities,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5105,7 +5222,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Cities, () =>
             resetCounteries("Cities", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5262,7 +5379,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("PostCode")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.PostCode,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5272,7 +5389,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("PostCode")) return;
-          await updateFtn("/lookup", drawerIpnuts?.PostCode, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.PostCode, () =>
             resetCounteries("PostCode", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5404,7 +5521,7 @@ function Configuratin() {
         isContact={true}
         update={async () => {
           if (!validateForm("Districts")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Districts, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Districts, () =>
             resetCounteries("Districts", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5413,7 +5530,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Districts")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Districts,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5540,7 +5657,7 @@ function Configuratin() {
             <Table
               columns={columnDistricts}
               loading={lookupsloading}
-              dataSource={data?.Districts}
+              dataSource={groupedLookups?.Branch}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -5564,7 +5681,7 @@ function Configuratin() {
           add={() => {
             if (!validateForm("Divisions")) return;
             insertDataFtn(
-              `/lookup`,
+              `/api/lookup`,
               drawerIpnuts?.Divisions,
               "Data inserted successfully:",
               "Data did not insert:",
@@ -5576,7 +5693,7 @@ function Configuratin() {
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/lookup", drawerIpnuts?.Divisions, () =>
+            await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () =>
               resetCounteries("Divisions", () => dispatch(getAllLookups()))
             );
             dispatch(getAllLookups());
@@ -5680,7 +5797,7 @@ function Configuratin() {
               <Table
                 pagination={{ pageSize: 10 }}
                 columns={columnDivisions}
-                dataSource={data?.Divisions}
+                dataSource={groupedLookups['Region']}
                 loading={lookupsloading}
                 className="drawer-tbl"
                 rowClassName={(record, index) =>
@@ -5707,7 +5824,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Divisions")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Divisions,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5719,7 +5836,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Divisions, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () =>
             resetCounteries("Divisions", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5832,7 +5949,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Station")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Station,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5845,7 +5962,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Station, () =>
             resetCounteries("Station", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5981,7 +6098,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnStations}
-              dataSource={data?.Stations}
+              dataSource={groupedLookups['Work Location']}
               className="drawer-tbl"
               loading={lookupsloading}
               rowClassName={(record, index) =>
@@ -6365,7 +6482,7 @@ function Configuratin() {
         }}
         add={async () => {
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Lookup,
             "Data inserted successfully",
             "Data did not insert",
@@ -6375,7 +6492,7 @@ function Configuratin() {
         }}
         isEdit={isUpdateRec?.Lookup}
         update={async () => {
-          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Lookup, () =>
             resetCounteries("Lookup", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6510,7 +6627,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Gender")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Gender,
             "Data inserted successfully",
             "Data did not insert",
@@ -6521,7 +6638,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Gender}
         update={async () => {
           if (!validateForm("Gender")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Gender, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Gender, () =>
             resetCounteries("Gender", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6612,7 +6729,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnGender}
-              dataSource={data?.gender}
+              dataSource={groupedLookups?.Gender}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6640,7 +6757,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Cities,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -6650,7 +6767,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Cities, () =>
             resetCounteries("Cities", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6760,7 +6877,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnCity}
-              dataSource={data?.Cities}
+              dataSource={groupedLookups['City']}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6787,7 +6904,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Title")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Title,
             "Data inserted successfully",
             "Data did not insert",
@@ -6798,7 +6915,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Title}
         update={async () => {
           if (!validateForm("Title")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Title, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Title, () =>
             resetCounteries("Title", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6822,7 +6939,6 @@ function Configuratin() {
             </Col>
           </Row>
 
-          {/* Code + Title Name */}
           <Row gutter={24}>
             <Col span={12}>
               <MyInput
@@ -6887,7 +7003,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columntTitles}
-              dataSource={data?.Titles}
+              dataSource={groupedLookups?.Title}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6913,7 +7029,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("RosterType")) return;
           insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.RosterType,
             "Data inserted successfully",
             "Data did not insert",
@@ -6924,7 +7040,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.RosterType}
         update={async () => {
           if (!validateForm("RosterType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.RosterType, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.RosterType, () =>
             resetCounteries("RosterType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7010,7 +7126,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnRosterTypes}
-              dataSource={data?.RosterType}
+              dataSource={groupedLookups['Roster Type']}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -7037,7 +7153,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("MaritalStatus")) return;
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `${baseURL}/api/lookup`,
             drawerIpnuts?.MaritalStatus,
             "Data inserted successfully",
             "Data did not insert",
@@ -7049,7 +7165,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("MaritalStatus")) return;
           await updateFtn(
-            `${baseURL}/lookup`,
+            `${baseURL}/api/lookup`,
             drawerIpnuts?.MaritalStatus,
             () =>
               resetCounteries("MaritalStatus", () => dispatch(getAllLookups()))
@@ -7132,7 +7248,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnGender}
-              dataSource={data?.MaritalStatus}
+                dataSource={groupedLookups["Marital Status"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -7159,7 +7275,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("ProjectTypes")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.ProjectTypes,
             "Data inserted successfully",
             "Data did not insert",
@@ -7171,7 +7287,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.ProjectTypes}
         update={async () => {
           if (!validateForm("ProjectTypes")) return;
-          await updateFtn("/lookup", drawerIpnuts?.ProjectTypes, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.ProjectTypes, () =>
             resetCounteries("ProjectTypes", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7289,7 +7405,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Trainings")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Trainings,
             "Data inserted successfully",
             "Data did not insert",
@@ -7300,7 +7416,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Trainings}
         update={async () => {
           if (!validateForm("Trainings")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Trainings, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Trainings, () =>
             resetCounteries("Trainings", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7444,7 +7560,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("DocumentType")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.DocumentType,
             "Data inserted successfully",
             "Data did not insert",
@@ -7456,7 +7572,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.DocumentType}
         update={async () => {
           if (!validateForm("DocumentType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.DocumentType, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.DocumentType, () =>
             resetCounteries("DocumentType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7574,18 +7690,13 @@ function Configuratin() {
         }}
         add={async () => {
           if (!validateForm("ClaimType")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.ClaimType,
-            "Data inserted successfully",
-            "Data did not insert"
-          );
+          await insertDataFtn(`/api/lookup`, drawerIpnuts?.ClaimType, "Data inserted successfully", "Data did not insert");
           resetCounteries("ClaimType", () => dispatch(getAllLookups()));
         }}
         isEdit={isUpdateRec?.ClaimType}
         update={async () => {
           if (!validateForm("ClaimType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.ClaimType, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.ClaimType, () =>
             resetCounteries("ClaimType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7696,18 +7807,14 @@ function Configuratin() {
         }}
         add={async () => {
           if (!validateForm("Schemes")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Schemes,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Schemes", () => dispatch(getAllLookups()))
+          await insertDataFtn(`/api/lookup`, drawerIpnuts?.Schemes, "Data inserted successfully", "Data did not insert", () =>
+            resetCounteries("Schemes", () => dispatch(getAllLookups()))
           );
         }}
         isEdit={isUpdateRec?.Schemes}
         update={async () => {
           if (!validateForm("Schemes")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Schemes, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Schemes, () =>
             resetCounteries("Schemes", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7818,19 +7925,15 @@ function Configuratin() {
         }}
         add={async () => {
           if (!validateForm("Reasons")) return;
-          await insertDataFtn(
-            `/lookup`,
-            drawerIpnuts?.Reasons,
-            "Data inserted successfully",
-            "Data did not insert",
-            () => resetCounteries("Reasons", () => dispatch(getAllLookups()))
+          await insertDataFtn(`/api/lookup`, drawerIpnuts?.Reasons, "Data inserted successfully", "Data did not insert", () =>
+            resetCounteries("Reasons", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Reasons}
         update={async () => {
           if (!validateForm("Reasons")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Reasons, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Reasons, () =>
             resetCounteries("Reasons", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7934,7 +8037,7 @@ function Configuratin() {
         onClose={() => openCloseDrawerFtn('Schemes')}
         add={async () => {
           if (!validateForm('Schemes')) return;
-          insertDataFtn(`/lookup`, drawerIpnuts?.Schemes, 'Data inserted successfully:',
+          insertDataFtn(`/api/lookup`, drawerIpnuts?.Schemes, 'Data inserted successfully:',
             'Data did not insert:', () => {
               resetCounteries('Schemes')
               dispatch(getAllLookups())
@@ -8015,7 +8118,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Duties")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Duties,
             "Data inserted successfully",
             "Data did not insert",
@@ -8026,7 +8129,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Duties}
         update={async () => {
           if (!validateForm("Duties")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Duties, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Duties, () =>
             resetCounteries("Duties", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8111,7 +8214,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnDuties}
-              dataSource={data?.Duties}
+              dataSource={groupedLookups["Duties"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -8138,7 +8241,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Ranks")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Ranks,
             "Data inserted successfully",
             "Data did not insert",
@@ -8149,7 +8252,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Ranks}
         update={async () => {
           if (!validateForm("Ranks")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Ranks, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Ranks, () =>
             resetCounteries("Ranks", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8231,7 +8334,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnRanks}
-              dataSource={data?.Ranks}
+              dataSource={groupedLookups["Ranks"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -8259,7 +8362,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Boards")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Boards,
             "Data inserted successfully",
             "Data did not insert",
@@ -8269,7 +8372,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Boards")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Boards, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Boards, () =>
             resetCounteries("Boards", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8360,7 +8463,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnBoards}
-              dataSource={data?.Boards}
+              dataSource={groupedLookups["Boards"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -8387,7 +8490,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Councils")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.Councils,
             "Data inserted successfully",
             "Data did not insert",
@@ -8398,7 +8501,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Councils}
         update={async () => {
           if (!validateForm("Councils")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Councils, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Councils, () =>
             resetCounteries("Councils", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8489,7 +8592,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnCouncils}
-              dataSource={data?.Councils}
+              dataSource={groupedLookups["Council"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -8516,7 +8619,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("CorrespondenceType")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.CorrespondenceType,
             "Data inserted successfully",
             "Data did not insert",
@@ -8530,10 +8633,8 @@ function Configuratin() {
         isEdit={isUpdateRec?.CorrespondenceType}
         update={async () => {
           if (!validateForm("CorrespondenceType")) return;
-          await updateFtn("/lookup", drawerIpnuts?.CorrespondenceType, () =>
-            resetCounteries("CorrespondenceType", () =>
-              dispatch(getAllLookups())
-            )
+          await updateFtn("/api/lookup", drawerIpnuts?.CorrespondenceType, () =>
+            resetCounteries("CorrespondenceType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
           IsUpdateFtn("CorrespondenceType", false);
@@ -8667,7 +8768,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("SpokenLanguages")) return;
           await insertDataFtn(
-            `/lookup`,
+            `/api/lookup`,
             drawerIpnuts?.SpokenLanguages,
             "Data inserted successfully",
             "Data did not insert",
@@ -8681,7 +8782,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.SpokenLanguages}
         update={async () => {
           if (!validateForm("SpokenLanguages")) return;
-          await updateFtn("/lookup", drawerIpnuts?.SpokenLanguages, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.SpokenLanguages, () =>
             resetCounteries("SpokenLanguages", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8778,7 +8879,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={SLColumns}
-              dataSource={data?.SpokenLanguages}
+              dataSource={groupedLookups["Spoken Languages"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -9088,7 +9189,7 @@ function Configuratin() {
         isAddMemeber={true}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/lookup`,
+            `${baseURL}/api/lookup`,
             { region: drawerIpnuts?.Committees },
             "Data inserted successfully",
             "Data did not insert",
@@ -9098,7 +9199,7 @@ function Configuratin() {
         }}
         isEdit={isUpdateRec?.Committees}
         update={async () => {
-          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/api/lookup", drawerIpnuts?.Lookup, () =>
             resetCounteries("Committees", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9140,8 +9241,8 @@ function Configuratin() {
                   <Input
                     disabled={isDisable}
                     className="inp"
-                    //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
-                    // value={drawerIpnuts?.Lookup?.RegionCode}
+                  //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
+                  // value={drawerIpnuts?.Lookup?.RegionCode}
                   />
                 </div>
                 <p className="error"></p>
@@ -9157,8 +9258,8 @@ function Configuratin() {
                   <Input
                     disabled={isDisable}
                     className="inp"
-                    // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
-                    // value={drawerIpnuts?.Lookup?.RegionName}
+                  // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
+                  // value={drawerIpnuts?.Lookup?.RegionName}
                   />
                 </div>
                 <p className="error"></p>
@@ -9231,7 +9332,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={Committeescolumns}
-              // dataSource={lookups}
+              dataSource={groupedLookups["Committees"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>

@@ -9,7 +9,7 @@ export const getLookupTypes = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token'); // Retrieve token
-            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/lookuptype`, {
+            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookuptype`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Include token in headers
                     'Content-Type': 'application/json',
