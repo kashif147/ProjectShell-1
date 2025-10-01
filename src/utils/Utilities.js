@@ -31,7 +31,7 @@ export const insertDataFtn = async (
     console.log("Response data:", response.data);
 
     // ✅ Accept any 2xx status as success
-    if (response.status >= 200 && response.status < 300) {
+    if (response.status === 200||response.status===201 ) {
       MyAlert("success", successNotification);
       if (callback && typeof callback === "function") callback();
       return response.data;
@@ -39,16 +39,16 @@ export const insertDataFtn = async (
       MyAlert(
         "error",
         failureNotification,
-        response?.data?.error || "Unknown error"
+       response?.response?.data?.error?.message || "Unknown error"
       );
       return null;
     }
   } catch (error) {
-    console.error("Axios Error:", error?.response || error);
+    // console.error("Axios Error:", error?.response?.data?.error?.message );
     MyAlert(
       "error",
       failureNotification,
-      error?.response?.data?.error || error.message
+      error?.response?.data?.error?.message
     );
     return null;
   }
@@ -113,11 +113,11 @@ export const updateFtn = async (
       }
       return response.data;
     } else {
-      MyAlert("error", notificationsMsg?.updating?.falier);
+      MyAlert("error", notificationsMsg?.updating?.falier, response?.error?.message || "Unknown error");
 
     }
   } catch (error) {
-    console.error("Error deleting region:", error?.response?.data?.error?.message || "");
+    console.error("Error deleting region:", error);
     return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
   }
 };

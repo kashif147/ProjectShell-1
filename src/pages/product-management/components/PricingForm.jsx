@@ -45,6 +45,7 @@ const PricingForm = ({
     nonMemberPrice: "",
     currency: "EUR",
     isActive: true,
+    status: "Active",
   });
 
   const [pricingRules, setPricingRules] = useState([]);
@@ -63,14 +64,15 @@ const PricingForm = ({
     }
 
     if (pricing) {
+      debugger
       setFormData({
-        productTypeId: pricing.productTypeId || "",
+        productId: pricing.id,
         effectiveFrom: pricing.effectiveFrom || "",
         effectiveTo: pricing.effectiveTo || "",
         memberPrice: pricing.memberPrice || "",
         nonMemberPrice: pricing.nonMemberPrice || "",
         currency: pricing.currency || "EUR",
-        isActive: pricing.isActive !== undefined ? pricing.isActive : true,
+        status: pricing?.status,
       });
     }
   }, [productType, pricing, dispatch]);
@@ -441,8 +443,8 @@ const PricingForm = ({
             {formData.currency === "EUR"
               ? "€"
               : formData.currency === "USD"
-              ? "$"
-              : "£"}
+                ? "$"
+                : "£"}
             )
           </label>
           <MyInput
@@ -465,8 +467,8 @@ const PricingForm = ({
               {formData.currency === "EUR"
                 ? "€"
                 : formData.currency === "USD"
-                ? "$"
-                : "£"}
+                  ? "$"
+                  : "£"}
               )
             </label>
             <MyInput
@@ -488,8 +490,8 @@ const PricingForm = ({
               {formData.currency === "EUR"
                 ? "€"
                 : formData.currency === "USD"
-                ? "$"
-                : "£"}
+                  ? "$"
+                  : "£"}
               )
             </label>
             <MyInput
@@ -538,14 +540,16 @@ const PricingForm = ({
         <label className="form-label fw-semibold">Status</label>
         <div className="switch-container">
           <Switch
-            checked={formData.isActive}
-            onChange={(checked) => handleInputChange("isActive", checked)}
+            checked={formData.status === "Active"} // ✅ true if Active
+            onChange={(checked) =>
+              handleInputChange("status", checked ? "Active" : "Inactive")
+            }
             checkedChildren="Active"
             unCheckedChildren="Inactive"
           />
-          <span className="switch-label">
+          {/* <span className="switch-label">
             {formData.isActive ? "Active" : "Inactive"}
-          </span>
+          </span> */}
         </div>
       </div>
 

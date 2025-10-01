@@ -6,14 +6,32 @@ import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
 
 const ProductForm = ({ product, productType, onClose, onSubmit }) => {
-  const [formData, setFormData] = useState({
+  const initialFormState = {
     name: "",
     code: "",
     description: "",
     status: "Active",
+    memberPrice: "",
+    nonMemberPrice: "",
+    currency: "",
+    effectiveFrom: null,
+    effectiveTo: null,
+  };
+  const [formData, setFormData] = useState(initialFormState);
+  const resetForm = () => {
+    setFormData(initialFormState);
+    setErrors({});
+  };
+  useEffect(() => {
+    if (!product && !productType) {
+      resetForm(); // optional safeguard when switching modes
+    }
+  }, [product, productType]);
 
-  });
-
+  const handleClose = () => {
+    resetForm();     // ✅ clear form
+    onClose?.();     // ✅ then close drawer
+  };
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
 
@@ -56,7 +74,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       [field]: value,
     }));
 
-    // Clear error when user starts typing
+
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
@@ -69,36 +87,36 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     let newErrors = {};
 
     if (!formData.name?.trim())
-      newErrors.name = `${isProductType ? "Product type" : "Product"
-        } name is required`;
+      newErrors.name = `${isProductType ? "Product type" : "Product"} name is required`;
+
     if (!formData.code?.trim())
-      newErrors.code = `${isProductType ? "Product type" : "Product"
-        } code is required`;
+      newErrors.code = `${isProductType ? "Product type" : "Product"} code is required`;
+
     if (!formData.description?.trim())
       newErrors.description = "Description is required";
 
-    // Product-specific validation
     if (isProduct) {
       if (!formData.memberPrice || formData.memberPrice <= 0)
         newErrors.memberPrice = "Price must be greater than 0";
 
-      // Validate non-member price
       if (!formData.nonMemberPrice || formData.nonMemberPrice <= 0)
         newErrors.nonMemberPrice = "Non-member price must be greater than 0";
 
       if (!formData.effectiveFrom)
         newErrors.effectiveFrom = "Effective from date is required";
     }
-
+debugger
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
+
   const handleSubmit = async () => {
+    debugger
     if (!validate()) {
       return;
     }
-
+    debugger
     setLoading(true);
     try {
       // Prepare data for submission
@@ -123,6 +141,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       }
 
       await onSubmit(submissionData);
+      resetForm();
+      onClose?.()
     } catch (error) {
       console.error("Error submitting form:", error);
     } finally {
@@ -134,7 +154,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     <form
       className="drawer-main-container product-form"
       onSubmit={(e) => {
-        e.preventDefault();
+        debugger
         handleSubmit();
       }}
     >

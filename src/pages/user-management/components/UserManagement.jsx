@@ -353,7 +353,7 @@ const handleSearchChange = (e) => {
         <div>
           <h4 className="mb-1">User Management</h4>
           <p className="text-muted mb-0">
-            Manage users, assign roles, and control access across tenants001
+            Manage users, assign roles, and control access across tenants
           </p>
         </div>
         <div className="d-flex align-items-center gap-3">

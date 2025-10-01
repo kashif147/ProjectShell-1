@@ -11,6 +11,7 @@ import {
   Divider,
 } from "antd";
 import MyAlert from "../../component/common/MyAlert";
+
 import axios from "axios";
 import {
   PlusOutlined,
@@ -72,6 +73,7 @@ const ProductTypesManagement = () => {
   };
 
   const handleEditProductType = (productType) => {
+    debugger
     setEditingProductType(productType);
     setIsProductTypeDrawerOpen(true);
   };
@@ -90,9 +92,10 @@ const ProductTypesManagement = () => {
   };
 
   const handleCreatePricing = (product, productType) => {
+    debugger
     setSelectedProductType(productType);
     setEditingProduct(product);
-    setEditingPricing(null);
+    setEditingPricing(product?.currentPricing);
     setIsPricingDrawerOpen(true);
   };
 
@@ -124,6 +127,62 @@ const ProductTypesManagement = () => {
         //   },
         // });
       },
+    });
+  };
+
+
+  const handleDeleteBoth = async (productTypeId) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      // custom delete function (no default notifications)
+      const deleteRequest = (url) =>
+        axios.delete(url, {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+
+      // delete pricing first
+      if (productTypeId?.currentPricing?.id) {
+        await deleteRequest(
+          `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/pricing/${productTypeId.currentPricing.id}`
+        );
+      }
+
+      // then delete product
+      await deleteRequest(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products/${productTypeId?._id}`
+      );
+
+      // refresh after both are done
+      dispatch(getProductTypesWithProducts());
+
+      // ✅ show success
+      MyAlert("success", "Deleted", "Product and pricing deleted successfully!");
+    } catch (err) {
+      MyAlert("error", "Error", "Failed to delete product or pricing.");
+    }
+  };
+
+
+
+  const handleDeleteProduct = (productTypeId) => {
+    Modal.confirm({
+      title: "Delete Product Type",
+      content:
+        "Are you sure you want to delete this product type? This action cannot be undone.",
+      okText: "Delete",
+      okType: "danger",
+      cancelText: "Cancel",
+      onOk: () =>
+        // dispatch(deleteProductType(productTypeId));
+        // message.success({
+        //   content: "Product type deleted successfully",
+        //   style: {
+        //     marginTop: "20vh",
+        //     textAlign: "center",
+        //   },
+        // });
+        handleDeleteBoth(productTypeId, dispatch)
     });
   };
 
@@ -231,7 +290,6 @@ const ProductTypesManagement = () => {
     debugger
     try {
       const token = localStorage.getItem("token");
-
       // 1️⃣ Create Product
       const productRes = await axios.post(
         `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products`,
@@ -318,7 +376,7 @@ const ProductTypesManagement = () => {
         dataIndex: "memberPrice",
         key: "memberPrice",
         render: (price, record) => {
-          const currency = record.currency || "EUR";
+          const currency = record.currentPricing?.currentPricing || "EUR";
           const symbol =
             currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
           return price ? `${symbol}${price}` : "-";
@@ -327,14 +385,15 @@ const ProductTypesManagement = () => {
     } else {
       baseColumns.push(
         {
-          title: "Member Price",
+          title: "Member Price1",
           dataIndex: "memberPrice",
           key: "memberPrice",
           render: (price, record) => {
-            const currency = record.currentPricing?.currency || "EUR";
+            debugger
+            const currency = record.currentPricing?.memberPrice || "EUR";
             const symbol =
               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-            return price ? `${symbol}${price}` : "-";
+            return currency ? `${symbol}${currency}` : "-";
           },
         },
         {
@@ -342,10 +401,10 @@ const ProductTypesManagement = () => {
           dataIndex: "nonMemberPrice",
           key: "nonMemberPrice",
           render: (price, record) => {
-            const currency = record.currency || "EUR";
+            const currency = record.currentPricing?.nonMemberPrice || "EUR";
             const symbol =
               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-            return price ? `${symbol}${price}` : "-";
+            return currency ? `${symbol}${currency}` : "-";
           },
         }
       );
@@ -371,6 +430,14 @@ const ProductTypesManagement = () => {
               onClick={() => handleEditProduct(record, productType)}
             />
           </Tooltip>
+          <Tooltip title="Delete Product">
+            <Button
+              size="small"
+              danger
+              icon={<DeleteOutlined />}
+              onClick={() => handleDeleteProduct(record)}
+            />
+          </Tooltip>
         </Space>
       ),
     });
@@ -391,17 +458,16 @@ const ProductTypesManagement = () => {
       </div>
       <div className="main-table-scroll-container">
         <Table
-          className=''
+          className=""
           columns={productTypeColumns}
           dataSource={data || []}
           rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10 }}
+          scroll={{ y: 400 }} // ✅ horizontal scroll
           expandable={{
             expandedRowRender: (record) => (
               <div className="expanded-content-container">
-                {/* <Divider orientation="left">
-                  Products in {record.name} */}
                 Products in {record.name}
                 <Table
                   columns={getProductColumns(record).map((col) => ({
@@ -417,11 +483,8 @@ const ProductTypesManagement = () => {
                   rowKey="id"
                   pagination={false}
                   size="small"
+                  scroll={{ x: "max-content" }}   // ✅ scroll for inner table too
                 />
-                {/* </Divider> */}
-                {/* ✅ You can add nested product details here later */}
-                <p>{record.name}</p>
-
                 <div style={{ marginTop: 16 }}>
                   <Button
                     type="dashed"
@@ -433,9 +496,10 @@ const ProductTypesManagement = () => {
                 </div>
               </div>
             ),
-            rowExpandable: () => true, // always show expand arrow
+            rowExpandable: () => true,
           }}
         />
+
 
         {/* <Table columns={productTypeColumns}
          dataSource={productTypes || []} */}
@@ -456,7 +520,7 @@ const ProductTypesManagement = () => {
       {/* Product Type Form Drawer */}
       <MyDrawer
         title={
-          editingProductType ? "Edit Product Type" : "Add New Product Type1"
+          editingProductType ? "Edit Product Type" : "Add New Product Type"
         }
         open={isProductTypeDrawerOpen}
         onClose={() => setIsProductTypeDrawerOpen(false)}
@@ -493,21 +557,22 @@ const ProductTypesManagement = () => {
             onClose={() => setIsProductTypeDrawerOpen(false)}
             onSubmit={(data) => {
               if (editingProductType) {
-                debugger
-                // dispatch(updateProductType(data));
-                message.success("Product type updated successfully");
+
+                updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/api/product-types/${editingProductType?._id}`,
+                  data,
+                  () => {
+                    dispatch(getProductTypesWithProducts());
+                  })
               } else {
                 // dispatch(createProductType(data));
-                debugger
+
                 insertDataFtn(process.env.REACT_APP_POLICY_SERVICE_URL, '/api/product-types',
                   data,
                   "Product Type Created Successfully",
                   "Product Type Creation Failed",
                   () => {
-                    dispatch(getAllProductTypes());
+                    dispatch(getProductTypesWithProducts());
                   })
-
-                message.success("Product type created successfully");
               }
               setIsProductTypeDrawerOpen(false);
             }}
@@ -517,9 +582,13 @@ const ProductTypesManagement = () => {
 
       {/* Product Form Drawer */}
       <MyDrawer
-        title={editingProduct ? "Edit Product" : "Add New Product"}
+        title={editingProduct ? "Edit Product11" : "Add New Product2"}
         open={isProductDrawerOpen}
-        onClose={() => setIsProductDrawerOpen(false)}
+        onClose={() => {
+          setIsProductDrawerOpen(false)
+          setEditingProduct(null)
+        }
+        }
         width={800}
         extra={
           <Space>
@@ -540,7 +609,7 @@ const ProductTypesManagement = () => {
                 }
               }}
             >
-              {editingProduct ? "Update Product" : "Create Product"}
+              {editingProduct ? "Update Product123" : "Create Product"}
             </Button>
           </Space>
         }
@@ -552,6 +621,7 @@ const ProductTypesManagement = () => {
             onClose={() => setIsProductDrawerOpen(false)}
             onSubmit={
               async (data) => {
+                debugger
                 if (editingProduct) {
                   const updatedData = {
                     name: data?.name,
@@ -603,8 +673,7 @@ const ProductTypesManagement = () => {
             pricing={editingPricing}
             onClose={() => setIsPricingDrawerOpen(false)}
             onSubmit={(data) => {
-            
-              message.success("Pricing updated successfully");
+
               setIsPricingDrawerOpen(false);
             }}
             onRef={setPricingFormMethods}
