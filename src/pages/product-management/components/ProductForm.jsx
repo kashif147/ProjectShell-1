@@ -11,7 +11,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     code: "",
     description: "",
     status: "Active",
-    
+
   });
 
   const [errors, setErrors] = useState({});
@@ -26,7 +26,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
         name: product.name || "",
         code: product.code || "",
         description: product.description || "",
-        status: product.isActive !== undefined ? product.isActive : true,
+        status: product.status,
         // Meta fields
       });
     } else if (isProduct) {
@@ -69,13 +69,11 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     let newErrors = {};
 
     if (!formData.name?.trim())
-      newErrors.name = `${
-        isProductType ? "Product type" : "Product"
-      } name is required`;
+      newErrors.name = `${isProductType ? "Product type" : "Product"
+        } name is required`;
     if (!formData.code?.trim())
-      newErrors.code = `${
-        isProductType ? "Product type" : "Product"
-      } code is required`;
+      newErrors.code = `${isProductType ? "Product type" : "Product"
+        } code is required`;
     if (!formData.description?.trim())
       newErrors.description = "Description is required";
 
@@ -121,7 +119,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       if (isProductType && product) {
         // submissionData.updatedAt = new Date().toISOString();
         // submissionData.updatedBy = "current_user";
-         // This should come from auth context
+        // This should come from auth context
       }
 
       await onSubmit(submissionData);
@@ -151,9 +149,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
           onChange={(e) => handleInputChange("name", e.target.value)}
           hasError={!!errors.name}
           errorMessage={errors.name}
-          placeholder={`Enter ${
-            isProductType ? "product type" : "product"
-          } name`}
+          placeholder={`Enter ${isProductType ? "product type" : "product"
+            } name`}
         />
       </div>
 
@@ -165,9 +162,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
           onChange={(e) => handleInputChange("code", e.target.value)}
           hasError={!!errors.code}
           errorMessage={errors.code}
-          placeholder={`Enter unique ${
-            isProductType ? "product type" : "product"
-          } code`}
+          placeholder={`Enter unique ${isProductType ? "product type" : "product"
+            } code`}
         />
       </div>
 
@@ -210,8 +206,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
                 {formData.currency === "EUR"
                   ? "€"
                   : formData.currency === "USD"
-                  ? "$"
-                  : "£"}
+                    ? "$"
+                    : "£"}
                 )
               </label>
               <MyInput
@@ -236,8 +232,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                    ? "$"
-                    : "£"}
+                      ? "$"
+                      : "£"}
                   )
                 </label>
                 <MyInput
@@ -261,8 +257,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                    ? "$"
-                    : "£"}
+                      ? "$"
+                      : "£"}
                   )
                 </label>
                 <MyInput
@@ -312,8 +308,10 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
         {/* <label className="form-label fw-semibold">Status</label> */}
         <div className="switch-container">
           <Switch
-            checked={formData.status}
-            onChange={(checked) =>{ handleInputChange("status", checked ? "Active" : "Inactive")}}
+            checked={formData.status === "Active"} // convert string → boolean
+            onChange={(checked) =>
+              handleInputChange("status", checked ? "Active" : "Inactive")
+            }
             checkedChildren="Active"
             unCheckedChildren="Inactive"
           />

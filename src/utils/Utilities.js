@@ -16,7 +16,7 @@ export const insertDataFtn = async (
   callback
 ) => {
   const token = localStorage.getItem("token");
-  debugger 
+  debugger
 
   try {
     const response = await axios.post(`${apiURL}${url}`, data, {
@@ -75,8 +75,8 @@ export const deleteFtn = async (url, callback) => {
     }
     return response.data;
   } catch (error) {
-    console.error("Error deleting region:", error?.response?.data?.error?.message||"" );
-    return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message||"");
+    console.error("Error deleting region:", error?.response?.data?.error?.message || "");
+    return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
   }
 };
 
@@ -87,6 +87,7 @@ export const updateFtn = async (
   callback,
   msg = notificationsMsg?.updating?.sucess
 ) => {
+  debugger
   try {
     const token = localStorage.getItem("token");
     // ✅ If `id` exists in data1 but not in URL, append it
@@ -103,7 +104,7 @@ export const updateFtn = async (
         "Content-Type": "application/json",
       },
     });
-console.log("Update Response:", response);
+    console.log("Update Response:", response);
     if (response?.status === 200) {
 
       MyAlert("success", msg);
@@ -113,11 +114,11 @@ console.log("Update Response:", response);
       return response.data;
     } else {
       MyAlert("error", notificationsMsg?.updating?.falier);
-     
+
     }
   } catch (error) {
-    // console.error("API Error:", error.response?.data || error.message);
-    throw error;
+    console.error("Error deleting region:", error?.response?.data?.error?.message || "");
+    return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
   }
 };
 

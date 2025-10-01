@@ -39,7 +39,7 @@ import { getAllProducts } from "../../features/ProductsSlice";
 import { getProductTypesWithProducts } from "../../features/ProducttypeWithProducts";
 import "../../styles/ProductManagement.css";
 import "../../styles/Configuration.css";
-import { deleteFtn, insertDataFtn } from "../../utils/Utilities";
+import { deleteFtn, insertDataFtn, updateFtn } from "../../utils/Utilities";
 
 const ProductTypesManagement = () => {
   const dispatch = useDispatch();
@@ -83,6 +83,7 @@ const ProductTypesManagement = () => {
   };
 
   const handleEditProduct = (product, productType) => {
+    debugger
     setSelectedProductType(productType);
     setEditingProduct(product);
     setIsProductDrawerOpen(true);
@@ -111,7 +112,7 @@ const ProductTypesManagement = () => {
       cancelText: "Cancel",
       onOk: () => {
         deleteFtn(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/product-types/${productTypeId}`,
-          ()=>{
+          () => {
             dispatch(getProductTypesWithProducts());
           })
         // dispatch(deleteProductType(productTypeId));
@@ -226,59 +227,59 @@ const ProductTypesManagement = () => {
       ),
     },
   ];
- const createProductWithPricing = async (data, selectedProductType) => {
-  debugger
-  try {
-    const token = localStorage.getItem("token");
-
-    // 1️⃣ Create Product
-    const productRes = await axios.post(
-      `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products`,
-      {
-        name: data?.name,
-        code: data?.code,
-        description: data?.description,
-        productTypeId: selectedProductType?._id,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
-
-    const prodid = productRes.data?.data?._id;
+  const createProductWithPricing = async (data, selectedProductType) => {
     debugger
-    if (!prodid) throw new Error("Product ID missing from response");
+    try {
+      const token = localStorage.getItem("token");
 
-    // 2️⃣ Create Pricing
-    await axios.post(
-      `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/pricing`,
-      {
-        effectiveFrom: data?.effectiveFrom,
-        effectiveTo: data?.effectiveTo,
-        status: data?.status,
-        currency: data?.currency,
-        productId: prodid,
-        price: data?.memberPrice,
-      },
-      {
-        headers: { Authorization: `Bearer ${token}` },
-      }
-    );
+      // 1️⃣ Create Product
+      const productRes = await axios.post(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products`,
+        {
+          name: data?.name,
+          code: data?.code,
+          description: data?.description,
+          productTypeId: selectedProductType?._id,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
 
-    // ✅ Single success notification
-    MyAlert("success", "Product and Pricing created successfully ✅");
-    dispatch(getProductTypesWithProducts())
-    return true;
-  } catch (error) {
-    console.error("❌ Error creating product/pricing:", error);
-    // ❌ Single error notification
-    MyAlert(
-      "error",
-      error?.response?.data?.message || "Failed to create product or pricing"
-    );
-    return false;
-  }
-};
+      const prodid = productRes.data?.data?._id;
+      debugger
+      if (!prodid) throw new Error("Product ID missing from response");
+
+      // 2️⃣ Create Pricing
+      await axios.post(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/pricing`,
+        {
+          effectiveFrom: data?.effectiveFrom,
+          effectiveTo: data?.effectiveTo,
+          status: data?.status,
+          currency: data?.currency,
+          productId: prodid,
+          price: data?.memberPrice,
+        },
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+
+      // ✅ Single success notification
+      MyAlert("success", "Product and Pricing created successfully ✅");
+      dispatch(getProductTypesWithProducts())
+      return true;
+    } catch (error) {
+      console.error("❌ Error creating product/pricing:", error);
+      // ❌ Single error notification
+      MyAlert(
+        "error",
+        error?.response?.data?.message || "Failed to create product or pricing"
+      );
+      return false;
+    }
+  };
 
   const getProductColumns = (productType) => {
     const baseColumns = [
@@ -289,7 +290,7 @@ const ProductTypesManagement = () => {
         render: (text, record) => (
           <div>
             <div className="font-weight-bold">{text}</div>
-            <div className="text-muted small">{record.description}</div>
+            <div className="text-muted small">{record?.description}</div>
           </div>
         ),
       },
@@ -330,7 +331,7 @@ const ProductTypesManagement = () => {
           dataIndex: "memberPrice",
           key: "memberPrice",
           render: (price, record) => {
-            const currency = record.currency || "EUR";
+            const currency = record.currentPricing?.currency || "EUR";
             const symbol =
               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
             return price ? `${symbol}${price}` : "-";
@@ -363,7 +364,7 @@ const ProductTypesManagement = () => {
               onClick={() => handleCreatePricing(record, productType)}
             />
           </Tooltip>
-          <Tooltip title="Edit Product">
+          <Tooltip title="Edit Product1">
             <Button
               size="small"
               icon={<EditOutlined />}
@@ -378,7 +379,7 @@ const ProductTypesManagement = () => {
   };
 
   const renderProductTypesTable = () => (
-    <Card title="Product Types test" className="theme-card">
+    <Card title="Product Types" className="theme-card">
       <div style={{ marginBottom: 16 }}>
         <Button
           type="primary"
@@ -390,6 +391,7 @@ const ProductTypesManagement = () => {
       </div>
       <div className="main-table-scroll-container">
         <Table
+          className=''
           columns={productTypeColumns}
           dataSource={data || []}
           rowKey="_id"
@@ -400,22 +402,22 @@ const ProductTypesManagement = () => {
               <div className="expanded-content-container">
                 {/* <Divider orientation="left">
                   Products in {record.name} */}
-                  Products in {record.name}
-                  <Table
-                    columns={getProductColumns(record).map((col) => ({
-                      ...col,
-                      title: col.title,
-                      render:
-                        col.title === "Actions"
-                          ? (text, productRecord) =>
-                            col.render(text, productRecord, null, record)
-                          : col.render,
-                    }))}
-                    dataSource={record.products || []}
-                    rowKey="id"
-                    pagination={false}
-                    size="small"
-                  />
+                Products in {record.name}
+                <Table
+                  columns={getProductColumns(record).map((col) => ({
+                    ...col,
+                    title: col.title,
+                    render:
+                      col.title === "Actions"
+                        ? (text, productRecord) =>
+                          col.render(text, productRecord, null, record)
+                        : col.render,
+                  }))}
+                  dataSource={record?.products || []}
+                  rowKey="id"
+                  pagination={false}
+                  size="small"
+                />
                 {/* </Divider> */}
                 {/* ✅ You can add nested product details here later */}
                 <p>{record.name}</p>
@@ -548,11 +550,22 @@ const ProductTypesManagement = () => {
             product={editingProduct}
             productType={selectedProductType}
             onClose={() => setIsProductDrawerOpen(false)}
-           onSubmit={async (data) => { if (editingProduct) { MyAlert("success", "Product updated successfully");
+            onSubmit={
+              async (data) => {
+                if (editingProduct) {
+                  const updatedData = {
+                    name: data?.name,
+                    code: data?.code,
+                    description: data?.description,
+                    status: data?.status
+                  }
+                  updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/api/products/${editingProduct?._id}`, updatedData, () => {
+                    dispatch(getProductTypesWithProducts())
+                  })
 
-            } else 
-              { await createProductWithPricing(data, selectedProductType); }
-            setIsProductDrawerOpen(false); }}
+                } else { await createProductWithPricing(data, selectedProductType); }
+                setIsProductDrawerOpen(false);
+              }}
           />
         </div>
       </MyDrawer>
@@ -590,7 +603,7 @@ const ProductTypesManagement = () => {
             pricing={editingPricing}
             onClose={() => setIsPricingDrawerOpen(false)}
             onSubmit={(data) => {
-              // Handle pricing submission
+            
               message.success("Pricing updated successfully");
               setIsPricingDrawerOpen(false);
             }}
