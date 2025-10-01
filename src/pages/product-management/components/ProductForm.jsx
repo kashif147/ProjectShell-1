@@ -10,18 +10,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     name: "",
     code: "",
     description: "",
-    isActive: true,
-    // Meta fields for product types
-    createdAt: null,
-    updatedAt: null,
-    createdBy: null,
-    updatedBy: null,
-    // Product-specific fields
-    memberPrice: "",
-    nonMemberPrice: "",
-    effectiveFrom: "",
-    effectiveTo: "",
-    currency: "EUR",
+    status: "Active",
+    
   });
 
   const [errors, setErrors] = useState({});
@@ -36,30 +26,20 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
         name: product.name || "",
         code: product.code || "",
         description: product.description || "",
-        isActive: product.isActive !== undefined ? product.isActive : true,
+        status: product.isActive !== undefined ? product.isActive : true,
         // Meta fields
-        createdAt: product.createdAt || null,
-        updatedAt: product.updatedAt || null,
-        createdBy: product.createdBy || null,
-        updatedBy: product.updatedBy || null,
-        // Product-specific fields
-        memberPrice: product.memberPrice || "",
-        nonMemberPrice: product.nonMemberPrice || "",
-        effectiveFrom: product.effectiveFrom || "",
-        effectiveTo: product.effectiveTo || "",
-        currency: product.currency || "EUR",
       });
     } else if (isProduct) {
       // Set default values for new product
       setFormData((prev) => ({
         ...prev,
+
       }));
     } else if (isProductType) {
       // Set default values for new product type
       setFormData((prev) => ({
         ...prev,
-        createdAt: new Date().toISOString(),
-        createdBy: "current_user", // This should come from auth context
+
       }));
     }
   }, [product, productType, isProduct, isProductType]);
@@ -133,14 +113,15 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
 
       // For new product types, set meta fields
       if (isProductType && !product) {
-        submissionData.createdAt = new Date().toISOString();
-        submissionData.createdBy = "current_user"; // This should come from auth context
+        // submissionData.createdAt = new Date().toISOString();
+        // submissionData.createdBy = "current_user"; // This should come from auth context
       }
 
       // For existing product types, update meta fields
       if (isProductType && product) {
-        submissionData.updatedAt = new Date().toISOString();
-        submissionData.updatedBy = "current_user"; // This should come from auth context
+        // submissionData.updatedAt = new Date().toISOString();
+        // submissionData.updatedBy = "current_user";
+         // This should come from auth context
       }
 
       await onSubmit(submissionData);
@@ -215,7 +196,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
             <CustomSelect
               name="currency"
               value={formData.currency}
-              onChange={(value) => handleInputChange("currency", value)}
+              onChange={(value) => handleInputChange("currency", value.target.value)}
               options={CURRENCY_OPTIONS}
               placeholder="Select currency"
             />
@@ -328,16 +309,16 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       )}
 
       <div className="mb-3">
-        <label className="form-label fw-semibold">Status</label>
+        {/* <label className="form-label fw-semibold">Status</label> */}
         <div className="switch-container">
           <Switch
-            checked={formData.isActive}
-            onChange={(checked) => handleInputChange("isActive", checked)}
+            checked={formData.status}
+            onChange={(checked) =>{ handleInputChange("status", checked ? "Active" : "Inactive")}}
             checkedChildren="Active"
             unCheckedChildren="Inactive"
           />
           <span className="switch-label">
-            {formData.isActive ? "Active" : "Inactive"}
+            {formData.status ? "Active" : "Inactive"}
           </span>
         </div>
       </div>

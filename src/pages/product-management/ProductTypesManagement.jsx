@@ -10,6 +10,8 @@ import {
   Modal,
   Divider,
 } from "antd";
+import MyAlert from "../../component/common/MyAlert";
+import axios from "axios";
 import {
   PlusOutlined,
   EditOutlined,
@@ -33,15 +35,24 @@ import {
   updatePricing,
   getPricingHistory,
 } from "../../features/ProductTypesSlice";
+import { getAllProducts } from "../../features/ProductsSlice";
+import { getProductTypesWithProducts } from "../../features/ProducttypeWithProducts";
 import "../../styles/ProductManagement.css";
 import "../../styles/Configuration.css";
+import { deleteFtn, insertDataFtn } from "../../utils/Utilities";
 
 const ProductTypesManagement = () => {
   const dispatch = useDispatch();
-  const { productTypes, loading, error } = useSelector(
+  const { productTypes } = useSelector(
     (state) => state.productTypes
   );
-
+  const { allProducts, } = useSelector(
+    (state) => state.products
+  );
+  const { data, loading, error } = useSelector(
+    (state) => state.productTypesWithProducts
+  );
+  console.log(data, "product")
   const [isProductTypeDrawerOpen, setIsProductTypeDrawerOpen] = useState(false);
   const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
   const [isPricingDrawerOpen, setIsPricingDrawerOpen] = useState(false);
@@ -52,7 +63,7 @@ const ProductTypesManagement = () => {
   const [pricingFormMethods, setPricingFormMethods] = useState(null);
 
   useEffect(() => {
-    dispatch(getAllProductTypes());
+    dispatch(getProductTypesWithProducts());
   }, [dispatch]);
 
   const handleCreateProductType = () => {
@@ -99,21 +110,25 @@ const ProductTypesManagement = () => {
       okType: "danger",
       cancelText: "Cancel",
       onOk: () => {
-        dispatch(deleteProductType(productTypeId));
-        message.success({
-          content: "Product type deleted successfully",
-          style: {
-            marginTop: "20vh",
-            textAlign: "center",
-          },
-        });
+        deleteFtn(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/product-types/${productTypeId}`,
+          ()=>{
+            dispatch(getProductTypesWithProducts());
+          })
+        // dispatch(deleteProductType(productTypeId));
+        // message.success({
+        //   content: "Product type deleted successfully",
+        //   style: {
+        //     marginTop: "20vh",
+        //     textAlign: "center",
+        //   },
+        // });
       },
     });
   };
 
   const productTypeColumns = [
     {
-      title: "Product Type",
+      title: "Product Type123",
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
@@ -152,7 +167,8 @@ const ProductTypesManagement = () => {
             {date ? new Date(date).toLocaleTimeString() : ""}
           </div>
           <div className="text-muted small">
-            by {record.createdBy || "Unknown"}
+            {/* by {record.createdBy || "Unknown"} */}
+            by {"Unknown"}
           </div>
         </div>
       ),
@@ -171,14 +187,15 @@ const ProductTypesManagement = () => {
             {date ? new Date(date).toLocaleTimeString() : ""}
           </div>
           <div className="text-muted small">
-            by {record.updatedBy || "Unknown"}
+            {/* by {record.updatedBy || "Unknown"} */}
+            by {"Unknown"}
           </div>
         </div>
       ),
       sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
     },
     {
-      title: "Actions",
+      title: "Actions1",
       key: "actions",
       render: (_, record) => (
         <Space>
@@ -202,13 +219,66 @@ const ProductTypesManagement = () => {
               size="small"
               danger
               icon={<DeleteOutlined />}
-              onClick={() => handleDeleteProductType(record.id)}
+              onClick={() => handleDeleteProductType(record._id)}
             />
           </Tooltip>
         </Space>
       ),
     },
   ];
+ const createProductWithPricing = async (data, selectedProductType) => {
+  debugger
+  try {
+    const token = localStorage.getItem("token");
+
+    // 1️⃣ Create Product
+    const productRes = await axios.post(
+      `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products`,
+      {
+        name: data?.name,
+        code: data?.code,
+        description: data?.description,
+        productTypeId: selectedProductType?._id,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    const prodid = productRes.data?.data?._id;
+    debugger
+    if (!prodid) throw new Error("Product ID missing from response");
+
+    // 2️⃣ Create Pricing
+    await axios.post(
+      `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/pricing`,
+      {
+        effectiveFrom: data?.effectiveFrom,
+        effectiveTo: data?.effectiveTo,
+        status: data?.status,
+        currency: data?.currency,
+        productId: prodid,
+        price: data?.memberPrice,
+      },
+      {
+        headers: { Authorization: `Bearer ${token}` },
+      }
+    );
+
+    // ✅ Single success notification
+    MyAlert("success", "Product and Pricing created successfully ✅");
+    dispatch(getProductTypesWithProducts())
+    return true;
+  } catch (error) {
+    console.error("❌ Error creating product/pricing:", error);
+    // ❌ Single error notification
+    MyAlert(
+      "error",
+      error?.response?.data?.message || "Failed to create product or pricing"
+    );
+    return false;
+  }
+};
 
   const getProductColumns = (productType) => {
     const baseColumns = [
@@ -282,7 +352,7 @@ const ProductTypesManagement = () => {
 
     // Add remaining columns
     baseColumns.push({
-      title: "Actions",
+      title: "Actions2",
       key: "actions",
       render: (_, record, index, productType) => (
         <Space>
@@ -308,7 +378,7 @@ const ProductTypesManagement = () => {
   };
 
   const renderProductTypesTable = () => (
-    <Card title="Product Types" className="theme-card">
+    <Card title="Product Types test" className="theme-card">
       <div style={{ marginBottom: 16 }}>
         <Button
           type="primary"
@@ -321,15 +391,16 @@ const ProductTypesManagement = () => {
       <div className="main-table-scroll-container">
         <Table
           columns={productTypeColumns}
-          dataSource={productTypes}
-          rowKey="id"
+          dataSource={data || []}
+          rowKey="_id"
           loading={loading}
           pagination={{ pageSize: 10 }}
           expandable={{
             expandedRowRender: (record) => (
               <div className="expanded-content-container">
-                <Divider orientation="left">Products in {record.name}</Divider>
-                <div className="table-scroll-container">
+                {/* <Divider orientation="left">
+                  Products in {record.name} */}
+                  Products in {record.name}
                   <Table
                     columns={getProductColumns(record).map((col) => ({
                       ...col,
@@ -337,7 +408,7 @@ const ProductTypesManagement = () => {
                       render:
                         col.title === "Actions"
                           ? (text, productRecord) =>
-                              col.render(text, productRecord, null, record)
+                            col.render(text, productRecord, null, record)
                           : col.render,
                     }))}
                     dataSource={record.products || []}
@@ -345,7 +416,10 @@ const ProductTypesManagement = () => {
                     pagination={false}
                     size="small"
                   />
-                </div>
+                {/* </Divider> */}
+                {/* ✅ You can add nested product details here later */}
+                <p>{record.name}</p>
+
                 <div style={{ marginTop: 16 }}>
                   <Button
                     type="dashed"
@@ -357,9 +431,13 @@ const ProductTypesManagement = () => {
                 </div>
               </div>
             ),
-            rowExpandable: (record) => (record.products?.length || 0) > 0,
+            rowExpandable: () => true, // always show expand arrow
           }}
         />
+
+        {/* <Table columns={productTypeColumns}
+         dataSource={productTypes || []} */}
+        {/* /> */}
       </div>
     </Card>
   );
@@ -376,7 +454,7 @@ const ProductTypesManagement = () => {
       {/* Product Type Form Drawer */}
       <MyDrawer
         title={
-          editingProductType ? "Edit Product Type" : "Add New Product Type"
+          editingProductType ? "Edit Product Type" : "Add New Product Type1"
         }
         open={isProductTypeDrawerOpen}
         onClose={() => setIsProductTypeDrawerOpen(false)}
@@ -402,7 +480,7 @@ const ProductTypesManagement = () => {
             >
               {editingProductType
                 ? "Update Product Type"
-                : "Create Product Type"}
+                : "Create Product Type1"}
             </Button>
           </Space>
         }
@@ -413,10 +491,20 @@ const ProductTypesManagement = () => {
             onClose={() => setIsProductTypeDrawerOpen(false)}
             onSubmit={(data) => {
               if (editingProductType) {
-                dispatch(updateProductType(data));
+                debugger
+                // dispatch(updateProductType(data));
                 message.success("Product type updated successfully");
               } else {
-                dispatch(createProductType(data));
+                // dispatch(createProductType(data));
+                debugger
+                insertDataFtn(process.env.REACT_APP_POLICY_SERVICE_URL, '/api/product-types',
+                  data,
+                  "Product Type Created Successfully",
+                  "Product Type Creation Failed",
+                  () => {
+                    dispatch(getAllProductTypes());
+                  })
+
                 message.success("Product type created successfully");
               }
               setIsProductTypeDrawerOpen(false);
@@ -433,9 +521,9 @@ const ProductTypesManagement = () => {
         width={800}
         extra={
           <Space>
-            <Button onClick={() => setIsProductDrawerOpen(false)}>
+            {/* <Button onClick={() => setIsProductDrawerOpen(false)}>
               Cancel
-            </Button>
+            </Button> */}
             <Button
               type="primary"
               onClick={() => {
@@ -460,16 +548,11 @@ const ProductTypesManagement = () => {
             product={editingProduct}
             productType={selectedProductType}
             onClose={() => setIsProductDrawerOpen(false)}
-            onSubmit={(data) => {
-              if (editingProduct) {
-                // Update product logic here
-                message.success("Product updated successfully");
-              } else {
-                // Create product logic here
-                message.success("Product created successfully");
-              }
-              setIsProductDrawerOpen(false);
-            }}
+           onSubmit={async (data) => { if (editingProduct) { MyAlert("success", "Product updated successfully");
+
+            } else 
+              { await createProductWithPricing(data, selectedProductType); }
+            setIsProductDrawerOpen(false); }}
           />
         </div>
       </MyDrawer>

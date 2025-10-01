@@ -121,6 +121,7 @@ function Configuratin() {
     callback
   ) => {
     const token = localStorage.getItem("token");
+    debugger
 
     try {
       const response = await axios.post(`${baseURL}${url}`, data, {
@@ -130,8 +131,6 @@ function Configuratin() {
           Authorization: `Bearer ${token}`,
         },
       });
-
-
       // ✅ Accept any 2xx status as success
       if (response.status >= 200 && response.status < 300) {
         MyAlert("success", successNotification);
@@ -5497,7 +5496,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnPostCode}
-              dataSource={data?.PostCodes}
+              dataSource={groupedLookups["Post Code"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6235,7 +6234,7 @@ function Configuratin() {
         }}
         add={async () => {
           await insertDataFtn(
-            `/lookuptype`,
+            `/api/lookuptype`,
             { ...drawerIpnuts?.LookupType, userid: "67f3f9d812b014a0a7a94081" },
             "Data inserted successfully",
             "Data did not insert",

@@ -753,15 +753,15 @@ const PolicyClientExample = () => {
               <ul>
                 <li>
                   Policy Service:
-                  https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net
+                  {/* https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net */}
                 </li>
                 <li>
                   Authorization API:
-                  https://projectshellapi-c0hqhbdwaaahbcab.northeurope-01.azurewebsites.net
+                  {/* https://projectshellapi-c0hqhbdwaaahbcab.northeurope-01.azurewebsites.net */}
                 </li>
                 <li>
                   Portal API:
-                  https://testportal-dabravg2h3hfbke9.canadacentral-01.azurewebsites.net
+                  {/* https://testportal-dabravg2h3hfbke9.canadacentral-01.azurewebsites.net */}
                 </li>
               </ul>
               <br />

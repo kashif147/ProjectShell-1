@@ -71,13 +71,12 @@ export const deleteFtn = async (url, callback) => {
     const response = await axios.request(config);
     MyAlert("success", "You Have Successfully Deleted.");
     if (callback && typeof callback === "function" && response?.data) {
-      debugger;
       callback();
     }
     return response.data;
   } catch (error) {
-    console.error("Error deleting region:", error);
-    return MyAlert("error", "Please Try Again");
+    console.error("Error deleting region:", error?.response?.data?.error?.message||"" );
+    return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message||"");
   }
 };
 

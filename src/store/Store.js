@@ -24,6 +24,8 @@ import roleReducer from "../features/RoleSlice";
 import permissionReducer from "../features/PermissionSlice";
 import roleByIdReducer from "../features/PermissionSlice";
 import productTypesReducer from "../features/ProductTypesSlice";
+import productsReducer from "../features/ProductsSlice";
+import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
 
 const store = configureStore({
   reducer: {
@@ -47,6 +49,8 @@ const store = configureStore({
     permissions: permissionReducer,
     roleById: roleByIdReducer,
     productTypes: productTypesReducer,
+    products: productsReducer,
+    productTypesWithProducts: productTypesWithProductsReducer,
   },
 });
 

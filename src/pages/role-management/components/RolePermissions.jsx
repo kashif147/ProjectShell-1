@@ -109,6 +109,11 @@ const RolePermissions = ({ role, onClose }) => {
 const userdata = JSON.parse(localStorage.getItem("userData"));
 const handleSave = async () => {
   debugger
+  // 68c8690e40c7b7d13ba2d0a8
+  //  "permissions": [
+  //               "68c84c57f10b0fff9ac905e2",
+  //               "68c84c58f10b0fff9ac905ec"
+  //           ],
   try {
     setLoading(true);
 
