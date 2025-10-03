@@ -11,6 +11,7 @@ import {
   Divider,
 } from "antd";
 import MyAlert from "../../component/common/MyAlert";
+import ProductDrawer from "./components/PricingForm";
 
 import axios from "axios";
 import {
@@ -25,8 +26,8 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import MyDrawer from "../../component/common/MyDrawer";
-import ProductForm from "./components/ProductForm";
-import PricingForm from "./components/PricingForm";
+import ProductForm from "./components/ProductDrawer";
+// import PricingForm from "./components/PricingForm";
 import {
   getAllProductTypes,
   createProductType,
@@ -41,6 +42,7 @@ import { getProductTypesWithProducts } from "../../features/ProducttypeWithProdu
 import "../../styles/ProductManagement.css";
 import "../../styles/Configuration.css";
 import { deleteFtn, insertDataFtn, updateFtn } from "../../utils/Utilities";
+import PricingDrawer from "./components/PricingForm";
 
 const ProductTypesManagement = () => {
   const dispatch = useDispatch();
@@ -92,11 +94,11 @@ const ProductTypesManagement = () => {
   };
 
   const handleCreatePricing = (product, productType) => {
-    debugger
     setSelectedProductType(productType);
     setEditingProduct(product);
-    setEditingPricing(product?.currentPricing);
+    setEditingPricing(product);
     setIsPricingDrawerOpen(true);
+    debugger
   };
 
   const handleEditPricing = (pricing, productType) => {
@@ -163,8 +165,6 @@ const ProductTypesManagement = () => {
     }
   };
 
-
-
   const handleDeleteProduct = (productTypeId) => {
     Modal.confirm({
       title: "Delete Product Type",
@@ -200,11 +200,11 @@ const ProductTypesManagement = () => {
     },
     {
       title: "Status",
-      dataIndex: "isActive",
-      key: "isActive",
-      render: (isActive) => (
-        <Tag color={isActive ? "green" : "red"}>
-          {isActive ? "Active" : "Inactive"}
+      dataIndex: "status",
+      key: "status",
+      render: (status) => (
+        <Tag color={status ? "green" : "red"}>
+          {status ? "Active" : "Inactive"}
         </Tag>
       ),
     },
@@ -227,7 +227,7 @@ const ProductTypesManagement = () => {
             {date ? new Date(date).toLocaleTimeString() : ""}
           </div>
           <div className="text-muted small">
-            {/* by {record.createdBy || "Unknown"} */}
+            by {record.createdBy || "Unknown"}
             by {"Unknown"}
           </div>
         </div>
@@ -247,8 +247,7 @@ const ProductTypesManagement = () => {
             {date ? new Date(date).toLocaleTimeString() : ""}
           </div>
           <div className="text-muted small">
-            {/* by {record.updatedBy || "Unknown"} */}
-            by {"Unknown"}
+           by {record.updatedBy || "Unknown"} 
           </div>
         </div>
       ),
@@ -317,7 +316,8 @@ const ProductTypesManagement = () => {
           status: data?.status,
           currency: data?.currency,
           productId: prodid,
-          price: data?.memberPrice,
+          memberPrice: data?.memberPrice,
+          nonMemberPrice:data?.nonMemberPrice
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -358,12 +358,12 @@ const ProductTypesManagement = () => {
         key: "code",
       },
       {
-        title: "Status",
-        dataIndex: "isActive",
-        key: "isActive",
-        render: (isActive) => (
-          <Tag color={isActive ? "green" : "red"}>
-            {isActive ? "Active" : "Inactive"}
+        title: "Status1",
+        dataIndex: "status",
+        key: "status",
+        render: (status) => (
+          <Tag color={status ? "green" : "red"}>
+            {status ? "Active" : "Inactive"}
           </Tag>
         ),
       },
@@ -427,7 +427,7 @@ const ProductTypesManagement = () => {
             <Button
               size="small"
               icon={<EditOutlined />}
-              onClick={() => handleEditProduct(record, productType)}
+              onClick={() => handleEditProduct(_,productType )}
             />
           </Tooltip>
           <Tooltip title="Delete Product">
@@ -557,11 +557,11 @@ const ProductTypesManagement = () => {
             onClose={() => setIsProductTypeDrawerOpen(false)}
             onSubmit={(data) => {
               if (editingProductType) {
-
                 updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/api/product-types/${editingProductType?._id}`,
                   data,
                   () => {
                     dispatch(getProductTypesWithProducts());
+                    
                   })
               } else {
                 // dispatch(createProductType(data));
@@ -574,7 +574,7 @@ const ProductTypesManagement = () => {
                     dispatch(getProductTypesWithProducts());
                   })
               }
-              setIsProductTypeDrawerOpen(false);
+              // setIsProductTypeDrawerOpen(false);
             }}
           />
         </div>
@@ -582,7 +582,7 @@ const ProductTypesManagement = () => {
 
       {/* Product Form Drawer */}
       <MyDrawer
-        title={editingProduct ? "Edit Product11" : "Add New Product2"}
+        title={editingProduct ? "Edit Product" : "Add New Product"}
         open={isProductDrawerOpen}
         onClose={() => {
           setIsProductDrawerOpen(false)
@@ -634,14 +634,15 @@ const ProductTypesManagement = () => {
                   })
 
                 } else { await createProductWithPricing(data, selectedProductType); }
-                setIsProductDrawerOpen(false);
+                // setIsProductDrawerOpen(false);
               }}
           />
         </div>
       </MyDrawer>
 
       {/* Pricing Form Drawer */}
-      <MyDrawer
+<PricingDrawer open={isPricingDrawerOpen} onClose={()=>setIsPricingDrawerOpen(false)}  product={editingPricing} />
+      {/* <MyDrawer
         title={editingPricing ? "Edit Pricing" : "Add New Pricing"}
         open={isPricingDrawerOpen}
         onClose={() => setIsPricingDrawerOpen(false)}
@@ -673,13 +674,13 @@ const ProductTypesManagement = () => {
             pricing={editingPricing}
             onClose={() => setIsPricingDrawerOpen(false)}
             onSubmit={(data) => {
-
+               console.log(data, "pricing data")
               setIsPricingDrawerOpen(false);
             }}
             onRef={setPricingFormMethods}
           />
         </div>
-      </MyDrawer>
+      </MyDrawer> */}
     </div>
   );
 };

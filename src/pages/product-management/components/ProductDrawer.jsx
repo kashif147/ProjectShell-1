@@ -24,7 +24,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     setErrors({});
   };
   useEffect(() => {
-    if (!product ) {
+    if (!product) {
+      debugger
       resetForm(); // optional safeguard when switching modes
     }
   }, [product, productType]);
@@ -48,8 +49,13 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
         status: product.status,
         // Meta fields
       });
-    } 
-    else if (isProductType) {
+    } else if (isProduct) {
+      // Set default values for new product
+      setFormData((prev) => ({
+        ...prev,
+
+      }));
+    } else if (isProductType) {
       // Set default values for new product type
       setFormData((prev) => ({
         ...prev,
@@ -79,7 +85,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     }
   };
 
-  const validate = () => {
+  const validate = (e) => {
+    e.preventDefault();
     let newErrors = {};
 
     if (!formData.name?.trim())
@@ -92,24 +99,24 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       newErrors.description = "Description is required";
 
     if (isProduct) {
-      if (!formData.memberPrice || formData.memberPrice <= 0)
-        newErrors.memberPrice = "Price must be greater than 0";
+      // if (!formData.memberPrice >= 0)
+      //   newErrors.memberPrice = "Price must be greater than 0";
 
-      if (!formData.nonMemberPrice || formData.nonMemberPrice <= 0)
-        newErrors.nonMemberPrice = "Non-member price must be greater than 0";
+      // if (!formData.nonMemberPrice <= 0)
+      //   newErrors.nonMemberPrice = "Non-mem ber price must be greater than 0";
 
       if (!formData.effectiveFrom)
         newErrors.effectiveFrom = "Effective from date is required";
     }
-debugger
+    debugger
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
 
-  const handleSubmit = async () => {
+  const handleSubmit = async (e) => {
     debugger
-    if (!validate()) {
+    if (!validate(e)) {
       return;
     }
     debugger
@@ -150,9 +157,8 @@ debugger
     <form
       className="drawer-main-container product-form"
       onSubmit={(e) => {
-        debugger
-       e.preventDefault();
-        handleSubmit();
+        e.preventDefault();
+        handleSubmit(e);
       }}
     >
       {/* Product Type Fields */}

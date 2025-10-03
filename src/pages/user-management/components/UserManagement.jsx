@@ -215,7 +215,7 @@ const handleSearchChange = (e) => {
         </div>
       ),
     },
-    {
+    { 
       title: "Type",
       dataIndex: "userType",
       key: "userType",
