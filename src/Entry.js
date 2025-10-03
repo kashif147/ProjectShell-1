@@ -148,6 +148,7 @@ function Entry() {
               display: "flex",
               flexDirection: "column",
               overflow: "hidden",
+              minWidth: 0, // Allow flex item to shrink
             }}
           >
             {/* Header Details */}
@@ -159,7 +160,12 @@ function Entry() {
             {/* Content area + resizable section */}
             <div style={{ flex: 1, display: "flex" }}>
               <div
-                style={{ flex: 1, scrollbarWidth: "none" }}
+                style={{
+                  flex: 1,
+                  scrollbarWidth: "none",
+                  overflow: "auto",
+                  minWidth: 0, // Allow content to shrink
+                }}
                 className="main-main "
               >
                 <Suspense

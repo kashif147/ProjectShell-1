@@ -71,9 +71,18 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
   ];
 
   const handleInputChange = (field, value) => {
+    let processedValue = value;
+
+    // Format pricing fields to 2 decimal places
+    if (field === "memberPrice" || field === "nonMemberPrice") {
+      if (value && !isNaN(value)) {
+        processedValue = parseFloat(value).toFixed(2);
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: processedValue,
     }));
 
     // Clear error when user starts typing

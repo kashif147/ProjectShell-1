@@ -190,6 +190,8 @@ export const AuthorizationProvider = ({ children }) => {
     localStorage.removeItem("userPermissions");
     localStorage.removeItem("token_expiry");
     localStorage.removeItem("refresh_token");
+    sessionStorage.removeItem("userInitialized"); // Clear the user initialization flag
+    sessionStorage.removeItem("menuManualSelection"); // Clear menu manual selection flag
   };
 
   // Initialize auth state from localStorage on mount

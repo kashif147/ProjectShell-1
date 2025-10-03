@@ -40,6 +40,10 @@ const Sidebar = () => {
   console.log("Sidebar Debug - menuLblState:", menuLblState);
   console.log("Sidebar Debug - activeKey:", activeKey);
 
+  // Fallback: if no active key, default to first available key
+  const fallbackActiveKey = activeKey || "Subscriptions & Rewards";
+  console.log("Sidebar Debug - Using activeKey:", fallbackActiveKey);
+
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = useMemo(
     () => ({
@@ -48,6 +52,7 @@ const Sidebar = () => {
       Finance: financeItems,
       Correspondence: correspondenceItems,
       Configuration: configurationItems,
+      Settings: configurationItems, // Map Settings to same as Configuration
       Profiles: profileItems,
       Reports: reportItems,
       "Issue Management": issuesItems,
@@ -65,11 +70,11 @@ const Sidebar = () => {
   // Filter menu items based on user permissions and roles
   const menuItems = useMemo(() => {
     // Get the base menu items for the active module
-    const baseMenuItems = itemsMap[activeKey] || [];
+    const baseMenuItems = itemsMap[fallbackActiveKey] || [];
     // Debug: Log current permissions and roles
     console.log("Sidebar Debug - Current permissions:", permissions);
     console.log("Sidebar Debug - Current roles:", roles);
-    console.log("Sidebar Debug - Active key:", activeKey);
+    console.log("Sidebar Debug - Active key:", fallbackActiveKey);
     console.log("Sidebar Debug - Base menu items:", baseMenuItems);
     console.log(
       "Sidebar Debug - Base menu items length:",
@@ -95,7 +100,7 @@ const Sidebar = () => {
     console.log("Sidebar Debug - Filtered menu items length:", filtered.length);
 
     return filtered;
-  }, [itemsMap, activeKey, permissions, roles]);
+  }, [itemsMap, fallbackActiveKey, permissions, roles]);
 
   // Transform menu items for collapsed/expanded view
   const transformedMenuItems = useMemo(() => {

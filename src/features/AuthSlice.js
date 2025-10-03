@@ -53,6 +53,8 @@ const authSlice = createSlice({
       state.isAuthenticated = false;
       state.loading = false;
       state.error = null;
+      sessionStorage.removeItem("userInitialized"); // Clear the user initialization flag
+      sessionStorage.removeItem("menuManualSelection"); // Clear menu manual selection flag
     },
     setLoading: (state, action) => {
       state.loading = action.payload;

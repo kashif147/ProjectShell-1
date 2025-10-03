@@ -51,6 +51,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
   const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
+  const navigate = useNavigate(); // Import navigate hook
   const [searchTerm, setSearchTerm] = useState("");
   let userdata = localStorage.getItem("userdata");
   userdata = JSON.parse(userdata);
@@ -58,8 +59,30 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   console.log(permission, "userdata");
 
   const handleUpdate = (key, value) => {
-    dispatch(updateMenuLbl({ key, value }));
+    console.log("Header Debug - Updating menu label:", { key, value });
+    dispatch(updateMenuLbl({ key, value, isManual: true }));
+    sessionStorage.setItem("menuManualSelection", "true"); // Mark as manual selection
+
+    // Navigate to first item of selected module
+    const navigationMap = {
+      "Subscriptions & Rewards": "/Summary",
+      Finance: "/Batches",
+      Correspondence: "/CorrespondencesSummary",
+      Events: "/NotDesignedYet", // Default route as Events items aren't fully implemented
+      Settings: "/Configuratin",
+      Configuration: "/Configuratin",
+      Reports: "/Reports",
+      Membership: "/members",
+      Profiles: "/Summary",
+    };
+
+    const route = navigationMap[key] || "/Summary";
+    console.log("Header Debug - Navigating to:", route);
+
     closeDropdown();
+
+    // Use React Router navigate for better state management (no page reload)
+    navigate(route, { replace: true });
   };
 
   const appItems = [
@@ -187,7 +210,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             Events: "Events", // Maps to eventsItems
             Courses: "Events", // Map Courses to Events for now
             "Professional Development": "Events", // Map Professional Development to Events for now
-            Settings: "Configuration", // Map Settings to Configuration
+            Settings: "Settings", // Map Settings to Settings
             Configuration: "Configuration", // Maps to configurationItems
             Reports: "Reports", // Maps to reportItems
           };

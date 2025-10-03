@@ -31,25 +31,49 @@ const Login = () => {
   const setMenuLabelForRole = (roleCodes) => {
     if (roleCodes.includes("SU")) {
       // Super User - show Configuration module
-      dispatch(updateMenuLbl({ key: "Configuration", value: true }));
+      dispatch(
+        updateMenuLbl({ key: "Configuration", value: true, isManual: false })
+      );
     } else if (roleCodes.includes("GS") || roleCodes.includes("DGS")) {
       // General Secretary roles - show Configuration module
-      dispatch(updateMenuLbl({ key: "Configuration", value: true }));
+      dispatch(
+        updateMenuLbl({ key: "Configuration", value: true, isManual: false })
+      );
     } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
       // Membership Officer roles - show Subscriptions & Rewards
-      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+      dispatch(
+        updateMenuLbl({
+          key: "Subscriptions & Rewards",
+          value: true,
+          isManual: false,
+        })
+      );
     } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
       // Account Manager roles - show Finance
-      dispatch(updateMenuLbl({ key: "Finance", value: true }));
+      dispatch(updateMenuLbl({ key: "Finance", value: true, isManual: false }));
     } else if (roleCodes.includes("IRO")) {
       // Industrial Relations Officer - show Issue Management
-      dispatch(updateMenuLbl({ key: "Issue Management", value: true }));
+      dispatch(
+        updateMenuLbl({ key: "Issue Management", value: true, isManual: false })
+      );
     } else if (roleCodes.includes("MEMBER")) {
       // Regular member - show Subscriptions & Rewards
-      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+      dispatch(
+        updateMenuLbl({
+          key: "Subscriptions & Rewards",
+          value: true,
+          isManual: false,
+        })
+      );
     } else {
       // Default fallback
-      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+      dispatch(
+        updateMenuLbl({
+          key: "Subscriptions & Rewards",
+          value: true,
+          isManual: false,
+        })
+      );
     }
   };
 
@@ -181,8 +205,11 @@ const Login = () => {
         // Set user data in authorization context
         await setUserData(decode, roleCodes, userPermissions);
 
-        // Set appropriate menu label based on user role
-        setMenuLabelForRole(roleCodes);
+        // Only set menu label on initial login, not on navigation
+        if (!sessionStorage.getItem("userInitialized")) {
+          setMenuLabelForRole(roleCodes);
+          sessionStorage.setItem("userInitialized", "true");
+        }
 
         // Navigate based on user role for default login behavior
         console.log("Login Debug - roleCodes:", roleCodes);
@@ -326,8 +353,11 @@ const Login = () => {
         userPermissions
       );
 
-      // Set appropriate menu label based on user role
-      setMenuLabelForRole(roleCodes);
+      // Only set menu label on initial login, not on navigation
+      if (!sessionStorage.getItem("userInitialized")) {
+        setMenuLabelForRole(roleCodes);
+        sessionStorage.setItem("userInitialized", "true");
+      }
 
       // Navigate based on user role
       if (roleCodes.includes("SU")) {

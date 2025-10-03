@@ -86,9 +86,18 @@ const PricingForm = ({
   }, [onRef, loading]);
 
   const handleInputChange = (field, value) => {
+    let processedValue = value;
+
+    // Format pricing fields to 2 decimal places
+    if (field === "memberPrice" || field === "nonMemberPrice") {
+      if (value && !isNaN(value)) {
+        processedValue = parseFloat(value).toFixed(2);
+      }
+    }
+
     setFormData((prev) => ({
       ...prev,
-      [field]: value,
+      [field]: processedValue,
     }));
 
     // Clear error when user starts typing
@@ -161,13 +170,13 @@ const PricingForm = ({
       title: "Member Price",
       dataIndex: "memberPrice",
       key: "memberPrice",
-      render: (price) => `€${price}`,
+      render: (price) => `€${(price || 0).toFixed(2)}`,
     },
     {
       title: "Non-Member Price",
       dataIndex: "nonMemberPrice",
       key: "nonMemberPrice",
-      render: (price) => `€${price}`,
+      render: (price) => `€${(price || 0).toFixed(2)}`,
     },
     {
       title: "Status",
@@ -201,7 +210,7 @@ const PricingForm = ({
           const currency = record.currency || "EUR";
           const symbol =
             currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-          return `${symbol}${price || 0}`;
+          return `${symbol}${(price || 0).toFixed(2)}`;
         },
       });
     } else {
@@ -214,7 +223,7 @@ const PricingForm = ({
             const currency = record.currency || "EUR";
             const symbol =
               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-            return `${symbol}${price || 0}`;
+            return `${symbol}${(price || 0).toFixed(2)}`;
           },
         },
         {
@@ -225,7 +234,7 @@ const PricingForm = ({
             const currency = record.currency || "EUR";
             const symbol =
               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-            return `${symbol}${price || 0}`;
+            return `${symbol}${(price || 0).toFixed(2)}`;
           },
         }
       );
