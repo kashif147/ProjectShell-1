@@ -154,4 +154,9 @@
   font-weight: 500;
 }
 
-/* App launcher styles moved to AppLauncher.css for better organization */
+.ant-modal-confirm-body-wrapper{
+  padding-top: 8px !important;
+  padding-left: 8px !important;
+  padding-right: 8px !important;
+}
+

@@ -208,122 +208,122 @@ debugger
         </Space>
       }
     >
-      <div className="drawer-main-cntainer">
-        {/* Search */}
-        <div className="mb-4">
-          <Search
-            placeholder="Search permissions..."
-            prefix={<SearchOutlined />}
+     <div className="drawer-main-cntainer">
+  {/* Search */}
+  <div className="mb-4">
+    <Search
+      placeholder="Search permissions..."
+      prefix={<SearchOutlined />}
+      style={{
+        height: "40px",
+        borderRadius: "4px",
+        border: "1px solid #d9d9d9",
+      }}
+    />
+  </div>
+
+  {/* Selected Count */}
+  <div className="mb-4">
+    <Card className="selected-permissions-card">
+      <div className="d-flex justify-content-between align-items-center">
+        <div>
+          <h5 className="mb-1">Selected Permissions</h5>
+          <p className="text-muted mb-0">
+            {selectedPermissions.length} of {allPermissions.length} permissions selected
+          </p>
+        </div>
+        <Badge
+          count={selectedPermissions.length}
+          showZero
+          color="var(--primary-color)"
+        >
+          <Tag color="var(--primary-color)" className="permission-count-tag">
+            {selectedPermissions.length}
+          </Tag>
+        </Badge>
+      </div>
+    </Card>
+  </div>
+
+  {/* Permissions by Category (expanded by default) */}
+  {Object.keys(filteredPermissions).map((category) => {
+    const categoryPermissions = filteredPermissions[category] || [];
+    const allChecked = categoryPermissions.every((p) =>
+      selectedPermissions.includes(p.id)
+    );
+    const partiallyChecked =
+      categoryPermissions.some((p) =>
+        selectedPermissions.includes(p.id)
+      ) && !allChecked;
+
+    return (
+      <Card
+        key={category}
+        className="mb-3"
+        title={
+          <div
             style={{
-              height: "40px",
-              borderRadius: "4px",
-              border: "1px solid #d9d9d9",
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
             }}
-          />
-        </div>
-
-        {/* Selected Count */}
-        <div className="mb-4">
-          <Card className="selected-permissions-card">
-            <div className="d-flex justify-content-between align-items-center">
-              <div>
-                <h5 className="mb-1">Selected Permissions</h5>
-                <p className="text-muted mb-0">
-                  {selectedPermissions.length} of {allPermissions.length} permissions selected
-                </p>
-              </div>
-              <Badge
-                count={selectedPermissions.length}
-                showZero
-                color="var(--primary-color)"
-              >
-                <Tag color="var(--primary-color)" className="permission-count-tag">
-                  {selectedPermissions.length}
-                </Tag>
-              </Badge>
+          >
+            <div>
+              <Tag color={getCategoryColor(category)}>{category}</Tag>
+              <span style={{ marginLeft: 8 }}>
+                ({categoryPermissions.length} permissions)
+              </span>
             </div>
-          </Card>
-        </div>
-
-        {/* Permissions by Category */}
-        <Collapse accordion>
-          {Object.keys(filteredPermissions).map((category) => {
-            const categoryPermissions = filteredPermissions[category] || [];
-            const allChecked = categoryPermissions.every((p) =>
-              selectedPermissions.includes(p.id)
-            );
-            const partiallyChecked =
-              categoryPermissions.some((p) =>
-                selectedPermissions.includes(p.id)
-              ) && !allChecked;
-
+            <Checkbox
+              indeterminate={partiallyChecked}
+              checked={allChecked}
+              onChange={() => handleCategoryToggle(categoryPermissions)}
+            >
+              Select All
+            </Checkbox>
+          </div>
+        }
+      >
+        <Row gutter={[16, 16]}>
+          {categoryPermissions.map((permission) => {
+            const checked = selectedPermissions.includes(permission.id);
             return (
-              <Panel
-                key={category}
-                header={
-                  <div
-                    style={{
-                      display: "flex",
-                      justifyContent: "space-between",
-                      alignItems: "center",
-                    }}
+              <Col xs={24} sm={12} md={8} key={permission.id}>
+                <div className="permission-item">
+                  <Checkbox
+                    checked={checked}
+                    onChange={(e) =>
+                      handlePermissionToggle(permission.id, e.target.checked)
+                    }
                   >
-                    <div>
-                      <Tag color={getCategoryColor(category)}>{category}</Tag>
-                      <span style={{ marginLeft: 8 }}>
-                        ({categoryPermissions.length} permissions)
-                      </span>
+                    <div className="permission-content">
+                      <div className="permission-name">{permission.name}</div>
+                      <div className="permission-string">
+                        <code style={{ fontSize: 12 }}>
+                          {permission.permission}
+                        </code>
+                      </div>
+                      <div className="permission-description">
+                        {permission.description}
+                      </div>
                     </div>
-                    <Checkbox
-                      indeterminate={partiallyChecked}
-                      checked={allChecked}
-                      onChange={() => handleCategoryToggle(categoryPermissions)}
-                    >
-                      Select All
-                    </Checkbox>
-                  </div>
-                }
-              >
-                <Row gutter={[16, 16]}>
-                  {categoryPermissions.map((permission) => {
-                    const checked = selectedPermissions.includes(permission.id);
-                    return (
-                      <Col xs={24} sm={12} md={8} key={permission.id}>
-                        <div className="permission-item">
-                          <Checkbox
-                            checked={checked}
-                            onChange={(e) =>
-                              handlePermissionToggle(permission.id, e.target.checked)
-                            }
-                          >
-                            <div className="permission-content">
-                              <div className="permission-name">{permission.name}</div>
-                              <div className="permission-string">
-                                <code style={{ fontSize: 12 }}>
-                                  {permission.permission}
-                                </code>
-                              </div>
-                              <div className="permission-description">
-                                {permission.description}
-                              </div>
-                            </div>
-                          </Checkbox>
-                        </div>
-                      </Col>
-                    );
-                  })}
-                </Row>
-              </Panel>
+                  </Checkbox>
+                </div>
+              </Col>
             );
           })}
-        </Collapse>
+        </Row>
+      </Card>
+    );
+  })}
 
-        {Object.keys(filteredPermissions).length === 0 && (
-          <Card className="text-center">
-            <p className="text-muted">No permissions found matching your search.</p>
-          </Card>
-        )}
-      </div>
+  {Object.keys(filteredPermissions).length === 0 && (
+    <Card className="text-center">
+      <p className="text-muted">No permissions found matching your search.</p>
+    </Card>
+  )}
+</div>
+
     </Drawer>
   );
 };

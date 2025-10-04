@@ -171,6 +171,7 @@ const RoleManagement = ({ onClose }) => {
   };
 
   const handleStatusChange = (value) => {
+    debugger
     dispatch(setSelectedStatus(value));
   };
 
@@ -300,16 +301,29 @@ const RoleManagement = ({ onClose }) => {
         </div>
       ),
     },
+    // {
+    //   title: "Status",
+    //   dataIndex: "status",
+    //   key: "status",
+    //   sorter: (a, b) => a.status.localeCompare(b.status),
+    //   render: (record, index) => {
+    //     // const badgeConfig = getStatusBadge(status);
+    //     // return <Badge status={badgeConfig.status} text={badgeConfig.text} />;
+    //     (
+    //       <Tag color={getStatusColor(record)} className="status-tag">
+    //     )
+    //   },
+    // },
     {
-      title: "Status",
-      dataIndex: "status",
-      key: "status",
-      sorter: (a, b) => a.status.localeCompare(b.status),
-      render: (status) => {
-        const badgeConfig = getStatusBadge(status);
-        return <Badge status={badgeConfig.status} text={badgeConfig.text} />;
-      },
-    },
+          title: "Status",
+          dataIndex: "status",
+          key: "status",
+          render: (text,record) => (
+            <Tag color={record?.isActive ? "green" : "red"}>
+              {record?.isActive ? "Active" : "Inactive"}
+            </Tag>
+          ),
+        },
     {
       title: "Created",
       dataIndex: "createdAt",

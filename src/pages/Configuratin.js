@@ -21,6 +21,7 @@ import {
   User,
   Heart,
   Map,
+  // MapPin,
   Globe,
   Building2,
   MapPin,
@@ -296,6 +297,7 @@ function Configuratin() {
   const { contacts, contactsLoading } = useSelector((state) => state.contact);
   const { lookupsForSelect, disableFtn, isDisable } = useTableColumns();
   const [drawerOpen, setDrawerOpen] = useState({
+    counties: false,
     Counteries: false,
     Provinces: false,
     Cities: false,
@@ -331,13 +333,13 @@ function Configuratin() {
     Divisions: [],
     Districts: [],
   });
-  console.log(data, "6565");
   const [lookupsData, setlookupsData] = useState({
     Duties: [],
     MaritalStatus: [],
   });
 
   const [isUpdateRec, setisUpdateRec] = useState({
+    counties: false,
     Counteries: false,
     Provinces: false,
     Cities: false,
@@ -4031,6 +4033,12 @@ function Configuratin() {
           icon: <Globe size={24} color="#ef4444" />,
           label: "Countries",
         }, // red-500
+
+        {
+          key: "counties",
+          icon: <CountyOutlined size={24} color="#22c55e" />,
+          label: "counties",
+        }, // green-500
         {
           key: "Provinces",
           icon: <Map size={24} color="#22c55e" />,
@@ -4206,7 +4214,7 @@ function Configuratin() {
   ];
 
   return (
-    <div className="bg-gray-50 mb-4 configuration-main">
+    <div className="bg-gray-50 mb-4 configuration-main" style={{paddingBottom: "120px"}}>
       {/* <div className="text-center mb-4">
         <h1 className="fw-bold mb-1">Configuration</h1>
         <p className="text-muted mb-0">System configuration and lookup management</p>
@@ -4252,13 +4260,13 @@ function Configuratin() {
             );
 
             return (
-              <div key={`${section.title}-${idx}`} className="mb-5">
+              <div key={`${section.title}-${idx}`} className="">
                 <h5 className="fw-semibold mb-4 text-primary">
                   {section.title}
                 </h5>
 
                 {filteredItems.length > 0 ? (
-                  <div className="row gx-3 gy-3">
+                  <div className="row gx-3 gy-3 mb-4 pb-4">
                     {filteredItems.map((item) => (
                       <div
                         key={item.key}
@@ -4969,94 +4977,109 @@ function Configuratin() {
       </MyDrawer>
       <MyDrawer
         isPagination={true}
-        title="County"
-        open={drawerOpen?.Counteries}
-        onClose={() => openCloseDrawerFtn("Counteries")}
-        isEdit={isUpdateRec?.Counteries}
+        title="Counties"
+        open={drawerOpen?.counties}
+        onClose={() => openCloseDrawerFtn("counties")}
+        isEdit={isUpdateRec?.counties}
         add={async () => {
-          if (!validateForm("Counteries")) return;
+          if (!validateForm("counties")) return;
           insertDataFtn(
             `/api/lookup`,
             drawerIpnuts?.Counteries,
             "Data inserted successfully:",
             "Data did not insert:",
-            () => resetCounteries("Counteries", dispatch(getAllLookups()))
+            () => resetCounteries("counties", dispatch(getAllLookups()))
           );
         }}
         update={async () => {
-          if (!validateForm("Counteries")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Counteries, () =>
-            resetCounteries("Counteries", () => dispatch(getAllLookups()))
+          if (!validateForm("counties")) return;
+          await updateFtn("/api/lookup", drawerIpnuts?.counties, () =>
+            resetCounteries("counties", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
-          IsUpdateFtn("Counteries", false);
+          IsUpdateFtn("counties", false);
         }}
       >
-        <div className="drawer-main-cntainer">
-          <CustomSelect
-            label="Type:"
-            placeholder="County"
-            value="County"
-            options={[{ label: "County", value: "County" }]}
-            isSimple
-            disabled
-            required
-            hasError={!!errors?.Counteries?.type}
-          />
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <Row>
+            <Col span={24}>
 
-          <MyInput
-            label="Code:"
-            name="code"
-            placeholder="Enter code"
-            value={drawerIpnuts?.Counteries?.code}
-            onChange={(e) =>
-              drawrInptChng("Counteries", "code", e.target.value)
-            }
-            required
-            hasError={!!errors?.Counteries?.code}
-            disabled={isDisable}
-          />
 
-          <MyInput
-            label="County Name:"
-            name="lookupname"
-            placeholder="Enter county name"
-            value={drawerIpnuts?.Counteries?.lookupname}
-            onChange={(e) =>
-              drawrInptChng("Counteries", "lookupname", e.target.value)
-            }
-            required
-            hasError={!!errors?.Counteries?.lookupname}
-            disabled={isDisable}
-          />
+              <CustomSelect
+                label="Type:"
+                placeholder="County"
+                value="County"
+                options={[{ label: "County", value: "County" }]}
+                isSimple
+                disabled
+                required
+                hasError={!!errors?.counties?.type}
+              />
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={12}>
+              <MyInput
+                label="Code:"
+                name="code"
+                placeholder="Enter code"
+                value={drawerIpnuts?.counties?.code}
+                onChange={(e) =>
+                  drawrInptChng("counties", "code", e.target.value)
+                }
+                required
+                hasError={!!errors?.counties?.code}
+                disabled={isDisable}
+              />
+            </Col>
 
-          <MyInput
-            label="Display Name:"
-            name="DisplayName"
-            placeholder="Enter display name"
-            value={drawerIpnuts?.Counteries?.DisplayName}
-            onChange={(e) =>
-              drawrInptChng("Counteries", "DisplayName", e.target.value)
-            }
-            disabled={isDisable}
-            hasError={!!errors?.Counteries?.DisplayName}
-          />
-
-          <CustomSelect
-            label="Province:"
-            placeholder="Select Province"
-            options={[{ label: "Province", value: "Province" }]}
-            value={"Province"}
-            disabled={isDisable}
-            onChange={(e) => drawrInptChng("Counteries", "Parentlookupid", e)}
-            required
-            hasError={!!errors?.Counteries?.parentLookup}
-          />
+            <Col span={12}>
+              <MyInput
+                label="County Name:"
+                name="lookupname"
+                placeholder="Enter county name"
+                value={drawerIpnuts?.counties?.lookupname}
+                onChange={(e) =>
+                  drawrInptChng("counties", "lookupname", e.target.value)
+                }
+                required
+                hasError={!!errors?.counties?.lookupname}
+                disabled={isDisable}
+              />
+            </Col>
+          </Row>
+          <Row gutter={12}>
+            <Col span={12}>
+              <MyInput
+                label="Display Name:"
+                name="DisplayName"
+                placeholder="Enter display name"
+                value={drawerIpnuts?.counties?.DisplayName}
+                onChange={(e) =>
+                  drawrInptChng("counties", "DisplayName", e.target.value)
+                }
+                disabled={isDisable}
+                hasError={!!errors?.Counteries?.DisplayName}
+              />
+            </Col>
+            <Col span={12}>
+              <CustomSelect
+                label="Province:"
+                placeholder="Select Province"
+                options={[{ label: "Province", value: "Province" }]}
+                value={"Province"}
+                disabled={isDisable}
+                onChange={(e) => drawrInptChng("counties", "Parentlookupid", e)}
+                required
+                hasError={!!errors?.counties?.parentLookup}
+              />
+            </Col>
+          </Row>
 
           <Checkbox
-            checked={drawerIpnuts?.Counteries?.isactive}
+            checked={drawerIpnuts?.counties?.isactive}
             onChange={(e) =>
-              drawrInptChng("Counteries", "isactive", e.target.checked)
+              drawrInptChng("counties", "isactive", e.target.checked)
             }
             disabled={isDisable}
           >
@@ -5064,6 +5087,7 @@ function Configuratin() {
           </Checkbox>
 
           <div className="mt-4 config-tbl-container">
+            <p>History</p>
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnCountry}
@@ -5081,7 +5105,7 @@ function Configuratin() {
             />
           </div>
         </div>
-      </MyDrawer>
+      </MyDrawer >
       <MyDrawer
         title="Provinces"
         open={drawerOpen?.Provinces}
@@ -5186,6 +5210,123 @@ function Configuratin() {
               columns={columnProvince}
               loading={lookupsloading}
               dataSource={groupedLookups?.Provinces}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer
+        title="Countries"
+        open={drawerOpen?.Countries}
+        isPagination={true}
+        onClose={() => openCloseDrawerFtn("Countries")}
+        add={() => {
+          if (!validateForm("Countries")) return;
+          insertDataFtn(
+            `/api/lookup`,
+            drawerIpnuts?.Provinces,
+            "Data inserted successfully:",
+            "Data did not insert:",
+            () => resetCounteries("Countries", dispatch(getAllLookups()))
+          );
+        }}
+        width="1100px"
+        isEdit={isUpdateRec?.Countries}
+        update={async () => {
+          if (!validateForm("Countries")) return;
+          await updateFtn("/api/lookup", drawerIpnuts?.Provinces, () =>
+            resetCounteries("Countries", () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Countries", false);
+        }}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <Row>
+            <Col span={24}>
+              <CustomSelect
+                label="Type:"
+                placeholder="Countries"
+                value={"Countries"}
+                options={[{ label: "Countries", value: "Countries" }]}
+                isSimple={true}
+                disabled={true}
+                required
+                hasError={!!errors?.lookuptypeId}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Code:"
+                name="code"
+                value={drawerIpnuts?.Countries?.code}
+                onChange={(e) =>
+                  drawrInptChng("Countries", "code", e.target.value)
+                }
+                placeholder="Enter code"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Countries?.code}
+              />
+            </Col>
+            <Col span={12}>
+              <MyInput
+                label="Country:"
+                name="lookupname"
+                value={drawerIpnuts?.Countries?.lookupname}
+                onChange={(e) =>
+                  drawrInptChng("Countries", "lookupname", e.target.value)
+                }
+                placeholder="Enter province"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Countries?.lookupname}
+              />
+            </Col>
+          </Row>
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Display Name:"
+                name="DisplayName"
+                value={drawerIpnuts?.Countries?.DisplayName}
+                onChange={(e) =>
+                  drawrInptChng("Countries", "DisplayName", e.target.value)
+                }
+                placeholder="Enter display name"
+                disabled={isDisable}
+              />
+            </Col>
+            <Col span={12}>
+              <Checkbox
+                disabled={isDisable}
+                onChange={(e) =>
+                  drawrInptChng("Countries", "isactive", e.target.checked)
+                }
+                checked={drawerIpnuts?.Countries?.isactive}
+                style={{ marginTop: "26px" }}
+              >
+                Active
+              </Checkbox>
+            </Col>
+          </Row>
+          <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Provinces</h6>
+            <Table
+              pagination={false}
+              columns={columnProvince}
+              loading={lookupsloading}
+              dataSource={groupedLookups?.Countries}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -7247,7 +7388,7 @@ function Configuratin() {
             <Table
               pagination={false}
               columns={columnGender}
-                dataSource={groupedLookups["Marital Status"]}
+              dataSource={groupedLookups["Marital Status"]}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -7393,6 +7534,7 @@ function Configuratin() {
         </div>
       </MyDrawer>
 
+
       <MyDrawer
         title="Trainings"
         open={drawerOpen?.Trainings}
@@ -7422,114 +7564,83 @@ function Configuratin() {
           IsUpdateFtn("Trainings", false);
         }}
       >
-        <div className="drawer-main-cntainer">
-          <div className="mb-4 pb-4">
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Lookup Type :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    isSimple={true}
-                    placeholder="Trainings"
-                    disabled={true}
-                    options={lookupsType}
-                    onChange={(value) => {
-                      drawrInptChng("Lookup", "Parentlookupid", String(value));
-                      drawrInptChng("Lookup", "Parentlookupid", String(value));
-                    }}
-                  />
-                  <h1 className="error-text"></h1>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Code:</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) =>
-                      drawrInptChng("Trainings", "code", e.target.value)
-                    }
-                    value={drawerIpnuts?.Trainings?.code}
-                  />
-                  <p className="error">
-                    <p className="error">{errors?.Trainings?.code}</p>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Trainings</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) =>
-                      drawrInptChng("Trainings", "lookupname", e.target.value)
-                    }
-                    value={drawerIpnuts?.Trainings?.lookupname}
-                  />
-                  <p className="error">
-                    <p className="error">{errors?.Trainings?.lookupname}</p>
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Display Name :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) =>
-                      drawrInptChng("Trainings", "DisplayName", e.target.value)
-                    }
-                    value={drawerIpnuts?.Trainings?.DisplayName}
-                  />
-                  <p className="error"></p>
-                </div>
-              </div>
-            </div>
+        <div className="drawer-main-container">
 
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p></p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Checkbox
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      drawrInptChng("Trainings", "isactive", e.target.checked)
-                    }
-                    checked={drawerIpnuts?.Trainings?.isactive}
-                  >
-                    Active
-                  </Checkbox>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-          </div>
-          <div className="mt-4 config-tbl-container">
+          <Row gutter={24}>
+            {/* Lookup Type - full width */}
+            <Col span={24}>
+              <CustomSelect
+                label="Lookup Type"
+                isSimple={true}
+                placeholder="Trainings"
+                disabled={true}
+                options={lookupsType}
+                value={drawerIpnuts?.Trainings?.Parentlookupid}
+                onChange={(value) => {
+                  drawrInptChng("Trainings", "Parentlookupid", String(value));
+                }}
+                hasError={!!errors?.Trainings?.Parentlookupid}
+              />
+            </Col>
+
+            {/* Code - half width */}
+            <Col span={12}>
+              <CustomSelect
+                label="Code"
+                placeholder="Enter Code"
+                value={drawerIpnuts?.Trainings?.code}
+                onChange={(e) =>
+                  drawrInptChng("Trainings", "code", e.target.value)
+                }
+                disabled={isDisable}
+                hasError={!!errors?.Trainings?.code}
+              />
+            </Col>
+
+            {/* Trainings - half width */}
+            <Col span={12}>
+              <MyInput
+                label="Training"
+                placeholder="Enter Training"
+                value={drawerIpnuts?.Trainings?.lookupname}
+                onChange={(e) =>
+                  drawrInptChng("Trainings", "lookupname", e.target.value)
+                }
+                disabled={isDisable}
+                hasError={!!errors?.Trainings?.lookupname}
+              />
+            </Col>
+
+            {/* Display Name - half width */}
+            <Col span={12}>
+              <MyInput
+                label="Display Name"
+                placeholder="Enter Display Name"
+                value={drawerIpnuts?.Trainings?.DisplayName}
+                onChange={(e) =>
+                  drawrInptChng("Trainings", "DisplayName", e.target.value)
+                }
+                disabled={isDisable}
+                hasError={!!errors?.Trainings?.DisplayName}
+              />
+            </Col>
+
+            {/* Active Checkbox - half width */}
+            <Col span={12} style={{ marginTop: "30px" }}>
+              <Checkbox
+                disabled={isDisable}
+                onChange={(e) =>
+                  drawrInptChng("Trainings", "isactive", e.target.checked)
+                }
+                checked={drawerIpnuts?.Trainings?.isactive}
+              >
+                Active
+              </Checkbox>
+            </Col>
+          </Row>
+
+          {/* Table */}
+          <div className="mt-4">
             <Table
               pagination={false}
               columns={columnTrainings}
@@ -7548,6 +7659,10 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+
+
+
+
       <MyDrawer
         title="Document Type"
         open={drawerOpen?.DocumentType}
@@ -8894,6 +9009,7 @@ function Configuratin() {
         </div>
       </MyDrawer>
 
+
       <MyDrawer
         title="Solicitors"
         open={drawerOpen?.Solicitors}
@@ -8921,243 +9037,150 @@ function Configuratin() {
         isEdit={isUpdateRec?.Solicitors}
         width={"1020px"}
       >
-        <div className="drawer-main-cntainer">
-          <div className="mb-4 pb-4">
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Contact Type :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    isSimple={true}
-                    placeholder="Select Contact type"
-                    disabled={true}
-                  />
-                  <h1 className="error-text"></h1>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Title :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    placeholder="Select Title"
-                    isSimple={true}
-                    options={lookupsForSelect?.Titles}
-                  />
-                  <p className="error text-white">errors?.Solicitors?.Titles</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Forename :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    value={drawerIpnuts?.Solicitors?.Forename}
-                    onChange={(e) =>
-                      drawrInptChng("Solicitors", "Forename", e.target.value)
-                    }
-                  />
-                  <p className="error">{errors?.Solicitors?.Forename}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Surname :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    value={drawerIpnuts?.Solicitors?.Surname}
-                    onChange={(e) =>
-                      drawrInptChng("Solicitors", "Surname", e.target.value)
-                    }
-                  />
-                  <p className="error">{errors?.Solicitors?.Surname}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Email :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={drawerIpnuts?.Solicitors?.ContactEmail}
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactEmail",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <p className="error">{errors?.Solicitors?.ContactEmail}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Mobile :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={drawerIpnuts?.Solicitors?.ContactPhone}
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactPhone",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <p className="error">{errors?.Solicitors?.ContactPhone}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Building or House :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={
-                      drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse
-                    }
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactAddress.BuildingOrHouse",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <p className="error">{errors?.Solicitors?.BuildingOrHouse}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Street or Road :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={
-                      drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad
-                    }
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactAddress.StreetOrRoad",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <p className="error text-white">
-                    errors?.Solicitors?.ContactEmail
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Area or Town :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactAddress.AreaOrTown",
-                        e.target.value
-                      )
-                    }
-                  />
-                  <p className="error">{errors?.Solicitors?.AreaOrTown}</p>
-                </div>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>County, City or Postcode :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={
-                      drawerIpnuts?.Solicitors?.ContactAddress
-                        ?.CityCountyOrPostCode
-                    }
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactAddress.CityCountyOrPostCode",
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-                {/* <p className="error">{drawerIpnuts}</p> */}
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container" style={{ width: "25%" }}>
-                <p>Eircode :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-                    onChange={(e) =>
-                      drawrInptChng(
-                        "Solicitors",
-                        "ContactAddress.Eircode",
-                        e.target.value
-                      )
-                    }
-                  />
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
+        <div className="drawer-main-container">
+
+          {/* Personal Information */}
+          <h3 className="section-title">Personal Information</h3>
+          <div className="drawer-section">
+            <MySelect
+              label="Contact Type:"
+              placeholder="Select Contact type"
+              options={selectLokups?.contactTypes}
+              value={drawerIpnuts?.Solicitors?.ContactTypeID}
+              onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
+              disabled={isDisable}
+              required
+              hasError={!!errors?.Solicitors?.ContactTypeID}
+              errorMessage={errors?.Solicitors?.ContactTypeID}
+            />
+            <MySelect
+              label="Title:"
+              placeholder="Select Title"
+              options={lookupsForSelect?.Titles}
+              value={drawerIpnuts?.Solicitors?.Title}
+              onChange={(e) => drawrInptChng("Solicitors", "Title", e)}
+            />
+            <MyInput
+              label="Forename:"
+              value={drawerIpnuts?.Solicitors?.Forename}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "Forename", e.target.value)
+              }
+              disabled={isDisable}
+              required
+              hasError={!!errors?.Solicitors?.Forename}
+              errorMessage={errors?.Solicitors?.Forename}
+            />
+            <MyInput
+              label="Surname:"
+              value={drawerIpnuts?.Solicitors?.Surname}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "Surname", e.target.value)
+              }
+              disabled={isDisable}
+              required
+              hasError={!!errors?.Solicitors?.Surname}
+              errorMessage={errors?.Solicitors?.Surname}
+            />
           </div>
+
+          {/* Contact Information */}
+          <h3 className="section-title mt-4">Contact Information</h3>
+          <div className="drawer-section">
+            <MyInput
+              label="Email:"
+              value={drawerIpnuts?.Solicitors?.ContactEmail}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "ContactEmail", e.target.value)
+              }
+              disabled={isDisable}
+              required
+              hasError={!!errors?.Solicitors?.ContactEmail}
+              errorMessage={errors?.Solicitors?.ContactEmail}
+            />
+            <MyInput
+              label="Mobile:"
+              value={drawerIpnuts?.Solicitors?.ContactPhone}
+              onChange={(e) =>
+                drawrInptChng("Solicitors", "ContactPhone", e.target.value)
+              }
+              disabled={isDisable}
+              required
+              hasError={!!errors?.Solicitors?.ContactPhone}
+              errorMessage={errors?.Solicitors?.ContactPhone}
+            />
+          </div>
+
+          {/* Address */}
+          <h3 className="section-title mt-4">Address</h3>
+          <div className="drawer-section">
+            <MyInput
+              label="Building or House:"
+              value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.BuildingOrHouse",
+                  e.target.value
+                )
+              }
+              disabled={isDisable}
+              hasError={!!errors?.Solicitors?.BuildingOrHouse}
+              errorMessage={errors?.Solicitors?.BuildingOrHouse}
+            />
+            <MyInput
+              label="Street or Road:"
+              value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.StreetOrRoad",
+                  e.target.value
+                )
+              }
+              disabled={isDisable}
+            />
+            <MyInput
+              label="Area or Town:"
+              value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.AreaOrTown",
+                  e.target.value
+                )
+              }
+              disabled={isDisable}
+              hasError={!!errors?.Solicitors?.AreaOrTown}
+              errorMessage={errors?.Solicitors?.AreaOrTown}
+            />
+            <MyInput
+              label="County, City or Postcode:"
+              value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.CityCountyOrPostCode",
+                  e.target.value
+                )
+              }
+              disabled={isDisable}
+            />
+            <MyInput
+              label="Eircode:"
+              value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+              onChange={(e) =>
+                drawrInptChng(
+                  "Solicitors",
+                  "ContactAddress.Eircode",
+                  e.target.value
+                )
+              }
+              disabled={isDisable}
+            />
+          </div>
+
+          {/* Table */}
           <div className="mt-4 config-tbl-container">
             <Table
               pagination={false}
@@ -9177,6 +9200,8 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+
+
       <MyDrawer
         title="Committees"
         open={drawerOpen?.Committees}
@@ -9204,147 +9229,57 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-        width="680"
+      // width="680"
       >
-        <div className="drawer-main-cntainer">
-          <div className="mb-4 pb-4">
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Type :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <MySelect
-                    isSimple={true}
-                    placeholder="Committee"
-                    disabled={true}
-                    options={lookupsType}
-                    onChange={(value) => {
-                      // drawrInptChng('Lookup', 'RegionTypeID', String(value))
-                    }}
-                    value={drawerIpnuts?.Lookup?.RegionTypeID}
-                  />
-                  <h1 className="error-text"></h1>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Code:</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                  //  onChange={(e) => drawrInptChng('Lookup', 'RegionCode', e.target.value)}
-                  // value={drawerIpnuts?.Lookup?.RegionCode}
-                  />
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Committee Name :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                  // onChange={(e) => drawrInptChng('Lookup', 'RegionName', e.target.value)}
-                  // value={drawerIpnuts?.Lookup?.RegionName}
-                  />
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Display Name :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Input
-                    disabled={isDisable}
-                    className="inp"
-                    onChange={(e) =>
-                      drawrInptChng("Lookup", "DisplayName", e.target.value)
-                    }
-                    value={drawerIpnuts?.Lookup?.DisplayName}
-                  />
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p>Parent :</p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con d-flex flex-row">
-                  <MySelect
-                    isSimple={true}
-                    placeholder=""
-                    options={lookupsType}
-                    onChange={(value) => {
-                      // drawrInptChng('Lookup', 'RegionTypeID', String(value))
-                    }}
-                  />
-                  <Button className="butn primary-btn detail-btn ms-2">
-                    +
-                  </Button>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
+        <div className="drawer-main-cntainer p-4"> {/* Type */}
+          <Row gutter={24}> <Col span={24}> <CustomSelect label="Type:" isSimple={true} placeholder="Committee" disabled={true} options={lookupsType} value={drawerIpnuts?.Committees?.RegionTypeID} onChange={(value) => drawrInptChng("Committees", "RegionTypeID", String(value))} required hasError={!!errors?.Committees?.RegionTypeID} /> </Col> </Row>
+          {/* Code + Committee Name */}
+          <Row gutter={24}> <Col span={12}> <MyInput label="Code:" name="RegionCode" value={drawerIpnuts?.Committees?.RegionCode || ""} onChange={(e) => drawrInptChng("Committees", "RegionCode", e.target.value)} placeholder="Enter code" disabled={isDisable} required hasError={!!errors?.Committees?.RegionCode} /> </Col>
+            <Col span={12}> <MyInput label="Committee Name:" name="RegionName" value={drawerIpnuts?.Committees?.RegionName || ""} onChange={(e) => drawrInptChng("Committees", "RegionName", e.target.value)} placeholder="Enter committee name" disabled={isDisable} required hasError={!!errors?.Committees?.RegionName} /> </Col>
+          </Row> {/* Display Name + Active */}
+          <Row gutter={24}> <Col span={12}>
+            <MyInput label="Display Name:" name="DisplayName" value={drawerIpnuts?.Committees?.DisplayName || ""} onChange={(e) => drawrInptChng("Committees", "DisplayName", e.target.value)} placeholder="Enter display name" disabled={isDisable} hasError={!!errors?.Committees?.DisplayName} /> </Col>
+            <Col span={10}>
+              <CustomSelect
+                label="Parent:"
+                isSimple={true}
+                placeholder="Select parent"
+                options={lookupsType}
+                value={drawerIpnuts?.Committees?.ParentId}
+                onChange={(value) =>
+                  drawrInptChng("Committees", "ParentId", String(value))
+                }
+                disabled={isDisable}
+              />
+            </Col>
+            <Col span={2}>
+              <Button
+                className="butn primary-btn detail-btn"
+                disabled={isDisable}
+                style={{ marginTop: 25, width: "100%", height: "40px" }}
+              >
+                +
+              </Button>
+            </Col>
+          </Row>
+          <Row>
+            <Col span={12}>
+              <Checkbox
+                disabled={isDisable}
+                onChange={(e) =>
+                  drawrInptChng("Committees", "isactive", e.target.checked)
+                }
+                checked={drawerIpnuts?.Committees?.isactive}
+              >
+                Active
+              </Checkbox>
+            </Col>
+          </Row>
+          {/* Parent */}
 
-            <div className="drawer-inpts-container">
-              <div className="drawer-lbl-container">
-                <p></p>
-              </div>
-              <div className="inpt-con">
-                <p className="star-white">*</p>
-                <div className="inpt-sub-con">
-                  <Checkbox
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      drawrInptChng("LookupType", "isactive", e.target.checked)
-                    }
-                    checked={drawerIpnuts?.LookupType?.isactive}
-                  >
-                    Active
-                  </Checkbox>
-                </div>
-                <p className="error"></p>
-              </div>
-            </div>
-          </div>
           <div className="mt-4 config-tbl-container">
-            <Table
-              pagination={false}
-              columns={Committeescolumns}
-              dataSource={groupedLookups["Committees"]}
-              loading={lookupsloading}
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
+            <h6 className="mb-3 text-primary">Existing Committees</h6>
+            <Table pagination={false} columns={Committeescolumns} dataSource={groupedLookups?.Committees || []} loading={lookupsloading} className="drawer-tbl" rowKey={(record) => record._id || record.id || record.RegionCode} rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"} rowSelection={{ type: selectionType, ...rowSelection, }} bordered /> </div> </div>
       </MyDrawer>
 
       <MyDrawer
@@ -9470,7 +9405,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
-    </div>
+    </div >
     // </div>
   );
 }

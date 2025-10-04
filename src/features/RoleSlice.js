@@ -172,7 +172,10 @@ const roleSlice = createSlice({
     setSelectedTenant: (state, action) => {
       state.selectedTenant = action.payload;
     },
-    setSelectedStatus: (state, action) => {
+    setSelectedStatus: (state, action) => 
+      
+      {
+    
       state.selectedStatus = action.payload;
     },
     setSelectedCategory: (state, action) => {

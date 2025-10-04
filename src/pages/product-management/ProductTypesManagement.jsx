@@ -75,7 +75,6 @@ const ProductTypesManagement = () => {
   };
 
   const handleEditProductType = (productType) => {
-    debugger
     setEditingProductType(productType);
     setIsProductTypeDrawerOpen(true);
   };
@@ -87,7 +86,6 @@ const ProductTypesManagement = () => {
   };
 
   const handleEditProduct = (product, productType) => {
-    debugger
     setSelectedProductType(productType);
     setEditingProduct(product);
     setIsProductDrawerOpen(true);
@@ -98,7 +96,6 @@ const ProductTypesManagement = () => {
     setEditingProduct(product);
     setEditingPricing(product);
     setIsPricingDrawerOpen(true);
-    debugger
   };
 
   const handleEditPricing = (pricing, productType) => {
@@ -202,11 +199,13 @@ const ProductTypesManagement = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (status) => (
-        <Tag color={status ? "green" : "red"}>
-          {status ? "Active" : "Inactive"}
+      render: (text,rec) =>{ 
+        debugger
+        return (
+        <Tag color={rec?.isActive ? "green" : "red"}>
+          {rec?.isActive ? "Active" : "Inactive"}
         </Tag>
-      ),
+      )},
     },
     {
       title: "Products Count",
@@ -286,7 +285,6 @@ const ProductTypesManagement = () => {
     },
   ];
   const createProductWithPricing = async (data, selectedProductType) => {
-    debugger
     try {
       const token = localStorage.getItem("token");
       // 1️⃣ Create Product
@@ -304,7 +302,6 @@ const ProductTypesManagement = () => {
       );
 
       const prodid = productRes.data?.data?._id;
-      debugger
       if (!prodid) throw new Error("Product ID missing from response");
 
       // 2️⃣ Create Pricing
@@ -389,7 +386,6 @@ const ProductTypesManagement = () => {
           dataIndex: "memberPrice",
           key: "memberPrice",
           render: (price, record) => {
-            debugger
             const currency = record.currentPricing?.memberPrice || "EUR";
             const symbol =
               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
@@ -621,7 +617,6 @@ const ProductTypesManagement = () => {
             onClose={() => setIsProductDrawerOpen(false)}
             onSubmit={
               async (data) => {
-                debugger
                 if (editingProduct) {
                   const updatedData = {
                     name: data?.name,
