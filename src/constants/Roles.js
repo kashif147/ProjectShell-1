@@ -490,8 +490,8 @@ export const SAMPLE_TENANTS = [
 
 export const ROLE_STATUSES = [
   { value: "all", label: "All Statuses" },
-  { value: true, label: "Active" },
-  { value: false, label: "Inactive" },
+  { value: "active", label: "Active" },
+  { value: "inactive", label: "Inactive" },
   // { value: "suspended", label: "Suspended" },
 ];
 

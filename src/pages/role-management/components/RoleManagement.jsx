@@ -75,26 +75,29 @@ const RoleManagement = ({ onClose }) => {
   }, [dispatch]);
 
   // Filter roles based on search query and filters
-  const filteredRoles = roles.filter((role) => {
-    const matchesSearch =
-      role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.code.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.description.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      role.tenantName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      (role.level && role.level.toString().includes(searchQuery));
+ const filteredRoles = roles.filter((role) => {
+  const matchesSearch =
+    role.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    role.code?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    role.description?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    role.tenantName?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    (role.level && role.level.toString().includes(searchQuery));
 
-    const matchesTenant =
-      selectedTenant === "all" || role.tenantId === selectedTenant;
+  const matchesTenant =
+    selectedTenant === "all" || role.tenantId === selectedTenant;
 
-    const matchesCategory =
-      selectedCategory === "all" || role.category === selectedCategory;
+  const matchesCategory =
+    selectedCategory === "all" || role.category === selectedCategory;
 
-    const matchesStatus =
-      selectedStatus === "all" ||
-      role.status.toLowerCase() === selectedStatus.toLowerCase();
+  const matchesStatus =
+    selectedStatus === "all" ||
+    (selectedStatus === "active" && role.isActive) ||
+    (selectedStatus === "inactive" && !role.isActive);
 
-    return matchesSearch && matchesTenant && matchesCategory && matchesStatus;
-  });
+  return matchesSearch && matchesTenant && matchesCategory && matchesStatus;
+});
+
+
 
   const handleEdit = (data) => {
     if (!data) return;
@@ -315,15 +318,15 @@ const RoleManagement = ({ onClose }) => {
     //   },
     // },
     {
-          title: "Status",
-          dataIndex: "status",
-          key: "status",
-          render: (text,record) => (
-            <Tag color={record?.isActive ? "green" : "red"}>
-              {record?.isActive ? "Active" : "Inactive"}
-            </Tag>
-          ),
-        },
+      title: "Status",
+      dataIndex: "status",
+      key: "status",
+      render: (text, record) => (
+        <Tag color={record?.isActive ? "green" : "red"}>
+          {record?.isActive ? "Active" : "Inactive"}
+        </Tag>
+      ),
+    },
     {
       title: "Created",
       dataIndex: "createdAt",
@@ -531,7 +534,7 @@ const RoleManagement = ({ onClose }) => {
 
       {/* Role Permissions Drawer */}
       {isPermissionsOpen && (
-        <RolePermissions role={editingRole} onClose={handlePermissionsClose} open={isPermissionsOpen}/>
+        <RolePermissions role={editingRole} onClose={handlePermissionsClose} open={isPermissionsOpen} />
       )}
     </div>
   );

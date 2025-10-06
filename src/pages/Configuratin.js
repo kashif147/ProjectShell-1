@@ -4214,7 +4214,7 @@ function Configuratin() {
   ];
 
   return (
-    <div className="bg-gray-50 mb-4 configuration-main" style={{paddingBottom: "120px"}}>
+    <div className="bg-gray-50 mb-4 configuration-main" style={{ paddingBottom: "120px" }}>
       {/* <div className="text-center mb-4">
         <h1 className="fw-bold mb-1">Configuration</h1>
         <p className="text-muted mb-0">System configuration and lookup management</p>
@@ -9037,168 +9037,199 @@ function Configuratin() {
         isEdit={isUpdateRec?.Solicitors}
         width={"1020px"}
       >
-        <div className="drawer-main-container">
+        {/* Personal Information */}
+       <div className="drawer-main-container">
 
-          {/* Personal Information */}
-          <h3 className="section-title">Personal Information</h3>
-          <div className="drawer-section">
-            <MySelect
-              label="Contact Type:"
-              placeholder="Select Contact type"
-              options={selectLokups?.contactTypes}
-              value={drawerIpnuts?.Solicitors?.ContactTypeID}
-              onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Solicitors?.ContactTypeID}
-              errorMessage={errors?.Solicitors?.ContactTypeID}
-            />
-            <MySelect
-              label="Title:"
-              placeholder="Select Title"
-              options={lookupsForSelect?.Titles}
-              value={drawerIpnuts?.Solicitors?.Title}
-              onChange={(e) => drawrInptChng("Solicitors", "Title", e)}
-            />
-            <MyInput
-              label="Forename:"
-              value={drawerIpnuts?.Solicitors?.Forename}
-              onChange={(e) =>
-                drawrInptChng("Solicitors", "Forename", e.target.value)
-              }
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Solicitors?.Forename}
-              errorMessage={errors?.Solicitors?.Forename}
-            />
-            <MyInput
-              label="Surname:"
-              value={drawerIpnuts?.Solicitors?.Surname}
-              onChange={(e) =>
-                drawrInptChng("Solicitors", "Surname", e.target.value)
-              }
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Solicitors?.Surname}
-              errorMessage={errors?.Solicitors?.Surname}
-            />
-          </div>
+  {/* Personal Information */}
+  <h3 className="section-title">Personal Information</h3>
+  <div className="drawer-section">
+    <Row gutter={24}>
+      <Col xs={24} md={12}>
+        <CustomSelect
+          label="Contact Type:"
+          placeholder="Select Contact type"
+          options={selectLokups?.contactTypes}
+          value={drawerIpnuts?.Solicitors?.ContactTypeID}
+          onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
+          disabled={isDisable}
+          required
+          hasError={!!errors?.Solicitors?.ContactTypeID}
+          errorMessage={errors?.Solicitors?.ContactTypeID}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <CustomSelect
+          label="Title:"
+          placeholder="Select Title"
+          options={lookupsForSelect?.Titles}
+          value={drawerIpnuts?.Solicitors?.Title}
+          onChange={(e) => drawrInptChng("Solicitors", "Title", e)}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Forename:"
+          value={drawerIpnuts?.Solicitors?.Forename}
+          onChange={(e) =>
+            drawrInptChng("Solicitors", "Forename", e.target.value)
+          }
+          disabled={isDisable}
+          required
+          hasError={!!errors?.Solicitors?.Forename}
+          errorMessage={errors?.Solicitors?.Forename}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Surname:"
+          value={drawerIpnuts?.Solicitors?.Surname}
+          onChange={(e) =>
+            drawrInptChng("Solicitors", "Surname", e.target.value)
+          }
+          disabled={isDisable}
+          required
+          hasError={!!errors?.Solicitors?.Surname}
+          errorMessage={errors?.Solicitors?.Surname}
+        />
+      </Col>
+    </Row>
+  </div>
 
-          {/* Contact Information */}
-          <h3 className="section-title mt-4">Contact Information</h3>
-          <div className="drawer-section">
-            <MyInput
-              label="Email:"
-              value={drawerIpnuts?.Solicitors?.ContactEmail}
-              onChange={(e) =>
-                drawrInptChng("Solicitors", "ContactEmail", e.target.value)
-              }
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Solicitors?.ContactEmail}
-              errorMessage={errors?.Solicitors?.ContactEmail}
-            />
-            <MyInput
-              label="Mobile:"
-              value={drawerIpnuts?.Solicitors?.ContactPhone}
-              onChange={(e) =>
-                drawrInptChng("Solicitors", "ContactPhone", e.target.value)
-              }
-              disabled={isDisable}
-              required
-              hasError={!!errors?.Solicitors?.ContactPhone}
-              errorMessage={errors?.Solicitors?.ContactPhone}
-            />
-          </div>
+  {/* Contact Information */}
+  <h3 className="section-title mt-4">Contact Information</h3>
+  <div className="drawer-section">
+    <Row gutter={24}>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Email:"
+          value={drawerIpnuts?.Solicitors?.ContactEmail}
+          onChange={(e) =>
+            drawrInptChng("Solicitors", "ContactEmail", e.target.value)
+          }
+          disabled={isDisable}
+          required
+          hasError={!!errors?.Solicitors?.ContactEmail}
+          errorMessage={errors?.Solicitors?.ContactEmail}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Mobile:"
+          value={drawerIpnuts?.Solicitors?.ContactPhone}
+          onChange={(e) =>
+            drawrInptChng("Solicitors", "ContactPhone", e.target.value)
+          }
+          disabled={isDisable}
+          required
+          hasError={!!errors?.Solicitors?.ContactPhone}
+          errorMessage={errors?.Solicitors?.ContactPhone}
+        />
+      </Col>
+    </Row>
+  </div>
 
-          {/* Address */}
-          <h3 className="section-title mt-4">Address</h3>
-          <div className="drawer-section">
-            <MyInput
-              label="Building or House:"
-              value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
-              onChange={(e) =>
-                drawrInptChng(
-                  "Solicitors",
-                  "ContactAddress.BuildingOrHouse",
-                  e.target.value
-                )
-              }
-              disabled={isDisable}
-              hasError={!!errors?.Solicitors?.BuildingOrHouse}
-              errorMessage={errors?.Solicitors?.BuildingOrHouse}
-            />
-            <MyInput
-              label="Street or Road:"
-              value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
-              onChange={(e) =>
-                drawrInptChng(
-                  "Solicitors",
-                  "ContactAddress.StreetOrRoad",
-                  e.target.value
-                )
-              }
-              disabled={isDisable}
-            />
-            <MyInput
-              label="Area or Town:"
-              value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
-              onChange={(e) =>
-                drawrInptChng(
-                  "Solicitors",
-                  "ContactAddress.AreaOrTown",
-                  e.target.value
-                )
-              }
-              disabled={isDisable}
-              hasError={!!errors?.Solicitors?.AreaOrTown}
-              errorMessage={errors?.Solicitors?.AreaOrTown}
-            />
-            <MyInput
-              label="County, City or Postcode:"
-              value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
-              onChange={(e) =>
-                drawrInptChng(
-                  "Solicitors",
-                  "ContactAddress.CityCountyOrPostCode",
-                  e.target.value
-                )
-              }
-              disabled={isDisable}
-            />
-            <MyInput
-              label="Eircode:"
-              value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-              onChange={(e) =>
-                drawrInptChng(
-                  "Solicitors",
-                  "ContactAddress.Eircode",
-                  e.target.value
-                )
-              }
-              disabled={isDisable}
-            />
-          </div>
+  {/* Address */}
+  <h3 className="section-title mt-4">Address</h3>
+  <div className="drawer-section">
+    <Row gutter={24}>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Building or House:"
+          value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
+          onChange={(e) =>
+            drawrInptChng(
+              "Solicitors",
+              "ContactAddress.BuildingOrHouse",
+              e.target.value
+            )
+          }
+          disabled={isDisable}
+          hasError={!!errors?.Solicitors?.BuildingOrHouse}
+          errorMessage={errors?.Solicitors?.BuildingOrHouse}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Street or Road:"
+          value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
+          onChange={(e) =>
+            drawrInptChng(
+              "Solicitors",
+              "ContactAddress.StreetOrRoad",
+              e.target.value
+            )
+          }
+          disabled={isDisable}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Area or Town:"
+          value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
+          onChange={(e) =>
+            drawrInptChng(
+              "Solicitors",
+              "ContactAddress.AreaOrTown",
+              e.target.value
+            )
+          }
+          disabled={isDisable}
+          hasError={!!errors?.Solicitors?.AreaOrTown}
+          errorMessage={errors?.Solicitors?.AreaOrTown}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="County, City or Postcode:"
+          value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
+          onChange={(e) =>
+            drawrInptChng(
+              "Solicitors",
+              "ContactAddress.CityCountyOrPostCode",
+              e.target.value
+            )
+          }
+          disabled={isDisable}
+        />
+      </Col>
+      <Col xs={24} md={12}>
+        <MyInput
+          label="Eircode:"
+          value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
+          onChange={(e) =>
+            drawrInptChng(
+              "Solicitors",
+              "ContactAddress.Eircode",
+              e.target.value
+            )
+          }
+          disabled={isDisable}
+        />
+      </Col>
+    </Row>
+  </div>
 
-          {/* Table */}
-          <div className="mt-4 config-tbl-container">
-            <Table
-              pagination={false}
-              columns={columnsSolicitors}
-              dataSource={data?.Solicitors}
-              loading={contactsLoading}
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
-        </div>
+  {/* Table */}
+  <div className="mt-4 config-tbl-container">
+    <Table
+      pagination={false}
+      columns={columnsSolicitors}
+      dataSource={data?.Solicitors}
+      loading={contactsLoading}
+      className="drawer-tbl"
+      rowClassName={(record, index) =>
+        index % 2 !== 0 ? "odd-row" : "even-row"
+      }
+      rowSelection={{
+        type: selectionType,
+        ...rowSelection,
+      }}
+      bordered
+    />
+  </div>
+</div>
+
+
       </MyDrawer>
 
 

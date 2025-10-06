@@ -53,6 +53,7 @@ const [initialPermissions, setInitialPermissions] = useState([]);
 
   const allRoles = roles;
   debugger
+  
   const groupedRoles = allRoles.reduce((acc, role) => {
     const category = role.category;
     if (!acc[category]) {
@@ -61,6 +62,7 @@ const [initialPermissions, setInitialPermissions] = useState([]);
     acc[category].push(role);
     return acc;
   }, {});
+  debugger
   const filteredRoles = Object.keys(groupedRoles).reduce((acc, category) => {
 
     const categoryRoles = groupedRoles[category].filter(
