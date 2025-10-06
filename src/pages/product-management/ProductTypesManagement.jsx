@@ -199,13 +199,13 @@ const ProductTypesManagement = () => {
       title: "Status",
       dataIndex: "status",
       key: "status",
-      render: (text,rec) =>{ 
-        debugger
+      render: (text, rec) => {
         return (
-        <Tag color={rec?.isActive ? "green" : "red"}>
-          {rec?.isActive ? "Active" : "Inactive"}
-        </Tag>
-      )},
+          <Tag color={rec?.isActive ? "green" : "red"}>
+            {rec?.isActive ? "Active" : "Inactive"}
+          </Tag>
+        )
+      },
     },
     {
       title: "Products Count",
@@ -246,7 +246,7 @@ const ProductTypesManagement = () => {
             {date ? new Date(date).toLocaleTimeString() : ""}
           </div>
           <div className="text-muted small">
-           by {record.updatedBy || "Unknown"} 
+            by {record.updatedBy || "Unknown"}
           </div>
         </div>
       ),
@@ -314,7 +314,7 @@ const ProductTypesManagement = () => {
           currency: data?.currency,
           productId: prodid,
           memberPrice: data?.memberPrice,
-          nonMemberPrice:data?.nonMemberPrice
+          nonMemberPrice: data?.nonMemberPrice
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -367,45 +367,47 @@ const ProductTypesManagement = () => {
     ];
 
     // Add price columns based on product type
-    if (productType?.category === "MEMBERSHIP") {
-      baseColumns.push({
-        title: "Price",
-        dataIndex: "memberPrice",
-        key: "memberPrice",
-        render: (price, record) => {
-          const currency = record.currentPricing?.currentPricing || "EUR";
-          const symbol =
-            currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-          return price ? `${symbol}${price}` : "-";
-        },
-      });
-    } else {
-      baseColumns.push(
-        {
-          title: "Member Price1",
-          dataIndex: "memberPrice",
-          key: "memberPrice",
-          render: (price, record) => {
-            const currency = record.currentPricing?.memberPrice || "EUR";
-            const symbol =
-              currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-            return currency ? `${symbol}${currency}` : "-";
-          },
-        },
-        {
-          title: "Non-Member Price",
-          dataIndex: "nonMemberPrice",
-          key: "nonMemberPrice",
-          render: (price, record) => {
-            const currency = record.currentPricing?.nonMemberPrice || "EUR";
-            const symbol =
-              currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
-            return currency ? `${symbol}${currency}` : "-";
-          },
-        }
-      );
+if (productType?.name === "Membership") {
+  baseColumns.push({
+    title: "Price",
+    dataIndex: "price",
+    key: "price",
+    render: (_, record) => {
+      const currency = record?.currentPricing?.currency;
+      const price = record?.currentPricing?.price;
+      const currencyStr = String(currency || "").toUpperCase();
+      const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+      return price != null ? `${symbol}${price}` : "-";
+    },
+  });
+} else {
+  baseColumns.push(
+    {
+      title: "Member Price",
+      dataIndex: "memberPrice",
+      key: "memberPrice",
+      render: (_, record) => {
+        const currency = record?.currentPricing?.currency;
+        const price = record?.currentPricing?.memberPrice;
+        const currencyStr = String(currency || "").toUpperCase();
+        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+        return price != null ? `${symbol}${price}` : "-";
+      },
+    },
+    {
+      title: "Non-Member Price",
+      dataIndex: "nonMemberPrice",
+      key: "nonMemberPrice",
+      render: (_, record) => {
+        const currency = record?.currentPricing?.currency;
+        const price = record?.currentPricing?.nonMemberPrice;
+        const currencyStr = String(currency || "").toUpperCase();
+        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+        return price != null ? `${symbol}${price}` : "-";
+      },
     }
-
+  );
+}
     // Add remaining columns
     baseColumns.push({
       title: "Actions2",
@@ -423,7 +425,7 @@ const ProductTypesManagement = () => {
             <Button
               size="small"
               icon={<EditOutlined />}
-              onClick={() => handleEditProduct(_,productType )}
+              onClick={() => handleEditProduct(_, productType)}
             />
           </Tooltip>
           <Tooltip title="Delete Product">
@@ -557,7 +559,7 @@ const ProductTypesManagement = () => {
                   data,
                   () => {
                     dispatch(getProductTypesWithProducts());
-                    
+
                   })
               } else {
                 // dispatch(createProductType(data));
@@ -636,7 +638,7 @@ const ProductTypesManagement = () => {
       </MyDrawer>
 
       {/* Pricing Form Drawer */}
-<PricingDrawer open={isPricingDrawerOpen} onClose={()=>setIsPricingDrawerOpen(false)}  product={editingPricing} />
+      <PricingDrawer open={isPricingDrawerOpen} onClose={() => setIsPricingDrawerOpen(false)} product={editingPricing} />
       {/* <MyDrawer
         title={editingPricing ? "Edit Pricing" : "Add New Pricing"}
         open={isPricingDrawerOpen}
