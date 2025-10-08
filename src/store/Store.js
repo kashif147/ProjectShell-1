@@ -14,7 +14,7 @@ import refreshReducer from "../features/RefreshSlice";
 import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice";
 // import countriesReducer from './countrySlice';
-import countriesReducer from "../features/CountrySlice";
+// import countriesReducer from "../features/CountrySlice";
 import menuLblReducer from "../features/MenuLblSlice";
 import applicationReducer from "../features/ApplicationSlice";
 import applicationDetailsReducer from "../features/ApplicationDetailsSlice";
@@ -26,6 +26,7 @@ import roleByIdReducer from "../features/PermissionSlice";
 import productTypesReducer from "../features/ProductTypesSlice";
 import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
+import countriesReducer from "../features/CountriesSlice"; // Countries slice
 
 const store = configureStore({
   reducer: {
@@ -40,7 +41,7 @@ const store = configureStore({
     contactType: contactTypeReducer,
     contact: contactReducer,
     menuLbl: menuLblReducer,
-    countries: countriesReducer,
+    // countries: countriesReducer,
     applications: applicationReducer,
     applicationDetails: applicationDetailsReducer,
     tenants: tenantReducer,
@@ -51,6 +52,7 @@ const store = configureStore({
     productTypes: productTypesReducer,
     products: productsReducer,
     productTypesWithProducts: productTypesWithProductsReducer,
+    countries: countriesReducer,
   },
 });
 

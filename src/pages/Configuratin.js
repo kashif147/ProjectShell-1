@@ -50,23 +50,11 @@ import {
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
-import { LuCalendarDays } from "react-icons/lu";
-import { PiUsersFourDuotone } from "react-icons/pi";
-import { tableData } from "../Data";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { FaRegCircleQuestion } from "react-icons/fa6";
-import { HiOutlineMinusCircle } from "react-icons/hi";
-import { MdOutlineScreenSearchDesktop } from "react-icons/md";
 import { getAllLookups } from "../features/LookupsSlice";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
-import { FaFileAlt } from "react-icons/fa";
-import { TbBulb } from "react-icons/tb";
-import { FaRegCircleUser } from "react-icons/fa6";
-import { IoSettingsOutline } from "react-icons/io5";
-import { MdOutlineContactPhone } from "react-icons/md";
-import { LuFileQuestion } from "react-icons/lu";
-import { PiRankingThin } from "react-icons/pi";
 import { useTableColumns } from "../context/TableColumnsContext ";
 import MyConfirm from "../component/common/MyConfirm";
 import {
@@ -109,52 +97,45 @@ import { getLookupTypes } from "../features/LookupTypeSlice";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
+import { fetchCountries } from "../features/CountriesSlice";
 
 // i have different drwers for configuration of lookups for the system
 
 function Configuratin() {
-  const insertDataFtn = async (
-    // apiURL = baseURL,
-    url,
-    data,
-    successNotification,
-    failureNotification,
-    callback
-  ) => {
-    const token = localStorage.getItem("token");
-    debugger
+ const insertDataFtn = async (url, data, successNotification, failureNotification, callback) => {
+  const token = localStorage.getItem("token");
 
-    try {
-      const response = await axios.post(`${baseURL}${url}`, data, {
-        headers: {
-          "Content-Type": "application/json",
-          maxBodyLength: Infinity,
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      // ✅ Accept any 2xx status as success
-      if (response.status >= 200 && response.status < 300) {
-        MyAlert("success", successNotification);
-        if (callback && typeof callback === "function") callback();
-        return response.data;
-      } else {
-        MyAlert(
-          "error",
-          failureNotification,
-          response?.data?.error || "Unknown error"
-        );
-        return null;
-      }
-    } catch (error) {
-      console.error("Axios Error:", error?.response || error);
-      MyAlert(
-        "error",
-        failureNotification,
-        error?.response?.data?.error || error.message
-      );
-      return null;
+  try {
+    const response = await axios.post(`${baseURL}${url}`, data, {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    // ✅ Handle all success codes (200–299)
+    if (response.status >= 200 && response.status < 300) {
+      MyAlert("success", successNotification);
+      if (typeof callback === "function") callback();
+      return response.data;
     }
-  };
+  } catch (error) {
+    console.error("Axios Error:", error?.response || error);
+
+    // ✅ Extract message safely
+    const errMsg =
+      error?.response?.data?.error?.message ||
+      error?.message ||
+      "Something went wrong";
+      debugger
+
+    // ✅ Trigger failure alert properly
+    
+
+    return MyAlert("error", failureNotification, errMsg);
+  }
+};
+
   const updateFtn = async (
     // apiURL = baseURL,
     endPoint,
@@ -191,8 +172,8 @@ function Configuratin() {
 
       }
     } catch (error) {
-      // console.error("API Error:", error.response?.data || error.message);
-      throw error;
+      console.error("API Error:", error.response?.data || error.message);
+      // throw error;
     }
   };
   const deleteFtn = async (url1, callback) => {
@@ -283,7 +264,8 @@ function Configuratin() {
   const dispatch = useDispatch();
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
-  console.log(lookups, "lok")
+  const { countriesData } = useSelector((state) => state.countries);
+  console.log(countriesData, "lok")
 
   const { lookupsTypes, lookupsTypesloading } = useSelector(
     (state) => state.lookupsTypes
@@ -298,7 +280,7 @@ function Configuratin() {
   const { lookupsForSelect, disableFtn, isDisable } = useTableColumns();
   const [drawerOpen, setDrawerOpen] = useState({
     counties: false,
-    Counteries: false,
+    Countries: false,
     Provinces: false,
     Cities: false,
     PostCode: false,
@@ -340,7 +322,7 @@ function Configuratin() {
 
   const [isUpdateRec, setisUpdateRec] = useState({
     counties: false,
-    Counteries: false,
+    Countries: false,
     Provinces: false,
     Cities: false,
     PostCode: false,
@@ -481,6 +463,7 @@ function Configuratin() {
     // dispatch(getContactTypes());
     dispatch(getLookupTypes());
     dispatch(getAllLookups());
+    dispatch(fetchCountries());
   }, [dispatch]);
 
   const [ContactTypeData, setContactTypeData] = useState({
@@ -573,16 +556,16 @@ function Configuratin() {
       isactive: true,
       isDeleted: false,
     },
-    Counteries: {
-      lookuptypeId: "67f5971f17f0ecf3dbf79df6",
-      DisplayName: "",
-      lookupname: "",
-      code: "",
-      Parentlookupid: null,
-      userid: "67f3f9d812b014a0a7a94081",
-      isactive: true,
-      isDeleted: false,
-    },
+    // Counteries: {
+    //   lookuptypeId: "67f5971f17f0ecf3dbf79df6",
+    //   DisplayName: "",
+    //   lookupname: "",
+    //   code: "",
+    //   Parentlookupid: null,
+    //   userid: "67f3f9d812b014a0a7a94081",
+    //   isactive: true,
+    //   isDeleted: false,
+    // },
     Station: {
       lookuptypeId: "67f6297617f0ecf3dbf79f12",
       DisplayName: "",
@@ -827,6 +810,13 @@ function Configuratin() {
       isactive: true,
       isDeleted: false,
     },
+  Countries: {
+      displayname: "",
+      name: "",
+      code: "",
+  callingCodes:""
+
+    },
   };
 
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
@@ -858,6 +848,7 @@ function Configuratin() {
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
+   
     if (value == false) {
       setisUpdateRec((prev) => ({
         ...prev,
@@ -880,7 +871,7 @@ function Configuratin() {
       },
       {}
     );
-
+debugger
     setdrawerIpnuts((prev) => ({
       ...prev,
       [drawer]: {
@@ -888,9 +879,11 @@ function Configuratin() {
         ...filteredData,
       },
     }));
+    debugger
   };
 
   const resetCounteries = (drawer, callback) => {
+    debugger
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
@@ -901,12 +894,14 @@ function Configuratin() {
   };
 
   const openCloseDrawerFtn = (name) => {
+    debugger
     setDrawerOpen((prevState) => {
       const wasOpen = prevState[name]; // Check if it was open before
       const newState = {
         ...prevState,
         [name]: !prevState[name],
       };
+      debugger
       if (wasOpen) {
         disableFtn(true); // Execute only when closing
       }
@@ -1111,14 +1106,14 @@ function Configuratin() {
       ),
     },
   ];
-  const columnCountry = [
+  const countiesColumn = [
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
     },
     {
-      title: "County",
+      title: "Province",
       dataIndex: "lookupname",
       key: "lookupname",
     },
@@ -1128,13 +1123,10 @@ function Configuratin() {
       key: "DisplayName",
     },
     {
-      title: "Province",
-      render: (record) => record?.Parentlookup,
-    },
-    {
       title: "Active",
-      dataIndex: "isactive",
-      key: "isactive",
+      dataIndex: "Active",
+      key: "DisplayName",
+
       render: (index, record) => (
         <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
       ),
@@ -1160,8 +1152,78 @@ function Configuratin() {
             size={16}
             style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn("Counteries", !isUpdateRec?.Provinces, record);
-              addIdKeyToLookup(record?._id, "Counteries");
+              IsUpdateFtn("Provinces", !isUpdateRec?.Provinces, record);
+              addIdKeyToLookup(record?._id, "Provinces");
+            }}
+          />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
+                  dispatch(getAllLookups());
+                },
+              })
+            }
+          />
+        </Space>
+      ),
+    },
+  ];
+  const columnCountry = [
+    {
+      title: "Code",
+      dataIndex: "code",
+      key: "code",
+    },
+    {
+      title: "County",
+      dataIndex: "displayname",
+      key: "displayname",
+    },
+    {
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Calling Codes",
+      render: (record) => record?.callingCodes,
+    },
+    // {
+    //   title: "Active",
+    //   dataIndex: "isactive",
+    //   key: "isactive",
+    //   render: (index, record) => (
+    //     <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
+    //   ),
+    // },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn("Countries", !isUpdateRec?.Countries, record);
+              addIdKeyToLookup(record?._id, "Countries");
             }}
           />
           <AiFillDelete
@@ -1171,8 +1233,8 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
+                  await deleteFtn(`countries/${record?._id}`,()=>dispatch(fetchCountries()) );
+                  ;
                 },
               });
             }}
@@ -3866,36 +3928,46 @@ function Configuratin() {
   //   // Check if there are any errors in the object
   //   return Object.keys(newErrors.Lookup).length === 0 && Object.keys(newErrors[drawerType]).length === 0;
   // };
-  const validateForm = (drawerType) => {
-    let newErrors = { Lookup: {}, [drawerType]: {} };
+ const validateForm = (drawerType) => {
+  let newErrors = { Lookup: {}, [drawerType]: {} };
 
-    if (!drawerIpnuts?.[drawerType]?.code) {
-      newErrors[drawerType].code = true;
+  const currentInput = drawerIpnuts?.[drawerType] || {};
+
+  // Code is required for all
+  if (!currentInput.code) {
+    newErrors[drawerType].code = true;
+  }
+
+  // Special case: "Counteries" uses 'name' instead of 'lookupname'
+  if (drawerType === "Countries") {
+    if (!drawerIpnuts?.Countries.name) {
+      newErrors[drawerType].name = true;
+      newErrors[drawerType].callingCodes = true;
     }
-    if (!drawerIpnuts?.[drawerType]?.lookupname) {
+   if (!drawerIpnuts?.Countries.callingCodes) {
+      newErrors[drawerType].callingCodes = true;}
+  } else {
+    if (!currentInput.lookupname) {
       newErrors[drawerType].lookupname = true;
     }
+  }
 
-    const requiresParentLookup = [
-      "Divisions",
-      "Districts",
-      "Cities",
-      "Counteries",
-      "Station",
-    ];
-    if (
-      requiresParentLookup.includes(drawerType) &&
-      !drawerIpnuts?.[drawerType]?.Parentlookupid
-    ) {
-      newErrors[drawerType].parentLookup = true;
-    }
+  // Parent lookup required for some types
+  const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries", "Station"];
+  if (
+    requiresParentLookup.includes(drawerType) &&
+    !currentInput.Parentlookupid
+  ) {
+    newErrors[drawerType].parentLookup = true;
+  }
 
-    setErrors(newErrors);
+  setErrors(newErrors);
+debugger
+  // Return true if no errors
+  const noErrors = Object.keys(newErrors[drawerType]).length === 0;
+  return noErrors;
+};
 
-    // Return true if no errors
-    const noErrors = Object.keys(newErrors[drawerType]).length === 0;
-    return noErrors;
-  };
   const validateSolicitors = (drawerType) => {
     let newErrors = { [drawerType]: {} };
 
@@ -4742,7 +4814,7 @@ function Configuratin() {
           suffix={<SearchOutlined />}
         />
 
-        <Table
+        {/* <Table
           columns={ProfileColumns}
           pagination={false}
           dataSource={tableData}
@@ -4788,7 +4860,7 @@ function Configuratin() {
               />
             </div>
           )}
-        />
+        /> */}
       </MyDrawer>
       {/*Reigon type Drawer */}
       <MyDrawer
@@ -4977,6 +5049,7 @@ function Configuratin() {
       </MyDrawer>
       <MyDrawer
         isPagination={true}
+        total={data?.county?.length}
         title="Counties"
         open={drawerOpen?.counties}
         onClose={() => openCloseDrawerFtn("counties")}
@@ -5226,13 +5299,14 @@ function Configuratin() {
       <MyDrawer
         title="Countries"
         open={drawerOpen?.Countries}
-        isPagination={true}
+        // isPagination={true}
+        total={countriesData?.length}
         onClose={() => openCloseDrawerFtn("Countries")}
         add={() => {
           if (!validateForm("Countries")) return;
           insertDataFtn(
-            `/api/lookup`,
-            drawerIpnuts?.Provinces,
+            `/api/countries`,
+            drawerIpnuts?.Countries,
             "Data inserted successfully:",
             "Data did not insert:",
             () => resetCounteries("Countries", dispatch(getAllLookups()))
@@ -5242,7 +5316,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Countries}
         update={async () => {
           if (!validateForm("Countries")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Provinces, () =>
+          await updateFtn(`/api/countries`, drawerIpnuts?.Countries, () =>
             resetCounteries("Countries", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5283,14 +5357,14 @@ function Configuratin() {
               <MyInput
                 label="Country:"
                 name="lookupname"
-                value={drawerIpnuts?.Countries?.lookupname}
+                value={drawerIpnuts?.Countries?.name}
                 onChange={(e) =>
-                  drawrInptChng("Countries", "lookupname", e.target.value)
+                  drawrInptChng("Countries", "name", e.target.value)
                 }
-                placeholder="Enter province"
+                placeholder="Enter Country"
                 disabled={isDisable}
                 required
-                hasError={!!errors?.Countries?.lookupname}
+                hasError={!!errors?.Countries?.name}
               />
             </Col>
           </Row>
@@ -5298,16 +5372,33 @@ function Configuratin() {
             <Col span={12}>
               <MyInput
                 label="Display Name:"
-                name="DisplayName"
-                value={drawerIpnuts?.Countries?.DisplayName}
+                name="displayname"
+                value={drawerIpnuts?.Countries?.displayname}
                 onChange={(e) =>
-                  drawrInptChng("Countries", "DisplayName", e.target.value)
+                  drawrInptChng("Countries", "displayname", e.target.value)
                 }
                 placeholder="Enter display name"
                 disabled={isDisable}
               />
             </Col>
             <Col span={12}>
+              <MyInput
+                label="Calling Codes"
+                name="callingCodes"
+                value={drawerIpnuts?.Countries?.callingCodes}
+                onChange={(e) =>
+                  drawrInptChng("Countries", "callingCodes", e.target.value)
+                }
+                placeholder="Enter Calling Codes"
+                disabled={isDisable}
+                 required
+                hasError={!!errors?.Countries?.callingCodes}
+              />
+            </Col>
+           
+          </Row>
+          <Row>
+             {/* <Col span={12}>
               <Checkbox
                 disabled={isDisable}
                 onChange={(e) =>
@@ -5318,15 +5409,15 @@ function Configuratin() {
               >
                 Active
               </Checkbox>
-            </Col>
+            </Col> */}
           </Row>
           <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Provinces</h6>
+            <h6 className=" mb-3 text-primary">Existing Countries</h6>
             <Table
-              pagination={false}
-              columns={columnProvince}
+              pagination={true}
+              columns={columnCountry}
               loading={lookupsloading}
-              dataSource={groupedLookups?.Countries}
+              dataSource={countriesData}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"

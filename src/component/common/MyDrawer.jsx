@@ -61,7 +61,7 @@ function MyDrawer({
   isrecursion = false,
   total,
   onChange,
-  pageSize,
+  pageSize=10,
   showSizeChanger = true,
   showQuickJumper = true,
   isGarda,

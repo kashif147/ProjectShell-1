@@ -2,17 +2,25 @@ import "./App.css";
 import "./styles/Utilites.css";
 import "./styles/GlobalChatbot.css";
 import Entry from "./Entry";
-import React from "react";
+import React, { useEffect } from "react";
 import AuthProvider from "./pages/auth/AuthProvider";
 import { ChatbotProvider } from "./context/ChatbotContext";
-import { useEffect } from "react";
+import { App as AntApp, notification } from "antd";
+import "antd/dist/reset.css";
 
 function App() {
+  const [api, contextHolder] = notification.useNotification();
+
+  // Make AntD notification globally available for MyAlert.js
+  notification.success = api.success;
+  notification.error = api.error;
+  notification.info = api.info;
+  notification.warning = api.warning;
+
   useEffect(() => {
     const loadWorklet = async () => {
       if ("sharedStorage" in window) {
         try {
-          // 👇 Load your worklet from public
           await window.sharedStorage.worklet.addModule(
             "/shared-storage-worklet.js"
           );
@@ -24,21 +32,22 @@ function App() {
         console.warn("Shared Storage API not supported in this browser.");
       }
     };
-
     loadWorklet();
   }, []);
+
   return (
-    <AuthProvider>
-      <ChatbotProvider>
-        <div className="App">
-          <div className="">
-            {/* <Login/> */}
+    <AntApp>
+      {contextHolder}
+      <AuthProvider>
+        <ChatbotProvider>
+          <div className="App">
             <Entry />
           </div>
-        </div>
-      </ChatbotProvider>
-    </AuthProvider>
+        </ChatbotProvider>
+      </AuthProvider>
+    </AntApp>
   );
 }
 
 export default App;
+
