@@ -3,7 +3,7 @@ import { SiActigraph } from "react-icons/si";
 import { FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
-import { selectGroupedLookups } from "../features/LookupsSlice";
+import { selectGroupedLookups, selectGroupedLookupsByType } from "../features/LookupsSlice";
 import {
   Input,
   Table,
@@ -102,39 +102,127 @@ import { fetchCountries } from "../features/CountriesSlice";
 // i have different drwers for configuration of lookups for the system
 
 function Configuratin() {
- const insertDataFtn = async (url, data, successNotification, failureNotification, callback) => {
-  const token = localStorage.getItem("token");
+  const insertDataFtn = async (url, data, successNotification, failureNotification, callback) => {
+    const token = localStorage.getItem("token");
+    try {
+      const response = await axios.post(`${baseURL}${url}`, data, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
 
-  try {
-    const response = await axios.post(`${baseURL}${url}`, data, {
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-    });
+      // ✅ Handle all success codes (200–299)
+      if (response.status >= 200 && response.status < 300) {
+        MyAlert("success", successNotification);
+        if (typeof callback === "function") callback();
+        return response.data;
+      }
+    } catch (error) {
+      console.error("Axios Error:", error?.response || error);
 
-    // ✅ Handle all success codes (200–299)
-    if (response.status >= 200 && response.status < 300) {
-      MyAlert("success", successNotification);
-      if (typeof callback === "function") callback();
-      return response.data;
-    }
-  } catch (error) {
-    console.error("Axios Error:", error?.response || error);
-
-    // ✅ Extract message safely
-    const errMsg =
-      error?.response?.data?.error?.message ||
-      error?.message ||
-      "Something went wrong";
+      // ✅ Extract message safely
+      const errMsg =
+        error?.response?.data?.error?.message ||
+        error?.message ||
+        "Something went wrong";
       debugger
 
-    // ✅ Trigger failure alert properly
-    
+      // ✅ Trigger failure alert properly
 
-    return MyAlert("error", failureNotification, errMsg);
-  }
-};
+
+      return MyAlert("error", failureNotification, errMsg);
+    }
+  };
+  const columnsSolicitors = [
+    {
+      title: "Surname",
+      dataIndex: "surname",
+      key: "surname",
+    },
+    {
+      title: "Forename",
+      dataIndex: "forename",
+      key: "forename",
+    },
+    {
+      title: "Phone",
+      dataIndex: "contactPhone",
+      key: "contactPhone",
+    },
+    {
+      title: "Email",
+      dataIndex: "contactEmail",
+      key: "contactEmail",
+    },
+    {
+      title: "Building/House",
+      dataIndex: ["contactAddress", "buildingOrHouse"],
+      key: "buildingOrHouse",
+    },
+    {
+      title: "Street/Road",
+      dataIndex: ["contactAddress", "streetOrRoad"],
+      key: "streetOrRoad",
+    },
+    {
+      title: "Area/Town",
+      dataIndex: ["contactAddress", "areaOrTown"],
+      key: "areaOrTown",
+    },
+    {
+      title: "City/Postcode",
+      dataIndex: ["contactAddress", "cityCountyOrPostCode"],
+      key: "cityCountyOrPostCode",
+    },
+    {
+      title: "Eircode",
+      dataIndex: ["contactAddress", "eircode"],
+      key: "eircode",
+    },
+    {
+      title: (
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+          Action
+        </div>
+      ),
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px", cursor: "pointer" }}
+            onClick={() => {
+              IsUpdateFtn("Solicitors", !isUpdateRec?.Solicitors, record);
+              addIdKeyToLookup(record?._id, "Solicitors");
+            }}
+          />
+          <AiFillDelete
+            size={16}
+            style={{ cursor: "pointer" }}
+            onClick={() =>
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do you want to delete this solicitor?",
+                onConfirm: async () => {
+                  await deleteFtn(`contacts/${record?._id}`, null, () => dispatch(getContacts()));
+
+                },
+              })
+            }
+          />
+        </Space>
+      ),
+    },
+  ];
 
   const updateFtn = async (
     // apiURL = baseURL,
@@ -152,6 +240,48 @@ function Configuratin() {
       }
 
       const { id, ...finalData } = data1;
+      debugger
+
+      const response = await axios.put(`${baseURL}${endPoint}`, data1, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+      console.log("Update Response:", response);
+      if (response?.status === 200) {
+
+        MyAlert("success", msg);
+        if (typeof callback === "function") {
+          callback(); // wait in case it's async
+        }
+        return response.data;
+      } else {
+        MyAlert("error", "notificationsMsg?.updating?.falier");
+
+      }
+    } catch (error) {
+      console.error("API Error:", error.response?.data || error.message);
+      // throw error;
+    }
+  };
+  const updateCountiesFtn = async (
+    // apiURL = baseURL,
+    endPoint,
+    data1,
+    callback,
+    msg = "updated successfully",
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
+      // ✅ If `id` exists in data1 but not in URL, append it
+      let finalEndPoint = endPoint;
+      if (data1?.id && !endPoint.includes(data1.id)) {
+        finalEndPoint = `${endPoint}/${data1.id}`;
+      }
+
+      const { id, ...finalData } = data1;
+      debugger
 
       const response = await axios.put(`${baseURL}${finalEndPoint}`, finalData, {
         headers: {
@@ -176,30 +306,46 @@ function Configuratin() {
       // throw error;
     }
   };
-  const deleteFtn = async (url1, callback) => {
+  const deleteFtn = async (url1, body = null, callback, showAlert = true) => {
     const token = localStorage.getItem("token");
-    // const data = JSON.stringify({  });
+
     const config = {
       method: "delete",
-      // maxBodyLength: Infinity,
       url: `${baseURL}/api/${url1}`,
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`, // Use Bearer token for authorization
+        Authorization: `Bearer ${token}`,
       },
     };
+
+    if (body) config.data = JSON.stringify(body);
+
     try {
       const response = await axios.request(config);
-      MyAlert("success", "You Have Successfully Deleted.");
-      if (callback && typeof callback === "function" && response?.data) {
-        callback();
+
+      // ✅ safely call callback only if it’s a function
+      if (typeof callback === "function") {
+        await callback();
       }
+
+      // ✅ show alert only once
+      if (showAlert) {
+        MyAlert("success", "You have successfully deleted.");
+      }
+
       return response.data;
     } catch (error) {
-      console.error("Error deleting region:", error);
-      return MyAlert("error", "Please Try Again");
+      const errMsg =
+        error?.response?.data?.error?.message ||
+        error?.message ||
+        "Something went wrong";
+
+      MyAlert("error", "Please Try Again", errMsg);
+      return null;
     }
   };
+
+
   const navigate = useNavigate();
   const [data, setdata] = useState({
     gender: [],
@@ -229,6 +375,8 @@ function Configuratin() {
   });
 
   const groupedLookups = useSelector(selectGroupedLookups);
+  const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
+
 
   const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
@@ -277,6 +425,22 @@ function Configuratin() {
     (state) => state.contactType
   );
   const { contacts, contactsLoading } = useSelector((state) => state.contact);
+  const [contactTypelookup, setcontactTypelookup] = useState([])
+  useEffect(() => {
+    if (contactTypes) {
+      let arr = []
+      let obj = {}
+      contactTypes.map((ct) => {
+        obj = {
+          label: ct?.contactType,
+          value: ct?._id
+        }
+        arr.push(obj)
+      })
+      setcontactTypelookup(arr)
+    }
+  }, [contactTypes])
+  console.log(contactTypelookup, "contactTypelookup")
   const { lookupsForSelect, disableFtn, isDisable } = useTableColumns();
   const [drawerOpen, setDrawerOpen] = useState({
     counties: false,
@@ -289,7 +453,7 @@ function Configuratin() {
     DivisionsForDistrict: false,
     Station: false,
     DivisionsForStation: false,
-    ContactTypes: false,
+    ContactType: false,
     LookupType: false,
     Lookup: false,
     Solicitors: false,
@@ -329,7 +493,7 @@ function Configuratin() {
     Districts: false,
     Divisions: false,
     Station: false,
-    ContactTypes: false,
+    ContactType: false,
     LookupType: false,
     Lookup: false,
     Solicitors: false,
@@ -392,11 +556,12 @@ function Configuratin() {
       setdata((prevState) => ({
         ...prevState,
         Solicitors: contacts.filter(
-          (item) => item?.ContactTypeID === "67d91cdf8a2875433c189f65"
+          (item) => item?.contactTypeId?.contactType === "Solicitors"
         ),
       }));
     }
   }, [contacts]);
+
   const [lookupTypSlct, setlookupTypSlct] = useState([]);
   useEffect(() => {
     if (!lookupsTypes || Array.isArray(lookupsTypes)) return;
@@ -458,7 +623,7 @@ function Configuratin() {
   }, [regions]);
 
   useEffect(() => {
-    // dispatch(getContacts());
+    dispatch(getContacts());
     dispatch(getAllRegionTypes());
     // dispatch(getContactTypes());
     dispatch(getLookupTypes());
@@ -536,20 +701,22 @@ function Configuratin() {
 
   let drawerInputsInitalValues = {
     Solicitors: {
-      Forename: "",
-      Surname: "",
-      ContactPhone: "",
-      ContactEmail: "",
-      ContactAddress: {
-        BuildingOrHouse: "",
-        StreetOrRoad: "",
-        AreaOrTown: "",
-        CityCountyOrPostCode: "",
-        Eircode: "",
+      forename: "",
+      surname: "",
+      contactPhone: "",
+      contactEmail: "",
+      contactAddress: {
+        buildingOrHouse: "",
+        streetOrRoad: "",
+        areaOrTown: "",
+        cityCountyOrPostCode: "",
+        eircode: "",
       },
-      ContactTypeID: "67d91cdf8a2875433c189f65",
-      isDeleted: false,
+      contactTypeId: "",
+      isactive: true,     // ✅ added based on API field
+      isDeleted: false,   // keep this if your app uses soft-delete flag
     },
+
     RegionType: {
       RegionType: "",
       DisplayName: "",
@@ -557,7 +724,7 @@ function Configuratin() {
       isDeleted: false,
     },
     // Counteries: {
-    //   lookuptypeId: "67f5971f17f0ecf3dbf79df6",
+    //   lookuptypeId: "68c85f21302e5600dc8477e4",
     //   DisplayName: "",
     //   lookupname: "",
     //   code: "",
@@ -566,8 +733,10 @@ function Configuratin() {
     //   isactive: true,
     //   isDeleted: false,
     // },
+
+    //worklocation
     Station: {
-      lookuptypeId: "67f6297617f0ecf3dbf79f12",
+      lookuptypeId: "68d0369c662428d1c504b3aa",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -577,7 +746,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Cities: {
-      lookuptypeId: "67f6282f17f0ecf3dbf79ef8",
+      lookuptypeId: "68c85f22302e5600dc8477ed",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -587,7 +756,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Districts: {
-      lookuptypeId: "67f626ed17f0ecf3dbf79ed1",
+      lookuptypeId: "68d0369c662428d1c504b3aa",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -596,8 +765,9 @@ function Configuratin() {
       isactive: true,
       isDeleted: false,
     },
+    // Region
     Divisions: {
-      lookuptypeId: "67f5990b17f0ecf3dbf79e35",
+      lookuptypeId: "68d0362a662428d1c504b3a8",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -607,7 +777,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Councils: {
-      lookuptypeId: "67f62fb517f0ecf3dbf79f86",
+      lookuptypeId: "68c85f22302e5600dc8477f6",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -617,7 +787,7 @@ function Configuratin() {
       isDeleted: false,
     },
     CorrespondenceType: {
-      lookuptypeId: "67f68bee17f0ecf3dbf7a088",
+      lookuptypeId: "68c85f22302e5600dc84780b",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -627,7 +797,7 @@ function Configuratin() {
       isDeleted: false,
     },
     ClaimType: {
-      lookuptypeId: "67f6906617f0ecf3dbf7a0fe",
+      lookuptypeId: "68c85f22302e5600dc847811",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -637,7 +807,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Schemes: {
-      lookuptypeId: "67f691ef17f0ecf3dbf7a135",
+      lookuptypeId: "68c85f22302e5600dc847814",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -647,7 +817,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Reasons: {
-      lookuptypeId: "67f6956817f0ecf3dbf7a189",
+      lookuptypeId: "68c85f22302e5600dc847817",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -657,7 +827,7 @@ function Configuratin() {
       isDeleted: false,
     },
     DocumentType: {
-      lookuptypeId: "67f68ee617f0ecf3dbf7a0bc",
+      lookuptypeId: "68c85f22302e5600dc84780e",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -667,7 +837,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Boards: {
-      lookuptypeId: "67f62cbc17f0ecf3dbf79f5a",
+      lookuptypeId: "68c85f22302e5600dc8477f3",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -695,7 +865,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Gender: {
-      lookuptypeId: "67f58a2d17f0ecf3dbf79cfe",
+      lookuptypeId: "68c85f21302e5600dc8477da",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -705,7 +875,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Title: {
-      lookuptypeId: "67f57de817f0ecf3dbf79cc2",
+      lookuptypeId: "68c85f21302e5600dc8477d6",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -715,7 +885,7 @@ function Configuratin() {
       isDeleted: false,
     },
     SpokenLanguages: {
-      lookuptypeId: "67f6308417f0ecf3dbf79fa3",
+      lookuptypeId: "68c85f22302e5600dc8477f9",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -725,7 +895,7 @@ function Configuratin() {
       isDeleted: false,
     },
     MaritalStatus: {
-      lookuptypeId: "67f590d017f0ecf3dbf79d57",
+      lookuptypeId: "68c85f21302e5600dc8477dd",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -735,7 +905,7 @@ function Configuratin() {
       isDeleted: false,
     },
     ProjectTypes: {
-      lookuptypeId: "67f6319a17f0ecf3dbf79fbc",
+      lookuptypeId: "68c85f22302e5600dc8477fc",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -745,7 +915,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Trainings: {
-      lookuptypeId: "67f6329f17f0ecf3dbf79fd3",
+      lookuptypeId: "68c85f22302e5600dc8477ff",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -755,7 +925,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Ranks: {
-      lookuptypeId: "67f6344d17f0ecf3dbf79fff",
+      lookuptypeId: "68c85f22302e5600dc84781a",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -765,7 +935,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Provinces: {
-      lookuptypeId: "67f5945517f0ecf3dbf79db4",
+      lookuptypeId: "68c85f21302e5600dc8477e0",
       DisplayName: "",
       code: "",
       lookupname: "",
@@ -775,7 +945,7 @@ function Configuratin() {
       isDeleted: false,
     },
     Duties: {
-      lookuptypeId: "67f6351b17f0ecf3dbf7a018",
+      lookuptypeId: "68c85f22302e5600dc847805",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -785,7 +955,7 @@ function Configuratin() {
       isDeleted: false,
     },
     RosterType: {
-      lookuptypeId: "67f652cf17f0ecf3dbf7a048",
+      lookuptypeId: "68c85f22302e5600dc847808",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -795,13 +965,13 @@ function Configuratin() {
       isDeleted: false,
     },
     ContactType: {
-      ContactType: "",
-      DisplayName: "",
-      isDeleted: false,
+      contactType: "",
+      displayName: "",
       isactive: true,
+      code: "",
     },
     Sections: {
-      lookuptypeId: "67f6344d17f0ecf3dbf79fff",
+      lookuptypeId: "68d06c36c1e03afe191120ef",
       DisplayName: "",
       lookupname: "",
       code: "",
@@ -810,11 +980,11 @@ function Configuratin() {
       isactive: true,
       isDeleted: false,
     },
-  Countries: {
+    Countries: {
       displayname: "",
       name: "",
       code: "",
-  callingCodes:""
+      callingCodes: ""
 
     },
   };
@@ -846,9 +1016,9 @@ function Configuratin() {
       }
     });
   };
-
+  console.log(drawerIpnuts?.ContactType, "drawerIpnuts?.ContactType?.id");
   const IsUpdateFtn = (drawer, value, data) => {
-   
+
     if (value == false) {
       setisUpdateRec((prev) => ({
         ...prev,
@@ -871,7 +1041,6 @@ function Configuratin() {
       },
       {}
     );
-debugger
     setdrawerIpnuts((prev) => ({
       ...prev,
       [drawer]: {
@@ -879,16 +1048,15 @@ debugger
         ...filteredData,
       },
     }));
-    debugger
+
   };
 
   const resetCounteries = (drawer, callback) => {
-    debugger
     setdrawerIpnuts((prevState) => ({
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
     }));
-    if (callback & (typeof callback === "function")) {
+    if (callback && typeof callback === "function") {
       callback();
     }
   };
@@ -916,7 +1084,16 @@ debugger
       [name4]: value4,
     }));
   };
+function simplifyContact(contact) {
+  // Create a shallow copy to avoid mutating the original
+  const cleaned = { ...contact };
 
+  if (cleaned.contactTypeId && cleaned.contactTypeId._id) {
+    cleaned.contactTypeId = cleaned.contactTypeId._id;
+  }
+
+  return cleaned;
+}
   const handleInputChange7 = (name7, value7) => {
     setprofileData((prevState7) => ({
       ...prevState7,
@@ -924,6 +1101,7 @@ debugger
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
+    debugger
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
 
@@ -934,6 +1112,7 @@ debugger
           id: idValue,
         },
       };
+      debugger
     });
   };
 
@@ -951,94 +1130,94 @@ debugger
       address: "10 Downing Street",
     },
   ];
-  const columnsSolicitors = [
-    {
-      title: "Surname",
-      dataIndex: "Surname",
-      key: "Surname",
-    },
-    {
-      title: "Forename",
-      dataIndex: "Forename",
-      key: "Forename",
-    },
-    {
-      title: "Phone",
-      dataIndex: "ContactPhone",
-      key: "ContactPhone",
-    },
-    {
-      title: "Email",
-      dataIndex: "ContactEmail",
-      key: "ContactEmail",
-    },
-    {
-      title: "Building/House",
-      dataIndex: ["ContactAddress", "BuildingOrHouse"],
-      key: "BuildingOrHouse",
-    },
-    {
-      title: "Street/Road",
-      dataIndex: ["ContactAddress", "StreetOrRoad"],
-      key: "StreetOrRoad",
-    },
-    {
-      title: "Area/Town",
-      dataIndex: ["ContactAddress", "AreaOrTown"],
-      key: "AreaOrTown",
-    },
-    {
-      title: "City/Postcode",
-      dataIndex: ["ContactAddress", "CityCountyOrPostCode"],
-      key: "CityCountyOrPostCode",
-    },
-    {
-      title: "Eircode",
-      dataIndex: ["ContactAddress", "Eircode"],
-      key: "Eircode",
-    },
-    {
-      title: (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "center",
-          }}
-        >
-          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-          Action
-        </div>
-      ),
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit
-            size={16}
-            style={{ marginRight: "10px" }}
-            onClick={() => {
-              IsUpdateFtn("Solicitors", !isUpdateRec?.Solicitors, record);
-              addIdKeyToLookup(record?._id, "Solicitors");
-            }}
-          />
-          <AiFillDelete
-            size={16}
-            onClick={() =>
-              MyConfirm({
-                title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/contact`, record?._id);
-                  dispatch(getContacts());
-                },
-              })
-            }
-          />
-        </Space>
-      ),
-    },
-  ];
+  // const columnsSolicitors = [
+  //   {
+  //     title: "Surname",
+  //     dataIndex: "Surname",
+  //     key: "Surname",
+  //   },
+  //   {
+  //     title: "Forename",
+  //     dataIndex: "Forename",
+  //     key: "Forename",
+  //   },
+  //   {
+  //     title: "Phone",
+  //     dataIndex: "ContactPhone",
+  //     key: "ContactPhone",
+  //   },
+  //   {
+  //     title: "Email",
+  //     dataIndex: "ContactEmail",
+  //     key: "ContactEmail",
+  //   },
+  //   {
+  //     title: "Building/House",
+  //     dataIndex: ["ContactAddress", "BuildingOrHouse"],
+  //     key: "BuildingOrHouse",
+  //   },
+  //   {
+  //     title: "Street/Road",
+  //     dataIndex: ["ContactAddress", "StreetOrRoad"],
+  //     key: "StreetOrRoad",
+  //   },
+  //   {
+  //     title: "Area/Town",
+  //     dataIndex: ["ContactAddress", "AreaOrTown"],
+  //     key: "AreaOrTown",
+  //   },
+  //   {
+  //     title: "City/Postcode",
+  //     dataIndex: ["ContactAddress", "CityCountyOrPostCode"],
+  //     key: "CityCountyOrPostCode",
+  //   },
+  //   {
+  //     title: "Eircode",
+  //     dataIndex: ["ContactAddress", "Eircode"],
+  //     key: "Eircode",
+  //   },
+  //   {
+  //     title: (
+  //       <div
+  //         style={{
+  //           display: "flex",
+  //           alignItems: "center",
+  //           justifyContent: "center",
+  //         }}
+  //       >
+  //         <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
+  //         Action
+  //       </div>
+  //     ),
+  //     key: "action",
+  //     align: "center",
+  //     render: (_, record) => (
+  //       <Space size="middle">
+  //         <FaEdit
+  //           size={16}
+  //           style={{ marginRight: "10px" }}
+  //           onClick={() => {
+  //             IsUpdateFtn("Solicitors", !isUpdateRec?.Solicitors, record);
+  //             addIdKeyToLookup(record?._id, "Solicitors");
+  //           }}
+  //         />
+  //         <AiFillDelete
+  //           size={16}
+  //           onClick={() =>
+  //             MyConfirm({
+  //               title: "Confirm Deletion",
+  //               message: "Do You Want To Delete This Item?",
+  //               onConfirm: async () => {
+  //                 await deleteFtn(`${baseURL}/contact`, record?._id);
+  //                 dispatch(getContacts());
+  //               },
+  //             })
+  //           }
+  //         />
+  //       </Space>
+  //     ),
+  //   },
+  // ];
   const columnProvince = [
     {
       title: "Code",
@@ -1096,8 +1275,8 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
+
                 },
               })
             }
@@ -1113,14 +1292,19 @@ debugger
       key: "code",
     },
     {
-      title: "Province",
-      dataIndex: "lookupname",
-      key: "lookupname",
+      title: "Country",
+      dataIndex: "displayname",
+      key: "displayname",
     },
     {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
+      title: "Name",
+      dataIndex: "name",
+      key: "name",
+    },
+    {
+      title: "Calling Codes",
+      dataIndex: "callingCodes",
+      key: "callingCodes",
     },
     {
       title: "Active",
@@ -1151,23 +1335,27 @@ debugger
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
+            // onClick={() => {
+            //   IsUpdateFtn("Provinces", !isUpdateRec?.Provinces, record);
+            //   addIdKeyToLookup(record?._id, "Provinces");
+            // }}
             onClick={() => {
-              IsUpdateFtn("Provinces", !isUpdateRec?.Provinces, record);
-              addIdKeyToLookup(record?._id, "Provinces");
+              IsUpdateFtn("Countries", !isUpdateRec?.Countries, record);
+              addIdKeyToLookup(record?._id, "Countries");
             }}
           />
           <AiFillDelete
             size={16}
-            onClick={() =>
+            onClick={() => {
               MyConfirm({
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
+                  await deleteFtn(`countries/${record?._id}`, null, () => dispatch(fetchCountries()));
+                  ;
                 },
-              })
-            }
+              });
+            }}
           />
         </Space>
       ),
@@ -1181,26 +1369,27 @@ debugger
     },
     {
       title: "County",
-      dataIndex: "displayname",
-      key: "displayname",
+      dataIndex: "lookupname",
+      key: "lookupname",
     },
     {
-      title: "Name",
-      dataIndex: "name",
-      key: "name",
+      title: "Display Name",
+      dataIndex: "DisplayName",
+      key: "DisplayName",
     },
-    {
-      title: "Calling Codes",
-      render: (record) => record?.callingCodes,
-    },
+
     // {
-    //   title: "Active",
-    //   dataIndex: "isactive",
-    //   key: "isactive",
-    //   render: (index, record) => (
-    //     <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
-    //   ),
+    //   title: "Calling Codes",
+    //   render: (record) => record?.callingCodes,
     // },
+    {
+      title: "Active",
+      dataIndex: "isactive",
+      key: "isactive",
+      render: (index, record) => (
+        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
+      ),
+    },
     {
       title: (
         <div
@@ -1233,7 +1422,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`,()=>dispatch(fetchCountries()) );
+                  await deleteFtn(`countries/${record?._id}`, () => dispatch(fetchCountries()));
                   ;
                 },
               });
@@ -1344,7 +1533,7 @@ debugger
             size={16}
             style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn("Districts", !isUpdateRec?.Provinces, record);
+              IsUpdateFtn("Districts", !isUpdateRec?.Districts, record);
               addIdKeyToLookup(record?._id, "Districts");
             }}
           />
@@ -1355,8 +1544,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
                 },
               });
             }}
@@ -1424,8 +1612,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
+                  await deleteFtn(`lookup`, { id: record?._id }, () => dispatch(getAllLookups()));
                 },
               });
             }}
@@ -1450,11 +1637,11 @@ debugger
       dataIndex: "DisplayName",
       key: "DisplayName",
     },
-    {
-      title: "County",
-      dataIndex: "Parentlookup",
-      key: "Parentlookup",
-    },
+    // {
+    //   title: "County",
+    //   dataIndex: "Parentlookup",
+    //   key: "Parentlookup",
+    // },
     {
       title: "Active",
       dataIndex: "Active",
@@ -1494,8 +1681,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
                 },
               });
             }}
@@ -1559,7 +1745,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
                   dispatch(getAllLookups());
                 },
               });
@@ -1572,25 +1758,25 @@ debugger
   const contactType = [
     {
       title: "Code",
-      dataIndex: "Code",
-      key: "Code",
+      dataIndex: "code",
+      key: "code",
     },
     {
       title: "Contact Type",
-      dataIndex: "ContactType",
-      key: "ContactType",
+      dataIndex: "contactType",
+      key: "contactType",
     },
     {
       title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
+      dataIndex: "displayName",
+      key: "displayName",
     },
     {
       title: "Active",
-      dataIndex: "isActive",
-      key: "isActive",
+      dataIndex: "isactive",
+      key: "isactive",
       render: (index, record) => (
-        <Checkbox disabled={isDisable} checked={record?.isActive}></Checkbox>
+        <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
       ),
     },
     {
@@ -1614,7 +1800,7 @@ debugger
             size={16}
             style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn("ContactType", !IsUpdateFtn?.ContactType, record);
+              IsUpdateFtn("ContactType", !isUpdateRec?.ContactType, record);
               addIdKeyToLookup(record?._id, "ContactType");
             }}
           />
@@ -1625,8 +1811,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/contacttype`, record?._id);
-                  dispatch(getContactTypes());
+                  await deleteFtn(`contact-types/${record?._id}`, null, () => dispatch(getContactTypes()))
                 },
               });
             }}
@@ -1692,8 +1877,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/lookuptype`, record?._id);
-                  dispatch(getLookupTypes());
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
                 },
               })
             }
@@ -1846,9 +2030,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Lookup");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
                 },
               })
             }
@@ -1921,9 +2103,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Gender");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -1996,9 +2176,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Ranks");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2061,9 +2239,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Sections");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2140,9 +2316,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("SpokenLanguages");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2215,9 +2389,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("ProjectTypes");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2290,9 +2462,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Trainings");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2365,9 +2535,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Boards");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2438,9 +2606,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Councils");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2514,11 +2680,7 @@ debugger
               MyConfirm({
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
-                onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("CorrespondenceType");
-                },
+                onConfirm: async () => deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
               })
             }
           />
@@ -2597,12 +2759,8 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id, () => {
-                    dispatch(getAllLookups())
-                    resetCounteries("Title")
-                  });
-
-                },
+                  deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                }
               })
             }
           />
@@ -2681,9 +2839,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Duties");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2759,9 +2915,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Gender");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2840,9 +2994,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Lookup");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2913,9 +3065,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("DocumentType");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -2986,9 +3136,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Reasons");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -3541,9 +3689,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do you want to delete this item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("RosterType");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -3887,9 +4033,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("Schemes");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -3928,72 +4072,82 @@ debugger
   //   // Check if there are any errors in the object
   //   return Object.keys(newErrors.Lookup).length === 0 && Object.keys(newErrors[drawerType]).length === 0;
   // };
- const validateForm = (drawerType) => {
-  let newErrors = { Lookup: {}, [drawerType]: {} };
+  const validateForm = (drawerType) => {
+    let newErrors = { Lookup: {}, [drawerType]: {} };
 
-  const currentInput = drawerIpnuts?.[drawerType] || {};
+    const currentInput = drawerIpnuts?.[drawerType] || {};
 
-  // Code is required for all
-  if (!currentInput.code) {
-    newErrors[drawerType].code = true;
-  }
-
-  // Special case: "Counteries" uses 'name' instead of 'lookupname'
-  if (drawerType === "Countries") {
-    if (!drawerIpnuts?.Countries.name) {
-      newErrors[drawerType].name = true;
-      newErrors[drawerType].callingCodes = true;
+    // Code is required for all
+    if (!currentInput.code) {
+      newErrors[drawerType].code = true;
     }
-   if (!drawerIpnuts?.Countries.callingCodes) {
-      newErrors[drawerType].callingCodes = true;}
-  } else {
-    if (!currentInput.lookupname) {
-      newErrors[drawerType].lookupname = true;
+
+    // Special case: "Countries" uses 'name' instead of 'lookupname'
+    if (drawerType === "Countries") {
+      if (!currentInput.name) {
+        newErrors[drawerType].name = true;
+      }
+      if (!currentInput.callingCodes) {
+        newErrors[drawerType].callingCodes = true;
+      }
     }
-  }
+    // Special case: "ContactType" uses 'contactType' instead of 'lookupname'
+    else if (drawerType === "ContactType") {
+      if (!currentInput.contactType) {
+        newErrors[drawerType].contactType = true;
+      }
+    }
+    // Default case: other drawers use 'lookupname'
+    else {
+      if (!currentInput.lookupname) {
+        newErrors[drawerType].lookupname = true;
+      }
+    }
 
-  // Parent lookup required for some types
-  const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries", "Station"];
-  if (
-    requiresParentLookup.includes(drawerType) &&
-    !currentInput.Parentlookupid
-  ) {
-    newErrors[drawerType].parentLookup = true;
-  }
+    // Parent lookup required for some types
+    const requiresParentLookup = ["Districts", "Cities", "Counteries", "Station"];
+    if (
+      requiresParentLookup.includes(drawerType) &&
+      !currentInput.Parentlookupid
+    ) {
+      newErrors[drawerType].parentLookup = true;
+    }
 
-  setErrors(newErrors);
-debugger
-  // Return true if no errors
-  const noErrors = Object.keys(newErrors[drawerType]).length === 0;
-  return noErrors;
-};
+    setErrors(newErrors);
+
+    // Return true if no errors
+    const noErrors = Object.keys(newErrors[drawerType]).length === 0;
+    return noErrors;
+  };
+
 
   const validateSolicitors = (drawerType) => {
     let newErrors = { [drawerType]: {} };
 
     if (drawerType === "Solicitors") {
-      if (!drawerIpnuts?.Solicitors?.Forename) {
-        newErrors[drawerType].Forename = "Required";
+      const solicitor = drawerIpnuts?.Solicitors || {};
+
+      if (!solicitor?.forename) {
+        newErrors[drawerType].forename = "Required";
       }
-      if (!drawerIpnuts?.Solicitors?.Surname) {
-        newErrors[drawerType].Surname = "Required";
+      if (!solicitor?.surname) {
+        newErrors[drawerType].surname = "Required";
       }
-      if (!drawerIpnuts?.Solicitors?.ContactEmail) {
-        newErrors[drawerType].ContactEmail = "Required";
+      if (!solicitor?.contactEmail) {
+        newErrors[drawerType].contactEmail = "Required";
       }
-      if (!drawerIpnuts?.Solicitors?.ContactPhone) {
-        newErrors[drawerType].ContactPhone = "Required";
+      if (!solicitor?.contactPhone) {
+        newErrors[drawerType].contactPhone = "Required";
       }
-      if (!drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse) {
-        newErrors[drawerType].BuildingOrHouse = "Required";
+      if (!solicitor?.contactAddress?.buildingOrHouse) {
+        newErrors[drawerType].buildingOrHouse = "Required";
       }
-      if (!drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown) {
-        newErrors[drawerType].AreaOrTown = "Required";
+      if (!solicitor?.contactAddress?.areaOrTown) {
+        newErrors[drawerType].areaOrTown = "Required";
       }
     }
-    // Set errors only if there are validation failures
+
     setErrors(newErrors);
-    // Check if there are any errors in the object
     return Object.keys(newErrors[drawerType]).length === 0;
   };
 
@@ -4078,9 +4232,7 @@ debugger
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/Lookup`, record?._id);
-                  dispatch(getAllLookups());
-                  resetCounteries("ClaimType");
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
                 },
               })
             }
@@ -4105,37 +4257,36 @@ debugger
           icon: <Globe size={24} color="#ef4444" />,
           label: "Countries",
         }, // red-500
-
-        {
-          key: "counties",
-          icon: <CountyOutlined size={24} color="#22c55e" />,
-          label: "counties",
-        }, // green-500
         {
           key: "Provinces",
           icon: <Map size={24} color="#22c55e" />,
           label: "Provinces",
         }, // green-500
         {
-          key: "Districts",
-          icon: <MapPinned size={24} color="#eab308" />,
-          label: "Branch",
-        }, // yellow-500
+          key: "counties",
+          icon: <CountyOutlined size={24} color="#22c55e" />,
+          label: "counties",
+        }, // green-500
         {
           key: "Divisions",
           icon: <Building2 size={24} color="#6366f1" />,
           label: "Region",
         }, // indigo-500
         {
-          key: "Cities",
-          icon: <Building2 size={24} color="#10b981" />,
-          label: "Cities",
-        }, // emerald-500
+          key: "Districts",
+          icon: <MapPinned size={24} color="#eab308" />,
+          label: "Branch",
+        }, // yellow-500
         {
           key: "Station",
           icon: <MapPin size={24} color="#f97316" />,
           label: "Work Location",
         }, // orange-500
+        {
+          key: "Cities",
+          icon: <Building2 size={24} color="#10b981" />,
+          label: "Cities",
+        }, // emerald-500
         {
           key: "PostCode",
           icon: <Mail size={24} color="#0ea5e9" />,
@@ -4232,7 +4383,7 @@ debugger
       title: "Communication & Documentation",
       items: [
         {
-          key: "ContactTypes",
+          key: "ContactType",
           icon: <Phone size={24} color="#a855f7" />,
           label: "Contact Types",
         }, // purple-500
@@ -5139,10 +5290,11 @@ debugger
               <CustomSelect
                 label="Province:"
                 placeholder="Select Province"
-                options={[{ label: "Province", value: "Province" }]}
+                options={groupedlookupsForSelect?.Provinces}
+
                 value={"Province"}
                 disabled={isDisable}
-                onChange={(e) => drawrInptChng("counties", "Parentlookupid", e)}
+                onChange={(e) => drawrInptChng("counties", "Parentlookupid", e.target.value)}
                 required
                 hasError={!!errors?.counties?.parentLookup}
               />
@@ -5165,7 +5317,7 @@ debugger
               pagination={{ pageSize: 10 }}
               columns={columnCountry}
               loading={lookupsloading}
-              dataSource={data?.county}
+              dataSource={groupedLookups?.County}
               className="drawer-tbl"
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -5309,14 +5461,14 @@ debugger
             drawerIpnuts?.Countries,
             "Data inserted successfully:",
             "Data did not insert:",
-            () => resetCounteries("Countries", dispatch(getAllLookups()))
+            () => resetCounteries("Countries", dispatch(fetchCountries()))
           );
         }}
         width="1100px"
         isEdit={isUpdateRec?.Countries}
         update={async () => {
           if (!validateForm("Countries")) return;
-          await updateFtn(`/api/countries`, drawerIpnuts?.Countries, () =>
+          await updateCountiesFtn(`/api/countries`, drawerIpnuts?.Countries, () =>
             resetCounteries("Countries", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5391,14 +5543,14 @@ debugger
                 }
                 placeholder="Enter Calling Codes"
                 disabled={isDisable}
-                 required
+                required
                 hasError={!!errors?.Countries?.callingCodes}
               />
             </Col>
-           
+
           </Row>
           <Row>
-             {/* <Col span={12}>
+            {/* <Col span={12}>
               <Checkbox
                 disabled={isDisable}
                 onChange={(e) =>
@@ -5415,7 +5567,7 @@ debugger
             <h6 className=" mb-3 text-primary">Existing Countries</h6>
             <Table
               pagination={true}
-              columns={columnCountry}
+              columns={countiesColumn}
               loading={lookupsloading}
               dataSource={countriesData}
               className="drawer-tbl"
@@ -5840,13 +5992,15 @@ debugger
                   <CustomSelect
                     label="Region"
                     placeholder="Select Region"
-                    options={selectLokups?.Divisions}
+                    options={groupedlookupsForSelect["Region"]}
                     disabled={isDisable}
                     required
                     hasError={!!errors?.Districts?.Parentlookupid}
                     value={drawerIpnuts?.Districts?.Parentlookupid}
-                    onChange={(val) =>
-                      drawrInptChng("Districts", "Parentlookupid", val)
+                    onChange={(val) => {
+                      debugger
+                      drawrInptChng("Districts", "Parentlookupid", val.target.value)
+                    }
                     }
                   />
                 </div>
@@ -5993,7 +6147,7 @@ debugger
                 />
               </Col>
               <Col span={12}>
-                <CustomSelect
+                {/* <CustomSelect
                   label="County"
                   placeholder="Select County"
                   options={selectLokups?.Counteries}
@@ -6004,7 +6158,7 @@ debugger
                   required
                   hasError={!!errors?.Divisions?.parentLookup}
                   disabled={isDisable}
-                />
+                /> */}
               </Col>
             </Row>
 
@@ -6028,7 +6182,7 @@ debugger
               <Table
                 pagination={{ pageSize: 10 }}
                 columns={columnDivisions}
-                dataSource={groupedLookups['Region']}
+                dataSource={groupedLookups?.Region}
                 loading={lookupsloading}
                 className="drawer-tbl"
                 rowClassName={(record, index) =>
@@ -6126,7 +6280,7 @@ debugger
               />
             </Col>
             <Col span={12}>
-              <CustomSelect
+              {/* <CustomSelect
                 label="County"
                 required
                 placeholder="Select County"
@@ -6137,7 +6291,7 @@ debugger
                   drawrInptChng("Divisions", "Parentlookupid", e)
                 }
                 hasError={!!errors?.Divisions?.parentLookup}
-              />
+              /> */}
             </Col>
           </Row>
 
@@ -6156,7 +6310,7 @@ debugger
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnDivisions}
-              dataSource={data?.Divisions}
+              dataSource={groupedLookups?.Region}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6327,9 +6481,9 @@ debugger
           <div className="mt-4 config-tbl-container">
             <h6 className=" mb-3 text-primary">Existing Work Locations</h6>
             <Table
-              pagination={false}
+              pagination={true}
               columns={columnStations}
-              dataSource={groupedLookups['Work Location']}
+              dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
               loading={lookupsloading}
               rowClassName={(record, index) =>
@@ -6346,20 +6500,32 @@ debugger
       </MyDrawer>
       <MyDrawer
         title="Contact Types"
-        open={drawerOpen?.ContactTypes}
+        open={drawerOpen?.ContactType}
+
         isPagination={true}
-        onClose={() => openCloseDrawerFtn("ContactTypes")}
+        onClose={() => openCloseDrawerFtn("ContactType")}
         add={() => {
+          if (!validateForm("ContactType")) return;
           insertDataFtn(
-            `/contacttype`,
+            `/api/contact-types`,
             drawerIpnuts?.ContactType,
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
-              resetCounteries("ContactTypes");
-              dispatch(getContactTypes());
+              resetCounteries("ContactType", () => dispatch(getContactTypes()));
+              dispatch(getContactTypes())
             }
           );
+        }}
+        isEdit={isUpdateRec?.ContactType}
+        update={async () => {
+          if (!validateForm("ContactType")) return;
+          await updateFtn(`/api/contact-types/${drawerIpnuts?.ContactType?.id}`, drawerIpnuts?.ContactType, () =>
+            resetCounteries("ContactType", () => dispatch(getContactTypes()))
+          );
+          dispatch(getContactTypes())
+          // dispatch(getAllLookups());
+          // IsUpdateFtn("Divisions", false);
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
@@ -6368,55 +6534,53 @@ debugger
               <Col span={12}>
                 <MyInput
                   label="Code"
-                  name="RegionCode"
-                  value={drawerIpnuts?.ContactType?.RegionCode}
+                  name="code"
+                  value={drawerIpnuts?.ContactType?.code}
                   onChange={(val) =>
-                    drawrInptChng("ContactType", "RegionCode", val)
+                    drawrInptChng("ContactType", "code", val.target.value)
                   }
                   disabled={isDisable}
-                  hasError={!!errors?.ContactType?.RegionCode}
-                  errorMessage={errors?.ContactType?.RegionCode}
+                  hasError={!!errors?.ContactType?.code}
+                  errorMessage={errors?.ContactType?.code}
                   required
                 />
               </Col>
-
               <Col span={12}>
                 <MyInput
                   label="Contact Type"
                   name="ContactType"
-                  value={drawerIpnuts?.ContactType?.ContactType}
+                  value={drawerIpnuts?.ContactType?.contactType}
                   onChange={(val) =>
-                    drawrInptChng("ContactType", "ContactType", val)
+                    drawrInptChng("ContactType", "contactType", val.target.value)
                   }
                   disabled={isDisable}
-                  hasError={!!errors?.ContactType?.ContactType}
-                  errorMessage={errors?.ContactType?.ContactType}
+                  hasError={!!errors?.ContactType?.contactType}
+                  errorMessage={errors?.ContactType?.contactType}
                   required
                 />
               </Col>
             </Row>
-
             <Row gutter={24}>
               <Col span={12}>
                 <MyInput
                   label="Display Name"
                   name="DisplayName"
-                  value={drawerIpnuts?.ContactType?.DisplayName}
+                  value={drawerIpnuts?.ContactType?.displayName}
                   onChange={(val) =>
-                    drawrInptChng("ContactType", "DisplayName", val)
+                    drawrInptChng("ContactType", "displayName", val.target.value)
                   }
                   disabled={isDisable}
-                  hasError={!!errors?.ContactType?.DisplayName}
-                  errorMessage={errors?.ContactType?.DisplayName}
+                  hasError={!!errors?.contactType?.displayName}
+                  errorMessage={errors?.contactType?.displayName}
                 />
               </Col>
 
               <Col span={12}>
                 <Checkbox
                   disabled={isDisable}
-                  checked={drawerIpnuts?.ContactType?.isActive}
+                  checked={drawerIpnuts?.ContactType?.isactive}
                   onChange={(e) =>
-                    drawrInptChng("ContactType", "isActive", e.target.checked)
+                    drawrInptChng("ContactType", "isactive", e.target.checked)
                   }
                   style={{ marginTop: 26 }} // aligns with input fields
                 >
@@ -9104,221 +9268,213 @@ debugger
       <MyDrawer
         title="Solicitors"
         open={drawerOpen?.Solicitors}
-        isPagination={true}
+        isPagination={false}
         onClose={() => openCloseDrawerFtn("Solicitors")}
         add={() => {
           if (!validateSolicitors("Solicitors")) return;
           insertDataFtn(
-            `/contact`,
+            `/api/contacts`,
             drawerIpnuts?.Solicitors,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Solicitors", () => dispatch(getContacts()))
+            () => {
+              resetCounteries("Solicitors", () => dispatch(getContacts()))
+              dispatch(getContacts())
+            }
           );
-          dispatch(getContacts());
         }}
         update={async () => {
+        const simplified = simplifyContact(drawerIpnuts?.Solicitors);
           if (!validateSolicitors("Solicitors")) return;
-          await updateFtn("/contact", drawerIpnuts?.Solicitors, () =>
+          await updateFtn(`/api/contacts/${drawerIpnuts?.Solicitors?.id}`, simplified, () =>
             resetCounteries("Solicitors", () => dispatch(getContacts()))
+
           );
-          dispatch(getAllLookups());
-          IsUpdateFtn("Solicitors", false);
+          // dispatch(getAllLookups());
+          // IsUpdateFtn("Solicitors", false);
         }}
         isEdit={isUpdateRec?.Solicitors}
         width={"1020px"}
       >
         {/* Personal Information */}
-       <div className="drawer-main-container">
+        <div className="drawer-main-container">
 
-  {/* Personal Information */}
-  <h3 className="section-title">Personal Information</h3>
-  <div className="drawer-section">
-    <Row gutter={24}>
-      <Col xs={24} md={12}>
-        <CustomSelect
-          label="Contact Type:"
-          placeholder="Select Contact type"
-          options={selectLokups?.contactTypes}
-          value={drawerIpnuts?.Solicitors?.ContactTypeID}
-          onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
-          disabled={isDisable}
-          required
-          hasError={!!errors?.Solicitors?.ContactTypeID}
-          errorMessage={errors?.Solicitors?.ContactTypeID}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <CustomSelect
-          label="Title:"
-          placeholder="Select Title"
-          options={lookupsForSelect?.Titles}
-          value={drawerIpnuts?.Solicitors?.Title}
-          onChange={(e) => drawrInptChng("Solicitors", "Title", e)}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Forename:"
-          value={drawerIpnuts?.Solicitors?.Forename}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "Forename", e.target.value)
-          }
-          disabled={isDisable}
-          required
-          hasError={!!errors?.Solicitors?.Forename}
-          errorMessage={errors?.Solicitors?.Forename}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Surname:"
-          value={drawerIpnuts?.Solicitors?.Surname}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "Surname", e.target.value)
-          }
-          disabled={isDisable}
-          required
-          hasError={!!errors?.Solicitors?.Surname}
-          errorMessage={errors?.Solicitors?.Surname}
-        />
-      </Col>
-    </Row>
-  </div>
+          {/* Personal Information */}
+          <h4 className="">Personal Information</h4>
+          <div className="drawer-section">
+            <Row gutter={24}>
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Contact Type:"
+                  placeholder="Select Contact Type"
+                  options={contactTypelookup}
+                  value={drawerIpnuts?.Solicitors?.contactTypeId}
+                  onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.contactTypeId}
+                  errorMessage={errors?.Solicitors?.contactTypeId}
+                />
+              </Col>
 
-  {/* Contact Information */}
-  <h3 className="section-title mt-4">Contact Information</h3>
-  <div className="drawer-section">
-    <Row gutter={24}>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Email:"
-          value={drawerIpnuts?.Solicitors?.ContactEmail}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "ContactEmail", e.target.value)
-          }
-          disabled={isDisable}
-          required
-          hasError={!!errors?.Solicitors?.ContactEmail}
-          errorMessage={errors?.Solicitors?.ContactEmail}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Mobile:"
-          value={drawerIpnuts?.Solicitors?.ContactPhone}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "ContactPhone", e.target.value)
-          }
-          disabled={isDisable}
-          required
-          hasError={!!errors?.Solicitors?.ContactPhone}
-          errorMessage={errors?.Solicitors?.ContactPhone}
-        />
-      </Col>
-    </Row>
-  </div>
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Title:"
+                  placeholder="Select Title"
+                  options={lookupsForSelect?.Titles}
+                  disabled={true}
+                  value={drawerIpnuts?.Solicitors?.title}
+                  onChange={(e) => drawrInptChng("Solicitors", "title", e.target.value)}
+                />
+              </Col>
 
-  {/* Address */}
-  <h3 className="section-title mt-4">Address</h3>
-  <div className="drawer-section">
-    <Row gutter={24}>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Building or House:"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.BuildingOrHouse",
-              e.target.value
-            )
-          }
-          disabled={isDisable}
-          hasError={!!errors?.Solicitors?.BuildingOrHouse}
-          errorMessage={errors?.Solicitors?.BuildingOrHouse}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Street or Road:"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.StreetOrRoad",
-              e.target.value
-            )
-          }
-          disabled={isDisable}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Area or Town:"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.AreaOrTown",
-              e.target.value
-            )
-          }
-          disabled={isDisable}
-          hasError={!!errors?.Solicitors?.AreaOrTown}
-          errorMessage={errors?.Solicitors?.AreaOrTown}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="County, City or Postcode:"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.CityCountyOrPostCode",
-              e.target.value
-            )
-          }
-          disabled={isDisable}
-        />
-      </Col>
-      <Col xs={24} md={12}>
-        <MyInput
-          label="Eircode:"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.Eircode",
-              e.target.value
-            )
-          }
-          disabled={isDisable}
-        />
-      </Col>
-    </Row>
-  </div>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Forename:"
+                  value={drawerIpnuts?.Solicitors?.forename}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "forename", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.forename}
+                  errorMessage={errors?.Solicitors?.forename}
+                />
+              </Col>
 
-  {/* Table */}
-  <div className="mt-4 config-tbl-container">
-    <Table
-      pagination={false}
-      columns={columnsSolicitors}
-      dataSource={data?.Solicitors}
-      loading={contactsLoading}
-      className="drawer-tbl"
-      rowClassName={(record, index) =>
-        index % 2 !== 0 ? "odd-row" : "even-row"
-      }
-      rowSelection={{
-        type: selectionType,
-        ...rowSelection,
-      }}
-      bordered
-    />
-  </div>
-</div>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Surname:"
+                  value={drawerIpnuts?.Solicitors?.surname}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "surname", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.surname}
+                  errorMessage={errors?.Solicitors?.surname}
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Contact Information */}
+          <h4 className="">Contact Information</h4>
+          <div className="drawer-section">
+            <Row gutter={24}>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Email:"
+                  type="email"
+                  value={drawerIpnuts?.Solicitors?.contactEmail}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactEmail", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.contactEmail}
+                  errorMessage={errors?.Solicitors?.contactEmail}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Mobile:"
+                  type="mobile"
+                  value={drawerIpnuts?.Solicitors?.contactPhone}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactPhone", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.contactPhone}
+                  errorMessage={errors?.Solicitors?.contactPhone}
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Address */}
+          <h4 className="section-title">Address</h4>
+          <div className="drawer-section">
+            <Row gutter={24}>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Building or House:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.buildingOrHouse", e.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Solicitors?.buildingOrHouse}
+                  errorMessage={errors?.Solicitors?.buildingOrHouse}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Street or Road:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.streetOrRoad}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.streetOrRoad", e.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Area or Town:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.areaOrTown}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.areaOrTown", e.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Solicitors?.areaOrTown}
+                  errorMessage={errors?.Solicitors?.areaOrTown}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="County, City or Postcode:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.cityCountyOrPostCode", e.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Eircode:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.eircode}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.eircode", e.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+            </Row>
+            <Table
+              pagination={false}
+              columns={columnsSolicitors}
+              dataSource={data?.Solicitors}
+              loading={contactsLoading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+
 
 
       </MyDrawer>

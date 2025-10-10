@@ -9,7 +9,7 @@ export const getContactTypes = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${baseURL}/contacttype`, {
+      const response = await axios.get(`${baseURL}/api/contact-types`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -46,7 +46,7 @@ const contactTypeSlice = createSlice({
       })
       .addCase(getContactTypes.fulfilled, (state, action) => {
         state.contactTypesloading = false;
-        state.contactTypes = action.payload;
+        state.contactTypes = action.payload?.data;
       })
       .addCase(getContactTypes.rejected, (state, action) => {
         state.contactTypesloading = false;

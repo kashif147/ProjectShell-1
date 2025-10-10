@@ -1113,8 +1113,8 @@ useEffect(() => {
   useEffect(() => {
     if (contactTypes) {
       const transformedData = contactTypes.map(item => ({
-        key: item?._id,
-        label: item?.ContactType,
+        value: item?._id,
+        label: item?.contactType,
       }));
 
       setSelectLokups(prevState => ({

@@ -91,6 +91,22 @@ function MyDrawer({
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
+    // const { contacts, contactsLoading } = useSelector((state) => state.contact);
+    const [contactTypelookup, setcontactTypelookup] = useState([])
+    useEffect(() => {
+      if (contactTypes) {
+        let arr = []
+        let obj = {}
+        contactTypes.map((ct) => {
+          obj = {
+            label: ct?.contactType,
+            value: ct?._id
+          }
+          arr.push(obj)
+        })
+        setcontactTypelookup(arr)
+      }
+    }, [contactTypes])
   const dispatch = useDispatch();
   const drawerInputsInitalValues = {
     Solicitors: {
@@ -199,34 +215,25 @@ function MyDrawer({
   const [errors, setErrors] = useState();
   const [isUpdate, setisUpdate] = useState();
 
-  const validateSolicitors = (drawerType) => {
-    let newErrors = { [drawerType]: {} };
+ const validateSolicitors = (drawerType) => {
+  let newErrors = { [drawerType]: {} };
 
-    if (drawerType === "Solicitors") {
-      if (!drawerIpnuts?.Solicitors?.Forename) {
-        newErrors[drawerType].Forename = "Required";
-      }
-      if (!drawerIpnuts?.Solicitors?.Surname) {
-        newErrors[drawerType].Surname = "Required";
-      }
-      if (!drawerIpnuts?.Solicitors?.ContactEmail) {
-        newErrors[drawerType].ContactEmail = "Required";
-      }
-      if (!drawerIpnuts?.Solicitors?.ContactPhone) {
-        newErrors[drawerType].ContactPhone = "Required";
-      }
-      if (!drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse) {
-        newErrors[drawerType].BuildingOrHouse = "Required";
-      }
-      if (!drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown) {
-        newErrors[drawerType].AreaOrTown = "Required";
-      }
-    }
-    // Set errors only if there are validation failures
-    setErrors(newErrors);
-    // Check if there are any errors in the object
-    return Object.keys(newErrors[drawerType]).length === 0;
-  };
+  if (drawerType === "Solicitors") {
+    const s = drawerIpnuts?.Solicitors || {};
+
+    if (!s?.forename) newErrors[drawerType].forename = "Required";
+    if (!s?.surname) newErrors[drawerType].surname = "Required";
+    if (!s?.contactEmail) newErrors[drawerType].contactEmail = "Required";
+    if (!s?.contactPhone) newErrors[drawerType].contactPhone = "Required";
+    if (!s?.contactAddress?.buildingOrHouse)
+      newErrors[drawerType].buildingOrHouse = "Required";
+    if (!s?.contactAddress?.areaOrTown)
+      newErrors[drawerType].areaOrTown = "Required";
+  }
+
+  setErrors(newErrors);
+  return Object.keys(newErrors[drawerType]).length === 0;
+};
 
   const CriticalIllnessSchemePaymentsClm = [
     {
@@ -589,17 +596,18 @@ function MyDrawer({
     }
   };
   const addFtn = () => {
-    if (!validateSolicitors("Solicitors")) return;
-    insertDataFtn(
-      `/contact`,
-      drawerIpnuts?.Solicitors,
-      "Data inserted successfully:",
-      "Data did not insert:",
-      () => {
-        resetCounteries("Solicitors");
-      }
-    );
-  };
+  if (!validateSolicitors("Solicitors")) return;
+  insertDataFtn(
+    process.env.REACT_APP_API_URL ,
+    `/api/contacts`,
+    drawerIpnuts?.Solicitors,
+    "Data inserted successfully:",
+    "Data did not insert:",
+    () => {
+      resetCounteries("Solicitors");
+    }
+  );
+};
 
   return (
   <Drawer
@@ -770,7 +778,7 @@ function MyDrawer({
   open={contactDrawer}
   onClose={() => setcontactDrawer(!contactDrawer)}
   width="1040px"
-  title="Solicitor1s"
+  title="IRO"
   extra={
     <Space>
       <Button
@@ -801,7 +809,7 @@ function MyDrawer({
         <CustomSelect
           label="Contact Type:"
           placeholder="Select Contact type"
-          options={selectLokups?.contactTypes}
+          options={contactTypes}
           value={drawerIpnuts?.Solicitors?.ContactTypeID}
           onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
           required
