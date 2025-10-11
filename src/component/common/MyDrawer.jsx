@@ -1,4 +1,4 @@
-import { React, useState, useEffect, useContext } from "react";
+import { React, useState, useEffect, useContext, useMemo } from "react";
 import {
   Button,
   Drawer,
@@ -8,9 +8,10 @@ import {
   Table,
   Checkbox,
   Radio,
-  Row,Col
+  Row, Col
 } from "antd";
 import MySelect from "./MySelect";
+
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
@@ -27,7 +28,7 @@ import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
 import { getContactTypes } from "../../features/ContactTypeSlice";
 import MyConfirm from "../common/MyConfirm";
-import { deleteFtn } from "../../utils/Utilities";
+import { deleteFtn, updateFtn } from "../../utils/Utilities";
 import { getContacts } from "../../features/ContactSlice";
 import CommonPopConfirm from "./CommonPopConfirm";
 import { baseURL } from "../../utils/Utilities";
@@ -38,6 +39,7 @@ import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import MemberSearch from "../profile/MemberSearch";
 import "../../styles/Configuration.css";
+
 
 function MyDrawer({
   title,
@@ -61,7 +63,7 @@ function MyDrawer({
   isrecursion = false,
   total,
   onChange,
-  pageSize=10,
+  pageSize = 10,
   showSizeChanger = true,
   showQuickJumper = true,
   isGarda,
@@ -82,54 +84,62 @@ function MyDrawer({
   const {
     selectLokups,
     lookupsForSelect,
-    contactTypes,
+    // contactTypes,
     disableFtn,
     isDisable,
   } = useTableColumns();
   const { excelData, selectedRowIndex, selectedRowData } =
     useContext(ExcelContext);
+  const dispatch = useDispatch();
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
-    // const { contacts, contactsLoading } = useSelector((state) => state.contact);
-    const [contactTypelookup, setcontactTypelookup] = useState([])
-    useEffect(() => {
-      if (contactTypes) {
-        let arr = []
-        let obj = {}
-        contactTypes.map((ct) => {
-          obj = {
-            label: ct?.contactType,
-            value: ct?._id
-          }
-          arr.push(obj)
-        })
-        setcontactTypelookup(arr)
-      }
-    }, [contactTypes])
-  const dispatch = useDispatch();
+  const { contactTypes, contactTypesloading, error } = useSelector(
+    (state) => state.contactType
+  );
+  const { contacts, contactsLoading } = useSelector((state) => state.contact);
+  const [contactTypelookup, setcontactTypelookup] = useState([])
+  useEffect(() => {
+    if (contactTypes) {
+      let arr = []
+      let obj = {}
+      contactTypes.map((ct) => {
+        obj = {
+          label: ct?.contactType,
+          value: ct?._id
+        }
+        arr.push(obj)
+      })
+      setcontactTypelookup(arr)
+    }
+  }, [contactTypes])
+
   const drawerInputsInitalValues = {
     Solicitors: {
-      ContactName: "",
-      ContactPhone: "",
-      ContactEmail: "",
-      ContactAddress: {
-        BuildingOrHouse: "",
-        StreetOrRoad: "",
-        AreaOrTown: "",
-        CityCountyOrPostCode: "",
-        Eircode: "",
+      forename: "",
+      surname: "",
+      contactPhone: "",
+      contactEmail: "",
+      contactAddress: {
+        buildingOrHouse: "",
+        streetOrRoad: "",
+        areaOrTown: "",
+        cityCountyOrPostCode: "",
+        eircode: "",
       },
-      ContactTypeID: "",
-      isDeleted: false,
+      contactTypeId: "68ea77798ff5d8c2b3f175c4",
+      isactive: true,     // ✅ added based on API field
+      isDeleted: false,   // keep this if your app uses soft-delete flag
     },
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
   useEffect(() => {
     if (contactDrawer) {
       dispatch(getContactTypes());
+      dispatch(getContacts());
     }
   }, [contactDrawer]);
+
   const Navigate = useNavigate();
   const location = useLocation();
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
@@ -213,27 +223,31 @@ function MyDrawer({
   };
 
   const [errors, setErrors] = useState();
-  const [isUpdate, setisUpdate] = useState();
+  const [isUpdate, setisUpdate] = useState({
+    Contacts: false,
+  });
 
- const validateSolicitors = (drawerType) => {
-  let newErrors = { [drawerType]: {} };
+  const validateSolicitors = (drawerType) => {
 
-  if (drawerType === "Solicitors") {
-    const s = drawerIpnuts?.Solicitors || {};
+    let newErrors = { [drawerType]: {} };
 
-    if (!s?.forename) newErrors[drawerType].forename = "Required";
-    if (!s?.surname) newErrors[drawerType].surname = "Required";
-    if (!s?.contactEmail) newErrors[drawerType].contactEmail = "Required";
-    if (!s?.contactPhone) newErrors[drawerType].contactPhone = "Required";
-    if (!s?.contactAddress?.buildingOrHouse)
-      newErrors[drawerType].buildingOrHouse = "Required";
-    if (!s?.contactAddress?.areaOrTown)
-      newErrors[drawerType].areaOrTown = "Required";
-  }
+    if (drawerType === "Solicitors") {
+      const s = drawerIpnuts?.Solicitors || {};
 
-  setErrors(newErrors);
-  return Object.keys(newErrors[drawerType]).length === 0;
-};
+      if (!s?.forename) newErrors[drawerType].forename = "Required";
+      if (!s?.surname) newErrors[drawerType].surname = "Required";
+      if (!s?.contactEmail) newErrors[drawerType].contactEmail = "Required";
+      if (!s?.contactPhone) newErrors[drawerType].contactPhone = "Required";
+      if (!s?.contactAddress?.buildingOrHouse)
+        newErrors[drawerType].buildingOrHouse = "Required";
+      if (!s?.contactAddress?.areaOrTown)
+        newErrors[drawerType].areaOrTown = "Required";
+    }
+
+    setErrors(newErrors);
+    debugger
+    return Object.keys(newErrors[drawerType]).length === 0;
+  };
 
   const CriticalIllnessSchemePaymentsClm = [
     {
@@ -449,7 +463,6 @@ function MyDrawer({
       [name]: value, // Update only the `timeDur` property
     }));
   };
-  const { contactsLoading } = useSelector((state) => state.contactType);
   const [isUpdateRec, setisUpdateRec] = useState({ Solicitors: false });
   const addIdKeyToLookup = (idValue, drawer) => {
     setdrawerIpnuts((prev) => {
@@ -498,51 +511,61 @@ function MyDrawer({
       },
     }));
   };
+  function simplifyContact(contact) {
+  // Create a shallow copy to avoid mutating the original
+  const cleaned = { ...contact };
+
+  if (cleaned.contactTypeId && cleaned.contactTypeId._id) {
+    cleaned.contactTypeId = cleaned.contactTypeId._id;
+  }
+
+  return cleaned;
+}
   const columnsSolicitors = [
     {
       title: "Surname",
-      dataIndex: "Surname",
-      key: "Surname",
+      dataIndex: "surname",
+      key: "surname",
     },
     {
       title: "Forename",
-      dataIndex: "Forename",
-      key: "Forename",
+      dataIndex: "forename",
+      key: "forename",
     },
     {
       title: "Phone",
-      dataIndex: "ContactPhone",
-      key: "ContactPhone",
+      dataIndex: "contactPhone",
+      key: "contactPhone",
     },
     {
       title: "Email",
-      dataIndex: "ContactEmail",
-      key: "ContactEmail",
+      dataIndex: "contactEmail",
+      key: "contactEmail",
     },
     {
       title: "Building/House",
-      dataIndex: ["ContactAddress", "BuildingOrHouse"],
-      key: "BuildingOrHouse",
+      dataIndex: ["contactAddress", "buildingOrHouse"],
+      key: "buildingOrHouse",
     },
     {
       title: "Street/Road",
-      dataIndex: ["ContactAddress", "StreetOrRoad"],
-      key: "StreetOrRoad",
+      dataIndex: ["contactAddress", "streetOrRoad"],
+      key: "streetOrRoad",
     },
     {
       title: "Area/Town",
-      dataIndex: ["ContactAddress", "AreaOrTown"],
-      key: "AreaOrTown",
+      dataIndex: ["contactAddress", "areaOrTown"],
+      key: "areaOrTown",
     },
     {
       title: "City/Postcode",
-      dataIndex: ["ContactAddress", "CityCountyOrPostCode"],
-      key: "CityCountyOrPostCode",
+      dataIndex: ["contactAddress", "cityCountyOrPostCode"],
+      key: "cityCountyOrPostCode",
     },
     {
       title: "Eircode",
-      dataIndex: ["ContactAddress", "Eircode"],
-      key: "Eircode",
+      dataIndex: ["contactAddress", "eircode"],
+      key: "eircode",
     },
     {
       title: (
@@ -563,7 +586,7 @@ function MyDrawer({
         <Space size="middle">
           <FaEdit
             size={16}
-            style={{ marginRight: "10px" }}
+            style={{ marginRight: "10px", cursor: "pointer" }}
             onClick={() => {
               IsUpdateFtn("Solicitors", !isUpdateRec?.Solicitors, record);
               addIdKeyToLookup(record?._id, "Solicitors");
@@ -571,13 +594,14 @@ function MyDrawer({
           />
           <AiFillDelete
             size={16}
+            style={{ cursor: "pointer" }}
             onClick={() =>
               MyConfirm({
                 title: "Confirm Deletion",
-                message: "Do You Want To Delete This Item?",
+                message: "Do you want to delete this solicitor?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/contact`, record?._id);
-                  dispatch(getContacts());
+                  await deleteFtn(`${baseURL}/api/contacts/${record?._id}`, null, () => resetCounteries("Solicitors",dispatch(getContacts())));
+await dispatch(getContacts())
                 },
               })
             }
@@ -596,162 +620,181 @@ function MyDrawer({
     }
   };
   const addFtn = () => {
-  if (!validateSolicitors("Solicitors")) return;
-  insertDataFtn(
-    process.env.REACT_APP_API_URL ,
-    `/api/contacts`,
-    drawerIpnuts?.Solicitors,
-    "Data inserted successfully:",
-    "Data did not insert:",
-    () => {
-      resetCounteries("Solicitors");
+    if (!validateSolicitors("Solicitors")) return;
+    insertDataFtn(
+      process.env.REACT_APP_API_URL,
+      `/api/contacts`,
+      drawerIpnuts?.Solicitors,
+      "Data inserted successfully:",
+      "Data did not insert:",
+      () => {
+        resetCounteries("Solicitors", dispatch(getContacts()));
+      }
+    );
+  };
+  const updatftn = async() => {
+          const simplified = simplifyContact(drawerIpnuts?.Solicitors);
+            if (!validateSolicitors("Solicitors")) return;
+            await updateFtn(`/api/contacts/${drawerIpnuts?.Solicitors?.id}`, simplified, () =>
+              resetCounteries("Solicitors", () => dispatch(getContacts()))
+  
+          )
+            // dispatch(getAllLookups());
+            // IsUpdateFtn("Solicitors", false);
+          }
+  useMemo(() => {
+    if (contacts && Array.isArray(contacts)) {
+      setdata((prevState) => ({
+        ...prevState,
+        Solicitors: contacts.filter(
+          (item) => item?.contactTypeId?.contactType === "IRO"
+        ),
+      }));
     }
-  );
-};
-
+  }, [contacts]);
   return (
-  <Drawer
-  width={width}
-  title={title}
-  placement="right"
-  onClose={onClose}
-  open={open}
-  extra={
-    extra || (
-      <div className="d-flex flex-wrap align-items-center gap-3">
-        {/* Contact Button */}
-        {isContact && (
-          <Button
-            onClick={() => setcontactDrawer(!contactDrawer)}
-            className="butn"
-            style={{ color: "#215E97" }}
-          >
-            Add IRO
-          </Button>
-        )}
+    <Drawer
+      width={width}
+      title={title}
+      placement="right"
+      onClose={onClose}
+      open={open}
+      extra={
+        extra || (
+          <div className="d-flex flex-wrap align-items-center gap-3">
+            {/* Contact Button */}
+            {isContact && (
+              <Button
+                onClick={() => setcontactDrawer(!contactDrawer)}
+                className="butn"
+                style={{ color: "#215E97" }}
+              >
+                Add IRO
+              </Button>
+            )}
 
-        {/* Add Member */}
-        {isAddMemeber && (
-          <Button
-            onClick={() => setcontactDrawer(!contactDrawer)}
-            className="butn"
-            style={{ color: "#215E97" }}
-          >
-            <FaUserAlt /> Add Member
-          </Button>
-        )}
+            {/* Add Member */}
+            {isAddMemeber && (
+              <Button
+                onClick={() => setcontactDrawer(!contactDrawer)}
+                className="butn"
+                style={{ color: "#215E97" }}
+              >
+                <FaUserAlt /> Add Member
+              </Button>
+            )}
 
-        {/* Payment */}
-        {isPyment && (
-          <Button
-            onClick={() => setisPayment(!isPayment)}
-            className="butn secondary"
-            style={{ color: "#215E97" }}
-          >
-            Add Payment
-          </Button>
-        )}
+            {/* Payment */}
+            {isPyment && (
+              <Button
+                onClick={() => setisPayment(!isPayment)}
+                className="butn secondary"
+                style={{ color: "#215E97" }}
+              >
+                Add Payment
+              </Button>
+            )}
 
-        {/* Approvals */}
-        {isAprov && (
-          <Button
-            onClick={() => setisAproved(!isAproved)}
-            className="butn secondary"
-            style={{ color: "#215E97" }}
-          >
-            Approvals
-          </Button>
-        )}
+            {/* Approvals */}
+            {isAprov && (
+              <Button
+                onClick={() => setisAproved(!isAproved)}
+                className="butn secondary"
+                style={{ color: "#215E97" }}
+              >
+                Approvals
+              </Button>
+            )}
 
-        {/* Recursion */}
-        {isrecursion && (
-          <Button
-            onClick={() => setisRecursion(!isRecursion)}
-            className="butn secondary"
-            style={{ color: "#215E97" }}
-          >
-            Recursion <BiRefresh style={{ fontSize: "18px" }} />
-          </Button>
-        )}
+            {/* Recursion */}
+            {isrecursion && (
+              <Button
+                onClick={() => setisRecursion(!isRecursion)}
+                className="butn secondary"
+                style={{ color: "#215E97" }}
+              >
+                Recursion <BiRefresh style={{ fontSize: "18px" }} />
+              </Button>
+            )}
 
-        {/* Member Search for Registration */}
-        {title === "Registration Request" && <MemberSearch />}
+            {/* Member Search for Registration */}
+            {title === "Registration Request" && <MemberSearch />}
 
-        {/* NOK & Insurance */}
-        {isAss && (
-          <>
-            <Button className="gray-btn butn" onClick={onClose}>
-              <FaFile /> NOK
-            </Button>
-            <Button className="gray-btn butn">
-              <FaFile /> Ins.Co.
-            </Button>
-          </>
-        )}
+            {/* NOK & Insurance */}
+            {isAss && (
+              <>
+                <Button className="gray-btn butn" onClick={onClose}>
+                  <FaFile /> NOK
+                </Button>
+                <Button className="gray-btn butn">
+                  <FaFile /> Ins.Co.
+                </Button>
+              </>
+            )}
 
-        {/* Bulk Registration */}
-        {isMultiple?.isGardaCheckbx && (
-          <Checkbox
-            value={isMultiple?.value}
-            onChange={isMultiple?.multipleFtn}
-          >
-            Bulk Registration
-          </Checkbox>
-        )}
+            {/* Bulk Registration */}
+            {isMultiple?.isGardaCheckbx && (
+              <Checkbox
+                value={isMultiple?.value}
+                onChange={isMultiple?.multipleFtn}
+              >
+                Bulk Registration
+              </Checkbox>
+            )}
 
-        {/* Approval / Rejection */}
-        {isAppRej && (
-          <Radio.Group value="">
-            <Radio value="approved" onClick={handleChangeApprove}>
-              Approve
-            </Radio>
-            <CommonPopConfirm
-              title="Are you sure you want to reject?"
-              onConfirm={rejFtn}
-            >
-              <Radio value="rejected">Reject</Radio>
-            </CommonPopConfirm>
-          </Radio.Group>
-        )}
+            {/* Approval / Rejection */}
+            {isAppRej && (
+              <Radio.Group value="">
+                <Radio value="approved" onClick={handleChangeApprove}>
+                  Approve
+                </Radio>
+                <CommonPopConfirm
+                  title="Are you sure you want to reject?"
+                  onConfirm={rejFtn}
+                >
+                  <Radio value="rejected">Reject</Radio>
+                </CommonPopConfirm>
+              </Radio.Group>
+            )}
 
-        {/* Add / Update / Submit */}
-        {isDisable ? (
-          <Button className="butn primary-btn" onClick={() => disableFtn(false)}>
-            Add
-          </Button>
-        ) : (
-          <Button
-            className="butn primary-btn"
-            onClick={() => {
-              if (!isEdit) {
-                add();
-              } else {
-                update();
-              }
-            }}
-          >
-            {isEdit ? "Update" : "Submit"}
-          </Button>
-        )}
+            {/* Add / Update / Submit */}
+            {isDisable ? (
+              <Button className="butn primary-btn" onClick={() => disableFtn(false)}>
+                Add
+              </Button>
+            ) : (
+              <Button
+                className="butn primary-btn"
+                onClick={() => {
+                  if (!isEdit) {
+                    add();
+                  } else {
+                    update();
+                  }
+                }}
+              >
+                {isEdit ? "Update" : "Submit"}
+              </Button>
+            )}
 
-        {/* Prev / Next Navigation */}
-        {(isGarda || isManual) && (
-          <div className="d-flex align-items-center">
-            <Button className="gray-btn butn me-1" onClick={PrevFtn}>
-              <FaAngleLeft className="deatil-header-icon" />
-            </Button>
-            <p className="m-0" style={{ fontWeight: 500, fontSize: "14px" }}>
-              {nextPrevData?.currentApp} of {nextPrevData?.total}
-            </p>
-            <Button className="gray-btn butn ms-1" onClick={nextFtn}>
-              <FaAngleRight className="deatil-header-icon" />
-            </Button>
+            {/* Prev / Next Navigation */}
+            {(isGarda || isManual) && (
+              <div className="d-flex align-items-center">
+                <Button className="gray-btn butn me-1" onClick={PrevFtn}>
+                  <FaAngleLeft className="deatil-header-icon" />
+                </Button>
+                <p className="m-0" style={{ fontWeight: 500, fontSize: "14px" }}>
+                  {nextPrevData?.currentApp} of {nextPrevData?.total}
+                </p>
+                <Button className="gray-btn butn ms-1" onClick={nextFtn}>
+                  <FaAngleRight className="deatil-header-icon" />
+                </Button>
+              </div>
+            )}
           </div>
-        )}
-      </div>
-    )
-  }
->
+        )
+      }
+    >
 
       <div
         className="drawer-main-cntainer"
@@ -774,234 +817,210 @@ function MyDrawer({
         )}
       </div>
 
-<Drawer
-  open={contactDrawer}
-  onClose={() => setcontactDrawer(!contactDrawer)}
-  width="1040px"
-  title="IRO"
-  extra={
-    <Space>
-      <Button
-        className="butn secoundry-btn"
-        onClick={() => setcontactDrawer(!contactDrawer)}
-      >
-        Close
-      </Button>
-      <Button
-        className="butn primary-btn"
-        onClick={isUpdate?.Contacts == true ? update : addFtn}
-        onKeyDown={(event) =>
-          event.key === "Enter" &&
-          (isUpdate?.Contacts ? update() : addFtn())
+      <Drawer
+        open={contactDrawer}
+        onClose={() => setcontactDrawer(!contactDrawer)}
+        width="1040px"
+        title="IRO"
+        extra={
+          <Space>
+            <Button
+              className="butn secoundry-btn"
+              onClick={() => setcontactDrawer(!contactDrawer)}
+            >
+              Close
+            </Button>
+            <Button
+              className="butn primary-btn"
+              onClick={() => isUpdate?.Contacts == true ? update() : isDisable === true ? disableFtn(false) : addFtn()}
+              onKeyDown={(event) =>
+                event.key === "Enter" &&
+                (() => isUpdate?.Contacts == true ? updatftn() : isDisable === false ? disableFtn(true) : addFtn())
+              }
+            >
+              {isUpdate?.Contacts === true ? "Update" : isDisable === true ? "Add" : "Submit"}
+            </Button>
+          </Space>
         }
       >
-        {isUpdate?.Contacts == true ? "Save" : "Add"}
-      </Button>
-    </Space>
-  }
->
-  <div className="drawer-main-container">
+        <div className="drawer-main-container">
 
-    {/* Personal Information */}
-    <h3 className="section-title">Personal Information</h3>
-    <Row gutter={16}>
-      <Col span={12}>
-        <CustomSelect
-          label="Contact Type:"
-          placeholder="Select Contact type"
-          options={contactTypes}
-          value={drawerIpnuts?.Solicitors?.ContactTypeID}
-          onChange={(e) => drawrInptChng("Solicitors", "ContactTypeID", e)}
-          required
-          hasError={!!errors?.Solicitors?.ContactTypeID}
-          errorMessage={errors?.Solicitors?.ContactTypeID}
-        />
-      </Col>
-      <Col span={12}>
-        <CustomSelect
-          label="Title:"
-          placeholder="Select Title"
-          options={lookupsForSelect?.Titles}
-          value={drawerIpnuts?.Solicitors?.Title}
-          onChange={(e) => drawrInptChng("Solicitors", "Title", e)}
-        />
-      </Col>
-    </Row>
-    <Row gutter={16}>
-      <Col span={12}>
-        <MyInput
-          label="Forename:"
-          name="Forename"
-          placeholder="Enter forename"
-          value={drawerIpnuts?.Solicitors?.Forename}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "Forename", e.target.value)
-          }
-          required
-          hasError={!!errors?.Solicitors?.Forename}
-          errorMessage={errors?.Solicitors?.Forename}
-        />
-      </Col>
-      <Col span={12}>
-        <MyInput
-          label="Surname:"
-          name="Surname"
-          placeholder="Enter surname"
-          value={drawerIpnuts?.Solicitors?.Surname}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "Surname", e.target.value)
-          }
-          required
-          hasError={!!errors?.Solicitors?.Surname}
-          errorMessage={errors?.Solicitors?.Surname}
-        />
-      </Col>
-    </Row>
+          {/* Personal Information */}
+          <h4 className="">Personal Information</h4>
+          <div className="drawer-section">
+            <Row gutter={24}>
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Contact Type:"
+                  placeholder="Select Contact Type"
+                  options={contactTypelookup}
+                  value={drawerIpnuts?.Solicitors?.contactTypeId}
+                  onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
+                  disabled={true}
+                  required
+                  hasError={!!errors?.Solicitors?.contactTypeId}
+                  errorMessage={errors?.Solicitors?.contactTypeId}
+                />
+              </Col>
 
-    {/* Contact Information */}
-    <h3 className="section-title mt-4">Contact Information</h3>
-    <Row gutter={16}>
-      <Col span={12}>
-        <MyInput
-          label="Email:"
-          name="ContactEmail"
-          type="email"
-          placeholder="Enter email"
-          value={drawerIpnuts?.Solicitors?.ContactEmail}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "ContactEmail", e.target.value)
-          }
-          required
-          hasError={!!errors?.Solicitors?.ContactEmail}
-          errorMessage={errors?.Solicitors?.ContactEmail}
-        />
-      </Col>
-      <Col span={12}>
-        <MyInput
-          label="Mobile:"
-          name="ContactPhone"
-          placeholder="Enter mobile number"
-          value={drawerIpnuts?.Solicitors?.ContactPhone}
-          onChange={(e) =>
-            drawrInptChng("Solicitors", "ContactPhone", e.target.value)
-          }
-          required
-          hasError={!!errors?.Solicitors?.ContactPhone}
-          errorMessage={errors?.Solicitors?.ContactPhone}
-        />
-      </Col>
-    </Row>
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Title:"
+                  placeholder="Select Title"
+                  options={lookupsForSelect?.Titles}
+                  disabled={true}
+                  value={drawerIpnuts?.Solicitors?.title}
+                  onChange={(e) => drawrInptChng("Solicitors", "title", e.target.value)}
+                />
+              </Col>
 
-    {/* Address */}
-    <h3 className="section-title mt-4">Address</h3>
-    <Row gutter={16}>
-      <Col span={12}>
-        <MyInput
-          label="Building or House:"
-          name="BuildingOrHouse"
-          placeholder="Enter building/house"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.BuildingOrHouse}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.BuildingOrHouse",
-              e.target.value
-            )
-          }
-          hasError={!!errors?.Solicitors?.BuildingOrHouse}
-          errorMessage={errors?.Solicitors?.BuildingOrHouse}
-        />
-      </Col>
-      <Col span={12}>
-        <MyInput
-          label="Street or Road:"
-          name="StreetOrRoad"
-          placeholder="Enter street/road"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.StreetOrRoad}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.StreetOrRoad",
-              e.target.value
-            )
-          }
-        />
-      </Col>
-    </Row>
-    <Row gutter={16}>
-      <Col span={12}>
-        <MyInput
-          label="Area or Town:"
-          name="AreaOrTown"
-          placeholder="Enter area/town"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.AreaOrTown}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.AreaOrTown",
-              e.target.value
-            )
-          }
-          hasError={!!errors?.Solicitors?.AreaOrTown}
-          errorMessage={errors?.Solicitors?.AreaOrTown}
-        />
-      </Col>
-      <Col span={12}>
-        <MyInput
-          label="County, City or Postcode:"
-          name="CityCountyOrPostCode"
-          placeholder="Enter county/city/postcode"
-          value={
-            drawerIpnuts?.Solicitors?.ContactAddress?.CityCountyOrPostCode
-          }
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.CityCountyOrPostCode",
-              e.target.value
-            )
-          }
-        />
-      </Col>
-    </Row>
-    <Row gutter={16}>
-      <Col span={12}>
-        <MyInput
-          label="Eircode:"
-          name="Eircode"
-          placeholder="Enter Eircode"
-          value={drawerIpnuts?.Solicitors?.ContactAddress?.Eircode}
-          onChange={(e) =>
-            drawrInptChng(
-              "Solicitors",
-              "ContactAddress.Eircode",
-              e.target.value
-            )
-          }
-        />
-      </Col>
-    </Row>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Forename:"
+                  value={drawerIpnuts?.Solicitors?.forename}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "forename", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.forename}
+                  errorMessage={errors?.Solicitors?.forename}
+                />
+              </Col>
 
-    {/* Table */}
-    <div className="mt-4 config-tbl-container">
-      <Table
-        pagination={false}
-        columns={columnsSolicitors}
-        dataSource={data?.Solicitors}
-        loading={contactsLoading}
-        className="drawer-tbl"
-        rowClassName={(record, index) =>
-          index % 2 !== 0 ? "odd-row" : "even-row"
-        }
-        rowSelection={{
-          type: selectionType,
-          ...rowSelection,
-        }}
-        bordered
-      />
-    </div>
-  </div>
-</Drawer>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Surname:"
+                  value={drawerIpnuts?.Solicitors?.surname}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "surname", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.surname}
+                  errorMessage={errors?.Solicitors?.surname}
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Contact Information */}
+          <h4 className="">Contact Information</h4>
+          <div className="drawer-section">
+            <Row gutter={24}>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Email:"
+                  type="email"
+                  value={drawerIpnuts?.Solicitors?.contactEmail}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactEmail", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.contactEmail}
+                  errorMessage={errors?.Solicitors?.contactEmail}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Mobile:"
+                  type="mobile"
+                  value={drawerIpnuts?.Solicitors?.contactPhone}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactPhone", e.target.value)
+                  }
+                  disabled={isDisable}
+                  required
+                  hasError={!!errors?.Solicitors?.contactPhone}
+                  errorMessage={errors?.Solicitors?.contactPhone}
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Address */}
+          <h4 className="section-title">Address</h4>
+          <div className="drawer-section">
+            <Row gutter={24}>
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Building or House:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.buildingOrHouse", e.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Solicitors?.buildingOrHouse}
+                  errorMessage={errors?.Solicitors?.buildingOrHouse}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Street or Road:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.streetOrRoad}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.streetOrRoad", e.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Area or Town:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.areaOrTown}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.areaOrTown", e.target.value)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Solicitors?.areaOrTown}
+                  errorMessage={errors?.Solicitors?.areaOrTown}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="County, City or Postcode:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.cityCountyOrPostCode", e.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Eircode:"
+                  value={drawerIpnuts?.Solicitors?.contactAddress?.eircode}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactAddress.eircode", e.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+            </Row>
+            <Table
+              pagination={false}
+              columns={columnsSolicitors}
+              dataSource={data?.Solicitors}
+              loading={contactsLoading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </Drawer>
 
       <Drawer
         open={isRecursion}
@@ -1101,40 +1120,40 @@ function MyDrawer({
               )}
               {(recData?.timeDur === "Year" ||
                 recData?.timeDur === "Month") && (
-                <div className="d-flex flex-column pt-4">
-                  <Checkbox>On December 16</Checkbox>
-                  <Checkbox>On third Monday of December</Checkbox>
-                  <div className="pt-3 d-flex flex-column">
-                    <p>
-                      Occur on day 16 of every month
-                      {isEndDate === true &&
-                        (recData?.timeDur === "Year" ||
-                          recData?.timeDur === "Month") && (
-                          <span
-                            onClick={() => setisEndDate(false)}
+                  <div className="d-flex flex-column pt-4">
+                    <Checkbox>On December 16</Checkbox>
+                    <Checkbox>On third Monday of December</Checkbox>
+                    <div className="pt-3 d-flex flex-column">
+                      <p>
+                        Occur on day 16 of every month
+                        {isEndDate === true &&
+                          (recData?.timeDur === "Year" ||
+                            recData?.timeDur === "Month") && (
+                            <span
+                              onClick={() => setisEndDate(false)}
+                              style={{ cursor: "pointer", color: "#215E97" }}
+                            >
+                              {" "}
+                              Choose an end date
+                            </span>
+                          )}
+                      </p>
+                      {isEndDate === false && (
+                        <div className="d-flex ">
+                          <div style={{ width: "50%" }} className="me-4">
+                            <MyDatePicker />
+                          </div>
+                          <p
                             style={{ cursor: "pointer", color: "#215E97" }}
+                            onClick={() => setisEndDate(true)}
                           >
-                            {" "}
-                            Choose an end date
-                          </span>
-                        )}
-                    </p>
-                    {isEndDate === false && (
-                      <div className="d-flex ">
-                        <div style={{ width: "50%" }} className="me-4">
-                          <MyDatePicker />
+                            Remove end Date
+                          </p>
                         </div>
-                        <p
-                          style={{ cursor: "pointer", color: "#215E97" }}
-                          onClick={() => setisEndDate(true)}
-                        >
-                          Remove end Date
-                        </p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               {/* <div>
                 {
                   isEndDate === false && (
@@ -1297,7 +1316,7 @@ function MyDrawer({
             >
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={() => {}}>
+            <Button className="butn primary-btn" onClick={() => { }}>
               Add
             </Button>
           </Space>
