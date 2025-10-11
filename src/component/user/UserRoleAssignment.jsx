@@ -13,10 +13,11 @@ import {
   Divider,
   Badge,
   Avatar,
+  Tooltip
 } from "antd";
 import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { getAllRolesList } from "../../constants/Roles";
-import { useDispatch,useSelector } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
 import { assignRolesToUser } from "../../features/UserSlice";
 import { getAllRoles } from "../../features/RoleSlice";
 
@@ -25,7 +26,7 @@ const { Search } = Input;
 
 const UserRoleAssignment = ({ user, onClose }) => {
   const dispatch = useDispatch();
-   const {
+  const {
     roles,
     rolesLoading,
     error,
@@ -39,7 +40,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
   console.log("User in Drawer:", selectedRoles);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
-const [initialPermissions, setInitialPermissions] = useState([]);
+  const [initialPermissions, setInitialPermissions] = useState([]);
   useEffect(() => {
     if (user) {
       setSelectedRoles(user.roles?.map((role) => role._id) || []);
@@ -53,7 +54,7 @@ const [initialPermissions, setInitialPermissions] = useState([]);
 
   const allRoles = roles;
   debugger
-  
+
   const groupedRoles = allRoles.reduce((acc, role) => {
     const category = role.category;
     if (!acc[category]) {
@@ -75,7 +76,7 @@ const [initialPermissions, setInitialPermissions] = useState([]);
     }
     return acc;
   }, {});
-debugger
+  debugger
   const handleRoleToggle = (roleId, checked) => {
     if (checked) {
       setSelectedRoles([...selectedRoles, roleId]);
@@ -85,7 +86,7 @@ debugger
   };
 
   const handleSelectAll = (categoryRoles, checked) => {
-    const roleIds = categoryRoles.map((r) => r.id);
+    const roleIds = categoryRoles.map((r) => r._id);
     if (checked) {
       const newRoles = [...new Set([...selectedRoles, ...roleIds])];
       setSelectedRoles(newRoles);
@@ -194,7 +195,7 @@ debugger
                 }}
               >
                 {getUserInitials(user)}
-               
+
               </Avatar>
               <div className="ml-3">
                 <h5 className="mb-1">{user?.userFullName}</h5>
@@ -249,7 +250,7 @@ debugger
             {Object.keys(filteredRoles).map((category) => {
               const categoryRoles = filteredRoles[category];
               const isFullySelected = isCategoryFullySelected(categoryRoles);
-          debugger
+              debugger
               const isPartiallySelected =
                 isCategoryPartiallySelected(categoryRoles);
 
@@ -296,8 +297,10 @@ debugger
                           <div className="role-item">
                             <Checkbox
                               checked={selectedRoles.includes(role._id)}
-                              onChange={(e) =>
-                                handleRoleToggle(role.id, e.target.checked)
+                              onChange={(e) => {
+                                debugger
+                                handleRoleToggle(role._id, e.target.checked)
+                              }
                               }
                             >
                               <div className="role-content">
@@ -306,9 +309,23 @@ debugger
                                   {role.description}
                                 </div>
                                 <div className="role-permissions">
-                                  <Tag color="blue" size="small">
-                                    {role.permissions?.length || 0} permissions
-                                  </Tag>
+                                  <Tooltip
+                                    title={
+                                      <div style={{ maxWidth: 300, maxHeight: 200, overflowY: "auto" }}>
+                                        {role.permissions?.length > 0 ? (
+                                          role.permissions.map((perm) => (
+                                            <div key={perm._id}>{perm.name}</div>
+                                          ))
+                                        ) : (
+                                          "No permissions assigned"
+                                        )}
+                                      </div>
+                                    }
+                                  >
+                                    <Tag color="blue" size="small" style={{ cursor: "pointer" }}>
+                                      {role.permissions?.length || 0} permissions
+                                    </Tag>
+                                  </Tooltip>
                                 </div>
                               </div>
                             </Checkbox>
