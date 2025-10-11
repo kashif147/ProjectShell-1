@@ -55,42 +55,49 @@ export const insertDataFtn = async (
 };
 
 export const deleteFtn = async (url, callback) => {
-  token = localStorage.getItem("token");
-  // const data = JSON.stringify({  });
+  const token = localStorage.getItem("token");
+
   const config = {
     method: "delete",
-    // maxBodyLength: Infinity,
-    url: url,
+    url,
     headers: {
       "Content-Type": "application/json",
-      Authorization: `Bearer ${token}`, // Use Bearer token for authorization
+      Authorization: `Bearer ${token}`,
     },
-    // data: data,
   };
+
   try {
     const response = await axios.request(config);
-    MyAlert("success", "You Have Successfully Deleted.");
-    if (callback && typeof callback === "function" && response?.data) {
-      callback();
+
+    // ✅ Handle all success codes (200–299)
+    if (response.status >= 200 && response.status < 300) {
+      MyAlert("success", "You Have Successfully Deleted.");
+      // ✅ Always call callback after success
+      // if (callback && typeof callback === "function") {
+            if (callback && typeof callback === "function") {
+        await callback();
+      }
     }
+
     return response.data;
   } catch (error) {
-    console.error("Error deleting region:", error?.response?.data?.error?.message || "");
-    return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
+    console.error("Error deleting record:", error?.response?.data?.error?.message || error.message);
+    MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
   }
 };
+
+
 
 export const updateFtn = async (
   apiURL = baseURL,
   endPoint,
   data1,
   callback,
-  msg = notificationsMsg?.updating?.sucess
+  msg = notificationsMsg?.updating?.sucess    
 ) => {
   debugger
   try {
     const token = localStorage.getItem("token");
-    // ✅ If `id` exists in data1 but not in URL, append it
     let finalEndPoint = endPoint;
     if (data1?.id && !endPoint.includes(data1.id)) {
       finalEndPoint = `${endPoint}/${data1.id}`;

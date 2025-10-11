@@ -712,7 +712,7 @@ function Configuratin() {
         cityCountyOrPostCode: "",
         eircode: "",
       },
-      contactTypeId: "",
+      contactTypeId: "68e94242aa4ff1e89eefa827",
       isactive: true,     // ✅ added based on API field
       isDeleted: false,   // keep this if your app uses soft-delete flag
     },
@@ -9310,7 +9310,7 @@ function simplifyContact(contact) {
                   options={contactTypelookup}
                   value={drawerIpnuts?.Solicitors?.contactTypeId}
                   onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
-                  disabled={isDisable}
+                  disabled={true}
                   required
                   hasError={!!errors?.Solicitors?.contactTypeId}
                   errorMessage={errors?.Solicitors?.contactTypeId}
