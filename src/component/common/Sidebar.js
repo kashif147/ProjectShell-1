@@ -150,6 +150,7 @@ const Sidebar = () => {
       "/Cancallation": "Cancellations",
       "/ChangCateSumm": "Change Category",
       "/Import": "Imports",
+      "/Cheque": "Cheques",
       "/Email": "Email",
       "/Sms": "SMS",
       "/Notes": "Notes & Letters",
@@ -224,6 +225,9 @@ const Sidebar = () => {
         break;
       case "Imports":
         navigate("/Import", { state: { search: "Imports" } });
+        break;
+      case "Cheque":
+        navigate("/Cheque", { state: { search: "Cheques" } });
         break;
       case "Email":
         navigate("/Email", { state: { search: "Email" } });

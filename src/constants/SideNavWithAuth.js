@@ -113,23 +113,37 @@ export const financeItems = [
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Standing orders",
+    "Standing Orders",
     <FaCreditCard />,
-    "Direct Debits",
+    "Standing Orders",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
     "Deductions",
     <FaCreditCard />,
-    "Direct Debits",
+    "Deductions",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
     "Refunds",
     <FaCreditCard />,
-    "Direct Debits",
+    "Refunds",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Refunds",
+    <FaCreditCard />,
+    "Refunds",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Direct Debit",
+    <FaCreditCard />,
+    "Direct Debit",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),

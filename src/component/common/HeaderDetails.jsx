@@ -526,6 +526,7 @@ function HeaderDetails() {
             location?.pathname == "/CornMarket" ||
             location?.pathname == "/Batches" ||
             location?.pathname == "/Import" ||
+            location?.pathname == "/Cheque" ||
             location?.pathname == "/Sms" ||
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
@@ -565,6 +566,7 @@ function HeaderDetails() {
                           nav === "/Cancallation" ||
                           nav === "/Batches" ||
                           nav === "/Import" ||
+                          nav === "/Cheque" ||
                           nav === "/CornMarket"
                         ) {
                           setIsBatchOpen(!isBatchOpen);
@@ -996,6 +998,8 @@ function HeaderDetails() {
             ? ""
             : nav === "/Import"
             ? ""
+            : nav === "/Cheque"
+            ? ""
             : nav === "/CancellationBatch"
             ? "Cancellation Batch"
             : nav === "/CornMarket"
@@ -1013,7 +1017,7 @@ function HeaderDetails() {
           setIsBatchOpen(!isBatchOpen);
         }}
       >
-        {nav === "/Batches" ||  nav === "/Import"? (
+         {nav === "/Batches" ||  nav === "/Import" || nav === "/Cheque"? (
           <CreateBatchPayment />
         ) : (
           <div className="drawer-main-container">

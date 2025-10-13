@@ -57,6 +57,7 @@ const CancellationDetail = lazy(() =>
 );
 const Batches = lazy(() => import("./pages/finance/Batches"));
 const Import = lazy(() => import("./pages/finance/Import"));
+const Cheque = lazy(() => import("./pages/finance/Cheque"));
 const BatchMemberSummary = lazy(() =>
   import("./pages/finance/BatchMemberSummary")
 );
@@ -442,6 +443,15 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <Import />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="Cheque"
+                      element={
+                        <ProtectedRoute>
+                          <Cheque />
                         </ProtectedRoute>
                       }
                     />
