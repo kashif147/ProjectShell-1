@@ -1,53 +1,63 @@
-import React, { useState } from 'react';
-import '../../styles/MyInput.css';
+import React, { useEffect, useState } from "react";
+import "../../styles/MyInput.css";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchCountries } from "../../features/CountriesSlice";
 
 const MyInput = ({
   label,
-  placeholder = 'Enter...',
+  placeholder = "Enter...",
   value,
   onChange,
   name,
-  type = 'text',
+  type = "text",
   required = false,
   hasError = false,
-  errorMessage = 'Required',
+  errorMessage = "Required",
   disabled = false,
   rows = 4,
   extra = null,
   maxLength,
 }) => {
+  const dispatch = useDispatch();
+  const { countriesData, loadingC } = useSelector((state) => state.countries);
+
   const [isFocused, setIsFocused] = useState(false);
-  const [internalError, setInternalError] = useState('');
+  const [internalError, setInternalError] = useState("");
+  const [countryCode, setCountryCode] = useState("+353"); // default fallback
+  const [mobileNumber, setMobileNumber] = useState("");
+
+  // 🔹 Fetch countries from API when needed
+  useEffect(() => {
+    if (!countriesData || countriesData.length === 0) {
+      dispatch(fetchCountries());
+    }
+  }, [dispatch, countriesData]);
+
+  const handleMobileChange = (e) => {
+    let val = e.target.value.replace(/\D/g, ""); // only digits
+    let formatted = val
+      .replace(/(\d{2})(\d{3})(\d{4})/, "$1 $2 $3")
+      .trim();
+
+    setMobileNumber(formatted);
+    const fullNumber = `${countryCode} ${formatted}`;
+    onChange({ target: { name, value: fullNumber } });
+  };
 
   const handleChange = (e) => {
     let val = e.target.value;
+    if (type === "mobile") return;
 
-    // 🔹 Mobile: only numbers
-    if (type === 'mobile') {
-      if (/^\d*$/.test(val)) {
-        onChange(e);
-        setInternalError('');
-      } else {
-        setInternalError('Only numbers are allowed');
-      }
-      return;
-    }
-
-    // 🔹 Email validation
-    if (type === 'email') {
+    if (type === "email") {
       onChange(e);
-
       if (val && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(val)) {
-        setInternalError('Invalid email address');
-      } else {
-        setInternalError('');
-      }
+        setInternalError("Invalid email address");
+      } else setInternalError("");
       return;
     }
 
-    // 🔹 Default behavior
     onChange(e);
-    setInternalError('');
+    setInternalError("");
   };
 
   const commonProps = {
@@ -58,9 +68,9 @@ const MyInput = ({
     placeholder,
     onFocus: () => setIsFocused(true),
     onBlur: () => setIsFocused(false),
-    className: 'my-input-field',
+    className: "my-input-field",
     disabled,
-    maxLength: type === 'mobile' ? (maxLength || 11) : maxLength,
+    maxLength,
   };
 
   const showError = hasError || internalError;
@@ -70,7 +80,7 @@ const MyInput = ({
       <div className="d-flex justify-content-between">
         <label
           htmlFor={name}
-          className={`my-input-label ${showError ? 'error' : ''}`}
+          className={`my-input-label ${showError ? "error" : ""}`}
         >
           {label}
           {required && <span className="required-star"> *</span>}
@@ -84,17 +94,47 @@ const MyInput = ({
       </div>
 
       <div
-        className={`my-input-container ${showError ? 'error' : ''} ${
-          isFocused ? 'focused' : ''
+        className={`my-input-container ${showError ? "error" : ""} ${
+          isFocused ? "focused" : ""
         }`}
       >
-        {type === 'textarea' ? (
+        {type === "textarea" ? (
           <textarea {...commonProps} rows={rows} />
+        ) : type === "mobile" ? (
+          <div className="mobile-input-group">
+            <select
+              className="country-code-select"
+              value={countryCode}
+              onChange={(e) => {
+                setCountryCode(e.target.value);
+                const fullNumber = `${e.target.value} ${mobileNumber}`;
+                onChange({ target: { name, value: fullNumber } });
+              }}
+              disabled={disabled || loadingC}
+            >
+              {loadingC ? (
+                <option>Loading...</option>
+              ) : (
+                countriesData?.map((c) => (
+                  <option key={c._id} value={c.callingCodes?.[0] || ""}>
+                    {c.displayname} {c.callingCodes?.[0]}
+                  </option>
+                ))
+              )}
+            </select>
+
+            <input
+              type="text"
+              className="mobile-number-input"
+              placeholder="87 900 0538"
+              value={mobileNumber}
+              onChange={handleMobileChange}
+              maxLength={11}
+              disabled={disabled}
+            />
+          </div>
         ) : (
-          <input
-            type={type === 'mobile' ? 'text' : type}
-            {...commonProps}
-          />
+          <input type={type} {...commonProps} />
         )}
         {showError && <span className="error-icon">ⓘ</span>}
       </div>

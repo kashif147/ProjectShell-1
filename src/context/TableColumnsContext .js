@@ -287,18 +287,72 @@ const staticColumns = {
   ],
 
   BatchMemberSummary: [
-    { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Member Name", title: "Member Name", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Bank Account", title: "Bank Account", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Payroll No", title: "Payroll No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Arrears", title: "Arrears", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Comments", title: "Comments", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "Advance", title: "Advance", ellipsis: true, isGride: true, isVisible: true, width: 100 },
-    { dataIndex: "Total Amount", title: "Total Amount", ellipsis: true, isGride: true, isVisible: true, width: 100 },
-    // { dataIndex: "createdBy", title: "Created By", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    // { dataIndex: "Count", title: "Count", ellipsis: true, isGride: true, isVisible: true, width: 100 },
-
-  ],
+  {
+    title: "First name",
+    dataIndex: "First name",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 150,
+    render: (_, record) => `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
+  },
+  {
+    dataIndex: "First name",
+    title: "Last name",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 150,
+  },
+  {
+    dataIndex: "Membership No",
+    title: "Membership No",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 150,
+  },
+  {
+    dataIndex: "Value for Periods Selected",
+    title: "Value for Periods Selected",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 150,
+  },
+  {
+    dataIndex: "Arrears",
+    title: "Arrears",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 150,
+  },
+  {
+    dataIndex: "Comments",
+    title: "Comments",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 150,
+  },
+  {
+    dataIndex: "Advance",
+    title: "Advance",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 100,
+  },
+  {
+    dataIndex: "Total Amount",
+    title: "Total Amount",
+    ellipsis: true,
+    isGride: true,
+    isVisible: true,
+    width: 100,
+  },
+],
   members: [
     { dataIndex: "MembershipNo", title: "Membership No", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
     { dataIndex: "FullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
@@ -641,6 +695,30 @@ const staticSearchFilters = {
     }
   ],
   Batches: [
+    { titleColumn: "Batch Name", isSearch: true, isCheck: true, lookups: {} },
+    { titleColumn: "Batch Date", isSearch: true, isCheck: true, lookups: {} },
+    {
+      titleColumn: "Batch Status",
+      isSearch: true,
+      isCheck: true,
+      lookups: {
+        "In Progress": false,
+        "Pending": true,
+        "Approve": false,
+        "Reject": false
+      }
+    },
+    { titleColumn: "Created At", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Created By", isSearch: true, isCheck: false, lookups: {} },
+    { titleColumn: "Count", isSearch: false, isCheck: false, lookups: {} },
+    {
+      titleColumn: "Action",
+      isSearch: false,
+      isCheck: false,
+      lookups: {}
+    }
+  ],
+  Import: [
     { titleColumn: "Batch Name", isSearch: true, isCheck: true, lookups: {} },
     { titleColumn: "Batch Date", isSearch: true, isCheck: true, lookups: {} },
     {

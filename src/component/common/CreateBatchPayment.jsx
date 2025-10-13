@@ -63,7 +63,7 @@ const CreateBatchPayment = () => {
         return;
       }
 
-      const requiredColumns = ['Member Name', 'Bank Account', 'Payroll No', 'Arrears', 'Advance']; // Customize if needed
+      const requiredColumns = ['Membership No', 'Last name', 'First name', 'Full name', 'Value for Periods Selected']; // Customize if needed
       const uploadedColumns = Object.keys(json[0]);
       const missingColumns = requiredColumns.filter(
         (col) => !uploadedColumns.includes(col)

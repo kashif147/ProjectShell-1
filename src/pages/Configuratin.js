@@ -1084,16 +1084,16 @@ function Configuratin() {
       [name4]: value4,
     }));
   };
-function simplifyContact(contact) {
-  // Create a shallow copy to avoid mutating the original
-  const cleaned = { ...contact };
+  function simplifyContact(contact) {
+    // Create a shallow copy to avoid mutating the original
+    const cleaned = { ...contact };
 
-  if (cleaned.contactTypeId && cleaned.contactTypeId._id) {
-    cleaned.contactTypeId = cleaned.contactTypeId._id;
+    if (cleaned.contactTypeId && cleaned.contactTypeId._id) {
+      cleaned.contactTypeId = cleaned.contactTypeId._id;
+    }
+
+    return cleaned;
   }
-
-  return cleaned;
-}
   const handleInputChange7 = (name7, value7) => {
     setprofileData((prevState7) => ({
       ...prevState7,
@@ -9284,7 +9284,7 @@ function simplifyContact(contact) {
           );
         }}
         update={async () => {
-        const simplified = simplifyContact(drawerIpnuts?.Solicitors);
+          const simplified = simplifyContact(drawerIpnuts?.Solicitors);
           if (!validateSolicitors("Solicitors")) return;
           await updateFtn(`/api/contacts/${drawerIpnuts?.Solicitors?.id}`, simplified, () =>
             resetCounteries("Solicitors", () => dispatch(getContacts()))
@@ -9298,181 +9298,168 @@ function simplifyContact(contact) {
       >
         {/* Personal Information */}
         <div className="drawer-main-container">
+          <Row gutter={24}>
+            <Col xs={24} md={12}>
+              <CustomSelect
+                label="Contact Type:"
+                placeholder="Select Contact Type"
+                options={contactTypelookup}
+                value={drawerIpnuts?.Solicitors?.contactTypeId}
+                onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
+                disabled={true}
+                required
+                hasError={!!errors?.Solicitors?.contactTypeId}
+                errorMessage={errors?.Solicitors?.contactTypeId}
+              />
+            </Col>
 
-          {/* Personal Information */}
-          <h4 className="">Personal Information</h4>
-          <div className="drawer-section">
-            <Row gutter={24}>
-              <Col xs={24} md={12}>
-                <CustomSelect
-                  label="Contact Type:"
-                  placeholder="Select Contact Type"
-                  options={contactTypelookup}
-                  value={drawerIpnuts?.Solicitors?.contactTypeId}
-                  onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
-                  disabled={true}
-                  required
-                  hasError={!!errors?.Solicitors?.contactTypeId}
-                  errorMessage={errors?.Solicitors?.contactTypeId}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <CustomSelect
+                label="Title:"
+                placeholder="Select Title"
+                options={lookupsForSelect?.Titles}
+                disabled={true}
+                value={drawerIpnuts?.Solicitors?.title}
+                onChange={(e) => drawrInptChng("Solicitors", "title", e.target.value)}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <CustomSelect
-                  label="Title:"
-                  placeholder="Select Title"
-                  options={lookupsForSelect?.Titles}
-                  disabled={true}
-                  value={drawerIpnuts?.Solicitors?.title}
-                  onChange={(e) => drawrInptChng("Solicitors", "title", e.target.value)}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Forename:"
+                value={drawerIpnuts?.Solicitors?.forename}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "forename", e.target.value)
+                }
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Solicitors?.forename}
+                errorMessage={errors?.Solicitors?.forename}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Forename:"
-                  value={drawerIpnuts?.Solicitors?.forename}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "forename", e.target.value)
-                  }
-                  disabled={isDisable}
-                  required
-                  hasError={!!errors?.Solicitors?.forename}
-                  errorMessage={errors?.Solicitors?.forename}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Surname:"
+                value={drawerIpnuts?.Solicitors?.surname}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "surname", e.target.value)
+                }
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Solicitors?.surname}
+                errorMessage={errors?.Solicitors?.surname}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Surname:"
-                  value={drawerIpnuts?.Solicitors?.surname}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "surname", e.target.value)
-                  }
-                  disabled={isDisable}
-                  required
-                  hasError={!!errors?.Solicitors?.surname}
-                  errorMessage={errors?.Solicitors?.surname}
-                />
-              </Col>
-            </Row>
-          </div>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Email:"
+                type="email"
+                value={drawerIpnuts?.Solicitors?.contactEmail}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactEmail", e.target.value)
+                }
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Solicitors?.contactEmail}
+                errorMessage={errors?.Solicitors?.contactEmail}
+              />
+            </Col>
 
-          {/* Contact Information */}
-          <h4 className="">Contact Information</h4>
-          <div className="drawer-section">
-            <Row gutter={24}>
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Email:"
-                  type="email"
-                  value={drawerIpnuts?.Solicitors?.contactEmail}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactEmail", e.target.value)
-                  }
-                  disabled={isDisable}
-                  required
-                  hasError={!!errors?.Solicitors?.contactEmail}
-                  errorMessage={errors?.Solicitors?.contactEmail}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Mobile:"
+                type="mobile"
+                value={drawerIpnuts?.Solicitors?.contactPhone}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactPhone", e.target.value)
+                }
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Solicitors?.contactPhone}
+                errorMessage={errors?.Solicitors?.contactPhone}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Mobile:"
-                  type="mobile"
-                  value={drawerIpnuts?.Solicitors?.contactPhone}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactPhone", e.target.value)
-                  }
-                  disabled={isDisable}
-                  required
-                  hasError={!!errors?.Solicitors?.contactPhone}
-                  errorMessage={errors?.Solicitors?.contactPhone}
-                />
-              </Col>
-            </Row>
-          </div>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Building or House:"
+                value={drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactAddress.buildingOrHouse", e.target.value)
+                }
+                disabled={isDisable}
+                hasError={!!errors?.Solicitors?.buildingOrHouse}
+                errorMessage={errors?.Solicitors?.buildingOrHouse}
+              />
+            </Col>
 
-          {/* Address */}
-          <h4 className="section-title">Address</h4>
-          <div className="drawer-section">
-            <Row gutter={24}>
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Building or House:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.buildingOrHouse", e.target.value)
-                  }
-                  disabled={isDisable}
-                  hasError={!!errors?.Solicitors?.buildingOrHouse}
-                  errorMessage={errors?.Solicitors?.buildingOrHouse}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Street or Road:"
+                value={drawerIpnuts?.Solicitors?.contactAddress?.streetOrRoad}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactAddress.streetOrRoad", e.target.value)
+                }
+                disabled={isDisable}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Street or Road:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.streetOrRoad}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.streetOrRoad", e.target.value)
-                  }
-                  disabled={isDisable}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Area or Town:"
+                value={drawerIpnuts?.Solicitors?.contactAddress?.areaOrTown}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactAddress.areaOrTown", e.target.value)
+                }
+                disabled={isDisable}
+                hasError={!!errors?.Solicitors?.areaOrTown}
+                errorMessage={errors?.Solicitors?.areaOrTown}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Area or Town:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.areaOrTown}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.areaOrTown", e.target.value)
-                  }
-                  disabled={isDisable}
-                  hasError={!!errors?.Solicitors?.areaOrTown}
-                  errorMessage={errors?.Solicitors?.areaOrTown}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="County, City or Postcode:"
+                value={drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactAddress.cityCountyOrPostCode", e.target.value)
+                }
+                disabled={isDisable}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="County, City or Postcode:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.cityCountyOrPostCode", e.target.value)
-                  }
-                  disabled={isDisable}
-                />
-              </Col>
+            <Col xs={24} md={12}>
+              <MyInput
+                label="Eircode:"
+                value={drawerIpnuts?.Solicitors?.contactAddress?.eircode}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactAddress.eircode", e.target.value)
+                }
+                disabled={isDisable}
+              />
+            </Col>
 
-              <Col xs={24} md={12}>
-                <MyInput
-                  label="Eircode:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.eircode}
-                  onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.eircode", e.target.value)
-                  }
-                  disabled={isDisable}
-                />
-              </Col>
-            </Row>
-            <Table
-              pagination={false}
-              columns={columnsSolicitors}
-              dataSource={data?.Solicitors}
-              loading={contactsLoading}
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? "odd-row" : "even-row"
-              }
-              rowSelection={{
-                type: selectionType,
-                ...rowSelection,
-              }}
-              bordered
-            />
-          </div>
+            <Col span={24}>
+              <Table
+                pagination={false}
+                columns={columnsSolicitors}
+                dataSource={data?.Solicitors}
+                loading={contactsLoading}
+                className="drawer-tbl"
+                rowClassName={(record, index) =>
+                  index % 2 !== 0 ? "odd-row" : "even-row"
+                }
+                rowSelection={{
+                  type: selectionType,
+                  ...rowSelection,
+                }}
+                bordered
+              />
+            </Col>
+          </Row>
+
         </div>
 
 

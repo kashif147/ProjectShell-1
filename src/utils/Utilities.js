@@ -228,6 +228,23 @@ export async function generatePKCE() {
 
   return { codeVerifier, codeChallenge };
 }
+export function convertEuroToSand(euroAmount) {
+  const euros = Number(euroAmount);
+  if (isNaN(euros)) throw new Error("Invalid Euro amount");
+  return euros * 100; // Convert to sand
+}
+export function convertSandToEuro(sandAmount) {
+  if (sandAmount === undefined || sandAmount === null || sandAmount === "") {
+    return sandAmount; // just return as is
+  }
+
+  const sand = Number(sandAmount);
+  if (isNaN(sand)) {
+    return sandAmount; // or return null if you prefer
+  }
+
+  return sand / 100; // Convert back to euros
+}
 
 export function generatePatch(original = {}, updated = {}, path = "") {
   let patches = [];

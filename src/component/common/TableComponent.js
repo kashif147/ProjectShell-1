@@ -753,10 +753,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         open={manualPayment}
         onClose={() => setmanualPayment(!manualPayment)}
         title={"Manual Payment Entry"}
-        width={760}
+        width={850}
         isManual={true}
       >
+        <div className="drawer-main-cntainer p-4">
         <ManualPaymentEntry />
+        </div>
       </MyDrawer>
     </DndContext>
   );

@@ -91,6 +91,13 @@ export const correspondenceItems = [
 ];
 
 export const financeItems = [
+   createMenuItem(
+    "Imports",
+    <FaFileImport />,
+    "Imports",
+    ["USER_WRITE", "USER_MANAGE_ROLES"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
   createMenuItem(
     "Batches",
     <FaClipboardList />,
@@ -99,16 +106,44 @@ export const financeItems = [
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Direct Debits",
+    "Cheque",
+    <FaClipboardList />,
+    "Cheque",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Standing orders",
     <FaCreditCard />,
     "Direct Debits",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "DD",
+    "Deductions",
+    <FaCreditCard />,
+    "Direct Debits",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Refunds",
+    <FaCreditCard />,
+    "Direct Debits",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Reconciliations",
     <FaExchangeAlt />,
-    "DD",
+    "Reconciliations",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Write-offs",
+    <FaExchangeAlt />,
+    "Write-offs",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
@@ -154,13 +189,7 @@ export const financeItems = [
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
-  createMenuItem(
-    "Imports",
-    <FaFileImport />,
-    "Imports",
-    ["USER_WRITE", "USER_MANAGE_ROLES"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
+ 
 ];
 
 export const profileItems = [

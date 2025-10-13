@@ -70,7 +70,7 @@ function BatchMemberSummary() {
     display: "inline-block",
     width: "100%",
   };
-  console.log("batchMemberSummaryData", batchMemberSummaryData);
+  console.log("batchMemberSummaryData", excelData);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
   const dataSource = [
     {

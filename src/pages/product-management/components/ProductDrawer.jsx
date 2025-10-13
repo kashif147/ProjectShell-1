@@ -6,7 +6,6 @@ import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
 
 const ProductForm = ({ product, productType, onClose, onSubmit }) => {
-  debugger
   const initialFormState = {
     name: "",
     code: "",
@@ -25,7 +24,6 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
   };
   useEffect(() => {
     if (!product) {
-      debugger
       resetForm(); // optional safeguard when switching modes
     }
   }, [product, productType]);
@@ -114,44 +112,56 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
   };
 
 
-  const handleSubmit = async (e) => {
-    debugger
-    if (!validate(e)) {
-      return;
+const handleSubmit = async (e) => {
+  if (!validate(e)) {
+    return;
+  }
+
+  setLoading(true);
+  try {
+    // Prepare data for submission
+    const submissionData = { ...formData };
+
+    // 🔹 Helper: Convert Euro → Sand
+    const euroToSand = (value) => {
+      const num = Number(value);
+      if (isNaN(num)) return 0;
+      return Math.round(num * 100); // 1 Euro = 100 Sand
+    };
+
+    // 🔹 Convert prices only if the keys exist
+    if ("memberPrice" in formData) {
+      submissionData.memberPrice = euroToSand(formData.memberPrice);
     }
-    debugger
-    setLoading(true);
-    try {
-      // Prepare data for submission
-      const submissionData = { ...formData };
-
-      // For membership products, use the single price for both member and non-member
-      if (isProduct && productType?.category === "MEMBERSHIP") {
-        submissionData.nonMemberPrice = formData.memberPrice; // Use same price for both
-      }
-
-      // For new product types, set meta fields
-      if (isProductType && !product) {
-        // submissionData.createdAt = new Date().toISOString();
-        // submissionData.createdBy = "current_user"; // This should come from auth context
-      }
-
-      // For existing product types, update meta fields
-      if (isProductType && product) {
-        // submissionData.updatedAt = new Date().toISOString();
-        // submissionData.updatedBy = "current_user";
-        // This should come from auth context
-      }
-
-      await onSubmit(submissionData);
-      resetForm();
-      onClose?.()
-    } catch (error) {
-      console.error("Error submitting form:", error);
-    } finally {
-      setLoading(false);
+    if ("nonMemberPrice" in formData) {
+      submissionData.nonMemberPrice = euroToSand(formData.nonMemberPrice);
     }
-  };
+
+    // 🔹 For membership products, use same price for both
+    if (isProduct && productType?.category === "MEMBERSHIP") {
+      submissionData.nonMemberPrice = submissionData.memberPrice;
+    }
+
+    // 🔹 Add or update meta fields
+    if (isProductType && !product) {
+      // submissionData.createdAt = new Date().toISOString();
+      // submissionData.createdBy = "current_user";
+    } else if (isProductType && product) {
+      // submissionData.updatedAt = new Date().toISOString();
+      // submissionData.updatedBy = "current_user";
+    }
+
+    // 🔹 Submit data
+    await onSubmit(submissionData);
+    resetForm();
+    onClose?.();
+  } catch (error) {
+    console.error("Error submitting form:", error);
+  } finally {
+    setLoading(false);
+  }
+};
+
 
   return (
     <form

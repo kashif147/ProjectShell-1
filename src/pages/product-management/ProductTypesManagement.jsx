@@ -41,7 +41,7 @@ import { getAllProducts } from "../../features/ProductsSlice";
 import { getProductTypesWithProducts } from "../../features/ProducttypeWithProducts";
 import "../../styles/ProductManagement.css";
 import "../../styles/Configuration.css";
-import { deleteFtn, insertDataFtn, updateFtn } from "../../utils/Utilities";
+import { deleteFtn, insertDataFtn, updateFtn,convertSandToEuro } from "../../utils/Utilities";
 import PricingDrawer from "./components/PricingForm";
 
 const ProductTypesManagement = () => {
@@ -374,7 +374,8 @@ if (productType?.name === "Membership") {
     key: "price",
     render: (_, record) => {
       const currency = record?.currentPricing?.currency;
-      const price = record?.currentPricing?.price;
+      let price = record?.currentPricing?.price;
+      price = convertSandToEuro(price)
       const currencyStr = String(currency || "").toUpperCase();
       const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
       return price != null ? `${symbol}${price}.00` : "-";
@@ -388,7 +389,8 @@ if (productType?.name === "Membership") {
       key: "memberPrice",
       render: (_, record) => {
         const currency = record?.currentPricing?.currency;
-        const price = record?.currentPricing?.memberPrice;
+        let price = record?.currentPricing?.memberPrice;
+        price = convertSandToEuro(price)
         const currencyStr = String(currency || "").toUpperCase();
         const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
         return price != null ? `${symbol}${price}.00` : "-";
@@ -400,9 +402,11 @@ if (productType?.name === "Membership") {
       key: "nonMemberPrice",
       render: (_, record) => {
         const currency = record?.currentPricing?.currency;
-        const price = record?.currentPricing?.nonMemberPrice;
+        let price = record?.currentPricing?.nonMemberPrice;
+            price = convertSandToEuro(price)
         const currencyStr = String(currency || "").toUpperCase();
         const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+
         return price != null ? `${symbol}${price}.00` : "-";
       },
     }
