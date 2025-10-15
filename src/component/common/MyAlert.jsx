@@ -1,12 +1,11 @@
 import { notification } from 'antd';
 
-// MyAlert.js
-const MyAlert = (type, message, description) => {
-    notification[type]({
-        message: message,
-        description: description,
-        placement: 'topRight', // You can set the position of the notification
-    });
+const MyAlert = (message, type = 'info', description = '') => {
+  notification[type]({
+    message,
+    description,
+    placement: 'topRight',
+  });
 };
 
 export default MyAlert;

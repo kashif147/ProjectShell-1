@@ -1,9 +1,13 @@
-import { useState, useContext } from 'react';
-import { Form, Input, Select, DatePicker, Row, Col, Card, Typography, Divider, message } from 'antd';
+import { useState, useContext, forwardRef, useImperativeHandle } from 'react';
+import { Form, Input, Select, DatePicker, Row, Col, Card, Typography, Divider, message, Button } from 'antd';
 import * as XLSX from 'xlsx';
 import { ExcelContext } from '../../context/ExcelContext';
 import { UploadOutlined } from '@ant-design/icons';
+import { paymentTypes } from '../../Data';
 import '../../styles/CreateBatchPayment.css';
+import MyDatePicker from './MyDatePicker';
+import MyInput from './MyInput';
+import CustomSelect from './CustomSelect';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -19,7 +23,8 @@ const requiredColumns = [
   "Total Amount"
 ];
 
-const CreateBatchPayment = () => {
+const CreateBatchPayment = forwardRef((props, ref) => {
+
   const memberData = [
     {
       membershipNumber: "M12345",
@@ -42,7 +47,15 @@ const CreateBatchPayment = () => {
   ];
   const [form] = Form.useForm();
   const { excelData, setExcelData, setBatchTotals, batchTotals, setUploadedFile, uploadedFile } = useContext(ExcelContext);
-  console.log("uploadedFile", uploadedFile);
+  console.log("uploadedFile", batchTotals);
+  const [formValues, setFormValues] = useState({
+    batchType: '',
+    batchDate: '',
+    batchRef: '',
+    description: '',
+    comments: '',
+  });
+  const [formErrors, setFormErrors] = useState({});
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -81,19 +94,19 @@ const CreateBatchPayment = () => {
           return parseFloat(val.toString().replace(/[^0-9.-]+/g, ""));
         };
 
-        const totalArrears = json.reduce((sum, row) => {
-          return sum + cleanValue(row["Arrears"]);
+        const totalCurrent = json.reduce((sum, row) => {
+          return sum + cleanValue(row["Value for Periods Selected"]);
         }, 0);
 
         const totalAdvance = json.reduce((sum, row) => {
           return sum + cleanValue(row["Advance"]);
         }, 0);
 
-        const batchTotal = totalArrears + totalAdvance;
-
+        const batchTotal =totalCurrent;
         setBatchTotals({
-          arrears: totalArrears,
+          arrears: 0,
           advance: totalAdvance,
+          totalCurrent,
           total: batchTotal,
 
           records: json.length,
@@ -103,6 +116,59 @@ const CreateBatchPayment = () => {
 
     reader.readAsArrayBuffer(file);
   };
+
+  const setField = (name, value) => {
+    setFormValues((prev) => ({ ...prev, [name]: value }));
+    setFormErrors((prev) => ({ ...prev, [name]: false }));
+  };
+
+  const handleSubmit = () => {
+    const required = ['batchType', 'batchDate', 'batchRef', 'description'];
+    const nextErrors = {};
+    required.forEach((key) => {
+      if (!formValues[key] || String(formValues[key]).trim() === '') {
+        nextErrors[key] = true;
+      }
+    });
+    setFormErrors(nextErrors);
+    if (Object.keys(nextErrors).length > 0) {
+      message.error('Please fill all required fields.');
+      return null;
+    }
+
+    // ✅ Check current path to enforce Excel requirement only for /Import
+    const currentPath = window.location.pathname;
+    if (currentPath === "/Import") {
+      if (!uploadedFile || !excelData || excelData.length === 0) {
+        message.error("Excel file is mandatory for Import path.");
+        return null;
+      }
+    }
+
+    // Ensure excelData is a valid array
+    const members = Array.isArray(excelData) ? excelData : [];
+
+    // Create the new structured object
+    const batchObject = {
+      batchType: formValues.batchType,
+      batchDate: formValues.batchDate,
+      batchRef: formValues.batchRef,
+      description: formValues.description,
+      comments: formValues.comments,
+      excelData: members,
+    };
+
+    // Save the object in context
+    setExcelData(batchObject);
+
+    message.success('Batch data prepared successfully');
+    return batchObject;
+  };
+
+
+  useImperativeHandle(ref, () => ({
+    submit: handleSubmit,
+  }));
 
   return (
     <div className="create-batch-container">
@@ -118,46 +184,62 @@ const CreateBatchPayment = () => {
             <Form layout="vertical" form={form} requiredMark={false}>
               <div className='d-flex w-100' style={{ gap: '5px' }}>
                 <div className='w-50'>
-                  <Form.Item
-                    label={<span>Batch Type <span style={{ color: 'red' }}>*</span></span>}
+                  <CustomSelect
+                    label="Batch Type"
                     name="batchType"
-                    rules={[{ required: true, message: 'Please select batch type' }]}
-                  >
-                    <Select style={{ height: '40px' }} placeholder="Select batch type" className="custom-input" />
-                  </Form.Item>
+                    required
+                    hasError={!!formErrors.batchType}
+                    errorMessage="Please select batch type"
+                    options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
+                    value={formValues.batchType}
+                    onChange={(e) => setField('batchType', e.target.value)}
+                  />
                 </div>
                 <div className='w-50'>
-                  <Form.Item
-                    label={<span>Batch Date <span style={{ color: 'red' }}>*</span></span>}
+                  <MyDatePicker
+                    label="Batch Date"
                     name="batchDate"
-                    rules={[{ required: true, message: 'Please select batch date' }]}
-                  >
-                    <DatePicker format="DD/MM/YYYY" className="custom-input" style={{ height: '40px', width: '100%' }} />
-                  </Form.Item>
+                    required
+                    hasError={!!formErrors.batchDate}
+                    errorMessage="Please select batch date"
+                    value={formValues.batchDate}
+                    onChange={(dateString) => setField("batchDate", dateString)}
+                  />
                 </div>
               </div>
 
-              <Form.Item
-                label={<span>Batch Ref No. <span style={{ color: 'red' }}>*</span></span>}
+              <MyInput
+                label="Batch Ref No."
                 name="batchRef"
-                rules={[{ required: true, message: 'Please enter batch reference number' }]}
-              >
-                <Input className="custom-input" />
-              </Form.Item>
+                required
+                hasError={!!formErrors.batchRef}
+                errorMessage="Please enter batch reference number"
+                value={formValues.batchRef}
+                onChange={(e) => setField('batchRef', e.target.value)}
+              />
 
-              <Form.Item
-                label={<span>Description <span style={{ color: 'red' }}>*</span></span>}
+              <MyInput
+                label="Description"
                 name="description"
-                rules={[{ required: true, message: 'Please enter description' }]}
-              >
-                <TextArea rows={3} className="custom-input" />
-              </Form.Item>
+                required
+                hasError={!!formErrors.description}
+                errorMessage="Please enter description"
+                type="textarea"
+                rows={3}
+                value={formValues.description}
+                onChange={(e) => setField('description', e.target.value)}
+              />
 
-              <Form.Item label="Comments" name="comments">
-                <TextArea rows={3} className="custom-input" />
-              </Form.Item>
+              <MyInput
+                label="Comments"
+                name="comments"
+                type="textarea"
+                rows={3}
+                value={formValues.comments}
+                onChange={(e) => setField('comments', e.target.value)}
+              />
 
-              <Form.Item label="Upload Excel File (optional)" name="file">
+              {/* <Form.Item label="Upload Excel File" name="file">
                 <Input
                   type="file"
                   accept=".xlsx, .xls"
@@ -165,7 +247,20 @@ const CreateBatchPayment = () => {
                   className="custom-input"
                   style={{ height: '40px', width: '100%' }}
                 />
-              </Form.Item>
+              </Form.Item> */}
+              <MyInput
+                label="Upload Excel Fil111e"
+                name="file"
+                type="file"
+                accept=".xlsx, .xls"
+                required={window.location.pathname === "/Import"} // only required on /Import
+                hasError={!!formErrors.file}
+                errorMessage="Please upload Excel file"
+                onChange={handleFileUpload}
+              />
+              {/* <div className='d-flex justify-content-end'>
+                <Button type="primary" onClick={handleSubmit}>Save Batch</Button>
+              </div> */}
             </Form>
           </Card>
         </Col>
@@ -174,28 +269,28 @@ const CreateBatchPayment = () => {
           <Card className="batch-card" bodyStyle={{ padding: '24px' }}>
             <Title level={4} className="section-title">Batch Summary</Title>
             <div className="summary-line">
-              <Text>Total Arrears (€):</Text> <Text strong>€{batchTotals.arrears.toLocaleString()}</Text>
+              <Text>Total Arrears (€):</Text> <Text strong>€{batchTotals?.arrears?.toLocaleString()}</Text>
             </div>
             <div className="summary-line">
-              <Text>Total Current (€):</Text> <Text strong>€0</Text>
+              <Text>Total Current (€):</Text> <Text strong>€{batchTotals?.totalCurrent?.toLocaleString()}</Text>
             </div>
             <div className="summary-line">
-              <Text>Total Advance (€):</Text> <Text strong>€{batchTotals.advance.toLocaleString()}</Text>
+              <Text>Total Advance (€):</Text> <Text strong>€{batchTotals?.advance?.toLocaleString()}</Text>
             </div>
 
             <Divider style={{ margin: '16px 0' }} />
 
             <div className="summary-line total">
-              <Text strong>Batch Total (€):</Text> <Text strong style={{ color: '#1677ff' }}>€{batchTotals.total.toLocaleString()}</Text>
+              <Text strong>Batch Total (€):</Text> <Text strong style={{ color: '#1677ff' }}>€{batchTotals?.totalCurrent?.toLocaleString()}</Text>
             </div>
             <div className="summary-line">
-              <Text strong>Total Records:</Text> <Text>{batchTotals.records}</Text>
+              <Text strong>Total Records:</Text> <Text>{batchTotals?.records}</Text>
             </div>
           </Card>
         </Col>
       </Row>
     </div>
   );
-};
+});
 
 export default CreateBatchPayment;

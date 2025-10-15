@@ -1,16 +1,18 @@
 import { useState, useContext, useEffect } from "react";
-import TableComponent from "../../component/common/TableComponent";
-import { Row, Col, Button, Tabs } from "antd"; // ✅ IMPORT Row and Col
+import { Row, Col, Button, Tabs, Table, message } from "antd";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
 import { ExcelContext } from "../../context/ExcelContext";
 import "../../styles/ManualEntry.css";
 import ManualPaymentEntry from "../../component/finanace/ManualPaymentEntry";
 import MyDrawer from "../../component/common/MyDrawer";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
-import { tableData } from "../../Data";
+import { formatCurrency } from "../../utils/Utilities";
+import { paymentTypes } from "../../Data";
+import CustomSelect from "../../component/common/CustomSelect";
+import MyDatePicker from "../../component/common/MyDatePicker";
+import MyInput from "../../component/common/MyInput";
 
 const inputStyle = {
-  // ✅ DEFINE inputStyle BEFORE using it
   width: "100%",
   padding: "6px 11px",
   borderRadius: "6px",
@@ -21,167 +23,190 @@ const inputStyle = {
   marginTop: "4px",
 };
 
-const memberData = [
-  {
-    membershipNumber: "M12345",
-    name: "Ali Raza",
-    accountNumber: "IE29AIBK93115212345678",
-    payrollNo: "PR12345",
-  },
-  {
-    membershipNumber: "M67890",
-    name: "Sara Khan",
-    accountNumber: "IE64IRCE92050112345678",
-    payrollNo: "PR67890",
-  },
-  {
-    membershipNumber: "M54321",
-    name: "Ahmed Noor",
-    accountNumber: "IE12BOFI90001712345678",
-    payrollNo: "PR54321",
-  },
-];
-
 function BatchMemberSummary() {
-  const {
-    excelData,
-    selectedRowIndex,
-    selectedRowData,
-    uploadedFile,
-    batchTotals,
-  } = useContext(ExcelContext);
+  const { excelData, uploadedFile, batchTotals } = useContext(ExcelContext);
+
+  // Handle both old and new formats
+  const batchInfo = excelData || {};
+
+  const members = Array.isArray(batchInfo.excelData)
+    ? batchInfo.excelData
+    : Array.isArray(excelData)
+      ? excelData
+      : [];
+  debugger
   const [manualPayment, setmanualPayment] = useState(false);
-  const [selectedMemberId, setSelectedMemberId] = useState("");
-  const batchMemberSummaryData = excelData?.map((member) => {
-    const matched = tableData.find(
-      (item) => item.fullName === member["Member Name"]
-    );
-    return {
-      fullName: matched ? matched.fullName : "", // Add fullName if matched
-      ...member, // Spread rest of the member data
-    };
-  });
   const [fileUrl, setFileUrl] = useState(null);
-  console.log("selectedRowData", selectedRowData);
-  console.log("selectedRowIndex", selectedRowIndex);
-  const inputStyle1 = {
-    padding: "8px",
-    border: "none",
-    display: "inline-block",
-    width: "100%",
-  };
-  console.log("batchMemberSummaryData", excelData);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
-  const dataSource = [
+  const [activeKey, setactiveKey] = useState("1");
+
+  const columns = [
     {
-      key: "1",
-      MemberName: "John Doe",
-      BankAccount: "DE12345678901234567890",
-      PayrollNo: "P001",
-      TotalAmount: "$200",
-      Advance: "$200",
-      Arrears: "$200",
-      Comments: "Created on 2024-09-01",
+      title: "Full Name",
+      dataIndex: "Full name",
+      key: "Full name",
+      ellipsis: true,
+      width: 150,
+      render: (_, record) => record["Full name"] || "",
     },
     {
-      key: "2",
-      MemberName: "Jane Smith",
-      BankAccount: "DE09876543210987654321",
-      PayrollNo: "P002",
-      TotalAmount: "",
-      Advance: "",
-      Arrears: "$0",
-      Comments: "Created on 2024-09-05",
+      title: "Member Name",
+      dataIndex: "Member Name",
+      key: "Member Name",
+      ellipsis: true,
+      width: 150,
+      render: (_, record) => record["Full name"] || "",
     },
     {
-      key: "3",
-      MemberName: "Alice Brown",
-      BankAccount: "DE11112222333344445555",
-      PayrollNo: "P003",
-      TotalAmount: "",
-      Advance: "",
-      Arrears: "$50",
-      Comments: "Created on 2024-09-07",
+      title: "Bank Account",
+      dataIndex: "Bank Account",
+      key: "Bank Account",
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "Payroll No",
+      dataIndex: "Payroll No",
+      key: "Payroll No",
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "Arrears",
+      dataIndex: "Arrears",
+      key: "Arrears",
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "Comments",
+      dataIndex: "Comments",
+      key: "Comments",
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "Advance",
+      dataIndex: "Advance",
+      key: "Advance",
+      ellipsis: true,
+      width: 100,
+    },
+    {
+      title: "Total Amount",
+      dataIndex: "Total Amount",
+      key: "Total Amount",
+      ellipsis: true,
+      width: 100,
+      render: (_, record) => formatCurrency(record["Value for Periods Selected"]),
     },
   ];
+
   const items = [
     {
       key: "1",
       label: "Batch Payments",
       children: (
-        <TableComponent
-          data={batchMemberSummaryData}
-          screenName="BatchMemberSummary"
-        />
+        <div
+          className="common-table"
+          style={{
+            paddingLeft: "34px",
+            paddingRight: "34px",
+            width: "100%",
+            overflow: "hidden",
+          }}
+        >
+          <Table
+            style={{ tableLayout: "fixed" }}
+            bordered
+            rowClassName={() => ""}
+            scroll={{ x: 1500, y: 800 }}
+            size="small"
+            columns={columns}
+            dataSource={members}
+          />
+        </div>
       ),
     },
     {
       key: "2",
       label: "Exceptions",
       children: (
-        <TableComponent data={excelData} screenName="BatchMemberSummary" />
+        <div
+          className="common-table"
+          style={{
+            paddingLeft: "34px",
+            paddingRight: "34px",
+            width: "100%",
+            overflow: "hidden",
+          }}
+        >
+          <Table
+            style={{ tableLayout: "fixed" }}
+            bordered
+            rowClassName={() => ""}
+            scroll={{ x: 1500, y: 800 }}
+            size="small"
+            columns={columns}
+            dataSource={members}
+          />
+        </div>
       ),
     },
   ];
-  const [activeKey, setactiveKey] = useState("1");
-  const onChange = (key) => {
-    setactiveKey(key);
-  };
+
+  const onChange = (key) => setactiveKey(key);
+
   useEffect(() => {
     if (uploadedFile) {
       const url = URL.createObjectURL(uploadedFile);
       setFileUrl(url);
-
-      // Revoke previous URL when component unmounts or file changes
       return () => URL.revokeObjectURL(url);
     }
   }, [uploadedFile]);
-  // conosle.log("uploadedFile", uploadedFile);
+
   return (
-    <div className="" style={{ width: "100%" }}>
+    <div>
+      {/* Header Info */}
       <Row
         gutter={[16, 16]}
         style={{
-          paddingLeft: " 35px",
+          paddingLeft: "35px",
           paddingRight: "35px",
           paddingBottom: "20px",
-          paaddingTop: "20px",
+          paddingTop: "20px",
         }}
       >
         <Col span={4}>
-          <label>Batch Type</label>
-          <input
-            value="Bank Draft"
+          <CustomSelect
+            label="Batch Type"
+            value={batchInfo.batchType || ""}
             disabled
-            style={{
-              width: "100%",
-              padding: "6px 11px",
-              borderRadius: "6px",
-              border: "1px solid #d9d9d9",
-              backgroundColor: "#f5f5f5",
-              color: "rgba(0, 0, 0, 0.85)",
-              display: "block",
-              marginTop: "4px",
-            }}
+            options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
+            style={{ width: "100%" }}
           />
         </Col>
         <Col span={4}>
-          <label>Batch Date</label>
-          <input value="01-09-2024" disabled style={inputStyle} />
+          <MyDatePicker
+            label="Batch Date"
+            value={batchInfo.batchDate || ""}
+            disabled
+            style={{ width: "100%" }}
+          />
         </Col>
         <Col span={6}>
           <label>Batch Ref No</label>
-          <input value="34586BCS" disabled style={inputStyle} />
+          <input value={batchInfo.batchRef || ""} disabled style={inputStyle} />
         </Col>
-        <Col span={8}>
+        <Col span={7}>
           <label>Comments</label>
-          <input value="Testing Comments" disabled style={inputStyle} />
+          <input value={batchInfo.comments || ""} disabled style={inputStyle} />
         </Col>
-        <Col span={2}>
+        <Col span={3}>
           <label>Source</label>
           <br />
           {uploadedFile ? (
-            <a href={fileUrl} download={uploadedFile.name} style={inputStyle1}>
+            <a href={fileUrl} download={uploadedFile.name} style={{ color: "#215e97" }}>
               {uploadedFile.name}
             </a>
           ) : (
@@ -189,62 +214,40 @@ function BatchMemberSummary() {
           )}
         </Col>
       </Row>
+
+      {/* Totals */}
       <Row
         gutter={[16, 16]}
-        style={{
-          paddingLeft: "35px",
-          paddingRight: "35px",
-          paddingBottom: "20px",
-        }}
+        style={{ paddingLeft: "35px", paddingRight: "35px", paddingBottom: "20px" }}
       >
         <Col span={4}>
           <label>Total Arrears (€)</label>
-          <input
-            value={`€${batchTotals?.arrears}`}
-            disabled
-            style={{
-              width: "100%",
-              padding: "6px 11px",
-              borderRadius: "6px",
-              border: "1px solid #d9d9d9",
-              backgroundColor: "#f5f5f5",
-              color: "rgba(0, 0, 0, 0.85)",
-              display: "block",
-              marginTop: "4px",
-            }}
-          />
+          <input value={`€${batchTotals?.arrears || 0}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
-          <label>Total Current (€):</label>
-          <input value={`€300.00`} disabled style={inputStyle} />
+          {/* <label></label> */}
+          <MyInput label="Total Current (€)" value={`€${batchTotals?.totalCurrent || 0}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Advance</label>
-          <input
-            value={`€${batchTotals?.advance}`}
-            disabled
-            style={inputStyle}
-          />
+          <input value={`€${batchTotals?.advance || 0}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Batch Total (€)</label>
-          <input value={`€${batchTotals?.total}`} disabled style={inputStyle} />
+          <input value={`€${batchTotals?.total?.toLocaleString() || 0}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Records</label>
-          <input value={excelData?.length} disabled style={inputStyle} />
+          <input value={members?.length || 0} disabled style={inputStyle} />
         </Col>
-        <Col span={2} style={{ display: "flex", alignItems: "flex-end" }}></Col>
       </Row>
+
+      {/* Buttons */}
       <Row
         gutter={[16, 16]}
-        style={{
-          paddingLeft: "35px",
-          paddingRight: "35px",
-          paddingBottom: "20px",
-        }}
+        style={{ paddingLeft: "35px", paddingRight: "35px", paddingBottom: "20px" }}
       >
-        <Col span={2}>
+        <Col span={4}>
           <div className="d-flex gap-2">
             <Button
               style={{
@@ -253,14 +256,13 @@ function BatchMemberSummary() {
                 borderRadius: "3px",
                 width: "100%",
               }}
-              onClick={() => setmanualPayment(!manualPayment)}
+              onClick={() => setmanualPayment(true)}
             >
               Add Members
             </Button>
             <CommonPopConfirm
               title="Do you want to exclude member?"
-              onConfirm={() => console.log("Confirmed")}
-              onCancel={() => console.log("Cancelled")}
+              onConfirm={() => message.info("Member excluded")}
             >
               <Button
                 style={{
@@ -276,12 +278,11 @@ function BatchMemberSummary() {
           </div>
         </Col>
       </Row>
-      <Tabs
-        activeKey={activeKey}
-        items={items}
-        onChange={onChange}
-        className="batch-tabs"
-      />
+
+      {/* Tabs */}
+      <Tabs activeKey={activeKey} items={items} onChange={onChange} className="batch-tabs" />
+
+      {/* Drawers */}
       <TrigerBatchMemberDrawer
         isOpen={isBatchmemberOpen}
         onClose={() => setIsBatchmemberOpen(!isBatchmemberOpen)}

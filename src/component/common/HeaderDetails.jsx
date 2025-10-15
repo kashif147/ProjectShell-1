@@ -73,6 +73,7 @@ function HeaderDetails() {
   const [TransferDrawer, setTransferDrawer] = useState(false);
   const [rosterDrawer, setrosterDrawer] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
+  const batchFormRef = useRef(null);
   const [aprove, setaprove] = useState("001");
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
@@ -459,7 +460,7 @@ function HeaderDetails() {
                     onChange={handleChangeCheckBox}
                     optionType="button"
                     buttonStyle="solid"
-                  />
+                  /> 
                 ) : (
                   <Button
                     style={{
@@ -526,6 +527,10 @@ function HeaderDetails() {
             location?.pathname == "/CornMarket" ||
             location?.pathname == "/Batches" ||
             location?.pathname == "/Import" ||
+            location?.pathname == "/Reconciliation" ||
+            location?.pathname == "/Deductions" ||
+            location?.pathname == "/onlinePayment" ||
+            location?.pathname == "/StandingOrders" ||
             location?.pathname == "/Cheque" ||
             location?.pathname == "/Sms" ||
             location?.pathname == "/Email" ||
@@ -549,6 +554,7 @@ function HeaderDetails() {
                   ) : nav === "/ClaimSummary" ? (
                     <CreateClaim />
                   ) : (
+                    nav === "/Reconciliation" ? null : (
                     <Button
                       onClick={() => {
                         if (nav == "/Applications") {
@@ -566,6 +572,9 @@ function HeaderDetails() {
                           nav === "/Cancallation" ||
                           nav === "/Batches" ||
                           nav === "/Import" ||
+                          nav === "/onlinePayment" ||
+                          nav === "/Deductions" ||
+                          nav === "/StandingOrders" ||
                           nav === "/Cheque" ||
                           nav === "/CornMarket"
                         ) {
@@ -583,7 +592,7 @@ function HeaderDetails() {
                       className="butn"
                     >
                       Create
-                    </Button>
+                    </Button>)
                   )}
                   <SimpleMenu
                     title={
@@ -612,7 +621,22 @@ function HeaderDetails() {
                   <ActionDropdown items={menuItems} />
                 </div>
               </div>
-              {nav == "/RemindersSummary" || nav == "/Cancallation" ? (
+              {nav == "/Reconciliation" ? (
+                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                  <Row className="align-items-baseline w-100">
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      placeholder="From Date"
+                      style={{ width: 220, marginRight: 12 }}
+                    />
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      placeholder="To Date"
+                      style={{ width: 220 }}
+                    />
+                  </Row>
+                </div>
+              ) : nav == "/RemindersSummary" || nav == "/Cancallation" ? (
                 <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
                   <Row className="align-items-baseline w-100">
                     <DatePicker
@@ -996,6 +1020,8 @@ function HeaderDetails() {
             ? "Batch"
             : nav === "/Batches"
             ? ""
+            : nav === "/onlinePayment"
+            ? ""
             : nav === "/Import"
             ? ""
             : nav === "/Cheque"
@@ -1011,14 +1037,19 @@ function HeaderDetails() {
           setIsBatchOpen(!isBatchOpen);
         }}
         add={() => {
+          // Try to submit the batch form inside drawer first
+          if (batchFormRef && batchFormRef.current && typeof batchFormRef.current.submit === 'function') {
+            const result = batchFormRef.current.submit();
+            if (!result) return; // validation failed inside form
+          }
           navigate("/BatchMemberSummary", {
             state: { search: "BatchMemberSummary" },
           });
           setIsBatchOpen(!isBatchOpen);
         }}
       >
-         {nav === "/Batches" ||  nav === "/Import" || nav === "/Cheque"? (
-          <CreateBatchPayment />
+         {nav === "/Batches" ||  nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque"? (
+          <CreateBatchPayment ref={batchFormRef} />
         ) : (
           <div className="drawer-main-container">
             <MyInput

@@ -138,9 +138,39 @@ const Breadcrumb = () => {
       page: "Batches",
       icon: "💳",
     },
+    "/Batches": {
+      module: "Finance",
+      page: "/Reconciliation",
+      icon: "💳",
+    },
     "/Import": {
       module: "Finance",
       page: "Import",
+      icon: "📥",
+    },
+    "/Deductions": {
+      module: "Finance",
+      page: "Deductions",
+      icon: "📉",
+    },
+    "/Cheque": {
+      module: "Finance",
+      page: "Cheques",
+      icon: "📥",
+    },
+    "/Reconciliation": {
+      module: "Finance",
+      page: "Reconciliation",
+      icon: "📥",
+    },
+    "/StandingOrders": {
+      module: "Finance",
+      page: "Standing Orders",
+      icon: "📥",
+    },
+    "/onlinePayment": {
+      module: "Finance",
+      page: "Online Payments",
       icon: "📥",
     },
     "/BatchMemberSummary": {

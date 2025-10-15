@@ -127,9 +127,9 @@ export const financeItems = [
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Refunds",
+    "Online Payments",
     <FaCreditCard />,
-    "Refunds",
+    "Online Payments",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
@@ -163,46 +163,18 @@ export const financeItems = [
   ),
   createMenuItem(
     "Authorisations",
-    <FaUserCheck />,
-    "Authorisations",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "DD Batches",
-    <FaCashRegister />,
-    "DD Batches",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Salary",
-    <FaFileInvoiceDollar />,
-    "Salary",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Deductions",
-    <FaReceipt />,
-    "Deductions",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "DAS",
-    <FaDatabase />,
-    "DAS",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "DAS Authorisations",
     <FaUserShield />,
-    "DAS Authorisations",
+    "Authorisations",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
+  // createMenuItem(
+  //   "DD Batches",
+  //   <FaCashRegister />,
+  //   "DD Batches",
+  //   ["USER_READ", "USER_WRITE"],
+  //   ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  // ),
  
 ];
 

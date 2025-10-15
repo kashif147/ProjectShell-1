@@ -10,6 +10,7 @@ import ProtectedRoute from "./Navigation/ProtectedRoute";
 import { AuthorizationProvider } from "./context/AuthorizationContext";
 import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
+import OnlinePayment from "./pages/finance/OnlinePayment";
 // import RemindersDetails from "./pages/reminders/RemindersDetails";
 
 // Lazy loaded components
@@ -58,9 +59,12 @@ const CancellationDetail = lazy(() =>
 const Batches = lazy(() => import("./pages/finance/Batches"));
 const Import = lazy(() => import("./pages/finance/Import"));
 const Cheque = lazy(() => import("./pages/finance/Cheque"));
+const StandingOrders = lazy(() => import("./pages/finance/StandingOrders"));
 const BatchMemberSummary = lazy(() =>
   import("./pages/finance/BatchMemberSummary")
 );
+const Deductions = lazy(() => import("./pages/finance/Deductions"));
+const Reconciliation = lazy(() => import("./pages/finance/Reconciliation"));
 const NotDesignedYet = lazy(() => import("./pages/NotDesign"));
 const Sms = lazy(() => import("./pages/Correspondences/sms"));
 const Email = lazy(() => import("./pages/Correspondences/Emails"));
@@ -448,10 +452,45 @@ function Entry() {
                     />
 
                     <Route
+                      path="Deductions"
+                      element={
+                        <ProtectedRoute>
+                          <Deductions />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="StandingOrders"
+                      element={
+                        <ProtectedRoute>
+                          <StandingOrders />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
                       path="Cheque"
                       element={
                         <ProtectedRoute>
                           <Cheque />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="Reconciliation"
+                      element={
+                        <ProtectedRoute>
+                          <Reconciliation />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="onlinePayment"
+                      element={
+                        <ProtectedRoute>
+                          <OnlinePayment />
                         </ProtectedRoute>
                       }
                     />

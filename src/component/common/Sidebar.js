@@ -150,6 +150,9 @@ const Sidebar = () => {
       "/Cancallation": "Cancellations",
       "/ChangCateSumm": "Change Category",
       "/Import": "Imports",
+      "/Deductions": "Deductions",
+      "/Reconciliation": "Reconciliation",
+      "/StandingOrders": "Standing Orders",
       "/Cheque": "Cheques",
       "/Email": "Email",
       "/Sms": "SMS",
@@ -226,8 +229,23 @@ const Sidebar = () => {
       case "Imports":
         navigate("/Import", { state: { search: "Imports" } });
         break;
+      case "Deductions":
+        navigate("/Deductions", { state: { search: "Deductions" } });
+        break;
+      case "Reconciliation":
+        navigate("/Reconciliation", { state: { search: "Reconciliation" } });
+        break;
+      case "Standing Orders":
+        navigate("/StandingOrders", { state: { search: "Standing Orders" } });
+        break;
       case "Cheque":
         navigate("/Cheque", { state: { search: "Cheques" } });
+        break;
+      case "Reconciliations":
+        navigate("/Reconciliation", { state: { search: "Reconciliation" } });
+        break;
+      case "Online Payments":
+        navigate("/onlinePayment", { state: { search: "onlinePayment" } });
         break;
       case "Email":
         navigate("/Email", { state: { search: "Email" } });

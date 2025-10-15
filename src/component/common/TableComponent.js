@@ -387,7 +387,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
               if (location.pathname === "/RemindersSummary") {
                 setTriggerReminderDrawer(!TriggerReminderDrawer);
               }
-              if (location.pathname === "/Batches") {
+              if (location.pathname === "/Batches" || location.pathname === "/Cheque" || location.pathname === "/StandingOrders" || location.pathname === "/Deductions" ) {
                 setIsBatchmemberOpen(!isBatchmemberOpen);
               }
               // if (location.pathname === "/Batches") {
