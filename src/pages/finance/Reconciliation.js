@@ -27,28 +27,28 @@ const summaryCards = [
   },
   {
     title: "Approved",
-    value: 20,
+    value: 36,
     icon: <CheckCircle size={24} color="#22c55e" />,
     color: "#22c55e",
     bg: "#dcfce7",
   },
   {
     title: "Pending",
-    value: 20,
+    value: 14,
     icon: <Clock size={24} color="#eab308" />,
     color: "#eab308",
     bg: "#fef9c3",
   },
   {
     title: "Rejected",
-    value: 25,
+    value: "00",
     icon: <XCircle size={24} color="#ef4444" />,
     color: "#ef4444",
     bg: "#fee2e2",
   },
   {
     title: "Closing Balance",
-    value: 25,
+    value: "€123,456.00",
     icon: <Shuffle size={24} color="#0891b2" />,
     color: "#0891b2",
     bg: "#cffafe",
@@ -57,9 +57,9 @@ const summaryCards = [
 
 // Pie chart data
 const chartData = [
-  { name: "Approved", value: 20, color: "#45669d" },
-  { name: "Pending", value: 15, color: "#60a5fa" },
-  { name: "Rejected", value: 15, color: "#ef4444" },
+  { name: "Approved", value: 36, color: "#45669d" },
+  { name: "Pending", value: 14, color: "#60a5fa" },
+  { name: "Rejected", value: 0, color: "#ef4444" },
 ];
 
 // Bar chart data
@@ -193,7 +193,7 @@ const Reconciliation = () => {
                 textAlign: "center",
               }}
             >
-              Reconciliation Status
+              Batch Status Analysis
             </div>
             <div style={{ width: "100%", height: 350 }}>
               <ResponsiveContainer width="100%" height="100%">
