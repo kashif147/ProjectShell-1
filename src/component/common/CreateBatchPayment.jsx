@@ -47,7 +47,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   ];
   const [form] = Form.useForm();
   const { excelData, setExcelData, setBatchTotals, batchTotals, setUploadedFile, uploadedFile } = useContext(ExcelContext);
-  console.log("uploadedFile", batchTotals);
+  console.log("uploadedFile", excelData);
   const [formValues, setFormValues] = useState({
     batchType: '',
     batchDate: '',
@@ -123,7 +123,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   };
 
   const handleSubmit = () => {
-    const required = ['batchType', 'batchDate', 'batchRef', 'description'];
+    const required = ['batchType', 'batchDate', 'batchRef', ];
     const nextErrors = {};
     required.forEach((key) => {
       if (!formValues[key] || String(formValues[key]).trim() === '') {
@@ -154,8 +154,10 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       batchDate: formValues.batchDate,
       batchRef: formValues.batchRef,
       description: formValues.description,
+      batchStatus: 'Pending',
       comments: formValues.comments,
-      excelData: members,
+      createdBy:"Super User",
+      members: members,
     };
 
     // Save the object in context
@@ -249,7 +251,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 />
               </Form.Item> */}
               <MyInput
-                label="Upload Excel Fil111e"
+                label="Upload Excel File"
                 name="file"
                 type="file"
                 accept=".xlsx, .xls"

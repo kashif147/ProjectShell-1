@@ -11,7 +11,7 @@ import { paymentTypes } from "../../Data";
 import CustomSelect from "../../component/common/CustomSelect";
 import MyDatePicker from "../../component/common/MyDatePicker";
 import MyInput from "../../component/common/MyInput";
-
+import moment from 'moment'
 const inputStyle = {
   width: "100%",
   padding: "6px 11px",
@@ -25,16 +25,26 @@ const inputStyle = {
 
 function BatchMemberSummary() {
   const { excelData, uploadedFile, batchTotals } = useContext(ExcelContext);
-
-  // Handle both old and new formats
   const batchInfo = excelData || {};
-
-  const members = Array.isArray(batchInfo.excelData)
-    ? batchInfo.excelData
+  const members = Array.isArray(batchInfo?.members)
+    ? batchInfo.members
     : Array.isArray(excelData)
       ? excelData
       : [];
+  const totalValue = members.reduce((sum, member) => {
+    const value = parseFloat(member["Value for Periods Selected"]) || 0;
+    return sum + value;
+  }, 0);
+  const [totalValueState, setTotalValueState] = useState(0);
+  useEffect(() => {
+  const total = members.reduce((sum, member) => {
+    const value = parseFloat(member["Value for Periods Selected"]) || 0;
+    return sum + value;
+  }, 0);
+  setTotalValueState(total);
+}, [members]);
   debugger
+
   const [manualPayment, setmanualPayment] = useState(false);
   const [fileUrl, setFileUrl] = useState(null);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
@@ -180,7 +190,7 @@ function BatchMemberSummary() {
         <Col span={4}>
           <CustomSelect
             label="Batch Type"
-            value={batchInfo.batchType || ""}
+            value={batchInfo.PaymentType || ""}
             disabled
             options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
             style={{ width: "100%" }}
@@ -200,7 +210,7 @@ function BatchMemberSummary() {
         </Col>
         <Col span={7}>
           <label>Comments</label>
-          <input value={batchInfo.comments || ""} disabled style={inputStyle} />
+          <input value={batchInfo.Comments || ""} disabled style={inputStyle} />
         </Col>
         <Col span={3}>
           <label>Source</label>
@@ -222,19 +232,19 @@ function BatchMemberSummary() {
       >
         <Col span={4}>
           <label>Total Arrears (€)</label>
-          <input value={`€${batchTotals?.arrears || 0}`} disabled style={inputStyle} />
+          <input value={`€0.00`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           {/* <label></label> */}
-          <MyInput label="Total Current (€)" value={`€${batchTotals?.totalCurrent || 0}`} disabled style={inputStyle} />
+          <MyInput label="Total Current (€)" value={`€${totalValueState || 0}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Advance</label>
-          <input value={`€${batchTotals?.advance || 0}`} disabled style={inputStyle} />
+          <input value={`€0.00`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Batch Total (€)</label>
-          <input value={`€${batchTotals?.total?.toLocaleString() || 0}`} disabled style={inputStyle} />
+          <input value={`€${totalValueState?.toLocaleString() || 0}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Records</label>
@@ -294,7 +304,10 @@ function BatchMemberSummary() {
         width={760}
         isManual={true}
       >
-        <ManualPaymentEntry />
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+
+          <ManualPaymentEntry />
+        </div>
       </MyDrawer>
     </div>
   );

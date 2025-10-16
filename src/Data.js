@@ -5881,16 +5881,15 @@ export const cancellationDetail = [
 
 ];
 export const paymentTypes = [
-  { label: "Cheque", value: "cheque" },
-  { label: "Cash", value: "cash" },
-  { label: "Bank Transfer", value: "bank_transfer" },
-  { label: "Standing Order", value: "standing_order" },
-  { label: "Payroll Deduction", value: "payroll_deduction" },
-  { label: "Demand Draft", value: "demand_draft" },
-  { label: "Credit/Debit Card", value: "card" },
-  { label: "Mobile Wallet", value: "mobile_wallet" },
-  { label: "Online Payment", value: "online_payment" },
-  { label: "Adjustment", value: "adjustment" },
+  { label: "Cheque", value: "Cheque" },
+  { label: "Bank Transfer", value: "Bank Transfer" },
+  { label: "Standing Order", value: "Standing Order" },
+  { label: "Deduction", value: "Deduction" },
+  { label: "Demand Draft", value: "Demand Draft" },
+  { label: "Direct Debit", value: "Direct Debit" },
+  { label: "Online Payment", value: "Online Payment" },
+  { label: "Adjustment", value: "Adjustment" },
 ];
+
 
 

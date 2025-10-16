@@ -30,6 +30,7 @@ import { arrayMove } from "@dnd-kit/sortable";
 import CornMarketDrawer from "../cornmarket/CornMarketDrawer";
 import Gridmenu from "./Gridmenu";
 import AddNewGarda from "../details/AddNewGarda";
+import { tableData } from "../../constants/Batch";
 import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
 import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
@@ -38,6 +39,7 @@ import { set } from "react-hook-form";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 const EditableContext = React.createContext(null);
 
+
 const DraggableHeaderCell = ({ id, style, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
   const customStyle = {
@@ -45,12 +47,12 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
     border: `2px solid green`,
     ...(isDragging
       ? {
-          position: "relative",
-          zIndex: 9999,
-          userSelect: "none",
-          backgroundColor: "red",
-          color: "white",
-        }
+        position: "relative",
+        zIndex: 9999,
+        userSelect: "none",
+        backgroundColor: "red",
+        color: "white",
+      }
       : {}),
   };
   return (
@@ -66,12 +68,15 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 };
 
 const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
+  
+ 
   const location = useLocation();
   const {
     selectedRowIndex,
     setSelectedRowIndex,
     selectedRowData,
     setSelectedRowData,
+    setExcelData
   } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false);
   const { applications, applicationsLoading } = useSelector(
@@ -270,7 +275,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
-            actions={() => {}}
+            actions={() => { }}
             attachedFtn={() => {
               handleUploadClick();
             }}
@@ -343,26 +348,46 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         ) : col.title === "Application ID" ? (
           <Link
             // to="/AproveMembersip"
-            onClick={() => {
-              const { applicationStatus, ApplicationId } = record || {};
-              if (applicationStatus === "Draft") {
-                dispatch(
-                  getApplicationById({ id: "draft", draftId: ApplicationId })
-                );
-                setAddNewGardaDrwr(true);
-              } else if (applicationStatus === "submitted") {
-                dispatch(getApplicationById({ id: ApplicationId }));
-                setAddNewGardaDrwr(true);
-                disableFtn(false);
-              }
-            }}
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
+            // onClick={() => {
+            //   const { applicationStatus, ApplicationId, id } = record || {};
+            //   const batchPaths = [
+            //     "/Batches",
+            //     "/Import",
+            //     "/onlinePayment",
+            //     "/Cheque",
+            //     "/StandingOrders",
+            //     "/Deductions",
+            //   ];
+
+            //   if (batchPaths.includes(location.pathname)) {
+            //     // 🔹 For batch-related pages, get batch by ID
+            //     const batch = getBatchById(id);
+            //     debugger
+            //     if (batch) {
+            //       setExcelData(batch); // assuming setExcel updates ExcelContext state
+            //       console.log("Batch loaded:", batch);
+            //     } else {
+            //       console.warn("No batch found with ID:", id);
+            //     }
+            //   } else {
+            //     // 🔹 For application pages
+            //     if (applicationStatus === "Draft") {
+            //       dispatch(getApplicationById({ id: "draft", draftId: ApplicationId }));
+            //       setAddNewGardaDrwr(true);
+            //     } else if (applicationStatus === "submitted") {
+            //       dispatch(getApplicationById({ id: ApplicationId }));
+            //       setAddNewGardaDrwr(true);
+            //       disableFtn(false);
+            //     }
+            //   }
+            // }}
+            // state={{
+            //   search: screenName,
+            //   name: record?.fullName,
+            //   Forename: record?.forename,
+            //   Fullname: record?.surname,
+            //   DateOfBirth: record?.dateOfBirth,
+            // }}
           >
             <span style={{ textOverflow: "ellipsis" }}>{text}</span>
           </Link>
@@ -381,38 +406,41 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           >
             <span style={{ textOverflow: "ellipsis" }}>{text}</span>
           </Link>
-        ) : col.title === "Batch Name" && location.pathname != "/Batches" ? (
-          <Link
-            onClick={() => {
-              if (location.pathname === "/RemindersSummary") {
-                setTriggerReminderDrawer(!TriggerReminderDrawer);
-              }
-              if (location.pathname === "/Batches" || location.pathname === "/Cheque" || location.pathname === "/StandingOrders" || location.pathname === "/Deductions" ) {
-                setIsBatchmemberOpen(!isBatchmemberOpen);
-              }
-              // if (location.pathname === "/Batches") {
-              //   setmanualPayment(!manualPayment)
-              //   getProfile([record], index)
-              // }
-              else if (location.pathname === "/Cancallation") {
-                setIscancellationOpen(!iscancellationOpen);
-              } else if (location.pathname === "/CornMarket") {
-                setisCornMarOpen(!isCornMarOpen);
-              }
-            }}
-            state={{ search: screenName }}
-            // onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
-        ) : col.title === "Batch Name" && location.pathname === "/Batches" ? (
+        
+        ) : (col.title === "Batch Name" ) ? (
           <Link
             to="/BatchMemberSummary"
             state={{
               search: screenName,
               batchName: text,
-              batchId: record?.batchId || record?.key,
+              batchId: record?.id || record?.key,
+
             }}
+              onClick={() => {
+              // const {  id } = record || {};
+               debugger
+              const batchPaths = [
+                "/Batches",
+                "/Import",
+                "/onlinePayment",
+                "/Cheque",
+                "/StandingOrders",
+                "/Deductions",
+              ];
+              if (batchPaths.includes(location.pathname)) {
+                // 🔹 For batch-related pages, get batch by ID
+                const batch = getBatchById(record?.id);
+                debugger
+                if (batch) {
+                  setExcelData(batch); // assuming setExcel updates ExcelContext state
+                  console.log("Batch loaded:", batch);
+                } else {
+                  // console.warn("No batch found with ID:", id);
+                }
+             
+              }
+            }}
+
           >
             {`${text}`}
           </Link>
@@ -437,69 +465,69 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       sorter:
         col.title === "Full Name"
           ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 3,
-            }
+            compare: (a, b) =>
+              a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+            multiple: 3,
+          }
           : col.title === "Station"
-          ? {
+            ? {
               compare: (a, b) =>
                 a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
               multiple: 2,
             }
-          : col.title === "Duty"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : col.title === "Reg No"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : col.title === "Correspondence ID"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : undefined,
+            : col.title === "Duty"
+              ? {
+                compare: (a, b) =>
+                  a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
+              : col.title === "Reg No"
+                ? {
+                  compare: (a, b) =>
+                    a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                  multiple: 1,
+                }
+                : col.title === "Correspondence ID"
+                  ? {
+                    compare: (a, b) =>
+                      a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                    multiple: 1,
+                  }
+                  : undefined,
       sortDirections: ["ascend", "descend"],
       filters:
         col.title === "Station" || col.title === "Current Station"
           ? [
-              { text: "GALC", value: "GALC" },
-              { text: "DUBC", value: "DUBC" },
-              { text: "STOC", value: "STOC" },
-            ]
+            { text: "GALC", value: "GALC" },
+            { text: "DUBC", value: "DUBC" },
+            { text: "STOC", value: "STOC" },
+          ]
           : col.title === "Division"
-          ? [
+            ? [
               { text: "0026", value: "0026" },
               { text: "0031", value: "0031" },
               { text: "0045", value: "0045" },
             ]
-          : col.title === "Approval Status"
-          ? [
-              { text: "Approved", value: "Approved" },
-              { text: "Pending", value: "Pending" },
-              { text: "Rejected", value: "Rejected" },
-            ]
-          : col.title === "Current Station"
-          ? [
-              { text: "0026", value: "0026" },
-              { text: "0031", value: "0031" },
-              { text: "0045", value: "0045" },
-            ]
-          : col.title === "Method of Contact"
-          ? [
-              { text: "Call", value: "Call" },
-              { text: "Email", value: "Email" },
-              { text: "Letter", value: "Letter" },
-              { text: "Letter", value: "Letter" },
-            ]
-          : undefined,
+            : col.title === "Approval Status"
+              ? [
+                { text: "Approved", value: "Approved" },
+                { text: "Pending", value: "Pending" },
+                { text: "Rejected", value: "Rejected" },
+              ]
+              : col.title === "Current Station"
+                ? [
+                  { text: "0026", value: "0026" },
+                  { text: "0031", value: "0031" },
+                  { text: "0045", value: "0045" },
+                ]
+                : col.title === "Method of Contact"
+                  ? [
+                    { text: "Call", value: "Call" },
+                    { text: "Email", value: "Email" },
+                    { text: "Letter", value: "Letter" },
+                    { text: "Letter", value: "Letter" },
+                  ]
+                  : undefined,
       onFilter: (value, record) => {
         if (col.title === "Station" || col.title === "Current Station") {
           return record[col.dataIndex] === value;
@@ -528,6 +556,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
     const endIndex = startIndex + pageSize;
     setCurrentPageData(dataSource.slice(startIndex, endIndex));
   }, [currentPage, dataSource]);
+ const getBatchById = (batchId) => {
+    if (!Array.isArray(tableData)) return null;
+    const batch = tableData.find((b) => b.id === batchId) || null;
+    if (batch) setExcelData(batch); // ✅ set into context
+    return batch;
+  };
 
   const EditableRow = ({ index, ...props }) => {
     const [form] = Form.useForm();
@@ -571,7 +605,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           ...record,
           ...values,
         });
-      } catch (errInfo) {}
+      } catch (errInfo) { }
     };
     let childNode = children;
     if (editable) {
@@ -757,7 +791,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         isManual={true}
       >
         <div className="drawer-main-cntainer p-4">
-        <ManualPaymentEntry />
+          <ManualPaymentEntry />
         </div>
       </MyDrawer>
     </DndContext>
