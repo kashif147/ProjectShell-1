@@ -1,10 +1,17 @@
-import { notification } from 'antd';
+// MyAlert.js
+import { notification } from "antd";
 
-const MyAlert = (message, type = 'info', description = '') => {
+const MyAlert = (type, message, description) => {
+  // Ensure `type` is valid: success, error, info, warning
+  if (!["success", "error", "info", "warning"].includes(type)) {
+    console.warn(`⚠️ Invalid notification type: ${type}`);
+    return;
+  }
+
   notification[type]({
     message,
     description,
-    placement: 'topRight',
+    placement: "topRight",
   });
 };
 

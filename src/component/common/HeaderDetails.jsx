@@ -1048,41 +1048,11 @@ function HeaderDetails() {
           setIsBatchOpen(!isBatchOpen);
         }}
       >
-         {nav === "/Batches" ||  nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque"? (
-          <CreateBatchPayment ref={batchFormRef} />
-        ) : (
-          <div className="drawer-main-container">
-            <MyInput
-              label="Batch Name"
-              name="batchName"
-              required
-              hasError={false} // Set to true if validation fails
-              errorMessage="Batch name is required"
-            />
-
-            <MyDatePicker
-              label="Batch Date"
-              name="batchDate"
-              required
-              hasError={false}
-              errorMessage="Batch date is required"
-            />
-
-            <CustomSelect
-              label="Status"
-              name="status"
-              value="001"
-              options={[
-                { value: "001", label: "Draft" },
-                { value: "002", label: "Inactive" },
-              ]}
-              disabled
-              required
-              hasError={false}
-              errorMessage="Status is required"
-            />
-          </div>
-        )}
+         {nav === "/Batches" ||  nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque"|| nav === "/onlinePayment"? (
+          <CreateBatchPayment ref={batchFormRef} />)
+          :
+          <CreateBatchPayment ref={batchFormRef} />}
+       
       </MyDrawer>
       <ChangeCategoryDrawer
         open={isDrawerOpen}

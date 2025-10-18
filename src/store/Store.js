@@ -27,7 +27,7 @@ import productTypesReducer from "../features/ProductTypesSlice";
 import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
-
+import batchReducer  from '../features/BatchesSlice'
 const store = configureStore({
   reducer: {
     auth: authReducer, // Authentication state
@@ -53,6 +53,7 @@ const store = configureStore({
     products: productsReducer,
     productTypesWithProducts: productTypesWithProductsReducer,
     countries: countriesReducer,
+    batches: batchReducer,
   },
 });
 

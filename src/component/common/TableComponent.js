@@ -19,7 +19,7 @@ import {
   useDroppable,
 } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
-import ManualPaymentEntry from "../finanace/ManualPaymentEntry";
+// import ManualPaymentEntry from "../finanace/ManualPaymentEntry";
 import {
   SortableContext,
   useSortable,
@@ -791,7 +791,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         isManual={true}
       >
         <div className="drawer-main-cntainer p-4">
-          <ManualPaymentEntry />
+          {/* <ManualPaymentEntry /> */}
         </div>
       </MyDrawer>
     </DndContext>

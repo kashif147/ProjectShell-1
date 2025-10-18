@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const api = `${process.env.REACT_APP_PORTAL_SERVICE}/applications`;
+const api = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications`;
 
 // 🔹 Normalizer: make local drafts look like API applications
 const mapLocalDraftToApplication = (draft) => ({

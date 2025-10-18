@@ -8,9 +8,9 @@ import { CiCreditCard1 } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
 
 const MembershipForm = () => {
-  const { data: countryOptions, } = useSelector(
-    (state) => state.countries
-  );
+  // const { data: countryOptions, } = useSelector(
+  //   (state) => state.countries
+  // );
   // Internal form state
   const [formData, setFormData] = useState({
     title: "",
@@ -196,7 +196,7 @@ const MembershipForm = () => {
                 label="country"
                 name="country"
                 value={formData.country}
-                options={countryOptions}
+                // options={countryOptions}
                 required
               // disabled={isDisable}
               // onChange={(e) => handleInputChange("country", e.target.value)}

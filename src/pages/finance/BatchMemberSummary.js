@@ -1,17 +1,19 @@
 import { useState, useContext, useEffect } from "react";
 import { Row, Col, Button, Tabs, Table, message } from "antd";
+import { useSelector } from "react-redux";
+import { useLocation, useParams } from "react-router-dom";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
 import { ExcelContext } from "../../context/ExcelContext";
 import "../../styles/ManualEntry.css";
-import ManualPaymentEntry from "../../component/finanace/ManualPaymentEntry";
-import MyDrawer from "../../component/common/MyDrawer";
+import ManualPaymentEntryDrawer from "../../component/finanace/ManualPaymentEntryDrawer";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { formatCurrency } from "../../utils/Utilities";
 import { paymentTypes } from "../../Data";
 import CustomSelect from "../../component/common/CustomSelect";
 import MyDatePicker from "../../component/common/MyDatePicker";
 import MyInput from "../../component/common/MyInput";
-import moment from 'moment'
+import moment from 'moment';
+
 const inputStyle = {
   width: "100%",
   padding: "6px 11px",
@@ -24,91 +26,117 @@ const inputStyle = {
 };
 
 function BatchMemberSummary() {
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const { batchId } = useParams();
+  const location = useLocation();
+  
+  const batches = useSelector(state => state.batches.batches);
   const { excelData, uploadedFile, batchTotals } = useContext(ExcelContext);
-  const batchInfo = excelData || {};
-  const members = Array.isArray(batchInfo?.members)
-    ? batchInfo.members
-    : Array.isArray(excelData)
-      ? excelData
-      : [];
+  
+  // Find the current batch with proper date handling
+  const locationBatchData = location.state?.batchData;
+  const batchFromRedux = batchId ? batches.find(batch => batch.id === parseInt(batchId)) : null;
+  
+  const currentBatch = locationBatchData || batchFromRedux || excelData;
+  const batchInfo = currentBatch || {};
+
+  // Helper function to safely parse dates
+  const getSafeDate = (dateValue) => {
+    if (!dateValue) return null;
+    if (moment.isMoment(dateValue)) return dateValue;
+    return moment(dateValue);
+  };
+
+  const members = Array.isArray(batchInfo?.members) ? batchInfo.members : [];
+
+  const onSelectAll = (checked) => {
+    if (checked) {
+      const allKeys = members.map((item, index) => item.id || index);
+      setSelectedRowKeys(allKeys);
+    } else {
+      setSelectedRowKeys([]);
+    }
+  };
+
+  const onSelectSingle = (record, selected) => {
+    if (selected) {
+      onSelectAll(true);
+    } else {
+      onSelectAll(false);
+    }
+  };
+
+  const rowSelection = {
+    selectedRowKeys,
+    onSelect: onSelectSingle,
+    onChange: (keys) => setSelectedRowKeys(keys),
+  };
+
+  // Calculate totals
   const totalValue = members.reduce((sum, member) => {
     const value = parseFloat(member["Value for Periods Selected"]) || 0;
     return sum + value;
   }, 0);
-  const [totalValueState, setTotalValueState] = useState(0);
-  useEffect(() => {
-  const total = members.reduce((sum, member) => {
-    const value = parseFloat(member["Value for Periods Selected"]) || 0;
-    return sum + value;
-  }, 0);
-  setTotalValueState(total);
-}, [members]);
-  debugger
 
-  const [manualPayment, setmanualPayment] = useState(false);
+  const [totalValueState, setTotalValueState] = useState(0);
+  const [manualPayment, setManualPayment] = useState(false);
   const [fileUrl, setFileUrl] = useState(null);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
-  const [activeKey, setactiveKey] = useState("1");
+  const [activeKey, setActiveKey] = useState("1");
+
+  useEffect(() => {
+    const total = members.reduce((sum, member) => {
+      const value = parseFloat(member["Value for Periods Selected"]) || 0;
+      return sum + value;
+    }, 0);
+    setTotalValueState(total);
+  }, [members]);
+
+  useEffect(() => {
+    if (uploadedFile) {
+      const url = URL.createObjectURL(uploadedFile);
+      setFileUrl(url);
+      return () => URL.revokeObjectURL(url);
+    }
+  }, [uploadedFile]);
 
   const columns = [
+    {
+      title: "Membership No",
+      dataIndex: "Membership No",
+      key: "Membership No",
+      ellipsis: true,
+      width: 120,
+    },
     {
       title: "Full Name",
       dataIndex: "Full name",
       key: "Full name",
       ellipsis: true,
       width: 150,
-      render: (_, record) => record["Full name"] || "",
+      render: (text, record) => text || `${record["First name"] || ''} ${record["Last name"] || ''}`.trim(),
     },
     {
-      title: "Member Name",
-      dataIndex: "Member Name",
-      key: "Member Name",
+      title: "First Name",
+      dataIndex: "First name",
+      key: "First name",
       ellipsis: true,
-      width: 150,
-      render: (_, record) => record["Full name"] || "",
+      width: 120,
     },
     {
-      title: "Bank Account",
-      dataIndex: "Bank Account",
-      key: "Bank Account",
+      title: "Last Name",
+      dataIndex: "Last name",
+      key: "Last name",
       ellipsis: true,
-      width: 150,
+      width: 120,
     },
     {
-      title: "Payroll No",
-      dataIndex: "Payroll No",
-      key: "Payroll No",
+      title: "Value for Periods Selected",
+      dataIndex: "Value for Periods Selected",
+      key: "Value for Periods Selected",
       ellipsis: true,
-      width: 150,
-    },
-    {
-      title: "Arrears",
-      dataIndex: "Arrears",
-      key: "Arrears",
-      ellipsis: true,
-      width: 150,
-    },
-    {
-      title: "Comments",
-      dataIndex: "Comments",
-      key: "Comments",
-      ellipsis: true,
-      width: 150,
-    },
-    {
-      title: "Advance",
-      dataIndex: "Advance",
-      key: "Advance",
-      ellipsis: true,
-      width: 100,
-    },
-    {
-      title: "Total Amount",
-      dataIndex: "Total Amount",
-      key: "Total Amount",
-      ellipsis: true,
-      width: 100,
-      render: (_, record) => formatCurrency(record["Value for Periods Selected"]),
+      width: 120,
+      render: (value) => formatCurrency(value || 0),
     },
   ];
 
@@ -134,6 +162,13 @@ function BatchMemberSummary() {
             size="small"
             columns={columns}
             dataSource={members}
+            rowSelection={rowSelection}
+            rowKey={(record, index) => record.id || index}
+            pagination={{
+              pageSize: 10,
+              showSizeChanger: true,
+              showQuickJumper: true,
+            }}
           />
         </div>
       ),
@@ -158,22 +193,26 @@ function BatchMemberSummary() {
             scroll={{ x: 1500, y: 800 }}
             size="small"
             columns={columns}
-            dataSource={members}
+            dataSource={[]}
+            pagination={false}
           />
         </div>
       ),
     },
   ];
 
-  const onChange = (key) => setactiveKey(key);
+  const onChange = (key) => setActiveKey(key);
 
-  useEffect(() => {
-    if (uploadedFile) {
-      const url = URL.createObjectURL(uploadedFile);
-      setFileUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [uploadedFile]);
+  // Get display values with fallbacks
+  const displayBatchDate = getSafeDate(batchInfo.batchDate);
+  const displayCreatedAt = getSafeDate(batchInfo.createdAt);
+  const displayPaymentType = batchInfo.PaymentType || batchInfo.batchType;
+  const displayComments = batchInfo.Comments || batchInfo.comments;
+  const displayArrears = batchInfo.arrears || batchTotals?.arrears || 0;
+  const displayAdvance = batchInfo.advance || batchTotals?.advance || 0;
+  const displayTotalCurrent = batchInfo.totalCurrent || batchTotals?.totalCurrent || totalValueState;
+  const displayTotal = batchInfo.total || batchTotals?.total || totalValueState;
+  const displayRecords = batchInfo.Count || members?.length || 0;
 
   return (
     <div>
@@ -190,7 +229,7 @@ function BatchMemberSummary() {
         <Col span={4}>
           <CustomSelect
             label="Batch Type"
-            value={batchInfo.PaymentType || ""}
+            value={displayPaymentType || ""}
             disabled
             options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
             style={{ width: "100%" }}
@@ -199,7 +238,7 @@ function BatchMemberSummary() {
         <Col span={4}>
           <MyDatePicker
             label="Batch Date"
-            value={batchInfo.batchDate || ""}
+            value={displayBatchDate}
             disabled
             style={{ width: "100%" }}
           />
@@ -210,7 +249,7 @@ function BatchMemberSummary() {
         </Col>
         <Col span={7}>
           <label>Comments</label>
-          <input value={batchInfo.Comments || ""} disabled style={inputStyle} />
+          <input value={displayComments || ""} disabled style={inputStyle} />
         </Col>
         <Col span={3}>
           <label>Source</label>
@@ -232,25 +271,50 @@ function BatchMemberSummary() {
       >
         <Col span={4}>
           <label>Total Arrears (€)</label>
-          <input value={`€0.00`} disabled style={inputStyle} />
+          <input value={`€${formatCurrency(displayArrears)}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
-          {/* <label></label> */}
-          <MyInput label="Total Current (€)" value={`€${totalValueState || 0}`} disabled style={inputStyle} />
+          <MyInput 
+            label="Total Current (€)" 
+            value={`€${formatCurrency(displayTotalCurrent)}`} 
+            disabled 
+          />
         </Col>
         <Col span={4}>
-          <label>Total Advance</label>
-          <input value={`€0.00`} disabled style={inputStyle} />
+          <label>Total Advance (€)</label>
+          <input value={`€${formatCurrency(displayAdvance)}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Batch Total (€)</label>
-          <input value={`€${totalValueState?.toLocaleString() || 0}`} disabled style={inputStyle} />
+          <input value={`€${formatCurrency(displayTotal)}`} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Records</label>
-          <input value={members?.length || 0} disabled style={inputStyle} />
+          <input value={displayRecords} disabled style={inputStyle} />
         </Col>
       </Row>
+
+      {/* Batch Info Display */}
+      {batchInfo.batchName && (
+        <Row
+          gutter={[16, 16]}
+          style={{ paddingLeft: "35px", paddingRight: "35px", paddingBottom: "10px" }}
+        >
+          <Col span={24}>
+            <div style={{ 
+              background: "#f0f8ff", 
+              padding: "10px", 
+              borderRadius: "6px",
+              border: "1px solid #d6e9ff"
+            }}>
+              <strong>Batch: </strong>{batchInfo.batchName} | 
+              <strong> Status: </strong>{batchInfo.batchStatus} | 
+              <strong> Created By: </strong>{batchInfo.createdBy} | 
+              <strong> Created At: </strong>{displayCreatedAt ? displayCreatedAt.format('DD/MM/YYYY HH:mm') : 'N/A'}
+            </div>
+          </Col>
+        </Row>
+      )}
 
       {/* Buttons */}
       <Row
@@ -266,7 +330,7 @@ function BatchMemberSummary() {
                 borderRadius: "3px",
                 width: "100%",
               }}
-              onClick={() => setmanualPayment(true)}
+              onClick={() => setManualPayment(true)}
             >
               Add Members
             </Button>
@@ -297,18 +361,16 @@ function BatchMemberSummary() {
         isOpen={isBatchmemberOpen}
         onClose={() => setIsBatchmemberOpen(!isBatchmemberOpen)}
       />
-      <MyDrawer
+      
+      <ManualPaymentEntryDrawer          
         open={manualPayment}
-        onClose={() => setmanualPayment(!manualPayment)}
-        title={"Manual Payment Entry"}
-        width={760}
-        isManual={true}
-      >
-        <div className="drawer-main-cntainer p-4 me-2 ms-2">
-
-          <ManualPaymentEntry />
-        </div>
-      </MyDrawer>
+        onClose={() => setManualPayment(!manualPayment)} 
+        batchSummryData={{
+          PaymentType: displayPaymentType,
+          total: displayTotalCurrent,
+          batchRef: batchInfo?.batchRef
+        }}
+      />
     </div>
   );
 }

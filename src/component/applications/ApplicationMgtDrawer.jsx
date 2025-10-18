@@ -13,17 +13,18 @@ import { CatOptions, workLocations } from "../../Data";
 import { CiCreditCard1 } from "react-icons/ci";
 import { insertDataFtn } from "../../utils/Utilities";
 import { getAllLookups } from "../../features/LookupsSlice";
-import { fetchCountries } from "../../features/CountrySlice";
+// import { fetchCountries } from "../../features/CountrySlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
+import { fetchCountries } from "../../features/CountriesSlice";
 
 import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
-const baseURL = process.env.REACT_APP_PORTAL_SERVICE;
+const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 
 function ApplicationMgtDrawer({
   open,
@@ -73,7 +74,7 @@ function ApplicationMgtDrawer({
     }
   };
   const dispatch = useDispatch();
-  const { data: countryOptions } = useSelector((state) => state.countries);
+    const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
@@ -417,7 +418,7 @@ function ApplicationMgtDrawer({
       MyAlert(
         "error",
         "Failed to submit details",
-        error?.response?.data?.error || error.message
+        error?.response?.data?.error?.message || error.message
       );
     }
   };
@@ -970,7 +971,7 @@ function ApplicationMgtDrawer({
                       label="country Primary Qualification"
                       name="countryPrimaryQualification"
                       value={InfData?.personalInfo?.countryPrimaryQualification}
-                      options={countryOptions}
+                      options={countriesOptions}
                       required
                       disabled={isDisable}
                       onChange={(e) =>
@@ -1178,7 +1179,7 @@ function ApplicationMgtDrawer({
                       label="country"
                       name="country"
                       value={InfData.contactInfo?.country}
-                      options={countryOptions}
+                      options={countriesOptions}
                       required
                       disabled={isDisable}
                       onChange={(e) =>
@@ -1196,7 +1197,7 @@ function ApplicationMgtDrawer({
                     <MyInput
                       label="Mobile"
                       name="mobile"
-                      type="number"
+                      type="mobile"
                       value={InfData.contactInfo?.mobileNumber}
                       disabled={isDisable}
                       onChange={(e) =>
@@ -1764,9 +1765,9 @@ function ApplicationMgtDrawer({
                     name="paymentType"
                     required
                     options={[
-                      { value: "deduction", label: "Deduction at Source" },
+                      { value: "Payroll Deduction", label: "Deduction at Source" },
                       // { value: 'creditCard', label: 'Credit Card' },
-                      { value: "creditCard", label: "Direct Debit" },
+                      { value: "Direct Debit", label: "Direct Debit" },
                     ]}
                     disabled={isDisable}
                     onChange={(e) =>

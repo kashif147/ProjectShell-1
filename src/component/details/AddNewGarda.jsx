@@ -174,9 +174,9 @@ function AddNewGarda({ open, onClose, isGard }) {
       "submissionDate": subscriptionDetails?.submissionDate ? convertToLocalTime(subscriptionDetails?.submissionDate) : null,
     };
   };
-  const { data: countryOptions, } = useSelector(
-    (state) => state.countries
-  );
+  // const { data: countryOptions, } = useSelector(
+  //   (state) => state.countries
+  // );
   const inputRef = useRef(null);
   const { isLoaded } = useJsApiLoader({
     id: 'google-map-script',
@@ -934,7 +934,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   label="country Primary Qualification"
                   name="countryPrimaryQualification"
                   value={InfData?.countryPrimaryQualification}
-                  options={countryOptions}
+                  // options={countryOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("countryPrimaryQualification", e.target.value)}
@@ -1087,7 +1087,7 @@ function AddNewGarda({ open, onClose, isGard }) {
                   label="country"
                   name="country"
                   value={InfData.country}
-                  options={countryOptions}
+                  // options={countryOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("country", e.target.value)}

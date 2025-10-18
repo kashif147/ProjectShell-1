@@ -1,4 +1,4 @@
-import { useState, useContext, forwardRef, useImperativeHandle } from 'react';
+import { useState, useContext, forwardRef, useImperativeHandle, useEffect } from 'react';
 import { Form, Input, Select, DatePicker, Row, Col, Card, Typography, Divider, message, Button } from 'antd';
 import * as XLSX from 'xlsx';
 import { ExcelContext } from '../../context/ExcelContext';
@@ -8,10 +8,14 @@ import '../../styles/CreateBatchPayment.css';
 import MyDatePicker from './MyDatePicker';
 import MyInput from './MyInput';
 import CustomSelect from './CustomSelect';
+import { useLocation } from 'react-router-dom';
+import { useDispatch } from 'react-redux';
+import { addBatchWithMember } from '../../features/BatchesSlice'; // Import the Redux action
+import { useNavigate } from 'react-router-dom';
+import moment from 'moment';
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
-
 
 const requiredColumns = [
   "Member Name",
@@ -24,6 +28,9 @@ const requiredColumns = [
 ];
 
 const CreateBatchPayment = forwardRef((props, ref) => {
+  const location = useLocation();
+  const navigate = useNavigate()
+  const dispatch = useDispatch(); // Initialize Redux dispatch
 
   const memberData = [
     {
@@ -45,9 +52,14 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       payrollNo: "PR54321",
     },
   ];
+
   const [form] = Form.useForm();
   const { excelData, setExcelData, setBatchTotals, batchTotals, setUploadedFile, uploadedFile } = useContext(ExcelContext);
   console.log("uploadedFile", excelData);
+
+  const [isSpecialPath, setIsSpecialPath] = useState(false);
+  const [autoBatchType, setAutoBatchType] = useState('');
+
   const [formValues, setFormValues] = useState({
     batchType: '',
     batchDate: '',
@@ -55,7 +67,71 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     description: '',
     comments: '',
   });
+
   const [formErrors, setFormErrors] = useState({});
+
+  // Check current path and set batch type accordingly
+  useEffect(() => {
+    const currentPath = location.pathname;
+    let batchType = '';
+    let isSpecial = false;
+
+    switch (currentPath) {
+      case "/StandingOrders":
+        batchType = 'Standing Order';
+        isSpecial = true;
+        break;
+      case "/Deductions":
+        batchType = 'Deductions';
+        isSpecial = true;
+        break;
+      case "/onlinePayment":
+        batchType = 'Online Payment';
+        isSpecial = true;
+        break;
+      case "/Cheque":
+        batchType = 'Cheque';
+        isSpecial = true;
+        break;
+      default:
+        batchType = '';
+        isSpecial = false;
+    }
+
+    setIsSpecialPath(isSpecial);
+    setAutoBatchType(batchType);
+
+    // If it's a special path, automatically set batchType
+    if (isSpecial && batchType) {
+      setFormValues(prev => ({
+        ...prev,
+        batchType: batchType
+      }));
+    }
+
+    // Cleanup function - reset form values when component unmounts
+    return () => {
+      setFormValues({
+        batchType: '',
+        batchDate: '',
+        batchRef: '',
+        description: '',
+        comments: '',
+      });
+      setFormErrors({});
+      // Also clear Excel context data if needed
+      setExcelData([]);
+      setBatchTotals({
+        arrears: 0,
+        advance: 0,
+        totalCurrent: 0,
+        total: 0,
+        records: 0,
+      });
+      setUploadedFile(null);
+    };
+  }, [location.pathname]);
+
   const handleFileUpload = (event) => {
     const file = event.target.files[0];
     if (!file) return;
@@ -76,7 +152,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         return;
       }
 
-      const requiredColumns = ['Membership No', 'Last name', 'First name', 'Full name', 'Value for Periods Selected']; // Customize if needed
+      const requiredColumns = ['Membership No', 'Last name', 'First name', 'Full name', 'Value for Periods Selected'];
       const uploadedColumns = Object.keys(json[0]);
       const missingColumns = requiredColumns.filter(
         (col) => !uploadedColumns.includes(col)
@@ -102,13 +178,12 @@ const CreateBatchPayment = forwardRef((props, ref) => {
           return sum + cleanValue(row["Advance"]);
         }, 0);
 
-        const batchTotal =totalCurrent;
+        const batchTotal = totalCurrent;
         setBatchTotals({
           arrears: 0,
           advance: totalAdvance,
           totalCurrent,
           total: batchTotal,
-
           records: json.length,
         });
       }
@@ -118,12 +193,17 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   };
 
   const setField = (name, value) => {
+    // Don't allow changing batchType if it's a special path
+    if (name === 'batchType' && isSpecialPath) {
+      return;
+    }
+
     setFormValues((prev) => ({ ...prev, [name]: value }));
     setFormErrors((prev) => ({ ...prev, [name]: false }));
   };
 
   const handleSubmit = () => {
-    const required = ['batchType', 'batchDate', 'batchRef', ];
+    const required = ['batchType', 'batchDate', 'batchRef'];
     const nextErrors = {};
     required.forEach((key) => {
       if (!formValues[key] || String(formValues[key]).trim() === '') {
@@ -131,12 +211,12 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       }
     });
     setFormErrors(nextErrors);
+
     if (Object.keys(nextErrors).length > 0) {
       message.error('Please fill all required fields.');
       return null;
     }
 
-    // ✅ Check current path to enforce Excel requirement only for /Import
     const currentPath = window.location.pathname;
     if (currentPath === "/Import") {
       if (!uploadedFile || !excelData || excelData.length === 0) {
@@ -145,10 +225,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       }
     }
 
-    // Ensure excelData is a valid array
     const members = Array.isArray(excelData) ? excelData : [];
-
-    // Create the new structured object
     const batchObject = {
       batchType: formValues.batchType,
       batchDate: formValues.batchDate,
@@ -156,27 +233,87 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       description: formValues.description,
       batchStatus: 'Pending',
       comments: formValues.comments,
-      createdBy:"Super User",
+      createdBy: "Super User",
       members: members,
     };
 
-    // Save the object in context
     setExcelData(batchObject);
-
     message.success('Batch data prepared successfully');
     return batchObject;
   };
 
 
+  // Add a reset function that can be called from parent
+  const resetForm = () => {
+    setFormValues({
+      batchType: '',
+      batchDate: '',
+      batchRef: '',
+      description: '',
+      comments: '',
+    });
+    setFormErrors({});
+    setExcelData([]);
+    setBatchTotals({
+      arrears: 0,
+      advance: 0,
+      totalCurrent: 0,
+      total: 0,
+      records: 0,
+    });
+    setUploadedFile(null);
+
+    // Also reset the file input
+    const fileInput = document.querySelector('input[type="file"]');
+    if (fileInput) {
+      fileInput.value = '';
+    }
+  };
+
   useImperativeHandle(ref, () => ({
     submit: handleSubmit,
+    reset: resetForm,
   }));
+
+  // Get page title based on path
+  const getPageTitle = () => {
+    const currentPath = location.pathname;
+    switch (currentPath) {
+      case "/StandingOrders":
+        return "Standing Orders Batch Payment Details";
+      case "/Deductions":
+        return "Deductions Batch Payment Details";
+      case "/onlinePayment":
+        return "Online Payment Batch Details";
+      case "/Cheque":
+        return "Cheque Batch Payment Details";
+      default:
+        return "Batch Payment Details";
+    }
+  };
+
+  // Get breadcrumb text based on path
+  const getBreadcrumbText = () => {
+    const currentPath = window.location.pathname;
+    switch (currentPath) {
+      case "/StandingOrders":
+        return "Payments > Standing Orders Batch";
+      case "/Deductions":
+        return "Payments > Deductions Batch";
+      case "/onlinePayment":
+        return "Payments > Online Payment Batch";
+      case "/Cheque":
+        return "Payments > Cheque Batch";
+      default:
+        return "Payments > Create Batch";
+    }
+  };
 
   return (
     <div className="create-batch-container">
       <div className="header">
-        <Title level={3} className="page-title">Batch Payment Details</Title>
-        <Text type="secondary">Payments &gt; Create Batch</Text>
+        <Title level={3} className="page-title">{getPageTitle()}</Title>
+        <Text type="secondary">{getBreadcrumbText()}</Text>
       </div>
 
       <Row gutter={24} style={{ marginTop: 24 }}>
@@ -190,12 +327,18 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                     label="Batch Type"
                     name="batchType"
                     required
+                    disabled={isSpecialPath} // Disable if special path
                     hasError={!!formErrors.batchType}
                     errorMessage="Please select batch type"
                     options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
                     value={formValues.batchType}
                     onChange={(e) => setField('batchType', e.target.value)}
                   />
+                  {isSpecialPath && (
+                    <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
+                      Payment type is automatically set to {autoBatchType}
+                    </Text>
+                  )}
                 </div>
                 <div className='w-50'>
                   <MyDatePicker
@@ -241,28 +384,21 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 onChange={(e) => setField('comments', e.target.value)}
               />
 
-              {/* <Form.Item label="Upload Excel File" name="file">
-                <Input
-                  type="file"
-                  accept=".xlsx, .xls"
-                  onChange={handleFileUpload}
-                  className="custom-input"
-                  style={{ height: '40px', width: '100%' }}
-                />
-              </Form.Item> */}
               <MyInput
                 label="Upload Excel File"
                 name="file"
                 type="file"
                 accept=".xlsx, .xls"
-                required={window.location.pathname === "/Import"} // only required on /Import
+                required={window.location.pathname === "/Import"}
                 hasError={!!formErrors.file}
                 errorMessage="Please upload Excel file"
                 onChange={handleFileUpload}
               />
-              {/* <div className='d-flex justify-content-end'>
-                <Button type="primary" onClick={handleSubmit}>Save Batch</Button>
-              </div> */}
+              {window.location.pathname !== "/Import" && (
+                <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
+                  Excel file is optional. If no file is uploaded, an empty batch will be created.
+                </Text>
+              )}
             </Form>
           </Card>
         </Col>
