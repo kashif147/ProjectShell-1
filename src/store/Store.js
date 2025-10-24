@@ -26,6 +26,7 @@ import roleByIdReducer from "../features/PermissionSlice";
 import productTypesReducer from "../features/ProductTypesSlice";
 import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
+import lookupsWorkLocationReducer from '../features/LookupsWorkLocationSlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
 const store = configureStore({
@@ -54,6 +55,7 @@ const store = configureStore({
     productTypesWithProducts: productTypesWithProductsReducer,
     countries: countriesReducer,
     batches: batchReducer,
+    lookupsWorkLocation: lookupsWorkLocationReducer
   },
 });
 

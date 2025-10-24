@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const baseURL = `${process.env.REACT_APP_PORTAL_SERVICE}`;
+const baseURL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}`;
 
 // ✅ Thunk: fetch from API OR localStorage (if draft)
 export const getApplicationById = createAsyncThunk(

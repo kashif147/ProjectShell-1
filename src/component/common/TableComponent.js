@@ -348,46 +348,27 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         ) : col.title === "Application ID" ? (
           <Link
             // to="/AproveMembersip"
-            // onClick={() => {
-            //   const { applicationStatus, ApplicationId, id } = record || {};
-            //   const batchPaths = [
-            //     "/Batches",
-            //     "/Import",
-            //     "/onlinePayment",
-            //     "/Cheque",
-            //     "/StandingOrders",
-            //     "/Deductions",
-            //   ];
-
-            //   if (batchPaths.includes(location.pathname)) {
-            //     // 🔹 For batch-related pages, get batch by ID
-            //     const batch = getBatchById(id);
-            //     debugger
-            //     if (batch) {
-            //       setExcelData(batch); // assuming setExcel updates ExcelContext state
-            //       console.log("Batch loaded:", batch);
-            //     } else {
-            //       console.warn("No batch found with ID:", id);
-            //     }
-            //   } else {
-            //     // 🔹 For application pages
-            //     if (applicationStatus === "Draft") {
-            //       dispatch(getApplicationById({ id: "draft", draftId: ApplicationId }));
-            //       setAddNewGardaDrwr(true);
-            //     } else if (applicationStatus === "submitted") {
-            //       dispatch(getApplicationById({ id: ApplicationId }));
-            //       setAddNewGardaDrwr(true);
-            //       disableFtn(false);
-            //     }
-            //   }
-            // }}
-            // state={{
-            //   search: screenName,
-            //   name: record?.fullName,
-            //   Forename: record?.forename,
-            //   Fullname: record?.surname,
-            //   DateOfBirth: record?.dateOfBirth,
-            // }}
+            onClick={() => {
+              const { applicationStatus, ApplicationId } = record || {};
+              if (applicationStatus === "Draft") {
+                dispatch(
+                  getApplicationById({ id: "draft", draftId: ApplicationId })
+                );
+                setAddNewGardaDrwr(true);
+              } else if (applicationStatus === "submitted") {
+                dispatch(getApplicationById({ id: ApplicationId }));
+                
+                setAddNewGardaDrwr(true);
+                disableFtn(false);
+              }
+            }}
+            state={{
+              search: screenName,
+              name: record?.fullName,
+              Forename: record?.forename,
+              Fullname: record?.surname,
+              DateOfBirth: record?.dateOfBirth,
+            }}
           >
             <span style={{ textOverflow: "ellipsis" }}>{text}</span>
           </Link>

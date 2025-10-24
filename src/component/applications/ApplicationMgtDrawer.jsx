@@ -21,7 +21,7 @@ import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
-
+import { getWorkLocationHierarchy } from "../../features/LookupsWorkLocationSlice";
 import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
@@ -75,7 +75,13 @@ function ApplicationMgtDrawer({
   };
   const dispatch = useDispatch();
     const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
-  const nextPrevData = { total: applications?.length };
+
+  const { 
+    hierarchyLookup, 
+    workLocationLoading, 
+    workLocationError 
+  } = useSelector((state) => state.lookupsWorkLocation);
+    const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
     if (!apiData) return inputValue;
@@ -157,11 +163,13 @@ function ApplicationMgtDrawer({
       },
     };
   };
+  console.log(hierarchyLookup,"hierarchyLookup")
   useEffect(() => {
     dispatch(fetchCountries());
     dispatch(getAllLookups());
     dispatch(getAllApplications());
-  }, []);
+    // dispatch(getWorkLocationHierarchy());
+  }, [dispatch]);
   useEffect(() => {
     if (isEdit) {
       disableFtn(false);
@@ -174,17 +182,46 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [open, application]);
-  const handleApprove = () => {
-    if (isEdit && originalData) {
-      const proposedPatch = generatePatch(originalData, InfData);
+const handleApprove = async () => {
+  debugger
+  if (isEdit && originalData) {
+    const proposedPatch = generatePatch(originalData, InfData);
 
-      const obj = {
-        submission: originalData,
-        proposedPatch: proposedPatch,
-      };
-      console.log(obj, "azn");
+    const obj = {
+      submission: originalData,
+      proposedPatch: proposedPatch,
+    };
+    console.log(obj, "azn");
+
+    try {
+      // Get token from localStorage
+      const token = localStorage.getItem('token');
+      
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      const response = await axios.post(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`, 
+        obj,
+        {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${token}`
+          }
+        }
+      );
+      
+      console.log('Approval successful:', response.data);
+      
+      // Handle success (e.g., show success message, redirect, etc.)
+      
+    } catch (error) {
+      console.error('Error approving application:', error);
+      // Handle error (e.g., show error message)
     }
-  };
+  }
+};
 
   const inputValue = {
     personalInfo: {
@@ -424,6 +461,10 @@ function ApplicationMgtDrawer({
   };
 
   const handleInputChange = (section, field, value) => {
+       if(field==="workLocation")
+    {
+      getWorkLocationHierarchy(application?.applicationId)
+    }
     setInfData((prev) => {
       let updated = {
         ...prev,
@@ -701,6 +742,7 @@ function ApplicationMgtDrawer({
     if (name === "Bulk" && checked === true) {
     }
     if (name === "Approve" && checked === true) {
+      debugger
       const isValid = validateForm();
       if (!isValid) return;
       disableFtn(false);
