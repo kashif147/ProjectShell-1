@@ -323,7 +323,6 @@ const handleApprove = async (key) => {
     return personalInfoChanged || contactInfoChanged;
   };
 
-  // Helper function to check if professional details have changed
   const hasProfessionalDetailsChanged = (original, current) => {
     const professionalFields = [
       'membershipCategory', 'workLocation', 'otherWorkLocation', 'grade',
