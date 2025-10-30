@@ -126,7 +126,7 @@ const MemberSearch = () => {
   };
 
   return (
-    <div style={{ width: "30rem" }}>
+    <div style={{ width: "20rem" }}>
       <AutoComplete
         style={{ width: "100%" }}
         options={options}
@@ -137,7 +137,7 @@ const MemberSearch = () => {
         dropdownMatchSelectWidth={true}
       >
         <Input
-          size="large"
+          size="small"
           prefix={<SearchOutlined />}
           placeholder="Search Member by Email or Mobile Number"
           // style={}

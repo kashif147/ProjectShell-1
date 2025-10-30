@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button } from 'antd';
 import { DownOutlined } from '@ant-design/icons';
 
@@ -19,6 +19,7 @@ const MultiFilterDropdown = ({
   onApply
 }) => {
   const [open, setOpen] = useState(false);
+  const hoverTimer = useRef(null);
 
   const handleReset = () => {
     onChange([]);
@@ -27,7 +28,7 @@ const MultiFilterDropdown = ({
 
   const handleApply = () => {
     setOpen(false);
-    if (onApply) onApply(); // ✅ Only trigger on Apply
+    if (onApply) onApply();
   };
 
   const handleCheckboxChange = (checkedValue) => {
@@ -43,11 +44,25 @@ const MultiFilterDropdown = ({
   };
 
   const badgeCount = selectedValues.length;
-  const firstValue = selectedValues[0];
-  const operatorLabel = operators.find(op => op.symbol === operator)?.label;
+
+  // 🧠 Keep menu open while hovering inside
+  const handleMouseEnter = () => {
+    clearTimeout(hoverTimer.current);
+    setOpen(true);
+  };
+
+  const handleMouseLeave = () => {
+    hoverTimer.current = setTimeout(() => {
+      setOpen(false);
+    }, 200); // slight delay for smoother transition
+  };
 
   const menu = (
-    <div className="filter-dropdown-menu">
+    <div
+      className="filter-dropdown-menu"
+      onMouseEnter={handleMouseEnter}
+      onMouseLeave={handleMouseLeave}
+    >
       <div className="operator-container">
         <Select
           value={operator}
@@ -60,7 +75,9 @@ const MultiFilterDropdown = ({
           ))}
         </Select>
       </div>
+
       <Divider style={{ margin: '8px 0' }} />
+
       <div className="checkbox-list">
         {options.map((option) => (
           <Checkbox
@@ -88,12 +105,6 @@ const MultiFilterDropdown = ({
     <div className={`filter-button1 ${badgeCount > 0 ? 'active' : ''}`}>
       <Space size={4}>
         <span className="filter-label">{label}</span>
-        {badgeCount > 0 && (
-          <span className="operator-value-container">
-            <span className="operator-display">{operatorLabel}</span>
-            <span className="selected-value">{firstValue}</span>
-          </span>
-        )}
         {badgeCount > 1 && <Badge count={badgeCount} className="red-badge" />}
         <DownOutlined className="dropdown-icon" />
       </Space>
@@ -101,15 +112,22 @@ const MultiFilterDropdown = ({
   );
 
   return (
-    <Dropdown overlay={menu} trigger={["click"]} open={open} onOpenChange={setOpen} placement="bottomLeft">
-      <div>{renderButtonContent()}</div>
-    </Dropdown>
+    <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
+      <Dropdown
+        overlay={menu}
+        open={open}
+        placement="bottomLeft"
+        trigger={['hover']}
+      >
+        <div>{renderButtonContent()}</div>
+      </Dropdown>
+    </div>
   );
 };
 
 export default MultiFilterDropdown;
 
-// 🔽 Optional: Style injection (or move to a CSS file)
+// 🔽 Optional inline CSS
 const style = document.createElement('style');
 style.innerHTML = `
   .filter-button1 {
@@ -123,7 +141,7 @@ style.innerHTML = `
     font-size: 14px !important;
     font-weight: 600 !important;
     box-shadow: none !important;
-    margin-left:4px
+    margin-left:4px;
   }
 
   .filter-button1.active {
@@ -133,28 +151,6 @@ style.innerHTML = `
   .filter-label {
     font-weight: 500;
     color: #000000e0;
-  }
-
-  .operator-value-container {
-    display: inline-flex;
-    align-items: center;
-    gap: 4px;
-    margin-left: 6px;
-  }
-
-  .operator-display {
-    font-weight: 600;
-    color: #215E97;
-    padding: 1px;
-    font-size: 14px !important;
-    background-color: #fff;
-  }
-
-  .selected-value {
-    font-weight: 600;
-    color: #215E97;
-    font-size: 14px !important;
-    // padding: px;
   }
 
   .red-badge .ant-badge-count {

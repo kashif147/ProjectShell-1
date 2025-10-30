@@ -54,6 +54,7 @@ import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
+import Toolbar from "./Toolbar";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -654,11 +655,8 @@ function HeaderDetails() {
               ) : (
                 <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
                   <Row className="align-items-baseline w-100">
-                    <Input
-                      placeholder="Reg No or Surname"
-                      style={{ width: "25%", color: "gray" }}
-                    />
-                    {trueFilters?.map((item, index) =>
+                   
+                    {/* {trueFilters?.map((item, index) =>
                       item?.titleColumn === "Date Of Birth" ? (
                         <DateRang key={index} title={item?.titleColumn} />
                       ) : (
@@ -668,8 +666,8 @@ function HeaderDetails() {
                           data={item?.lookups}
                         />
                       )
-                    )}
-                    <MultiFilterDropdown
+                    )} */}
+                    {/* <MultiFilterDropdown
                       style={{ float: "left" }}
                       label="Status"
                       options={[
@@ -684,36 +682,30 @@ function HeaderDetails() {
                       operator={statusOperator}
                       onOperatorChange={setStatusOperator}
                       onApply={handleApplyStatusFilter}
-                    />
+                    /> */}
 
-                    <div className="searchfilter-margin d-flex searchfilter- ms-2">
-                      <SimpleMenu
+                    {/* <div className="searchfilter-margin d-flex searchfilter- ms-2"> */}
+                    {/* <div className="searchfilter-margin d-flex searchfilter- ms-2"> */}
+                      {/* <SimpleMenu
                         title={
                           <>
                             More <PlusOutlined style={{ marginLeft: "-2px" }} />
                           </>
                         }
                         isSearched={false}
-                      />
-                    </div>
+                      /> */}
+                      <Toolbar />
+                    {/* </div> */}
 
                     <div>
-                      <Button
-                        className="transparent bordr-less"
-                        style={{ color: "#333333" }}
-                        onClick={() => resetFtn()}
-                      >
-                        Reset
-                      </Button>
+                      
                       {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
                         Save filter
                       </Button> */}
                     </div>
 
                     {/* 👇 Push this div to the right */}
-                    <div className="ms-auto searchfilter-">
-                      <SaveViewMenu />
-                    </div>
+                    
                   </Row>
                 </div>
               )}

@@ -19,7 +19,7 @@ import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
-import { selectGroupedLookups,selectGroupedLookupsByType } from "../../features/LookupsSlice";
+import { selectGroupedLookups, selectGroupedLookupsByType } from "../../features/LookupsSlice";
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
 import { getWorkLocationHierarchy } from "../../features/LookupsWorkLocationSlice";
@@ -36,6 +36,7 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
+  console.log(application, "application")
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -75,14 +76,14 @@ function ApplicationMgtDrawer({
     }
   };
   const dispatch = useDispatch();
-    const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
+  const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
 
-  const { 
-    hierarchyLookup, 
-    workLocationLoading, 
-    workLocationError 
+  const {
+    hierarchyLookup,
+    workLocationLoading,
+    workLocationError
   } = useSelector((state) => state.lookupsWorkLocation);
-    const nextPrevData = { total: applications?.length };
+  const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
     if (!apiData) return inputValue;
@@ -164,7 +165,7 @@ function ApplicationMgtDrawer({
       },
     };
   };
-  console.log(hierarchyLookup,"hierarchyLookup")
+  console.log(hierarchyLookup, "hierarchyLookup")
   useEffect(() => {
     dispatch(fetchCountries());
     dispatch(getAllLookups());
@@ -183,46 +184,139 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [open, application]);
-const handleApprove = async () => {
-  debugger
-  if (isEdit && originalData) {
-    const proposedPatch = generatePatch(originalData, InfData);
+  const handleApprove = async () => {
+    if (isEdit && originalData) {
+      const proposedPatch = generatePatch(originalData, InfData);
+      const obj = {
+        submission: originalData,
+        proposedPatch: proposedPatch,
+      };
+      console.log(obj, "azn");
 
-    const obj = {
-      submission: originalData,
-      proposedPatch: proposedPatch,
-    };
-    console.log(obj, "azn");
+      try {
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
 
-    try {
-      // Get token from localStorage
-      const token = localStorage.getItem('token');
-      
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const response = await axios.post(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`, 
-        obj,
-        {
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${token}`
-          }
+        if (!token) {
+          throw new Error('No authentication token found');
         }
-      );
-      
-      console.log('Approval successful:', response.data);
-      
-      // Handle success (e.g., show success message, redirect, etc.)
-      
-    } catch (error) {
-      console.error('Error approving application:', error);
-      // Handle error (e.g., show error message)
+
+        // 1. First approve the application
+        const approveResponse = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+          obj,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+
+        console.log('Approval successful:', approveResponse.data);
+
+        // 2. Check which sections have changed and update accordingly
+        const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
+        const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
+
+        if (personalChanged && application?.personalDetails?._id) {
+          const personalPayload = cleanPayload({
+            personalInfo: InfData.personalInfo,
+            contactInfo: InfData.contactInfo,
+          });
+
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application.personalDetails._id}`,
+            personalPayload,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          console.log('Personal details updated successfully');
+        }
+
+        if (professionalChanged && application?.professionalDetails?._id) {
+          const professionalPayload = cleanPayload({
+            professionalDetails: InfData.professionalDetails,
+          });
+
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application.professionalDetails._id}`,
+            professionalPayload,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              }
+            }
+          );
+          console.log('Professional details updated successfully');
+        }
+
+        // Show appropriate success message based on what was updated
+        let successMessage = "Application approved successfully!";
+        if (personalChanged && professionalChanged) {
+          successMessage = "Application approved and all details updated successfully!";
+        } else if (personalChanged) {
+          successMessage = "Application approved and personal details updated successfully!";
+        } else if (professionalChanged) {
+          successMessage = "Application approved and professional details updated successfully!";
+        }
+
+        MyAlert("success", successMessage);
+
+        // Refresh applications data
+        dispatch(getAllApplications());
+
+        // Close drawer
+        onClose();
+
+      } catch (error) {
+        console.error('Error approving application:', error);
+        MyAlert(
+          "error",
+          "Failed to approve application",
+          error?.response?.data?.error?.message || error.message
+        );
+      }
     }
-  }
-};
+  };
+
+  // Helper function to check if personal details (personalInfo + contactInfo) have changed
+  const hasPersonalDetailsChanged = (original, current) => {
+    const personalInfoFields = ['title', 'surname', 'forename', 'gender', 'dateOfBirth', 'countryPrimaryQualification'];
+    const contactInfoFields = ['preferredAddress', 'eircode', 'buildingOrHouse', 'streetOrRoad', 'areaOrTown', 'countyCityOrPostCode', 'country', 'mobileNumber', 'telephoneNumber', 'preferredEmail', 'personalEmail', 'workEmail'];
+
+    const personalInfoChanged = personalInfoFields.some(field =>
+      original.personalInfo?.[field] !== current.personalInfo?.[field]
+    );
+
+    const contactInfoChanged = contactInfoFields.some(field =>
+      original.contactInfo?.[field] !== current.contactInfo?.[field]
+    );
+
+    return personalInfoChanged || contactInfoChanged;
+  };
+
+  // Helper function to check if professional details have changed
+  const hasProfessionalDetailsChanged = (original, current) => {
+    const professionalFields = [
+      'membershipCategory', 'workLocation', 'otherWorkLocation', 'grade',
+      'otherGrade', 'nmbiNumber', 'nurseType', 'nursingAdaptationProgramme',
+      'region', 'branch', 'pensionNo', 'isRetired', 'retiredDate',
+      'studyLocation', 'graduationDate'
+    ];
+
+    return professionalFields.some(field => {
+      const originalValue = original.professionalDetails?.[field];
+      const currentValue = current.professionalDetails?.[field];
+
+      return originalValue !== currentValue;
+    });
+  };
 
   const inputValue = {
     personalInfo: {
@@ -460,10 +554,57 @@ const handleApprove = async () => {
       );
     }
   };
+  const handleSave = async () => {
+    const isValid = validateForm();
+    if (!isValid) return;
+    if (isEdit && originalData) {
+      const proposedPatch = generatePatch(originalData, InfData);
+      const obj = {
+        submission: originalData,
+        proposedPatch: proposedPatch,
+      };
+      console.log(obj, "azn");
+      try {
+        // Get token from localStorage
+        const token = localStorage.getItem('token');
+
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        const response = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/review-draft`,
+          obj,
+          {
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${token}`
+            }
+          }
+        );
+        // console.log('Approval successful:', response.data);
+        {
+          response.data &&
+            MyAlert(
+              "success",
+              "Successfully Updated Application",
+            );
+        }
+        // Handle success (e.g., show success message, redirect, etc.)
+
+      } catch (error) {
+        console.error('Approval successful:', error);
+        MyAlert(
+          "error",
+          "Failed to submit details",
+          error?.response?.data?.error?.message || error.message
+        );
+      }
+    }
+  };
 
   const handleInputChange = (section, field, value) => {
-       if(field==="workLocation")
-    {
+    if (field === "workLocation") {
       getWorkLocationHierarchy(application?.applicationId)
     }
     setInfData((prev) => {
@@ -743,7 +884,6 @@ const handleApprove = async () => {
     if (name === "Bulk" && checked === true) {
     }
     if (name === "Approve" && checked === true) {
-      debugger
       const isValid = validateForm();
       if (!isValid) return;
       disableFtn(false);
@@ -765,6 +905,7 @@ const handleApprove = async () => {
   };
   function navigateApplication(direction) {
     if (index === -1) return;
+    setSelected(select)
     let newIndex = index;
 
     if (direction === "prev") {
@@ -810,18 +951,22 @@ const handleApprove = async () => {
             <Checkbox
               name="Approve"
               checked={selected.Approve} // <-- Must bind to state
+              disabled={select.Reject}
               onChange={handleChange}
             >
               Approve
             </Checkbox>
             <Checkbox
               name="Reject"
+              disabled={selected.Approve}
               checked={selected.Reject} // <-- Must bind to state
               onChange={handleChange}
             >
               Reject
             </Checkbox>
-            <Button className="butn primary-btn">Save</Button>
+            <Button className="butn primary-btn"
+              disabled={selected?.Reject || selected?.Approve}
+              onClick={() => handleSave()} >Save</Button>
             {!isEdit && (
               <Button
                 onClick={() => handleSubmit()}
@@ -1083,17 +1228,15 @@ const handleApprove = async () => {
                       <Row className="bg-white p-1 ms-1 me-1">
                         <Col span={12}>
                           <label
-                            className={`my-input-label ${
-                              errors?.preferredAddress ? "error-text1" : ""
-                            }`}
+                            className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""
+                              }`}
                           >
                             Preferred Address{" "}
                             <span className="text-danger">*</span>
                           </label>
                           <div
-                            className={`d-flex justify-content-between align-items-start ${
-                              errors?.preferredAddress ? "has-error" : ""
-                            }`}
+                            className={`d-flex justify-content-between align-items-start ${errors?.preferredAddress ? "has-error" : ""
+                              }`}
                           >
                             <Radio.Group
                               onChange={(e) =>
@@ -1250,7 +1393,7 @@ const handleApprove = async () => {
                           e.target.value
                         )
                       }
-                      // hasError={!!errors?.mobile}
+                    // hasError={!!errors?.mobile}
                     />
                   </Col>
                   <Col span={12}>
@@ -1275,9 +1418,8 @@ const handleApprove = async () => {
                   <Col span={12} className="mt-1 mb-3">
                     <div className="d-flex justify-content-between">
                       <label
-                        className={`my-input-label ${
-                          errors?.preferredEmail ? "error-text1" : ""
-                        }`}
+                        className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""
+                          }`}
                       >
                         Preferred Email
                         <span className="text-danger ms-1">*</span>
@@ -1380,7 +1522,7 @@ const handleApprove = async () => {
               </Row>
               <Row
                 gutter={18}
-                className="bg-white ms-1 me-1 pt-2 "
+                className="bg-white ms-1 me-1 pt-2      bg-white p-1 ms-1 me-1 pt-2 "
                 style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
               >
                 <Col span={12}>
@@ -1402,18 +1544,64 @@ const handleApprove = async () => {
                   />
                 </Col>
                 <Col span={12}>
-                  {/* <MyDatePicker
-                                          label="Joining Date"
-                                          name="dateJoined"
-                                          required
-                                          value={InfData?.dateJoined} // ✅ just string like "01/07/2019"
-                                          disabled={isDisable}
-                                          onChange={(date, dateString) => {
-                                            console.log(date, "dte")
-                                            handleInputChange("dateJoined", date)
-                                          }}
-                                          hasError={!!errors?.dateJoined}
-                                        /> */}
+                  <div className="d-flex w-100">
+                    <div className="w-50 me-2">
+                      <MyDatePicker
+
+                        label="Retired Date"
+                        name="retiredDate"
+                        value={
+                          InfData.isRetired?.retiredDate
+                            ? moment(InfData.isRetired?.retiredDate, "DD/MM/YYYY")
+                            : null
+                        }
+                        disabled={
+                          isDisable ||
+                          InfData?.professionalDetails?.membershipCategory !=
+                          "Retired Associate"
+                        }
+                        required={
+                          InfData?.professionalDetails?.membershipCategory ==
+                          "Retired Associate"
+                        }
+                        onChange={(date) =>
+                          handleInputChange(
+                            "professionalDetails",
+                            "retiredDate",
+                            date ? moment(date).utc().toISOString() : null
+                          )
+                        }
+                      />
+                    </div>
+                    <div className="w-50 me-2">
+                      <MyInput
+                        label="Pension No"
+                        name="pensionNo"
+                        value={InfData.professionalDetails?.pensionNo}
+                        disabled={
+                          isDisable ||
+                          InfData?.professionalDetails?.membershipCategory !=
+                          "Retired Associate"
+                        }
+                        onChange={(e) =>
+                          handleInputChange("pensionNo", e.target.value)
+                        }
+                        required={
+                          InfData?.professionalDetails?.membershipCategory ==
+                          "Retired Associate"
+                        }
+                        hasError={!!errors?.pensionNo}
+                      />
+                    </div>
+
+                  </div>
+                  {/* </Col> */}
+
+                  {/* Pension No */}
+                  {/* <Col span={12}> */}
+
+                  {/* </Col> */}
+                  {/* </Row> */}
                 </Col>
               </Row>
               {InfData?.membershipCategory === "Undergraduate Student" && (
@@ -1546,131 +1734,6 @@ const handleApprove = async () => {
               </Row>
               <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
                 <Col span={12}>
-                  <label className="my-input-label mt-4 my-input-wrapper">
-                    Are you currently undertaking a nursing adaptation
-                    programme?
-                  </label>
-                  <Radio.Group
-                    name="nursingAdaptationProgramme"
-                    value={
-                      InfData.professionalDetails?.nursingAdaptationProgramme
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "nursingAdaptationProgramme",
-                        e.target.value
-                      )
-                    }
-                  >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
-                  </Radio.Group>
-                </Col>
-                <Col span={12}>
-                  <MyInput
-                    label="NMBI No/An Board Altranais Number"
-                    name="nmbiNumber"
-                    value={InfData?.professionalDetails?.nmbiNumber}
-                    // disabled={isDisable}
-                    disabled={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== true
-                    }
-                    required={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "nmbiNumber",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-                <label className="my-input-label mt-2">
-                  Please tick one of the following
-                </label>
-                <Col span={24}>
-                  <Radio.Group
-                    name="nursingType"
-                    value={InfData.professionalDetails?.nurseType}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "nurseType",
-                        e.target.value
-                      )
-                    }
-                    required={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                    }
-                    disabled={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== true
-                    }
-                    style={{ display: "flex", flexWrap: "wrap", gap: "16px" }} // FLEX layout here
-                  >
-                    <Radio value="General Nursing">General Nursing</Radio>
-                    <Radio value="Public Health Nurse">
-                      Public Health Nurse
-                    </Radio>
-                    <Radio value="Mental Health Nurse">
-                      Mental Health Nurse
-                    </Radio>
-                    <Radio value="Midwife">Midwife</Radio>
-                    <Radio value="Sick Children's Nurse">
-                      Sick Children's Nurse
-                    </Radio>
-                    <Radio value="Registered Nurse for Intellectual Disability">
-                      Registered Nurse for Intellectual Disability
-                    </Radio>
-                  </Radio.Group>
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1">
-                <Col span={24}>
-                  <label className="my-input-label mt-4 mb-2">
-                    Please select the most appropriate option below
-                  </label>
-                  <Radio.Group
-                    label="Please select the most appropriate option below"
-                    name="memberStatus"
-                    value={InfData?.subscriptionDetails?.membershipStatus || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "membershipStatus",
-                        e.target.value
-                      )
-                    }
-                    options={[
-                      { value: "new", label: "You are a new member" },
-                      { value: "graduate", label: "You are newly graduated" },
-                      {
-                        value: "rejoin",
-                        label:
-                          "You were previously a member of the INMO, and are rejoining",
-                      },
-                      {
-                        value: "careerBreak",
-                        label: "You are returning from a career break",
-                      },
-                      {
-                        value: "nursingAbroad",
-                        label: "You are returning from nursing abroad",
-                      },
-                    ]}
-                  />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 pt-3 ms-1 me-1" gutter={18}>
-                <Col span={12}>
                   <CustomSelect
                     label="Grade"
                     name="grade"
@@ -1716,56 +1779,98 @@ const handleApprove = async () => {
                     hasError={!!errors?.otherGrade}
                   />
                 </Col>
+              </Row>
+              <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
                 <Col span={12}>
-                  <MyDatePicker
-                    label="Retired Date"
-                    name="retiredDate"
+                  <label className="my-input-label mt-4 my-input-wrapper">
+                    Are you currently undertaking a nursing adaptation
+                    programme?
+                  </label>
+                  <Radio.Group
+                    name="nursingAdaptationProgramme"
                     value={
-                      InfData.isRetired?.retiredDate
-                        ? moment(InfData.isRetired?.retiredDate, "DD/MM/YYYY")
-                        : null
+                      InfData.professionalDetails?.nursingAdaptationProgramme
                     }
-                    disabled={
-                      isDisable ||
-                      InfData?.professionalDetails?.membershipCategory !=
-                        "Retired Associate"
-                    }
-                    required={
-                      InfData?.professionalDetails?.membershipCategory ==
-                      "Retired Associate"
-                    }
-                    onChange={(date) =>
+                    onChange={(e) =>
                       handleInputChange(
                         "professionalDetails",
-                        "retiredDate",
-                        date ? moment(date).utc().toISOString() : null
+                        "nursingAdaptationProgramme",
+                        e.target.value
+                      )
+                    }
+                  >
+                    <Radio value={true}>Yes</Radio>
+                    <Radio value={false}>No</Radio>
+                  </Radio.Group>
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="NMBI No/An Board Altranais Number"
+                    name="nmbiNumber"
+                    value={InfData?.professionalDetails?.nmbiNumber}
+                    // disabled={isDisable}
+                    disabled={
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme !== true
+                    }
+                    required={
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme === true
+                    }
+                    onChange={(e) =>
+                      handleInputChange(
+                        "professionalDetails",
+                        "nmbiNumber",
+                        e.target.value
                       )
                     }
                   />
                 </Col>
-
-                {/* Pension No */}
-                <Col span={12}>
-                  <MyInput
-                    label="Pension No"
-                    name="pensionNo"
-                    value={InfData.professionalDetails?.pensionNo}
-                    disabled={
-                      isDisable ||
-                      InfData?.professionalDetails?.membershipCategory !=
-                        "Retired Associate"
-                    }
+              </Row>
+              <Row className="bg-white p-1 ms-1 me-1 pb-4" gutter={18}>
+                <label className="my-input-label mt-2">
+                  Please tick one of the following
+                </label>
+                <Col span={24}>
+                  <Radio.Group
+                    name="nursingType"
+                    value={InfData.professionalDetails?.nurseType}
                     onChange={(e) =>
-                      handleInputChange("pensionNo", e.target.value)
+                      handleInputChange(
+                        "professionalDetails",
+                        "nurseType",
+                        e.target.value
+                      )
                     }
                     required={
-                      InfData?.professionalDetails?.membershipCategory ==
-                      "Retired Associate"
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme === true
                     }
-                    hasError={!!errors?.pensionNo}
-                  />
+                    disabled={
+                      InfData?.professionalDetails
+                        ?.nursingAdaptationProgramme !== true
+                    }
+                    style={{ display: "flex", flexWrap: "wrap", gap: "16px" }} // FLEX layout here
+                  >
+                    <Radio value="General Nursing">General Nursing</Radio>
+                    <Radio value="Public Health Nurse">
+                      Public Health Nurse
+                    </Radio>
+                    <Radio value="Mental Health Nurse">
+                      Mental Health Nurse
+                    </Radio>
+                    <Radio value="Midwife">Midwife</Radio>
+                    <Radio value="Sick Children's Nurse">
+                      Sick Children's Nurse
+                    </Radio>
+                    <Radio value="Registered Nurse for Intellectual Disability">
+                      Registered Nurse for Intellectual Disability
+                    </Radio>
+                  </Radio.Group>
                 </Col>
               </Row>
+
+
               <Row
                 className="p-1 ms-1 me-1 "
                 style={{ backgroundColor: "#fff9eb" }}
@@ -1845,6 +1950,42 @@ const handleApprove = async () => {
                         e.target.value
                       )
                     }
+                  />
+                </Col>
+              </Row>
+              <Row className="bg-white p-1 ms-1 me-1">
+                <Col span={24}>
+                  <label className="my-input-label mb-2">
+                    Please select the most appropriate option below
+                  </label>
+                  <Radio.Group
+                    label="Please select the most appropriate option below"
+                    name="memberStatus"
+                    value={InfData?.subscriptionDetails?.membershipStatus || ""}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "membershipStatus",
+                        e.target.value
+                      )
+                    }
+                    options={[
+                      { value: "new", label: "You are a new member" },
+                      { value: "graduate", label: "You are newly graduated" },
+                      {
+                        value: "rejoin",
+                        label:
+                          "You were previously a member of the INMO, and are rejoining",
+                      },
+                      {
+                        value: "careerBreak",
+                        label: "You are returning from a career break",
+                      },
+                      {
+                        value: "nursingAbroad",
+                        label: "You are returning from nursing abroad",
+                      },
+                    ]}
                   />
                 </Col>
               </Row>

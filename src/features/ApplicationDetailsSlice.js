@@ -30,7 +30,6 @@ export const getApplicationById = createAsyncThunk(
           'Content-Type': 'application/json',
         },
       });
-debugger
       return response.data.data; // adjust if response shape differs
     } catch (error) {
       return rejectWithValue(

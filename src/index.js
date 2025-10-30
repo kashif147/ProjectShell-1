@@ -10,6 +10,7 @@ import { ViewProvider } from './context/ViewContext';
 import {Provider }from 'react-redux'
 import store from './store/Store';
 import { RemindersProvider } from './context/CampaignDetailsProvider';
+import { FilterProvider } from './context/FilterContext';
 
 
 
@@ -20,6 +21,7 @@ root.render(
   <Provider store={store}>
     <Router>
       <ExcelProvider>
+        <FilterProvider>
         <RemindersProvider>
         <ViewProvider>
         <TableColumnsProvider>
@@ -27,6 +29,7 @@ root.render(
         </TableColumnsProvider>
         </ViewProvider>
         </RemindersProvider>
+        </FilterProvider>
       </ExcelProvider>
     </Router>
   </Provider>
