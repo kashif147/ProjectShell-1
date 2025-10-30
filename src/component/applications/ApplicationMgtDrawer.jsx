@@ -184,108 +184,130 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [open, application]);
-  const handleApprove = async () => {
-    if (isEdit && originalData) {
-      const proposedPatch = generatePatch(originalData, InfData);
-      const obj = {
-        submission: originalData,
-        proposedPatch: proposedPatch,
-      };
-      console.log(obj, "azn");
+const handleApprove = async (key) => {
+  if (isEdit && originalData) {
+    const proposedPatch = generatePatch(originalData, InfData);
+    const obj = {
+      submission: originalData,
+      proposedPatch: proposedPatch,
+    };
 
-      try {
-        // Get token from localStorage
-        const token = localStorage.getItem('token');
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
 
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
+      // 🟢 If no changes were proposed, update status directly
+      if (!proposedPatch || proposedPatch.length === 0) {
+        const newStatus =
+          key?.toLowerCase() === "rejected" ? "rejected" : "approved";
 
-        // 1. First approve the application
-        const approveResponse = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-          obj,
+        const statusPayload = { applicationStatus: newStatus };
+
+        const statusResponse = await axios.put(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+          statusPayload,
           {
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
         );
 
-        console.log('Approval successful:', approveResponse.data);
-
-        // 2. Check which sections have changed and update accordingly
-        const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
-        const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
-
-        if (personalChanged && application?.personalDetails?._id) {
-          const personalPayload = cleanPayload({
-            personalInfo: InfData.personalInfo,
-            contactInfo: InfData.contactInfo,
-          });
-
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application.personalDetails._id}`,
-            personalPayload,
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          );
-          console.log('Personal details updated successfully');
-        }
-
-        if (professionalChanged && application?.professionalDetails?._id) {
-          const professionalPayload = cleanPayload({
-            professionalDetails: InfData.professionalDetails,
-          });
-
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application.professionalDetails._id}`,
-            professionalPayload,
-            {
-              headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
-              }
-            }
-          );
-          console.log('Professional details updated successfully');
-        }
-
-        // Show appropriate success message based on what was updated
-        let successMessage = "Application approved successfully!";
-        if (personalChanged && professionalChanged) {
-          successMessage = "Application approved and all details updated successfully!";
-        } else if (personalChanged) {
-          successMessage = "Application approved and personal details updated successfully!";
-        } else if (professionalChanged) {
-          successMessage = "Application approved and professional details updated successfully!";
-        }
-
-        MyAlert("success", successMessage);
-
-        // Refresh applications data
-        dispatch(getAllApplications());
-
-        // Close drawer
-        onClose();
-
-      } catch (error) {
-        console.error('Error approving application:', error);
+        console.log(`Status updated to ${newStatus}:`, statusResponse.data);
         MyAlert(
-          "error",
-          "Failed to approve application",
-          error?.response?.data?.error?.message || error.message
+          "success",
+          `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`
         );
-      }
-    }
-  };
 
-  // Helper function to check if personal details (personalInfo + contactInfo) have changed
+        dispatch(getAllApplications());
+        onClose();
+        return; // ⛔ stop further flow
+      }
+
+      // 🟡 If there are proposed changes → approve as usual
+      const approveResponse = await axios.post(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+        obj,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      console.log("Approval successful:", approveResponse.data);
+
+      // Check for section changes
+      const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
+      const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
+
+      if (personalChanged && application?.personalDetails?._id) {
+        const personalPayload = cleanPayload({
+          personalInfo: InfData.personalInfo,
+          contactInfo: InfData.contactInfo,
+        });
+
+        await axios.put(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application.personalDetails._id}`,
+          personalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Personal details updated successfully");
+      }
+
+      if (professionalChanged && application?.professionalDetails?._id) {
+        const professionalPayload = cleanPayload({
+          professionalDetails: InfData.professionalDetails,
+        });
+
+        await axios.put(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application.professionalDetails._id}`,
+          professionalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Professional details updated successfully");
+      }
+
+      // Show success message
+      let successMessage = "Application approved successfully!";
+      if (personalChanged && professionalChanged) {
+        successMessage = "Application approved and all details updated successfully!";
+      } else if (personalChanged) {
+        successMessage = "Application approved and personal details updated successfully!";
+      } else if (professionalChanged) {
+        successMessage = "Application approved and professional details updated successfully!";
+      }
+
+      MyAlert("success", successMessage);
+      dispatch(getAllApplications());
+      onClose();
+
+    } catch (error) {
+      console.error("Error approving application:", error);
+      MyAlert(
+        "error",
+        "Failed to approve application",
+        error?.response?.data?.error?.message || error.message
+      );
+    }
+  }
+};
+
+
   const hasPersonalDetailsChanged = (original, current) => {
     const personalInfoFields = ['title', 'surname', 'forename', 'gender', 'dateOfBirth', 'countryPrimaryQualification'];
     const contactInfoFields = ['preferredAddress', 'eircode', 'buildingOrHouse', 'streetOrRoad', 'areaOrTown', 'countyCityOrPostCode', 'country', 'mobileNumber', 'telephoneNumber', 'preferredEmail', 'personalEmail', 'workEmail'];
@@ -1825,7 +1847,7 @@ function ApplicationMgtDrawer({
                       )
                     }
                   />
-                </Col>
+                </Col>afa
               </Row>
               <Row className="bg-white p-1 ms-1 me-1 pb-4" gutter={18}>
                 <label className="my-input-label mt-2">
