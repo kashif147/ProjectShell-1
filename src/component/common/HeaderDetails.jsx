@@ -426,7 +426,10 @@ function HeaderDetails() {
   return (
     <div className="" style={{ width: "93vw" }}>
       {/* New Breadcrumb Component */}
-      <Breadcrumb />
+      {
+        location?.pathname !== "/applicationMgt" && 
+        <Breadcrumb />
+      }
 
       <div
         className={`details-header d-flex w-100% overflow-hidden ${
@@ -559,7 +562,8 @@ function HeaderDetails() {
                     <Button
                       onClick={() => {
                         if (nav == "/Applications") {
-                          setisGardaDrwer(!isGardaDrwer);
+                          // setisGardaDrwer(!isGardaDrwer);
+                          navigate('/applicationMgt')
                         } else if (nav == "/ClaimSummary") {
                           handlClaimDrawerChng();
                         } else if (nav == "/Transfers")
@@ -567,7 +571,8 @@ function HeaderDetails() {
                         else if (nav === "/RosterSummary")
                           setrosterDrawer(!rosterDrawer);
                         else if (nav === "/Summary")
-                          setisGardaDrwer(!isGardaDrwer);
+                          // setisGardaDrwer(!isGardaDrwer);
+                        navigate('/applicationMgt')
                         else if (
                           nav === "/RemindersSummary" ||
                           nav === "/Cancallation" ||
@@ -895,10 +900,10 @@ function HeaderDetails() {
           placeholder="Enter Name For Report"
         />
       </Modal>
-      <ApplicationMgtDrawer
+      {/* <ApplicationMgtDrawer
         open={isGardaDrwer}
         onClose={() => setisGardaDrwer(!isGardaDrwer)}
-      />
+      /> */}
       {/* <AddNewGarda  /> */}
       <TransferRequests
         open={TransferDrawer}

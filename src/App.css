@@ -17,6 +17,14 @@
   --btn-hover: #dcdfe4;
   --gray: rgba(9, 30, 66, 0.04);
 }
+.custom-scroll {
+  scrollbar-width: none !important;       /* Firefox */
+  -ms-overflow-style: none !important;    /* Internet Explorer/Edge */
+}
+.custom-scroll::-webkit-scrollbar {
+  display: none !important;               /* Chrome, Safari, Opera */
+}
+
 .input-container {
 }
 .custom-icon {
@@ -462,6 +470,7 @@ body {
   color: var(--labelColor) !important;
   cursor: pointer;
   padding-bottom: 5px;
+  width: auto;
 }
 .title-main {
   font-size: 20px !important;

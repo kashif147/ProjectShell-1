@@ -354,7 +354,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
                 dispatch(
                   getApplicationById({ id: "draft", draftId: ApplicationId })
                 );
-                setAddNewGardaDrwr(true);
+           
               } else if (applicationStatus === "submitted") {
                 dispatch(getApplicationById({ id: ApplicationId }));
                 
@@ -742,12 +742,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           </th>
         )}
       </DragOverlay>
-      <ApplicationMgtDrawer
+      {/* <ApplicationMgtDrawer
         open={AddNewGardaDrwr}
         onClose={() => setAddNewGardaDrwr(!AddNewGardaDrwr)}
         isEdit={true}
         title="Registration Request"
-      />
+      /> */}
       <TrigerReminderDrawer
         isOpen={TriggerReminderDrawer}
         onClose={() => setTriggerReminderDrawer(!TriggerReminderDrawer)}

@@ -1,5 +1,5 @@
 import { useState, useRef, useEffect } from "react";
-import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal } from "antd";
+import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal, Flex } from "antd";
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import axios from "axios";
 import CustomSelect from "../common/CustomSelect";
@@ -25,6 +25,8 @@ import { fetchCountries } from "../../features/CountriesSlice";
 import { getWorkLocationHierarchy } from "../../features/LookupsWorkLocationSlice";
 import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
+import MyFooter from "../common/MyFooter";
+import Breadcrumb from "../common/Breadcrumb";
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 
 function ApplicationMgtDrawer({
@@ -184,30 +186,53 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [open, application]);
-const handleApprove = async (key) => {
-  if (isEdit && originalData) {
-    const proposedPatch = generatePatch(originalData, InfData);
-    const obj = {
-      submission: originalData,
-      proposedPatch: proposedPatch,
-    };
+  const handleApprove = async (key) => {
+    if (isEdit && originalData) {
+      const proposedPatch = generatePatch(originalData, InfData);
+      const obj = {
+        submission: originalData,
+        proposedPatch: proposedPatch,
+      };
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
 
-      // 🟢 If no changes were proposed, update status directly
-      if (!proposedPatch || proposedPatch.length === 0) {
-        const newStatus =
-          key?.toLowerCase() === "rejected" ? "rejected" : "approved";
+        // 🟢 If no changes were proposed, update status directly
+        if (!proposedPatch || proposedPatch.length === 0) {
+          const newStatus =
+            key?.toLowerCase() === "rejected" ? "rejected" : "approved";
 
-        const statusPayload = { applicationStatus: newStatus };
+          const statusPayload = { applicationStatus: newStatus };
 
-        const statusResponse = await axios.put(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-          statusPayload,
+          const statusResponse = await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+            statusPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          console.log(`Status updated to ${newStatus}:`, statusResponse.data);
+          MyAlert(
+            "success",
+            `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`
+          );
+
+          dispatch(getAllApplications());
+          onClose();
+          return; // ⛔ stop further flow
+        }
+
+        // 🟡 If there are proposed changes → approve as usual
+        const approveResponse = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+          obj,
           {
             headers: {
               "Content-Type": "application/json",
@@ -216,96 +241,73 @@ const handleApprove = async (key) => {
           }
         );
 
-        console.log(`Status updated to ${newStatus}:`, statusResponse.data);
-        MyAlert(
-          "success",
-          `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`
-        );
+        console.log("Approval successful:", approveResponse.data);
 
+        // Check for section changes
+        const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
+        const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
+
+        if (personalChanged && application?.personalDetails?._id) {
+          const personalPayload = cleanPayload({
+            personalInfo: InfData.personalInfo,
+            contactInfo: InfData.contactInfo,
+          });
+
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application.personalDetails._id}`,
+            personalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          console.log("Personal details updated successfully");
+        }
+
+        if (professionalChanged && application?.professionalDetails?._id) {
+          const professionalPayload = cleanPayload({
+            professionalDetails: InfData.professionalDetails,
+          });
+
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application.professionalDetails._id}`,
+            professionalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          console.log("Professional details updated successfully");
+        }
+
+        // Show success message
+        let successMessage = "Application approved successfully!";
+        if (personalChanged && professionalChanged) {
+          successMessage = "Application approved and all details updated successfully!";
+        } else if (personalChanged) {
+          successMessage = "Application approved and personal details updated successfully!";
+        } else if (professionalChanged) {
+          successMessage = "Application approved and professional details updated successfully!";
+        }
+
+        MyAlert("success", successMessage);
         dispatch(getAllApplications());
         onClose();
-        return; // ⛔ stop further flow
-      }
 
-      // 🟡 If there are proposed changes → approve as usual
-      const approveResponse = await axios.post(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-        obj,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      console.log("Approval successful:", approveResponse.data);
-
-      // Check for section changes
-      const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
-      const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
-
-      if (personalChanged && application?.personalDetails?._id) {
-        const personalPayload = cleanPayload({
-          personalInfo: InfData.personalInfo,
-          contactInfo: InfData.contactInfo,
-        });
-
-        await axios.put(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application.personalDetails._id}`,
-          personalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+      } catch (error) {
+        console.error("Error approving application:", error);
+        MyAlert(
+          "error",
+          "Failed to approve application",
+          error?.response?.data?.error?.message || error.message
         );
-        console.log("Personal details updated successfully");
       }
-
-      if (professionalChanged && application?.professionalDetails?._id) {
-        const professionalPayload = cleanPayload({
-          professionalDetails: InfData.professionalDetails,
-        });
-
-        await axios.put(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application.professionalDetails._id}`,
-          professionalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-        console.log("Professional details updated successfully");
-      }
-
-      // Show success message
-      let successMessage = "Application approved successfully!";
-      if (personalChanged && professionalChanged) {
-        successMessage = "Application approved and all details updated successfully!";
-      } else if (personalChanged) {
-        successMessage = "Application approved and personal details updated successfully!";
-      } else if (professionalChanged) {
-        successMessage = "Application approved and professional details updated successfully!";
-      }
-
-      MyAlert("success", successMessage);
-      dispatch(getAllApplications());
-      onClose();
-
-    } catch (error) {
-      console.error("Error approving application:", error);
-      MyAlert(
-        "error",
-        "Failed to approve application",
-        error?.response?.data?.error?.message || error.message
-      );
     }
-  }
-};
+  };
 
 
   const hasPersonalDetailsChanged = (original, current) => {
@@ -376,6 +378,7 @@ const handleApprove = async (key) => {
       region: "",
       branch: "",
       isRetired: false,
+      pensionNo: ""
     },
     subscriptionDetails: {
       paymentType: "",
@@ -418,7 +421,11 @@ const handleApprove = async (key) => {
       "paymentType",
       "termsAndConditions",
       "preferredAddress",
-      // 'payrollNo',
+      'payrollNo',
+      'pensionNo',
+      'retiredDate',
+      'countryPrimaryQualification',
+
       // 'otherPrimarySection',
       // 'otherSecondarySection',
       // 'personalEmail'
@@ -441,6 +448,8 @@ const handleApprove = async (key) => {
       membershipCategory: ["professionalDetails", "membershipCategory"],
       workLocation: ["professionalDetails", "workLocation"],
       grade: ["professionalDetails", "grade"],
+      retiredDate: ["professionalDetails", "retiredDate"],
+      pensionNo: ["professionalDetails", "pensionNo"],
 
       paymentType: ["subscriptionDetails", "paymentType"],
       termsAndConditions: ["subscriptionDetails", "termsAndConditions"],
@@ -483,9 +492,18 @@ const handleApprove = async (key) => {
         newErrors.otherPrimarySection = "other Primary Section is required";
       }
     }
+    if (InfData?.professionalDetails?.membershipCategory === "retired_associate" ) {
+      if (!InfData.professionalDetails?.retiredDate?.trim()) {
+        newErrors.retiredDate = "required";
+      }
+      if (!InfData.professionalDetails?.pensionNo?.trim()) {
+        newErrors.pensionNo = "required";
+      }
+     
+    }
 
     // InfData?.subscriptionDetails?.paymentType === ''
-    if (InfData.subscriptionDetails.paymentType === "Deduction at Source") {
+    if (InfData.subscriptionDetails.paymentType === "Payroll Deduction") {
       if (!InfData.subscriptionDetails.payrollNo?.trim()) {
         newErrors.payrollNo = "other Primary Section is required";
       }
@@ -941,7 +959,7 @@ const handleApprove = async (key) => {
   }
   return (
     <div>
-      <Drawer
+      {/* <Drawer
         width="60%"
         open={open}
         onClose={() => {
@@ -1029,44 +1047,285 @@ const handleApprove = async (key) => {
             )}
           </div>
         }
-      >
-        <div className="drawer-wrapper" style={{ position: "relative" }}>
-          <div
-            className="drawer-main-container"
-            style={{
-              backgroundColor: "#f6f9fc",
-              filter: showLoader ? "blur(3px)" : "none",
-              pointerEvents: showLoader ? "none" : "auto",
-              transition: "0.3s ease",
-            }}
-          >
-            <>
-              <div className="" style={{ backgroundColor: "#f6f9fc" }}>
-                <Row
-                  gutter={18}
-                  className="p-1 ms-1 me-1"
-                  style={{
-                    backgroundColor: "#eef4ff",
-                    borderRadius: "4px",
+      > */}
+      <div style={{ backgroundColor: '#f6f7f8', }} >
+        <div style={{ marginRight: "2.25rem" }} className="d-flex justify-content-between ">
+          <div><Breadcrumb /></div>
+          <div className="d-flex space-evenly gap-3 align-items-baseline">
+            {!isEdit && (
+              <>
+                <MemberSearch />
+                <Checkbox
+                  name="Bulk"
+                  checked={selected.Bulk} // <-- Must bind to state
+                  onChange={handleChange}
+                  onClick={() => {
+                    disableFtn(false);
+                    handleApprove();
                   }}
                 >
-                  <Col span={24}>
-                    <div className="d-flex  pt-1 pb-1">
-                      <div
-                        style={{
-                          backgroundColor: "#e5edff",
-                          padding: "6px 8px",
-                          borderRadius: "6px",
-                          marginRight: "8px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <MailOutlined
-                          style={{ color: "#2f6bff", fontSize: "18px" }}
-                        />
-                      </div>
+                  Batch Entry
+                </Checkbox>
+              </>
+            )}
+            <Checkbox
+              name="Approve"
+              checked={selected.Approve} // <-- Must bind to state
+              disabled={select.Reject}
+              onChange={handleChange}
+            >
+              Approve
+            </Checkbox>
+            <Checkbox
+              name="Reject"
+              disabled={selected.Approve}
+              checked={selected.Reject} // <-- Must bind to state
+              onChange={handleChange}
+            >
+              Reject
+            </Checkbox>
+            <Button className="butn primary-btn"
+              disabled={selected?.Reject || selected?.Approve}
+              onClick={() => handleSave()} >Save</Button>
+            {!isEdit && (
+              <Button
+                onClick={() => handleSubmit()}
+                className="butn primary-btn"
+              >
+                Submit
+              </Button>
+            )}
+            {isEdit && (
+              <div
+                style={{
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center",
+                }}
+              >
+                <Button
+                  className="me-1 gray-btn butn"
+                  onClick={() => navigateApplication("prev")}
+                >
+                  <FaAngleLeft className="deatil-header-icon" />
+                </Button>
+                <p
+                  style={{
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    margin: "0 8px",
+                  }}
+                >
+                  {index} of {nextPrevData?.total}
+                </p>
+                <Button
+                  className="me-1 gray-btn butn"
+                  onClick={() => navigateApplication("next")}
+                >
+                  <FaAngleRight className="deatil-header-icon" />
+                </Button>
+              </div>
+            )}
+          </div>
+        </div>
+        <div
+          className="hide-scroll-webkit"
+          style={{
+            borderRadius: '15px',
+            boxShadow: "0 2px 6px rgba(0,0,0,0.04)",
+            margin: '1.5rem',
+            maxHeight: '80.5vh',
+            height: '80.5vh',
+            // display:Flex,
+            // flex:1,
+            overflowY: "auto",
+            backgroundColor: 'white',
+            //  height: '500px',
+            padding: '1rem 3rem',
+            // marginBottom:'10rem',
+            filter: showLoader ? "blur(3px)" : "none",
+            pointerEvents: showLoader ? "none" : "auto",
+            transition: "0.3s ease",
+          }}
+        >
+          <>
+            <div className="" style={{}}>
+              <Row
+                gutter={18}
+                className="p-1 ms-1 me-1"
+                style={{
+                  backgroundColor: "#eef4ff",
+                  borderRadius: "4px",
+                }}
+              >
+                <Col span={24}>
+                  <div className="d-flex  pt-1 pb-1">
+                    <div
+                      style={{
+                        backgroundColor: "#e5edff",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        marginRight: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <MailOutlined
+                        style={{ color: "#2f6bff", fontSize: "18px" }}
+                      />
+                    </div>
+                    <h2
+                      style={{
+                        fontSize: "18px",
+                        margin: 0,
+                        fontWeight: 500,
+                        color: "#1a1a1a",
+                      }}
+                    >
+                      Personal Information
+                    </h2>
+                  </div>
+                </Col>
+              </Row>
+              <Row
+                className="bg-white p-1 ms-1 me-1 pt-2"
+                gutter={18}
+              // style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
+              >
+                <Col span={8}>
+                  <CustomSelect
+                    label="Title"
+                    name="title"
+                    value={InfData?.personalInfo?.title}
+                    options={lookupsForSelect?.Titles}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalInfo",
+                        "title",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.title}
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="Forename"
+                    name="forename"
+                    value={InfData.personalInfo?.forename}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalInfo",
+                        "forename",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.forename}
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="Surname"
+                    name="surname"
+                    value={InfData.personalInfo?.surname}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalInfo",
+                        "surname",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.surname}
+                  />
+                </Col>
+                <Col span={8}>
+                  <CustomSelect
+                    label="Gender"
+                    name="gender"
+                    value={InfData.personalInfo?.gender}
+                    options={lookupsForSelect?.gender}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalInfo",
+                        "gender",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.gender}
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyDatePicker
+                    label="Date of Birth"
+                    name="dob"
+                    required
+                    value={InfData?.personalInfo?.dateOfBirth} // ✅ just string like "01/07/2019"
+                    disabled={isDisable}
+                    onChange={(date, dateString) => {
+                      console.log(moment(date).utc().toISOString(), "dte");
+                      handleInputChange(
+                        "personalInfo",
+                        "dateOfBirth",
+                        moment(date).utc().toISOString()
+                      );
+                    }}
+                    hasError={!!errors?.dateOfBirth}
+                  />
+                </Col>
+
+                {/* country Of Primary Qualification */}
+                <Col span={8}>
+                  <CustomSelect
+                    label="Country Primary Qualification"
+                    name="countryPrimaryQualification"
+                    value={InfData?.personalInfo?.countryPrimaryQualification}
+                    options={countriesOptions}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "personalInfo",
+                        "countryPrimaryQualification",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.countryPrimaryQualification}
+                  />
+                </Col>
+                <Col span={12}></Col>
+              </Row>
+              <Row
+                gutter={18}
+                className="p-1 ms-1 me-1 mt-1"
+                style={{ backgroundColor: "#edfdf5" }}
+              >
+                <Col span={24}>
+                  <div className="d-flex align-items-center pt-1 pb-1">
+                    <div
+                      style={{
+                        backgroundColor: "#e5edff",
+                        padding: "6px 8px",
+                        borderRadius: "6px",
+                        marginRight: "8px",
+                        display: "flex",
+                        alignItems: "center",
+                        justifyContent: "center",
+                      }}
+                    >
+                      <EnvironmentOutlined
+                        style={{ color: "green", fontSize: "18px" }}
+                      />
+                    </div>
+                    <div>
                       <h2
                         style={{
                           fontSize: "18px",
@@ -1075,179 +1334,29 @@ const handleApprove = async (key) => {
                           color: "#1a1a1a",
                         }}
                       >
-                        Personal Information
+                        Correspondence Details
+                        <Checkbox
+                          className=""
+                          style={{ marginLeft: "7.5rem" }}
+                        >
+                          Consent to receive Correspondence from INMO
+                        </Checkbox>
                       </h2>
                     </div>
-                  </Col>
-                </Row>
-                <Row
-                  className="bg-white p-1 ms-1 me-1 pt-2"
-                  gutter={18}
-                  style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
-                >
-                  <Col span={8}>
-                    <CustomSelect
-                      label="Title"
-                      name="title"
-                      value={InfData?.personalInfo?.title}
-                      options={lookupsForSelect?.Titles}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "personalInfo",
-                          "title",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.title}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <MyInput
-                      label="Forename"
-                      name="forename"
-                      value={InfData.personalInfo?.forename}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "personalInfo",
-                          "forename",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.forename}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <MyInput
-                      label="Surname"
-                      name="surname"
-                      value={InfData.personalInfo?.surname}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "personalInfo",
-                          "surname",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.surname}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <CustomSelect
-                      label="Gender"
-                      name="gender"
-                      value={InfData.personalInfo?.gender}
-                      options={lookupsForSelect?.gender}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "personalInfo",
-                          "gender",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.gender}
-                    />
-                  </Col>
-                  <Col span={8}>
-                    <MyDatePicker
-                      label="Date of Birth"
-                      name="dob"
-                      required
-                      value={InfData?.personalInfo?.dateOfBirth} // ✅ just string like "01/07/2019"
-                      disabled={isDisable}
-                      onChange={(date, dateString) => {
-                        console.log(moment(date).utc().toISOString(), "dte");
-                        handleInputChange(
-                          "personalInfo",
-                          "dateOfBirth",
-                          moment(date).utc().toISOString()
-                        );
-                      }}
-                      hasError={!!errors?.dateOfBirth}
-                    />
-                  </Col>
-
-                  {/* country Of Primary Qualification */}
-                  <Col span={8}>
-                    <CustomSelect
-                      label="country Primary Qualification"
-                      name="countryPrimaryQualification"
-                      value={InfData?.personalInfo?.countryPrimaryQualification}
-                      options={countriesOptions}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "personalInfo",
-                          "countryPrimaryQualification",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.countryPrimaryQualification}
-                    />
-                  </Col>
-                  <Col span={12}></Col>
-                </Row>
-                <Row
-                  gutter={18}
-                  className="p-1 ms-1 me-1 mt-1"
-                  style={{ backgroundColor: "#edfdf5" }}
-                >
-                  <Col span={24}>
-                    <div className="d-flex align-items-center pt-1 pb-1">
-                      <div
-                        style={{
-                          backgroundColor: "#e5edff",
-                          padding: "6px 8px",
-                          borderRadius: "6px",
-                          marginRight: "8px",
-                          display: "flex",
-                          alignItems: "center",
-                          justifyContent: "center",
-                        }}
-                      >
-                        <EnvironmentOutlined
-                          style={{ color: "green", fontSize: "18px" }}
-                        />
-                      </div>
-                      <div>
-                        <h2
-                          style={{
-                            fontSize: "18px",
-                            margin: 0,
-                            fontWeight: 500,
-                            color: "#1a1a1a",
-                          }}
-                        >
-                          Correspondence Details
-                          <Checkbox
-                            className=""
-                            style={{ marginLeft: "7.5rem" }}
-                          >
-                            Consent to receive Correspondence from INMO
-                          </Checkbox>
-                        </h2>
-                      </div>
-                    </div>
-                  </Col>
-                </Row>
-                <Row
-                  gutter={18}
-                  className="bg-white p-1 ms-1 me-1"
-                  style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
-                >
-                  <Col span={12}></Col>
-                  <Col span={24} className="">
-                    <div className="my-input-group">
-                      <Row className="bg-white p-1 ms-1 me-1">
-                        <Col span={12}>
+                  </div>
+                </Col>
+              </Row>
+              <Row
+                gutter={18}
+                className="bg-white p-1 ms-1 me-1"
+              // style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
+              >
+                <Col span={12}></Col>
+                <Col span={24} className="">
+                  <div className="my-input-group">
+                    <Row className="bg-white" gutter={24}>
+                      <Col span={12} className="pt-4 pb-1 mt-1 mb-1" style={{ backgroundColor: "#f7f9fa", width: '96%', borderRadius: '5px' }}>
+                        <div className="d-flex justify-content-between">
                           <label
                             className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""
                               }`}
@@ -1278,1031 +1387,1035 @@ const handleApprove = async (key) => {
                               }
                             />
                           </div>
-                        </Col>
-                        <Col span={12}>
-                          {isLoaded && (
-                            <StandaloneSearchBox
-                              onLoad={(ref) => (inputRef.current = ref)}
-                              onPlacesChanged={handlePlacesChanged}
+                        </div>
+                      </Col>
+                      <Col span={12} className="">
+                        {isLoaded && (
+                          <StandaloneSearchBox
+                            onLoad={(ref) => (inputRef.current = ref)}
+                            onPlacesChanged={handlePlacesChanged}
+                            placeholder="Enter Eircode (e.g., D01X4X0)"
+                          >
+                            <MyInput
+                              label="Search by address or Eircode"
+                              name="Enter Eircode (e.g., D01X4X0)"
                               placeholder="Enter Eircode (e.g., D01X4X0)"
-                            >
-                              <MyInput
-                                label="Search by address or Eircode"
-                                name="Enter Eircode (e.g., D01X4X0)"
-                                placeholder="Enter Eircode (e.g., D01X4X0)"
-                                disabled={isDisable}
-                              />
-                            </StandaloneSearchBox>
-                          )}
-                        </Col>
-                      </Row>
-                    </div>
-                  </Col>
-                  {/* Address Line 1 | Address Line 2 */}
-                  <Col span={12}>
-                    <MyInput
-                      label="Address Line 1 (Building or House)"
-                      name="buildingOrHouse"
-                      value={InfData?.contactInfo?.buildingOrHouse}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "buildingOrHouse",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.buildingOrHouse}
-                    />
-                  </Col>
-
-                  <Col span={12}>
-                    <MyInput
-                      label="Address Line 2 (Street or Road)"
-                      name="streetOrRoad"
-                      value={InfData?.contactInfo.streetOrRoad}
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "streetOrRoad",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <MyInput
-                      label="Address Line 3 (Area or Town)"
-                      name="adressLine3"
-                      value={InfData.contactInfo?.areaOrTown}
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "adressLine3",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <MyInput
-                      label="Address Line 4 (County, City or Postcode)"
-                      name="countyCityOrPostCode"
-                      value={InfData?.contactInfo?.countyCityOrPostCode}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "countyCityOrPostCode",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.countyCityOrPostCode}
-                    />
-                  </Col>
-
-                  {/* country | Mobile */}
-                  <Col span={12}>
-                    <MyInput
-                      label="Eircode"
-                      name="Eircode"
-                      placeholder="Enter Eircode"
-                      value={InfData?.contactInfo?.eircode}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "eircode",
-                          e.target.value
-                        )
-                      }
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <CustomSelect
-                      label="country"
-                      name="country"
-                      value={InfData.contactInfo?.country}
-                      options={countriesOptions}
-                      required
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "country",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.country}
-                    />
-                  </Col>
-
-                  <Col span={12}>
-                    <MyInput
-                      label="Mobile"
-                      name="mobile"
-                      type="mobile"
-                      value={InfData.contactInfo?.mobileNumber}
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "mobileNumber",
-                          e.target.value
-                        )
-                      }
-                    // hasError={!!errors?.mobile}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <MyInput
-                      label="Home / Work Tel Number"
-                      name="telephoneNumber"
-                      type="number"
-                      value={InfData.contactInfo?.telephoneNumber}
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "telephoneNumber",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.telephoneNumber}
-                    />
-                  </Col>
-
-                  {/* Preferred Email (Full Width) */}
-                  <Col span={12} className="mt-1 mb-3">
-                    <div className="d-flex justify-content-between">
-                      <label
-                        className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""
-                          }`}
-                      >
-                        Preferred Email
-                        <span className="text-danger ms-1">*</span>
-                      </label>
-                      <Radio.Group
-                        onChange={(e) =>
-                          handleInputChange(
-                            "contactInfo",
-                            "preferredEmail",
-                            e.target.value
-                          )
-                        }
-                        value={InfData?.contactInfo?.preferredEmail}
-                        disabled={isDisable}
-                        className={errors?.preferredEmail ? "radio-error" : ""}
-                      >
-                        <Radio value="personal">Personal</Radio>
-                        <Radio value="work">Work</Radio>
-                      </Radio.Group>
-                    </div>
-                  </Col>
-                  <Col span={12}></Col>
-                  <Col span={12}>
-                    <MyInput
-                      label="Personal Email"
-                      name="email"
-                      type="email"
-                      required={
-                        InfData.contactInfo?.preferredEmail === "personal"
-                      }
-                      value={InfData.contactInfo?.personalEmail}
-                      disabled={isDisable}
-                      // onChange={handleInputChange}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "personalEmail",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.email}
-                    />
-                  </Col>
-
-                  <Col span={12}>
-                    <MyInput
-                      label="Work Email"
-                      name="Work Email"
-                      type="email"
-                      value={InfData?.contactInfo?.workEmail}
-                      required={InfData.contactInfo?.preferredEmail === "work"}
-                      disabled={isDisable}
-                      onChange={(e) =>
-                        handleInputChange(
-                          "contactInfo",
-                          "workEmail",
-                          e.target.value
-                        )
-                      }
-                      hasError={!!errors?.workEmail}
-                    />
-                  </Col>
-                </Row>
-              </div>
-              <Row
-                gutter={18}
-                className="p-1 ms-1 me-1 mt-1"
-                style={{ backgroundColor: "#f7f4ff" }}
-              >
-                <Col span={24}>
-                  {/* <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Professional Details</h2> */}
-                  <div className="d-flex pt-1 pb-1">
-                    <div
-                      style={{
-                        backgroundColor: "#ede6fa",
-                        padding: "6px 8px",
-                        borderRadius: "6px",
-                        marginRight: "8px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
-                    >
-                      <IoBagRemoveOutline
-                        style={{ color: "#bf86f3", fontSize: "18px" }}
-                      />
-                    </div>
-                    <h2
-                      style={{
-                        fontSize: "18px",
-                        margin: 0,
-                        fontWeight: 500,
-                        color: "#1a1a1a",
-                      }}
-                    >
-                      Professional Details
-                    </h2>
+                              disabled={isDisable}
+                              onChange={() => { }}
+                            />
+                          </StandaloneSearchBox>
+                        )}
+                      </Col>
+                    </Row>
                   </div>
                 </Col>
-              </Row>
-              <Row
-                gutter={18}
-                className="bg-white ms-1 me-1 pt-2      bg-white p-1 ms-1 me-1 pt-2 "
-                style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
-              >
-                <Col span={12}>
-                  <CustomSelect
-                    label="Membership Category"
-                    name="membershipCategory"
-                    value={InfData.professionalDetails?.membershipCategory}
-                    options={CatOptions}
-                    required
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "membershipCategory",
-                        e.target.value
-                      )
-                    }
-                    hasError={!!errors?.membershipCategory}
-                  />
-                </Col>
-                <Col span={12}>
-                  <div className="d-flex w-100">
-                    <div className="w-50 me-2">
-                      <MyDatePicker
-
-                        label="Retired Date"
-                        name="retiredDate"
-                        value={
-                          InfData.isRetired?.retiredDate
-                            ? moment(InfData.isRetired?.retiredDate, "DD/MM/YYYY")
-                            : null
-                        }
-                        disabled={
-                          isDisable ||
-                          InfData?.professionalDetails?.membershipCategory !=
-                          "Retired Associate"
-                        }
-                        required={
-                          InfData?.professionalDetails?.membershipCategory ==
-                          "Retired Associate"
-                        }
-                        onChange={(date) =>
-                          handleInputChange(
-                            "professionalDetails",
-                            "retiredDate",
-                            date ? moment(date).utc().toISOString() : null
-                          )
-                        }
-                      />
-                    </div>
-                    <div className="w-50 me-2">
-                      <MyInput
-                        label="Pension No"
-                        name="pensionNo"
-                        value={InfData.professionalDetails?.pensionNo}
-                        disabled={
-                          isDisable ||
-                          InfData?.professionalDetails?.membershipCategory !=
-                          "Retired Associate"
-                        }
-                        onChange={(e) =>
-                          handleInputChange("pensionNo", e.target.value)
-                        }
-                        required={
-                          InfData?.professionalDetails?.membershipCategory ==
-                          "Retired Associate"
-                        }
-                        hasError={!!errors?.pensionNo}
-                      />
-                    </div>
-
-                  </div>
-                  {/* </Col> */}
-
-                  {/* Pension No */}
-                  {/* <Col span={12}> */}
-
-                  {/* </Col> */}
-                  {/* </Row> */}
-                </Col>
-              </Row>
-              {InfData?.membershipCategory === "Undergraduate Student" && (
-                <Row gutter={18} className="bg-white p-1 ms-1 me-1">
-                  <Col span={12}>
-                    <CustomSelect
-                      label="Study Location"
-                      name="studyLocation"
-                      disabled={
-                        InfData.membershipCategory !== "Undergraduate Student"
-                      }
-                      value={InfData?.studyLocation || ""}
-                      onChange={handleInputChange}
-                      placeholder="Select study location"
-                      options={[
-                        { value: "location1", label: "Location 1" },
-                        { value: "location2", label: "Location 2" },
-                        { value: "location3", label: "Location 3" },
-                      ]}
-                      hasError={!!errors?.studyLocation}
-                    />
-                  </Col>
-                  <Col span={12}>
-                    <MyDatePicker
-                      label="Graduation date"
-                      name="graduationDate"
-                      required
-                      value={moment(InfData?.graduationDate)} // ✅ just string like "01/07/2019"
-                      disabled={isDisable}
-                      onChange={(date, dateString) => {
-                        console.log(date, "dte");
-                        handleInputChange(
-                          "graduationDate",
-                          moment(date).utc().toISOString()
-                        );
-                      }}
-                      hasError={!!errors?.graduationDate}
-                    />
-                  </Col>
-                </Row>
-              )}
-              <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-                <Col span={12}>
-                  <CustomSelect
-                    label="Work Location"
-                    name="workLocation "
-                    value={InfData.professionalDetails?.workLocation}
-                    options={[
-                      ...workLocations.map((loc) => ({
-                        value: loc,
-                        label: loc,
-                      })),
-                      { value: "other", label: "other" },
-                    ]}
-                    required
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "workLocation",
-                        e.target.value
-                      )
-                    }
-                    hasError={!!errors?.workLocation}
-                  />
-                </Col>
-
-                {/* Other Work Location | Grade */}
+                {/* Address Line 1 | Address Line 2 */}
                 <Col span={12}>
                   <MyInput
-                    label="Other Work Location"
-                    name="Other Work Location"
-                    value={InfData.professionalDetails?.otherWorkLocation}
-                    required={
-                      InfData.professionalDetails?.workLocation == "Other"
-                    }
-                    disabled={
-                      isDisable ||
-                      InfData?.professionalDetails?.workLocation != "Other"
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "otherWorkLocation",
-                        e.target.value
-                      )
-                    }
-                    hasError={!!errors?.workLocation}
-                  />
-                </Col>
-                <Col span={12}>
-                  <CustomSelect
-                    label="Branch"
-                    name="branch"
-                    value={InfData.professionalDetails.branch}
-                    disabled={true}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "branch",
-                        e.target.value
-                      )
-                    }
-                    options={allBranches.map((branch) => ({
-                      value: branch,
-                      label: branch,
-                    }))}
-                  />
-                </Col>
-                {/* Region | Retired Date */}
-                <Col span={12}>
-                  <CustomSelect
-                    label="Region"
-                    name="Region"
-                    value={InfData.professionalDetails?.region}
-                    disabled={true}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "region",
-                        e.target.value
-                      )
-                    }
-                    options={allRegions.map((region) => ({
-                      value: region,
-                      label: region,
-                    }))}
-                  />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-                <Col span={12}>
-                  <CustomSelect
-                    label="Grade"
-                    name="grade"
-                    value={InfData?.professionalDetails?.grade}
+                    label="Address Line 1 (Building or House)"
+                    name="buildingOrHouse"
+                    value={InfData?.contactInfo?.buildingOrHouse}
                     required
                     disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
-                        "professionalDetails",
-                        "grade",
+                        "contactInfo",
+                        "buildingOrHouse",
                         e.target.value
                       )
                     }
-                    options={[
-                      { value: "junior", label: "Junior" },
-                      { value: "senior", label: "Senior" },
-                      { value: "lead", label: "Lead" },
-                      { value: "manager", label: "Manager" },
-                      { value: "other", label: "Other" },
-                    ]}
-                    hasError={!!errors?.grade}
+                    hasError={!!errors?.buildingOrHouse}
                   />
                 </Col>
 
                 <Col span={12}>
                   <MyInput
-                    label="Other Grade"
-                    name="otherGrade"
-                    value={InfData.professionalDetails?.otherGrade}
-                    required={InfData?.professionalDetails?.grade === "other"}
-                    disabled={
-                      InfData?.professionalDetails?.grade !== "other" ||
-                      isDisable
-                    }
-                    // disabled={isDisable}
+                    label="Address Line 2 (Street or Road)"
+                    name="streetOrRoad"
+                    value={InfData?.contactInfo.streetOrRoad}
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
-                        "professionalDetails",
-                        "otherGrade",
+                        "contactInfo",
+                        "streetOrRoad",
                         e.target.value
                       )
                     }
-                    hasError={!!errors?.otherGrade}
                   />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-                <Col span={12}>
-                  <label className="my-input-label mt-4 my-input-wrapper">
-                    Are you currently undertaking a nursing adaptation
-                    programme?
-                  </label>
-                  <Radio.Group
-                    name="nursingAdaptationProgramme"
-                    value={
-                      InfData.professionalDetails?.nursingAdaptationProgramme
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "professionalDetails",
-                        "nursingAdaptationProgramme",
-                        e.target.value
-                      )
-                    }
-                  >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
-                  </Radio.Group>
                 </Col>
                 <Col span={12}>
                   <MyInput
-                    label="NMBI No/An Board Altranais Number"
-                    name="nmbiNumber"
-                    value={InfData?.professionalDetails?.nmbiNumber}
-                    // disabled={isDisable}
-                    disabled={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== true
-                    }
-                    required={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                    }
+                    label="Address Line 3 (Area or Town)"
+                    name="adressLine3"
+                    value={InfData.contactInfo?.areaOrTown}
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
-                        "professionalDetails",
-                        "nmbiNumber",
+                        "contactInfo",
+                        "areaOrTown",
                         e.target.value
                       )
                     }
                   />
-                </Col>afa
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1 pb-4" gutter={18}>
-                <label className="my-input-label mt-2">
-                  Please tick one of the following
-                </label>
-                <Col span={24}>
-                  <Radio.Group
-                    name="nursingType"
-                    value={InfData.professionalDetails?.nurseType}
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Address Line 4 (County, City or Postcode)"
+                    name="countyCityOrPostCode"
+                    value={InfData?.contactInfo?.countyCityOrPostCode}
+                    required
+                    disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(
-                        "professionalDetails",
-                        "nurseType",
+                        "contactInfo",
+                        "countyCityOrPostCode",
                         e.target.value
                       )
                     }
-                    required={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                    }
-                    disabled={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== true
-                    }
-                    style={{ display: "flex", flexWrap: "wrap", gap: "16px" }} // FLEX layout here
-                  >
-                    <Radio value="General Nursing">General Nursing</Radio>
-                    <Radio value="Public Health Nurse">
-                      Public Health Nurse
-                    </Radio>
-                    <Radio value="Mental Health Nurse">
-                      Mental Health Nurse
-                    </Radio>
-                    <Radio value="Midwife">Midwife</Radio>
-                    <Radio value="Sick Children's Nurse">
-                      Sick Children's Nurse
-                    </Radio>
-                    <Radio value="Registered Nurse for Intellectual Disability">
-                      Registered Nurse for Intellectual Disability
-                    </Radio>
-                  </Radio.Group>
+                    hasError={!!errors?.countyCityOrPostCode}
+                  />
                 </Col>
-              </Row>
 
+                {/* country | Mobile */}
+                <Col span={12}>
+                  <MyInput
+                    label="Eircode"
+                    name="Eircode"
+                    placeholder="Enter Eircode"
+                    value={InfData?.contactInfo?.eircode}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "eircode",
+                        e.target.value
+                      )
+                    }
+                  />
+                </Col>
+                <Col span={12}>
+                  <CustomSelect
+                    label="country"
+                    name="country"
+                    value={InfData.contactInfo?.country}
+                    options={countriesOptions}
+                    required
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "country",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.country}
+                  />
+                </Col>
 
-              <Row
-                className="p-1 ms-1 me-1 "
-                style={{ backgroundColor: "#fff9eb" }}
-                gutter={18}
-              >
-                <Col span={24}>
-                  <div className="d-flex  pt-1 pb-1">
-                    <div
-                      style={{
-                        backgroundColor: "#fad1b8ff",
-                        padding: "6px 8px",
-                        borderRadius: "6px",
-                        marginRight: "8px",
-                        display: "flex",
-                        alignItems: "center",
-                        justifyContent: "center",
-                      }}
+                <Col span={12}>
+                  <MyInput
+                    label="Mobile"
+                    name="mobile"
+                    type="mobile"
+                    value={InfData.contactInfo?.mobileNumber}
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "mobileNumber",
+                        e.target.value
+                      )
+                    }
+                  // hasError={!!errors?.mobile}
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Home / Work Tel Number"
+                    name="telephoneNumber"
+                    type="number"
+                    value={InfData.contactInfo?.telephoneNumber}
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "telephoneNumber",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.telephoneNumber}
+                  />
+                </Col>
+
+                {/* Preferred Email (Full Width) */}
+                <Col span={12} className="pt-3 pb-3 mb-1" style={{ backgroundColor: "#f7f9fa", width: '8%', borderRadius: '5px' }}>
+                  <div className="d-flex justify-content-between">
+                    <label
+                      className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""
+                        }`}
                     >
-                      <CiCreditCard1
-                        style={{ color: "#ec6d28", fontSize: "18px" }}
-                      />
-                    </div>
-                    <h2
-                      style={{
-                        fontSize: "18px",
-                        margin: 0,
-                        fontWeight: 500,
-                        color: "#1a1a1a",
-                      }}
-                    >
-                      Subscription Details
-                    </h2>
-                  </div>
-                </Col>
-              </Row>
-              <Row gutter={18} className="bg-white p-1 ms-1 me-1">
-                <Col span={12}>
-                  <CustomSelect
-                    label="Payment Type"
-                    name="paymentType"
-                    required
-                    options={[
-                      { value: "Payroll Deduction", label: "Deduction at Source" },
-                      // { value: 'creditCard', label: 'Credit Card' },
-                      { value: "Direct Debit", label: "Direct Debit" },
-                    ]}
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "paymentType",
-                        e.target.value
-                      )
-                    }
-                    value={InfData.subscriptionDetails?.paymentType}
-                    hasError={!!errors?.paymentType}
-                  />
-                </Col>
-                <Col span={12}>
-                  <MyInput
-                    label="Payroll No"
-                    name="payrollNo"
-                    value={InfData.payrollNo}
-                    hasError={!!errors?.payrollNo}
-                    required={
-                      InfData?.subscriptionDetails?.paymentType ===
-                      "Deduction at Source"
-                    }
-                    disabled={
-                      InfData?.subscriptionDetails?.paymentType !==
-                      "Deduction at Source"
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "payrollNo",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1">
-                <Col span={24}>
-                  <label className="my-input-label mb-2">
-                    Please select the most appropriate option below
-                  </label>
-                  <Radio.Group
-                    label="Please select the most appropriate option below"
-                    name="memberStatus"
-                    value={InfData?.subscriptionDetails?.membershipStatus || ""}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "membershipStatus",
-                        e.target.value
-                      )
-                    }
-                    options={[
-                      { value: "new", label: "You are a new member" },
-                      { value: "graduate", label: "You are newly graduated" },
-                      {
-                        value: "rejoin",
-                        label:
-                          "You were previously a member of the INMO, and are rejoining",
-                      },
-                      {
-                        value: "careerBreak",
-                        label: "You are returning from a career break",
-                      },
-                      {
-                        value: "nursingAbroad",
-                        label: "You are returning from nursing abroad",
-                      },
-                    ]}
-                  />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-2 me-2" gutter={18}>
-                <Col span={12}>
-                  <div
-                    style={{
-                      minHeight: "60px",
-                      display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "flex-start",
-                    }}
-                  >
-                    <label className="my-input-label">
-                      If you are a member of another Trade Union. If yes, which
-                      Union?
+                      Preferred Email
+                      <span className="text-danger ms-1">*</span>
                     </label>
                     <Radio.Group
-                      name="otherIrishTradeUnion"
-                      value={InfData.subscriptionDetails?.otherIrishTradeUnion}
                       onChange={(e) =>
                         handleInputChange(
-                          "subscriptionDetails",
-                          "otherIrishTradeUnion",
-                          e.target?.value
+                          "contactInfo",
+                          "preferredEmail",
+                          e.target.value
                         )
                       }
+                      value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
+                      className={errors?.preferredEmail ? "radio-error" : ""}
                     >
-                      <Radio value={true}>Yes</Radio>
-                      <Radio value={false}>No</Radio>
+                      <Radio value="personal">Personal</Radio>
+                      <Radio value="work">Work</Radio>
                     </Radio.Group>
                   </div>
                 </Col>
+                <Col span={12}></Col>
+                <Col span={12}>
+                  <MyInput
+                    label="Personal Email"
+                    name="email"
+                    type="email"
+                    required={
+                      InfData.contactInfo?.preferredEmail === "personal"
+                    }
+                    value={InfData.contactInfo?.personalEmail}
+                    disabled={isDisable}
+                    // onChange={handleInputChange}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "personalEmail",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.email}
+                  />
+                </Col>
 
                 <Col span={12}>
-                  {/* <div style={{ minHeight: '70px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}> */}
+                  <MyInput
+                    label="Work Email"
+                    name="Work Email"
+                    type="email"
+                    value={InfData?.contactInfo?.workEmail}
+                    required={InfData.contactInfo?.preferredEmail === "work"}
+                    disabled={isDisable}
+                    onChange={(e) =>
+                      handleInputChange(
+                        "contactInfo",
+                        "workEmail",
+                        e.target.value
+                      )
+                    }
+                    hasError={!!errors?.workEmail}
+                  />
+                </Col>
+              </Row>
+            </div>
+            <Row
+              gutter={18}
+              className="p-1 ms-1 me-1 mt-1"
+            // style={{ backgroundColor: "#f7f4ff" }}
+            >
+              <Col span={24}>
+                {/* <h2 style={{ fontSize: '22px', marginBottom: '20px' }}>Professional Details</h2> */}
+                <div className="d-flex pt-1 pb-1">
+                  <div
+                    style={{
+                      // backgroundColor: "#ede6fa",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      marginRight: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <IoBagRemoveOutline
+                      style={{ color: "#bf86f3", fontSize: "18px" }}
+                    />
+                  </div>
+                  <h2
+                    style={{
+                      fontSize: "18px",
+                      margin: 0,
+                      fontWeight: 500,
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Professional Details
+                  </h2>
+                </div>
+              </Col>
+            </Row>
+            <Row
+              gutter={18}
+              className="bg-white ms-1 me-1 pt-2      bg-white p-1 ms-1 me-1 pt-2 "
+            // style={{ boxShadow: "0 2px 6px rgba(0,0,0,0.04)" }}
+            >
+              <Col span={12}>
+                <CustomSelect
+                  label="Membership Category"
+                  name="membershipCategory"
+                  value={InfData.professionalDetails?.membershipCategory}
+                  options={CatOptions}
+                  required
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "membershipCategory",
+                      e.target.value
+                    )
+                  }
+                  hasError={!!errors?.membershipCategory}
+                />
+              </Col>
+              <Col span={12}>
+                <div className="d-flex w-100">
+                  <div className="w-50 me-2">
+                    <MyDatePicker
+
+                      label="Retired Date"
+                      name="retiredDate"
+                      value={
+                        InfData?.professionalDetails?.retiredDate
+                      }
+                      disabled={
+                        isDisable ||
+                        InfData?.professionalDetails?.membershipCategory !=
+                        "retired_associate"
+                      }
+                      required={
+                        InfData?.professionalDetails?.membershipCategory ===
+                        "retired_associate"
+                      }
+                      onChange={(date, dateString) => {
+                        console.log(moment(date).utc().toISOString(), "dte");
+                        handleInputChange(
+                          "professionalDetails",
+                          "retiredDate",
+                          moment(date).utc().toISOString()
+                        );
+                      }}
+                    />
+                  </div>
+                  <div className="w-50 me-2">
+                    <MyInput
+                      label="Pension No"
+                      name="pensionNo"
+                      value={InfData.professionalDetails?.pensionNo}
+                      disabled={
+                        isDisable ||
+                        InfData?.professionalDetails?.membershipCategory !=
+                        "retired_associate"
+                      }
+                      onChange={(e) =>
+                        handleInputChange("pensionNo", e.target.value)
+                      }
+                      required={
+                        InfData?.professionalDetails?.membershipCategory ===
+                        "retired_associate"
+                      }
+                      hasError={!!errors?.pensionNo}
+                    />
+                  </div>
+
+                </div>
+                {/* </Col> */}
+
+                {/* Pension No */}
+                {/* <Col span={12}> */}
+
+                {/* </Col> */}
+                {/* </Row> */}
+              </Col>
+            </Row>
+            {InfData?.membershipCategory === "Undergraduate Student" && (
+              <Row gutter={18} className="bg-white p-1 ms-1 me-1">
+                <Col span={12}>
+                  <CustomSelect
+                    label="Study Location"
+                    name="studyLocation"
+                    disabled={
+                      InfData.membershipCategory !== "Undergraduate Student"
+                    }
+                    value={InfData?.studyLocation || ""}
+                    onChange={handleInputChange}
+                    placeholder="Select study location"
+                    options={[
+                      { value: "location1", label: "Location 1" },
+                      { value: "location2", label: "Location 2" },
+                      { value: "location3", label: "Location 3" },
+                    ]}
+                    hasError={!!errors?.studyLocation}
+                  />
+                </Col>
+                <Col span={12}>
+                  <MyDatePicker
+                    label="Graduation date"
+                    name="graduationDate"
+                    required
+                    value={moment(InfData?.graduationDate)} // ✅ just string like "01/07/2019"
+                    disabled={isDisable}
+                    onChange={(date, dateString) => {
+                      console.log(date, "dte");
+                      handleInputChange(
+                        "graduationDate",
+                        moment(date).utc().toISOString()
+                      );
+                    }}
+                    hasError={!!errors?.graduationDate}
+                  />
+                </Col>
+              </Row>
+            )}
+            <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
+              <Col span={12}>
+                <CustomSelect
+                  label="Work Location"
+                  name="workLocation "
+                  value={InfData.professionalDetails?.workLocation}
+                  options={[
+                    ...workLocations.map((loc) => ({
+                      value: loc,
+                      label: loc,
+                    })),
+                    { value: "other", label: "other" },
+                  ]}
+                  required
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "workLocation",
+                      e.target.value
+                    )
+                  }
+                  hasError={!!errors?.workLocation}
+                />
+              </Col>
+
+              {/* Other Work Location | Grade */}
+              <Col span={12}>
+                <MyInput
+                  label="Other Work Location"
+                  name="Other Work Location"
+                  value={InfData.professionalDetails?.otherWorkLocation}
+                  required={
+                    InfData.professionalDetails?.workLocation == "Other"
+                  }
+                  disabled={
+                    isDisable ||
+                    InfData?.professionalDetails?.workLocation != "Other"
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "otherWorkLocation",
+                      e.target.value
+                    )
+                  }
+                  hasError={!!errors?.workLocation}
+                />
+              </Col>
+              <Col span={12}>
+                <CustomSelect
+                  label="Branch"
+                  name="branch"
+                  value={InfData.professionalDetails.branch}
+                  disabled={true}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "branch",
+                      e.target.value
+                    )
+                  }
+                  options={allBranches.map((branch) => ({
+                    value: branch,
+                    label: branch,
+                  }))}
+                />
+              </Col>
+              {/* Region | Retired Date */}
+              <Col span={12}>
+                <CustomSelect
+                  label="Region"
+                  name="Region"
+                  value={InfData.professionalDetails?.region}
+                  disabled={true}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "region",
+                      e.target.value
+                    )
+                  }
+                  options={allRegions.map((region) => ({
+                    value: region,
+                    label: region,
+                  }))}
+                />
+              </Col>
+            </Row>
+            <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
+              <Col span={12}>
+                <CustomSelect
+                  label="Grade"
+                  name="grade"
+                  value={InfData?.professionalDetails?.grade}
+                  required
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "grade",
+                      e.target.value
+                    )
+                  }
+                  options={[
+                    { value: "junior", label: "Junior" },
+                    { value: "senior", label: "Senior" },
+                    { value: "lead", label: "Lead" },
+                    { value: "manager", label: "Manager" },
+                    { value: "other", label: "Other" },
+                  ]}
+                  hasError={!!errors?.grade}
+                />
+              </Col>
+
+              <Col span={12}>
+                <MyInput
+                  label="Other Grade"
+                  name="otherGrade"
+                  value={InfData.professionalDetails?.otherGrade}
+                  required={InfData?.professionalDetails?.grade === "other"}
+                  disabled={
+                    InfData?.professionalDetails?.grade !== "other" ||
+                    isDisable
+                  }
+                  // disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "otherGrade",
+                      e.target.value
+                    )
+                  }
+                  hasError={!!errors?.otherGrade}
+                />
+              </Col>
+            </Row>
+            <Row className=" p-1 ms-1 me-1" gutter={18}>
+              <Col span={12} className="mt-1 mb-1" style={{ backgroundColor: "#f7f9fa", width: '96%', borderRadius: '5px' }}>
+                <label className="my-input-label  my-input-wrapper">
+                  Are you currently undertaking a nursing adaptation
+                  programme?
+                </label>
+                <Radio.Group
+                  name="nursingAdaptationProgramme"
+                  value={
+                    InfData.professionalDetails?.nursingAdaptationProgramme
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "nursingAdaptationProgramme",
+                      e.target.value
+                    )
+                  }
+                >
+                  <Radio value={true}>Yes</Radio>
+                  <Radio value={false}>No</Radio>
+                </Radio.Group>
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="NMBI No/An Board Altranais Number"
+                  name="nmbiNumber"
+                  value={InfData?.professionalDetails?.nmbiNumber}
+                  // disabled={isDisable}
+                  disabled={
+                    InfData?.professionalDetails
+                      ?.nursingAdaptationProgramme !== true
+                  }
+                  required={
+                    InfData?.professionalDetails
+                      ?.nursingAdaptationProgramme === true
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "nmbiNumber",
+                      e.target.value
+                    )
+                  }
+                />
+              </Col>
+            </Row>
+            <Row style={{ backgroundColor: "#f7f9fa", borderRadius: '5px' }} className="p-1 ms-1 me-1 pb-4 mt-2 mb-3" gutter={18}>
+              <label className="my-input-label mt-2 mb-2">
+                Please tick one of the following
+              </label>
+              <Col span={24}>
+                <Radio.Group
+                  name="nursingType"
+                  value={InfData.professionalDetails?.nurseType}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "professionalDetails",
+                      "nurseType",
+                      e.target.value
+                    )
+                  }
+                  required={
+                    InfData?.professionalDetails
+                      ?.nursingAdaptationProgramme === true
+                  }
+                  disabled={
+                    InfData?.professionalDetails
+                      ?.nursingAdaptationProgramme !== true
+                  }
+                  style={{ display: "flex", flexWrap: "wrap", gap: "16px" }} // FLEX layout here
+                >
+                  <Radio value="General Nursing">General Nursing</Radio>
+                  <Radio value="Public Health Nurse">
+                    Public Health Nurse
+                  </Radio>
+                  <Radio value="Mental Health Nurse">
+                    Mental Health Nurse
+                  </Radio>
+                  <Radio value="Midwife">Midwife</Radio>
+                  <Radio value="Sick Children's Nurse">
+                    Sick Children's Nurse
+                  </Radio>
+                  <Radio value="Registered Nurse for Intellectual Disability">
+                    Registered Nurse for Intellectual Disability
+                  </Radio>
+                </Radio.Group>
+              </Col>
+            </Row>
+
+
+            <Row
+              className="p-1 ms-1 me-1 "
+              style={{ backgroundColor: "#fff9eb" }}
+              gutter={18}
+            >
+              <Col span={24}>
+                <div className="d-flex  pt-1 pb-1">
+                  <div
+                    style={{
+                      backgroundColor: "#fad1b8ff",
+                      padding: "6px 8px",
+                      borderRadius: "6px",
+                      marginRight: "8px",
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                    }}
+                  >
+                    <CiCreditCard1
+                      style={{ color: "#ec6d28", fontSize: "18px" }}
+                    />
+                  </div>
+                  <h2
+                    style={{
+                      fontSize: "18px",
+                      margin: 0,
+                      fontWeight: 500,
+                      color: "#1a1a1a",
+                    }}
+                  >
+                    Subscription Details
+                  </h2>
+                </div>
+              </Col>
+            </Row>
+            <Row gutter={18} className="bg-white p-1 ms-1 me-1">
+              <Col span={12}>
+                <CustomSelect
+                  label="Payment Type"
+                  name="paymentType"
+                  required
+                  options={[
+                    { value: "Payroll Deduction", label: "Deduction at Source" },
+                    // { value: 'creditCard', label: 'Credit Card' },
+                    { value: "Direct Debit", label: "Direct Debit" },
+                  ]}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "paymentType",
+                      e.target.value
+                    )
+                  }
+                  value={InfData.subscriptionDetails?.paymentType}
+                  hasError={!!errors?.paymentType}
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Payroll No"
+                  name="payrollNo"
+                  value={InfData?.subscriptionDetails?.payrollNo}
+                  hasError={!!errors?.payrollNo}
+                  required={
+                    InfData?.subscriptionDetails?.paymentType ===
+                    "Payroll No"
+                  }
+                  disabled={
+                    InfData?.subscriptionDetails?.paymentType !==
+                    "Payroll No"
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "payrollNo",
+                      e.target.value
+                    )
+                  }
+                />
+              </Col>
+            </Row>
+            <Row className="p-1 pt-2 pb-2 ms-1 me-1 mb-4" style={{ backgroundColor: "#f7f9fa", width: '99%', borderRadius: '5px' }}>
+              <Col span={24}>
+                <label className="my-input-label mb-2">
+                  Please select the most appropriate option below
+                </label>
+                <Radio.Group
+                  label="Please select the most appropriate option below"
+                  name="memberStatus"
+                  value={InfData?.subscriptionDetails?.membershipStatus || ""}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "membershipStatus",
+                      e.target.value
+                    )
+                  }
+                  options={[
+                    { value: "new", label: "You are a new member" },
+                    { value: "graduate", label: "You are newly graduated" },
+                    {
+                      value: "rejoin",
+                      label:
+                        "You were previously a member of the INMO, and are rejoining",
+                    },
+                    {
+                      value: "careerBreak",
+                      label: "You are returning from a career break",
+                    },
+                    {
+                      value: "nursingAbroad",
+                      label: "You are returning from nursing abroad",
+                    },
+                  ]}
+                />
+              </Col>
+            </Row>
+            <Row className="p-1 ms-1 me-1" style={{ backgroundColor: "#f7f9fa", borderRadius: '5px' }} gutter={18}>
+              <Col span={12}>
+                <Checkbox
+                  checked={
+                    InfData?.subscriptionDetails?.incomeProtectionScheme
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "incomeProtectionScheme",
+                      e.target.checked
+                    )
+                  }
+                  className="my-input-wrapper"
+                  disabled={
+                    !["new", "graduate"].includes(
+                      InfData?.incomeProtectionScheme?.inmoRewards
+                    ) || isDisable
+                  }
+                >
+                  Tick here to join INMO Income Protection Scheme
+                </Checkbox>
+              </Col>
+
+              <Col span={12}>
+                <Checkbox
+                  checked={
+                    InfData?.subscriptionDetails?.rewardsForInmoMembers
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "rewardsForInmoMembers",
+                      e.target.checked
+                    )
+                  }
+                  className="my-input-wrapper"
+                  disabled={
+                    isDisable ||
+                    !["new", "graduate"].includes(
+                      InfData?.subscriptionDetails?.inmoRewards
+                    )
+                  }
+                >
+                  Tick here to join Rewards for INMO members
+                </Checkbox>
+              </Col>
+
+
+            </Row>
+            <Row className="bg-white  ms-2 me-2 pt-4 mb-4" gutter={18}>
+              <Col className="" span={12} style={{ backgroundColor: "#f7f9fa", borderRadius: '5px' }}>
+                <div
+                  style={{
+                    minHeight: "60px",
+                    display: "flex",
+                    flexDirection: "column",
+                    justifyContent: "flex-start",
+                  }}
+                >
                   <label className="my-input-label">
-                    Are you or were you a member of another Irish trade Union
-                    salary or Income Protection Scheme?
+                    If you are a member of another Trade Union. If yes, which
+                    Union?
                   </label>
                   <Radio.Group
-                    name="otherScheme"
-                    value={InfData.subscriptionDetails?.otherScheme}
+                    name="otherIrishTradeUnion"
+                    value={InfData.subscriptionDetails?.otherIrishTradeUnion}
                     onChange={(e) =>
                       handleInputChange(
                         "subscriptionDetails",
-                        "otherScheme",
+                        "otherIrishTradeUnion",
                         e.target?.value
                       )
                     }
-                    className="my-input-wrapper "
                     disabled={isDisable}
                   >
                     <Radio value={true}>Yes</Radio>
                     <Radio value={false}>No</Radio>
                   </Radio.Group>
-                  {/* </div> */}
-                </Col>
-              </Row>
-              <Row gutter={18} className="bg-white p-1 ms-1 me-1 ">
-                <Col span={12} gutter={18}>
-                  <MyInput
-                    label="Recurited By"
-                    name="recuritedBy"
-                    value={InfData.subscriptionDetails?.recuritedBy}
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "recuritedBy",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Col>
-                <Col span={12}>
-                  <MyInput
-                    label="Recurited By (Membership No)"
-                    name="recuritedByMembershipNo"
-                    value={
-                      InfData?.subscriptionDetails?.recuritedByMembershipNo
-                    }
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "recuritedByMembershipNo",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Col>
-              </Row>
-              <Row gutter={18} className="bg-white p-1 ms-1 me-1">
-                <Col span={12}>
-                  <CustomSelect
-                    label="Primary Section"
-                    name="primarySection"
-                    value={InfData.subscriptionDetails?.primarySection}
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "primarySection",
-                        e.target.value
-                      )
-                    }
-                    options={[
-                      { value: "section1", label: "Section 1" },
-                      { value: "section2", label: "Section 2" },
-                      { value: "section3", label: "Section 3" },
-                      { value: "section4", label: "Section 4" },
-                      { value: "section5", label: "Section 5" },
-                      { value: "other", label: "Other" },
-                    ]}
-                  />
-                </Col>
-                <Col span={12}>
-                  <MyInput
-                    label="Other Primary Section"
-                    name="otherPrimarySection"
-                    value={InfData.subscriptionDetails?.otherPrimarySection}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "otherPrimarySection",
-                        e.target.value
-                      )
-                    }
-                    required={
-                      InfData?.subscriptionDetails?.primarySection === "Other"
-                    }
-                    disabled={
-                      InfData?.subscriptionDetails?.primarySection !== "Other"
-                    }
-                    hasError={!!errors?.otherSecondarySection}
-                  />
-                </Col>
-              </Row>
-              <Row gutter={18} className="bg-white p-1 ms-1 me-1">
-                <Col span={12}>
-                  <CustomSelect
-                    label="Secondary Section"
-                    name="secondarySection"
-                    value={InfData.subscriptionDetails?.secondarySection}
-                    options={[
-                      { value: "section1", label: "Section 1" },
-                      { value: "section2", label: "Section 2" },
-                      { value: "section3", label: "Section 3" },
-                      { value: "section4", label: "Section 4" },
-                      { value: "section5", label: "Section 5" },
-                      { value: "other", label: "Other" },
-                    ]}
-                    disabled={isDisable}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "secondarySection",
-                        e.target.value
-                      )
-                    }
-                  />
-                </Col>
-                <Col span={12}>
-                  <MyInput
-                    label="Other Secondary Section"
-                    name="otherSecondarySection"
-                    value={InfData.subscriptionDetails?.otherSecondarySection}
-                    disabled={
-                      isDisable ||
-                      InfData?.subscriptionDetails?.secondarySection !== "Other"
-                    }
-                    required={
-                      isDisable ||
-                      InfData?.subscriptionDetails?.secondarySection === "Other"
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "otherSecondarySection",
-                        e.target.value
-                      )
-                    }
-                    hasError={!!errors?.otherSecondarySection}
-                  />
-                </Col>
-              </Row>
-              <Row className="bg-white p-1 ms-1 me-1" gutter={18}>
-                <Col span={12}>
-                  <Checkbox
-                    checked={
-                      InfData?.subscriptionDetails?.incomeProtectionScheme
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "incomeProtectionScheme",
-                        e.target.checked
-                      )
-                    }
-                    className="my-input-wrapper"
-                    disabled={
-                      !["new", "graduate"].includes(
-                        InfData?.incomeProtectionScheme?.inmoRewards
-                      ) || isDisable
-                    }
-                  >
-                    Tick here to join INMO Income Protection Scheme
-                  </Checkbox>
-                </Col>
+                </div>
+              </Col>
 
-                <Col span={12}>
-                  <Checkbox
-                    checked={
-                      InfData?.subscriptionDetails?.rewardsForInmoMembers
-                    }
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "rewardsForInmoMembers",
-                        e.target.checked
-                      )
-                    }
-                    className="my-input-wrapper"
-                    disabled={
-                      isDisable ||
-                      !["new", "graduate"].includes(
-                        InfData?.subscriptionDetails?.inmoRewards
-                      )
-                    }
-                  >
-                    Tick here to join Rewards for INMO members
-                  </Checkbox>
-                </Col>
+              <Col span={12} style={{ backgroundColor: "#f7f9fa", width: '98%', borderRadius: '5px' }}>
+                {/* <div style={{ minHeight: '70px', display: 'flex', flexDirection: 'column', justifyContent: 'flex-start' }}> */}
+                <label className="my-input-label">
+                  Are you or were you a member of another Irish trade Union
+                  salary or Income Protection Scheme?
+                </label>
+                <Radio.Group
+                  name="otherScheme"
+                  value={InfData.subscriptionDetails?.otherScheme}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "otherScheme",
+                      e.target?.value
+                    )
+                  }
+                  className="my-input-wrapper "
+                  disabled={isDisable}
+                >
+                  <Radio value={true}>Yes</Radio>
+                  <Radio value={false}>No</Radio>
+                </Radio.Group>
+                {/* </div> */}
+              </Col>
+            </Row>
+            <Row gutter={18} className="bg-white p-1 ms-1 me-1 ">
+              <Col span={12} gutter={18}>
+                <MyInput
+                  label="Recurited By"
+                  name="recuritedBy"
+                  value={InfData.subscriptionDetails?.recuritedBy}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "recuritedBy",
+                      e.target.value
+                    )
+                  }
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Recurited By (Membership No)"
+                  name="recuritedByMembershipNo"
+                  value={
+                    InfData?.subscriptionDetails?.recuritedByMembershipNo
+                  }
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "recuritedByMembershipNo",
+                      e.target.value
+                    )
+                  }
+                />
+              </Col>
+            </Row>
+            <Row gutter={18} className="bg-white p-1 ms-1 me-1">
+              <Col span={12}>
+                <CustomSelect
+                  label="Primary Section"
+                  name="primarySection"
+                  value={InfData.subscriptionDetails?.primarySection}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "primarySection",
+                      e.target.value
+                    )
+                  }
+                  options={[
+                    { value: "section1", label: "Section 1" },
+                    { value: "section2", label: "Section 2" },
+                    { value: "section3", label: "Section 3" },
+                    { value: "section4", label: "Section 4" },
+                    { value: "section5", label: "Section 5" },
+                    { value: "other", label: "Other" },
+                  ]}
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Other Primary Section"
+                  name="otherPrimarySection"
+                  value={InfData.subscriptionDetails?.otherPrimarySection}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "otherPrimarySection",
+                      e.target.value
+                    )
+                  }
+                  required={
+                    InfData?.subscriptionDetails?.primarySection === "Other"
+                  }
+                  disabled={
+                    InfData?.subscriptionDetails?.primarySection !== "Other"
+                  }
+                  hasError={!!errors?.otherSecondarySection}
+                />
+              </Col>
+            </Row>
+            <Row gutter={18} className="bg-white p-1 ms-1 me-1">
+              <Col span={12}>
+                <CustomSelect
+                  label="Secondary Section"
+                  name="secondarySection"
+                  value={InfData.subscriptionDetails?.secondarySection}
+                  options={[
+                    { value: "section1", label: "Section 1" },
+                    { value: "section2", label: "Section 2" },
+                    { value: "section3", label: "Section 3" },
+                    { value: "section4", label: "Section 4" },
+                    { value: "section5", label: "Section 5" },
+                    { value: "other", label: "Other" },
+                  ]}
+                  disabled={isDisable}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "secondarySection",
+                      e.target.value
+                    )
+                  }
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Other Secondary Section"
+                  name="otherSecondarySection"
+                  value={InfData.subscriptionDetails?.otherSecondarySection}
+                  disabled={
+                    isDisable ||
+                    InfData?.subscriptionDetails?.secondarySection !== "Other"
+                  }
+                  required={
+                    isDisable ||
+                    InfData?.subscriptionDetails?.secondarySection === "Other"
+                  }
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "otherSecondarySection",
+                      e.target.value
+                    )
+                  }
+                  hasError={!!errors?.otherSecondarySection}
+                />
+              </Col>
+            </Row>
+            <Row className="p-1 me-2" style={{ backgroundColor: "#f7f9fa", width: "99%", borderRadius: '5px' }}>
+              <Col span={12} className="ps-3">
+                <Checkbox
+                  checked={InfData?.subscriptionDetails?.valueAddedServices}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "valueAddedServices",
+                      e.target.checked
+                    )
+                  }
+                  className="my-input-wrapper"
+                >
+                  Tick here to allow our partners to contact you about Value
+                  added Services by Email and SMS
+                </Checkbox>
+              </Col>
 
-                <Col span={12}>
-                  <Checkbox
-                    checked={InfData?.subscriptionDetails?.valueAddedServices}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "valueAddedServices",
-                        e.target.checked
-                      )
-                    }
-                    className="my-input-wrapper"
-                  >
-                    Tick here to allow our partners to contact you about Value
-                    added Services by Email and SMS
-                  </Checkbox>
-                </Col>
-
-                <Col span={12}>
-                  <Checkbox
-                    checked={InfData?.subscriptionDetails?.termsAndConditions}
-                    onChange={(e) =>
-                      handleInputChange(
-                        "subscriptionDetails",
-                        "termsAndConditions",
-                        e.target.checked
-                      )
-                    }
-                    className="my-input-wrapper"
-                  >
-                    I have read and agree to the INMO Data Protection Statement,
-                    the INMO Privacy Statement and the INMO Conditions of
-                    Membership
-                    {errors?.termsAndConditions && (
-                      <span style={{ color: "red" }}> (Required)</span>
-                    )}
-                  </Checkbox>
-                </Col>
-              </Row>
-            </>
-          </div>
-          {showLoader && (
-            <div
-              style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                background: "rgba(255,255,255,0.5)",
-                zIndex: 10,
-              }}
-            >
-              <Spin size="large" />
-            </div>
-          )}
+              <Col span={12}>
+                <Checkbox
+                  checked={InfData?.subscriptionDetails?.termsAndConditions}
+                  onChange={(e) =>
+                    handleInputChange(
+                      "subscriptionDetails",
+                      "termsAndConditions",
+                      e.target.checked
+                    )
+                  }
+                  className="my-input-wrapper"
+                >
+                  I have read and agree to the INMO Data Protection Statement,
+                  the INMO Privacy Statement and the INMO Conditions of
+                  Membership
+                  {errors?.termsAndConditions && (
+                    <span style={{ color: "red" }}> (Required)</span>
+                  )}
+                </Checkbox>
+              </Col>
+            </Row>
+          </>
         </div>
-      </Drawer>
+        {showLoader && (
+          <div
+            style={{
+              position: "absolute",
+              top: 0,
+              left: 0,
+              width: "100%",
+              height: "100%",
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "center",
+              background: "rgba(255,255,255,0.5)",
+              zIndex: 10,
+            }}
+          >
+            <Spin size="large" />
+          </div>
+        )}
+      </div>
+      {/* </Drawer> */}
       <Modal
         title="Reject Application"
         open={rejectModal}
@@ -2340,6 +2453,7 @@ const handleApprove = async (key) => {
           />
         </div>
       </Modal>
+
     </div>
   );
 }

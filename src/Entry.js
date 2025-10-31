@@ -44,6 +44,9 @@ const RusterSummary = lazy(() => import("./pages/roster/RusterSummary"));
 const MembershipApplication = lazy(() =>
   import("./pages/application/MembershipApplication")
 );
+const ApplicationMgt = lazy(() =>
+  import("./component/applications/ApplicationMgtDrawer")
+);
 const ApproveMembership = lazy(() =>
   import("./pages/application/ApproveMembership")
 );
@@ -384,6 +387,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <MembershipApplication />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="applicationMgt"
+                      element={
+                        <ProtectedRoute>
+                          <ApplicationMgt />
                         </ProtectedRoute>
                       }
                     />

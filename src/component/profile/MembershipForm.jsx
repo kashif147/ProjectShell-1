@@ -7,6 +7,7 @@ import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
 
+
 const MembershipForm = () => {
   // const { data: countryOptions, } = useSelector(
   //   (state) => state.countries
@@ -85,8 +86,8 @@ const MembershipForm = () => {
         height: "80vh",        // fixed height
         maxHeight: "80vh",     // don’t allow to expand more
         overflowY: "auto",      // vertical scroll
-        overflowX: "hidden",    // no horizontal scroll
-        display: "block",       // force block context
+        overflowY: "hidden",    // no horizontal scroll
+        // display: "block",       // force block context
         backgroundColor: "#fff" // just for clarity
       }}
     >

@@ -208,6 +208,11 @@ const Breadcrumb = () => {
       page: "Applications",
       icon: "📋",
     },
+    "/applicationMgt": {
+      module: "Subscriptions & Rewards",
+      page: "Applications Mangment",
+      icon: "📋",
+    },
     "/AproveMembersip": {
       module: "Subscriptions & Rewards",
       page: "Approve Membership",
