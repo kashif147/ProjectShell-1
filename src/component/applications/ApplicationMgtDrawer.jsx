@@ -8,12 +8,11 @@ import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import { useSelector, useDispatch } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CatOptions, workLocations } from "../../Data";
 import { CiCreditCard1 } from "react-icons/ci";
 import { insertDataFtn } from "../../utils/Utilities";
-import { getAllLookups } from "../../features/LookupsSlice";
 // import { fetchCountries } from "../../features/CountrySlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { cleanPayload } from "../../utils/Utilities";
@@ -24,6 +23,7 @@ import { selectGroupedLookups, selectGroupedLookupsByType } from "../../features
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
 import { getWorkLocationHierarchy } from "../../features/LookupsWorkLocationSlice";
+import { getAllLookups } from "../../features/LookupsSlice";
 import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
 import MyFooter from "../common/MyFooter";
@@ -38,8 +38,11 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
+  const navigate = useNavigate();
+    const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
+
   const { state } = useLocation();
-  console.log(application, "application")
+  console.log(groupedlookupsForSelect, "application")
    const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
@@ -66,7 +69,6 @@ function ApplicationMgtDrawer({
 
   const handleReject = async () => {
     if (!rejectionData.reason) {
-      //   message.error("Please select a reason before rejecting.");
       return;
     }
 
@@ -208,9 +210,7 @@ function ApplicationMgtDrawer({
         if (!proposedPatch || proposedPatch.length === 0) {
           const newStatus =
             key?.toLowerCase() === "rejected" ? "rejected" : "approved";
-
           const statusPayload = { applicationStatus: newStatus };
-
           const statusResponse = await axios.put(
             `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
             statusPayload,
@@ -222,14 +222,12 @@ function ApplicationMgtDrawer({
             }
           );
 
-          console.log(`Status updated to ${newStatus}:`, statusResponse.data);
           MyAlert(
             "success",
             `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`
           );
-
           dispatch(getAllApplications());
-          onClose();
+          navigate('/Applications')
           return; // ⛔ stop further flow
         }
 
@@ -245,8 +243,6 @@ function ApplicationMgtDrawer({
           }
         );
 
-        console.log("Approval successful:", approveResponse.data);
-
         // Check for section changes
         const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
         const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
@@ -258,7 +254,7 @@ function ApplicationMgtDrawer({
           });
 
           await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application.personalDetails._id}`,
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
             personalPayload,
             {
               headers: {
@@ -276,7 +272,7 @@ function ApplicationMgtDrawer({
           });
 
           await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application.professionalDetails._id}`,
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
             professionalPayload,
             {
               headers: {
@@ -297,11 +293,8 @@ function ApplicationMgtDrawer({
         } else if (professionalChanged) {
           successMessage = "Application approved and professional details updated successfully!";
         }
-
         MyAlert("success", successMessage);
         dispatch(getAllApplications());
-        onClose();
-
       } catch (error) {
         console.error("Error approving application:", error);
         MyAlert(
@@ -530,7 +523,6 @@ function ApplicationMgtDrawer({
     if (!isValid) return;
     try {
       const token = localStorage.getItem("token");
-
       const personalPayload = cleanPayload({
         personalInfo: InfData.personalInfo,
         contactInfo: InfData.contactInfo,
@@ -583,14 +575,12 @@ function ApplicationMgtDrawer({
         }
       );
 
-      // ✅ Success notification (only once)
       MyAlert("success", "All details submitted successfully!");
       setInfData(inputValue);
       if (selected?.Bulk !== true) {
-        onClose();
+        navigate('/Applications')
       }
     } catch (error) {
-      console.error("Submission failed:", error);
       MyAlert(
         "error",
         "Failed to submit details",

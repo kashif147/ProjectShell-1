@@ -1,14 +1,12 @@
-// src/context/FilterContext.jsx
-import React, { createContext, useContext, useState, useMemo } from "react";
+import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
 
 const FilterContext = createContext();
 
 export const FilterProvider = ({ children }) => {
-  // 🔹 View-wise field definitions
+  // 🔹 All possible filters per screen
   const viewFilters = useMemo(
     () => ({
       Applications: [
-        "Full Name",
         "Membership Category",
         "Application Status",
         "Submission Date",
@@ -24,7 +22,6 @@ export const FilterProvider = ({ children }) => {
       ],
       Profile: [
         "Membership No",
-        "Full Name",
         "Email",
         "Mobile No",
         "Date of Birth",
@@ -49,7 +46,6 @@ export const FilterProvider = ({ children }) => {
       ],
       Membership: [
         "Membership No",
-        "Full Name",
         "Email",
         "Mobile No",
         "Membership Status",
@@ -73,27 +69,40 @@ export const FilterProvider = ({ children }) => {
     []
   );
 
-  // 🔹 Filters currently visible (selected by user)
-  const [visibleFilters, setVisibleFilters] = useState([]);
+  // 🔹 Default visible filters for each screen
+  const defaultVisibleFilters = {
+    Applications: [ "Application Status", "Membership Category"],
+    Profile: [ "Email"],
+    Membership: ["Membership Status"],
+  };
 
-  // 🔹 Active page (Applications, Profile, or Membership)
+  // 🔹 Current active screen
   const [activePage, setActivePage] = useState("Applications");
 
-  // 🔹 Compute filters for the current page
+  // 🔹 Default visible filters for current page
+  const [visibleFilters, setVisibleFilters] = useState(defaultVisibleFilters["Applications"]);
+
+  // ⏩ Whenever page changes, update visible filters accordingly
+  useEffect(() => {
+    setVisibleFilters(defaultVisibleFilters[activePage] || []);
+  }, [activePage]);
+
   const currentPageFilters = useMemo(
     () => viewFilters[activePage] || [],
     [activePage, viewFilters]
   );
 
-  // Toggle individual filter visibility
+  // Toggle one filter
   const toggleFilter = (filter, checked) => {
     setVisibleFilters((prev) =>
       checked ? [...prev, filter] : prev.filter((f) => f !== filter)
     );
   };
 
-  // Reset all filters
-  const resetFilters = () => setVisibleFilters([]);
+  // Reset filters for current page (back to its defaults)
+  const resetFilters = () => {
+    setVisibleFilters(defaultVisibleFilters[activePage] || []);
+  };
 
   return (
     <FilterContext.Provider

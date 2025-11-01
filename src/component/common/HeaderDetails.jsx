@@ -79,7 +79,7 @@ function HeaderDetails() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
-  
+
   const handleDateChange = (val) => {
     setValue(val); // val is a dayjs or null
   };
@@ -97,7 +97,7 @@ function HeaderDetails() {
     claimsDrawer,
     ProfileDetails,
     resetFilters,
-    handleSave, 
+    handleSave,
     report,
     isSaveChng,
     ReportsTitle,
@@ -407,13 +407,13 @@ function HeaderDetails() {
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
           location?.pathname === "/CasesSummary") && (
-          <FaClipboardList
-            style={{
-              fontSize: "15px",
-              color: "#45669d",
-            }}
-          />
-        )}
+            <FaClipboardList
+              style={{
+                fontSize: "15px",
+                color: "#45669d",
+              }}
+            />
+          )}
       </>
     );
   };
@@ -421,27 +421,26 @@ function HeaderDetails() {
     location.pathname === "/Cancallation"
       ? "Cancallation"
       : location.pathname === "/RemindersSummary"
-      ? "reminder"
-      : null;
+        ? "reminder"
+        : null;
   return (
     <div className="" style={{ width: "93vw" }}>
       {/* New Breadcrumb Component */}
       {
-        location?.pathname !== "/applicationMgt" && 
+        location?.pathname !== "/applicationMgt" &&
         <Breadcrumb />
       }
 
       <div
-        className={`details-header d-flex w-100% overflow-hidden ${
-          location?.pathname == "/Details" ||
-          location?.pathname == "/CasesById" ||
-          location?.pathname == "/AddNewProfile" ||
-          location?.pathname == "/ClaimsById" ||
-          location?.pathname == "/AddClaims" ||
-          location?.pathname == "/Doucmnets"
+        className={`details-header d-flex w-100% overflow-hidden ${location?.pathname == "/Details" ||
+            location?.pathname == "/CasesById" ||
+            location?.pathname == "/AddNewProfile" ||
+            location?.pathname == "/ClaimsById" ||
+            location?.pathname == "/AddClaims" ||
+            location?.pathname == "/Doucmnets"
             ? "Header-border"
             : ""
-        }`}
+          }`}
       >
         <div style={{ width: "100%" }}>
           {/* Action buttons for detail pages */}
@@ -453,67 +452,67 @@ function HeaderDetails() {
             location?.pathname == "/Doucmnets" ||
             location?.pathname == "/AproveMembersip" ||
             location?.pathname == "/ChangeCatById") && (
-            <div className="d-flex justify-content-end align-items-baseline mb-3">
-              <div className="d-flex align-items-baseline">
-                {location?.pathname == "/AproveMembersip" ||
-                location?.pathname == "/ChangeCatById" ? (
-                  <Radio.Group
-                    style={{ marginRight: "10px" }}
-                    options={plainOptions}
-                    value={selectedValue1}
-                    onChange={handleChangeCheckBox}
-                    optionType="button"
-                    buttonStyle="solid"
-                  /> 
-                ) : (
+              <div className="d-flex justify-content-end align-items-baseline mb-3">
+                <div className="d-flex align-items-baseline">
+                  {location?.pathname == "/AproveMembersip" ||
+                    location?.pathname == "/ChangeCatById" ? (
+                    <Radio.Group
+                      style={{ marginRight: "10px" }}
+                      options={plainOptions}
+                      value={selectedValue1}
+                      onChange={handleChangeCheckBox}
+                      optionType="button"
+                      buttonStyle="solid"
+                    />
+                  ) : (
+                    <Button
+                      style={{
+                        marginRight: "50px",
+                        color: "white",
+                        borderRadius: "3px",
+                        backgroundColor: "#45669d",
+                      }}
+                      onClick={() => {
+                        if (nav == "/ClaimsById") handlClaimDrawerChng();
+                      }}
+                    >
+                      Create
+                    </Button>
+                  )}
+                  <Button onClick={goBack} className="me-1 gray-btn butn">
+                    Return to summary
+                  </Button>
+                  <Button onClick={goBack} className="me-1 gray-btn butn">
+                    Print
+                  </Button>
                   <Button
+                    disabled={rowIndex == 0}
+                    onClick={profilPrevBtnFtn}
+                    className="me-1 gray-btn butn"
+                  >
+                    <FaAngleLeft className="deatil-header-icon" />
+                  </Button>
+                  <p
+                    className=""
                     style={{
-                      marginRight: "50px",
-                      color: "white",
-                      borderRadius: "3px",
-                      backgroundColor: "#45669d",
-                    }}
-                    onClick={() => {
-                      if (nav == "/ClaimsById") handlClaimDrawerChng();
+                      fontWeight: "500",
+                      fontSize: "14px",
+                      marginLeft: "4px",
                     }}
                   >
-                    Create
+                    {rowIndex + 1} of {gridData?.length}
+                  </p>
+                  <Button
+                    disabled={rowIndex == gridData?.length - 1}
+                    onClick={profilNextBtnFtn}
+                    className="me-1 gray-btn butn"
+                    style={{ marginLeft: "8px" }}
+                  >
+                    <FaAngleRight className="deatil-header-icon" />
                   </Button>
-                )}
-                <Button onClick={goBack} className="me-1 gray-btn butn">
-                  Return to summary
-                </Button>
-                <Button onClick={goBack} className="me-1 gray-btn butn">
-                  Print
-                </Button>
-                <Button
-                  disabled={rowIndex == 0}
-                  onClick={profilPrevBtnFtn}
-                  className="me-1 gray-btn butn"
-                >
-                  <FaAngleLeft className="deatil-header-icon" />
-                </Button>
-                <p
-                  className=""
-                  style={{
-                    fontWeight: "500",
-                    fontSize: "14px",
-                    marginLeft: "4px",
-                  }}
-                >
-                  {rowIndex + 1} of {gridData?.length}
-                </p>
-                <Button
-                  disabled={rowIndex == gridData?.length - 1}
-                  onClick={profilNextBtnFtn}
-                  className="me-1 gray-btn butn"
-                  style={{ marginLeft: "8px" }}
-                >
-                  <FaAngleRight className="deatil-header-icon" />
-                </Button>
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Applications" ||
@@ -540,196 +539,146 @@ function HeaderDetails() {
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
             location?.pathname == "/Popout") && (
-            <div className="search-main">
-              <div className="title d-flex justify-content-between ">
-                <h2 className="title-main">
-                  {nav == "/" && location?.state == null
-                    ? `Profile`
-                    : ` ${location?.state?.search}`}
-                </h2>
+              <div className="search-main">
+                <div className="title d-flex justify-content-between ">
+                  <h2 className="title-main">
+                    {nav == "/" && location?.state == null
+                      ? `Profile`
+                      : ` ${location?.state?.search}`}
+                  </h2>
 
-                <div className="d-flex">
-                  {nav === "/CorrespondencesSummary" ||
-                  nav === "/Sms" ||
-                  nav === "/Emails" ? (
-                    <div style={{ marginRight: "50px" }}>
-                      <New />
-                    </div>
-                  ) : nav === "/ClaimSummary" ? (
-                    <CreateClaim />
-                  ) : (
-                    nav === "/Reconciliation" ? null : (
-                    <Button
-                      onClick={() => {
-                        if (nav == "/Applications") {
-                          // setisGardaDrwer(!isGardaDrwer);
-                          navigate('/applicationMgt')
-                        } else if (nav == "/ClaimSummary") {
-                          handlClaimDrawerChng();
-                        } else if (nav == "/Transfers")
-                          setTransferDrawer(!TransferDrawer);
-                        else if (nav === "/RosterSummary")
-                          setrosterDrawer(!rosterDrawer);
-                        else if (nav === "/Summary")
-                          // setisGardaDrwer(!isGardaDrwer);
-                        navigate('/applicationMgt')
-                        else if (
-                          nav === "/RemindersSummary" ||
-                          nav === "/Cancallation" ||
-                          nav === "/Batches" ||
-                          nav === "/Import" ||
-                          nav === "/onlinePayment" ||
-                          nav === "/Deductions" ||
-                          nav === "/StandingOrders" ||
-                          nav === "/Cheque" ||
-                          nav === "/CornMarket"
-                        ) {
-                          setIsBatchOpen(!isBatchOpen);
-                        } else if (nav === "/ChangCateSumm") {
-                          setisDrawerOpen(!isDrawerOpen);
-                        }
-                      }}
-                      style={{
-                        marginRight: "50px",
-                        color: "white",
-                        borderRadius: "3px",
-                        backgroundColor: "#45669d",
-                      }}
-                      className="butn"
-                    >
-                      Create
-                    </Button>)
-                  )}
-                  <SimpleMenu
-                    title={
-                      <>
-                        <Button className="me-1 gray-btn butn">Export</Button>
-                      </>
-                    }
-                    data={exportbtn}
-                    isSearched={true}
-                    isCheckBox={false}
-                    actions={genaratePdf}
-                  />
+                  <div className="d-flex">
+                    {nav === "/CorrespondencesSummary" ||
+                      nav === "/Sms" ||
+                      nav === "/Emails" ? (
+                      <div style={{ marginRight: "50px" }}>
+                        <New />
+                      </div>
+                    ) : nav === "/ClaimSummary" ? (
+                      <CreateClaim />
+                    ) : (
+                      nav === "/Reconciliation" ? null : (
+                        <Button
+                          onClick={() => {
+                            if (nav == "/Applications") {
+                              // setisGardaDrwer(!isGardaDrwer);
+                              navigate('/applicationMgt')
+                            } else if (nav == "/ClaimSummary") {
+                              handlClaimDrawerChng();
+                            } else if (nav == "/Transfers")
+                              setTransferDrawer(!TransferDrawer);
+                            else if (nav === "/RosterSummary")
+                              setrosterDrawer(!rosterDrawer);
+                            else if (nav === "/Summary")
+                              // setisGardaDrwer(!isGardaDrwer);
+                              navigate('/applicationMgt')
+                            else if (
+                              nav === "/RemindersSummary" ||
+                              nav === "/Cancallation" ||
+                              nav === "/Batches" ||
+                              nav === "/Import" ||
+                              nav === "/onlinePayment" ||
+                              nav === "/Deductions" ||
+                              nav === "/StandingOrders" ||
+                              nav === "/Cheque" ||
+                              nav === "/CornMarket"
+                            ) {
+                              setIsBatchOpen(!isBatchOpen);
+                            } else if (nav === "/ChangCateSumm") {
+                              setisDrawerOpen(!isDrawerOpen);
+                            }
+                          }}
+                          style={{
+                            marginRight: "50px",
+                            color: "white",
+                            borderRadius: "3px",
+                            backgroundColor: "#45669d",
+                          }}
+                          className="butn"
+                        >
+                          Create
+                        </Button>)
+                    )}
+                    <SimpleMenu
+                      title={
+                        <>
+                          <Button className="me-1 gray-btn butn">Export</Button>
+                        </>
+                      }
+                      data={exportbtn}
+                      isSearched={true}
+                      isCheckBox={false}
+                      actions={genaratePdf}
+                    />
 
-                  <Button className="me-1 gray-btn butn">Share</Button>
-                  <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                  {currentKey && (
-                    <Button
-                      className="me-1 gray-btn butn"
-                      onClick={() => toggleView(currentKey)}
-                    >
-                      {viewMode[currentKey] === "card"
-                        ? "Card view"
-                        : "Grid view"}
-                    </Button>
-                  )}
-                  <ActionDropdown items={menuItems} />
+                    <Button className="me-1 gray-btn butn">Share</Button>
+                    <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
+                    {currentKey && (
+                      <Button
+                        className="me-1 gray-btn butn"
+                        onClick={() => toggleView(currentKey)}
+                      >
+                        {viewMode[currentKey] === "card"
+                          ? "Card view"
+                          : "Grid view"}
+                      </Button>
+                    )}
+                    <ActionDropdown items={menuItems} />
+                  </div>
                 </div>
-              </div>
-              {nav == "/Reconciliation" ? (
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="From Date"
-                      style={{ width: 220, marginRight: 12 }}
-                    />
-                    <DatePicker
-                      format="DD/MM/YYYY"
-                      placeholder="To Date"
-                      style={{ width: 220 }}
-                    />
-                  </Row>
-                </div>
-              ) : nav == "/RemindersSummary" || nav == "/Cancallation" ? (
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                    <DatePicker
-                      picker="year"
-                      format="YYYY"
-                      value={value}
-                      onChange={(e) => handleDateChange(e)}
-                      inputReadOnly={false} // allow typing
-                      allowClear={false} // keep a value always; set true if you want clear
-                      style={{ width: 220 }} // compact width for year
-                      placeholder="Select year"
-                    />
-                  </Row>
-                </div>
-              ) : (
-                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                  <Row className="align-items-baseline w-100">
-                   
-                    {/* {trueFilters?.map((item, index) =>
-                      item?.titleColumn === "Date Of Birth" ? (
-                        <DateRang key={index} title={item?.titleColumn} />
-                      ) : (
-                        <JiraLikeMenu
-                          key={index}
-                          title={item?.titleColumn}
-                          data={item?.lookups}
-                        />
-                      )
-                    )} */}
-                    {/* <MultiFilterDropdown
-                      style={{ float: "left" }}
-                      label="Status"
-                      options={[
-                        "submitted",
-                        "approved",
-                        "rejected",
-                        "in-progress",
-                        "draft",
-                      ]}
-                      selectedValues={statusValues}
-                      onChange={setStatusValues}
-                      operator={statusOperator}
-                      onOperatorChange={setStatusOperator}
-                      onApply={handleApplyStatusFilter}
-                    /> */}
-
-                    {/* <div className="searchfilter-margin d-flex searchfilter- ms-2"> */}
-                    {/* <div className="searchfilter-margin d-flex searchfilter- ms-2"> */}
-                      {/* <SimpleMenu
-                        title={
-                          <>
-                            More <PlusOutlined style={{ marginLeft: "-2px" }} />
-                          </>
-                        }
-                        isSearched={false}
-                      /> */}
+                {nav == "/Reconciliation" ? (
+                  <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                    <Row className="align-items-baseline w-100">
+                      <DatePicker
+                        format="DD/MM/YYYY"
+                        placeholder="From Date"
+                        style={{ width: 220, marginRight: 12 }}
+                      />
+                      <DatePicker
+                        format="DD/MM/YYYY"
+                        placeholder="To Date"
+                        style={{ width: 220 }}
+                      />
+                    </Row>
+                  </div>
+                ) : nav == "/RemindersSummary" || nav == "/Cancallation" ? (
+                  <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                    <Row className="align-items-baseline w-100">
+                      <DatePicker
+                        picker="year"
+                        format="YYYY"
+                        value={value}
+                        onChange={(e) => handleDateChange(e)}
+                        inputReadOnly={false} // allow typing
+                        allowClear={false} // keep a value always; set true if you want clear
+                        style={{ width: 220 }} // compact width for year
+                        placeholder="Select year"
+                      />
+                    </Row>
+                  </div>
+                ) : (
+                  <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
                       <Toolbar />
-                    {/* </div> */}
-
-                    <div>
-                      
-                      {/* <Button className="transparent bordr-less" onClick={showHidSavModal}>
-                        Save filter
-                      </Button> */}
-                    </div>
-
-                    {/* 👇 Push this div to the right */}
-                    
-                  </Row>
-                </div>
-              )}
-            </div>
-          )}
+                      <div className="d-flex">
+                        <SaveViewMenu className="me-4" />
+                        </div>
+                  </div>
+                )}
+              </div>
+            )}
         </div>
       </div>
       <MyDrawer
-        title={`${
-          nav === "/CasesById"
+        title={`${nav === "/CasesById"
             ? "Enter Cases"
             : nav == "/ClaimSummary"
-            ? "Enter Claims"
-            : nav === "/ClaimsById"
-            ? "Enter Claims"
-            : nav === "/Details"
-            ? "Enter Profile"
-            : ""
-        }`}
+              ? "Enter Claims"
+              : nav === "/ClaimsById"
+                ? "Enter Claims"
+                : nav === "/Details"
+                  ? "Enter Profile"
+                  : ""
+          }`}
         open={claimsDrawer}
         onClose={() => handlClaimDrawerChng()}
         width={600}
@@ -940,8 +889,8 @@ function HeaderDetails() {
               <div className="inpt-sub-con">
                 <Input
                   className="inp"
-                  // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                  // value={drawerIpnuts?.LookupType?.code}
+                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                // value={drawerIpnuts?.LookupType?.code}
                 />
                 <h1 className="error-text"></h1>
               </div>
@@ -957,8 +906,8 @@ function HeaderDetails() {
               <div className="inpt-sub-con">
                 <Input
                   className="inp"
-                  // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                  // value={drawerIpnuts?.LookupType?.code}
+                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                // value={drawerIpnuts?.LookupType?.code}
                 />
                 <h1 className="error-text"></h1>
               </div>
@@ -1012,23 +961,22 @@ function HeaderDetails() {
       <MyDrawer
         isPagination={false}
         width="1300px"
-        title={`${
-          nav === "/RemindersSummary"
+        title={`${nav === "/RemindersSummary"
             ? "Batch"
             : nav === "/Batches"
-            ? ""
-            : nav === "/onlinePayment"
-            ? ""
-            : nav === "/Import"
-            ? ""
-            : nav === "/Cheque"
-            ? ""
-            : nav === "/CancellationBatch"
-            ? "Cancellation Batch"
-            : nav === "/CornMarket"
-            ? "Corn Market Batch"
-            : ""
-        }`}
+              ? ""
+              : nav === "/onlinePayment"
+                ? ""
+                : nav === "/Import"
+                  ? ""
+                  : nav === "/Cheque"
+                    ? ""
+                    : nav === "/CancellationBatch"
+                      ? "Cancellation Batch"
+                      : nav === "/CornMarket"
+                        ? "Corn Market Batch"
+                        : ""
+          }`}
         open={isBatchOpen}
         onClose={() => {
           setIsBatchOpen(!isBatchOpen);
@@ -1045,11 +993,11 @@ function HeaderDetails() {
           setIsBatchOpen(!isBatchOpen);
         }}
       >
-         {nav === "/Batches" ||  nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque"|| nav === "/onlinePayment"? (
+        {nav === "/Batches" || nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque" || nav === "/onlinePayment" ? (
           <CreateBatchPayment ref={batchFormRef} />)
           :
           <CreateBatchPayment ref={batchFormRef} />}
-       
+
       </MyDrawer>
       <ChangeCategoryDrawer
         open={isDrawerOpen}

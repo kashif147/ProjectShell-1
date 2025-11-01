@@ -24,7 +24,9 @@
 .custom-scroll::-webkit-scrollbar {
   display: none !important;               /* Chrome, Safari, Opera */
 }
-
+.h-auto{
+  height: auto !important;
+}
 .input-container {
 }
 .custom-icon {
