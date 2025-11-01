@@ -8,6 +8,7 @@ import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import { useSelector, useDispatch } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
+import { useLocation } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CatOptions, workLocations } from "../../Data";
 import { CiCreditCard1 } from "react-icons/ci";
@@ -33,12 +34,13 @@ function ApplicationMgtDrawer({
   open,
   onClose,
   title = "Registration Request",
-  isEdit = false,
 }) {
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
+  const { state } = useLocation();
   console.log(application, "application")
+   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -136,6 +138,8 @@ function ApplicationMgtDrawer({
         region: apiData?.professionalDetails?.region || "",
         branch: apiData?.professionalDetails?.branch || "",
         isRetired: apiData?.professionalDetails?.isRetired || false,
+        retiredDate:apiData?.professionalDetails?.retiredDate,
+        pensionNo:apiData?.professionalDetails?.pensionNo
       },
       subscriptionDetails: {
         paymentType: apiData?.subscriptionDetails?.paymentType || "",
@@ -180,12 +184,12 @@ function ApplicationMgtDrawer({
     }
   }, []);
   useEffect(() => {
-    if (application && open) {
+    if (application && isEdit) {
       const mappedData = mapApiToState(application);
       setInfData(mappedData);
       setOriginalData(mappedData);
     }
-  }, [open, application]);
+  }, [isEdit, application]);
   const handleApprove = async (key) => {
     if (isEdit && originalData) {
       const proposedPatch = generatePatch(originalData, InfData);
@@ -436,6 +440,7 @@ function ApplicationMgtDrawer({
       surname: ["personalInfo", "surname"],
       dateOfBirth: ["personalInfo", "dateOfBirth"],
       gender: ["personalInfo", "gender"],
+      countryPrimaryQualification: ["personalInfo", "countryPrimaryQualification"],
 
       buildingOrHouse: ["contactInfo", "buildingOrHouse"],
       countyCityOrPostCode: ["contactInfo", "countyCityOrPostCode"],
@@ -1715,7 +1720,7 @@ function ApplicationMgtDrawer({
                         "retired_associate"
                       }
                       onChange={(e) =>
-                        handleInputChange("pensionNo", e.target.value)
+                        handleInputChange("professionalDetails","pensionNo", e.target.value)
                       }
                       required={
                         InfData?.professionalDetails?.membershipCategory ===
@@ -2068,11 +2073,11 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.payrollNo}
                   required={
                     InfData?.subscriptionDetails?.paymentType ===
-                    "Payroll No"
+                    "Payroll Deduction"
                   }
                   disabled={
                     InfData?.subscriptionDetails?.paymentType !==
-                    "Payroll No"
+                    "Payroll Deduction"
                   }
                   onChange={(e) =>
                     handleInputChange(

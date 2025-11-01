@@ -74,7 +74,15 @@ const MyInput = ({
   };
 
   const showError = hasError || internalError;
-
+  useEffect(() => {
+    if (type === "mobile" && value) {
+      const parts = value.trim().split(" ");
+      const code = parts[0] || "+353";
+      const number = parts.slice(1).join(" ");
+      setCountryCode(code);
+      setMobileNumber(number);
+    }
+  }, [type, value]);
   return (
     <div className="my-input-wrapper">
       <div className="d-flex justify-content-between">

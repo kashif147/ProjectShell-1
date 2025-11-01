@@ -11,6 +11,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+
 import SimpleMenu from "./SimpleMenu";
 import {
   DndContext,
@@ -68,8 +69,8 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
 };
 
 const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
-  
- 
+
+  const navigate = useNavigate()
   const location = useLocation();
   const {
     selectedRowIndex,
@@ -346,32 +347,23 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
             <span style={{ textOverflow: "ellipsis" }}>{text}</span>
           </Link>
         ) : col.title === "Application ID" ? (
-          <Link
-            // to="/AproveMembersip"
+          <span
+            style={{ color: "blue", cursor: "pointer" }}
             onClick={() => {
               const { applicationStatus, ApplicationId } = record || {};
               if (applicationStatus === "Draft") {
-                dispatch(
-                  getApplicationById({ id: "draft", draftId: ApplicationId })
-                );
-           
+                dispatch(getApplicationById({ id: "draft", draftId: ApplicationId }));
+                navigate("/applicationMgt", { state: { isEdit: true } });
               } else if (applicationStatus === "submitted") {
                 dispatch(getApplicationById({ id: ApplicationId }));
-                
+                navigate("/applicationMgt", { state: { isEdit: true } });
                 setAddNewGardaDrwr(true);
                 disableFtn(false);
               }
             }}
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
           >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
+            View
+          </span>
         ) : col.title === "Change To" ? (
           <Link
             to="/ChangeCatById"
@@ -387,8 +379,8 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           >
             <span style={{ textOverflow: "ellipsis" }}>{text}</span>
           </Link>
-        
-        ) : (col.title === "Batch Name" ) ? (
+
+        ) : (col.title === "Batch Name") ? (
           <Link
             to="/BatchMemberSummary"
             state={{
@@ -397,9 +389,9 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
               batchId: record?.id || record?.key,
 
             }}
-              onClick={() => {
+            onClick={() => {
               // const {  id } = record || {};
-               debugger
+              debugger
               const batchPaths = [
                 "/Batches",
                 "/Import",
@@ -418,7 +410,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
                 } else {
                   // console.warn("No batch found with ID:", id);
                 }
-             
+
               }
             }}
 
@@ -537,7 +529,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
     const endIndex = startIndex + pageSize;
     setCurrentPageData(dataSource.slice(startIndex, endIndex));
   }, [currentPage, dataSource]);
- const getBatchById = (batchId) => {
+  const getBatchById = (batchId) => {
     if (!Array.isArray(tableData)) return null;
     const batch = tableData.find((b) => b.id === batchId) || null;
     if (batch) setExcelData(batch); // ✅ set into context
