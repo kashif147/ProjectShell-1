@@ -707,6 +707,7 @@ function ApplicationMgtDrawer({
   };
 
   const handleSubmit = async () => {
+    if (isDisable ) return
     const isValid = validateForm();
     if (!isValid) return;
 
@@ -1513,7 +1514,8 @@ const handleChange = (e) => {
             </Checkbox>
             <Button
               className="butn primary-btn"
-              disabled={selected?.Reject || selected?.Approve || isDisable}
+              // disabled={selected?.Reject || selected?.Approve || isDisable}>
+              disabled={true}
               onClick={() => handleSave()}
             >
               Save
@@ -1522,7 +1524,7 @@ const handleChange = (e) => {
               <Button
                 onClick={() => handleSubmit()}
                 className="butn primary-btn"
-                disabled={isDisable}
+                // disabled={isDisable}
               >
                 Submit
               </Button>
