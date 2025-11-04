@@ -42,22 +42,22 @@ function ApplicationMgtDrawer({
   );
   const navigate = useNavigate();
   const { filtersState } = useFilters();
- const getApplicationStatusFilters = () => {
-  if (filtersState['Application Status']?.selectedValues?.length > 0) {
-    const statusMapping = {
-      'In-Progress': 'inprogress',
-      'Approved': 'approved',
-      'Rejected': 'rejected', 
-      'Submitted': 'submitted',
-      'Draft': 'draft'  // ✅ ADD DRAFT MAPPING
-    };
-    const statusValues = filtersState['Application Status'].selectedValues;
-    return statusValues.map(status => 
-      statusMapping[status] || status.toLowerCase().replace('-', '')
-    );
-  }
-  return [];
-};
+  const getApplicationStatusFilters = () => {
+    if (filtersState['Application Status']?.selectedValues?.length > 0) {
+      const statusMapping = {
+        'In-Progress': 'inprogress',
+        'Approved': 'approved',
+        'Rejected': 'rejected',
+        'Submitted': 'submitted',
+        'Draft': 'draft'  // ✅ ADD DRAFT MAPPING
+      };
+      const statusValues = filtersState['Application Status'].selectedValues;
+      return statusValues.map(status =>
+        statusMapping[status] || status.toLowerCase().replace('-', '')
+      );
+    }
+    return [];
+  };
 
   const refreshApplicationsWithStatusFilters = () => {
     const statusFilters = getApplicationStatusFilters();
@@ -199,7 +199,7 @@ function ApplicationMgtDrawer({
         branch: apiData?.professionalDetails?.branch || "",
         isRetired: apiData?.professionalDetails?.isRetired || false,
         retiredDate: apiData?.professionalDetails?.retiredDate !== undefined && apiData?.professionalDetails?.retiredDate !== "" && apiData?.professionalDetails?.retiredDate !== null ?
-          apiData?.professionalDetails?.retiredDate : null,
+          dayjs(apiData?.professionalDetails?.retiredDate) : null,
         pensionNo: apiData?.professionalDetails?.pensionNo
       },
       subscriptionDetails: {
@@ -251,49 +251,52 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
-  const handleApprove = async (key) => {
-    if (isEdit && originalData) {
-      const proposedPatch = generatePatch(originalData, InfData);
-      const obj = {
-        submission: originalData,
-        proposedPatch: proposedPatch,
-      };
+ const handleApprove = async (key) => {
+  if (isEdit && originalData) {
+    
+    // ✅ ADD DATE CONVERSION FOR APPROVAL FLOW
+    const convertDatesToISO = (data) => {
+      if (!data) return data;
+      const converted = { ...data };
 
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
+      if (converted.personalInfo?.dateOfBirth) {
+        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
+      }
 
-        // 🟢 If no changes were proposed, update status directly
-        if (!proposedPatch || proposedPatch.length === 0) {
-          const newStatus =
-            key?.toLowerCase() === "rejected" ? "rejected" : "approved";
-          const statusPayload = { applicationStatus: newStatus };
-          const statusResponse = await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-            statusPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+      if (converted.professionalDetails?.retiredDate) {
+        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
+      }
 
-          MyAlert(
-            "success",
-            `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`
-          );
-          refreshApplicationsWithStatusFilters()
-          navigate('/Applications')
-          return; // ⛔ stop further flow
-        }
+      if (converted.professionalDetails?.graduationDate) {
+        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
+      }
 
-        // 🟡 If there are proposed changes → approve as usual
-        const approveResponse = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-          obj,
+      return converted;
+    };
+
+    // Convert dates before generating patch
+    const convertedInfData = convertDatesToISO(InfData);
+    const convertedOriginalData = convertDatesToISO(originalData);
+
+    const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+    const obj = {
+      submission: convertedOriginalData,
+      proposedPatch: proposedPatch,
+    };
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // 🟢 If no changes were proposed, update status directly
+      if (!proposedPatch || proposedPatch.length === 0) {
+        const newStatus = key?.toLowerCase() === "rejected" ? "rejected" : "approved";
+        const statusPayload = { applicationStatus: newStatus };
+        const statusResponse = await axios.put(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+          statusPayload,
           {
             headers: {
               "Content-Type": "application/json",
@@ -302,68 +305,87 @@ function ApplicationMgtDrawer({
           }
         );
 
-        // Check for section changes
-        const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
-        const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
-
-        if (personalChanged && application?.personalDetails?._id) {
-          const personalPayload = cleanPayload({
-            personalInfo: InfData.personalInfo,
-            contactInfo: InfData.contactInfo,
-          });
-
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-            personalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          console.log("Personal details updated successfully");
-        }
-
-        if (professionalChanged && application?.professionalDetails?._id) {
-          const professionalPayload = cleanPayload({
-            professionalDetails: InfData.professionalDetails,
-          });
-
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-            professionalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-          console.log("Professional details updated successfully");
-        }
-
-        // Show success message
-        let successMessage = "Application approved successfully!";
-        if (personalChanged && professionalChanged) {
-          successMessage = "Application approved and all details updated successfully!";
-        } else if (personalChanged) {
-          successMessage = "Application approved and personal details updated successfully!";
-        } else if (professionalChanged) {
-          successMessage = "Application approved and professional details updated successfully!";
-        }
-        MyAlert("success", successMessage);
-        refreshApplicationsWithStatusFilters()
-      } catch (error) {
-        console.error("Error approving application:", error);
-        MyAlert(
-          "error",
-          "Failed to approve application",
-          error?.response?.data?.error?.message || error.message
-        );
+        MyAlert("success", `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`);
+        refreshApplicationsWithStatusFilters();
+        navigate('/Applications')
+        return;
       }
+
+      // 🟡 If there are proposed changes → approve as usual
+      const approveResponse = await axios.post(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+        obj,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Check for section changes
+      const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
+      const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
+
+      if (personalChanged && application?.personalDetails?._id) {
+        const personalPayload = cleanPayload({
+          personalInfo: convertedInfData.personalInfo,
+          contactInfo: convertedInfData.contactInfo,
+        });
+
+        await axios.put(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+          personalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Personal details updated successfully");
+      }
+
+      if (professionalChanged && application?.professionalDetails?._id) {
+        const professionalPayload = cleanPayload({
+          professionalDetails: convertedInfData.professionalDetails,
+        });
+
+        await axios.put(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+          professionalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log("Professional details updated successfully");
+      }
+
+      // Show success message
+      let successMessage = "Application approved successfully!";
+      if (personalChanged && professionalChanged) {
+        successMessage = "Application approved and all details updated successfully!";
+      } else if (personalChanged) {
+        successMessage = "Application approved and personal details updated successfully!";
+      } else if (professionalChanged) {
+        successMessage = "Application approved and professional details updated successfully!";
+      }
+      MyAlert("success", successMessage);
+      refreshApplicationsWithStatusFilters();
+      
+    } catch (error) {
+      console.error("Error approving application:", error);
+      MyAlert(
+        "error",
+        "Failed to approve application",
+        error?.response?.data?.error?.message || error.message
+      );
     }
-  };
+  }
+};
   const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
       <Col span={24}>
@@ -407,20 +429,30 @@ function ApplicationMgtDrawer({
     </Row>
   );
 
-  const hasPersonalDetailsChanged = (original, current) => {
-    const personalInfoFields = ['title', 'surname', 'forename', 'gender', 'dateOfBirth', 'countryPrimaryQualification'];
-    const contactInfoFields = ['preferredAddress', 'eircode', 'buildingOrHouse', 'streetOrRoad', 'areaOrTown', 'countyCityOrPostCode', 'country', 'mobileNumber', 'telephoneNumber', 'preferredEmail', 'personalEmail', 'workEmail'];
+ const hasPersonalDetailsChanged = (original, current) => {
+  const personalInfoFields = ['title', 'surname', 'forename', 'gender', 'dateOfBirth', 'countryPrimaryQualification'];
+  const contactInfoFields = ['preferredAddress', 'eircode', 'buildingOrHouse', 'streetOrRoad', 'areaOrTown', 'countyCityOrPostCode', 'country', 'mobileNumber', 'telephoneNumber', 'preferredEmail', 'personalEmail', 'workEmail'];
 
-    const personalInfoChanged = personalInfoFields.some(field =>
-      original.personalInfo?.[field] !== current.personalInfo?.[field]
-    );
+  const personalInfoChanged = personalInfoFields.some(field => {
+    const originalValue = original.personalInfo?.[field];
+    const currentValue = current.personalInfo?.[field];
+    
+    // ✅ Handle date comparison properly
+    if (field === 'dateOfBirth') {
+      const originalDate = originalValue ? moment(originalValue).format('YYYY-MM-DD') : null;
+      const currentDate = currentValue ? moment(currentValue).format('YYYY-MM-DD') : null;
+      return originalDate !== currentDate;
+    }
+    
+    return originalValue !== currentValue;
+  });
 
-    const contactInfoChanged = contactInfoFields.some(field =>
-      original.contactInfo?.[field] !== current.contactInfo?.[field]
-    );
+  const contactInfoChanged = contactInfoFields.some(field =>
+    original.contactInfo?.[field] !== current.contactInfo?.[field]
+  );
 
-    return personalInfoChanged || contactInfoChanged;
-  };
+  return personalInfoChanged || contactInfoChanged;
+};
 
   const hasProfessionalDetailsChanged = (original, current) => {
     const professionalFields = [
@@ -475,7 +507,8 @@ function ApplicationMgtDrawer({
       region: "",
       branch: "",
       isRetired: false,
-      pensionNo: ""
+      pensionNo: "",
+      retiredDate:null
     },
     subscriptionDetails: {
       paymentType: "",
@@ -848,6 +881,7 @@ function ApplicationMgtDrawer({
       );
     }
   };
+  
   const handleSave = async () => {
     const isValid = validateForm();
     if (!isValid) return;
@@ -1166,211 +1200,243 @@ function ApplicationMgtDrawer({
   useEffect(() => {
     if (application && isEdit) {
       const status = application.applicationStatus?.toLowerCase();
-      const readOnlyStatuses = ['APPROVED', 'rejected', 'in-progress',];
+      const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
 
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true); // Disable form for read-only statuses
-      } else if (isEdit === false) {
-        disableFtn(false); // Enable form for editable statuses in edit mode
+
+        // ✅ UPDATE CHECKBOXES BASED ON STATUS
+        setSelected(prev => ({
+          ...prev,
+          Approve: status === 'approved',
+          Reject: status === 'rejected'
+        }));
+      } else {
+        // For editable applications, reset checkboxes to default
+        setSelected(prev => ({
+          ...prev,
+          Approve: false,
+          Reject: false
+        }));
+        disableFtn(false);
       }
-      // For new applications (isEdit: false), let the existing isDisable logic handle it
+    } else {
+      // For new applications, use default state
+      setSelected(select);
     }
   }, [application, isEdit]);
-  const handleChange = (e) => {
-    const { name, checked } = e.target;
 
-    if (name === "Bulk" && checked === false) {
-      disableFtn(true);
-      setErrors({});
+
+const handleChange = (e) => {
+  const { name, checked } = e.target;
+
+  // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
+  const status = application?.applicationStatus?.toLowerCase();
+  const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
+  
+  if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
+    return; // Don't allow changes for read-only statuses
+  }
+
+  if (name === "Bulk") {
+    disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
+    setErrors({});
+    setSelected((prev) => ({
+      ...prev,
+      Bulk: checked,
+    }));
+  }
+
+  if (name === "Approve" && checked === true) {
+    if (isEdit) {
+      // Edit mode: Open confirmation modal
+      setActionModal({ open: true, type: 'approve' });
+    } else {
+      // Non-edit mode: Just update checkbox state
       setSelected((prev) => ({
         ...prev,
-        Bulk: checked,
+        Approve: true,
+        Reject: false, // Uncheck reject
       }));
     }
+  }
 
-    if (name === "Bulk" && checked === true) {
-      disableFtn(false);
-      setErrors({});
+  if (name === "Reject" && checked === true) {
+    if (isEdit) {
+      // Edit mode: Open rejection modal
+      setActionModal({ open: true, type: 'reject' });
+    } else {
+      // Non-edit mode: Just update checkbox state
       setSelected((prev) => ({
         ...prev,
-        Bulk: checked,
+        Reject: true,
+        Approve: false, // Uncheck approve
       }));
     }
+  }
 
-    if (name === "Approve" && checked === true) {
-      if (isEdit) {
-        // Edit mode: Open confirmation modal
-        setActionModal({ open: true, type: 'approve' });
-      } else {
-        // Non-edit mode: Just update checkbox state (like radio button)
-        setSelected((prev) => ({
-          ...prev,
-          Approve: true,
-          Reject: false, // Uncheck reject
-        }));
-      }
+  // Handle unchecking for non-edit mode
+  if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
+    setSelected((prev) => ({
+      ...prev,
+      [name]: false,
+    }));
+  }
+};
+ const handleApplicationAction = async (action) => {
+  if (isEdit && !originalData) return;
+
+  setIsProcessing(true);
+
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
     }
 
-    if (name === "Reject" && checked === true) {
-      if (isEdit) {
-        // Edit mode: Open rejection modal
-        setActionModal({ open: true, type: 'reject' });
-      } else {
-        // Non-edit mode: Just update checkbox state (like radio button)
-        setSelected((prev) => ({
-          ...prev,
-          Reject: true,
-          Approve: false, // Uncheck approve
-        }));
-      }
-    }
+    // ✅ ADD DATE CONVERSION FOR APPROVAL/REJECTION FLOW
+    const convertDatesToISO = (data) => {
+      if (!data) return data;
+      const converted = { ...data };
 
-    // Handle unchecking for non-edit mode (optional - if you want to allow unchecking)
-    if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
-      setSelected((prev) => ({
-        ...prev,
-        [name]: false,
-      }));
-    }
-
-    // Handle unchecking for Bulk
-    if (name === "Bulk" && checked === false) {
-      setSelected((prev) => ({
-        ...prev,
-        [name]: checked,
-      }));
-    }
-  };
-  const handleApplicationAction = async (action) => {
-    if (isEdit && !originalData) return;
-
-    setIsProcessing(true);
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
+      if (converted.personalInfo?.dateOfBirth) {
+        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
       }
 
-      // Prepare status payload
-      const statusPayload = {
-        applicationStatus: action, // "approved" or "rejected"
-        comments: action === "rejected"
-          ? rejectionData.reason
-          : rejectionData.note || "Application approved"
-      };
-
-      // Validate rejection reason
-      if (action === "rejected" && !rejectionData.reason) {
-        MyAlert("error", "Please select a rejection reason");
-        setIsProcessing(false);
-        return;
+      if (converted.professionalDetails?.retiredDate) {
+        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
       }
 
-      // Handle approval with changes (only for edit mode)
-      if (isEdit && action === "approved") {
-        const proposedPatch = generatePatch(originalData, InfData);
-
-        if (proposedPatch && proposedPatch.length > 0) {
-          const obj = {
-            submission: originalData,
-            proposedPatch: proposedPatch,
-          };
-
-          await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-            obj,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          // Update changed sections
-          const personalChanged = hasPersonalDetailsChanged(originalData, InfData);
-          const professionalChanged = hasProfessionalDetailsChanged(originalData, InfData);
-
-          if (personalChanged && application?.personalDetails?._id) {
-            const personalPayload = cleanPayload({
-              personalInfo: InfData.personalInfo,
-              contactInfo: InfData.contactInfo,
-            });
-            await axios.put(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-              personalPayload,
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-            );
-          }
-
-          if (professionalChanged && application?.professionalDetails?._id) {
-            const professionalPayload = cleanPayload({
-              professionalDetails: InfData.professionalDetails,
-            });
-            await axios.put(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-              professionalPayload,
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-            );
-          }
-        }
+      if (converted.professionalDetails?.graduationDate) {
+        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
       }
 
-      // Update application status
-      await axios.put(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-        statusPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+      return converted;
+    };
 
-      // ✅ SUCCESS: Now update the checkbox state
-      setSelected(prev => ({
-        ...prev,
-        Approve: action === 'approved',
-        Reject: action === 'rejected'
-      }));
+    // Convert dates before any processing
+    const convertedInfData = convertDatesToISO(InfData);
+    const convertedOriginalData = convertDatesToISO(originalData);
 
-      // Success handling
-      const successMessage = action === "approved"
-        ? "Application approved successfully!"
-        : "Application rejected successfully!";
+    // Prepare status payload
+    const statusPayload = {
+      applicationStatus: action, // "approved" or "rejected"
+      comments: action === "rejected"
+        ? rejectionData.reason
+        : rejectionData.note || "Application approved"
+    };
 
-      MyAlert("success", successMessage);
-      disableFtn(true);
-      refreshApplicationsWithStatusFilters()
-
-      // Reset modal and rejection data
-      setActionModal({ open: false, type: null });
-      setRejectionData({ reason: "", note: "" });
-
-      if (!isEdit) {
-        navigate('/Applications');
-      }
-
-    } catch (error) {
-      console.error(`Error ${action} application:`, error);
-      MyAlert(
-        "error",
-        `Failed to ${action} application`,
-        error?.response?.data?.error?.message || error.message
-      );
-
-      // ❌ On error, ensure checkboxes are unchecked
-      setSelected(prev => ({
-        ...prev,
-        Approve: false,
-        Reject: false
-      }));
-    } finally {
+    // Validate rejection reason
+    if (action === "rejected" && !rejectionData.reason) {
+      MyAlert("error", "Please select a rejection reason");
       setIsProcessing(false);
+      return;
     }
-  };
+
+    // Handle approval with changes (only for edit mode)
+    if (isEdit && action === "approved") {
+      const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+
+      if (proposedPatch && proposedPatch.length > 0) {
+        const obj = {
+          submission: convertedOriginalData,
+          proposedPatch: proposedPatch,
+        };
+
+        await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+          obj,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Update changed sections with CONVERTED data
+        const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
+        const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
+
+        if (personalChanged && application?.personalDetails?._id) {
+          const personalPayload = cleanPayload({
+            personalInfo: convertedInfData.personalInfo,
+            contactInfo: convertedInfData.contactInfo,
+          });
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+            personalPayload,
+            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+          );
+        }
+
+        if (professionalChanged && application?.professionalDetails?._id) {
+          const professionalPayload = cleanPayload({
+            professionalDetails: convertedInfData.professionalDetails,
+          });
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+            professionalPayload,
+            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+          );
+        }
+      }
+    }
+
+    // Update application status
+    await axios.put(
+      `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+      statusPayload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
+
+    // ✅ SUCCESS: Now update the checkbox state
+    setSelected(prev => ({
+      ...prev,
+      Approve: action === 'approved',
+      Reject: action === 'rejected'
+    }));
+
+    // Success handling
+    const successMessage = action === "approved"
+      ? "Application approved successfully!"
+      : "Application rejected successfully!";
+
+    MyAlert("success", successMessage);
+    disableFtn(true);
+    refreshApplicationsWithStatusFilters();
+
+    // Reset modal and rejection data
+    setActionModal({ open: false, type: null });
+    setRejectionData({ reason: "", note: "" });
+
+    if (!isEdit) {
+      navigate('/Applications');
+    }
+
+  } catch (error) {
+    console.error(`Error ${action} application:`, error);
+    MyAlert(
+      "error",
+      `Failed to ${action} application`,
+      error?.response?.data?.error?.message || error.message
+    );
+
+    // ❌ On error, ensure checkboxes are unchecked
+    setSelected(prev => ({
+      ...prev,
+      Approve: false,
+      Reject: false
+    }));
+  } finally {
+    setIsProcessing(false);
+  }
+};
   function navigateApplication(direction) {
     if (index === -1 || !applications?.length) return;
 
@@ -1567,7 +1633,6 @@ function ApplicationMgtDrawer({
                   disabled={isDisable}
                   onChange={(date, dateString) => {
                     console.log(dateString, "dateString111")
-                    debugger
                     handleInputChange("personalInfo", "dateOfBirth", date);
                   }}
                   hasError={!!errors?.dateOfBirth}
@@ -1842,7 +1907,7 @@ function ApplicationMgtDrawer({
                       disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "retired_associate"}
                       required={InfData?.professionalDetails?.membershipCategory === "retired_associate"}
                       onChange={(date, dateString) => {
-                        handleInputChange("professionalDetails", "retiredDate", dateString);
+                        handleInputChange("professionalDetails", "retiredDate", date);
 
                       }}
                     />

@@ -30,7 +30,8 @@
 
 .my-input-container.disabled .my-input-field-select {
   background-color: #f5f5f5;
-  color: #bfbfbf;
+  /* color: #bfbfbf; */
+  font-weight: 400;
   border-color: #d9d9d9;
   box-shadow: none;
   cursor: not-allowed;
@@ -146,7 +147,7 @@
 
 .my-input-field:disabled {
   background-color: #f5f5f5;
-  color: #bfbfbf;
+  /* color: #bfbfbf; */
   border-color: #d9d9d9;
   cursor: not-allowed;
 }
