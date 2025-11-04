@@ -350,10 +350,11 @@ function SimpleMenu({
         overlay={menu}
         trigger={["hover"]}
         placement="bottomLeft"
-        overlayStyle={{ width: 220, padding: "0px" }}
+        overlayStyle={{ width: 220, padding: "0px", height:'35px' }}
       >
         <Button
-          className={` ${vertical ? "gray-btn butn" : "transparent-bg p-0"}`}
+          // className={` gray-btn butn ${vertical ? "gray-btn butn" : "transparent-bg p-0"}`}
+          style={{backgroundColor:'#091e420a', borderRadius:'4px', height:'32px',border:'none', fontWeight:'500',marginLeft:'8px' }}
         >
           {title}
         </Button>

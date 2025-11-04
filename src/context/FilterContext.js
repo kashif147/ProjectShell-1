@@ -1,7 +1,5 @@
-import React, { createContext, useContext, useState, useMemo, useEffect } from "react";
-
+import { createContext, useContext, useState, useMemo, useEffect } from "react";
 const FilterContext = createContext();
-
 export const FilterProvider = ({ children }) => {
   // 🔹 All possible filters per screen
   const viewFilters = useMemo(
@@ -71,38 +69,100 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Default visible filters for each screen
   const defaultVisibleFilters = {
-    Applications: [ "Application Status", "Membership Category"],
-    Profile: [ "Email"],
+    Applications: ["Application Status", "Membership Category"],
+    Profile: ["Email"],
     Membership: ["Membership Status"],
   };
 
-  // 🔹 Current active screen
-  const [activePage, setActivePage] = useState("Applications");
+  // 🔹 Default filter VALUES for each screen
+  const defaultFilterValues = {
+    Applications: {
+      "Application Status": {
+        operator: "==",
+        selectedValues: ["Draft", "Submitted"] // ✅ Default for Applications screen
+      }
+    },
+    Profile: {
+      "Email": {
+        operator: "==",
+        selectedValues: [] // No default values for Profile
+      }
+    },
+    Membership: {
+      "Membership Status": {
+        operator: "==",
+        selectedValues: ["Active"] // ✅ Default for Membership screen
+      }
+    },
+  };
 
-  // 🔹 Default visible filters for current page
-  const [visibleFilters, setVisibleFilters] = useState(defaultVisibleFilters["Applications"]);
-
-  // ⏩ Whenever page changes, update visible filters accordingly
-  useEffect(() => {
-    setVisibleFilters(defaultVisibleFilters[activePage] || []);
-  }, [activePage]);
-
-  const currentPageFilters = useMemo(
-    () => viewFilters[activePage] || [],
-    [activePage, viewFilters]
+  // 🔹 Dropdown options per filter
+  const filterOptions = useMemo(
+    () => ({
+      "Application Status": ["In-Progress", "Approved", "Rejected", "Submitted", "Draft"],
+      "Membership Category": ["Student", "Full", "Associate", "Retired"],
+      "Membership Status": ["Active", "Inactive", "Pending", "Cancelled"],
+      "Payment Type": ["Payroll Deduction", "Credit Card", "Bank Transfer"],
+      "Gender": ["Male", "Female", "Other"],
+      "Region": ["North", "South", "East", "West"],
+      "Branch": ["Dublin", "Cork", "Galway", "Limerick"],
+    }),
+    []
   );
 
-  // Toggle one filter
+  // 🔹 Active page
+  const [activePage, setActivePage] = useState("Applications");
+
+  // 🔹 Visible filters and saved states
+  const [visibleFilters, setVisibleFilters] = useState(
+    defaultVisibleFilters["Applications"]
+  );
+  const [filtersState, setFiltersState] = useState(
+    defaultFilterValues["Applications"] || {}
+  );
+
+  // 🔹 Reset filters when changing page - UPDATED
+  useEffect(() => {
+    setVisibleFilters(defaultVisibleFilters[activePage] || []);
+    setFiltersState(defaultFilterValues[activePage] || {});
+  }, [activePage]);
+
+  // 🔹 Helper functions
   const toggleFilter = (filter, checked) => {
     setVisibleFilters((prev) =>
       checked ? [...prev, filter] : prev.filter((f) => f !== filter)
     );
   };
 
-  // Reset filters for current page (back to its defaults)
   const resetFilters = () => {
     setVisibleFilters(defaultVisibleFilters[activePage] || []);
+    setFiltersState(defaultFilterValues[activePage] || {});
   };
+
+  const updateFilterValues = (filter, values) => {
+    setFiltersState((prev) => ({
+      ...prev,
+      [filter]: {
+        ...(prev[filter] || { operator: "==" }),
+        selectedValues: values,
+      },
+    }));
+  };
+
+  const updateFilterOperator = (filter, operator) => {
+    setFiltersState((prev) => ({
+      ...prev,
+      [filter]: {
+        ...(prev[filter] || { selectedValues: [] }),
+        operator,
+      },
+    }));
+  };
+
+  const currentPageFilters = useMemo(
+    () => viewFilters[activePage] || [],
+    [activePage, viewFilters]
+  );
 
   return (
     <FilterContext.Provider
@@ -113,6 +173,10 @@ export const FilterProvider = ({ children }) => {
         visibleFilters,
         toggleFilter,
         resetFilters,
+        filterOptions,
+        filtersState,
+        updateFilterValues,
+        updateFilterOperator,
       }}
     >
       {children}

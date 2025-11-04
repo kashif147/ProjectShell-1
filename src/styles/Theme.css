@@ -667,44 +667,44 @@ body {
    ======================================== */
 
 /* Ant Design Notification Override */
-.ant-notification {
+/* .ant-notification {
   padding: 16px !important;
   margin: 16px !important;
   border-radius: 8px !important;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15) !important;
-}
+} */
 
 /* Center notification positioning */
-.ant-message {
+/* .ant-message {
   top: 20vh !important;
   left: 50% !important;
   transform: translateX(-50%) !important;
   text-align: center !important;
-}
+} */
 
-.ant-message-notice {
+/* .ant-message-notice {
   text-align: center !important;
   margin: 0 auto !important;
-}
+} */
 
-.ant-notification-notice {
+/* .ant-notification-notice {
   padding: 16px 20px !important;
   margin: 8px 0 !important;
   border-radius: 8px !important;
   border: 1px solid var(--border-color) !important;
   background: var(--background-primary) !important;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1) !important;
-}
+} */
 
-.ant-notification-notice-message {
+/* .ant-notification-notice-message {
   margin: 0 0 8px 0 !important;
   padding: 0 !important;
   font-size: var(--font-size-base) !important;
   font-weight: 600 !important;
   color: var(--font-color) !important;
-}
+} */
 
-.ant-notification-notice-description {
+/* .ant-notification-notice-description {
   margin: 0 !important;
   padding: 0 !important;
   font-size: var(--font-size-sm) !important;
@@ -720,55 +720,55 @@ body {
 
 .ant-notification-notice-close:hover {
   color: var(--font-color) !important;
-}
+} */
 
 /* Success Notification */
-.ant-notification-notice-success {
+/* .ant-notification-notice-success {
   border-left: 4px solid var(--success-color) !important;
 }
 
 .ant-notification-notice-success .ant-notification-notice-message {
   color: var(--success-color) !important;
-}
+} */
 
 /* Error Notification */
-.ant-notification-notice-error {
+/* .ant-notification-notice-error {
   border-left: 4px solid var(--error-color) !important;
 }
 
 .ant-notification-notice-error .ant-notification-notice-message {
   color: var(--error-color) !important;
-}
+} */
 
 /* Warning Notification */
-.ant-notification-notice-warning {
+/* .ant-notification-notice-warning {
   border-left: 4px solid var(--warning-color) !important;
-}
+} */
 
-.ant-notification-notice-warning .ant-notification-notice-message {
+/* .ant-notification-notice-warning .ant-notification-notice-message {
   color: var(--warning-color) !important;
-}
+} */
 
 /* Info Notification */
-.ant-notification-notice-info {
+/* .ant-notification-notice-info {
   border-left: 4px solid var(--info-color) !important;
 }
 
 .ant-notification-notice-info .ant-notification-notice-message {
   color: var(--info-color) !important;
-}
+} */
 
 /* Notification Icon Styling */
-.ant-notification-notice-icon {
+/* .ant-notification-notice-icon {
   margin-right: 12px !important;
   font-size: 20px !important;
-}
+} */
 
 /* Notification Content Container */
-.ant-notification-notice-content {
+/* .ant-notification-notice-content {
   margin: 0 !important;
   padding: 0 !important;
-}
+} */
 
 /* Responsive Design */
 @media (max-width: 768px) {

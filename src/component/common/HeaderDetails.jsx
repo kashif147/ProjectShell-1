@@ -433,13 +433,13 @@ function HeaderDetails() {
 
       <div
         className={`details-header d-flex w-100% overflow-hidden ${location?.pathname == "/Details" ||
-            location?.pathname == "/CasesById" ||
-            location?.pathname == "/AddNewProfile" ||
-            location?.pathname == "/ClaimsById" ||
-            location?.pathname == "/AddClaims" ||
-            location?.pathname == "/Doucmnets"
-            ? "Header-border"
-            : ""
+          location?.pathname == "/CasesById" ||
+          location?.pathname == "/AddNewProfile" ||
+          location?.pathname == "/ClaimsById" ||
+          location?.pathname == "/AddClaims" ||
+          location?.pathname == "/Doucmnets"
+          ? "Header-border"
+          : ""
           }`}
       >
         <div style={{ width: "100%" }}>
@@ -658,10 +658,10 @@ function HeaderDetails() {
                   </div>
                 ) : (
                   <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
-                      <Toolbar />
-                      <div className="d-flex">
-                        <SaveViewMenu className="me-4" />
-                        </div>
+                    <Toolbar />
+                    <div className="d-flex">
+                      <SaveViewMenu className="me-4" />
+                    </div>
                   </div>
                 )}
               </div>
@@ -670,14 +670,14 @@ function HeaderDetails() {
       </div>
       <MyDrawer
         title={`${nav === "/CasesById"
-            ? "Enter Cases"
-            : nav == "/ClaimSummary"
+          ? "Enter Cases"
+          : nav == "/ClaimSummary"
+            ? "Enter Claims"
+            : nav === "/ClaimsById"
               ? "Enter Claims"
-              : nav === "/ClaimsById"
-                ? "Enter Claims"
-                : nav === "/Details"
-                  ? "Enter Profile"
-                  : ""
+              : nav === "/Details"
+                ? "Enter Profile"
+                : ""
           }`}
         open={claimsDrawer}
         onClose={() => handlClaimDrawerChng()}
@@ -962,20 +962,20 @@ function HeaderDetails() {
         isPagination={false}
         width="1300px"
         title={`${nav === "/RemindersSummary"
-            ? "Batch"
-            : nav === "/Batches"
+          ? "Batch"
+          : nav === "/Batches"
+            ? ""
+            : nav === "/onlinePayment"
               ? ""
-              : nav === "/onlinePayment"
+              : nav === "/Import"
                 ? ""
-                : nav === "/Import"
+                : nav === "/Cheque"
                   ? ""
-                  : nav === "/Cheque"
-                    ? ""
-                    : nav === "/CancellationBatch"
-                      ? "Cancellation Batch"
-                      : nav === "/CornMarket"
-                        ? "Corn Market Batch"
-                        : ""
+                  : nav === "/CancellationBatch"
+                    ? "Cancellation Batch"
+                    : nav === "/CornMarket"
+                      ? "Corn Market Batch"
+                      : ""
           }`}
         open={isBatchOpen}
         onClose={() => {

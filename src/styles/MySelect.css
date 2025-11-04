@@ -1,3 +1,33 @@
+/* Add these styles to your existing MySelect.css */
+
+/* Error state for select */
+.my-input-container.error .my-input-field-select {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.15) !important;
+}
+
+.my-input-container.error .my-input-field-select:focus {
+  border-color: #ff4d4f !important;
+  box-shadow: 0 0 0 2px rgba(255, 77, 79, 0.2) !important;
+}
+
+/* Placeholder error color */
+.placeholder-error {
+  color: #ff4d4f !important;
+}
+
+/* Ensure the error icon appears properly */
+.my-input-container .error-icon {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: #ff4d4f;
+  font-size: 18px;
+  pointer-events: none;
+  z-index: 1;
+}
+
 .my-input-container.disabled .my-input-field-select {
   background-color: #f5f5f5;
   color: #bfbfbf;

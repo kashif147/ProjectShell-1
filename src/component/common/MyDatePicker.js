@@ -1,8 +1,14 @@
 import React, { useState } from 'react';
 import { DatePicker } from 'antd';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
+import dayjs from "dayjs";
 import '../../styles/MySelect.css';
 import moment from 'moment';
+
+// ✅ ADD THESE TWO LINES BELOW
+import customParseFormat from "dayjs/plugin/customParseFormat";
+dayjs.extend(customParseFormat);
+
 
 const MyDatePicker = ({
   label,
@@ -15,13 +21,14 @@ const MyDatePicker = ({
   disabled = false,
   placeholder = 'Select date',
   isMarginBtm = true,
-  extra = null, // 🔹 checkbox, info, etc
+  extra = null,
 }) => {
+  debugger
   const [isFocused, setIsFocused] = useState(false);
+  const format = "DD/MM/YYYY";
 
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
-      {/* 🔹 Row with label on left + extra on right */}
       <div className="d-flex justify-content-between">
         <div>
           <label
@@ -35,12 +42,9 @@ const MyDatePicker = ({
             )}
           </label>
         </div>
-
-        {/* ✅ Checkbox / info aligned to far right */}
         {extra && <div>{extra}</div>}
       </div>
 
-      {/* DatePicker input */}
       <div
         className={`my-input-container ${hasError ? 'error' : ''} ${
           isFocused ? 'focused' : ''
@@ -49,13 +53,15 @@ const MyDatePicker = ({
         <DatePicker
           name={name}
           onChange={onChange}
+          // ✅ this now works correctly with DD/MM/YYYY format
+          value={value ? dayjs(value) : null}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled}
           className="my-input-field-select"
           placeholder={placeholder}
-          format="DD/MM/YYYY"
-          value={value ? moment(value) : null}
+          format={format}
+          allowClear
         />
         {hasError && !disabled && (
           <AiOutlineExclamationCircle className="error-icon" />

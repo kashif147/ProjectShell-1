@@ -1,51 +1,50 @@
-import { useState, useRef } from 'react';
-import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button } from 'antd';
-import { DownOutlined } from '@ant-design/icons';
+import { useState, useRef, useEffect } from "react";
+import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button } from "antd";
+import { DownOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
 
 const operators = [
-  { symbol: '==', label: '= (equal)' },
-  { symbol: '!=', label: '!= (Not equal)' }
+  { symbol: "==", label: "= (equal)" },
+  { symbol: "!=", label: "!= (not equal)" },
 ];
 
 const MultiFilterDropdown = ({
   label,
   options = [],
   selectedValues = [],
-  onChange,
-  operator = '==',
-  onOperatorChange,
-  onApply
+  operator: propOperator = "==",
+  onApply,
 }) => {
   const [open, setOpen] = useState(false);
   const hoverTimer = useRef(null);
 
+  // ✅ No need for local state - use props directly and apply changes immediately
+
+  const handleCheckboxChange = (value) => {
+    const newSelectedValues = selectedValues.includes(value)
+      ? selectedValues.filter((v) => v !== value)
+      : [...selectedValues, value];
+    
+    // ✅ Call onApply immediately with new selection
+    onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
+  };
   const handleReset = () => {
-    onChange([]);
-    onOperatorChange('==');
+    // ✅ Apply empty selection immediately
+    onApply?.({ label, operator: "==", selectedValues: [] });
   };
 
   const handleApply = () => {
+    // ✅ Already applied immediately, just close dropdown
     setOpen(false);
-    if (onApply) onApply();
-  };
-
-  const handleCheckboxChange = (checkedValue) => {
-    if (selectedValues.includes(checkedValue)) {
-      onChange(selectedValues.filter((val) => val !== checkedValue));
-    } else {
-      onChange([...selectedValues, checkedValue]);
-    }
   };
 
   const handleOperatorChange = (value) => {
-    onOperatorChange(value);
+    // ✅ Call onApply immediately with operator change
+    onApply?.({ label, operator: value, selectedValues });
   };
 
-  const badgeCount = selectedValues.length;
-
-  // 🧠 Keep menu open while hovering inside
+  // 🧭 Hover behavior
   const handleMouseEnter = () => {
     clearTimeout(hoverTimer.current);
     setOpen(true);
@@ -54,8 +53,10 @@ const MultiFilterDropdown = ({
   const handleMouseLeave = () => {
     hoverTimer.current = setTimeout(() => {
       setOpen(false);
-    }, 200); // slight delay for smoother transition
+    }, 150);
   };
+
+  const badgeCount = selectedValues.length;
 
   const menu = (
     <div
@@ -63,26 +64,26 @@ const MultiFilterDropdown = ({
       onMouseEnter={handleMouseEnter}
       onMouseLeave={handleMouseLeave}
     >
-      <div className="operator-container">
-        <Select
-          value={operator}
-          onChange={handleOperatorChange}
-          size="small"
-          style={{ width: "100%", backgroundColor: '#fff', border: 'none' }}
-        >
-          {operators.map((op) => (
-            <Option key={op.symbol} value={op.symbol}>{op.label}</Option>
-          ))}
-        </Select>
-      </div>
+      <Select
+        value={propOperator}
+        onChange={handleOperatorChange}
+        size="small"
+        style={{ width: "100%", marginBottom: 8 }}
+      >
+        {operators.map((op) => (
+          <Option key={op.symbol} value={op.symbol}>
+            {op.label}
+          </Option>
+        ))}
+      </Select>
 
-      <Divider style={{ margin: '8px 0' }} />
+      <Divider style={{ margin: "8px 0" }} />
 
       <div className="checkbox-list">
         {options.map((option) => (
           <Checkbox
             key={option}
-            checked={selectedValues.includes(option)}
+            checked={selectedValues.includes(option)} // ✅ Use prop directly
             onChange={() => handleCheckboxChange(option)}
           >
             {option}
@@ -90,11 +91,15 @@ const MultiFilterDropdown = ({
         ))}
       </div>
 
-      <div className="dropdown-action-buttons mt-3 mb-3 d-flex justify-content-end gap-2">
-        <Button size="small" className="butn secoundry-btn" onClick={handleReset}>
+      <div className="d-flex justify-content-end gap-2 mt-3 mb-1">
+        <Button size="small" onClick={handleReset}>
           Reset
         </Button>
-        <Button type="primary" className="butn primary-btn me-4" size="small" onClick={handleApply}>
+        <Button
+          type="primary"
+          size="small"
+          onClick={handleApply}
+        >
           Apply
         </Button>
       </div>
@@ -102,10 +107,12 @@ const MultiFilterDropdown = ({
   );
 
   const renderButtonContent = () => (
-    <div className={`filter-button1 ${badgeCount > 0 ? 'active' : ''}`}>
+    <div className={`filter-button1 ${badgeCount > 0 ? "active" : ""}`}>
       <Space size={4}>
         <span className="filter-label">{label}</span>
-        {badgeCount > 1 && <Badge count={badgeCount} className="red-badge" />}
+        {badgeCount > 0 && (
+          <Badge count={badgeCount} className="red-badge" />
+        )}
         <DownOutlined className="dropdown-icon" />
       </Space>
     </div>
@@ -117,7 +124,7 @@ const MultiFilterDropdown = ({
         overlay={menu}
         open={open}
         placement="bottomLeft"
-        trigger={['hover']}
+        trigger={["hover"]}
       >
         <div>{renderButtonContent()}</div>
       </Dropdown>
@@ -127,8 +134,8 @@ const MultiFilterDropdown = ({
 
 export default MultiFilterDropdown;
 
-// 🔽 Optional inline CSS
-const style = document.createElement('style');
+// 💅 Inline styles for visual consistency
+const style = document.createElement("style");
 style.innerHTML = `
   .filter-button1 {
     border: none;
@@ -141,7 +148,7 @@ style.innerHTML = `
     font-size: 14px !important;
     font-weight: 600 !important;
     box-shadow: none !important;
-    margin-left:4px;
+    margin-left: 4px;
   }
 
   .filter-button1.active {
@@ -170,17 +177,14 @@ style.innerHTML = `
     border-radius: 6px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     min-width: 250px;
-  }
-
-  .operator-container {
-    margin-bottom: 10px;
+    max-height: 300px;
+    overflow-y: auto;
   }
 
   .checkbox-list {
     display: flex;
     flex-direction: column;
-    gap: 4px;
-    margin-top: 10px;
+    gap: 6px;
   }
 `;
 document.head.appendChild(style);

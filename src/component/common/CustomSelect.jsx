@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import '../../styles/MySelect.css';
+import { AiOutlineExclamationCircle } from 'react-icons/ai';
 
 const CustomSelect = ({
   label,
@@ -64,16 +65,15 @@ const CustomSelect = ({
             </option>
           )}
           {options.map((opt) => {
-            // 👈 stops execution every time an option renders
-            console.log("Rendering option:", opt); // 👈 logs option object
             return (
               <option key={opt.key || opt.label} value={opt.value}>
                 {opt.label}
               </option>
             );
           })}
-
         </select>
+        
+        {/* Error Icon - Add this */}
       </div>
     </div>
   );

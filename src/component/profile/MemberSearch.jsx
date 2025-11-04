@@ -137,11 +137,11 @@ const MemberSearch = () => {
         dropdownMatchSelectWidth={true}
       >
         <Input
-          size="small"
+          // size="small"
           prefix={<SearchOutlined />}
           placeholder="Search Member by Email or Mobile Number"
           // style={}
-          className="p-2"
+          className="p-2 my-input-field"
         />
       </AutoComplete>
     </div>

@@ -17,6 +17,40 @@
   --btn-hover: #dcdfe4;
   --gray: rgba(9, 30, 66, 0.04);
 }
+.full-width-radio-group-no-gap {
+  display: flex !important;
+  width: 100% !important;
+  justify-content: space-between !important;
+  align-items: stretch !important;
+  gap: 8px !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+.radio-option-no-gap {
+  flex: 1 !important;
+  text-align: center !important;
+  margin: 0 !important;
+  padding: 12px 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  white-space: normal !important;
+  line-height: 1.2 !important;
+  min-height: 60px !important;
+}
+
+.radio-option-no-gap .ant-radio {
+  margin-right: 0 !important;
+}
+input:disabled,
+select:disabled {
+    color: #434242;
+}
+.radio-text {
+  margin-left: 8px !important;
+  word-wrap: break-word !important;
+}
 .custom-scroll {
   scrollbar-width: none !important;       /* Firefox */
   -ms-overflow-style: none !important;    /* Internet Explorer/Edge */
@@ -66,6 +100,13 @@
   background-color: #edf1fd;
   border: 1.5px solid var(--mainBlue);
   outline: none;
+}
+.ant-modal {
+  display: block !important;
+  position: fixed !important;
+  top: 50% !important;
+  left: 50% !important;
+  transform: translate(-50%, -50%) !important;
 }
 .star {
   color: red;
@@ -160,6 +201,22 @@ select {
   background-color: var(--mainBlue);
   color: white;
   font-weight: 400;
+  transition: all 0.3s ease;
+}
+.primary-btn:hover:not(:disabled) {
+  background-color: #3a7bb8 !important; /* Lighter shade of mainBlue */
+  color: white !important;
+}
+.primary-btn:disabled {
+  background-color: rgba(33, 94, 151, 0.4) !important; /* Light transparent version of mainBlue */
+  color: rgb(255, 255, 255) !important;
+  cursor: not-allowed;
+  border: none !important;
+}
+.primary-btn:focus {
+  background-color: var(--mainBlue) !important;
+  color: white !important;
+  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
 }
 .secoundry-btn {
   background-color: var(--gray);
