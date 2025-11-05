@@ -6,6 +6,7 @@ import axios from "axios";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
+import { fetchLookupHierarchy, selectLookupEntry } from "../../features/lookupHierarchySlice";
 import { useSelector, useDispatch } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router-dom";
@@ -40,6 +41,7 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
+    // const entry = useSelector(state => selectLookupEntry(state, regionTypeId));
   const navigate = useNavigate();
   const { filtersState } = useFilters();
   const getApplicationStatusFilters = () => {
@@ -70,7 +72,7 @@ function ApplicationMgtDrawer({
   })
 
   const { state } = useLocation();
-  console.log(groupedlookupsForSelect, "application")
+  console.log(groupedlookupsForSelect?.Section, "xycz")
   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
@@ -1198,11 +1200,13 @@ function ApplicationMgtDrawer({
   };
   const [selected, setSelected] = useState(select);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [currentApplication, setCurrentApplication] = useState(null);
   useEffect(() => {
     if (application && isEdit) {
       const status = application.applicationStatus?.toLowerCase();
+      setCurrentApplication(application);
       const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
-
+ debugger
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true); // Disable form for read-only statuses
 
@@ -1212,6 +1216,7 @@ function ApplicationMgtDrawer({
           Approve: status === 'approved',
           Reject: status === 'rejected'
         }));
+        debugger
       } else {
         // For editable applications, reset checkboxes to default
         setSelected(prev => ({
@@ -1438,38 +1443,50 @@ const handleChange = (e) => {
     setIsProcessing(false);
   }
 };
+
   function navigateApplication(direction) {
-    if (index === -1 || !applications?.length) return;
+  if (index === -1 || !applications?.length) return;
 
-    let newIndex = index;
+  let newIndex = index;
 
-    if (direction === "prev" && index > 0) {
-      newIndex = index - 1;
-    } else if (direction === "next" && index < applications.length - 1) {
-      newIndex = index + 1;
+  if (direction === "prev" && index > 0) {
+    newIndex = index - 1;
+  } else if (direction === "next" && index < applications.length - 1) {
+    newIndex = index + 1;
+  } else {
+    return;
+  }
+
+  setIndex(newIndex);
+  const newApplication = applications[newIndex];
+
+  if (newApplication) {
+    const newdata = mapApiToState(newApplication);
+    setInfData(newdata);
+    setOriginalData(newdata);
+    setCurrentApplication(newApplication); // ✅ Update current application
+
+    // ✅ Now use currentApplication for status checks
+    const status = newApplication.applicationStatus?.toLowerCase();
+    const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
+
+    if (readOnlyStatuses.includes(status)) {
+      disableFtn(true);
+      setSelected(prev => ({
+        ...prev,
+        Approve: status === 'approved',
+        Reject: status === 'rejected'
+      }));
     } else {
-      return;
-    }
-
-    setIndex(newIndex);
-    const newApplication = applications[newIndex];
-
-    if (newApplication) {
-      const newdata = mapApiToState(newApplication);
-      setInfData(newdata);
-      setOriginalData(newdata);
-
-      // ✅ Check status and disable form immediately
-      const status = newApplication.applicationStatus?.toLowerCase();
-      const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
-
-      if (readOnlyStatuses.includes(status)) {
-        disableFtn(true);
-      } else {
-        disableFtn(false);
-      }
+      disableFtn(false);
+      setSelected(prev => ({
+        ...prev,
+        Approve: false,
+        Reject: false
+      }));
     }
   }
+}
   return (
     <div>
       <div style={{ backgroundColor: '#f6f7f8', minHeight: '100vh' }}>
@@ -1584,7 +1601,7 @@ const handleChange = (e) => {
                   label="Title"
                   name="title"
                   value={InfData?.personalInfo?.title}
-                  options={lookupsForSelect?.Titles}
+                  options={groupedlookupsForSelect?.Title}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "title", e.target.value)}
@@ -1934,13 +1951,14 @@ const handleChange = (e) => {
                   label="Work Location"
                   name="workLocation"
                   value={InfData.professionalDetails?.workLocation}
-                  options={[
-                    ...workLocations.map((loc) => ({
-                      value: loc,
-                      label: loc,
-                    })),
-                    { value: "other", label: "other" },
-                  ]}
+                  // options={[
+                  //   ...workLocations.map((loc) => ({
+                  //     value: loc,
+                  //     label: loc,
+                  //   })),
+                  //   { value: "other", label: "other" },
+                  // ]}
+                  options={groupedlookupsForSelect?.workLocation}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "workLocation", e.target.value)}
@@ -1996,13 +2014,14 @@ const handleChange = (e) => {
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "grade", e.target.value)}
-                  options={[
-                    { value: "junior", label: "Junior" },
-                    { value: "senior", label: "Senior" },
-                    { value: "lead", label: "Lead" },
-                    { value: "manager", label: "Manager" },
-                    { value: "other", label: "Other" },
-                  ]}
+                  // options={[
+                  //   { value: "junior", label: "Junior" },
+                  //   { value: "senior", label: "Senior" },
+                  //   { value: "lead", label: "Lead" },
+                  //   { value: "manager", label: "Manager" },
+                  //   { value: "other", label: "Other" },
+                  // ]}
+                  options={groupedlookupsForSelect?.Grade}
                   hasError={!!errors?.grade}
                 />
               </Col>
@@ -2021,8 +2040,8 @@ const handleChange = (e) => {
 
               {/* Nursing Adaptation Programme */}
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded h-100">
-                  <label className="my-input-label my-input-wrapper">
+                <div className="p-3 rounded h-100" style={{backgroundColor:'#1173d41a'}}>
+                  <label className="my-input-label my-input-wrapper" style={{color:'#215e97', borderColor:'#bfdbfe'}}>
                     Are you currently undertaking a nursing adaptation programme?
                   </label>
                   <Radio.Group
@@ -2030,8 +2049,8 @@ const handleChange = (e) => {
                     value={InfData.professionalDetails?.nursingAdaptationProgramme}
                     onChange={(e) => handleInputChange("professionalDetails", "nursingAdaptationProgramme", e.target.value)}
                   >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
+                    <Radio style={{color:'#215e97'}} value={true}>Yes</Radio>
+                    <Radio style={{color:'#215e97'}} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
@@ -2144,8 +2163,8 @@ const handleChange = (e) => {
           </div>
         </Col> */}
               <Col span={24}>
-                <div className="p-3 bg-light rounded">
-                  <label className="my-input-label mb-1 d-block">
+                <div className="p-3 bg-ly" style={{backgroundColor:'#f0fdf4', border:'1px solid #a4e3ba',}}>
+                  <label className="my-input-label mb-1 d-block" style={{color:'#14532d'}}>
                     Please select the most appropriate option below
                   </label>
                   <Radio.Group
@@ -2157,12 +2176,14 @@ const handleChange = (e) => {
                       width: "100%",
                       justifyContent: "space-between",
                       alignItems: "stretch",
-                      gap: "8px"
+                      gap: "8px",
+                   
                     }}
                   >
                     <Radio value="new" style={{
                       // flex: "1 0 auto",
                       textAlign: 'center',
+ color:'#14532d',
                       margin: 0,
                       padding: '12px 8px',
                       display: 'flex',
@@ -2182,6 +2203,7 @@ const handleChange = (e) => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
+                       color:'#14532d',
                       whiteSpace: 'normal',
                       lineHeight: '1.2',
                       minHeight: '60px'
@@ -2189,6 +2211,7 @@ const handleChange = (e) => {
                       <span style={{ marginLeft: '8px' }}>You are newly graduated</span>
                     </Radio>
                     <Radio value="rejoin" style={{
+                       color:'#14532d',
                       flex: "1 0 auto",
                       textAlign: 'center',
                       margin: 0,
@@ -2203,6 +2226,7 @@ const handleChange = (e) => {
                       <span style={{ marginLeft: '8px' }}>You were previously a member of the INMO, and are rejoining</span>
                     </Radio>
                     <Radio value="careerBreak" style={{
+                       color:'#14532d',
                       flex: "1 0 auto",
                       textAlign: 'center',
                       margin: 0,
@@ -2217,6 +2241,7 @@ const handleChange = (e) => {
                       <span style={{ marginLeft: '8px' }}>You are returning from a career break</span>
                     </Radio>
                     <Radio value="nursingAbroad" style={{
+                       color:'#14532d',
                       flex: "1 0 auto",
                       textAlign: 'center',
                       margin: 0,
@@ -2236,9 +2261,10 @@ const handleChange = (e) => {
 
               {/* Checkboxes in 50% width */}
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded h-100">
+                <div className="p-3 h-100" style={{backgroundColor:"#fffbeb", border:"1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                    style={{color:"#78350f"}}
                     onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
                     className="my-input-wrapper"
                     disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
@@ -2328,14 +2354,16 @@ const handleChange = (e) => {
                   value={InfData.subscriptionDetails?.primarySection}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "primarySection", e.target.value)}
-                  options={[
-                    { value: "section1", label: "Section 1" },
-                    { value: "section2", label: "Section 2" },
-                    { value: "section3", label: "Section 3" },
-                    { value: "section4", label: "Section 4" },
-                    { value: "section5", label: "Section 5" },
-                    { value: "other", label: "Other" },
-                  ]}
+                  // options={[
+                  //   { value: "section1", label: "Section 1" },
+                  //   { value: "section2", label: "Section 2" },
+                  //   { value: "section3", label: "Section 3" },
+                  //   { value: "section4", label: "Section 4" },
+                  //   { value: "section5", label: "Section 5" },
+                  //   { value: "other", label: "Other" },
+                  // ]}
+                  options={groupedlookupsForSelect?.Section}
+
                 />
               </Col>
 
@@ -2356,14 +2384,15 @@ const handleChange = (e) => {
                   label="Secondary Section"
                   name="secondarySection"
                   value={InfData.subscriptionDetails?.secondarySection}
-                  options={[
-                    { value: "section1", label: "Section 1" },
-                    { value: "section2", label: "Section 2" },
-                    { value: "section3", label: "Section 3" },
-                    { value: "section4", label: "Section 4" },
-                    { value: "section5", label: "Section 5" },
-                    { value: "other", label: "Other" },
-                  ]}
+                  // options={[
+                  //   { value: "section1", label: "Section 1" },
+                  //   { value: "section2", label: "Section 2" },
+                  //   { value: "section3", label: "Section 3" },
+                  //   { value: "section4", label: "Section 4" },
+                  //   { value: "section5", label: "Section 5" },
+                  //   { value: "other", label: "Other" },
+                  // ]}
+                  options={groupedlookupsForSelect["Secondary Section"]}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "secondarySection", e.target.value)}
                 />

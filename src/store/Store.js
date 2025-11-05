@@ -27,6 +27,7 @@ import productTypesReducer from "../features/ProductTypesSlice";
 import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
 import lookupsWorkLocationReducer from '../features/LookupsWorkLocationSlice';
+import lookupHierarchyReducer from '../features/lookupHierarchySlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
 const store = configureStore({
@@ -55,7 +56,8 @@ const store = configureStore({
     productTypesWithProducts: productTypesWithProductsReducer,
     countries: countriesReducer,
     batches: batchReducer,
-    lookupsWorkLocation: lookupsWorkLocationReducer
+    lookupsWorkLocation: lookupsWorkLocationReducer,
+    lookupHierarchy: lookupHierarchyReducer,
   },
 });
 

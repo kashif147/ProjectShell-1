@@ -1,8 +1,12 @@
 .my-input-wrapper {
   margin-bottom: 0.97rem;
 }
-:where(.css-dev-only-do-not-override-tjsggz).ant-checkbox-disabled + span {
+/* :where(.css-dev-only-do-not-override-tjsggz) span {
     color: #212529 !important;
+} */
+ :where(.css-dev-only-do-not-override-tjsggz).ant-checkbox-disabled+span
+ {
+    color: rgba(0, 0, 0, 0.5);
 }
 :where(.css-dev-only-do-not-override-tjsggz).ant-radio-wrapper-disabled {
     color: #212529 !important;
@@ -11,6 +15,11 @@
   display: flex;
   align-items: center;
   width: 100%;
+}
+.bg-ly
+.ant-radio-wrapper .ant-radio-checked .ant-radio-inner{
+  background-color: #14532d !important;
+  border-color: #14532d !important;
 }
 
 .country-code-select {
