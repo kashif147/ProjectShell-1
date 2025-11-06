@@ -2097,7 +2097,7 @@ function ApplicationMgtDrawer({
 
               {/* Nurse Type - Full Width */}
               <Col span={24}>
-                <div className="ps-3 pe-3 pt-2 pb-2 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
+                <div className="ps-3 pe-3 pt-2 pb-3 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
                   <label className="my-input-label mb-1" style={{ color: '#14532d' }}>
                     Please tick one of the following
                   </label>
@@ -2250,15 +2250,15 @@ function ApplicationMgtDrawer({
                         You are newly graduated
                       </Radio>
 
-                      <Radio value="rejoin" style={{ color: '#14532d', width: '26%', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                      <Radio value="rejoin" style={{ color: '#14532d', width: '28%', whiteSpace: 'normal', lineHeight: '1.2' }}>
                         You were previously a member of the INMO, and are rejoining
                       </Radio>
 
-                      <Radio value="careerBreak" style={{ color: '#14532d', width: '19%', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                      <Radio value="careerBreak" style={{ color: '#14532d', width: '18%', whiteSpace: 'normal', lineHeight: '1.2' }}>
                         You are returning from a career break
                       </Radio>
 
-                      <Radio value="nursingAbroad" style={{ color: '#14532d', width: '19%', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                      <Radio value="nursingAbroad" style={{ color: '#14532d', width: '18%', whiteSpace: 'normal', lineHeight: '1.2' }}>
                         You are returning from nursing abroad
                       </Radio>
                     </div>
