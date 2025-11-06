@@ -36,7 +36,12 @@ import {
   selectWorkLocationOptions,
   selectGradeOptions,
   selectSectionOptions,
+  selectMembershipCategoryOptions,
+  selectPaymentTypeOptions,
   selectCountryOptions,
+  selectRegionOptions,
+  selectSecondarySectionOptions,
+  selectBranchOptions,
   selectGroupedLookupsByType // 🔄 Keep for configuration
 } from '../../features/LookupsSlice'
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
@@ -55,6 +60,12 @@ function ApplicationMgtDrawer({
   const workLocationOptions = useSelector(selectWorkLocationOptions);
   const gradeOptions = useSelector(selectGradeOptions);
   const sectionOptions = useSelector(selectSectionOptions);
+  const MembershipCategoryOptions = useSelector(selectMembershipCategoryOptions);
+  const PaymentTypeOptions = useSelector(selectPaymentTypeOptions);
+  const BranchOptions = useSelector(selectBranchOptions);
+  const RegionOptions = useSelector(selectRegionOptions);
+  const SecondarySectionOptions = useSelector(selectSecondarySectionOptions);
+
   // const entry = useSelector(state => selectLookupEntry(state, regionTypeId));
   const navigate = useNavigate();
   const { filtersState } = useFilters();
@@ -1650,7 +1661,7 @@ function ApplicationMgtDrawer({
                   label="Gender"
                   name="gender"
                   value={InfData.personalInfo?.gender}
-                  options={lookupsForSelect?.gender}
+                  options={genderOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "gender", e.target.value)}
@@ -1702,7 +1713,7 @@ function ApplicationMgtDrawer({
               <Col span={24}>
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <div className="p-3 rounded " style={{ borderRadius:'4px',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                    <div className="p-3" style={{ borderRadius:'4px',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                       <Checkbox 
                        style={{ color: "#78350f" }}
                       value={InfData?.contactInfo?.consent}
@@ -1715,7 +1726,7 @@ function ApplicationMgtDrawer({
                     </div>
                   </Col>
                   <Col xs={24} md={12} className="!pb-0">
-                    <div className="p-3 bg-lb " style={{ height:'100%',backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
+                    <div className="p-3 bg-lb " style={{ borderRadius:'4px',height:'100%',backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
                       <div className="d-flex justify-content-between align-items-center">
                         <label style={{ color: '#215e97' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
                           Preferred Address <span className="text-danger">*</span>
@@ -1929,7 +1940,7 @@ function ApplicationMgtDrawer({
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.professionalDetails?.membershipCategory}
-                  options={CatOptions}
+                  options={MembershipCategoryOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "membershipCategory", e.target.value)}
@@ -1972,15 +1983,8 @@ function ApplicationMgtDrawer({
                   label="Work Location"
                   name="workLocation"
                   value={InfData.professionalDetails?.workLocation}
-                  // options={[
-                  //   ...workLocations.map((loc) => ({
-                  //     value: loc,
-                  //     label: loc,
-                  //   })),
-                  //   { value: "other", label: "other" },
-                  // ]}
-                  // options={groupedlookupsForSelect?.workLocation}
                   required
+                  options={workLocationOptions}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "workLocation", e.target.value)}
                   hasError={!!errors?.workLocation}
@@ -2006,10 +2010,11 @@ function ApplicationMgtDrawer({
                   value={InfData.professionalDetails.branch}
                   disabled={true}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
-                  options={allBranches.map((branch) => ({
-                    value: branch,
-                    label: branch,
-                  }))}
+                  // options={allBranches.map((branch) => ({
+                  //   value: branch,
+                  //   label: branch,
+                  // }))}
+                  options={BranchOptions}
                 />
               </Col>
 
@@ -2020,10 +2025,11 @@ function ApplicationMgtDrawer({
                   value={InfData.professionalDetails?.region}
                   disabled={true}
                   onChange={(e) => handleInputChange("professionalDetails", "region", e.target.value)}
-                  options={allRegions.map((region) => ({
-                    value: region,
-                    label: region,
-                  }))}
+                  // options={allRegions.map((region) => ({
+                  //   value: region,
+                  //   label: region,
+                  // }))}
+                  options={RegionOptions}
                 />
               </Col>
 
@@ -2042,7 +2048,7 @@ function ApplicationMgtDrawer({
                   //   { value: "manager", label: "Manager" },
                   //   { value: "other", label: "Other" },
                   // ]}
-                  // options={groupedlookupsForSelect?.Grade}
+                  options={gradeOptions}
                   hasError={!!errors?.grade}
                 />
               </Col>
@@ -2136,10 +2142,7 @@ function ApplicationMgtDrawer({
                   label="Payment Type"
                   name="paymentType"
                   required
-                  options={[
-                    { value: "Payroll Deduction", label: "Deduction at Source" },
-                    { value: "Direct Debit", label: "Direct Debit" },
-                  ]}
+                  options={PaymentTypeOptions}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "paymentType", e.target.value)}
                   value={InfData.subscriptionDetails?.paymentType}
@@ -2315,7 +2318,7 @@ function ApplicationMgtDrawer({
               {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
                 <div className="p-3 bg-lb"  style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:"4px" }}>
-                  <label className="my-input-label mb-2">
+                  <label className="my-input-label mb-2" style={{color: '#6da5daff'}}>
                     If you are a member of another Trade Union. If yes, which Union?
                   </label>
                   <Radio.Group
@@ -2325,15 +2328,15 @@ function ApplicationMgtDrawer({
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
                     disabled={isDisable}
                   >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
+                    <Radio  style={{color: '#6da5daff'}} value={true}>Yes</Radio>
+                    <Radio  style={{color: '#6da5daff'}} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
 
               <Col xs={24} md={12}>
                 <div className="p-3 bg-lb pb-0 " style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:'4px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <label className="my-input-label mb-2" >
+                  <label className="my-input-label mb-2"  style={{color: '#6da5daff'}} >
                     Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
                   </label>
                   <Radio.Group
@@ -2341,10 +2344,11 @@ function ApplicationMgtDrawer({
                     value={InfData.subscriptionDetails?.otherScheme}
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherScheme", e.target?.value)}
                     className="my-input-wrapper"
+                     style={{color: '#6da5daff'}}
                     disabled={isDisable}
                   >
-                    <Radio value={true}>Yes</Radio>
-                    <Radio value={false}>No</Radio>
+                    <Radio  style={{color: '#6da5daff'}} value={true}>Yes</Radio>
+                    <Radio  style={{color: '#6da5daff'}} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
@@ -2386,7 +2390,7 @@ function ApplicationMgtDrawer({
                 //   { value: "section5", label: "Section 5" },
                 //   { value: "other", label: "Other" },
                 // ]}
-                // options={groupedlookupsForSelect?.Section}
+                options={sectionOptions}
 
                 />
               </Col>
@@ -2416,7 +2420,7 @@ function ApplicationMgtDrawer({
                   //   { value: "section5", label: "Section 5" },
                   //   { value: "other", label: "Other" },
                   // ]}
-                  // options={groupedlookupsForSelect["Secondary Section"]}
+                  options={SecondarySectionOptions}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "secondarySection", e.target.value)}
                 />
