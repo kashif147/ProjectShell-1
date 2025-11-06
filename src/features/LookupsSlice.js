@@ -195,7 +195,7 @@ export const selectGenderOptions = createSelector(
 
 export const selectWorkLocationOptions = createSelector(
   [selectLookups],
-  (lookups) => getLookupsByType(lookups, 'WorkLocation')
+  (lookups) => getLookupsByType(lookups, 'workLocation')
 );
 
 export const selectGradeOptions = createSelector(
