@@ -516,7 +516,7 @@ function ApplicationMgtDrawer({
       mobileNumber: "",
       telephoneNumber: "",
       preferredEmail: "",
-      consent:true,
+      consent: true,
       personalEmail: "",
       workEmail: "",
       // consentSMS: false,
@@ -1713,11 +1713,11 @@ function ApplicationMgtDrawer({
               <Col span={24}>
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <div className="p-3" style={{ borderRadius:'4px',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
-                      <Checkbox 
-                       style={{ color: "#78350f" }}
-                      value={InfData?.contactInfo?.consent}
-                      onChange={(e) => handleInputChange("contactInfo", "consent", e.target.checked)}
+                    <div className="p-3" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                      <Checkbox
+                        style={{ color: "#78350f" }}
+                        value={InfData?.contactInfo?.consent}
+                        onChange={(e) => handleInputChange("contactInfo", "consent", e.target.checked)}
                       >
                         Consent to receive Correspondence from INMO
                       </Checkbox>
@@ -1726,13 +1726,13 @@ function ApplicationMgtDrawer({
                     </div>
                   </Col>
                   <Col xs={24} md={12} className="!pb-0">
-                    <div className="p-3 bg-lb " style={{ borderRadius:'4px',height:'100%',backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
+                    <div className="p-3 bg-lb " style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
                       <div className="d-flex justify-content-between align-items-center">
                         <label style={{ color: '#215e97' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
                           Preferred Address <span className="text-danger">*</span>
                         </label>
                         <Radio.Group
-                        style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
+                          style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
                           onChange={(e) => handleInputChange("contactInfo", "preferredAddress", e.target.value)}
                           value={InfData?.contactInfo?.preferredAddress}
                           disabled={isDisable}
@@ -2286,7 +2286,7 @@ function ApplicationMgtDrawer({
 
               {/* Checkboxes in 50% width */}
               <Col xs={24} md={12}>
-                <div className="p-3 h-100" style={{ borderRadius:'4px',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="p-3 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
                     style={{ color: "#78350f" }}
@@ -2300,7 +2300,7 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 h-100" style={{borderRadius:'4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="p-3 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.rewardsForInmoMembers}
                     onChange={(e) => handleInputChange("subscriptionDetails", "rewardsForInmoMembers", e.target.checked)}
@@ -2317,26 +2317,26 @@ function ApplicationMgtDrawer({
 
               {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
-                <div className="p-3 bg-lb"  style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:"4px" }}>
-                  <label className="my-input-label mb-2" style={{color: '#6da5daff'}}>
+                <div className="p-3 bg-lb" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: "4px" }}>
+                  <label className="my-input-label mb-2" style={{ color: '#6da5daff' }}>
                     If you are a member of another Trade Union. If yes, which Union?
                   </label>
                   <Radio.Group
-                  style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
+                    style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
                     name="otherIrishTradeUnion"
                     value={InfData.subscriptionDetails?.otherIrishTradeUnion}
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
                     disabled={isDisable}
                   >
-                    <Radio  style={{color: '#6da5daff'}} value={true}>Yes</Radio>
-                    <Radio  style={{color: '#6da5daff'}} value={false}>No</Radio>
+                    <Radio style={{ color: '#6da5daff' }} value={true}>Yes</Radio>
+                    <Radio style={{ color: '#6da5daff' }} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 bg-lb pb-0 " style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:'4px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <label className="my-input-label mb-2"  style={{color: '#6da5daff'}} >
+                <div className="p-3 bg-lb pb-0 " style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <label className="my-input-label mb-2" style={{ color: '#6da5daff' }} >
                     Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
                   </label>
                   <Radio.Group
@@ -2344,11 +2344,11 @@ function ApplicationMgtDrawer({
                     value={InfData.subscriptionDetails?.otherScheme}
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherScheme", e.target?.value)}
                     className="my-input-wrapper"
-                     style={{color: '#6da5daff'}}
+                    style={{ color: '#6da5daff' }}
                     disabled={isDisable}
                   >
-                    <Radio  style={{color: '#6da5daff'}} value={true}>Yes</Radio>
-                    <Radio  style={{color: '#6da5daff'}} value={false}>No</Radio>
+                    <Radio style={{ color: '#6da5daff' }} value={true}>Yes</Radio>
+                    <Radio style={{ color: '#6da5daff' }} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
@@ -2382,15 +2382,15 @@ function ApplicationMgtDrawer({
                   value={InfData.subscriptionDetails?.primarySection}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "primarySection", e.target.value)}
-                // options={[
-                //   { value: "section1", label: "Section 1" },
-                //   { value: "section2", label: "Section 2" },
-                //   { value: "section3", label: "Section 3" },
-                //   { value: "section4", label: "Section 4" },
-                //   { value: "section5", label: "Section 5" },
-                //   { value: "other", label: "Other" },
-                // ]}
-                options={sectionOptions}
+                  // options={[
+                  //   { value: "section1", label: "Section 1" },
+                  //   { value: "section2", label: "Section 2" },
+                  //   { value: "section3", label: "Section 3" },
+                  //   { value: "section4", label: "Section 4" },
+                  //   { value: "section5", label: "Section 5" },
+                  //   { value: "other", label: "Other" },
+                  // ]}
+                  options={sectionOptions}
 
                 />
               </Col>
@@ -2440,12 +2440,12 @@ function ApplicationMgtDrawer({
 
               {/* Final Checkboxes - Same Height */}
               <Col xs={24} md={12} className="!pb-0">
-                <div className="p-3   d-flex align-items-center" style={{ borderRadius:'4px',height:'100%',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="p-3   d-flex align-items-center" style={{ borderRadius: '4px', height: '100%', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.valueAddedServices}
                     style={{ color: "#78350f" }}
                     onChange={(e) => handleInputChange("subscriptionDetails", "valueAddedServices", e.target.checked)}
-                    // className="my-input-wrapper"
+                  // className="my-input-wrapper"
                   >
                     Tick here to allow our partners to contact you about Value added Services by Email and SMS
                   </Checkbox>
@@ -2453,13 +2453,13 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 d-flex align-items-center" style={{borderRadius:'4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="p-3 d-flex align-items-center" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.termsAndConditions}
                     onChange={(e) => handleInputChange("subscriptionDetails", "termsAndConditions", e.target.checked)}
                     // className="my-input-wrapper"
-                  style={{ color: "#78350f" }}
-               >
+                    style={{ color: "#78350f" }}
+                  >
                     I have read and agree to the INMO Data Protection Statement, the INMO Privacy Statement and the INMO Conditions of Membership
                     {errors?.termsAndConditions && (
                       <span style={{ color: "red" }}> (Required)</span>
