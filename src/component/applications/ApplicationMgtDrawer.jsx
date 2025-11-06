@@ -192,7 +192,7 @@ function ApplicationMgtDrawer({
         preferredAddress:
           apiData?.personalDetails?.contactInfo?.preferredAddress || "",
         eircode: apiData?.personalDetails?.contactInfo?.eircode || "",
-        consent: apiData?.personalDetails?.contactInfo?.consent || "",
+        consent: apiData?.personalDetails?.contactInfo?.consent || true,
         buildingOrHouse:
           apiData?.personalDetails?.contactInfo?.buildingOrHouse || "",
         streetOrRoad: apiData?.personalDetails?.contactInfo?.streetOrRoad || "",
@@ -218,7 +218,7 @@ function ApplicationMgtDrawer({
         grade: apiData?.professionalDetails?.grade || "",
         otherGrade: apiData?.professionalDetails?.otherGrade || "",
         nmbiNumber: apiData?.professionalDetails?.nmbiNumber || "",
-        nurseType: apiData?.professionalDetails?.nurseType || "",
+        nurseType: apiData?.professionalDetails?.nurseType || null,
         nursingAdaptationProgramme:
           apiData?.professionalDetails?.nursingAdaptationProgramme || false,
         region: apiData?.professionalDetails?.region || "",
@@ -529,7 +529,7 @@ function ApplicationMgtDrawer({
       grade: "",
       otherGrade: "",
       nmbiNumber: "",
-      nurseType: "",
+      nurseType: null,
       nursingAdaptationProgramme: false,
       region: "",
       branch: "",
@@ -1705,7 +1705,7 @@ function ApplicationMgtDrawer({
               title="Correspondence Details"
               backgroundColor="#edfdf5"
               iconBackground="#e5edff"
-              subTitle="Let us know the best way to send you mail."
+              subTitle="Let us know the best way to contact you"
             />
 
             <Row gutter={[16, 12]} className="mt-2">
@@ -1716,7 +1716,7 @@ function ApplicationMgtDrawer({
                     <div className="p-3" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                       <Checkbox
                         style={{ color: "#78350f" }}
-                        value={InfData?.contactInfo?.consent}
+                        value={true}
                         onChange={(e) => handleInputChange("contactInfo", "consent", e.target.checked)}
                       >
                         Consent to receive Correspondence from INMO
@@ -1725,10 +1725,10 @@ function ApplicationMgtDrawer({
                       </p>
                     </div>
                   </Col>
-                  <Col xs={24} md={12} className="!pb-0">
+                  <Col xs={24} md={12} className="!pb-0 pa">
                     <div className="p-3 bg-lb " style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
                       <div className="d-flex justify-content-between align-items-center">
-                        <label style={{ color: '#215e97' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
+                        <label style={{ color: '#6da5da' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
                           Preferred Address <span className="text-danger">*</span>
                         </label>
                         <Radio.Group
@@ -1877,19 +1877,21 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded">
+                <div className="p-3 bg-lb" style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:"4px" }}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <label className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>
+                    <label  style={{ color: '#6da5da' }} className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>
                       Preferred Email <span className="text-danger ms-1">*</span>
                     </label>
                     <Radio.Group
+                    style={{ color: '#6da5da' }}
                       onChange={(e) => handleInputChange("contactInfo", "preferredEmail", e.target.value)}
                       value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
                       className={errors?.preferredEmail ? "radio-error" : ""}
+                      
                     >
-                      <Radio value="personal">Personal</Radio>
-                      <Radio value="work">Work</Radio>
+                      <Radio  style={{ color: '#6da5da' }} value="personal">Personal</Radio>
+                      <Radio  style={{ color: '#6da5da' }} value="work">Work</Radio>
                     </Radio.Group>
                   </div>
                 </div>
@@ -2095,8 +2097,8 @@ function ApplicationMgtDrawer({
 
               {/* Nurse Type - Full Width */}
               <Col span={24}>
-                <div className="p-3 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
-                  <label className="my-input-label mb-3 d-block" style={{ color: '#14532d' }}>
+                <div className="ps-3 pe-3 pt-2 pb-2 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
+                  <label className="my-input-label mb-1" style={{ color: '#14532d' }}>
                     Please tick one of the following
                   </label>
                   <Radio.Group
@@ -2113,14 +2115,35 @@ function ApplicationMgtDrawer({
                       width: "100%"
                     }}
                   >
-                    <Radio value="General Nursing" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>General Nursing</Radio>
-                    <Radio value="Public Health Nurse" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Public Health Nurse</Radio>
-                    <Radio value="Mental Health Nurse" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Mental Health Nurse</Radio>
-                    <Radio value="Midwife" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Midwife</Radio>
-                    <Radio value="Sick Children's Nurse" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Sick Children's Nurse</Radio>
-                    <Radio value="Registered Nurse for Intellectual Disability" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>
-                      Registered Nurse for Intellectual Disability
-                    </Radio>
+                    <div className="d-flex justify-content-between align-items-baseline flex-wrap" style={{ gap: '8px' }}>
+                      <Radio value="General Nursing" style={{ color: '#14532d', width: '14%' }}>
+                        General Nursing
+                      </Radio>
+                      <Radio value="Public Health Nurse" style={{ color: '#14532d', width: '14%' }}>
+                        Public Health Nurse
+                      </Radio>
+                      <Radio value="Mental Health Nurse" style={{ color: '#14532d', width: '14%' }}>
+                        Mental Health Nurse
+                      </Radio>
+                      <Radio value="Midwife" style={{ color: '#14532d', width: '16%' }}>
+                        Midwife
+                      </Radio>
+                      <Radio value="Sick Children's Nurse" style={{ color: '#14532d', width: '14%' }}>
+                        Sick Children's Nurse
+                      </Radio>
+                      <Radio
+                        value="Registered Nurse for Intellectual Disability"
+                        style={{
+                          color: '#14532d',
+                          width: '20%',
+                          whiteSpace: 'normal',   // 👈 allows text to wrap
+                          lineHeight: '1.2',
+                        }}
+                      >
+                        Registered Nurse for Intellectual Disability
+                      </Radio>
+                    </div>
+
                   </Radio.Group>
                 </div>
               </Col>
@@ -2188,101 +2211,61 @@ function ApplicationMgtDrawer({
           </div>
         </Col> */}
               <Col span={24}>
-                <div className="p-3 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
-                  <label className="my-input-label mb-1 d-block" style={{ color: '#14532d' }}>
+                <div
+                  className="ps-3 pe-3 pt-2 pb-3 bg-ly"
+                  style={{
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: '4px',
+                    border: '1px solid #a4e3ba',
+                  }}
+                >
+                  <label className="my-input-label mb-1" style={{ color: '#14532d' }}>
                     Please select the most appropriate option below
                   </label>
+
                   <Radio.Group
                     name="memberStatus"
-                    value={InfData?.subscriptionDetails?.membershipStatus || ""}
-                    onChange={(e) => handleInputChange("subscriptionDetails", "membershipStatus", e.target.value)}
+                    value={InfData?.subscriptionDetails?.membershipStatus || ''}
+                    onChange={(e) =>
+                      handleInputChange(
+                        'subscriptionDetails',
+                        'membershipStatus',
+                        e.target.value
+                      )
+                    }
                     style={{
-                      display: "flex",
-                      width: "100%",
-                      justifyContent: "space-between",
-                      alignItems: "stretch",
-                      gap: "8px",
-
+                      color: '#14532d',
+                      width: '100%',
                     }}
                   >
-                    <Radio value="new" style={{
-                      // flex: "1 0 auto",
-                      textAlign: 'center',
-                      color: '#14532d',
-                      margin: 0,
-                      padding: '12px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      whiteSpace: 'normal',
-                      lineHeight: '1.2',
-                      minHeight: '60px'
-                    }}>
-                      <span style={{ marginLeft: '8px' }}>You are a new member</span>
-                    </Radio>
-                    <Radio value="graduate" style={{
-                      flex: "1 0 auto",
-                      textAlign: 'center',
-                      margin: 0,
-                      padding: '12px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      color: '#14532d',
-                      whiteSpace: 'normal',
-                      lineHeight: '1.2',
-                      minHeight: '60px'
-                    }}>
-                      <span style={{ marginLeft: '8px' }}>You are newly graduated</span>
-                    </Radio>
-                    <Radio value="rejoin" style={{
-                      color: '#14532d',
-                      flex: "1 0 auto",
-                      textAlign: 'center',
-                      margin: 0,
-                      padding: '12px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      whiteSpace: 'normal',
-                      lineHeight: '1.2',
-                      minHeight: '60px'
-                    }}>
-                      <span style={{ marginLeft: '8px' }}>You were previously a member of the INMO, and are rejoining</span>
-                    </Radio>
-                    <Radio value="careerBreak" style={{
-                      color: '#14532d',
-                      flex: "1 0 auto",
-                      textAlign: 'center',
-                      margin: 0,
-                      padding: '12px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      whiteSpace: 'normal',
-                      lineHeight: '1.2',
-                      minHeight: '60px'
-                    }}>
-                      <span style={{ marginLeft: '8px' }}>You are returning from a career break</span>
-                    </Radio>
-                    <Radio value="nursingAbroad" style={{
-                      color: '#14532d',
-                      flex: "1 0 auto",
-                      textAlign: 'center',
-                      margin: 0,
-                      padding: '12px 8px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      whiteSpace: 'normal',
-                      lineHeight: '1.2',
-                      minHeight: '60px'
-                    }}>
-                      <span style={{ marginLeft: '8px' }}>You are returning from nursing abroad</span>
-                    </Radio>
+                    <div
+                      className="d-flex justify-content-between align-items-baseline flex-wrap"
+                      style={{ gap: '8px' }}
+                    >
+                      <Radio value="new" style={{ color: '#14532d', width: '14%' }}>
+                        You are a new member
+                      </Radio>
+
+                      <Radio value="graduate" style={{ color: '#14532d', width: '14%' }}>
+                        You are newly graduated
+                      </Radio>
+
+                      <Radio value="rejoin" style={{ color: '#14532d', width: '26%', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                        You were previously a member of the INMO, and are rejoining
+                      </Radio>
+
+                      <Radio value="careerBreak" style={{ color: '#14532d', width: '19%', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                        You are returning from a career break
+                      </Radio>
+
+                      <Radio value="nursingAbroad" style={{ color: '#14532d', width: '19%', whiteSpace: 'normal', lineHeight: '1.2' }}>
+                        You are returning from nursing abroad
+                      </Radio>
+                    </div>
                   </Radio.Group>
                 </div>
               </Col>
+
 
               {/* Checkboxes in 50% width */}
               <Col xs={24} md={12}>
