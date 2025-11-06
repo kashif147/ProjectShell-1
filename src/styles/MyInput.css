@@ -16,6 +16,11 @@
   align-items: center;
   width: 100%;
 }
+.bg-lb
+.ant-radio-wrapper .ant-radio-checked .ant-radio-inner{
+  background-color: #6da5da !important;
+  border-color:  #6da5da !important;
+}
 .bg-ly
 .ant-radio-wrapper .ant-radio-checked .ant-radio-inner{
   background-color: #14532d !important;

@@ -20,18 +20,27 @@ import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
-import { selectGroupedLookups, selectGroupedLookupsByType } from "../../features/LookupsSlice";
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
 import { getWorkLocationHierarchy } from "../../features/LookupsWorkLocationSlice";
-import { getAllLookups } from "../../features/LookupsSlice";
 import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
+import {
+  getAllLookups,
+  selectTitleOptions,
+  selectGenderOptions,
+  selectWorkLocationOptions,
+  selectGradeOptions,
+  selectSectionOptions,
+  selectCountryOptions,
+  selectGroupedLookupsByType // 🔄 Keep for configuration
+} from '../../features/LookupsSlice'
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
+
 
 function ApplicationMgtDrawer({
   open,
@@ -41,7 +50,12 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
-    // const entry = useSelector(state => selectLookupEntry(state, regionTypeId));
+  const titleOptions = useSelector(selectTitleOptions);
+  const genderOptions = useSelector(selectGenderOptions);
+  const workLocationOptions = useSelector(selectWorkLocationOptions);
+  const gradeOptions = useSelector(selectGradeOptions);
+  const sectionOptions = useSelector(selectSectionOptions);
+  // const entry = useSelector(state => selectLookupEntry(state, regionTypeId));
   const navigate = useNavigate();
   const { filtersState } = useFilters();
   const getApplicationStatusFilters = () => {
@@ -65,14 +79,12 @@ function ApplicationMgtDrawer({
     const statusFilters = getApplicationStatusFilters();
     dispatch(getAllApplications(statusFilters));
   };
-  const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
   const [actionModal, setActionModal] = useState({
     open: false,
     type: null, // 'approve' or 'reject'
   })
 
   const { state } = useLocation();
-  console.log(groupedlookupsForSelect?.Section, "xycz")
   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
@@ -169,6 +181,7 @@ function ApplicationMgtDrawer({
         preferredAddress:
           apiData?.personalDetails?.contactInfo?.preferredAddress || "",
         eircode: apiData?.personalDetails?.contactInfo?.eircode || "",
+        consent: apiData?.personalDetails?.contactInfo?.consent || "",
         buildingOrHouse:
           apiData?.personalDetails?.contactInfo?.buildingOrHouse || "",
         streetOrRoad: apiData?.personalDetails?.contactInfo?.streetOrRoad || "",
@@ -253,91 +266,70 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
- const handleApprove = async (key) => {
-  if (isEdit && originalData) {
-    
-    // ✅ ADD DATE CONVERSION FOR APPROVAL FLOW
-    const convertDatesToISO = (data) => {
-      if (!data) return data;
-      const converted = { ...data };
+  const handleApprove = async (key) => {
+    if (isEdit && originalData) {
 
-      if (converted.personalInfo?.dateOfBirth) {
-        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
-      }
+      // ✅ ADD DATE CONVERSION FOR APPROVAL FLOW
+      const convertDatesToISO = (data) => {
+        if (!data) return data;
+        const converted = { ...data };
 
-      if (converted.professionalDetails?.retiredDate) {
-        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
-      }
-
-      if (converted.professionalDetails?.graduationDate) {
-        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-      }
-
-      return converted;
-    };
-
-    // Convert dates before generating patch
-    const convertedInfData = convertDatesToISO(InfData);
-    const convertedOriginalData = convertDatesToISO(originalData);
-
-    const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
-    const obj = {
-      submission: convertedOriginalData,
-      proposedPatch: proposedPatch,
-    };
-
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      // 🟢 If no changes were proposed, update status directly
-      if (!proposedPatch || proposedPatch.length === 0) {
-        const newStatus = key?.toLowerCase() === "rejected" ? "rejected" : "approved";
-        const statusPayload = { applicationStatus: newStatus };
-        const statusResponse = await axios.put(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-          statusPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        MyAlert("success", `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`);
-        refreshApplicationsWithStatusFilters();
-        navigate('/Applications')
-        return;
-      }
-
-      // 🟡 If there are proposed changes → approve as usual
-      const approveResponse = await axios.post(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-        obj,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+        if (converted.personalInfo?.dateOfBirth) {
+          converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
         }
-      );
 
-      // Check for section changes
-      const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
-      const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
+        if (converted.professionalDetails?.retiredDate) {
+          converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
+        }
 
-      if (personalChanged && application?.personalDetails?._id) {
-        const personalPayload = cleanPayload({
-          personalInfo: convertedInfData.personalInfo,
-          contactInfo: convertedInfData.contactInfo,
-        });
+        if (converted.professionalDetails?.graduationDate) {
+          converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
+        }
 
-        await axios.put(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-          personalPayload,
+        return converted;
+      };
+
+      // Convert dates before generating patch
+      const convertedInfData = convertDatesToISO(InfData);
+      const convertedOriginalData = convertDatesToISO(originalData);
+
+      const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+      const obj = {
+        submission: convertedOriginalData,
+        proposedPatch: proposedPatch,
+      };
+
+      try {
+        const token = localStorage.getItem('token');
+        if (!token) {
+          throw new Error('No authentication token found');
+        }
+
+        // 🟢 If no changes were proposed, update status directly
+        if (!proposedPatch || proposedPatch.length === 0) {
+          const newStatus = key?.toLowerCase() === "rejected" ? "rejected" : "approved";
+          const statusPayload = { applicationStatus: newStatus };
+          const statusResponse = await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+            statusPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          MyAlert("success", `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`);
+          refreshApplicationsWithStatusFilters();
+          navigate('/Applications')
+          return;
+        }
+
+        // 🟡 If there are proposed changes → approve as usual
+        const approveResponse = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+          obj,
           {
             headers: {
               "Content-Type": "application/json",
@@ -345,49 +337,70 @@ function ApplicationMgtDrawer({
             },
           }
         );
-        console.log("Personal details updated successfully");
-      }
 
-      if (professionalChanged && application?.professionalDetails?._id) {
-        const professionalPayload = cleanPayload({
-          professionalDetails: convertedInfData.professionalDetails,
-        });
+        // Check for section changes
+        const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
+        const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
 
-        await axios.put(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-          professionalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
+        if (personalChanged && application?.personalDetails?._id) {
+          const personalPayload = cleanPayload({
+            personalInfo: convertedInfData.personalInfo,
+            contactInfo: convertedInfData.contactInfo,
+          });
+
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+            personalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          console.log("Personal details updated successfully");
+        }
+
+        if (professionalChanged && application?.professionalDetails?._id) {
+          const professionalPayload = cleanPayload({
+            professionalDetails: convertedInfData.professionalDetails,
+          });
+
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+            professionalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+          console.log("Professional details updated successfully");
+        }
+
+        // Show success message
+        let successMessage = "Application approved successfully!";
+        if (personalChanged && professionalChanged) {
+          successMessage = "Application approved and all details updated successfully!";
+        } else if (personalChanged) {
+          successMessage = "Application approved and personal details updated successfully!";
+        } else if (professionalChanged) {
+          successMessage = "Application approved and professional details updated successfully!";
+        }
+        MyAlert("success", successMessage);
+        refreshApplicationsWithStatusFilters();
+
+      } catch (error) {
+        console.error("Error approving application:", error);
+        MyAlert(
+          "error",
+          "Failed to approve application",
+          error?.response?.data?.error?.message || error.message
         );
-        console.log("Professional details updated successfully");
       }
-
-      // Show success message
-      let successMessage = "Application approved successfully!";
-      if (personalChanged && professionalChanged) {
-        successMessage = "Application approved and all details updated successfully!";
-      } else if (personalChanged) {
-        successMessage = "Application approved and personal details updated successfully!";
-      } else if (professionalChanged) {
-        successMessage = "Application approved and professional details updated successfully!";
-      }
-      MyAlert("success", successMessage);
-      refreshApplicationsWithStatusFilters();
-      
-    } catch (error) {
-      console.error("Error approving application:", error);
-      MyAlert(
-        "error",
-        "Failed to approve application",
-        error?.response?.data?.error?.message || error.message
-      );
     }
-  }
-};
+  };
   const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
       <Col span={24}>
@@ -431,30 +444,30 @@ function ApplicationMgtDrawer({
     </Row>
   );
 
- const hasPersonalDetailsChanged = (original, current) => {
-  const personalInfoFields = ['title', 'surname', 'forename', 'gender', 'dateOfBirth', 'countryPrimaryQualification'];
-  const contactInfoFields = ['preferredAddress', 'eircode', 'buildingOrHouse', 'streetOrRoad', 'areaOrTown', 'countyCityOrPostCode', 'country', 'mobileNumber', 'telephoneNumber', 'preferredEmail', 'personalEmail', 'workEmail'];
+  const hasPersonalDetailsChanged = (original, current) => {
+    const personalInfoFields = ['title', 'surname', 'forename', 'gender', 'dateOfBirth', 'countryPrimaryQualification'];
+    const contactInfoFields = ['preferredAddress', 'eircode', 'buildingOrHouse', 'streetOrRoad', 'areaOrTown', 'countyCityOrPostCode', 'country', 'mobileNumber', 'telephoneNumber', 'preferredEmail', 'personalEmail', 'workEmail', 'consent'];
 
-  const personalInfoChanged = personalInfoFields.some(field => {
-    const originalValue = original.personalInfo?.[field];
-    const currentValue = current.personalInfo?.[field];
-    
-    // ✅ Handle date comparison properly
-    if (field === 'dateOfBirth') {
-      const originalDate = originalValue ? moment(originalValue).format('YYYY-MM-DD') : null;
-      const currentDate = currentValue ? moment(currentValue).format('YYYY-MM-DD') : null;
-      return originalDate !== currentDate;
-    }
-    
-    return originalValue !== currentValue;
-  });
+    const personalInfoChanged = personalInfoFields.some(field => {
+      const originalValue = original.personalInfo?.[field];
+      const currentValue = current.personalInfo?.[field];
 
-  const contactInfoChanged = contactInfoFields.some(field =>
-    original.contactInfo?.[field] !== current.contactInfo?.[field]
-  );
+      // ✅ Handle date comparison properly
+      if (field === 'dateOfBirth') {
+        const originalDate = originalValue ? moment(originalValue).format('YYYY-MM-DD') : null;
+        const currentDate = currentValue ? moment(currentValue).format('YYYY-MM-DD') : null;
+        return originalDate !== currentDate;
+      }
 
-  return personalInfoChanged || contactInfoChanged;
-};
+      return originalValue !== currentValue;
+    });
+
+    const contactInfoChanged = contactInfoFields.some(field =>
+      original.contactInfo?.[field] !== current.contactInfo?.[field]
+    );
+
+    return personalInfoChanged || contactInfoChanged;
+  };
 
   const hasProfessionalDetailsChanged = (original, current) => {
     const professionalFields = [
@@ -492,6 +505,7 @@ function ApplicationMgtDrawer({
       mobileNumber: "",
       telephoneNumber: "",
       preferredEmail: "",
+      consent:true,
       personalEmail: "",
       workEmail: "",
       // consentSMS: false,
@@ -510,7 +524,7 @@ function ApplicationMgtDrawer({
       branch: "",
       isRetired: false,
       pensionNo: "",
-      retiredDate:null
+      retiredDate: null
     },
     subscriptionDetails: {
       paymentType: "",
@@ -709,7 +723,7 @@ function ApplicationMgtDrawer({
   };
 
   const handleSubmit = async () => {
-    if (isDisable ) return
+    if (isDisable) return
     const isValid = validateForm();
     if (!isValid) return;
 
@@ -884,7 +898,7 @@ function ApplicationMgtDrawer({
       );
     }
   };
-  
+
   const handleSave = async () => {
     const isValid = validateForm();
     if (!isValid) return;
@@ -1206,7 +1220,7 @@ function ApplicationMgtDrawer({
       const status = application.applicationStatus?.toLowerCase();
       setCurrentApplication(application);
       const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
- debugger
+      debugger
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true); // Disable form for read-only statuses
 
@@ -1233,260 +1247,260 @@ function ApplicationMgtDrawer({
   }, [application, isEdit]);
 
 
-const handleChange = (e) => {
-  const { name, checked } = e.target;
+  const handleChange = (e) => {
+    const { name, checked } = e.target;
 
-  // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
-  const status = application?.applicationStatus?.toLowerCase();
-  const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
-  
-  if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
-    return; // Don't allow changes for read-only statuses
-  }
-
-  if (name === "Bulk") {
-    disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
-    setErrors({});
-    setSelected((prev) => ({
-      ...prev,
-      Bulk: checked,
-    }));
-  }
-
-  if (name === "Approve" && checked === true) {
-    if (isEdit) {
-      // Edit mode: Open confirmation modal
-      setActionModal({ open: true, type: 'approve' });
-    } else {
-      // Non-edit mode: Just update checkbox state
-      setSelected((prev) => ({
-        ...prev,
-        Approve: true,
-        Reject: false, // Uncheck reject
-      }));
-    }
-  }
-
-  if (name === "Reject" && checked === true) {
-    if (isEdit) {
-      // Edit mode: Open rejection modal
-      setActionModal({ open: true, type: 'reject' });
-    } else {
-      // Non-edit mode: Just update checkbox state
-      setSelected((prev) => ({
-        ...prev,
-        Reject: true,
-        Approve: false, // Uncheck approve
-      }));
-    }
-  }
-
-  // Handle unchecking for non-edit mode
-  if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
-    setSelected((prev) => ({
-      ...prev,
-      [name]: false,
-    }));
-  }
-};
- const handleApplicationAction = async (action) => {
-  if (isEdit && !originalData) return;
-
-  setIsProcessing(true);
-
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    // ✅ ADD DATE CONVERSION FOR APPROVAL/REJECTION FLOW
-    const convertDatesToISO = (data) => {
-      if (!data) return data;
-      const converted = { ...data };
-
-      if (converted.personalInfo?.dateOfBirth) {
-        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
-      }
-
-      if (converted.professionalDetails?.retiredDate) {
-        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
-      }
-
-      if (converted.professionalDetails?.graduationDate) {
-        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-      }
-
-      return converted;
-    };
-
-    // Convert dates before any processing
-    const convertedInfData = convertDatesToISO(InfData);
-    const convertedOriginalData = convertDatesToISO(originalData);
-
-    // Prepare status payload
-    const statusPayload = {
-      applicationStatus: action, // "approved" or "rejected"
-      comments: action === "rejected"
-        ? rejectionData.reason
-        : rejectionData.note || "Application approved"
-    };
-
-    // Validate rejection reason
-    if (action === "rejected" && !rejectionData.reason) {
-      MyAlert("error", "Please select a rejection reason");
-      setIsProcessing(false);
-      return;
-    }
-
-    // Handle approval with changes (only for edit mode)
-    if (isEdit && action === "approved") {
-      const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
-
-      if (proposedPatch && proposedPatch.length > 0) {
-        const obj = {
-          submission: convertedOriginalData,
-          proposedPatch: proposedPatch,
-        };
-
-        await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-          obj,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        // Update changed sections with CONVERTED data
-        const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
-        const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
-
-        if (personalChanged && application?.personalDetails?._id) {
-          const personalPayload = cleanPayload({
-            personalInfo: convertedInfData.personalInfo,
-            contactInfo: convertedInfData.contactInfo,
-          });
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-            personalPayload,
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-          );
-        }
-
-        if (professionalChanged && application?.professionalDetails?._id) {
-          const professionalPayload = cleanPayload({
-            professionalDetails: convertedInfData.professionalDetails,
-          });
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-            professionalPayload,
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-          );
-        }
-      }
-    }
-
-    // Update application status
-    await axios.put(
-      `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-      statusPayload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      }
-    );
-
-    // ✅ SUCCESS: Now update the checkbox state
-    setSelected(prev => ({
-      ...prev,
-      Approve: action === 'approved',
-      Reject: action === 'rejected'
-    }));
-
-    // Success handling
-    const successMessage = action === "approved"
-      ? "Application approved successfully!"
-      : "Application rejected successfully!";
-
-    MyAlert("success", successMessage);
-    disableFtn(true);
-    refreshApplicationsWithStatusFilters();
-
-    // Reset modal and rejection data
-    setActionModal({ open: false, type: null });
-    setRejectionData({ reason: "", note: "" });
-
-    if (!isEdit) {
-      navigate('/Applications');
-    }
-
-  } catch (error) {
-    console.error(`Error ${action} application:`, error);
-    MyAlert(
-      "error",
-      `Failed to ${action} application`,
-      error?.response?.data?.error?.message || error.message
-    );
-
-    // ❌ On error, ensure checkboxes are unchecked
-    setSelected(prev => ({
-      ...prev,
-      Approve: false,
-      Reject: false
-    }));
-  } finally {
-    setIsProcessing(false);
-  }
-};
-
-  function navigateApplication(direction) {
-  if (index === -1 || !applications?.length) return;
-
-  let newIndex = index;
-
-  if (direction === "prev" && index > 0) {
-    newIndex = index - 1;
-  } else if (direction === "next" && index < applications.length - 1) {
-    newIndex = index + 1;
-  } else {
-    return;
-  }
-
-  setIndex(newIndex);
-  const newApplication = applications[newIndex];
-
-  if (newApplication) {
-    const newdata = mapApiToState(newApplication);
-    setInfData(newdata);
-    setOriginalData(newdata);
-    setCurrentApplication(newApplication); // ✅ Update current application
-
-    // ✅ Now use currentApplication for status checks
-    const status = newApplication.applicationStatus?.toLowerCase();
+    // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
+    const status = application?.applicationStatus?.toLowerCase();
     const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
 
-    if (readOnlyStatuses.includes(status)) {
-      disableFtn(true);
+    if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
+      return; // Don't allow changes for read-only statuses
+    }
+
+    if (name === "Bulk") {
+      disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
+      setErrors({});
+      setSelected((prev) => ({
+        ...prev,
+        Bulk: checked,
+      }));
+    }
+
+    if (name === "Approve" && checked === true) {
+      if (isEdit) {
+        // Edit mode: Open confirmation modal
+        setActionModal({ open: true, type: 'approve' });
+      } else {
+        // Non-edit mode: Just update checkbox state
+        setSelected((prev) => ({
+          ...prev,
+          Approve: true,
+          Reject: false, // Uncheck reject
+        }));
+      }
+    }
+
+    if (name === "Reject" && checked === true) {
+      if (isEdit) {
+        // Edit mode: Open rejection modal
+        setActionModal({ open: true, type: 'reject' });
+      } else {
+        // Non-edit mode: Just update checkbox state
+        setSelected((prev) => ({
+          ...prev,
+          Reject: true,
+          Approve: false, // Uncheck approve
+        }));
+      }
+    }
+
+    // Handle unchecking for non-edit mode
+    if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
+      setSelected((prev) => ({
+        ...prev,
+        [name]: false,
+      }));
+    }
+  };
+  const handleApplicationAction = async (action) => {
+    if (isEdit && !originalData) return;
+
+    setIsProcessing(true);
+
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
+      }
+
+      // ✅ ADD DATE CONVERSION FOR APPROVAL/REJECTION FLOW
+      const convertDatesToISO = (data) => {
+        if (!data) return data;
+        const converted = { ...data };
+
+        if (converted.personalInfo?.dateOfBirth) {
+          converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
+        }
+
+        if (converted.professionalDetails?.retiredDate) {
+          converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
+        }
+
+        if (converted.professionalDetails?.graduationDate) {
+          converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
+        }
+
+        return converted;
+      };
+
+      // Convert dates before any processing
+      const convertedInfData = convertDatesToISO(InfData);
+      const convertedOriginalData = convertDatesToISO(originalData);
+
+      // Prepare status payload
+      const statusPayload = {
+        applicationStatus: action, // "approved" or "rejected"
+        comments: action === "rejected"
+          ? rejectionData.reason
+          : rejectionData.note || "Application approved"
+      };
+
+      // Validate rejection reason
+      if (action === "rejected" && !rejectionData.reason) {
+        MyAlert("error", "Please select a rejection reason");
+        setIsProcessing(false);
+        return;
+      }
+
+      // Handle approval with changes (only for edit mode)
+      if (isEdit && action === "approved") {
+        const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+
+        if (proposedPatch && proposedPatch.length > 0) {
+          const obj = {
+            submission: convertedOriginalData,
+            proposedPatch: proposedPatch,
+          };
+
+          await axios.post(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+            obj,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          // Update changed sections with CONVERTED data
+          const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
+          const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
+
+          if (personalChanged && application?.personalDetails?._id) {
+            const personalPayload = cleanPayload({
+              personalInfo: convertedInfData.personalInfo,
+              contactInfo: convertedInfData.contactInfo,
+            });
+            await axios.put(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+              personalPayload,
+              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            );
+          }
+
+          if (professionalChanged && application?.professionalDetails?._id) {
+            const professionalPayload = cleanPayload({
+              professionalDetails: convertedInfData.professionalDetails,
+            });
+            await axios.put(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+              professionalPayload,
+              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            );
+          }
+        }
+      }
+
+      // Update application status
+      await axios.put(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+        statusPayload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // ✅ SUCCESS: Now update the checkbox state
       setSelected(prev => ({
         ...prev,
-        Approve: status === 'approved',
-        Reject: status === 'rejected'
+        Approve: action === 'approved',
+        Reject: action === 'rejected'
       }));
-    } else {
-      disableFtn(false);
+
+      // Success handling
+      const successMessage = action === "approved"
+        ? "Application approved successfully!"
+        : "Application rejected successfully!";
+
+      MyAlert("success", successMessage);
+      disableFtn(true);
+      refreshApplicationsWithStatusFilters();
+
+      // Reset modal and rejection data
+      setActionModal({ open: false, type: null });
+      setRejectionData({ reason: "", note: "" });
+
+      if (!isEdit) {
+        navigate('/Applications');
+      }
+
+    } catch (error) {
+      console.error(`Error ${action} application:`, error);
+      MyAlert(
+        "error",
+        `Failed to ${action} application`,
+        error?.response?.data?.error?.message || error.message
+      );
+
+      // ❌ On error, ensure checkboxes are unchecked
       setSelected(prev => ({
         ...prev,
         Approve: false,
         Reject: false
       }));
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  function navigateApplication(direction) {
+    if (index === -1 || !applications?.length) return;
+
+    let newIndex = index;
+
+    if (direction === "prev" && index > 0) {
+      newIndex = index - 1;
+    } else if (direction === "next" && index < applications.length - 1) {
+      newIndex = index + 1;
+    } else {
+      return;
+    }
+
+    setIndex(newIndex);
+    const newApplication = applications[newIndex];
+
+    if (newApplication) {
+      const newdata = mapApiToState(newApplication);
+      setInfData(newdata);
+      setOriginalData(newdata);
+      setCurrentApplication(newApplication); // ✅ Update current application
+
+      // ✅ Now use currentApplication for status checks
+      const status = newApplication.applicationStatus?.toLowerCase();
+      const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
+
+      if (readOnlyStatuses.includes(status)) {
+        disableFtn(true);
+        setSelected(prev => ({
+          ...prev,
+          Approve: status === 'approved',
+          Reject: status === 'rejected'
+        }));
+      } else {
+        disableFtn(false);
+        setSelected(prev => ({
+          ...prev,
+          Approve: false,
+          Reject: false
+        }));
+      }
     }
   }
-}
   return (
     <div>
       <div style={{ backgroundColor: '#f6f7f8', minHeight: '100vh' }}>
@@ -1541,7 +1555,7 @@ const handleChange = (e) => {
               <Button
                 onClick={() => handleSubmit()}
                 className="butn primary-btn"
-                // disabled={isDisable}
+              // disabled={isDisable}
               >
                 Submit
               </Button>
@@ -1601,7 +1615,7 @@ const handleChange = (e) => {
                   label="Title"
                   name="title"
                   value={InfData?.personalInfo?.title}
-                  options={groupedlookupsForSelect?.Title}
+                  options={titleOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "title", e.target.value)}
@@ -1688,19 +1702,26 @@ const handleChange = (e) => {
               <Col span={24}>
                 <Row gutter={16}>
                   <Col xs={24} md={12}>
-                    <div className="p-3 bg-light rounded h-100">
-                      <Checkbox>
+                    <div className="p-3 rounded " style={{ borderRadius:'4px',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                      <Checkbox 
+                       style={{ color: "#78350f" }}
+                      value={InfData?.contactInfo?.consent}
+                      onChange={(e) => handleInputChange("contactInfo", "consent", e.target.checked)}
+                      >
                         Consent to receive Correspondence from INMO
                       </Checkbox>
+                      <p className="m-0 !ms-0">Please un-tick this box if you would not like to receive correspondence from us to this address.
+                      </p>
                     </div>
                   </Col>
-                  <Col xs={24} md={12}>
-                    <div className="p-3 bg-light rounded h-100">
+                  <Col xs={24} md={12} className="!pb-0">
+                    <div className="p-3 bg-lb " style={{ height:'100%',backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
                       <div className="d-flex justify-content-between align-items-center">
-                        <label className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
+                        <label style={{ color: '#215e97' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
                           Preferred Address <span className="text-danger">*</span>
                         </label>
                         <Radio.Group
+                        style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
                           onChange={(e) => handleInputChange("contactInfo", "preferredAddress", e.target.value)}
                           value={InfData?.contactInfo?.preferredAddress}
                           disabled={isDisable}
@@ -1958,7 +1979,7 @@ const handleChange = (e) => {
                   //   })),
                   //   { value: "other", label: "other" },
                   // ]}
-                  options={groupedlookupsForSelect?.workLocation}
+                  // options={groupedlookupsForSelect?.workLocation}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "workLocation", e.target.value)}
@@ -2021,7 +2042,7 @@ const handleChange = (e) => {
                   //   { value: "manager", label: "Manager" },
                   //   { value: "other", label: "Other" },
                   // ]}
-                  options={groupedlookupsForSelect?.Grade}
+                  // options={groupedlookupsForSelect?.Grade}
                   hasError={!!errors?.grade}
                 />
               </Col>
@@ -2039,9 +2060,9 @@ const handleChange = (e) => {
               </Col>
 
               {/* Nursing Adaptation Programme */}
-              <Col xs={24} md={12}>
-                <div className="p-3 rounded h-100" style={{backgroundColor:'#1173d41a'}}>
-                  <label className="my-input-label my-input-wrapper" style={{color:'#215e97', borderColor:'#bfdbfe'}}>
+              <Col xs={24} md={12}  >
+                <div className="p-3 rounded h-100 bg-lb" style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
+                  <label className="my-input-label my-input-wrapper" style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}>
                     Are you currently undertaking a nursing adaptation programme?
                   </label>
                   <Radio.Group
@@ -2049,8 +2070,8 @@ const handleChange = (e) => {
                     value={InfData.professionalDetails?.nursingAdaptationProgramme}
                     onChange={(e) => handleInputChange("professionalDetails", "nursingAdaptationProgramme", e.target.value)}
                   >
-                    <Radio style={{color:'#215e97'}} value={true}>Yes</Radio>
-                    <Radio style={{color:'#215e97'}} value={false}>No</Radio>
+                    <Radio style={{ color: '#215e97' }} value={true}>Yes</Radio>
+                    <Radio style={{ color: '#215e97' }} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
@@ -2068,8 +2089,8 @@ const handleChange = (e) => {
 
               {/* Nurse Type - Full Width */}
               <Col span={24}>
-                <div className="p-3 bg-light rounded">
-                  <label className="my-input-label mb-3 d-block">
+                <div className="p-3 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
+                  <label className="my-input-label mb-3 d-block" style={{ color: '#14532d' }}>
                     Please tick one of the following
                   </label>
                   <Radio.Group
@@ -2079,18 +2100,19 @@ const handleChange = (e) => {
                     required={InfData?.professionalDetails?.nursingAdaptationProgramme === true}
                     disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true}
                     style={{
-                      display: "flex",
-                      flexWrap: "wrap",
-                      gap: "16px",
+                      // display: "flex",
+                      // flexWrap: "wrap",
+                      // gap: "16px",
+                      color: '#14532d',
                       width: "100%"
                     }}
                   >
-                    <Radio value="General Nursing" style={{ flex: '1 1 30%', minWidth: '200px' }}>General Nursing</Radio>
-                    <Radio value="Public Health Nurse" style={{ flex: '1 1 30%', minWidth: '200px' }}>Public Health Nurse</Radio>
-                    <Radio value="Mental Health Nurse" style={{ flex: '1 1 30%', minWidth: '200px' }}>Mental Health Nurse</Radio>
-                    <Radio value="Midwife" style={{ flex: '1 1 30%', minWidth: '200px' }}>Midwife</Radio>
-                    <Radio value="Sick Children's Nurse" style={{ flex: '1 1 30%', minWidth: '200px' }}>Sick Children's Nurse</Radio>
-                    <Radio value="Registered Nurse for Intellectual Disability" style={{ flex: '1 1 30%', minWidth: '200px' }}>
+                    <Radio value="General Nursing" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>General Nursing</Radio>
+                    <Radio value="Public Health Nurse" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Public Health Nurse</Radio>
+                    <Radio value="Mental Health Nurse" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Mental Health Nurse</Radio>
+                    <Radio value="Midwife" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Midwife</Radio>
+                    <Radio value="Sick Children's Nurse" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>Sick Children's Nurse</Radio>
+                    <Radio value="Registered Nurse for Intellectual Disability" style={{ color: '#14532d', flex: '1 1 30%', minWidth: '200px' }}>
                       Registered Nurse for Intellectual Disability
                     </Radio>
                   </Radio.Group>
@@ -2163,8 +2185,8 @@ const handleChange = (e) => {
           </div>
         </Col> */}
               <Col span={24}>
-                <div className="p-3 bg-ly" style={{backgroundColor:'#f0fdf4', border:'1px solid #a4e3ba',}}>
-                  <label className="my-input-label mb-1 d-block" style={{color:'#14532d'}}>
+                <div className="p-3 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
+                  <label className="my-input-label mb-1 d-block" style={{ color: '#14532d' }}>
                     Please select the most appropriate option below
                   </label>
                   <Radio.Group
@@ -2177,13 +2199,13 @@ const handleChange = (e) => {
                       justifyContent: "space-between",
                       alignItems: "stretch",
                       gap: "8px",
-                   
+
                     }}
                   >
                     <Radio value="new" style={{
                       // flex: "1 0 auto",
                       textAlign: 'center',
- color:'#14532d',
+                      color: '#14532d',
                       margin: 0,
                       padding: '12px 8px',
                       display: 'flex',
@@ -2203,7 +2225,7 @@ const handleChange = (e) => {
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
-                       color:'#14532d',
+                      color: '#14532d',
                       whiteSpace: 'normal',
                       lineHeight: '1.2',
                       minHeight: '60px'
@@ -2211,7 +2233,7 @@ const handleChange = (e) => {
                       <span style={{ marginLeft: '8px' }}>You are newly graduated</span>
                     </Radio>
                     <Radio value="rejoin" style={{
-                       color:'#14532d',
+                      color: '#14532d',
                       flex: "1 0 auto",
                       textAlign: 'center',
                       margin: 0,
@@ -2226,7 +2248,7 @@ const handleChange = (e) => {
                       <span style={{ marginLeft: '8px' }}>You were previously a member of the INMO, and are rejoining</span>
                     </Radio>
                     <Radio value="careerBreak" style={{
-                       color:'#14532d',
+                      color: '#14532d',
                       flex: "1 0 auto",
                       textAlign: 'center',
                       margin: 0,
@@ -2241,7 +2263,7 @@ const handleChange = (e) => {
                       <span style={{ marginLeft: '8px' }}>You are returning from a career break</span>
                     </Radio>
                     <Radio value="nursingAbroad" style={{
-                       color:'#14532d',
+                      color: '#14532d',
                       flex: "1 0 auto",
                       textAlign: 'center',
                       margin: 0,
@@ -2261,12 +2283,12 @@ const handleChange = (e) => {
 
               {/* Checkboxes in 50% width */}
               <Col xs={24} md={12}>
-                <div className="p-3 h-100" style={{backgroundColor:"#fffbeb", border:"1px solid #fde68a" }}>
+                <div className="p-3 h-100" style={{ borderRadius:'4px',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
-                    style={{color:"#78350f"}}
+                    style={{ color: "#78350f" }}
                     onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
-                    className="my-input-wrapper"
+                    // className="my-input-wrapper"
                     disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
                   >
                     Tick here to join INMO Income Protection Scheme
@@ -2275,13 +2297,14 @@ const handleChange = (e) => {
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded h-100">
+                <div className="p-3 h-100" style={{borderRadius:'4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.rewardsForInmoMembers}
                     onChange={(e) => handleInputChange("subscriptionDetails", "rewardsForInmoMembers", e.target.checked)}
-                    className="my-input-wrapper"
+                    // className="my-input-wrapper"
                     // disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
                     disabled={true}
+                    style={{ color: "#78350f" }}
 
                   >
                     Tick here to join Rewards for INMO members
@@ -2291,11 +2314,12 @@ const handleChange = (e) => {
 
               {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded" style={{ minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <label className="my-input-label mb-3">
+                <div className="p-3 bg-lb"  style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:"4px" }}>
+                  <label className="my-input-label mb-2">
                     If you are a member of another Trade Union. If yes, which Union?
                   </label>
                   <Radio.Group
+                  style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
                     name="otherIrishTradeUnion"
                     value={InfData.subscriptionDetails?.otherIrishTradeUnion}
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
@@ -2308,8 +2332,8 @@ const handleChange = (e) => {
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded" style={{ minHeight: '120px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <label className="my-input-label mb-3">
+                <div className="p-3 bg-lb pb-0 " style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:'4px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
+                  <label className="my-input-label mb-2" >
                     Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
                   </label>
                   <Radio.Group
@@ -2354,15 +2378,15 @@ const handleChange = (e) => {
                   value={InfData.subscriptionDetails?.primarySection}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "primarySection", e.target.value)}
-                  // options={[
-                  //   { value: "section1", label: "Section 1" },
-                  //   { value: "section2", label: "Section 2" },
-                  //   { value: "section3", label: "Section 3" },
-                  //   { value: "section4", label: "Section 4" },
-                  //   { value: "section5", label: "Section 5" },
-                  //   { value: "other", label: "Other" },
-                  // ]}
-                  options={groupedlookupsForSelect?.Section}
+                // options={[
+                //   { value: "section1", label: "Section 1" },
+                //   { value: "section2", label: "Section 2" },
+                //   { value: "section3", label: "Section 3" },
+                //   { value: "section4", label: "Section 4" },
+                //   { value: "section5", label: "Section 5" },
+                //   { value: "other", label: "Other" },
+                // ]}
+                // options={groupedlookupsForSelect?.Section}
 
                 />
               </Col>
@@ -2392,7 +2416,7 @@ const handleChange = (e) => {
                   //   { value: "section5", label: "Section 5" },
                   //   { value: "other", label: "Other" },
                   // ]}
-                  options={groupedlookupsForSelect["Secondary Section"]}
+                  // options={groupedlookupsForSelect["Secondary Section"]}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "secondarySection", e.target.value)}
                 />
@@ -2411,12 +2435,13 @@ const handleChange = (e) => {
               </Col>
 
               {/* Final Checkboxes - Same Height */}
-              <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded h-100 d-flex align-items-center">
+              <Col xs={24} md={12} className="!pb-0">
+                <div className="p-3   d-flex align-items-center" style={{ borderRadius:'4px',height:'100%',backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.valueAddedServices}
+                    style={{ color: "#78350f" }}
                     onChange={(e) => handleInputChange("subscriptionDetails", "valueAddedServices", e.target.checked)}
-                    className="my-input-wrapper"
+                    // className="my-input-wrapper"
                   >
                     Tick here to allow our partners to contact you about Value added Services by Email and SMS
                   </Checkbox>
@@ -2424,12 +2449,13 @@ const handleChange = (e) => {
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 bg-light rounded h-100 d-flex align-items-center">
+                <div className="p-3 d-flex align-items-center" style={{borderRadius:'4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.termsAndConditions}
                     onChange={(e) => handleInputChange("subscriptionDetails", "termsAndConditions", e.target.checked)}
-                    className="my-input-wrapper"
-                  >
+                    // className="my-input-wrapper"
+                  style={{ color: "#78350f" }}
+               >
                     I have read and agree to the INMO Data Protection Statement, the INMO Privacy Statement and the INMO Conditions of Membership
                     {errors?.termsAndConditions && (
                       <span style={{ color: "red" }}> (Required)</span>
