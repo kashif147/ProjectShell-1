@@ -90,6 +90,7 @@ const MyDatePicker1 = ({
   return (
     <div style={{ marginBottom: isMarginBtm ? '16px' : '0' }}>
       <label 
+       className='my-input-label'
         htmlFor={name} 
         style={getLabelStyles()}
       >
