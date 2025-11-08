@@ -3,7 +3,7 @@ import { SiActigraph } from "react-icons/si";
 import { FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
-import { selectGroupedLookups, selectGroupedLookupsByType } from "../features/LookupsSlice";
+// import { selectGroupedLookups, selectGroupedLookupsByType } from "../features/LookupsSlice";
 import {
   Input,
   Table,
@@ -374,10 +374,11 @@ function Configuratin() {
     Sections: [],
   });
 
-  const groupedLookups = useSelector(selectGroupedLookups);
-  const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
+  // const groupedLookups = useSelector(selectGroupedLookups);
+  // const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
 
-
+const groupedLookups= []
+const groupedlookupsForSelect= []
   const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);

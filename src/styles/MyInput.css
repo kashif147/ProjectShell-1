@@ -9,10 +9,10 @@
     color: rgba(0, 0, 0, 0.5);
 }
 :where(.css-dev-only-do-not-override-tjsggz).ant-radio-wrapper-disabled {
-    color: #212529 !important;
+    /* color: #212529 !important; */
 }
 :where(.css-dev-only-do-not-override-tjsggz).pa .ant-radio-wrapper-disabled {
-    color: #215e97 !important;
+    color: #6da5da !important;
 }
 .mobile-input-group {
   display: flex;

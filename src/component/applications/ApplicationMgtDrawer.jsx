@@ -30,23 +30,12 @@ import MyDatePicker1 from "../common/MyDatePicker1";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
 import {
-  getAllLookups,
-  selectTitleOptions,
-  selectGenderOptions,
-  selectWorkLocationOptions,
-  selectGradeOptions,
-  selectSectionOptions,
-  selectMembershipCategoryOptions,
-  selectPaymentTypeOptions,
-  selectCountryOptions,
-  selectRegionOptions,
-  selectSecondarySectionOptions,
-  selectBranchOptions,
-  selectGroupedLookupsByType // 🔄 Keep for configuration
+ getAllLookups,
+selectAllFormLookups 
 } from '../../features/LookupsSlice'
+// import { useLookups } from "../../hooks/useLookups";
+
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
-
-
 function ApplicationMgtDrawer({
   open,
   onClose,
@@ -55,19 +44,35 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
-  const titleOptions = useSelector(selectTitleOptions);
-  const genderOptions = useSelector(selectGenderOptions);
-  const workLocationOptions = useSelector(selectWorkLocationOptions);
-  const gradeOptions = useSelector(selectGradeOptions);
-  const sectionOptions = useSelector(selectSectionOptions);
-  const MembershipCategoryOptions = useSelector(selectMembershipCategoryOptions);
-  const PaymentTypeOptions = useSelector(selectPaymentTypeOptions);
-  const BranchOptions = useSelector(selectBranchOptions);
-  const RegionOptions = useSelector(selectRegionOptions);
-  const SecondarySectionOptions = useSelector(selectSecondarySectionOptions);
-
-  // const entry = useSelector(state => selectLookupEntry(state, regionTypeId));
+  // const lookupOptions = useSelector(selectAllLookupOptions);
+  
+  // const {
+  //   titleOptions,
+  //   genderOptions,
+  //   workLocationOptions,
+  //   gradeOptions,
+  //   sectionOptions,
+  //   membershipCategoryOptions,
+  //   paymentTypeOptions,
+  //   branchOptions,
+  //   regionOptions,
+  //   secondarySectionOptions,
+  //   countryOptions
+  // } = useSelector(selectAllFormLookups);
   const navigate = useNavigate();
+
+  const titleOptions = [];
+  const genderOptions = [];
+  const workLocationOptions = [];
+  const gradeOptions = [];
+  const sectionOptions = [];
+  const membershipCategoryOptions = [];
+  const paymentTypeOptions = [];
+  const branchOptions = [];
+  const regionOptions = [];
+  const secondarySectionOptions = [];
+  const countryOptions = [];
+  
   const { filtersState } = useFilters();
   const getApplicationStatusFilters = () => {
     if (filtersState['Application Status']?.selectedValues?.length > 0) {
@@ -261,7 +266,7 @@ function ApplicationMgtDrawer({
   console.log(hierarchyLookup, "hierarchyLookup")
   useEffect(() => {
     dispatch(fetchCountries());
-    dispatch(getAllLookups());
+    // dispatch(getAllLookups());
     refreshApplicationsWithStatusFilters()
     // dispatch(getWorkLocationHierarchy());
   }, [dispatch]);
@@ -412,6 +417,7 @@ function ApplicationMgtDrawer({
       }
     }
   };
+  const { lookups, groupedLookups } = useSelector(state => state.lookups);
   const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
       <Col span={24}>
@@ -530,7 +536,7 @@ function ApplicationMgtDrawer({
       otherGrade: "",
       nmbiNumber: "",
       nurseType: null,
-      nursingAdaptationProgramme: false,
+      nursingAdaptationProgramme: null,
       region: "",
       branch: "",
       isRetired: false,
@@ -541,8 +547,8 @@ function ApplicationMgtDrawer({
       paymentType: "",
       payrollNo: "",
       membershipStatus: "",
-      otherIrishTradeUnion: false,
-      otherScheme: false,
+      otherIrishTradeUnion: null,
+      otherScheme: null,
       recuritedBy: "",
       recuritedByMembershipNo: "",
       primarySection: "",
@@ -1626,7 +1632,7 @@ function ApplicationMgtDrawer({
                   label="Title"
                   name="title"
                   value={InfData?.personalInfo?.title}
-                  options={titleOptions}
+                  options={groupedLookups?.Title}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "title", e.target.value)}
@@ -1661,7 +1667,7 @@ function ApplicationMgtDrawer({
                   label="Gender"
                   name="gender"
                   value={InfData.personalInfo?.gender}
-                  options={genderOptions}
+                  options={groupedLookups?.Gender}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "gender", e.target.value)}
@@ -1877,21 +1883,21 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 bg-lb" style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius:"4px" }}>
+                <div className="p-3 bg-lb" style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: "4px" }}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <label  style={{ color: '#6da5da' }} className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>
+                    <label style={{ color: '#6da5da' }} className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>
                       Preferred Email <span className="text-danger ms-1">*</span>
                     </label>
                     <Radio.Group
-                    style={{ color: '#6da5da' }}
+                      style={{ color: '#6da5da' }}
                       onChange={(e) => handleInputChange("contactInfo", "preferredEmail", e.target.value)}
                       value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
                       className={errors?.preferredEmail ? "radio-error" : ""}
-                      
+
                     >
-                      <Radio  style={{ color: '#6da5da' }} value="personal">Personal</Radio>
-                      <Radio  style={{ color: '#6da5da' }} value="work">Work</Radio>
+                      <Radio style={{ color: '#6da5da' }} value="personal">Personal</Radio>
+                      <Radio style={{ color: '#6da5da' }} value="work">Work</Radio>
                     </Radio.Group>
                   </div>
                 </div>
@@ -1942,7 +1948,7 @@ function ApplicationMgtDrawer({
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.professionalDetails?.membershipCategory}
-                  options={MembershipCategoryOptions}
+                  options={membershipCategoryOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "membershipCategory", e.target.value)}
@@ -2016,7 +2022,7 @@ function ApplicationMgtDrawer({
                   //   value: branch,
                   //   label: branch,
                   // }))}
-                  options={BranchOptions}
+                  options={branchOptions}
                 />
               </Col>
 
@@ -2031,7 +2037,7 @@ function ApplicationMgtDrawer({
                   //   value: region,
                   //   label: region,
                   // }))}
-                  options={RegionOptions}
+                  options={regionOptions}
                 />
               </Col>
 
@@ -2068,21 +2074,60 @@ function ApplicationMgtDrawer({
               </Col>
 
               {/* Nursing Adaptation Programme */}
-              <Col xs={24} md={12}  >
-                <div className="p-3 rounded h-100 bg-lb" style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
-                  <label className="my-input-label my-input-wrapper" style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}>
-                    Are you currently undertaking a nursing adaptation programme?
+              <Col xs={24} md={12} className="!pb-0 pa">
+                <div
+                  className="p-3 bg-lb"
+                  style={{
+                    borderRadius: '4px',
+                    height: '100%',
+                    backgroundColor: '#1173d41a',
+                    border: '1px solid #97c5efff',
+                  }}
+                >
+                  <label
+                    style={{
+                      color: '#6da5da',
+                      display: 'block',
+                      marginBottom: '8px',
+                    }}
+                    className={`my-input-label ${errors?.preferredAddress ? 'error-text1' : ''}`}
+                  >
+                    Are you currently undertaking a nursing adaptation programme?{' '}
+                    <span className="text-danger">*</span>
                   </label>
+
                   <Radio.Group
                     name="nursingAdaptationProgramme"
-                    value={InfData.professionalDetails?.nursingAdaptationProgramme}
-                    onChange={(e) => handleInputChange("professionalDetails", "nursingAdaptationProgramme", e.target.value)}
-                  >
-                    <Radio style={{ color: '#215e97' }} value={true}>Yes</Radio>
-                    <Radio style={{ color: '#215e97' }} value={false}>No</Radio>
+                    value={
+                      InfData.professionalDetails?.nursingAdaptationProgramme === true
+                        ? true
+                        : InfData.professionalDetails?.nursingAdaptationProgramme === false
+                          ? false
+                          : null
+                    }
+                    onChange={(e) =>
+                      handleInputChange(
+                        'professionalDetails',
+                        'nursingAdaptationProgramme',
+                        e.target.value
+                      )
+                    }
+                    disabled={isDisable}
+                    style={{
+                      color: '#6da5daff',
+                      borderColor: '#bfdbfe',
+                      display: 'flex',
+                      gap: '20px',
+                    }}
+                    className={errors?.preferredAddress ? 'radio-error' : ''}
+                  >   
+                    <Radio value={true}>Yes</Radio>
+                    <Radio value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
+
+
 
               <Col xs={24} md={12}>
                 <MyInput
@@ -2165,7 +2210,7 @@ function ApplicationMgtDrawer({
                   label="Payment Type"
                   name="paymentType"
                   required
-                  options={PaymentTypeOptions}
+                  options={paymentTypeOptions}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "paymentType", e.target.value)}
                   value={InfData.subscriptionDetails?.paymentType}
@@ -2307,7 +2352,8 @@ function ApplicationMgtDrawer({
                   <Radio.Group
                     style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
                     name="otherIrishTradeUnion"
-                    value={InfData.subscriptionDetails?.otherIrishTradeUnion}
+                    value={InfData.subscriptionDetails?.otherIrishTradeUnion!==null?
+                      InfData.subscriptionDetails?.otherIrishTradeUnion:null}
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
                     disabled={isDisable}
                   >
@@ -2324,7 +2370,10 @@ function ApplicationMgtDrawer({
                   </label>
                   <Radio.Group
                     name="otherScheme"
-                    value={InfData.subscriptionDetails?.otherScheme}
+                    value={InfData.subscriptionDetails?.otherScheme!==null?
+                      InfData.subscriptionDetails?.otherScheme:
+                      null
+                    }
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherScheme", e.target?.value)}
                     className="my-input-wrapper"
                     style={{ color: '#6da5daff' }}
@@ -2403,7 +2452,7 @@ function ApplicationMgtDrawer({
                   //   { value: "section5", label: "Section 5" },
                   //   { value: "other", label: "Other" },
                   // ]}
-                  options={SecondarySectionOptions}
+                  options={secondarySectionOptions}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "secondarySection", e.target.value)}
                 />
@@ -2423,7 +2472,7 @@ function ApplicationMgtDrawer({
 
               {/* Final Checkboxes - Same Height */}
               <Col xs={24} md={12} className="!pb-0">
-                <div className="p-3   d-flex align-items-center" style={{ borderRadius: '4px', height: '100%', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="p-3 !pt-2 !pb-2   d-flex align-items-center" style={{ borderRadius: '4px', height: '100%', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.valueAddedServices}
                     style={{ color: "#78350f" }}
@@ -2436,7 +2485,7 @@ function ApplicationMgtDrawer({
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 d-flex align-items-center" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="p-3 !pt-2 !pb-2 d-flex align-items-center" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.termsAndConditions}
                     onChange={(e) => handleInputChange("subscriptionDetails", "termsAndConditions", e.target.checked)}

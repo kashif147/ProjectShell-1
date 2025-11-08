@@ -6,9 +6,12 @@ import React, { useEffect } from "react";
 import AuthProvider from "./pages/auth/AuthProvider";
 import { ChatbotProvider } from "./context/ChatbotContext";
 import { App as AntApp, notification } from "antd";
+import { useSelector, useDispatch } from "react-redux";
+import { getAllLookups } from "./features/LookupsSlice";
 import "antd/dist/reset.css";
 
 function App() {
+    const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
 
   // Make AntD notification globally available for MyAlert.js
@@ -16,7 +19,9 @@ function App() {
   notification.error = api.error;
   notification.info = api.info;
   notification.warning = api.warning;
-
+useEffect(()=>{
+getAllLookups()
+},[dispatch])
   useEffect(() => {
     const loadWorklet = async () => {
       if ("sharedStorage" in window) {
