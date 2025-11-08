@@ -58,12 +58,12 @@ function ApplicationMgtDrawer({
     countryOptions
   } = useSelector(state => state.lookups);
   const navigate = useNavigate();
-const {
+  const {
     hierarchyData, // This replaces hierarchyLookup
     workLocationLoading,
     workLocationError
-} = useSelector((state) => state.lookupsWorkLocation);
-console.log(hierarchyData,"lk")
+  } = useSelector((state) => state.lookupsWorkLocation);
+  console.log(hierarchyData, "lk")
   const { filtersState } = useFilters();
   const getApplicationStatusFilters = () => {
     if (filtersState['Application Status']?.selectedValues?.length > 0) {
@@ -162,7 +162,7 @@ console.log(hierarchyData,"lk")
   const dispatch = useDispatch();
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
 
-  
+
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
@@ -245,8 +245,12 @@ console.log(hierarchyData,"lk")
           apiData?.subscriptionDetails?.termsAndConditions || false,
         membershipCategory:
           apiData?.subscriptionDetails?.membershipCategory || "",
-        dateJoined: apiData?.subscriptionDetails?.dateJoined || "",
-        paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency || "",
+        // dateJoined: apiData?.subscriptionDetails?.dateJoined || "",
+        dateJoined: apiData?.subscriptionDetails?.dateJoined !== undefined && apiData?.subscriptionDetails?.dateJoined !== "" && apiData?.subscriptionDetails?.dateJoined !== null ?
+          dayjs(apiData?.dateJoined) : null,
+        submissionDate: apiData?.subscriptionDetails?.submissionDate !== undefined && apiData?.subscriptionDetails?.submissionDate !== "" && apiData?.subscriptionDetails?.submissionDate !== null ?
+          dayjs(apiData?.submissionDate) : null,
+        paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
       },
     };
   };
@@ -268,18 +272,18 @@ console.log(hierarchyData,"lk")
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
-useEffect(() => {
+  useEffect(() => {
     if (hierarchyData && (hierarchyData.region || hierarchyData.branch) && !workLocationLoading) {
-        setInfData((prev) => ({
-            ...prev,
-            professionalDetails: {
-                ...prev.professionalDetails,
-                region: hierarchyData.region || prev.professionalDetails.region,
-                branch: hierarchyData.branch || prev.professionalDetails.branch
-            },
-        }));
+      setInfData((prev) => ({
+        ...prev,
+        professionalDetails: {
+          ...prev.professionalDetails,
+          region: hierarchyData.region || prev.professionalDetails.region,
+          branch: hierarchyData.branch || prev.professionalDetails.branch
+        },
+      }));
     }
-}, [hierarchyData, workLocationLoading]);
+  }, [hierarchyData, workLocationLoading]);
 
   const handleApprove = async (key) => {
     if (isEdit && originalData) {
@@ -559,7 +563,8 @@ useEffect(() => {
       valueAddedServices: false,
       termsAndConditions: false,
       membershipCategory: "",
-      dateJoined: "",
+      dateJoined: dayjs(),
+      submissionDate:null,
       paymentFrequency: "",
     },
   };
@@ -967,13 +972,13 @@ useEffect(() => {
   const handleInputChange = (section, field, value) => {
     if (field === "workLocation") {
       setInfData((prev) => ({
-      ...prev,
-      professionalDetails: {
-        ...prev.professionalDetails,
-        region: "",
-        branch: ""
-      },
-    }));
+        ...prev,
+        professionalDetails: {
+          ...prev.professionalDetails,
+          region: "",
+          branch: ""
+        },
+      }));
       dispatch(getWorkLocationHierarchy(value))
     }
     setInfData((prev) => {
@@ -1522,7 +1527,7 @@ useEffect(() => {
                   value={InfData?.personalInfo?.dateOfBirth}
                   disabled={isDisable}
                   onChange={(date, dateString) => {
-                    console.log(dateString, "dateString111")
+
                     handleInputChange("personalInfo", "dateOfBirth", date);
                   }}
                   hasError={!!errors?.dateOfBirth}
@@ -1563,11 +1568,12 @@ useEffect(() => {
                       <Checkbox
                         style={{ color: "#78350f" }}
                         value={true}
+                        checked={InfData?.contactInfo?.consent}
                         onChange={(e) => handleInputChange("contactInfo", "consent", e.target.checked)}
                       >
                         Consent to receive Correspondence from INMO
                       </Checkbox>
-                      <p className="m-0 !ms-0">Please un-tick this box if you would not like to receive correspondence from us to this address.
+                      <p style={{ color: '#78350f', }} className="m-0 !ms-0">Please un-tick this box if you would not like to receive correspondence from us to this address.
                       </p>
                     </div>
                   </Col>
@@ -1788,7 +1794,7 @@ useEffect(() => {
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.professionalDetails?.membershipCategory}
-                  options={membershipCategoryOptions}
+                  options={CatOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "membershipCategory", e.target.value)}
@@ -1857,7 +1863,7 @@ useEffect(() => {
                   name="branch"
                   value={InfData.professionalDetails.branch}
                   disabled={true}
-                 placeholder={`${workLocationLoading?"Loading...":"Select"}`}
+                  placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
                   // options={allBranches.map((branch) => ({
                   //   value: branch,
@@ -1871,7 +1877,7 @@ useEffect(() => {
                 <CustomSelect
                   label="Region"
                   name="Region"
-                   placeholder={`${workLocationLoading?"Loading...":"Select"}`}
+                  placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
                   value={InfData.professionalDetails?.region}
                   disabled={true}
                   onChange={(e) => handleInputChange("professionalDetails", "region", e.target.value)}
@@ -1932,7 +1938,7 @@ useEffect(() => {
                       display: 'block',
                       marginBottom: '8px',
                     }}
-                    className={`my-input-label ${errors?.preferredAddress ? 'error-text1' : ''}`}
+                    className={`my-input-label ${errors?.nursingAdaptationProgramme ? 'error-text1' : ''}`}
                   >
                     Are you currently undertaking a nursing adaptation programme?{' '}
                     <span className="text-danger">*</span>
@@ -1961,7 +1967,7 @@ useEffect(() => {
                       display: 'flex',
                       gap: '20px',
                     }}
-                    className={errors?.preferredAddress ? 'radio-error' : ''}
+                    className={errors?.nursingAdaptationProgramme ? 'radio-error' : ''}
                   >
                     <Radio value={true}>Yes</Radio>
                     <Radio value={false}>No</Radio>
@@ -2052,7 +2058,11 @@ useEffect(() => {
                   label="Payment Type"
                   name="paymentType"
                   required
-                  options={paymentTypeOptions}
+                  // options={paymentTypeOptions}
+                  options={[
+                    { value: "Payroll Deduction", label: "Deduction at Source" },
+                    { value: "Direct Debit", label: "Direct Debit" },
+                  ]}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("subscriptionDetails", "paymentType", e.target.value)}
                   value={InfData.subscriptionDetails?.paymentType}
@@ -2061,15 +2071,45 @@ useEffect(() => {
               </Col>
 
               <Col xs={24} md={12}>
-                <MyInput
-                  label="Payroll No"
-                  name="payrollNo"
-                  value={InfData?.subscriptionDetails?.payrollNo}
-                  hasError={!!errors?.payrollNo}
-                  required={InfData?.subscriptionDetails?.paymentType === "Payroll Deduction"}
-                  disabled={InfData?.subscriptionDetails?.paymentType !== "Payroll Deduction"}
-                  onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
-                />
+                <div className="w-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
+                  <MyInput
+                    className="w-100"
+                    label="Payroll No"
+                    name="payrollNo"
+                    value={InfData?.subscriptionDetails?.payrollNo}
+                    hasError={!!errors?.payrollNo}
+                    required={InfData?.subscriptionDetails?.paymentType === "Payroll Deduction"}
+                    disabled={InfData?.subscriptionDetails?.paymentType !== "Payroll Deduction"}
+                    onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
+                  />
+                  {/* <MyDatePicker1 label="" /> */}
+                  <MyDatePicker1
+                    className="w-100"
+                    label="Joined Date"
+                    name="dateJoined"
+                    required
+                    value={InfData?.subscriptionDetails?.dateJoined}
+                    disabled={isDisable}
+                    onChange={(date, dateString) => {
+                      handleInputChange("subscriptionDetails", "dateJoined", date);
+                    }}
+                    hasError={!!errors?.dateJoined}
+                    errorMessage={errors?.dateJoined || "Required"}
+                  />
+                  <MyDatePicker1
+                    className="w-100"
+                    label="Submission Date"
+                    name="SubmissionDate"
+                    required
+                    value={InfData?.subscriptionDetails?.submissionDate}
+                    disabled={isDisable || isEdit }
+                    onChange={(date, dateString) => {
+                      handleInputChange("subscriptionDetails", "submissionDate", date);
+                    }}
+                    hasError={!!errors?.dateJoined}
+                    errorMessage={errors?.dateJoined || "Required"}
+                  />
+                </div>
               </Col>
 
               {/* Membership Status - Full Width */}
@@ -2156,7 +2196,7 @@ useEffect(() => {
 
               {/* Checkboxes in 50% width */}
               <Col xs={24} md={12}>
-                <div className="p-3 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
                     style={{ color: "#78350f" }}
@@ -2170,7 +2210,7 @@ useEffect(() => {
               </Col>
 
               <Col xs={24} md={12}>
-                <div className="p-3 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                <div className="h-100 pe-3 ps-3 pt-2 pb-2" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.rewardsForInmoMembers}
                     onChange={(e) => handleInputChange("subscriptionDetails", "rewardsForInmoMembers", e.target.checked)}
@@ -2187,21 +2227,30 @@ useEffect(() => {
 
               {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
-                <div className="p-3 bg-lb" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: "4px" }}>
-                  <label className="my-input-label mb-2" style={{ color: '#215e97' }}>
-                    If you are a member of another Trade Union. If yes, which Union?
-                  </label>
-                  <Radio.Group
-                    style={{ color: '#215e97', borderColor: '#' }}
-                    name="otherIrishTradeUnion"
-                    value={InfData.subscriptionDetails?.otherIrishTradeUnion !== null ?
-                      InfData.subscriptionDetails?.otherIrishTradeUnion : null}
-                    onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
-                    disabled={isDisable}
-                  >
-                    <Radio style={{ color: '#215e97' }} value={true}>Yes</Radio>
-                    <Radio style={{ color: '#215e97' }} value={false}>No</Radio>
-                  </Radio.Group>
+                <div className="d-flex p-3  " style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: "4px" }}>
+                  <div className=" bg-lb me-2" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', }}>
+                    <label className="my-input-label mb-2 " style={{ color: '#215e97' }}>
+                      If you are a member of another Trade Union. If yes, which Union?
+                    </label>
+                    <Radio.Group
+                      style={{ color: '#215e97', borderColor: '#' }}
+                      name="otherIrishTradeUnion"
+                      value={InfData.subscriptionDetails?.otherIrishTradeUnion !== null ?
+                        InfData.subscriptionDetails?.otherIrishTradeUnion : null}
+                      onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
+                      disabled={isDisable}
+                    >
+                      <Radio style={{ color: '#215e97' }} value={true}>Yes</Radio>
+                      <Radio style={{ color: '#215e97' }} value={false}>No</Radio>
+                    </Radio.Group>
+                    <div className="d-flex">
+
+                    </div>
+                  </div>
+                  {
+                    InfData.subscriptionDetails?.otherIrishTradeUnion &&
+                    <MyInput onChange={() => { }} />
+                  }
                 </div>
               </Col>
 
@@ -2313,8 +2362,8 @@ useEffect(() => {
               </Col>
 
               {/* Final Checkboxes - Same Height */}
-              <Col xs={24} md={12} className="!pb-0">
-                <div className="p-3 !pt-2 !pb-2   d-flex align-items-center" style={{ borderRadius: '4px', height: '100%', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+              <Col xs={24} md={12} className="mb-3">
+                <div className="pe-3 ps-3 pt-2 pb-2   d-flex align-items-center" style={{ borderRadius: '4px', height: '100%', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.valueAddedServices}
                     style={{ color: "#78350f" }}
@@ -2326,8 +2375,8 @@ useEffect(() => {
                 </div>
               </Col>
 
-              <Col xs={24} md={12}>
-                <div className="p-3 !pt-2 !pb-2 d-flex align-items-center" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+              <Col className="mb-3" xs={24} md={12}>
+                <div className="pe-3 ps-3 pt-2 pb-2 d-flex align-items-center" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.termsAndConditions}
                     onChange={(e) => handleInputChange("subscriptionDetails", "termsAndConditions", e.target.checked)}
