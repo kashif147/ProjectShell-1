@@ -26,39 +26,23 @@ export const getWorkLocationHierarchy = createAsyncThunk(
 
 // Helper function to transform hierarchy data
 const transformHierarchyData = (apiData) => {
-    const hierarchyLookup = {};
+    const hierarchyData = {
+        branch: "",
+        region: ""
+    };
     
-    // Process hierarchy array and individual region/branch objects
-    const allHierarchyItems = [
-        ...apiData.hierarchy,
-        apiData.region,
-        apiData.branch
-    ].filter(Boolean); // Remove any null/undefined values
+    if (!apiData) return hierarchyData;
+    
+    // Process individual region and branch objects
+    if (apiData.region && apiData.region._id) {
+        hierarchyData.region = apiData.region._id;
+    }
+    
+    if (apiData.branch && apiData.branch._id) {
+        hierarchyData.branch = apiData.branch._id;
+    }
 
-    allHierarchyItems.forEach(item => {
-        if (!item || !item.lookuptypeId) return;
-        
-        const lookupType = item.lookuptypeId.lookuptype;
-        const formattedItem = {
-            label: item.DisplayName || item.lookupname,
-            value: item._id
-        };
-
-        if (!hierarchyLookup[lookupType]) {
-            hierarchyLookup[lookupType] = [];
-        }
-
-        // Avoid duplicates by checking if item with same value already exists
-        const exists = hierarchyLookup[lookupType].some(existingItem => 
-            existingItem.value === formattedItem.value
-        );
-        
-        if (!exists) {
-            hierarchyLookup[lookupType].push(formattedItem);
-        }
-    });
-
-    return hierarchyLookup;
+    return hierarchyData;
 };
 
 // Create the slice
@@ -66,18 +50,21 @@ const lookupsWorkLocationSlice = createSlice({
     name: 'lookupsWorkLocation',
     initialState: {
         workLocationHierarchy: null,
-        hierarchyLookup: {}, // New state for transformed data
+        hierarchyData: { branch: "", region: "" }, // Changed to object structure
         workLocationLoading: false,
         workLocationError: null,
     },
     reducers: {
         clearWorkLocationHierarchy: (state) => {
             state.workLocationHierarchy = null;
-            state.hierarchyLookup = {};
+            state.hierarchyData = { branch: "", region: "" };
             state.workLocationError = null;
         },
         clearWorkLocationError: (state) => {
             state.workLocationError = null;
+        },
+        setHierarchyData: (state, action) => {
+            state.hierarchyData = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -91,18 +78,25 @@ const lookupsWorkLocationSlice = createSlice({
                 state.workLocationError = null;
                 state.workLocationHierarchy = action.payload;
                 
-                // Transform and set the hierarchy lookup data
-                state.hierarchyLookup = transformHierarchyData(action.payload);
+                // Transform and set the hierarchy data
+                state.hierarchyData = transformHierarchyData(action.payload);
             })
             .addCase(getWorkLocationHierarchy.rejected, (state, action) => {
                 state.workLocationLoading = false;
                 state.workLocationError = action.payload;
-                state.hierarchyLookup = {};
+                state.hierarchyData = { branch: "", region: "" };
             });
     },
 });
 
 // Export actions
-export const { clearWorkLocationHierarchy, clearWorkLocationError } = lookupsWorkLocationSlice.actions;
+export const { 
+    clearWorkLocationHierarchy, 
+    clearWorkLocationError,
+    setHierarchyData 
+} = lookupsWorkLocationSlice.actions;
 
+// Export the async thunk
+
+// Export the reducer as default
 export default lookupsWorkLocationSlice.reducer;

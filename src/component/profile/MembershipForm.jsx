@@ -86,7 +86,7 @@ const MembershipForm = () => {
         height: "80vh",        // fixed height
         maxHeight: "80vh",     // don’t allow to expand more
         overflowY: "auto",      // vertical scroll
-        overflowY: "hidden",    // no horizontal scroll
+  // no horizontal scroll
         // display: "block",       // force block context
         backgroundColor: "#fff" // just for clarity
       }}

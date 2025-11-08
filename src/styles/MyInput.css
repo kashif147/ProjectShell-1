@@ -12,7 +12,7 @@
     /* color: #212529 !important; */
 }
 :where(.css-dev-only-do-not-override-tjsggz).pa .ant-radio-wrapper-disabled {
-    color: #6da5da !important;
+    color: #215e97 !important;
 }
 .mobile-input-group {
   display: flex;
@@ -21,16 +21,16 @@
 }
 .bg-lb
 .ant-radio-wrapper .ant-radio-checked .ant-radio-inner{
-  background-color: #6da5da !important;
-  border-color:  #6da5da !important;
+  background-color: #215e97 !important;
+  border-color:  #215e97 !important;
 }
 .pb .ant-radio-label{
-color: #6da5da !important;
+color: #215e97 !important;
 }
 .pa
 .ant-radio-wrapper .ant-radio-checked .ant-radio-inner{
-  background-color: #6da5da !important;
-  border-color:  #6da5da !important;
+  background-color: #215e97 !important;
+  border-color:  #215e97 !important;
 }
 .bg-ly
 .ant-radio-wrapper .ant-radio-checked .ant-radio-inner{

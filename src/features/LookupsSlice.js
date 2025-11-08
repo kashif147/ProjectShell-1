@@ -2,152 +2,137 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-// Fetch all lookups
+const API_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
+const getAuthHeaders = () => ({
+  Authorization: `Bearer ${localStorage.getItem('token')}`,
+  'Content-Type': 'application/json',
+});
+
+// Only GET operation
 export const getAllLookups = createAsyncThunk(
   'lookups/getAllLookups',
   async (_, { rejectWithValue }) => {
     try {
-      const token = localStorage.getItem('token');
-      const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookup`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
+      const { data } = await axios.get(`${API_URL}/api/lookup`, { 
+        headers: getAuthHeaders() 
       });
-      return response.data;
+      return data;
     } catch (error) {
       return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookups');
     }
   }
 );
 
-// Add new lookup
-export const addLookup = createAsyncThunk(
-  'lookups/addLookup',
-  async (newLookup, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.post(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookup`, newLookup, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to add lookup');
-    }
-  }
-);
-
-// Update existing lookup
-export const updateLookup = createAsyncThunk(
-  'lookups/updateLookup',
-  async ({ id, updatedLookup }, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('token');
-      const response = await axios.put(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookup/${id}`, updatedLookup, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      return response.data;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to update lookup');
-    }
-  }
-);
-
-// Delete lookup
-export const deleteLookup = createAsyncThunk(
-  'lookups/deleteLookup',
-  async (id, { rejectWithValue }) => {
-    try {
-      const token = localStorage.getItem('token');
-      await axios.delete(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookup/${id}`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          'Content-Type': 'application/json',
-        },
-      });
-      return id;
-    } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to delete lookup');
-    }
-  }
-);
-
-// Helper function to group lookups by type
-const groupLookupsByType = (lookups) => {
-  if (!lookups || lookups.length === 0) return {};
-  
-  const grouped = {};
-  
-  for (let i = 0; i < lookups.length; i++) {
-    const item = lookups[i];
-    const lookuptype = item.lookuptypeId?.lookuptype || item.lookuptype || 'Unknown';
-    
-    if (!grouped[lookuptype]) {
-      grouped[lookuptype] = [];
-    }
-    
-    grouped[lookuptype].push({
-      value: item._id,
-      label: item.lookupname,
-      ...item
-    });
-  }
-  
-  return grouped;
-};
-
 const lookupsSlice = createSlice({
   name: 'lookups',
   initialState: {
-    lookups: [], // Raw response data
-    groupedLookups: {}, // Lookups grouped by type
+    // Separate states for each lookup type with label-value format
+    titleOptions: [],
+    genderOptions: [],
+    workLocationOptions: [],
+    gradeOptions: [],
+    sectionOptions: [],
+    membershipCategoryOptions: [],
+    paymentTypeOptions: [],
+    branchOptions: [],
+    regionOptions: [],
+    secondarySectionOptions: [],
+    countryOptions: [],
+    
+    // Raw API response (optional - remove if not needed)
+    lookups: [],
   },
   reducers: {
     clearLookupsError: (state) => {
       state.error = null;
     },
     resetLookups: (state) => {
+      // Reset all arrays to empty
+      state.titleOptions = [];
+      state.genderOptions = [];
+      state.workLocationOptions = [];
+      state.gradeOptions = [];
+      state.sectionOptions = [];
+      state.membershipCategoryOptions = [];
+      state.paymentTypeOptions = [];
+      state.branchOptions = [];
+      state.regionOptions = [];
+      state.secondarySectionOptions = [];
+      state.countryOptions = [];
       state.lookups = [];
-      state.groupedLookups = {};
     }
   },
   extraReducers: (builder) => {
     builder
-      // getAllLookups
-      .addCase(getAllLookups.fulfilled, (state, action) => {
-        state.lookups = action.payload;
-        state.groupedLookups = groupLookupsByType(action.payload);
-      })
-      // addLookup
-      .addCase(addLookup.fulfilled, (state, action) => {
-        const newLookup = action.payload;
-        state.lookups.push(newLookup);
-        state.groupedLookups = groupLookupsByType(state.lookups);
-      })
-      // updateLookup
-      .addCase(updateLookup.fulfilled, (state, action) => {
-        const updatedLookup = action.payload;
-        const index = state.lookups.findIndex(item => item._id === updatedLookup._id);
-        if (index !== -1) {
-          state.lookups[index] = updatedLookup;
+      .addCase(getAllLookups.fulfilled, (state, { payload }) => {
+        // Store raw response
+        state.lookups = payload;
+        
+        // Reset all arrays before populating
+        state.titleOptions = [];
+        state.genderOptions = [];
+        state.workLocationOptions = [];
+        state.gradeOptions = [];
+        state.sectionOptions = [];
+        state.membershipCategoryOptions = [];
+        state.paymentTypeOptions = [];
+        state.branchOptions = [];
+        state.regionOptions = [];
+        state.secondarySectionOptions = [];
+        state.countryOptions = [];
+        
+        // Manually populate each type with label-value format
+        if (Array.isArray(payload)) {
+          payload.forEach(item => {
+            const lookuptype = item.lookuptypeId?.lookuptype;
+            const optionItem = {
+              value: item._id,
+              key: item._id,
+              label: item.lookupname
+            };
+            switch (lookuptype) {
+              case 'Title':
+                state.titleOptions.push(optionItem);
+                
+                break;
+              case 'Gender':
+                state.genderOptions.push(optionItem);
+                break;
+              case 'workLocation':
+                state.workLocationOptions.push(optionItem);
+                break;
+              case 'Grade':
+                state.gradeOptions.push(optionItem);
+                break;
+              case 'Section':
+                state.sectionOptions.push(optionItem);
+                break;
+              case 'MembershipCategory':
+                state.membershipCategoryOptions.push(optionItem);
+                break;
+              case 'PaymentType':
+                state.paymentTypeOptions.push(optionItem);
+                break;
+              case 'Branch':
+                state.branchOptions.push(optionItem);
+                break;
+              case 'Region':
+                state.regionOptions.push(optionItem);
+                break;
+              case 'Secondary Section':
+                state.secondarySectionOptions.push(optionItem);
+                break;
+              case 'Country':
+                state.countryOptions.push(optionItem);
+                break;
+              default:
+                break;
+            }
+          });
         }
-        state.groupedLookups = groupLookupsByType(state.lookups);
-      })
-      // deleteLookup
-      .addCase(deleteLookup.fulfilled, (state, action) => {
-        const deletedId = action.payload;
-        state.lookups = state.lookups.filter(item => item._id !== deletedId);
-        state.groupedLookups = groupLookupsByType(state.lookups);
       });
   },
 });
 
 export const { clearLookupsError, resetLookups } = lookupsSlice.actions;
-
 export default lookupsSlice.reducer;

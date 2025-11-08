@@ -11,7 +11,7 @@ import { getAllLookups } from "./features/LookupsSlice";
 import "antd/dist/reset.css";
 
 function App() {
-    const dispatch = useDispatch();
+  const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
 
   // Make AntD notification globally available for MyAlert.js
@@ -19,9 +19,9 @@ function App() {
   notification.error = api.error;
   notification.info = api.info;
   notification.warning = api.warning;
-useEffect(()=>{
-getAllLookups()
-},[dispatch])
+  useEffect(() => {
+    dispatch(getAllLookups())
+  }, [])
   useEffect(() => {
     const loadWorklet = async () => {
       if ("sharedStorage" in window) {

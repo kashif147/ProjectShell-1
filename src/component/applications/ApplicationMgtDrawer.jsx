@@ -30,8 +30,8 @@ import MyDatePicker1 from "../common/MyDatePicker1";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
 import {
- getAllLookups,
-selectAllFormLookups 
+  getAllLookups,
+  selectAllFormLookups
 } from '../../features/LookupsSlice'
 // import { useLookups } from "../../hooks/useLookups";
 
@@ -44,35 +44,26 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
-  // const lookupOptions = useSelector(selectAllLookupOptions);
-  
-  // const {
-  //   titleOptions,
-  //   genderOptions,
-  //   workLocationOptions,
-  //   gradeOptions,
-  //   sectionOptions,
-  //   membershipCategoryOptions,
-  //   paymentTypeOptions,
-  //   branchOptions,
-  //   regionOptions,
-  //   secondarySectionOptions,
-  //   countryOptions
-  // } = useSelector(selectAllFormLookups);
+  const {
+    titleOptions,
+    genderOptions,
+    workLocationOptions,
+    gradeOptions,
+    sectionOptions,
+    membershipCategoryOptions,
+    paymentTypeOptions,
+    branchOptions,
+    regionOptions,
+    secondarySectionOptions,
+    countryOptions
+  } = useSelector(state => state.lookups);
   const navigate = useNavigate();
-
-  const titleOptions = [];
-  const genderOptions = [];
-  const workLocationOptions = [];
-  const gradeOptions = [];
-  const sectionOptions = [];
-  const membershipCategoryOptions = [];
-  const paymentTypeOptions = [];
-  const branchOptions = [];
-  const regionOptions = [];
-  const secondarySectionOptions = [];
-  const countryOptions = [];
-  
+const {
+    hierarchyData, // This replaces hierarchyLookup
+    workLocationLoading,
+    workLocationError
+} = useSelector((state) => state.lookupsWorkLocation);
+console.log(hierarchyData,"lk")
   const { filtersState } = useFilters();
   const getApplicationStatusFilters = () => {
     if (filtersState['Application Status']?.selectedValues?.length > 0) {
@@ -171,11 +162,7 @@ function ApplicationMgtDrawer({
   const dispatch = useDispatch();
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
 
-  const {
-    hierarchyLookup,
-    workLocationLoading,
-    workLocationError
-  } = useSelector((state) => state.lookupsWorkLocation);
+  
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
@@ -263,7 +250,6 @@ function ApplicationMgtDrawer({
       },
     };
   };
-  console.log(hierarchyLookup, "hierarchyLookup")
   useEffect(() => {
     dispatch(fetchCountries());
     // dispatch(getAllLookups());
@@ -282,6 +268,19 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
+useEffect(() => {
+    if (hierarchyData && (hierarchyData.region || hierarchyData.branch) && !workLocationLoading) {
+        setInfData((prev) => ({
+            ...prev,
+            professionalDetails: {
+                ...prev.professionalDetails,
+                region: hierarchyData.region || prev.professionalDetails.region,
+                branch: hierarchyData.branch || prev.professionalDetails.branch
+            },
+        }));
+    }
+}, [hierarchyData, workLocationLoading]);
+
   const handleApprove = async (key) => {
     if (isEdit && originalData) {
 
@@ -967,7 +966,15 @@ function ApplicationMgtDrawer({
 
   const handleInputChange = (section, field, value) => {
     if (field === "workLocation") {
-      getWorkLocationHierarchy(application?.applicationId)
+      setInfData((prev) => ({
+      ...prev,
+      professionalDetails: {
+        ...prev.professionalDetails,
+        region: "",
+        branch: ""
+      },
+    }));
+      dispatch(getWorkLocationHierarchy(value))
     }
     setInfData((prev) => {
       let updated = {
@@ -979,17 +986,7 @@ function ApplicationMgtDrawer({
       };
 
       // Example: auto update branch & region based on workLocation
-      if (field === "workLocation" && workLocationDetails?.[value]) {
-        updated = {
-          ...updated,
-          professionalDetails: {
-            ...updated.professionalDetails,
-            workLocation: value,
-            branch: workLocationDetails[value].branch,
-            region: workLocationDetails[value].region,
-          },
-        };
-      }
+
 
       // Generate patch from observer
 
@@ -1068,162 +1065,7 @@ function ApplicationMgtDrawer({
     googleMapsApiKey: "AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o",
     libraries: libraries,
   });
-  const workLocationDetails = {
-    "24 Hour Care Services": { branch: "Meath", region: "Dublin North East" },
-    "24 Hour Care Services (Mid-West)": {
-      branch: "Clare",
-      region: "Mid-West, West and North West",
-    },
-    "24 Hour Care Services (North West)": {
-      branch: "Sligo",
-      region: "Mid-West, West and North West",
-    },
-    "BLANCHARDSTOWN INSTITUTE OF TECHNOLOGY": {
-      branch: "Dublin Northern Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "CAREDOC (CORK)": {
-      branch: "Cork Vol/Private Branch",
-      region: "South - South East",
-    },
-    "DUBLIN INSTITUTE OF TECHNOLOGY": {
-      branch: "Dublin South West Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "GLENDALE NURSING HOME (TULLOW)": {
-      branch: "Carlow",
-      region: "South - South East",
-    },
-    "HOME INSTEAD (WESTERN REGION)": { branch: "Roscommon", region: "West" },
-    "LETTERKENNY INSTITUTE OF TECHNOLOGY": {
-      branch: "Letterkenny",
-      region: "Letterkenny",
-    },
-    "LIMERICK INSTITUTE OF TECHNOLOGY": {
-      branch: "Limerick",
-      region: "Limerick",
-    },
-    "SLIGO INSTITUTE OF TECHNOLOGY": { branch: "Sligo", region: "Sligo" },
-    "ST JOSEPHS HOSPITAL- MOUNT DESERT": {
-      branch: "Cork Vol/Private Branch",
-      region: "South - South East",
-    },
-    "TALLAGHT INSTITUTE OF TECHNOLOGY": {
-      branch: "Dublin South West Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "Atu (Letterkenny)": { branch: "Letterkenny", region: "Letterkenny" },
-    "Regional Centre Of Nursing & Midwifery Education": {
-      branch: "Offaly",
-      region: "Mid Leinster",
-    },
-    "Newtown School": { branch: "Waterford", region: "South - South East" },
-    "Tipperary Education & Training Board": {
-      branch: "Tipperary-North-Mwhb",
-      region: "Mid-West, West and North West",
-    },
-    "National University Ireland Galway": {
-      branch: "Galway",
-      region: "Mid-West, West and North West",
-    },
-    "South East Technological University (Setu)": {
-      branch: "Carlow",
-      region: "South - South East",
-    },
-    "Tud (Tallaght)": {
-      branch: "Dublin South West Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "College Of Anaesthetists": {
-      branch: "Dublin South West Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "Tud (Blanchardstown)": {
-      branch: "Dublin Northern Branch",
-      region: "Dublin North East",
-    },
-    "Gmit (Galway)": {
-      branch: "Galway",
-      region: "Mid-West, West and North West",
-    },
-    "Cork University College": {
-      branch: "Cork Vol/Private Branch",
-      region: "South - South East",
-    },
-    "Mtu (Cork)": {
-      branch: "Cork Vol/Private Branch",
-      region: "South - South East",
-    },
-    Student: { branch: "Student", region: "Student" },
-    "St Columbas College (Dublin)": {
-      branch: "Dublin East Coast Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "Setu (Waterford)": { branch: "Waterford", region: "South - South East" },
-    "Nui Galway": {
-      branch: "Galway City",
-      region: "Mid-West, West and North West",
-    },
-    "Roscrea College": {
-      branch: "Tipperary-North-Mwhb",
-      region: "Mid-West, West and North West",
-    },
-    "Dun Laoghaire Institute Of Art & Design": {
-      branch: "Dunlaoghaire",
-      region: "Dublin Mid Leinster",
-    },
-    "Mtu (Kerry)": { branch: "Kerry", region: "South - South East" },
-    "Tus (Limerick)": {
-      branch: "Limerick",
-      region: "Mid-West, West and North West",
-    },
-    "Dundalk Institute Of Technology (Dkit)": {
-      branch: "Dundalk",
-      region: "Dublin North East",
-    },
-    "Atu (Sligo)": { branch: "Sligo", region: "Mid-West, West and North West" },
-    "Tud (Bolton Street)": {
-      branch: "Dublin South West Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "Dublin City University": {
-      branch: "Dublin Northern Branch",
-      region: "Dublin North East",
-    },
-    "National University Ireland Maynooth": {
-      branch: "Kildare/Naas",
-      region: "Dublin Mid Leinster",
-    },
-    "University College Dublin": {
-      branch: "Dublin East Coast Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "Limerick University": { branch: "Limerick", region: "Limerick" },
-    "Trinity College": {
-      branch: "Dublin East Coast Branch",
-      region: "Dublin Mid Leinster",
-    },
-    "St Angelas College (Sligo)": { branch: "Sligo", region: "Sligo" },
-    "Royal College Of Surgeons": {
-      branch: "Dublin East Coast Branch",
-      region: "Dublin North East",
-    },
-    "Tus (Technological University Of The Shannon)": {
-      branch: "Athlone",
-      region: "Dublin North East",
-    },
-    "Galway Mayo Institute Of Tech(C'Bar)": {
-      branch: "Castlebar",
-      region: "Mid-West, West and North West",
-    },
-  };
 
-  const allBranches = Array.from(
-    new Set(Object.values(workLocationDetails).map((d) => d.branch))
-  );
-  const allRegions = Array.from(
-    new Set(Object.values(workLocationDetails).map((d) => d.region))
-  );
   const select = {
     Bulk: false,
     Approve: false,
@@ -1237,7 +1079,6 @@ function ApplicationMgtDrawer({
       const status = application.applicationStatus?.toLowerCase();
       setCurrentApplication(application);
       const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
-      debugger
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true); // Disable form for read-only statuses
 
@@ -1247,7 +1088,6 @@ function ApplicationMgtDrawer({
           Approve: status === 'approved',
           Reject: status === 'rejected'
         }));
-        debugger
       } else {
         // For editable applications, reset checkboxes to default
         setSelected(prev => ({
@@ -1632,7 +1472,7 @@ function ApplicationMgtDrawer({
                   label="Title"
                   name="title"
                   value={InfData?.personalInfo?.title}
-                  options={groupedLookups?.Title}
+                  options={titleOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "title", e.target.value)}
@@ -1667,7 +1507,7 @@ function ApplicationMgtDrawer({
                   label="Gender"
                   name="gender"
                   value={InfData.personalInfo?.gender}
-                  options={groupedLookups?.Gender}
+                  options={genderOptions}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("personalInfo", "gender", e.target.value)}
@@ -1734,11 +1574,11 @@ function ApplicationMgtDrawer({
                   <Col xs={24} md={12} className="!pb-0 pa">
                     <div className="p-3 bg-lb " style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff' }}>
                       <div className="d-flex justify-content-between align-items-center">
-                        <label style={{ color: '#6da5da' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
+                        <label style={{ color: '#215e97' }} className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""}`}>
                           Preferred Address <span className="text-danger">*</span>
                         </label>
                         <Radio.Group
-                          style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
+                          style={{ color: '#215e97', borderColor: '#215e97' }}
                           onChange={(e) => handleInputChange("contactInfo", "preferredAddress", e.target.value)}
                           value={InfData?.contactInfo?.preferredAddress}
                           disabled={isDisable}
@@ -1885,19 +1725,19 @@ function ApplicationMgtDrawer({
               <Col xs={24} md={12}>
                 <div className="p-3 bg-lb" style={{ borderRadius: '4px', height: '100%', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: "4px" }}>
                   <div className="d-flex justify-content-between align-items-center">
-                    <label style={{ color: '#6da5da' }} className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>
+                    <label style={{ color: '#215e97' }} className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""}`}>
                       Preferred Email <span className="text-danger ms-1">*</span>
                     </label>
                     <Radio.Group
-                      style={{ color: '#6da5da' }}
+                      style={{ color: '#215e97' }}
                       onChange={(e) => handleInputChange("contactInfo", "preferredEmail", e.target.value)}
                       value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
                       className={errors?.preferredEmail ? "radio-error" : ""}
 
                     >
-                      <Radio style={{ color: '#6da5da' }} value="personal">Personal</Radio>
-                      <Radio style={{ color: '#6da5da' }} value="work">Work</Radio>
+                      <Radio style={{ color: '#215e97' }} value="personal">Personal</Radio>
+                      <Radio style={{ color: '#215e97' }} value="work">Work</Radio>
                     </Radio.Group>
                   </div>
                 </div>
@@ -2017,6 +1857,7 @@ function ApplicationMgtDrawer({
                   name="branch"
                   value={InfData.professionalDetails.branch}
                   disabled={true}
+                 placeholder={`${workLocationLoading?"Loading...":"Select"}`}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
                   // options={allBranches.map((branch) => ({
                   //   value: branch,
@@ -2030,6 +1871,7 @@ function ApplicationMgtDrawer({
                 <CustomSelect
                   label="Region"
                   name="Region"
+                   placeholder={`${workLocationLoading?"Loading...":"Select"}`}
                   value={InfData.professionalDetails?.region}
                   disabled={true}
                   onChange={(e) => handleInputChange("professionalDetails", "region", e.target.value)}
@@ -2086,7 +1928,7 @@ function ApplicationMgtDrawer({
                 >
                   <label
                     style={{
-                      color: '#6da5da',
+                      color: '#215e97',
                       display: 'block',
                       marginBottom: '8px',
                     }}
@@ -2114,13 +1956,13 @@ function ApplicationMgtDrawer({
                     }
                     disabled={isDisable}
                     style={{
-                      color: '#6da5daff',
-                      borderColor: '#bfdbfe',
+                      color: '#215e97',
+                      borderColor: '#215e97',
                       display: 'flex',
                       gap: '20px',
                     }}
                     className={errors?.preferredAddress ? 'radio-error' : ''}
-                  >   
+                  >
                     <Radio value={true}>Yes</Radio>
                     <Radio value={false}>No</Radio>
                   </Radio.Group>
@@ -2346,41 +2188,41 @@ function ApplicationMgtDrawer({
               {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
                 <div className="p-3 bg-lb" style={{ display: 'flex', flexDirection: 'column', justifyContent: 'center', backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: "4px" }}>
-                  <label className="my-input-label mb-2" style={{ color: '#6da5daff' }}>
+                  <label className="my-input-label mb-2" style={{ color: '#215e97' }}>
                     If you are a member of another Trade Union. If yes, which Union?
                   </label>
                   <Radio.Group
-                    style={{ color: '#6da5daff', borderColor: '#bfdbfe' }}
+                    style={{ color: '#215e97', borderColor: '#' }}
                     name="otherIrishTradeUnion"
-                    value={InfData.subscriptionDetails?.otherIrishTradeUnion!==null?
-                      InfData.subscriptionDetails?.otherIrishTradeUnion:null}
+                    value={InfData.subscriptionDetails?.otherIrishTradeUnion !== null ?
+                      InfData.subscriptionDetails?.otherIrishTradeUnion : null}
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnion", e.target?.value)}
                     disabled={isDisable}
                   >
-                    <Radio style={{ color: '#6da5daff' }} value={true}>Yes</Radio>
-                    <Radio style={{ color: '#6da5daff' }} value={false}>No</Radio>
+                    <Radio style={{ color: '#215e97' }} value={true}>Yes</Radio>
+                    <Radio style={{ color: '#215e97' }} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>
 
               <Col xs={24} md={12}>
                 <div className="p-3 bg-lb pb-0 " style={{ backgroundColor: '#1173d41a', border: '1px solid #97c5efff', borderRadius: '4px', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                  <label className="my-input-label mb-2" style={{ color: '#6da5daff' }} >
+                  <label className="my-input-label mb-2" style={{ color: '#215e97' }} >
                     Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
                   </label>
                   <Radio.Group
                     name="otherScheme"
-                    value={InfData.subscriptionDetails?.otherScheme!==null?
-                      InfData.subscriptionDetails?.otherScheme:
+                    value={InfData.subscriptionDetails?.otherScheme !== null ?
+                      InfData.subscriptionDetails?.otherScheme :
                       null
                     }
                     onChange={(e) => handleInputChange("subscriptionDetails", "otherScheme", e.target?.value)}
                     className="my-input-wrapper"
-                    style={{ color: '#6da5daff' }}
+                    style={{ color: '#215e97' }}
                     disabled={isDisable}
                   >
-                    <Radio style={{ color: '#6da5daff' }} value={true}>Yes</Radio>
-                    <Radio style={{ color: '#6da5daff' }} value={false}>No</Radio>
+                    <Radio style={{ color: '#215e97' }} value={true}>Yes</Radio>
+                    <Radio style={{ color: '#215e97' }} value={false}>No</Radio>
                   </Radio.Group>
                 </div>
               </Col>

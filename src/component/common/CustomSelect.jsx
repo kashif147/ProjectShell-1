@@ -66,7 +66,7 @@ const CustomSelect = ({
           )}
           {options.map((opt) => {
             return (
-              <option key={opt.key || opt.label} value={opt.value}>
+              <option key={opt.key} value={opt.value}>
                 {opt.label}
               </option>
             );
