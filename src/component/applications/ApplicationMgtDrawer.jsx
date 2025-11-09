@@ -581,7 +581,7 @@ function ApplicationMgtDrawer({
       termsAndConditions: false,
       membershipCategory: "",
       dateJoined: dayjs(),
-      submissionDate: null,
+      submissionDate: dayjs(),
       paymentFrequency: "",
     },
   };
