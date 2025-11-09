@@ -27,6 +27,7 @@ import productTypesReducer from "../features/ProductTypesSlice";
 import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
 import lookupsWorkLocationReducer from '../features/LookupsWorkLocationSlice';
+import categoryLookupReducer from '../features/CategoryLookupSlice';
 import lookupHierarchyReducer from '../features/lookupHierarchySlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
@@ -37,6 +38,7 @@ const store = configureStore({
     lookups: lookupsReducer,
     lookupsTypes: lookupsTypeReducer,
     regionTypes: regionTypeReducer,
+    categoryLookup: categoryLookupReducer,
     partner: partnerReducer,
     children: childrenReducer,
     refresh: refreshReducer,

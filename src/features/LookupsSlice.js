@@ -93,7 +93,6 @@ const lookupsSlice = createSlice({
             switch (lookuptype) {
               case 'Title':
                 state.titleOptions.push(optionItem);
-                
                 break;
               case 'Gender':
                 state.genderOptions.push(optionItem);
@@ -129,6 +128,33 @@ const lookupsSlice = createSlice({
                 break;
             }
           });
+        }
+
+        // Add "Other" option to specified lookup types
+        const otherOption = {
+          id: 'Other',
+          value: 'Other',
+          label: 'Other'
+        };
+
+        // Add "Other" to Secondary Section
+        if (state.secondarySectionOptions.length > 0) {
+          state.secondarySectionOptions.push(otherOption);
+        }
+
+        // Add "Other" to Primary Section (assuming this is the same as sectionOptions)
+        if (state.sectionOptions.length > 0) {
+          state.sectionOptions.push(otherOption);
+        }
+
+        // Add "Other" to Grade
+        if (state.gradeOptions.length > 0) {
+          state.gradeOptions.push(otherOption);
+        }
+
+        // Add "Other" to Work Location
+        if (state.workLocationOptions.length > 0) {
+          state.workLocationOptions.push(otherOption);
         }
       });
   },

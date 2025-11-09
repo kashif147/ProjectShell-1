@@ -14,7 +14,7 @@ const CustomSelect = ({
   disabled = false,
   placeholder = 'Select...',
   isMarginBtm = true,
-  extra = null, // 👈 extra (checkbox, info, etc.)
+  extra = null,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -66,7 +66,7 @@ const CustomSelect = ({
           )}
           {options.map((opt) => {
             return (
-              <option key={opt.key} value={opt.value}>
+              <option key={opt.key} value={opt.label}>
                 {opt.label}
               </option>
             );
