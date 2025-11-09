@@ -28,10 +28,12 @@ import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
+import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
 // import IncomeProtectionTooltip from "../../component/profile/IncomeProtectionTooltip"
 import { InsuranceScreen, RewardsScreen } from "../profile/IncomeProtectionTooltip";
+import { getProductsByType } from "../../features/ProductsSlice";
 // import { } from "../profile/IncomeProtectionTooltip";
 import {
   getAllLookups,
@@ -48,6 +50,7 @@ function ApplicationMgtDrawer({
   const { application, loading } = useSelector(
     (state) => state.applicationDetails
   );
+
   const {
     titleOptions,
     genderOptions,
@@ -260,12 +263,19 @@ function ApplicationMgtDrawer({
       },
     };
   };
-
+  const { 
+    categoryData, 
+    error, 
+    currentCategoryId 
+  } = useSelector((state) => state.categoryLookup);
   useEffect(() => {
     dispatch(fetchCountries());
     // dispatch(getAllLookups());
     refreshApplicationsWithStatusFilters()
     // dispatch(getWorkLocationHierarchy());
+  }, [dispatch]);
+    useEffect(() => {
+    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, [dispatch]);
   useEffect(() => {
     if (isEdit) {
@@ -1802,7 +1812,7 @@ function ApplicationMgtDrawer({
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.professionalDetails?.membershipCategory}
-                  options={CatOptions}
+                  options={categoryData}
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "membershipCategory", e.target.value)}
@@ -1817,8 +1827,8 @@ function ApplicationMgtDrawer({
                       label="Retired Date"
                       name="retiredDate"
                       value={InfData?.professionalDetails?.retiredDate}
-                      disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "retired_associate"}
-                      required={InfData?.professionalDetails?.membershipCategory === "retired_associate"}
+                      disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
+                      required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
                       onChange={(date, dateString) => {
                         handleInputChange("professionalDetails", "retiredDate", date);
 
@@ -1830,8 +1840,8 @@ function ApplicationMgtDrawer({
                       label="Pension No"
                       name="pensionNo"
                       value={InfData.professionalDetails?.pensionNo}
-                      disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "retired_associate"}
-                      required={InfData?.professionalDetails?.membershipCategory === "retired_associate"}
+                      disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
+                      required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
                       onChange={(e) => handleInputChange("professionalDetails", "pensionNo", e.target.value)}
                       hasError={!!errors?.pensionNo}
                     />
@@ -1922,8 +1932,8 @@ function ApplicationMgtDrawer({
                   label="Other Grade"
                   name="otherGrade"
                   value={InfData.professionalDetails?.otherGrade}
-                  required={InfData?.professionalDetails?.grade === "other"}
-                  disabled={InfData?.professionalDetails?.grade !== "other" || isDisable}
+                  required={InfData?.professionalDetails?.grade === "Other"}
+                  disabled={InfData?.professionalDetails?.grade !== "Other" || isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "otherGrade", e.target.value)}
                   hasError={!!errors?.otherGrade}
                 />
