@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect } from "react";
-import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal, Flex } from "antd";
+import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal, Flex, Tooltip } from "antd";
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import dayjs from "dayjs"
+import { Shield, Heart, FileText, Users, Gift, Home, Percent, Trophy } from 'lucide-react';
 import axios from "axios";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -29,6 +30,9 @@ import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
+// import IncomeProtectionTooltip from "../../component/profile/IncomeProtectionTooltip"
+import { InsuranceScreen, RewardsScreen } from "../profile/IncomeProtectionTooltip";
+// import { } from "../profile/IncomeProtectionTooltip";
 import {
   getAllLookups,
   selectAllFormLookups
@@ -103,6 +107,8 @@ function ApplicationMgtDrawer({
     note: "",
   });
   const [rejectModal, setRejectModal] = useState(false);
+  const [insurenceModal, setinsurence] = useState(true);
+
   useEffect(() => {
     if (application && applications?.length) {
       const newIndex =
@@ -254,6 +260,7 @@ function ApplicationMgtDrawer({
       },
     };
   };
+
   useEffect(() => {
     dispatch(fetchCountries());
     // dispatch(getAllLookups());
@@ -564,7 +571,7 @@ function ApplicationMgtDrawer({
       termsAndConditions: false,
       membershipCategory: "",
       dateJoined: dayjs(),
-      submissionDate:null,
+      submissionDate: null,
       paymentFrequency: "",
     },
   };
@@ -1030,9 +1037,10 @@ function ApplicationMgtDrawer({
           details
         ) {
           const components = details.address_components;
-
+          debugger
           const getComponent = (type) =>
             components.find((c) => c.types.includes(type))?.long_name || "";
+          debugger
 
           const streetNumber = getComponent("street_number");
           const route = getComponent("route");
@@ -1443,8 +1451,8 @@ function ApplicationMgtDrawer({
             )}
           </div>
         </div>
-
-        {/* Main Content */}
+        {/* <InsuranceScreen /> */}
+        {/* <InsuranceScreen /> */}
         <div
           className="hide-scroll-webkit"
           style={{
@@ -2054,38 +2062,11 @@ function ApplicationMgtDrawer({
 
             <Row gutter={[16, 12]} className="mt-2">
               <Col xs={24} md={12}>
-                <CustomSelect
-                  label="Payment Type"
-                  name="paymentType"
-                  required
-                  // options={paymentTypeOptions}
-                  options={[
-                    { value: "Payroll Deduction", label: "Deduction at Source" },
-                    { value: "Direct Debit", label: "Direct Debit" },
-                  ]}
-                  disabled={isDisable}
-                  onChange={(e) => handleInputChange("subscriptionDetails", "paymentType", e.target.value)}
-                  value={InfData.subscriptionDetails?.paymentType}
-                  hasError={!!errors?.paymentType}
-                />
-              </Col>
-
-              <Col xs={24} md={12}>
-                <div className="w-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: '8px' }}>
-                  <MyInput
-                    className="w-100"
-                    label="Payroll No"
-                    name="payrollNo"
-                    value={InfData?.subscriptionDetails?.payrollNo}
-                    hasError={!!errors?.payrollNo}
-                    required={InfData?.subscriptionDetails?.paymentType === "Payroll Deduction"}
-                    disabled={InfData?.subscriptionDetails?.paymentType !== "Payroll Deduction"}
-                    onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
-                  />
+                <div className="w-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr ', gap: '8px' }}>
                   {/* <MyDatePicker1 label="" /> */}
                   <MyDatePicker1
                     className="w-100"
-                    label="Joined Date"
+                    label="Date Joined"
                     name="dateJoined"
                     required
                     value={InfData?.subscriptionDetails?.dateJoined}
@@ -2102,7 +2083,7 @@ function ApplicationMgtDrawer({
                     name="SubmissionDate"
                     required
                     value={InfData?.subscriptionDetails?.submissionDate}
-                    disabled={isDisable || isEdit }
+                    disabled={isDisable || isEdit}
                     onChange={(date, dateString) => {
                       handleInputChange("subscriptionDetails", "submissionDate", date);
                     }}
@@ -2111,6 +2092,36 @@ function ApplicationMgtDrawer({
                   />
                 </div>
               </Col>
+              <Col xs={24} md={12}>
+                <div className="w-100" style={{ display: 'grid', gridTemplateColumns: '1fr 1fr ', gap: '8px' }}>
+                  <CustomSelect
+                    label="Payment Type"
+                    name="paymentType"
+                    required
+                    // options={paymentTypeOptions}
+                    options={[
+                      { value: "Payroll Deduction", label: "Deduction at Source" },
+                      { value: "Direct Debit", label: "Direct Debit" },
+                    ]}
+                    disabled={isDisable}
+                    onChange={(e) => handleInputChange("subscriptionDetails", "paymentType", e.target.value)}
+                    value={InfData.subscriptionDetails?.paymentType}
+                    hasError={!!errors?.paymentType}
+                  />
+                  <MyInput
+                    className="w-100"
+                    label="Payroll No"
+                    name="payrollNo"
+                    value={InfData?.subscriptionDetails?.payrollNo}
+                    hasError={!!errors?.payrollNo}
+                    required={InfData?.subscriptionDetails?.paymentType === "Payroll Deduction"}
+                    disabled={InfData?.subscriptionDetails?.paymentType !== "Payroll Deduction"}
+                    onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
+                  />
+                </div>
+              </Col>
+
+
 
               {/* Membership Status - Full Width */}
               {/* <Col span={24}>
@@ -2160,6 +2171,7 @@ function ApplicationMgtDrawer({
                         e.target.value
                       )
                     }
+                    disabled={isDisable}
                     style={{
                       color: '#14532d',
                       width: '100%',
@@ -2192,10 +2204,121 @@ function ApplicationMgtDrawer({
                   </Radio.Group>
                 </div>
               </Col>
+              {
+                ["graduate"].includes(InfData?.subscriptionDetails?.membershipStatus) && (
+                  <>
+                    <Col xs={24} md={24}>
+                      <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                        <Checkbox
+                          // checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                          style={{ color: "#78350f" }}
+                          // onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
+                          // className="my-input-wrapper"
+                          disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
+                        >
+                          Would you like to hear about exclusive discounts and offers for INMO members?
+                        </Checkbox>
+                      </div>
+                    </Col>
+                    <Col xs={24} md={24}>
+                      <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                        <Checkbox
+                          // checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                          style={{ color: "#78350f" }}
+                          // onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
+                          // className="my-input-wrapper"
+                          disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
+                        >
+                          I consent to <Tooltip
+                            placement="top"
+                            styles={{
+                              body: {
+                                maxWidth: '600px',
+                                width: '600px',
+                                maxHeight: '650px', // Increased height for better content display
+                                overflow: 'hidden',
+                                padding: '0'
+                              }
+                            }}
+                            title={
+                              <div style={{
+                                maxHeight: '650px', // Scrollable area height
+                                overflowY: 'auto',
+                                marginTop: '5px',
+                                marginBottom: '5px',
+                                // padding: '0 5px'
+                              }}>
+                                <InsuranceScreen />
+                              </div>
+                            }
+                          >
+                            <a href="#" style={{ color: "#78350f", textDecoration: "underline" }}>   INMO Income Protection Scheme.
 
 
+                            </a></Tooltip>
+                        </Checkbox>
+                        <p>
+                          By selecting ‘I consent’ below, you are agreeing to the INMO, sharing your Trade Union membership details with Cornmarket. Cornmarket as Scheme Administrator will process and retain details of your Trade Union membership for the purposes of assessing eligibility and admitting eligible members (automatically) to the Income Protection Scheme (with 9 Months’ Free Cover), and for the ongoing administration of the Scheme. Where you have also opted in to receiving marketing communications, Cornmarket will provide you with information on discounts and offers they have for INMO members. This consent can be withdrawn at any time by emailing Cornmarket at dataprotection@cornmarket.ie. Please note, if you do consent below, your data will be shared with Cornmarket, and you will be assessed for eligibility for automatic Income Protection Scheme membership. If you do not consent, your data will not be shared with Cornmarket for this purpose, you will not be assessed for automatic Scheme membership (including 9 Months’ Free Cover) and you will have to contact Cornmarket separately should you wish to apply for Scheme membership. This offer will run on a pilot basis. Terms and conditions apply and are subject to change.
+                          Important: If you do not give your consent, your Trade union membership data will not be shared with Cornmarket for this purpose. This means you will not be assessed for Automatic Access to the Scheme.
+                        </p>
+                      </div>
+                    </Col>
+                  </>
+                )
+              }
+              {
+                ["new"].includes(InfData?.subscriptionDetails?.membershipStatus) && (
+                  <>
+                    <Col xs={24} md={24}>
+                      <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
+                        <Checkbox
+                          // checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                          style={{ color: "#78350f" }}
+                          // onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
+                          // className="my-input-wrapper"
+                          disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
+                        >
+
+                          Tick here to join{" "}
+                          <Tooltip
+                            placement="top"
+                            styles={{
+                              body: {
+                                maxWidth: '600px',
+                                width: '600px',
+                                maxHeight: '650px', // Increased height for better content display
+                                overflow: 'hidden',
+                                padding: '0'
+                              }
+                            }}
+                            title={
+                              <div style={{
+                                maxHeight: '650px', // Scrollable area height
+                                overflowY: 'auto',
+                                marginTop: '5px',
+                                marginBottom: '5px',
+                                // padding: '0 5px'
+                              }}>
+                                <RewardsScreen />
+                              </div>
+                            }
+                          >
+                            <a href="#" style={{ color: "#78350f", textDecoration: "underline" }}>
+                              Rewards
+                            </a>
+                          </Tooltip>
+                          {" "}
+                          for INMO members
+                        </Checkbox>
+                        <p>
+                          By ticking here, you confirm that you agree to the Terms & Conditions available on Cornmarket.ie/rewards-club-terms and the Data Protection Statement available on Cornmarket.ie/rewards-dps. Cornmarket will contact you about your Rewards Benefits. You can opt out at any time.</p>
+                      </div>
+                    </Col>
+                  </>
+                )
+              }
               {/* Checkboxes in 50% width */}
-              <Col xs={24} md={12}>
+              {/* <Col xs={24} md={12}>
                 <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
@@ -2212,18 +2335,18 @@ function ApplicationMgtDrawer({
               <Col xs={24} md={12}>
                 <div className="h-100 pe-3 ps-3 pt-2 pb-2" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                   <Checkbox
-                    checked={InfData?.subscriptionDetails?.rewardsForInmoMembers}
-                    onChange={(e) => handleInputChange("subscriptionDetails", "rewardsForInmoMembers", e.target.checked)}
+                    checked={InfData?.subscriptionDetails?.inmoRewards}
+                    onChange={(e) => handleInputChange("subscriptionDetails", "inmoRewards", e.target.checked)}
                     // className="my-input-wrapper"
                     // disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
-                    disabled={true}
+                    disabled={isDisable}
                     style={{ color: "#78350f" }}
 
                   >
                     Tick here to join Rewards for INMO members
                   </Checkbox>
                 </div>
-              </Col>
+              </Col> */}
 
               {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
@@ -2380,10 +2503,20 @@ function ApplicationMgtDrawer({
                   <Checkbox
                     checked={InfData?.subscriptionDetails?.termsAndConditions}
                     onChange={(e) => handleInputChange("subscriptionDetails", "termsAndConditions", e.target.checked)}
-                    // className="my-input-wrapper"
                     style={{ color: "#78350f" }}
                   >
-                    I have read and agree to the INMO Data Protection Statement, the INMO Privacy Statement and the INMO Conditions of Membership
+                    I have read and agree to the{" "}
+                    <a href="#" style={{ color: "#78350f", textDecoration: "underline" }}>
+                      INMO Data Protection Statement,
+                    </a>{" "}
+                    the{" "}
+                    <a href="#" style={{ color: "#78350f", textDecoration: "underline" }}>
+                      INMO Privacy Statement
+                    </a>{" "}
+                    and the{" "}
+                    <a href="#" style={{ color: "#78350f", textDecoration: "underline" }}>
+                      INMO Conditions of Membership
+                    </a>
                     {errors?.termsAndConditions && (
                       <span style={{ color: "red" }}> (Required)</span>
                     )}

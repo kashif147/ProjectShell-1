@@ -20,9 +20,8 @@ import { MdOutlineLocalPrintshop } from "react-icons/md";
 import { LuSmartphoneNfc } from "react-icons/lu";
 import QRCode from "qrcode";
 import { useLocation } from "react-router-dom";
-// import { useTableColumns } from "../../context/TableColumnsContext";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { useFilters } from "../../context/FilterContext"; // ✅ new context
+import { useFilters } from "../../context/FilterContext";
 import ExportCSV from "./ExportCSV";
 import ExportPDF from "./ExportPDF";
 import TransferRequests from "../TransferRequests";
@@ -48,7 +47,6 @@ function SimpleMenu({
   const [ddSearch, setddSearch] = useState("");
   const location = useLocation();
 
-  // 🔹 Contexts
   const {
     updateSelectedTitles,
     searchFilters,
@@ -66,7 +64,6 @@ function SimpleMenu({
     activePage
   } = useFilters();
 
-  // Load global filters initially
   useEffect(() => {
     setCheckboxes(globleFilters);
   }, [globleFilters]);
@@ -130,200 +127,172 @@ function SimpleMenu({
   };
 
   // ====================
-  // ✅ Dropdown Menu
+  // ✅ Dropdown Menu - FIXED
   // ====================
   const menu = (
     <Menu>
-      {isCheckBox && (
-        <Menu.Item key="search">
-          <Input
-            suffix={<SearchOutlined />}
-            onChange={(e) => setddSearch(e.target.value)}
-            onClick={(e) => e.stopPropagation()}
-          />
-        </Menu.Item>
-      )}
-
-      {/* 🔹 Column visibility checkboxes */}
-      {/* <Row style={{ maxHeight: "250px", overflowY: "auto" }}>
-        {checkboxes &&
-          isCheckBox &&
-          checkboxes.map((item, index) => (
-            <Col span={24} key={index}>
-              <Checkbox
-                style={{ marginBottom: "8px" }}
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateSelectedTitles(item?.titleColumn, e.target.checked);
-                  updateSelectedTitlesA(item?.titleColumn, e.target.checked);
-                }}
-                checked={item?.isCheck}
-              >
-                {item?.titleColumn}
-              </Checkbox>
-            </Col>
-          ))}
-      </Row> */}
-
-      {/* 🔹 Dynamic filters from FilterContext */}
-      {/* <Menu.Divider /> */}
-      {/* <Menu.ItemGroup title={`Filters (${activePage})`}> */}
-      <Menu.ItemGroup title={``}>
-        <Row style={{ maxHeight: "250px", overflowY: "auto",  }}>
-          {currentPageFilters.map((filter, idx) => (
-            <Col span={24} key={idx}>
-              <Checkbox
-                checked={visibleFilters.includes(filter)}
-                onChange={(e) => toggleFilter(filter, e.target.checked)}
-              >
-                {filter}
-              </Checkbox>
-            </Col>
-          ))}
-        </Row>
-        <div className="flex justify-end mt-3 ">
-          <Button size="small" className="butn secoundry-btn" onClick={resetFilters}>
-            Reset
-          </Button>
-        </div>
-      </Menu.ItemGroup>
-
-      {/* <Menu.Divider /> */}
-
-      {/* 🔹 Actions */}
-      {!isCheckBox &&
-        data &&
-        Object.keys(data)?.map((key) => (
-          <Menu.Item key={key} onClick={(e) => actions(e)}>
-            {key === "Delete" ? (
-              <div className="d-flex align-items-baseline">
-                <FaTrashAlt
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                Delete
-              </div>
-            ) : key === "Attached" ? (
-              <div onClick={attachedFtn} className="d-flex align-items-baseline">
-                <ImAttachment
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    fontWeight: "500",
-                    color: "#45669d"
-                  }}
-                />
-                Attached
-              </div>
-            ) : key === "View" ? (
-              <div className="d-flex align-items-baseline">
-                <GrView
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                View
-              </div>
-            ) : key === "Export CSV" ? (
-              <ExportCSV data={gridData} filename="my-data.csv" />
-            ) : key === "Export PDF" ? (
-              <ExportPDF data={gridData} filename="my-data.pdf" />
-            ) : key === "Print Label" ? (
-              <div className="d-flex align-items-baseline">
-                <MdOutlineLocalPrintshop
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                Print Label
-              </div>
-            ) : key === "Transfer Requests" ? (
-              <div
-                className="d-flex align-items-baseline"
-                onClick={() => {
-                  settransferreq(true);
-                  getProfile(record, index);
-                }}
-              >
-                <FaRegArrowAltCircleRight
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                Transfer Request
-              </div>
-            ) : key === "assign IRO" ? (
-              <div
-                className="d-flex align-items-baseline bg-danger"
-                onClick={() => setcontactDrawer(!contactDrawer)}
-              >
-                Assign IRO
-              </div>
-            ) : key === "Career Break" ? (
-              <div
-                className="d-flex align-items-baseline"
-                onClick={() => {
-                  setcareerBreak(!careerBreak);
-                  getProfile(record, index);
-                }}
-              >
-                <FaUserAltSlash
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                Career Break
-              </div>
-            ) : key === "Generate NFC tag" ? (
-              <div
-                className="d-flex align-items-baseline"
-                onClick={async () => {
-                  await getProfile(record, index);
-                  handleGenerate();
-                }}
-              >
-                <LuSmartphoneNfc
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                Generate NFC tag
-              </div>
-            ) : key === "Change Category" ? (
-              <div
-                className="d-flex align-items-baseline"
-                onClick={async () => {
-                  await getProfile(record, index);
-                  setisDrawerOpen(true);
-                }}
-              >
-                <LuSmartphoneNfc
-                  style={{
-                    fontSize: "12px",
-                    marginRight: "10px",
-                    color: "#45669d"
-                  }}
-                />
-                Change Category
-              </div>
-            ) : (
-              key
-            )}
+      {/* 🔹 Only show filters section when isCheckBox is true */}
+      {isCheckBox ? (
+        <>
+          <Menu.Item key="search">
+            <Input
+              suffix={<SearchOutlined />}
+              onChange={(e) => setddSearch(e.target.value)}
+              onClick={(e) => e.stopPropagation()}
+              placeholder="Search filters..."
+            />
           </Menu.Item>
-        ))}
+
+          {/* 🔹 Dynamic filters from FilterContext - ONLY when isCheckBox is true */}
+          <Menu.ItemGroup title={`Filters (${activePage})`}>
+            <Row style={{ maxHeight: "250px", overflowY: "auto" }}>
+              {currentPageFilters.map((filter, idx) => (
+                <Col span={24} key={idx}>
+                  <Checkbox
+                    checked={visibleFilters.includes(filter)}
+                    onChange={(e) => toggleFilter(filter, e.target.checked)}
+                  >
+                    {filter}
+                  </Checkbox>
+                </Col>
+              ))}
+            </Row>
+            <div className="flex justify-end mt-3">
+              <Button size="small" className="butn secoundry-btn" onClick={resetFilters}>
+                Reset
+              </Button>
+            </div>
+          </Menu.ItemGroup>
+        </>
+      ) : (
+        // 🔹 When isCheckBox is false, only show action items
+        <>
+          {data && Object.keys(data)?.map((key) => (
+            <Menu.Item key={key} onClick={(e) => actions(e)}>
+              {key === "Delete" ? (
+                <div className="d-flex align-items-baseline">
+                  <FaTrashAlt
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  Delete
+                </div>
+              ) : key === "Attached" ? (
+                <div onClick={attachedFtn} className="d-flex align-items-baseline">
+                  <ImAttachment
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      fontWeight: "500",
+                      color: "#45669d"
+                    }}
+                  />
+                  Attached
+                </div>
+              ) : key === "View" ? (
+                <div className="d-flex align-items-baseline">
+                  <GrView
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  View
+                </div>
+              ) : key === "Export CSV" ? (
+                <ExportCSV data={gridData} filename="my-data.csv" />
+              ) : key === "Export PDF" ? (
+                <ExportPDF data={gridData} filename="my-data.pdf" />
+              ) : key === "Print Label" ? (
+                <div className="d-flex align-items-baseline">
+                  <MdOutlineLocalPrintshop
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  Print Label
+                </div>
+              ) : key === "Transfer Requests" ? (
+                <div
+                  className="d-flex align-items-baseline"
+                  onClick={() => {
+                    settransferreq(true);
+                    getProfile(record, index);
+                  }}
+                >
+                  <FaRegArrowAltCircleRight
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  Transfer Request
+                </div>
+              ) : key === "assign IRO" ? (
+                <div
+                  className="d-flex align-items-baseline"
+                  onClick={() => setcontactDrawer(!contactDrawer)}
+                >
+                  Assign IRO
+                </div>
+              ) : key === "Career Break" ? (
+                <div
+                  className="d-flex align-items-baseline"
+                  onClick={() => {
+                    setcareerBreak(!careerBreak);
+                    getProfile(record, index);
+                  }}
+                >
+                  <FaUserAltSlash
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  Career Break
+                </div>
+              ) : key === "Generate NFC tag" ? (
+                <div
+                  className="d-flex align-items-baseline"
+                  onClick={async () => {
+                    await getProfile(record, index);
+                    handleGenerate();
+                  }}
+                >
+                  <LuSmartphoneNfc
+                    style={{
+                      fontSize: "12px",
+                      marginRight: "10px",
+                      color: "#45669d"
+                    }}
+                  />
+                  Generate NFC tag
+                </div>
+              ) : key === "Change Category" ? (
+                <div
+                  className="d-flex align-items-baseline"
+                  onClick={async () => {
+                    await getProfile(record, index);
+                    setisDrawerOpen(true);
+                  }}
+                >
+                  Change Category
+                </div>
+              ) : (
+                key
+              )}
+            </Menu.Item>
+          ))}
+        </>
+      )}
     </Menu>
   );
 
@@ -350,11 +319,29 @@ function SimpleMenu({
         overlay={menu}
         trigger={["hover"]}
         placement="bottomLeft"
-        overlayStyle={{ width: 220, padding: "0px", height:'35px' }}
+        overlayStyle={{ width: 220, padding: "0px" }}
       >
         <Button
-          // className={` gray-btn butn ${vertical ? "gray-btn butn" : "transparent-bg p-0"}`}
-          style={{backgroundColor:'#091e420a', borderRadius:'4px', height:'32px',border:'none', fontWeight:'500',marginLeft:'8px' }}
+          style={
+            isCheckBox 
+              ? {
+                  backgroundColor: '#091e420a',
+                  borderRadius: '4px',
+                  height: '32px',
+                  border: 'none',
+                  fontWeight: '500',
+                  marginLeft: '8px'
+                }
+              : {
+                  backgroundColor: 'transparent',
+                  borderRadius: '4px',
+                  height: '32px',
+                  border: 'none',
+                  fontWeight: '500',
+                  marginLeft: '0px',
+                  boxShadow: 'none'
+                }
+          }
         >
           {title}
         </Button>
