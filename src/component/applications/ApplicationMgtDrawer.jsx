@@ -291,6 +291,13 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
+  
+  useEffect(() => {
+    if (application && isEdit) {
+handleLocationChange(InfData?.professionalDetails?.workLocation)
+    }
+  }, [isEdit, application]);
+
   useEffect(() => {
     if (hierarchyData && (hierarchyData.region || hierarchyData.branch) && !workLocationLoading) {
       setInfData((prev) => ({
@@ -786,187 +793,197 @@ function ApplicationMgtDrawer({
     return patch;
   };
 
-  const handleSubmit = async () => {
-    if (isDisable) return
-    const isValid = validateForm();
-    if (!isValid) return;
+const handleSubmit = async () => {
+  if (isDisable) return
+  const isValid = validateForm();
+  if (!isValid) return;
 
-    try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        throw new Error("No authentication token found");
-      }
+  // ✅ Start loading and disable form
+  setIsProcessing(true);
+  disableFtn(true);
 
-      // Convert dates to ISO format before sending
-      const convertDatesToISO = (data) => {
-        if (!data) return data;
-
-        const converted = { ...data };
-
-        // Personal Info dates
-        if (converted.personalInfo?.dateOfBirth) {
-          converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
-        }
-
-        // Professional Details dates
-        if (converted.professionalDetails?.retiredDate) {
-          converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
-        }
-
-        // Add any other date fields that need conversion
-        if (converted.professionalDetails?.graduationDate) {
-          converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-        }
-        if (converted.subscriptionDetails?.dateJoined) {
-          converted.subscriptionDetails.dateJoined = moment(converted.subscriptionDetails.dateJoined).toISOString();
-        }
-        // if (converted.subscriptionDetails?.submissionDate) {
-        //   converted.subscriptionDetails.submissionDate = moment(converted.subscriptionDetails.submissionDate).toISOString();
-        // }
-        return converted;
-      };
-
-      // Convert all dates to ISO format
-      const convertedData = convertDatesToISO(InfData);
-
-      // 1. Personal Details
-      const personalPayload = cleanPayload({
-        personalInfo: convertedData.personalInfo,
-        contactInfo: convertedData.contactInfo,
-      });
-
-      const personalRes = await axios.post(
-        `${baseURL}/personal-details`,
-        personalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      const applicationId = personalRes?.data?.data?.ApplicationId;
-      if (!applicationId) {
-        throw new Error("ApplicationId not returned from personal details API");
-      }
-
-      // 2. Professional Details
-      const professionalPayload = cleanPayload({
-        professionalDetails: convertedData.professionalDetails,
-      });
-
-      await axios.post(
-        `${baseURL}/professional-details/${applicationId}`,
-        professionalPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      // 3. Subscription Details
-      const subscriptionPayload = cleanPayload({
-        subscriptionDetails: convertedData.subscriptionDetails,
-      });
-
-      await axios.post(
-        `${baseURL}/subscription-details/${applicationId}`,
-        subscriptionPayload,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
-
-      // 4. ✅ AUTO-APPROVE if Approve checkbox is checked
-      if (selected.Approve) {
-        try {
-          // Prepare approval payload
-          let approvalPayload;
-
-          if (isEdit && originalData) {
-            // ✅ EDIT MODE: Generate patch with changes from original
-            const proposedPatch = generatePatch(originalData, convertedData);
-
-            approvalPayload = {
-              submission: convertedData, // Current data
-              proposedPatch: proposedPatch,
-              notes: "Auto-approved with changes on submission"
-            };
-          } else {
-            // ✅ NEW APPLICATION: Create patch for ALL new fields being created
-            const proposedPatch = generateCreatePatch(convertedData);
-
-            approvalPayload = {
-              submission: convertedData, // Current data
-              proposedPatch: proposedPatch, // Patch showing all created fields
-              notes: "Auto-approved on submission"
-            };
-          }
-
-          await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-            approvalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-
-          MyAlert("success", "Application submitted and approved successfully!");
-
-        } catch (approveError) {
-          // If approval fails, still show success for submission but warn about approval
-          console.error("Approval failed:", approveError);
-          MyAlert(
-            "warning",
-            "Application submitted successfully but approval failed",
-            "The application was created but could not be automatically approved. Please approve it manually."
-          );
-        }
-      } else {
-        // Regular success message without approval
-        MyAlert("success", "Application submitted successfully!");
-      }
-
-      // ✅ RESET LOGIC: Only reset if NOT in Bulk mode
-      if (selected?.Bulk !== true) {
-        // Normal mode: Clear everything and redirect
-        setInfData(inputValue);
-        setSelected(prev => ({
-          ...prev,
-          Approve: false,  // Uncheck Approve in normal mode
-          Reject: false
-        }));
-        navigate('/Applications');
-      } else {
-        // ✅ BULK MODE: Clear form inputs but keep Approve checkbox checked
-        setInfData(inputValue); // Clear all form inputs
-        // Keep Approve checkbox checked, clear other checkboxes
-        setSelected(prev => ({
-          ...prev,
-          Reject: false,
-          // Approve stays true (checked)
-        }));
-        MyAlert("success", "Application submitted successfully! Form cleared and ready for next entry.");
-      }
-
-    } catch (error) {
-      console.error("Submission error:", error);
-      MyAlert(
-        "error",
-        "Failed to submit application",
-        error?.response?.data?.error?.message || error.message
-      );
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
     }
-  };
+
+    // Convert dates to ISO format before sending
+    const convertDatesToISO = (data) => {
+      if (!data) return data;
+
+      const converted = { ...data };
+
+      // Personal Info dates
+      if (converted.personalInfo?.dateOfBirth) {
+        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
+      }
+
+      // Professional Details dates
+      if (converted.professionalDetails?.retiredDate) {
+        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
+      }
+
+      // Add any other date fields that need conversion
+      if (converted.professionalDetails?.graduationDate) {
+        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
+      }
+      if (converted.subscriptionDetails?.dateJoined) {
+        converted.subscriptionDetails.dateJoined = moment(converted.subscriptionDetails.dateJoined).toISOString();
+      }
+      // if (converted.subscriptionDetails?.submissionDate) {
+      //   converted.subscriptionDetails.submissionDate = moment(converted.subscriptionDetails.submissionDate).toISOString();
+      // }
+      return converted;
+    };
+
+    // Convert all dates to ISO format
+    const convertedData = convertDatesToISO(InfData);
+
+    // 1. Personal Details
+    const personalPayload = cleanPayload({
+      personalInfo: convertedData.personalInfo,
+      contactInfo: convertedData.contactInfo,
+    });
+
+    const personalRes = await axios.post(
+      `${baseURL}/personal-details`,
+      personalPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    const applicationId = personalRes?.data?.data?.ApplicationId;
+    if (!applicationId) {
+      throw new Error("ApplicationId not returned from personal details API");
+    }
+
+    // 2. Professional Details
+    const professionalPayload = cleanPayload({
+      professionalDetails: convertedData.professionalDetails,
+    });
+
+    await axios.post(
+      `${baseURL}/professional-details/${applicationId}`,
+      professionalPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // 3. Subscription Details
+    const subscriptionPayload = cleanPayload({
+      subscriptionDetails: convertedData.subscriptionDetails,
+    });
+
+    await axios.post(
+      `${baseURL}/subscription-details/${applicationId}`,
+      subscriptionPayload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    // 4. ✅ AUTO-APPROVE if Approve checkbox is checked
+    if (selected.Approve) {
+      try {
+        // Prepare approval payload
+        let approvalPayload;
+
+        if (isEdit && originalData) {
+          // ✅ EDIT MODE: Generate patch with changes from original
+          const proposedPatch = generatePatch(originalData, convertedData);
+
+          approvalPayload = {
+            submission: convertedData, // Current data
+            proposedPatch: proposedPatch,
+            notes: "Auto-approved with changes on submission"
+          };
+        } else {
+          // ✅ NEW APPLICATION: Create patch for ALL new fields being created
+          const proposedPatch = generateCreatePatch(convertedData);
+
+          approvalPayload = {
+            submission: convertedData, // Current data
+            proposedPatch: proposedPatch, // Patch showing all created fields
+            notes: "Auto-approved on submission"
+          };
+        }
+
+        await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+          approvalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        MyAlert("success", "Application submitted and approved successfully!");
+
+      } catch (approveError) {
+        // If approval fails, still show success for submission but warn about approval
+        console.error("Approval failed:", approveError);
+        MyAlert(
+          "warning",
+          "Application submitted successfully but approval failed",
+          "The application was created but could not be automatically approved. Please approve it manually."
+        );
+      }
+    } else {
+      // Regular success message without approval
+      MyAlert("success", "Application submitted successfully!");
+    }
+
+    // ✅ RESET LOGIC: Only reset if NOT in Bulk mode
+    if (selected?.Bulk !== true) {
+      // Normal mode: Clear everything and redirect
+      setInfData(inputValue);
+      setSelected(prev => ({
+        ...prev,
+        Approve: false,  // Uncheck Approve in normal mode
+        Reject: false
+      }));
+      navigate('/Applications');
+    } else {
+      // ✅ BULK MODE: Clear form inputs but keep Approve checkbox checked
+      setInfData(inputValue); // Clear all form inputs
+      // Keep Approve checkbox checked, clear other checkboxes
+      setSelected(prev => ({
+        ...prev,
+        Reject: false,
+        // Approve stays true (checked)
+      }));
+      MyAlert("success", "Application submitted successfully! Form cleared and ready for next entry.");
+    }
+
+  } catch (error) {
+    console.error("Submission error:", error);
+    MyAlert(
+      "error",
+      "Failed to submit application",
+      error?.response?.data?.error?.message || error.message
+    );
+  } finally {
+    // ✅ Stop loading and re-enable form (only if not in Bulk mode)
+    setIsProcessing(false);
+    if (selected?.Bulk !== true) {
+      disableFtn(false);
+    }
+  }
+};
 
   const handleSave = async () => {
     const isValid = validateForm();
@@ -1473,6 +1490,7 @@ function ApplicationMgtDrawer({
                 onClick={() => handleSubmit()}
                 className="butn primary-btn"
               // disabled={isDisable}
+              loading={isProcessing }
               >
                 Submit
               </Button>
@@ -1766,6 +1784,8 @@ function ApplicationMgtDrawer({
                   name="mobile"
                   type="mobile"
                   value={InfData.contactInfo?.mobileNumber}
+                  require
+                     hasError={!!errors?.mobileNumber}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("contactInfo", "mobileNumber", e.target.value)}
                 />
