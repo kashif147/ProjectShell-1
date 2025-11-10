@@ -8,12 +8,17 @@ import { ChatbotProvider } from "./context/ChatbotContext";
 import { App as AntApp, notification } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "./features/LookupsSlice";
+import { getHierarchicalLookups } from "./features/GetLocationWithHierarky";
 import "antd/dist/reset.css";
 
 function App() {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-
+  const { 
+    hierarchicalLookups, 
+    hierarchicalLookupsLoading, 
+    hierarchicalLookupsError 
+  } = useSelector((state) => state.hierarchicalLookups);
   // Make AntD notification globally available for MyAlert.js
   notification.success = api.success;
   notification.error = api.error;
@@ -22,6 +27,9 @@ function App() {
   useEffect(() => {
     dispatch(getAllLookups())
   }, [])
+    useEffect(() => {
+    dispatch(getHierarchicalLookups());
+  }, [dispatch]);
   useEffect(() => {
     const loadWorklet = async () => {
       if ("sharedStorage" in window) {

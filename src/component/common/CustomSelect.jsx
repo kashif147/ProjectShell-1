@@ -15,6 +15,7 @@ const CustomSelect = ({
   placeholder = 'Select...',
   isMarginBtm = true,
   extra = null,
+  isIDs=false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
 
@@ -66,7 +67,7 @@ const CustomSelect = ({
           )}
           {options.map((opt) => {
             return (
-              <option key={opt.key} value={opt.label}>
+              <option key={opt.key} value={isIDs?opt.key:opt.label}>
                 {opt.label}
               </option>
             );

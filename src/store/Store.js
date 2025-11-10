@@ -28,7 +28,9 @@ import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
 import lookupsWorkLocationReducer from '../features/LookupsWorkLocationSlice';
 import categoryLookupReducer from '../features/CategoryLookupSlice';
-import lookupHierarchyReducer from '../features/lookupHierarchySlice';
+// import lookupHierarchyReducer from '../features/lookupHierarchySlice';
+import hierarchicalLookupsReducer from '../features/lookupHierarchySlice';
+import hierarchicalDataByLocationReducer from '../features/HierarchicalDataByLocationSlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
 const store = configureStore({
@@ -41,6 +43,7 @@ const store = configureStore({
     categoryLookup: categoryLookupReducer,
     partner: partnerReducer,
     children: childrenReducer,
+    hierarchicalLookups: hierarchicalLookupsReducer,
     refresh: refreshReducer,
     contactType: contactTypeReducer,
     contact: contactReducer,
@@ -48,6 +51,7 @@ const store = configureStore({
     // countries: countriesReducer,
     applications: applicationReducer,
     applicationDetails: applicationDetailsReducer,
+      hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
     tenants: tenantReducer,
     users: userReducer,
     roles: roleReducer,
@@ -59,7 +63,7 @@ const store = configureStore({
     countries: countriesReducer,
     batches: batchReducer,
     lookupsWorkLocation: lookupsWorkLocationReducer,
-    lookupHierarchy: lookupHierarchyReducer,
+    // lookupHierarchy: lookupHierarchyReducer,
   },
 });
 

@@ -2,6 +2,7 @@ import { useState, useRef, useEffect } from "react";
 import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal, Flex, Tooltip } from "antd";
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import dayjs from "dayjs"
+
 import { Shield, Heart, FileText, Users, Gift, Home, Percent, Trophy } from 'lucide-react';
 import axios from "axios";
 import CustomSelect from "../common/CustomSelect";
@@ -39,6 +40,7 @@ import {
   getAllLookups,
   selectAllFormLookups
 } from '../../features/LookupsSlice'
+import { getHierarchicalDataByLocation } from "../../features/HierarchicalDataByLocationSlice";
 // import { useLookups } from "../../hooks/useLookups";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
@@ -257,16 +259,16 @@ function ApplicationMgtDrawer({
         // dateJoined: apiData?.subscriptionDetails?.dateJoined || "",
         dateJoined: apiData?.subscriptionDetails?.dateJoined !== undefined && apiData?.subscriptionDetails?.dateJoined !== "" && apiData?.subscriptionDetails?.dateJoined !== null ?
           dayjs(apiData?.dateJoined) : null,
-        submissionDate: apiData?.subscriptionDetails?.submissionDate !== undefined && apiData?.subscriptionDetails?.submissionDate !== "" && apiData?.subscriptionDetails?.submissionDate !== null ?
-          dayjs(apiData?.submissionDate) : null,
+        // submissionDate: apiData?.subscriptionDetails?.submissionDate !== undefined && apiData?.subscriptionDetails?.submissionDate !== "" && apiData?.subscriptionDetails?.submissionDate !== null ?
+        //   dayjs(apiData?.submissionDate) : null,
         paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
       },
     };
   };
-  const { 
-    categoryData, 
-    error, 
-    currentCategoryId 
+  const {
+    categoryData,
+    error,
+    currentCategoryId
   } = useSelector((state) => state.categoryLookup);
   useEffect(() => {
     dispatch(fetchCountries());
@@ -274,7 +276,7 @@ function ApplicationMgtDrawer({
     refreshApplicationsWithStatusFilters()
     // dispatch(getWorkLocationHierarchy());
   }, [dispatch]);
-    useEffect(() => {
+  useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, [dispatch]);
   useEffect(() => {
@@ -581,12 +583,36 @@ function ApplicationMgtDrawer({
       termsAndConditions: false,
       membershipCategory: "",
       dateJoined: dayjs(),
-      submissionDate: dayjs(),
+      // submissionDate: dayjs(),
       paymentFrequency: "",
     },
   };
   const [InfData, setInfData] = useState(inputValue);
-  console.log("InfData", InfData)
+  const handleLocationChange = (selectedLookupId) => {
+    debugger
+    // Get hierarchicalLookups from localStorage
+    const storedLookups = localStorage.getItem('hierarchicalLookups');
+    const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
+
+    // Find the selected object in hierarchicalLookups
+    const foundObject = hierarchicalLookups.find(item =>
+      item.lookup && item.lookup._id === selectedLookupId
+    );
+
+    if (foundObject) {
+      // Update InfData with region and branch IDs
+      setInfData(prevData => ({
+        ...prevData,
+        professionalDetails: {
+          ...prevData.professionalDetails,
+          workLocation: selectedLookupId, // Set the selected location ID
+          region: foundObject.region?._id || "", // Set region ID
+          branch: foundObject.branch?._id || "" // Set branch ID
+        }
+      }));
+    }
+    debugger
+  };
   const validateForm = () => {
     const requiredFields = [
       "title",
@@ -791,7 +817,12 @@ function ApplicationMgtDrawer({
         if (converted.professionalDetails?.graduationDate) {
           converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
         }
-
+        if (converted.subscriptionDetails?.dateJoined) {
+          converted.subscriptionDetails.dateJoined = moment(converted.subscriptionDetails.dateJoined).toISOString();
+        }
+        // if (converted.subscriptionDetails?.submissionDate) {
+        //   converted.subscriptionDetails.submissionDate = moment(converted.subscriptionDetails.submissionDate).toISOString();
+        // }
         return converted;
       };
 
@@ -985,7 +1016,12 @@ function ApplicationMgtDrawer({
       }
     }
   };
-
+  const {
+    hierarchicalData,
+    hierarchicalDataLoading,
+    hierarchicalDataError
+  } = useSelector((state) => state.hierarchicalDataByLocation);
+  console.log(hierarchicalData, "hierarchicalData")
   const handleInputChange = (section, field, value) => {
     if (field === "workLocation") {
       setInfData((prev) => ({
@@ -996,7 +1032,8 @@ function ApplicationMgtDrawer({
           branch: ""
         },
       }));
-      dispatch(getWorkLocationHierarchy(value))
+      // dispatch(getWorkLocationHierarchy(value))
+      handleLocationChange(value)
     }
     setInfData((prev) => {
       let updated = {
@@ -1047,11 +1084,10 @@ function ApplicationMgtDrawer({
           details
         ) {
           const components = details.address_components;
-          debugger
+
           const getComponent = (type) =>
             components.find((c) => c.types.includes(type))?.long_name || "";
           debugger
-
           const streetNumber = getComponent("street_number");
           const route = getComponent("route");
           const sublocality = getComponent("sublocality") || "";
@@ -1059,7 +1095,7 @@ function ApplicationMgtDrawer({
             getComponent("locality") || getComponent("postal_town") || "";
           const county = getComponent("administrative_area_level_1") || "";
           const postalCode = getComponent("postal_code");
-
+          const country = getComponent("country");
           const buildingOrHouse = `${streetNumber} ${route}`.trim();
           const streetOrRoad = sublocality;
           const areaOrTown = town;
@@ -1075,6 +1111,7 @@ function ApplicationMgtDrawer({
               areaOrTown,
               countyCityOrPostCode,
               eircode,
+              country
             },
           }));
         }
@@ -1853,12 +1890,16 @@ function ApplicationMgtDrawer({
               <Col xs={24} md={12}>
                 <CustomSelect
                   label="Work Location"
+                  isIDs={true}
                   name="workLocation"
                   value={InfData.professionalDetails?.workLocation}
                   required
                   options={workLocationOptions}
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("professionalDetails", "workLocation", e.target.value)}
+                  onChange={(e) => {
+                    handleInputChange("professionalDetails", "workLocation", e.target.value)
+                  }
+                  }
                   hasError={!!errors?.workLocation}
                 />
               </Col>
@@ -1880,6 +1921,7 @@ function ApplicationMgtDrawer({
                   label="Branch"
                   name="branch"
                   value={InfData.professionalDetails.branch}
+                  isIDs={true}
                   disabled={true}
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
@@ -1893,6 +1935,7 @@ function ApplicationMgtDrawer({
 
               <Col xs={24} md={12}>
                 <CustomSelect
+                  isIDs={true}
                   label="Region"
                   name="Region"
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
@@ -2092,10 +2135,10 @@ function ApplicationMgtDrawer({
                     label="Submission Date"
                     name="SubmissionDate"
                     required
-                    value={InfData?.subscriptionDetails?.submissionDate}
+                    // value={InfData?.subscriptionDetails?.submissionDate}
                     disabled={isDisable || isEdit}
                     onChange={(date, dateString) => {
-                      handleInputChange("subscriptionDetails", "submissionDate", date);
+                      // handleInputChange("subscriptionDetails", "submissionDate", date);
                     }}
                     hasError={!!errors?.dateJoined}
                     errorMessage={errors?.dateJoined || "Required"}
@@ -2109,9 +2152,11 @@ function ApplicationMgtDrawer({
                     name="paymentType"
                     required
                     // options={paymentTypeOptions}
+
                     options={[
-                      { value: "Payroll Deduction", label: "Deduction at Source" },
-                      { value: "Direct Debit", label: "Direct Debit" },
+                      { value: "Payroll Deduction", label: "Payroll Deduction" },
+                      { value: "Card Payment", label: "Card Payment" },
+                      // { value: "Direct Debit", label: "Direct Debit" },
                     ]}
                     disabled={isDisable}
                     onChange={(e) => handleInputChange("subscriptionDetails", "paymentType", e.target.value)}
