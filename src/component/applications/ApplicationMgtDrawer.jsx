@@ -1181,216 +1181,207 @@ const handleSubmit = async () => {
   }, [application, isEdit]);
 
 
-  const handleChange = (e) => {
-    const { name, checked } = e.target;
+ const handleChange = (e) => {
+  const { name, checked } = e.target;
 
-    // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
-    const status = application?.applicationStatus?.toLowerCase();
-    const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
+  // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
+  const status = application?.applicationStatus?.toLowerCase();
+  const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
 
-    if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
-      return; // Don't allow changes for read-only statuses
-    }
+  if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
+    return; // Don't allow changes for read-only statuses
+  }
 
-    if (name === "Bulk") {
-      disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
-      setErrors({});
-      setSelected((prev) => ({
-        ...prev,
-        Bulk: checked,
-      }));
-    }
+  if (name === "Bulk") {
+    disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
+    setErrors({});
+    setSelected((prev) => ({
+      ...prev,
+      Bulk: checked,
+    }));
+  }
 
-    if (name === "Approve" && checked === true) {
-      if (isEdit) {
-        // Edit mode: Open confirmation modal
-        setActionModal({ open: true, type: 'approve' });
-      } else {
-        // Non-edit mode: Just update checkbox state
-        setSelected((prev) => ({
-          ...prev,
-          Approve: true,
-          Reject: false, // Uncheck reject
-        }));
-      }
-    }
+  if (name === "Approve" && checked === true) {
+    // ✅ REMOVED MODAL - Direct approval
+    setSelected((prev) => ({
+      ...prev,
+      Approve: true,
+      Reject: false, // Uncheck reject
+    }));
+    
+    // Directly call approval function
+    handleApplicationAction('approved');
+  }
 
-    if (name === "Reject" && checked === true) {
-      if (isEdit) {
-        // Edit mode: Open rejection modal
-        setActionModal({ open: true, type: 'reject' });
-      } else {
-        // Non-edit mode: Just update checkbox state
-        setSelected((prev) => ({
-          ...prev,
-          Reject: true,
-          Approve: false, // Uncheck approve
-        }));
-      }
-    }
+  if (name === "Reject" && checked === true) {
+    // Keep rejection modal for safety
+    setActionModal({ open: true, type: 'reject' });
+  }
 
-    // Handle unchecking for non-edit mode
-    if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
-      setSelected((prev) => ({
-        ...prev,
-        [name]: false,
-      }));
-    }
-  };
+  // Handle unchecking for non-edit mode
+  if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
+    setSelected((prev) => ({
+      ...prev,
+      [name]: false,
+    }));
+  }
+};
   const handleApplicationAction = async (action) => {
-    if (isEdit && !originalData) return;
+  if (isEdit && !originalData) return;
 
-    setIsProcessing(true);
+  setIsProcessing(true);
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
+  try {
+    const token = localStorage.getItem('token');
+    if (!token) {
+      throw new Error('No authentication token found');
+    }
+
+    // ✅ ADD DATE CONVERSION FOR APPROVAL/REJECTION FLOW
+    const convertDatesToISO = (data) => {
+      if (!data) return data;
+      const converted = { ...data };
+
+      if (converted.personalInfo?.dateOfBirth) {
+        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
       }
 
-      // ✅ ADD DATE CONVERSION FOR APPROVAL/REJECTION FLOW
-      const convertDatesToISO = (data) => {
-        if (!data) return data;
-        const converted = { ...data };
-
-        if (converted.personalInfo?.dateOfBirth) {
-          converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
-        }
-
-        if (converted.professionalDetails?.retiredDate) {
-          converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
-        }
-
-        if (converted.professionalDetails?.graduationDate) {
-          converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-        }
-
-        return converted;
-      };
-
-      // Convert dates before any processing
-      const convertedInfData = convertDatesToISO(InfData);
-      const convertedOriginalData = convertDatesToISO(originalData);
-
-      // Prepare status payload
-      const statusPayload = {
-        applicationStatus: action, // "approved" or "rejected"
-        comments: action === "rejected"
-          ? rejectionData.reason
-          : rejectionData.note || "Application approved"
-      };
-
-      // Validate rejection reason
-      if (action === "rejected" && !rejectionData.reason) {
-        MyAlert("error", "Please select a rejection reason");
-        setIsProcessing(false);
-        return;
+      if (converted.professionalDetails?.retiredDate) {
+        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
       }
 
-      // Handle approval with changes (only for edit mode)
-      if (isEdit && action === "approved") {
-        const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+      if (converted.professionalDetails?.graduationDate) {
+        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
+      }
 
-        if (proposedPatch && proposedPatch.length > 0) {
-          const obj = {
-            submission: convertedOriginalData,
-            proposedPatch: proposedPatch,
-          };
+      return converted;
+    };
 
-          await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-            obj,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
+    // Convert dates before any processing
+    const convertedInfData = convertDatesToISO(InfData);
+    const convertedOriginalData = convertDatesToISO(originalData);
+
+    // Prepare status payload
+    const statusPayload = {
+      applicationStatus: action, // "approved" or "rejected"
+      comments: action === "rejected"
+        ? rejectionData.reason
+        : "Application approved" // Default comment for approval
+    };
+
+    // Validate rejection reason (only for reject)
+    if (action === "rejected" && !rejectionData.reason) {
+      MyAlert("error", "Please select a rejection reason");
+      setIsProcessing(false);
+      return;
+    }
+
+    // Handle approval with changes (only for edit mode)
+    if (isEdit && action === "approved") {
+      const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+
+      if (proposedPatch && proposedPatch.length > 0) {
+        const obj = {
+          submission: convertedOriginalData,
+          proposedPatch: proposedPatch,
+        };
+
+        await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+          obj,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        // Update changed sections with CONVERTED data
+        const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
+        const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
+
+        if (personalChanged && application?.personalDetails?._id) {
+          const personalPayload = cleanPayload({
+            personalInfo: convertedInfData.personalInfo,
+            contactInfo: convertedInfData.contactInfo,
+          });
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+            personalPayload,
+            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
           );
+        }
 
-          // Update changed sections with CONVERTED data
-          const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
-          const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
-
-          if (personalChanged && application?.personalDetails?._id) {
-            const personalPayload = cleanPayload({
-              personalInfo: convertedInfData.personalInfo,
-              contactInfo: convertedInfData.contactInfo,
-            });
-            await axios.put(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-              personalPayload,
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-            );
-          }
-
-          if (professionalChanged && application?.professionalDetails?._id) {
-            const professionalPayload = cleanPayload({
-              professionalDetails: convertedInfData.professionalDetails,
-            });
-            await axios.put(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-              professionalPayload,
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-            );
-          }
+        if (professionalChanged && application?.professionalDetails?._id) {
+          const professionalPayload = cleanPayload({
+            professionalDetails: convertedInfData.professionalDetails,
+          });
+          await axios.put(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+            professionalPayload,
+            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+          );
         }
       }
+    }
 
-      // Update application status
-      await axios.put(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-        statusPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    // Update application status
+    await axios.put(
+      `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+      statusPayload,
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      }
+    );
 
-      // ✅ SUCCESS: Now update the checkbox state
-      setSelected(prev => ({
-        ...prev,
-        Approve: action === 'approved',
-        Reject: action === 'rejected'
-      }));
+    // ✅ SUCCESS: Now update the checkbox state
+    setSelected(prev => ({
+      ...prev,
+      Approve: action === 'approved',
+      Reject: action === 'rejected'
+    }));
 
-      // Success handling
-      const successMessage = action === "approved"
-        ? "Application approved successfully!"
-        : "Application rejected successfully!";
+    // Success handling
+    const successMessage = action === "approved"
+      ? "Application approved successfully!"
+      : "Application rejected successfully!";
 
-      MyAlert("success", successMessage);
-      disableFtn(true);
-      refreshApplicationsWithStatusFilters();
+    MyAlert("success", successMessage);
+    disableFtn(true);
+    refreshApplicationsWithStatusFilters();
 
-      // Reset modal and rejection data
+    // Reset modal and rejection data (only for reject)
+    if (action === "rejected") {
       setActionModal({ open: false, type: null });
       setRejectionData({ reason: "", note: "" });
-
-      if (!isEdit) {
-        navigate('/Applications');
-      }
-
-    } catch (error) {
-      console.error(`Error ${action} application:`, error);
-      MyAlert(
-        "error",
-        `Failed to ${action} application`,
-        error?.response?.data?.error?.message || error.message
-      );
-
-      // ❌ On error, ensure checkboxes are unchecked
-      setSelected(prev => ({
-        ...prev,
-        Approve: false,
-        Reject: false
-      }));
-    } finally {
-      setIsProcessing(false);
     }
-  };
+
+    if (!isEdit) {
+      navigate('/Applications');
+    }
+
+  } catch (error) {
+    console.error(`Error ${action} application:`, error);
+    MyAlert(
+      "error",
+      `Failed to ${action} application`,
+      error?.response?.data?.error?.message || error.message
+    );
+
+    // ❌ On error, ensure checkboxes are unchecked
+    setSelected(prev => ({
+      ...prev,
+      Approve: false,
+      Reject: false
+    }));
+  } finally {
+    setIsProcessing(false);
+  }
+};
 
   function navigateApplication(direction) {
     if (index === -1 || !applications?.length) return;
@@ -2622,87 +2613,62 @@ const handleSubmit = async () => {
         )}
       </div>
       {/* </Drawer> */}
-      <Modal
-        centered
-        title={actionModal.type === 'approve' ? "Confirm Approval" : "Reject Application"}
-        open={actionModal.open}
-        onCancel={() => {
-          setActionModal({ open: false, type: null });
-          // Uncheck both checkboxes when modal is cancelled
-          setSelected(prev => ({
-            ...prev,
-            Approve: false,
-            Reject: false,
-            actionCompleted: false // Reset the flag
-          }));
-          setRejectionData({ reason: "", note: "" });
-        }}
-        onOk={() => handleApplicationAction(actionModal.type === 'approve' ? 'approved' : 'rejected')}
-        okText={actionModal.type === 'approve' ? "Yes, Approve" : "Reject"}
-        okButtonProps={{
-          danger: actionModal.type === 'reject',
-          className: `butn ${actionModal.type === 'approve' ? 'primary-btn' : ''}`,
-          loading: isProcessing
-        }}
-        cancelButtonProps={{
-          className: "butn butn primary-btn",
-          disabled: isProcessing
-        }}
-        confirmLoading={isProcessing}
-      >
-        <div className="drawer-main-container">
-          {actionModal.type === 'approve' ? (
-            <>
-              <div style={{ padding: '10px 0', textAlign: 'center' }}>
-                <p style={{ fontSize: '16px', marginBottom: '10px' }}>
-                  Are you sure you want to approve this application?
-                </p>
-                <p style={{ fontSize: '14px', color: '#666', marginBottom: '20px' }}>
-                  Once approved, the application will be locked and cannot be modified.
-                </p>
-              </div>
-              <MyInput
-                name="approvalComments"
-                label="Comments (Optional)"
-                placeholder="Enter any comments for approval"
-                value={rejectionData.note}
-                onChange={(e) => setRejectionData((prev) => ({ ...prev, note: e.target.value }))}
-                textarea
-              />
-            </>
-          ) : (
-            <>
-              <CustomSelect
-                label="Reason"
-                name="Reason"
-                required
-                placeholder="Select reason"
-                value={rejectionData.reason}
-                onChange={(val) =>
-                  setRejectionData((prev) => ({ ...prev, reason: val.target.value }))
-                }
-                options={[
-                  { label: "Incomplete documents", value: "incomplete_documents" },
-                  { label: "Invalid information", value: "invalid_information" },
-                  { label: "Duplicate application", value: "duplicate" },
-                  { label: "Other", value: "other" },
-                ]}
-                hasError={!rejectionData.reason}
-              />
-              <MyInput
-                name="Note (optional)"
-                label="Note (optional)"
-                placeholder="Enter note"
-                value={rejectionData.note}
-                onChange={(e) =>
-                  setRejectionData((prev) => ({ ...prev, note: e.target.value }))
-                }
-                textarea
-              />
-            </>
-          )}
-        </div>
-      </Modal>
+     <Modal
+  centered
+  title="Reject Application"
+  open={actionModal.open && actionModal.type === 'reject'} // Only show for reject
+  onCancel={() => {
+    setActionModal({ open: false, type: null });
+    // Uncheck reject checkbox when modal is cancelled
+    setSelected(prev => ({
+      ...prev,
+      Reject: false,
+    }));
+    setRejectionData({ reason: "", note: "" });
+  }}
+  onOk={() => handleApplicationAction('rejected')}
+  okText="Reject"
+  okButtonProps={{
+    danger: true,
+    className: 'butn',
+    loading: isProcessing
+  }}
+  cancelButtonProps={{
+    className: "butn butn primary-btn",
+    disabled: isProcessing
+  }}
+  confirmLoading={isProcessing}
+>
+  <div className="drawer-main-container">
+    <CustomSelect
+      label="Reason"
+      name="Reason"
+      required
+      placeholder="Select reason"
+      value={rejectionData.reason}
+      onChange={(val) =>
+        setRejectionData((prev) => ({ ...prev, reason: val.target.value }))
+      }
+      options={[
+        { label: "Incomplete documents", value: "incomplete_documents" },
+        { label: "Invalid information", value: "invalid_information" },
+        { label: "Duplicate application", value: "duplicate" },
+        { label: "Other", value: "other" },
+      ]}
+      hasError={!rejectionData.reason}
+    />
+    <MyInput
+      name="Note (optional)"
+      label="Note (optional)"
+      placeholder="Enter note"
+      value={rejectionData.note}
+      onChange={(e) =>
+        setRejectionData((prev) => ({ ...prev, note: e.target.value }))
+      }
+      textarea
+    />
+  </div>
+</Modal>
 
     </div>
   );
