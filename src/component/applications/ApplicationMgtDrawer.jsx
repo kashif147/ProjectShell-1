@@ -1,22 +1,17 @@
 import { useState, useRef, useEffect } from "react";
-import { Drawer, Row, Col, Checkbox, Radio, Button, Spin, Modal, Flex, Tooltip } from "antd";
+import { Row, Col, Checkbox, Radio, Button, Spin, Modal, Flex, Tooltip } from "antd";
 import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
 import dayjs from "dayjs"
-
-import { Shield, Heart, FileText, Users, Gift, Home, Percent, Trophy } from 'lucide-react';
 import axios from "axios";
+import { dateUtils } from "../../utils/Utilities";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
-import { fetchLookupHierarchy, selectLookupEntry } from "../../features/lookupHierarchySlice";
 import { useSelector, useDispatch } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
-import { CatOptions, workLocations } from "../../Data";
 import { CiCreditCard1 } from "react-icons/ci";
-import { insertDataFtn } from "../../utils/Utilities";
-// import { fetchCountries } from "../../features/CountrySlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
@@ -24,24 +19,15 @@ import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
-import { getWorkLocationHierarchy } from "../../features/LookupsWorkLocationSlice";
-import moment from "moment";
 import MemberSearch from "../profile/MemberSearch";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
-// import IncomeProtectionTooltip from "../../component/profile/IncomeProtectionTooltip"
 import { InsuranceScreen, RewardsScreen } from "../profile/IncomeProtectionTooltip";
-import { getProductsByType } from "../../features/ProductsSlice";
-// import { } from "../profile/IncomeProtectionTooltip";
-import {
-  getAllLookups,
-  selectAllFormLookups
-} from '../../features/LookupsSlice'
-import { getHierarchicalDataByLocation } from "../../features/HierarchicalDataByLocationSlice";
-// import { useLookups } from "../../hooks/useLookups";
+
+
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 function ApplicationMgtDrawer({
@@ -77,16 +63,14 @@ function ApplicationMgtDrawer({
   const getApplicationStatusFilters = () => {
     if (filtersState['Application Status']?.selectedValues?.length > 0) {
       const statusMapping = {
-        'In-Progress': 'inprogress',
+        'In-Progress': 'in-progress', // ✅ CORRECT: with hyphen
         'Approved': 'approved',
         'Rejected': 'rejected',
         'Submitted': 'submitted',
-        'Draft': 'draft'  // ✅ ADD DRAFT MAPPING
+        'Draft': 'draft'
       };
       const statusValues = filtersState['Application Status'].selectedValues;
-      return statusValues.map(status =>
-        statusMapping[status] || status.toLowerCase().replace('-', '')
-      );
+      return statusValues.map(status => statusMapping[status] || status.toLowerCase());
     }
     return [];
   };
@@ -111,8 +95,6 @@ function ApplicationMgtDrawer({
     reason: "",
     note: "",
   });
-  const [rejectModal, setRejectModal] = useState(false);
-  const [insurenceModal, setinsurence] = useState(true);
 
   useEffect(() => {
     if (application && applications?.length) {
@@ -178,89 +160,73 @@ function ApplicationMgtDrawer({
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
     if (!apiData) return inputValue;
+
+    // Helper function to safely convert to Day.js
+    const toDayJS = (dateValue) => {
+      if (!dateValue) return null;
+      if (dayjs.isDayjs(dateValue)) return dateValue;
+      const parsed = dayjs(dateValue);
+      return parsed.isValid() ? parsed : null;
+    };
+
     return {
       personalInfo: {
         title: apiData?.personalDetails?.personalInfo?.title || "",
         surname: apiData?.personalDetails?.personalInfo?.surname || "",
         forename: apiData?.personalDetails?.personalInfo?.forename || "",
         gender: apiData?.personalDetails?.personalInfo?.gender || "",
-        dateOfBirth: apiData?.personalDetails?.personalInfo?.dateOfBirth !== null && apiData?.personalDetails?.personalInfo?.dateOfBirth != undefined && apiData?.personalDetails?.personalInfo?.dateOfBirth !== "" ?
-          dayjs(apiData?.personalDetails?.personalInfo?.dateOfBirth) : null,
-        countryPrimaryQualification:
-          apiData?.personalDetails?.personalInfo?.countryPrimaryQualification ||
-          "",
+        dateOfBirth: toDayJS(apiData?.personalDetails?.personalInfo?.dateOfBirth),
+        countryPrimaryQualification: apiData?.personalDetails?.personalInfo?.countryPrimaryQualification || "",
       },
-
       contactInfo: {
-        preferredAddress:
-          apiData?.personalDetails?.contactInfo?.preferredAddress || "",
+        preferredAddress: apiData?.personalDetails?.contactInfo?.preferredAddress || "",
         eircode: apiData?.personalDetails?.contactInfo?.eircode || "",
         consent: apiData?.personalDetails?.contactInfo?.consent || true,
-        buildingOrHouse:
-          apiData?.personalDetails?.contactInfo?.buildingOrHouse || "",
+        buildingOrHouse: apiData?.personalDetails?.contactInfo?.buildingOrHouse || "",
         streetOrRoad: apiData?.personalDetails?.contactInfo?.streetOrRoad || "",
         areaOrTown: apiData?.personalDetails?.contactInfo?.areaOrTown || "",
-        countyCityOrPostCode:
-          apiData?.personalDetails?.contactInfo?.countyCityOrPostCode || "",
+        countyCityOrPostCode: apiData?.personalDetails?.contactInfo?.countyCityOrPostCode || "",
         country: apiData?.personalDetails?.contactInfo?.country || "",
         mobileNumber: apiData?.personalDetails?.contactInfo?.mobileNumber || "",
-        telephoneNumber:
-          apiData?.personalDetails?.contactInfo?.telephoneNumber || "",
-        preferredEmail:
-          apiData?.personalDetails?.contactInfo?.preferredEmail || "",
-        personalEmail:
-          apiData?.personalDetails?.contactInfo?.personalEmail || "",
+        telephoneNumber: apiData?.personalDetails?.contactInfo?.telephoneNumber || "",
+        preferredEmail: apiData?.personalDetails?.contactInfo?.preferredEmail || "",
+        personalEmail: apiData?.personalDetails?.contactInfo?.personalEmail || "",
         workEmail: apiData?.personalDetails?.contactInfo?.workEmail || "",
       },
       professionalDetails: {
-        membershipCategory:
-          apiData?.professionalDetails?.membershipCategory || "",
+        membershipCategory: apiData?.professionalDetails?.membershipCategory || "",
         workLocation: apiData?.professionalDetails?.workLocation || "",
-        otherWorkLocation:
-          apiData?.professionalDetails?.otherWorkLocation || "",
+        otherWorkLocation: apiData?.professionalDetails?.otherWorkLocation || "",
         grade: apiData?.professionalDetails?.grade || "",
         otherGrade: apiData?.professionalDetails?.otherGrade || "",
         nmbiNumber: apiData?.professionalDetails?.nmbiNumber || "",
         nurseType: apiData?.professionalDetails?.nurseType || null,
-        nursingAdaptationProgramme:
-          apiData?.professionalDetails?.nursingAdaptationProgramme || false,
+        nursingAdaptationProgramme: apiData?.professionalDetails?.nursingAdaptationProgramme || false,
         region: apiData?.professionalDetails?.region || "",
         branch: apiData?.professionalDetails?.branch || "",
         isRetired: apiData?.professionalDetails?.isRetired || false,
-        retiredDate: apiData?.professionalDetails?.retiredDate !== undefined && apiData?.professionalDetails?.retiredDate !== "" && apiData?.professionalDetails?.retiredDate !== null ?
-          dayjs(apiData?.professionalDetails?.retiredDate) : null,
-        pensionNo: apiData?.professionalDetails?.pensionNo
+        retiredDate: toDayJS(apiData?.professionalDetails?.retiredDate),
+        pensionNo: apiData?.professionalDetails?.pensionNo || "",
+        graduationDate: toDayJS(apiData?.professionalDetails?.graduationDate), // ✅ ADD THIS LINE
       },
       subscriptionDetails: {
         paymentType: apiData?.subscriptionDetails?.paymentType || "",
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
         membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
-        otherIrishTradeUnion:
-          apiData?.subscriptionDetails?.otherIrishTradeUnion || false,
+        otherIrishTradeUnion: apiData?.subscriptionDetails?.otherIrishTradeUnion || false,
         otherScheme: apiData?.subscriptionDetails?.otherScheme || false,
         recuritedBy: apiData?.subscriptionDetails?.recuritedBy || "",
-        recuritedByMembershipNo:
-          apiData?.subscriptionDetails?.recuritedByMembershipNo || "",
+        recuritedByMembershipNo: apiData?.subscriptionDetails?.recuritedByMembershipNo || "",
         primarySection: apiData?.subscriptionDetails?.primarySection || "",
-        otherPrimarySection:
-          apiData?.subscriptionDetails?.otherPrimarySection || "",
+        otherPrimarySection: apiData?.subscriptionDetails?.otherPrimarySection || "",
         secondarySection: apiData?.subscriptionDetails?.secondarySection || "",
-        otherSecondarySection:
-          apiData?.subscriptionDetails?.otherSecondarySection || "",
-        incomeProtectionScheme:
-          apiData?.subscriptionDetails?.incomeProtectionScheme || false,
+        otherSecondarySection: apiData?.subscriptionDetails?.otherSecondarySection || "",
+        incomeProtectionScheme: apiData?.subscriptionDetails?.incomeProtectionScheme || false,
         inmoRewards: apiData?.subscriptionDetails?.inmoRewards || false,
-        valueAddedServices:
-          apiData?.subscriptionDetails?.valueAddedServices || false,
-        termsAndConditions:
-          apiData?.subscriptionDetails?.termsAndConditions || false,
-        membershipCategory:
-          apiData?.subscriptionDetails?.membershipCategory || "",
-        // dateJoined: apiData?.subscriptionDetails?.dateJoined || "",
-        dateJoined: apiData?.subscriptionDetails?.dateJoined !== undefined && apiData?.subscriptionDetails?.dateJoined !== "" && apiData?.subscriptionDetails?.dateJoined !== null ?
-          dayjs(apiData?.dateJoined) : null,
-        // submissionDate: apiData?.subscriptionDetails?.submissionDate !== undefined && apiData?.subscriptionDetails?.submissionDate !== "" && apiData?.subscriptionDetails?.submissionDate !== null ?
-        //   dayjs(apiData?.submissionDate) : null,
+        valueAddedServices: apiData?.subscriptionDetails?.valueAddedServices || false,
+        termsAndConditions: apiData?.subscriptionDetails?.termsAndConditions || false,
+        membershipCategory: apiData?.subscriptionDetails?.membershipCategory || "",
+        dateJoined: toDayJS(apiData?.subscriptionDetails?.dateJoined),
         paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
       },
     };
@@ -291,10 +257,10 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
-  
+
   useEffect(() => {
     if (application && isEdit) {
-handleLocationChange(InfData?.professionalDetails?.workLocation)
+      handleLocationChange(InfData?.professionalDetails?.workLocation)
     }
   }, [isEdit, application]);
 
@@ -311,36 +277,16 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
     }
   }, [hierarchyData, workLocationLoading]);
 
+  // REPLACE your current handleApprove with this:
   const handleApprove = async (key) => {
     if (isEdit && originalData) {
+      // ✅ Convert both for API only - state remains unchanged
+      const apiInfData = dateUtils.prepareForAPI(InfData);
+      const apiOriginalData = dateUtils.prepareForAPI(originalData);
 
-      // ✅ ADD DATE CONVERSION FOR APPROVAL FLOW
-      const convertDatesToISO = (data) => {
-        if (!data) return data;
-        const converted = { ...data };
-
-        if (converted.personalInfo?.dateOfBirth) {
-          converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
-        }
-
-        if (converted.professionalDetails?.retiredDate) {
-          converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
-        }
-
-        if (converted.professionalDetails?.graduationDate) {
-          converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-        }
-
-        return converted;
-      };
-
-      // Convert dates before generating patch
-      const convertedInfData = convertDatesToISO(InfData);
-      const convertedOriginalData = convertDatesToISO(originalData);
-
-      const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
+      const proposedPatch = generatePatch(apiOriginalData, apiInfData);
       const obj = {
-        submission: convertedOriginalData,
+        submission: apiOriginalData,
         proposedPatch: proposedPatch,
       };
 
@@ -350,7 +296,6 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
           throw new Error('No authentication token found');
         }
 
-        // 🟢 If no changes were proposed, update status directly
         if (!proposedPatch || proposedPatch.length === 0) {
           const newStatus = key?.toLowerCase() === "rejected" ? "rejected" : "approved";
           const statusPayload = { applicationStatus: newStatus };
@@ -371,7 +316,6 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
           return;
         }
 
-        // 🟡 If there are proposed changes → approve as usual
         const approveResponse = await axios.post(
           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
           obj,
@@ -383,14 +327,14 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
           }
         );
 
-        // Check for section changes
-        const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
-        const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
+        // Check for section changes using API data (not state data)
+        const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
+        const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
 
         if (personalChanged && application?.personalDetails?._id) {
           const personalPayload = cleanPayload({
-            personalInfo: convertedInfData.personalInfo,
-            contactInfo: convertedInfData.contactInfo,
+            personalInfo: apiInfData.personalInfo,
+            contactInfo: apiInfData.contactInfo,
           });
 
           await axios.put(
@@ -403,12 +347,11 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
               },
             }
           );
-          console.log("Personal details updated successfully");
         }
 
         if (professionalChanged && application?.professionalDetails?._id) {
           const professionalPayload = cleanPayload({
-            professionalDetails: convertedInfData.professionalDetails,
+            professionalDetails: apiInfData.professionalDetails,
           });
 
           await axios.put(
@@ -421,10 +364,8 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
               },
             }
           );
-          console.log("Professional details updated successfully");
         }
 
-        // Show success message
         let successMessage = "Application approved successfully!";
         if (personalChanged && professionalChanged) {
           successMessage = "Application approved and all details updated successfully!";
@@ -433,6 +374,7 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
         } else if (professionalChanged) {
           successMessage = "Application approved and professional details updated successfully!";
         }
+
         MyAlert("success", successMessage);
         refreshApplicationsWithStatusFilters();
 
@@ -500,8 +442,8 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
 
       // ✅ Handle date comparison properly
       if (field === 'dateOfBirth') {
-        const originalDate = originalValue ? moment(originalValue).format('YYYY-MM-DD') : null;
-        const currentDate = currentValue ? moment(currentValue).format('YYYY-MM-DD') : null;
+        const originalDate = originalValue ? dayjs(originalValue).format('YYYY-MM-DD') : null;
+        const currentDate = currentValue ? dayjs(currentValue).format('YYYY-MM-DD') : null;
         return originalDate !== currentDate;
       }
 
@@ -570,7 +512,8 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
       branch: "",
       isRetired: false,
       pensionNo: "",
-      retiredDate: null
+      retiredDate: null,
+      graduationDate: null
     },
     subscriptionDetails: {
       paymentType: "",
@@ -595,6 +538,7 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
     },
   };
   const [InfData, setInfData] = useState(inputValue);
+  console.log(InfData, "InfData")
   const handleLocationChange = (selectedLookupId) => {
     debugger
     // Get hierarchicalLookups from localStorage
@@ -708,10 +652,10 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
       }
     }
     // if (InfData?.professionalDetails?.membershipCategory === "retired_associate") {
-    if (InfData?.professionalDetails?.membershipCategory === "retired_associate" && !InfData.professionalDetails?.retiredDate?.trim()) {
+    if (InfData?.professionalDetails?.membershipCategory === "Retired Associate" && !InfData.professionalDetails?.retiredDate?.trim()) {
       newErrors.retiredDate = "required";
     }
-    if (InfData?.professionalDetails?.membershipCategory === "retired_associate" && !InfData.professionalDetails?.pensionNo?.trim()) {
+    if (InfData?.professionalDetails?.membershipCategory === "Retired Associate" && !InfData.professionalDetails?.pensionNo?.trim()) {
       newErrors.pensionNo = "required";
     }
     // }
@@ -793,198 +737,158 @@ handleLocationChange(InfData?.professionalDetails?.workLocation)
     return patch;
   };
 
-const handleSubmit = async () => {
-  if (isDisable) return
-  const isValid = validateForm();
-  if (!isValid) return;
 
-  // ✅ Start loading and disable form
-  setIsProcessing(true);
-  disableFtn(true);
+  // REPLACE your current handleSubmit with this:
+  const handleSubmit = async () => {
+    if (isDisable) return;
+    const isValid = validateForm();
+    if (!isValid) return;
 
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("No authentication token found");
-    }
+    setIsProcessing(true);
+    disableFtn(true);
 
-    // Convert dates to ISO format before sending
-    const convertDatesToISO = (data) => {
-      if (!data) return data;
-
-      const converted = { ...data };
-
-      // Personal Info dates
-      if (converted.personalInfo?.dateOfBirth) {
-        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
       }
 
-      // Professional Details dates
-      if (converted.professionalDetails?.retiredDate) {
-        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
-      }
+      // ✅ Convert ONLY for API call - don't touch state
+      const apiData = dateUtils.prepareForAPI(InfData);
 
-      // Add any other date fields that need conversion
-      if (converted.professionalDetails?.graduationDate) {
-        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-      }
-      if (converted.subscriptionDetails?.dateJoined) {
-        converted.subscriptionDetails.dateJoined = moment(converted.subscriptionDetails.dateJoined).toISOString();
-      }
-      // if (converted.subscriptionDetails?.submissionDate) {
-      //   converted.subscriptionDetails.submissionDate = moment(converted.subscriptionDetails.submissionDate).toISOString();
-      // }
-      return converted;
-    };
+      // 1. Personal Details
+      const personalPayload = cleanPayload({
+        personalInfo: apiData.personalInfo,
+        contactInfo: apiData.contactInfo,
+      });
 
-    // Convert all dates to ISO format
-    const convertedData = convertDatesToISO(InfData);
-
-    // 1. Personal Details
-    const personalPayload = cleanPayload({
-      personalInfo: convertedData.personalInfo,
-      contactInfo: convertedData.contactInfo,
-    });
-
-    const personalRes = await axios.post(
-      `${baseURL}/personal-details`,
-      personalPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    const applicationId = personalRes?.data?.data?.ApplicationId;
-    if (!applicationId) {
-      throw new Error("ApplicationId not returned from personal details API");
-    }
-
-    // 2. Professional Details
-    const professionalPayload = cleanPayload({
-      professionalDetails: convertedData.professionalDetails,
-    });
-
-    await axios.post(
-      `${baseURL}/professional-details/${applicationId}`,
-      professionalPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    // 3. Subscription Details
-    const subscriptionPayload = cleanPayload({
-      subscriptionDetails: convertedData.subscriptionDetails,
-    });
-
-    await axios.post(
-      `${baseURL}/subscription-details/${applicationId}`,
-      subscriptionPayload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    // 4. ✅ AUTO-APPROVE if Approve checkbox is checked
-    if (selected.Approve) {
-      try {
-        // Prepare approval payload
-        let approvalPayload;
-
-        if (isEdit && originalData) {
-          // ✅ EDIT MODE: Generate patch with changes from original
-          const proposedPatch = generatePatch(originalData, convertedData);
-
-          approvalPayload = {
-            submission: convertedData, // Current data
-            proposedPatch: proposedPatch,
-            notes: "Auto-approved with changes on submission"
-          };
-        } else {
-          // ✅ NEW APPLICATION: Create patch for ALL new fields being created
-          const proposedPatch = generateCreatePatch(convertedData);
-
-          approvalPayload = {
-            submission: convertedData, // Current data
-            proposedPatch: proposedPatch, // Patch showing all created fields
-            notes: "Auto-approved on submission"
-          };
+      const personalRes = await axios.post(
+        `${baseURL}/personal-details`,
+        personalPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
 
-        await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-          approvalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        MyAlert("success", "Application submitted and approved successfully!");
-
-      } catch (approveError) {
-        // If approval fails, still show success for submission but warn about approval
-        console.error("Approval failed:", approveError);
-        MyAlert(
-          "warning",
-          "Application submitted successfully but approval failed",
-          "The application was created but could not be automatically approved. Please approve it manually."
-        );
+      const applicationId = personalRes?.data?.data?.ApplicationId;
+      if (!applicationId) {
+        throw new Error("ApplicationId not returned from personal details API");
       }
-    } else {
-      // Regular success message without approval
-      MyAlert("success", "Application submitted successfully!");
-    }
 
-    // ✅ RESET LOGIC: Only reset if NOT in Bulk mode
-    if (selected?.Bulk !== true) {
-      // Normal mode: Clear everything and redirect
-      setInfData(inputValue);
-      setSelected(prev => ({
-        ...prev,
-        Approve: false,  // Uncheck Approve in normal mode
-        Reject: false
-      }));
-      navigate('/Applications');
-    } else {
-      // ✅ BULK MODE: Clear form inputs but keep Approve checkbox checked
-      setInfData(inputValue); // Clear all form inputs
-      // Keep Approve checkbox checked, clear other checkboxes
-      setSelected(prev => ({
-        ...prev,
-        Reject: false,
-        // Approve stays true (checked)
-      }));
-      MyAlert("success", "Application submitted successfully! Form cleared and ready for next entry.");
-    }
+      // 2. Professional Details
+      const professionalPayload = cleanPayload({
+        professionalDetails: apiData.professionalDetails,
+      });
 
-  } catch (error) {
-    console.error("Submission error:", error);
-    MyAlert(
-      "error",
-      "Failed to submit application",
-      error?.response?.data?.error?.message || error.message
-    );
-  } finally {
-    // ✅ Stop loading and re-enable form (only if not in Bulk mode)
-    setIsProcessing(false);
-    if (selected?.Bulk !== true) {
-      disableFtn(false);
-    }
-  }
-};
+      await axios.post(
+        `${baseURL}/professional-details/${applicationId}`,
+        professionalPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
+      // 3. Subscription Details
+      const subscriptionPayload = cleanPayload({
+        subscriptionDetails: apiData.subscriptionDetails,
+      });
+
+      await axios.post(
+        `${baseURL}/subscription-details/${applicationId}`,
+        subscriptionPayload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      // ✅ AUTO-APPROVE if Approve checkbox is checked
+      if (selected.Approve) {
+        try {
+          let approvalPayload;
+
+          if (isEdit && originalData) {
+            const apiOriginalData = dateUtils.prepareForAPI(originalData);
+            const proposedPatch = generatePatch(apiOriginalData, apiData);
+            approvalPayload = {
+              submission: apiData,
+              proposedPatch: proposedPatch,
+              notes: "Auto-approved with changes on submission"
+            };
+          } else {
+            const proposedPatch = generateCreatePatch(apiData);
+            approvalPayload = {
+              submission: apiData,
+              proposedPatch: proposedPatch,
+              notes: "Auto-approved on submission"
+            };
+          }
+
+          await axios.post(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+            approvalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
+
+          MyAlert("success", "Application submitted and approved successfully!");
+        } catch (approveError) {
+          console.error("Approval failed:", approveError);
+          MyAlert(
+            "warning",
+            "Application submitted successfully but approval failed",
+            "The application was created but could not be automatically approved. Please approve it manually."
+          );
+        }
+      } else {
+        MyAlert("success", "Application submitted successfully!");
+      }
+
+      // ✅ RESET LOGIC
+      if (selected?.Bulk !== true) {
+        setInfData(inputValue);
+        setSelected(prev => ({
+          ...prev,
+          Approve: false,
+          Reject: false
+        }));
+        navigate('/Applications');
+      } else {
+        setInfData(inputValue);
+        setSelected(prev => ({
+          ...prev,
+          Reject: false,
+        }));
+        MyAlert("success", "Application submitted successfully! Form cleared and ready for next entry.");
+      }
+
+    } catch (error) {
+      console.error("Submission error:", error);
+      MyAlert(
+        "error",
+        "Failed to submit application",
+        error?.response?.data?.error?.message || error.message
+      );
+    } finally {
+      setIsProcessing(false);
+      disableFtn(false)
+      // disableFtn(false);
+      // if (selected?.Bulk !== true) {
+      // }
+    }
+  };
   const handleSave = async () => {
     const isValid = validateForm();
     if (!isValid) return;
@@ -1181,207 +1085,187 @@ const handleSubmit = async () => {
   }, [application, isEdit]);
 
 
- const handleChange = (e) => {
-  const { name, checked } = e.target;
+  const handleChange = (e) => {
+    const { name, checked } = e.target;
 
-  // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
-  const status = application?.applicationStatus?.toLowerCase();
-  const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
+    // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
+    const status = application?.applicationStatus?.toLowerCase();
+    const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
 
-  if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
-    return; // Don't allow changes for read-only statuses
-  }
+    if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
+      return; // Don't allow changes for read-only statuses
+    }
 
-  if (name === "Bulk") {
-    disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
-    setErrors({});
-    setSelected((prev) => ({
-      ...prev,
-      Bulk: checked,
-    }));
-  }
+    if (name === "Bulk") {
+      disableFtn(!checked); // Enable form when Bulk is checked, disable when unchecked
+      setErrors({});
+      setSelected((prev) => ({
+        ...prev,
+        Bulk: checked,
+      }));
+    }
 
-  if (name === "Approve" && checked === true) {
-    // ✅ REMOVED MODAL - Direct approval
-    setSelected((prev) => ({
-      ...prev,
-      Approve: true,
-      Reject: false, // Uncheck reject
-    }));
-    
-    // Directly call approval function
-    handleApplicationAction('approved');
-  }
+    if (name === "Approve" && checked === true) {
+      // ✅ REMOVED MODAL - Direct approval
+      setSelected((prev) => ({
+        ...prev,
+        Approve: true,
+        Reject: false, // Uncheck reject
+      }));
 
-  if (name === "Reject" && checked === true) {
-    // Keep rejection modal for safety
-    setActionModal({ open: true, type: 'reject' });
-  }
+      // Directly call approval function
+      handleApplicationAction('approved');
+    }
 
-  // Handle unchecking for non-edit mode
-  if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
-    setSelected((prev) => ({
-      ...prev,
-      [name]: false,
-    }));
-  }
-};
+    if (name === "Reject" && checked === true) {
+      // Keep rejection modal for safety
+      setActionModal({ open: true, type: 'reject' });
+    }
+
+    // Handle unchecking for non-edit mode
+    if (!isEdit && (name === "Approve" || name === "Reject") && checked === false) {
+      setSelected((prev) => ({
+        ...prev,
+        [name]: false,
+      }));
+    }
+  };
   const handleApplicationAction = async (action) => {
-  if (isEdit && !originalData) return;
+    if (isEdit && !originalData) return;
 
-  setIsProcessing(true);
+    setIsProcessing(true);
 
-  try {
-    const token = localStorage.getItem('token');
-    if (!token) {
-      throw new Error('No authentication token found');
-    }
-
-    // ✅ ADD DATE CONVERSION FOR APPROVAL/REJECTION FLOW
-    const convertDatesToISO = (data) => {
-      if (!data) return data;
-      const converted = { ...data };
-
-      if (converted.personalInfo?.dateOfBirth) {
-        converted.personalInfo.dateOfBirth = moment(converted.personalInfo.dateOfBirth).toISOString();
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('No authentication token found');
       }
 
-      if (converted.professionalDetails?.retiredDate) {
-        converted.professionalDetails.retiredDate = moment(converted.professionalDetails.retiredDate).toISOString();
+      // ✅ USE dateUtils INSTEAD OF convertDatesToISO
+      const apiInfData = dateUtils.prepareForAPI(InfData);
+      const apiOriginalData = dateUtils.prepareForAPI(originalData);
+
+      // Prepare status payload
+      const statusPayload = {
+        applicationStatus: action, // "approved" or "rejected"
+        comments: action === "rejected"
+          ? rejectionData.reason
+          : "Application approved" // Default comment for approval
+      };
+
+      // Validate rejection reason (only for reject)
+      if (action === "rejected" && !rejectionData.reason) {
+        MyAlert("error", "Please select a rejection reason");
+        setIsProcessing(false);
+        return;
       }
 
-      if (converted.professionalDetails?.graduationDate) {
-        converted.professionalDetails.graduationDate = moment(converted.professionalDetails.graduationDate).toISOString();
-      }
+      // Handle approval with changes (only for edit mode)
+      if (isEdit && action === "approved") {
+        const proposedPatch = generatePatch(apiOriginalData, apiInfData);
 
-      return converted;
-    };
+        if (proposedPatch && proposedPatch.length > 0) {
+          const obj = {
+            submission: apiOriginalData,
+            proposedPatch: proposedPatch,
+          };
 
-    // Convert dates before any processing
-    const convertedInfData = convertDatesToISO(InfData);
-    const convertedOriginalData = convertDatesToISO(originalData);
+          await axios.post(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+            obj,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          );
 
-    // Prepare status payload
-    const statusPayload = {
-      applicationStatus: action, // "approved" or "rejected"
-      comments: action === "rejected"
-        ? rejectionData.reason
-        : "Application approved" // Default comment for approval
-    };
+          // Update changed sections with API DATA (not state data)
+          const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
+          const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
 
-    // Validate rejection reason (only for reject)
-    if (action === "rejected" && !rejectionData.reason) {
-      MyAlert("error", "Please select a rejection reason");
-      setIsProcessing(false);
-      return;
-    }
-
-    // Handle approval with changes (only for edit mode)
-    if (isEdit && action === "approved") {
-      const proposedPatch = generatePatch(convertedOriginalData, convertedInfData);
-
-      if (proposedPatch && proposedPatch.length > 0) {
-        const obj = {
-          submission: convertedOriginalData,
-          proposedPatch: proposedPatch,
-        };
-
-        await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-          obj,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
+          if (personalChanged && application?.personalDetails?._id) {
+            const personalPayload = cleanPayload({
+              personalInfo: apiInfData.personalInfo,
+              contactInfo: apiInfData.contactInfo,
+            });
+            await axios.put(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+              personalPayload,
+              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            );
           }
-        );
 
-        // Update changed sections with CONVERTED data
-        const personalChanged = hasPersonalDetailsChanged(convertedOriginalData, convertedInfData);
-        const professionalChanged = hasProfessionalDetailsChanged(convertedOriginalData, convertedInfData);
-
-        if (personalChanged && application?.personalDetails?._id) {
-          const personalPayload = cleanPayload({
-            personalInfo: convertedInfData.personalInfo,
-            contactInfo: convertedInfData.contactInfo,
-          });
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-            personalPayload,
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-          );
-        }
-
-        if (professionalChanged && application?.professionalDetails?._id) {
-          const professionalPayload = cleanPayload({
-            professionalDetails: convertedInfData.professionalDetails,
-          });
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-            professionalPayload,
-            { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-          );
+          if (professionalChanged && application?.professionalDetails?._id) {
+            const professionalPayload = cleanPayload({
+              professionalDetails: apiInfData.professionalDetails,
+            });
+            await axios.put(
+              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+              professionalPayload,
+              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
+            );
+          }
         }
       }
-    }
 
-    // Update application status
-    await axios.put(
-      `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-      statusPayload,
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      // Update application status
+      await axios.put(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+        statusPayload,
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // ✅ SUCCESS: Now update the checkbox state
+      setSelected(prev => ({
+        ...prev,
+        Approve: action === 'approved',
+        Reject: action === 'rejected'
+      }));
+
+      // Success handling
+      const successMessage = action === "approved"
+        ? "Application approved successfully!"
+        : "Application rejected successfully!";
+
+      MyAlert("success", successMessage);
+      disableFtn(true);
+      refreshApplicationsWithStatusFilters();
+
+      // Reset modal and rejection data (only for reject)
+      if (action === "rejected") {
+        setActionModal({ open: false, type: null });
+        setRejectionData({ reason: "", note: "" });
       }
-    );
 
-    // ✅ SUCCESS: Now update the checkbox state
-    setSelected(prev => ({
-      ...prev,
-      Approve: action === 'approved',
-      Reject: action === 'rejected'
-    }));
+      if (!isEdit) {
+        navigate('/Applications');
+      }
 
-    // Success handling
-    const successMessage = action === "approved"
-      ? "Application approved successfully!"
-      : "Application rejected successfully!";
+    } catch (error) {
+      console.error(`Error ${action} application:`, error);
+      MyAlert(
+        "error",
+        `Failed to ${action} application`,
+        error?.response?.data?.error?.message || error.message
+      );
 
-    MyAlert("success", successMessage);
-    disableFtn(true);
-    refreshApplicationsWithStatusFilters();
-
-    // Reset modal and rejection data (only for reject)
-    if (action === "rejected") {
-      setActionModal({ open: false, type: null });
-      setRejectionData({ reason: "", note: "" });
+      // ❌ On error, ensure checkboxes are unchecked
+      setSelected(prev => ({
+        ...prev,
+        Approve: false,
+        Reject: false
+      }));
+    } finally {
+      setIsProcessing(false);
     }
-
-    if (!isEdit) {
-      navigate('/Applications');
-    }
-
-  } catch (error) {
-    console.error(`Error ${action} application:`, error);
-    MyAlert(
-      "error",
-      `Failed to ${action} application`,
-      error?.response?.data?.error?.message || error.message
-    );
-
-    // ❌ On error, ensure checkboxes are unchecked
-    setSelected(prev => ({
-      ...prev,
-      Approve: false,
-      Reject: false
-    }));
-  } finally {
-    setIsProcessing(false);
-  }
-};
+  };
 
   function navigateApplication(direction) {
     if (index === -1 || !applications?.length) return;
@@ -1480,8 +1364,8 @@ const handleSubmit = async () => {
               <Button
                 onClick={() => handleSubmit()}
                 className="butn primary-btn"
-              // disabled={isDisable}
-              loading={isProcessing }
+                // disabled={isDisable}
+                loading={isProcessing}
               >
                 Submit
               </Button>
@@ -1585,7 +1469,7 @@ const handleSubmit = async () => {
               </Col>
               <Col xs={24} md={8}>
                 <MyDatePicker1
-                  label="Date of Birth"
+                  label="Date Of Birth"
                   name="dob"
                   required
                   value={InfData?.personalInfo?.dateOfBirth}
@@ -1776,7 +1660,7 @@ const handleSubmit = async () => {
                   type="mobile"
                   value={InfData.contactInfo?.mobileNumber}
                   require
-                     hasError={!!errors?.mobileNumber}
+                  hasError={!!errors?.mobileNumber}
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("contactInfo", "mobileNumber", e.target.value)}
                 />
@@ -1960,6 +1844,34 @@ const handleSubmit = async () => {
                   options={regionOptions}
                 />
               </Col>
+              {
+                InfData.professionalDetails?.membershipCategory === "Undergraduate Student" && (
+
+                  <>
+                    <Col xs={24} md={12}>
+                      <CustomSelect
+                        onChange={(e) => handleInputChange("professionalDetails", "studyLocation", e.target.value)}
+                        label="Study Location"
+                        options={[
+                          { value: "Trinity College Dublin", label: "Trinity College Dublin" },
+                          { value: "University College Dublin", label: "University College Dublin" },
+                          // { value: "Direct Debit", label: "Direct Debit" },
+
+                        ]}
+                        value={InfData?.professionalDetails?.studyLocation}
+                      />
+                    </Col>
+
+                    <Col xs={24} md={12}>
+                      <MyDatePicker1 label="graduation date"
+                        onChange={(date, datestring) => {
+                          {
+                            handleInputChange("professionalDetails", "graduationDate", date)
+                          }
+                        }}
+                        value={InfData?.professionalDetails?.graduationDate} />
+                    </Col>
+                  </>)}
 
               <Col xs={24} md={12}>
                 <CustomSelect
@@ -2146,10 +2058,10 @@ const handleSubmit = async () => {
                     label="Submission Date"
                     name="SubmissionDate"
                     required
-                    // value={InfData?.subscriptionDetails?.submissionDate}
+                    value={InfData?.subscriptionDetails?.submissionDate}
                     disabled={isDisable || isEdit}
                     onChange={(date, dateString) => {
-                      // handleInputChange("subscriptionDetails", "submissionDate", date);
+                      handleInputChange("subscriptionDetails", "submissionDate", date);
                     }}
                     hasError={!!errors?.dateJoined}
                     errorMessage={errors?.dateJoined || "Required"}
@@ -2613,62 +2525,62 @@ const handleSubmit = async () => {
         )}
       </div>
       {/* </Drawer> */}
-     <Modal
-  centered
-  title="Reject Application"
-  open={actionModal.open && actionModal.type === 'reject'} // Only show for reject
-  onCancel={() => {
-    setActionModal({ open: false, type: null });
-    // Uncheck reject checkbox when modal is cancelled
-    setSelected(prev => ({
-      ...prev,
-      Reject: false,
-    }));
-    setRejectionData({ reason: "", note: "" });
-  }}
-  onOk={() => handleApplicationAction('rejected')}
-  okText="Reject"
-  okButtonProps={{
-    danger: true,
-    className: 'butn',
-    loading: isProcessing
-  }}
-  cancelButtonProps={{
-    className: "butn butn primary-btn",
-    disabled: isProcessing
-  }}
-  confirmLoading={isProcessing}
->
-  <div className="drawer-main-container">
-    <CustomSelect
-      label="Reason"
-      name="Reason"
-      required
-      placeholder="Select reason"
-      value={rejectionData.reason}
-      onChange={(val) =>
-        setRejectionData((prev) => ({ ...prev, reason: val.target.value }))
-      }
-      options={[
-        { label: "Incomplete documents", value: "incomplete_documents" },
-        { label: "Invalid information", value: "invalid_information" },
-        { label: "Duplicate application", value: "duplicate" },
-        { label: "Other", value: "other" },
-      ]}
-      hasError={!rejectionData.reason}
-    />
-    <MyInput
-      name="Note (optional)"
-      label="Note (optional)"
-      placeholder="Enter note"
-      value={rejectionData.note}
-      onChange={(e) =>
-        setRejectionData((prev) => ({ ...prev, note: e.target.value }))
-      }
-      textarea
-    />
-  </div>
-</Modal>
+      <Modal
+        centered
+        title="Reject Application"
+        open={actionModal.open && actionModal.type === 'reject'} // Only show for reject
+        onCancel={() => {
+          setActionModal({ open: false, type: null });
+          // Uncheck reject checkbox when modal is cancelled
+          setSelected(prev => ({
+            ...prev,
+            Reject: false,
+          }));
+          setRejectionData({ reason: "", note: "" });
+        }}
+        onOk={() => handleApplicationAction('rejected')}
+        okText="Reject"
+        okButtonProps={{
+          danger: true,
+          className: 'butn',
+          loading: isProcessing
+        }}
+        cancelButtonProps={{
+          className: "butn butn primary-btn",
+          disabled: isProcessing
+        }}
+        confirmLoading={isProcessing}
+      >
+        <div className="drawer-main-container">
+          <CustomSelect
+            label="Reason"
+            name="Reason"
+            required
+            placeholder="Select reason"
+            value={rejectionData.reason}
+            onChange={(val) =>
+              setRejectionData((prev) => ({ ...prev, reason: val.target.value }))
+            }
+            options={[
+              { label: "Incomplete documents", value: "incomplete_documents" },
+              { label: "Invalid information", value: "invalid_information" },
+              { label: "Duplicate application", value: "duplicate" },
+              { label: "Other", value: "other" },
+            ]}
+            hasError={!rejectionData.reason}
+          />
+          <MyInput
+            name="Note (optional)"
+            label="Note (optional)"
+            placeholder="Enter note"
+            value={rejectionData.note}
+            onChange={(e) =>
+              setRejectionData((prev) => ({ ...prev, note: e.target.value }))
+            }
+            textarea
+          />
+        </div>
+      </Modal>
 
     </div>
   );

@@ -52,19 +52,35 @@ export const getAllApplications = createAsyncThunk(
 
       let apiApplications = [];
 
-      if (Array.isArray(status)) {
-        const includesDraft = status.includes('draft');
-        const filteredStatus = status.filter((s) => s !== 'draft');
+      // ✅ COMPREHENSIVE FIX: Map all status values to API format
+      const normalizeStatus = (statusValue) => {
+        const statusMap = {
+          'inprogress': 'in-progress',
+          'in-progress': 'in-progress', // already correct
+          'approved': 'approved',
+          'rejected': 'rejected',
+          'submitted': 'submitted',
+          'draft': 'draft'
+        };
+        return statusMap[statusValue] || statusValue;
+      };
 
-        // ✅ Case 1: only draft
+      if (Array.isArray(status)) {
+        const normalizedStatus = status.map(normalizeStatus);
+        console.log('📊 Status mapping:', { input: status, output: normalizedStatus });
+        
+        const includesDraft = normalizedStatus.includes('draft');
+        const filteredStatus = normalizedStatus.filter((s) => s !== 'draft');
+
+        // ... rest of the code remains the same
         if (includesDraft && filteredStatus.length === 0) {
           return normalizedDrafts;
         }
 
-        // ✅ Case 2: draft + others
         if (filteredStatus.length > 0) {
           const queryParams = filteredStatus.map((s) => `type=${s}`).join('&');
           const url = `${api}?${queryParams}`;
+          console.log('🔄 Final API URL:', url);
           const response = await axios.get(url, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -78,12 +94,16 @@ export const getAllApplications = createAsyncThunk(
         }
       }
 
-      // ✅ Case 3: single string
+      // ... rest of the cases remain the same
       if (typeof status === 'string' && status !== '') {
-        if (status === 'draft') {
+        const normalizedStatus = normalizeStatus(status);
+        console.log('📊 Single status mapping:', { input: status, output: normalizedStatus });
+        
+        if (normalizedStatus === 'draft') {
           return normalizedDrafts;
         } else {
-          const url = `${api}?type=${status}`;
+          const url = `${api}?type=${normalizedStatus}`;
+          console.log('🔄 Final API URL:', url);
           const response = await axios.get(url, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -95,7 +115,6 @@ export const getAllApplications = createAsyncThunk(
         }
       }
 
-      // ✅ Case 4: no status
       const response = await axios.get(api, {
         headers: {
           Authorization: `Bearer ${token}`,

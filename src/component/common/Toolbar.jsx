@@ -18,42 +18,47 @@ const Toolbar = () => {
   } = useFilters();
 
   // ✅ Convert filter state to API parameters
-  const getApiParametersFromFilters = () => {
-    const apiParams = [];
-    
-    // Handle Application Status filter
-    if (filtersState['Application Status']?.selectedValues?.length > 0) {
-      const statusValues = filtersState['Application Status'].selectedValues;
-      const apiStatusParams = statusValues.map(status => 
-        status.toLowerCase().replace('-', '') // "In-Progress" -> "inprogress"
-      );
-      apiParams.push(...apiStatusParams);
-    }
-    
-    // Handle Membership Category filter
-    if (filtersState['Membership Category']?.selectedValues?.length > 0) {
-      const categoryValues = filtersState['Membership Category'].selectedValues;
-      const apiCategoryParams = categoryValues.map(category => 
-        category.toLowerCase() // "Student" -> "student"
-      );
-      apiParams.push(...apiCategoryParams);
-    }
-    
-    return apiParams;
-  };
+ const getApiParametersFromFilters = () => {
+  const apiParams = [];
+  
+  // Handle Application Status filter
+  if (filtersState['Application Status']?.selectedValues?.length > 0) {
+    const statusValues = filtersState['Application Status'].selectedValues;
+    const apiStatusParams = statusValues.map(status => 
+      status.toLowerCase() // ✅ JUST lowercase, KEEP THE HYPHEN
+    );
+    apiParams.push(...apiStatusParams);
+  }
+  
+  // Handle Membership Category filter
+  if (filtersState['Membership Category']?.selectedValues?.length > 0) {
+    const categoryValues = filtersState['Membership Category'].selectedValues;
+    const apiCategoryParams = categoryValues.map(category => 
+      category.toLowerCase()
+    );
+    apiParams.push(...apiCategoryParams);
+  }
+  
+  return apiParams;
+};
 
   // ✅ Call API with current filters
-  const callApplicationsWithFilters = () => {
-    const apiParams = getApiParametersFromFilters();
-    
-    if (apiParams.length > 0) {
-      console.log('Calling API with filters:', apiParams);
-      dispatch(getAllApplications(apiParams));
-    } else {
-      // No filters, get all applications
-      dispatch(getAllApplications());
-    }
-  };
+ // In Toolbar.js - FIX THIS FUNCTION
+const callApplicationsWithFilters = () => {
+  const apiParams = getApiParametersFromFilters();
+  
+  console.log('🔍 DEBUG FILTERS:');
+  console.log('Filter State:', filtersState['Application Status']?.selectedValues);
+  console.log('API Params:', apiParams);
+  console.log('First param type:', typeof apiParams[0]);
+  console.log('First param value:', apiParams[0]);
+  
+  if (apiParams.length > 0) {
+    dispatch(getAllApplications(apiParams)); 
+  } else {
+    dispatch(getAllApplications(''));
+  }
+};
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;

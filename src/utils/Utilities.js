@@ -186,13 +186,12 @@ export const cleanPayload = (obj) => {
   if (Array.isArray(obj)) {
     return obj
       .map(cleanPayload)
-      .filter((v) => v !== null && v !== undefined && v !== ""); // ✅ remove "" inside arrays too
+      .filter((v) => v !== null && v !== undefined && v !== "");
   } else if (typeof obj === "object" && obj !== null) {
-    return Object.entries(obj)
-      .filter(([_, v]) => v !== null && v !== undefined && v !== "") // ✅ remove ""
+    const cleanedObj = Object.entries(obj)
+      .filter(([_, v]) => v !== null && v !== undefined && v !== "")
       .reduce((acc, [k, v]) => {
         const cleaned = cleanPayload(v);
-        // also drop empty objects/arrays
         if (
           !(
             typeof cleaned === "object" &&
@@ -205,6 +204,13 @@ export const cleanPayload = (obj) => {
         }
         return acc;
       }, {});
+
+    // ✅ SPECIFICALLY remove submissionDate from subscriptionDetails
+    if (cleanedObj.subscriptionDetails && cleanedObj.subscriptionDetails.submissionDate) {
+      delete cleanedObj.subscriptionDetails.submissionDate;
+    }
+    
+    return cleanedObj;
   }
   return obj;
 };
@@ -313,3 +319,33 @@ const policy = new PolicyClient(
 );
 
 export default policy;
+
+
+export const dateUtils = {
+  prepareForAPI: (data) => {
+    if (!data) return data;
+    
+    const apiData = JSON.parse(JSON.stringify(data)); // Deep clone
+    
+    const convertDateField = (obj, field) => {
+      if (obj && obj[field] && dayjs.isDayjs(obj[field])) {
+        obj[field] = obj[field].isValid() ? obj[field].toISOString() : null;
+      }
+    };
+
+    if (apiData.personalInfo) {
+      convertDateField(apiData.personalInfo, 'dateOfBirth');
+    }
+    
+    if (apiData.professionalDetails) {
+      convertDateField(apiData.professionalDetails, 'retiredDate');
+      convertDateField(apiData.professionalDetails, 'graduationDate');
+    }
+    
+    if (apiData.subscriptionDetails) {
+      convertDateField(apiData.subscriptionDetails, 'dateJoined');
+    }
+
+    return apiData;
+  }
+};

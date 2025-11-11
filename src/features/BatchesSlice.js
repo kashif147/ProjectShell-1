@@ -2,6 +2,7 @@
 import { createSlice } from '@reduxjs/toolkit';
 import moment from "moment";
 import { useSelector, useDispatch } from "react-redux";
+import dayjs from "dayjs"
 
 // Initial state with static data
 const initialState = {
@@ -9,9 +10,9 @@ const initialState = {
         {
             id: 1,
             batchName: "Batch-2023-11",
-            batchDate: moment("15/11/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
             batchStatus: "Pending",
-            createdAt: moment("10/11/2023 09:30", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-10T09:30:00"), // ✅ Converted to dayjs
             createdBy: "admin1",
             Count: 5,
             batchRef: "REF12345",
@@ -39,9 +40,9 @@ const initialState = {
         {
             id: 2,
             batchName: "Batch-2023-11",
-            batchDate: moment("15/11/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
             batchStatus: "Approved",
-            createdAt: moment("10/11/2023 10:15", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-10T10:15:00"), // ✅ Converted to dayjs
             createdBy: "admin2",
             Count: 3,
             PaymentType: "Bank Transfer",
@@ -69,9 +70,9 @@ const initialState = {
         {
             id: 3,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -91,9 +92,9 @@ const initialState = {
         {
             id: 4,
             batchName: "Batch-2023-11",
-            batchDate: moment("15/11/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
             batchStatus: "Pending",
-            createdAt: moment("10/11/2023 09:30", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-10T09:30:00"), // ✅ Converted to dayjs
             createdBy: "admin1",
             Count: 5,
             batchRef: "REF12345",
@@ -121,9 +122,9 @@ const initialState = {
         {
             id: 5,
             batchName: "Batch-2023-11",
-            batchDate: moment("15/11/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
             batchStatus: "Approved",
-            createdAt: moment("10/11/2023 10:15", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-10T10:15:00"), // ✅ Converted to dayjs
             createdBy: "admin2",
             Count: 3,
             PaymentType: "Cheque",
@@ -151,9 +152,9 @@ const initialState = {
         {
             id: 6,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -173,9 +174,9 @@ const initialState = {
         {
             id: 7,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -195,9 +196,9 @@ const initialState = {
         {
             id: 8,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -217,9 +218,9 @@ const initialState = {
         {
             id: 9,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Standing Orders",
@@ -239,9 +240,9 @@ const initialState = {
         {
             id: 10,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Standing Orders",
@@ -261,9 +262,9 @@ const initialState = {
         {
             id: 11,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Standing Orders",
@@ -283,9 +284,9 @@ const initialState = {
         {
             id: 12,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Deductions",
@@ -305,9 +306,9 @@ const initialState = {
         {
             id: 13,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Deductions",
@@ -327,9 +328,9 @@ const initialState = {
         {
             id: 14,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Deductions",
@@ -349,9 +350,9 @@ const initialState = {
         {
             id: 15,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Online Payments",
@@ -371,9 +372,9 @@ const initialState = {
         {
             id: 16,
             batchName: "Batch-2023-12",
-            batchDate: moment("01/12/2023", "DD/MM/YYYY"),
+            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
             batchStatus: "Rejected",
-            createdAt: moment("28/11/2023 14:45", "DD/MM/YYYY HH:mm"),
+            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Online Payments",
