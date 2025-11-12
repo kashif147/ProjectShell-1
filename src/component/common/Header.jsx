@@ -128,18 +128,10 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   ];
 
   // Filter app items based on user permissions and roles
-  const accessibleApps = appItems.filter((app) => {
-    // Debug logging
-    console.log(`Checking access for ${app.name}:`, {
-      requiredPermissions: app.permissions,
-      requiredRoles: app.roles,
-      userPermissions: permissions,
-      userRoles: roles,
-    });
-
+const accessibleApps = appItems.filter((app) => {
     // If no permissions/roles required, show the app
     if (!app.permissions?.length && !app.roles?.length) {
-      return true;
+        return true;
     }
 
     // Check if user has wildcard permission (grants all permissions)
@@ -147,24 +139,16 @@ const AppLauncherMenu = ({ closeDropdown }) => {
 
     // Check permissions
     const hasRequiredPermission =
-      hasWildcardPermission ||
-      !app.permissions?.length ||
-      app.permissions.some((permission) => permissions.includes(permission));
+        hasWildcardPermission ||
+        !app.permissions?.length ||
+        app.permissions.some((permission) => permissions.includes(permission));
 
     // Check roles
     const hasRequiredRole =
-      !app.roles?.length || app.roles.some((role) => roles.includes(role));
+        !app.roles?.length || app.roles.some((role) => roles.includes(role));
 
-    const hasAccess = hasRequiredPermission && hasRequiredRole;
-    console.log(`${app.name} access:`, {
-      hasWildcardPermission,
-      hasRequiredPermission,
-      hasRequiredRole,
-      hasAccess,
-    });
-
-    return hasAccess;
-  });
+    return hasRequiredPermission && hasRequiredRole;
+});
 
   const filteredItems = accessibleApps.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase())

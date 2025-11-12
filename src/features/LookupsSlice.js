@@ -65,10 +65,7 @@ const lookupsSlice = createSlice({
   extraReducers: (builder) => {
     builder
       .addCase(getAllLookups.fulfilled, (state, { payload }) => {
-        // Store raw response
         state.lookups = payload;
-        
-        // Reset all arrays before populating
         state.titleOptions = [];
         state.genderOptions = [];
         state.workLocationOptions = [];
@@ -80,8 +77,7 @@ const lookupsSlice = createSlice({
         state.regionOptions = [];
         state.secondarySectionOptions = [];
         state.countryOptions = [];
-        
-        // Manually populate each type with label-value format
+
         if (Array.isArray(payload)) {
           payload.forEach(item => {
             const lookuptype = item.lookuptypeId?.lookuptype;
@@ -130,7 +126,6 @@ const lookupsSlice = createSlice({
           });
         }
 
-        // Add "Other" option to specified lookup types
         const otherOption = {
           id: 'Other',
           value: 'Other',
@@ -142,7 +137,6 @@ const lookupsSlice = createSlice({
           state.secondarySectionOptions.push(otherOption);
         }
 
-        // Add "Other" to Primary Section (assuming this is the same as sectionOptions)
         if (state.sectionOptions.length > 0) {
           state.sectionOptions.push(otherOption);
         }

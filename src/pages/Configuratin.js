@@ -126,7 +126,7 @@ function Configuratin() {
         error?.response?.data?.error?.message ||
         error?.message ||
         "Something went wrong";
-      debugger
+      
 
       // ✅ Trigger failure alert properly
 
@@ -240,7 +240,7 @@ function Configuratin() {
       }
 
       const { id, ...finalData } = data1;
-      debugger
+      
 
       const response = await axios.put(`${baseURL}${endPoint}`, data1, {
         headers: {
@@ -281,7 +281,7 @@ function Configuratin() {
       }
 
       const { id, ...finalData } = data1;
-      debugger
+      
 
       const response = await axios.put(`${baseURL}${finalEndPoint}`, finalData, {
         headers: {
@@ -377,8 +377,8 @@ function Configuratin() {
   // const groupedLookups = useSelector(selectGroupedLookups);
   // const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
 
-const groupedLookups= []
-const groupedlookupsForSelect= []
+
+  const groupedlookupsForSelect = []
   const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
@@ -414,7 +414,7 @@ const groupedlookupsForSelect= []
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
   const { countriesData } = useSelector((state) => state.countries);
-  console.log(countriesData, "lok")
+
 
   const { lookupsTypes, lookupsTypesloading } = useSelector(
     (state) => state.lookupsTypes
@@ -441,7 +441,6 @@ const groupedlookupsForSelect= []
       setcontactTypelookup(arr)
     }
   }, [contactTypes])
-  console.log(contactTypelookup, "contactTypelookup")
   const { lookupsForSelect, disableFtn, isDisable } = useTableColumns();
   const [drawerOpen, setDrawerOpen] = useState({
     counties: false,
@@ -1017,7 +1016,7 @@ const groupedlookupsForSelect= []
       }
     });
   };
-  console.log(drawerIpnuts?.ContactType, "drawerIpnuts?.ContactType?.id");
+
   const IsUpdateFtn = (drawer, value, data) => {
 
     if (value == false) {
@@ -1051,7 +1050,14 @@ const groupedlookupsForSelect= []
     }));
 
   };
-
+  const transformLookupTypes = (data) => {
+    return data.map(item => ({
+      value: item._id,
+      key: item._id,
+      label: item.lookuptype
+    }));
+  };
+  const lookupsTypesSelect = transformLookupTypes(lookupsTypes);
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
@@ -1063,14 +1069,14 @@ const groupedlookupsForSelect= []
   };
 
   const openCloseDrawerFtn = (name) => {
-    debugger
+    
     setDrawerOpen((prevState) => {
       const wasOpen = prevState[name]; // Check if it was open before
       const newState = {
         ...prevState,
         [name]: !prevState[name],
       };
-      debugger
+      
       if (wasOpen) {
         disableFtn(true); // Execute only when closing
       }
@@ -1102,7 +1108,7 @@ const groupedlookupsForSelect= []
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
-    debugger
+    
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
 
@@ -1113,7 +1119,7 @@ const groupedlookupsForSelect= []
           id: idValue,
         },
       };
-      debugger
+      
     });
   };
 
@@ -2040,6 +2046,23 @@ const groupedlookupsForSelect= []
       ),
     },
   ];
+  const groupByLookupType = function (data) {
+    
+    return data.reduce((grouped, item) => {
+      const lookupType = item.lookuptypeId.lookuptype;
+      
+      if (!grouped[lookupType]) {
+        grouped[lookupType] = [];
+      }
+
+      grouped[lookupType].push(item);
+      return grouped;
+    }, {});
+  };
+
+  // Usage
+  const groupedLookups = groupByLookupType(lookups);
+
   const columnGender = [
     {
       title: "code",
@@ -5999,7 +6022,7 @@ const groupedlookupsForSelect= []
                     hasError={!!errors?.Districts?.Parentlookupid}
                     value={drawerIpnuts?.Districts?.Parentlookupid}
                     onChange={(val) => {
-                      debugger
+                      
                       drawrInptChng("Districts", "Parentlookupid", val.target.value)
                     }
                     }
@@ -6905,7 +6928,7 @@ const groupedlookupsForSelect= []
                 label="Lookup Type"
                 name="lookuptype"
                 value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
-                options={lookupsType}
+                options={lookupsTypesSelect}
                 isSimple={true}
                 required
                 onChange={(value) => {

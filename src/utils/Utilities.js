@@ -205,9 +205,11 @@ export const cleanPayload = (obj) => {
         return acc;
       }, {});
 
-    // ✅ SPECIFICALLY remove submissionDate from subscriptionDetails
     if (cleanedObj.subscriptionDetails && cleanedObj.subscriptionDetails.submissionDate) {
       delete cleanedObj.subscriptionDetails.submissionDate;
+    }
+    if (cleanedObj.professionalDetails && cleanedObj.professionalDetails.startDate) {
+      delete cleanedObj.professionalDetails.startDate;
     }
     
     return cleanedObj;

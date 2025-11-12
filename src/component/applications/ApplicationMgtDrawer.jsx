@@ -160,7 +160,7 @@ function ApplicationMgtDrawer({
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
     if (!apiData) return inputValue;
-
+    debugger
     // Helper function to safely convert to Day.js
     const toDayJS = (dateValue) => {
       if (!dateValue) return null;
@@ -207,6 +207,7 @@ function ApplicationMgtDrawer({
         isRetired: apiData?.professionalDetails?.isRetired || false,
         retiredDate: toDayJS(apiData?.professionalDetails?.retiredDate),
         pensionNo: apiData?.professionalDetails?.pensionNo || "",
+        studyLocation: apiData?.professionalDetails?.studyLocation,
         graduationDate: toDayJS(apiData?.professionalDetails?.graduationDate), // ✅ ADD THIS LINE
       },
       subscriptionDetails: {
@@ -228,6 +229,7 @@ function ApplicationMgtDrawer({
         membershipCategory: apiData?.subscriptionDetails?.membershipCategory || "",
         dateJoined: toDayJS(apiData?.subscriptionDetails?.dateJoined),
         paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
+        submissionDate: toDayJS(apiData?.subscriptionDetails?.submissionDate),
       },
     };
   };
@@ -238,9 +240,7 @@ function ApplicationMgtDrawer({
   } = useSelector((state) => state.categoryLookup);
   useEffect(() => {
     dispatch(fetchCountries());
-    // dispatch(getAllLookups());
     refreshApplicationsWithStatusFilters()
-    // dispatch(getWorkLocationHierarchy());
   }, [dispatch]);
   useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
@@ -257,6 +257,7 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
+  console.log(application,"application92")
 
   useEffect(() => {
     if (application && isEdit) {
@@ -496,8 +497,6 @@ function ApplicationMgtDrawer({
       consent: true,
       personalEmail: "",
       workEmail: "",
-      // consentSMS: false,
-      // consentEmail: false
     },
     professionalDetails: {
       membershipCategory: "",
@@ -513,6 +512,7 @@ function ApplicationMgtDrawer({
       isRetired: false,
       pensionNo: "",
       retiredDate: null,
+
       graduationDate: null
     },
     subscriptionDetails: {
@@ -533,8 +533,9 @@ function ApplicationMgtDrawer({
       termsAndConditions: false,
       membershipCategory: "",
       dateJoined: dayjs(),
-      // submissionDate: dayjs(),
+      submissionDate: dayjs(),
       paymentFrequency: "",
+      startDate: null
     },
   };
   const [InfData, setInfData] = useState(inputValue);
@@ -583,11 +584,8 @@ function ApplicationMgtDrawer({
       "termsAndConditions",
       "preferredAddress",
       'countryPrimaryQualification',
-
-      // 'otherPrimarySection',
-      // 'otherSecondarySection',
-      // 'personalEmail'
     ];
+
     const fieldMap = {
       title: ["personalInfo", "title"],
       forename: ["personalInfo", "forename"],
@@ -616,7 +614,10 @@ function ApplicationMgtDrawer({
       otherPrimarySection: ["subscriptionDetails", "otherPrimarySection"],
       otherSecondarySection: ["subscriptionDetails", "otherSecondarySection"],
     };
+
     const newErrors = {};
+
+    // Validate required fields
     requiredFields.forEach((field) => {
       const [section, key] = fieldMap[field] || [];
       const value = section ? InfData[section]?.[key] : null;
@@ -631,6 +632,7 @@ function ApplicationMgtDrawer({
       }
     });
 
+    // Email validation based on preferred email type
     if (InfData.contactInfo.preferredEmail === "personal") {
       if (!InfData.contactInfo.personalEmail?.trim()) {
         newErrors.personalEmail = "Personal Email is required";
@@ -641,47 +643,65 @@ function ApplicationMgtDrawer({
         newErrors.workEmail = "Work Email is required";
       }
     }
-    if (InfData.personalInfo?.workLocation === "Other") {
-      if (!InfData.personalInfo.otherworkLocation?.trim()) {
-        newErrors.otherworkLocation = "other Work Location";
-      }
-    }
-    if (InfData.subscriptionDetails.primarySection === "other") {
-      if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
-        newErrors.otherPrimarySection = "other Primary Section is required";
-      }
-    }
-    // if (InfData?.professionalDetails?.membershipCategory === "retired_associate") {
-    if (InfData?.professionalDetails?.membershipCategory === "Retired Associate" && !InfData.professionalDetails?.retiredDate?.trim()) {
-      newErrors.retiredDate = "required";
-    }
-    if (InfData?.professionalDetails?.membershipCategory === "Retired Associate" && !InfData.professionalDetails?.pensionNo?.trim()) {
-      newErrors.pensionNo = "required";
-    }
-    // }
 
-    // InfData?.subscriptionDetails?.paymentType === ''
+    // ✅ FIXED: Correct field path and use proper validation
+    if (InfData.professionalDetails?.workLocation === "Other") {
+      if (!InfData.professionalDetails.otherWorkLocation?.trim()) {
+        newErrors.otherWorkLocation = "Other work location is required";
+      }
+    }
+
+    // ✅ FIXED: Case sensitivity fix
+    if (InfData.subscriptionDetails.primarySection === "Other") {
+      if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
+        newErrors.otherPrimarySection = "Other primary section is required";
+      }
+    }
+
+    // ✅ FIXED: Date validation - don't use .trim() on dates
+    if (InfData?.professionalDetails?.membershipCategory === "Retired Associate") {
+      if (!InfData.professionalDetails?.retiredDate) {
+        newErrors.retiredDate = "Retired date is required";
+      }
+      if (!InfData.professionalDetails?.pensionNo?.trim()) {
+        newErrors.pensionNo = "Pension number is required";
+      }
+    }
+
+    // ✅ FIXED: Date validation - don't use .trim() on dates
+    if (InfData?.professionalDetails?.membershipCategory === "Undergraduate Student") {
+      if (!InfData.professionalDetails?.studyLocation?.trim()) {
+        newErrors.studyLocation = "Study location is required";
+      }
+      if (!InfData.professionalDetails?.graduationDate) {
+        newErrors.graduationDate = "Graduation date is required";
+      }
+    }
+
+    // ✅ FIXED: Error message correction
     if (InfData.subscriptionDetails.paymentType === "Payroll Deduction") {
       if (!InfData.subscriptionDetails.payrollNo?.trim()) {
-        newErrors.payrollNo = "other Primary Section is required";
+        newErrors.payrollNo = "Payroll number is required";
+      }
+    }
+
+    // ✅ ADDED: Secondary section validation
+    if (InfData.subscriptionDetails.secondarySection === "Other") {
+      if (!InfData.subscriptionDetails.otherSecondarySection?.trim()) {
+        newErrors.otherSecondarySection = "Other secondary section is required";
       }
     }
 
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      debugger;
       return false;
     }
 
     setErrors({});
-
     return true;
   };
-  // Function to generate patch for newly created fields
   const generateCreatePatch = (data) => {
     const patch = [];
-
-    // Add operations for each section and field
     if (data.personalInfo) {
       patch.push({ "op": "add", "path": "/personalInfo", "value": {} });
       Object.keys(data.personalInfo).forEach(key => {
@@ -743,10 +763,8 @@ function ApplicationMgtDrawer({
     if (isDisable) return;
     const isValid = validateForm();
     if (!isValid) return;
-
     setIsProcessing(true);
     disableFtn(true);
-
     try {
       const token = localStorage.getItem("token");
       if (!token) {
@@ -889,54 +907,130 @@ function ApplicationMgtDrawer({
       // }
     }
   };
-  const handleSave = async () => {
-    const isValid = validateForm();
-    if (!isValid) return;
-    if (isEdit && originalData) {
-      const proposedPatch = generatePatch(originalData, InfData);
-      const obj = {
-        submission: originalData,
-        proposedPatch: proposedPatch,
-      };
-      console.log(obj, "azn");
-      try {
-        // Get token from localStorage
-        const token = localStorage.getItem('token');
 
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
+const handleSave = async () => {
+  if (isDisable) return;
+  const isValid = validateForm();
+  if (!isValid) return;
+  setIsProcessing(true);
+  disableFtn(true);
 
-        const response = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/review-draft`,
-          obj,
+  try {
+    const token = localStorage.getItem("token");
+    if (!token) {
+      throw new Error("No authentication token found");
+    }
+
+    // ✅ Convert ONLY for API call - don't touch state
+    const apiData = dateUtils.prepareForAPI(InfData);
+
+    // Check if we're in edit mode and have original data
+    if (!isEdit || !originalData) {
+      throw new Error("Save operation requires edit mode and original data");
+    }
+
+    // ✅ Get applicationId - use the same source as handleApprove
+    const applicationId = application?.applicationId;
+    if (!applicationId) {
+      throw new Error("ApplicationId not found");
+    }
+
+    // Convert original data for comparison
+    const apiOriginalData = dateUtils.prepareForAPI(originalData);
+
+    // ✅ UPDATE ALL SECTIONS (like handleSubmit - ALWAYS send all data)
+    const savePromises = [];
+
+    // 1. Personal Details - ALWAYS send if personalDetails exists
+    if (application?.personalDetails?._id) {
+      const personalPayload = cleanPayload({
+        personalInfo: apiData.personalInfo,
+        contactInfo: apiData.contactInfo,
+      });
+
+      console.log("💾 Saving Personal Details:", personalPayload);
+
+      savePromises.push(
+        axios.put(
+          `${baseURL}/personal-details/${applicationId}`,
+          personalPayload,
           {
             headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${token}`
-            }
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
           }
-        );
-        // console.log('Approval successful:', response.data);
-        {
-          response.data &&
-            MyAlert(
-              "success",
-              "Successfully Updated Application",
-            );
-        }
-        // Handle success (e.g., show success message, redirect, etc.)
-
-      } catch (error) {
-        console.error('Approval successful:', error);
-        MyAlert(
-          "error",
-          "Failed to submit details",
-          error?.response?.data?.error?.message || error.message
-        );
-      }
+        )
+      );
     }
-  };
+
+    // 2. Professional Details - ALWAYS send if professionalDetails exists
+    if (application?.professionalDetails?._id) {
+      const professionalPayload = cleanPayload({
+        professionalDetails: apiData.professionalDetails,
+      });
+
+      console.log("💾 Saving Professional Details:", professionalPayload);
+
+      savePromises.push(
+        axios.put(
+          `${baseURL}/professional-details/${applicationId}`,
+          professionalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+      );
+    }
+
+    // 3. Subscription Details - ALWAYS send if subscriptionDetails exists
+    if (application?.subscriptionDetails?._id) {
+      const subscriptionPayload = cleanPayload({
+        subscriptionDetails: apiData.subscriptionDetails,
+      });
+
+      console.log("💾 Saving Subscription Details:", subscriptionPayload);
+
+      savePromises.push(
+        axios.put(
+          `${baseURL}/subscription-details/${applicationId}`,
+          subscriptionPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        )
+      );
+    }
+
+    console.log("📦 Total save promises:", savePromises.length);
+
+    // Execute all save requests
+    if (savePromises.length > 0) {
+      await Promise.all(savePromises);
+      MyAlert("success", "Application Updated successfully!");
+      setOriginalData(InfData); // Update original data after successful save
+    } else {
+      MyAlert("info", "No sections found to update.");
+    }
+
+  } catch (error) {
+    console.error("Save error:", error);
+    MyAlert(
+      "error",
+      "Failed to save changes",
+      error?.response?.data?.error?.message || error.message
+    );
+  } finally {
+    setIsProcessing(false);
+    disableFtn(false);
+  }
+};
   const {
     hierarchicalData,
     hierarchicalDataLoading,
@@ -1355,7 +1449,7 @@ function ApplicationMgtDrawer({
             <Button
               className="butn primary-btn"
               // disabled={selected?.Reject || selected?.Approve || isDisable}>
-              disabled={true}
+              disabled={isDisable}
               onClick={() => handleSave()}
             >
               Save
@@ -1751,35 +1845,87 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.membershipCategory}
                 />
               </Col>
-
-              <Col xs={24} md={12}>
-                <Row gutter={[8, 8]}>
+              {
+                InfData.professionalDetails?.membershipCategory === "Retired Associate" ? (
                   <Col xs={24} md={12}>
-                    <MyDatePicker1
-                      label="Retired Date"
-                      name="retiredDate"
-                      value={InfData?.professionalDetails?.retiredDate}
-                      disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
-                      required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
-                      onChange={(date, dateString) => {
-                        handleInputChange("professionalDetails", "retiredDate", date);
+                    <Row gutter={[8, 8]}>
+                      <Col xs={24} md={12}>
+                        <MyDatePicker1
+                          label="Retired Date"
+                          name="retiredDate"
+                          value={InfData?.professionalDetails?.retiredDate}
+                          disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
+                          required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
+                          onChange={(date, dateString) => {
+                            handleInputChange("professionalDetails", "retiredDate", date);
+                          }}
+                          hasError={!!errors?.retiredDate}
+                        />
+                      </Col>
+                      <Col xs={24} md={12}>
+                        <MyInput
+                          label="Pension No"
+                          name="pensionNo"
+                          value={InfData.professionalDetails?.pensionNo}
+                          disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
+                          required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
+                          onChange={(e) => handleInputChange("professionalDetails", "pensionNo", e.target.value)}
+                          hasError={!!errors?.pensionNo}
+                        />
+                      </Col>
+                    </Row>
+                  </Col>
+                )
+                  :
+                  InfData.professionalDetails?.membershipCategory == "Undergraduate Student" ? (
+                    <>
+                      <Col xs={24} md={12}>
+                        <Row gutter={12}>
+                          <Col xs={24} md={8}>
+                            <CustomSelect
+                              onChange={(e) => handleInputChange("professionalDetails", "studyLocation", e.target.value)}
+                              label="Study Location"
+                              required
+                              options={[
+                                { value: "Trinity College Dublin", label: "Trinity College Dublin" },
+                                { value: "University College Dublin", label: "University College Dublin" },
+                                // { value: "Direct Debit", label: "Direct Debit" },
+                              ]}
+                              value={InfData?.professionalDetails?.studyLocation}
+                              hasError={!!errors?.studyLocation}
+                            />
+                          </Col>
 
-                      }}
-                    />
-                  </Col>
-                  <Col xs={24} md={12}>
-                    <MyInput
-                      label="Pension No"
-                      name="pensionNo"
-                      value={InfData.professionalDetails?.pensionNo}
-                      disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
-                      required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
-                      onChange={(e) => handleInputChange("professionalDetails", "pensionNo", e.target.value)}
-                      hasError={!!errors?.pensionNo}
-                    />
-                  </Col>
-                </Row>
-              </Col>
+                          <Col xs={24} md={8}>
+                            <MyDatePicker1 label="Start Date"
+                              onChange={(date, datestring) => {
+                                {
+                                  handleInputChange("professionalDetails", "startDate", date)
+                                }
+                              }}
+                              required
+                              value={InfData?.professionalDetails?.startDate} />
+                          </Col>
+                          <Col xs={24} md={8}>
+                            <MyDatePicker1 label="Graduation date"
+                              required
+                              onChange={(date, datestring) => {
+                                {
+                                  handleInputChange("professionalDetails", "graduationDate", date)
+                                }
+                              }}
+                              value={InfData?.professionalDetails?.graduationDate}
+                              hasError={!!errors?.graduationDate}
+                            />
+
+                          </Col>
+                        </Row>
+                      </Col>
+                    </>
+                  )
+                    :
+                    <Col span={12}></Col>
+              }
 
               {/* Work Location */}
               <Col xs={24} md={12}>
@@ -1844,35 +1990,6 @@ function ApplicationMgtDrawer({
                   options={regionOptions}
                 />
               </Col>
-              {
-                InfData.professionalDetails?.membershipCategory === "Undergraduate Student" && (
-
-                  <>
-                    <Col xs={24} md={12}>
-                      <CustomSelect
-                        onChange={(e) => handleInputChange("professionalDetails", "studyLocation", e.target.value)}
-                        label="Study Location"
-                        options={[
-                          { value: "Trinity College Dublin", label: "Trinity College Dublin" },
-                          { value: "University College Dublin", label: "University College Dublin" },
-                          // { value: "Direct Debit", label: "Direct Debit" },
-
-                        ]}
-                        value={InfData?.professionalDetails?.studyLocation}
-                      />
-                    </Col>
-
-                    <Col xs={24} md={12}>
-                      <MyDatePicker1 label="graduation date"
-                        onChange={(date, datestring) => {
-                          {
-                            handleInputChange("professionalDetails", "graduationDate", date)
-                          }
-                        }}
-                        value={InfData?.professionalDetails?.graduationDate} />
-                    </Col>
-                  </>)}
-
               <Col xs={24} md={12}>
                 <CustomSelect
                   label="Grade"
@@ -2057,7 +2174,6 @@ function ApplicationMgtDrawer({
                     className="w-100"
                     label="Submission Date"
                     name="SubmissionDate"
-                    required
                     value={InfData?.subscriptionDetails?.submissionDate}
                     disabled={isDisable || isEdit}
                     onChange={(date, dateString) => {

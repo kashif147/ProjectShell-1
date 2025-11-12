@@ -10,9 +10,9 @@ const initialState = {
         {
             id: 1,
             batchName: "Batch-2023-11",
-            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
+            batchDate: "2023-11-15", // ✅ String
             batchStatus: "Pending",
-            createdAt: dayjs("2023-11-10T09:30:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-10T09:30:00", // ✅ String
             createdBy: "admin1",
             Count: 5,
             batchRef: "REF12345",
@@ -40,9 +40,9 @@ const initialState = {
         {
             id: 2,
             batchName: "Batch-2023-11",
-            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
+            batchDate: "2023-11-15", // ✅ String
             batchStatus: "Approved",
-            createdAt: dayjs("2023-11-10T10:15:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-10T10:15:00", // ✅ String
             createdBy: "admin2",
             Count: 3,
             PaymentType: "Bank Transfer",
@@ -70,9 +70,9 @@ const initialState = {
         {
             id: 3,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -92,9 +92,9 @@ const initialState = {
         {
             id: 4,
             batchName: "Batch-2023-11",
-            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
+            batchDate: "2023-11-15", // ✅ String
             batchStatus: "Pending",
-            createdAt: dayjs("2023-11-10T09:30:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-10T09:30:00", // ✅ String
             createdBy: "admin1",
             Count: 5,
             batchRef: "REF12345",
@@ -122,9 +122,9 @@ const initialState = {
         {
             id: 5,
             batchName: "Batch-2023-11",
-            batchDate: dayjs("2023-11-15"), // ✅ Converted to dayjs
+            batchDate: "2023-11-15", // ✅ String
             batchStatus: "Approved",
-            createdAt: dayjs("2023-11-10T10:15:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-10T10:15:00", // ✅ String
             createdBy: "admin2",
             Count: 3,
             PaymentType: "Cheque",
@@ -152,9 +152,9 @@ const initialState = {
         {
             id: 6,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -174,9 +174,9 @@ const initialState = {
         {
             id: 7,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -196,9 +196,9 @@ const initialState = {
         {
             id: 8,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Cheque",
@@ -218,9 +218,9 @@ const initialState = {
         {
             id: 9,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Standing Orders",
@@ -240,9 +240,9 @@ const initialState = {
         {
             id: 10,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Standing Orders",
@@ -262,9 +262,9 @@ const initialState = {
         {
             id: 11,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Standing Orders",
@@ -284,9 +284,9 @@ const initialState = {
         {
             id: 12,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Deductions",
@@ -306,9 +306,9 @@ const initialState = {
         {
             id: 13,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Deductions",
@@ -328,9 +328,9 @@ const initialState = {
         {
             id: 14,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Deductions",
@@ -350,9 +350,9 @@ const initialState = {
         {
             id: 15,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Online Payments",
@@ -372,9 +372,9 @@ const initialState = {
         {
             id: 16,
             batchName: "Batch-2023-12",
-            batchDate: dayjs("2023-12-01"), // ✅ Converted to dayjs
+            batchDate: "2023-12-01", // ✅ String
             batchStatus: "Rejected",
-            createdAt: dayjs("2023-11-28T14:45:00"), // ✅ Converted to dayjs
+            createdAt: "2023-11-28T14:45:00", // ✅ String
             createdBy: "admin3",
             Count: 7,
             PaymentType: "Online Payments",
@@ -396,7 +396,6 @@ const initialState = {
     batchesloading: false,
     batcheserror: null,
 };
-
 // Create the slice
 const batchSlice = createSlice({
     name: 'batches',

@@ -25,9 +25,10 @@ const MultiFilterDropdown = ({
     const newSelectedValues = selectedValues.includes(value)
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
-    
+    debugger
     // ✅ Call onApply immediately with new selection
     onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
+    debugger
   };
   const handleReset = () => {
     // ✅ Apply empty selection immediately

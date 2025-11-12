@@ -1,4 +1,5 @@
 import { createContext, useContext, useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 const FilterContext = createContext();
 export const FilterProvider = ({ children }) => {
   // 🔹 All possible filters per screen
@@ -113,14 +114,29 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Active page
   const [activePage, setActivePage] = useState("Applications");
 
+
   // 🔹 Visible filters and saved states
   const [visibleFilters, setVisibleFilters] = useState(
     defaultVisibleFilters["Applications"]
   );
+  const location = useLocation();
+  const activeScreenName = location?.pathname
   const [filtersState, setFiltersState] = useState(
     defaultFilterValues["Applications"] || {}
   );
-
+  const getScreenFromPath = () => {
+    const pathMap = {
+      '/applications': 'Applications',
+      '/Summary': 'Profile',
+      '/membership': 'Membership'
+    };
+    return pathMap[activeScreenName] || 'Applications';
+  };
+  const activeScreen = getScreenFromPath(activeScreenName)
+  useEffect(()=>{
+  setActivePage(activeScreen)
+  },[activeScreen])
+  
   // 🔹 Reset filters when changing page - UPDATED
   useEffect(() => {
     setVisibleFilters(defaultVisibleFilters[activePage] || []);

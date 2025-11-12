@@ -1,5 +1,6 @@
 import React from "react";
 import { useFilters } from "../../context/FilterContext";
+import { useLocation } from "react-router-dom";
 import SimpleMenu from "./SimpleMenu";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import { Button, Input } from "antd";
@@ -19,8 +20,9 @@ const Toolbar = () => {
 
   // ✅ Convert filter state to API parameters
  const getApiParametersFromFilters = () => {
+  debugger
   const apiParams = [];
-  
+
   // Handle Application Status filter
   if (filtersState['Application Status']?.selectedValues?.length > 0) {
     const statusValues = filtersState['Application Status'].selectedValues;
@@ -28,16 +30,17 @@ const Toolbar = () => {
       status.toLowerCase() // ✅ JUST lowercase, KEEP THE HYPHEN
     );
     apiParams.push(...apiStatusParams);
+    debugger
   }
   
   // Handle Membership Category filter
-  if (filtersState['Membership Category']?.selectedValues?.length > 0) {
-    const categoryValues = filtersState['Membership Category'].selectedValues;
-    const apiCategoryParams = categoryValues.map(category => 
-      category.toLowerCase()
-    );
-    apiParams.push(...apiCategoryParams);
-  }
+  // if (filtersState['Membership Category']?.selectedValues?.length > 0) {
+  //   const categoryValues = filtersState['Membership Category'].selectedValues;
+  //   const apiCategoryParams = categoryValues.map(category => 
+  //     category.toLowerCase()
+  //   );
+  //   apiParams.push(...apiCategoryParams);
+  // }
   
   return apiParams;
 };
@@ -46,17 +49,10 @@ const Toolbar = () => {
  // In Toolbar.js - FIX THIS FUNCTION
 const callApplicationsWithFilters = () => {
   const apiParams = getApiParametersFromFilters();
-  
-  console.log('🔍 DEBUG FILTERS:');
-  console.log('Filter State:', filtersState['Application Status']?.selectedValues);
-  console.log('API Params:', apiParams);
-  console.log('First param type:', typeof apiParams[0]);
-  console.log('First param value:', apiParams[0]);
-  
   if (apiParams.length > 0) {
     dispatch(getAllApplications(apiParams)); 
   } else {
-    dispatch(getAllApplications(''));
+    // dispatch(getAllApplications(''));
   }
 };
 
@@ -64,7 +60,7 @@ const callApplicationsWithFilters = () => {
     const { label, operator, selectedValues } = filterData;
     updateFilterValues(label, selectedValues);
     updateFilterOperator(label, operator);
-    
+    debugger
     // ✅ Auto-call API when relevant filters are applied
     if (['Application Status', 'Membership Category'].includes(label)) {
       callApplicationsWithFilters();
@@ -81,6 +77,17 @@ const callApplicationsWithFilters = () => {
     // ✅ Reset to all applications
     dispatch(getAllApplications());
   };
+     const location = useLocation();
+     const activeScreenName = location?.pathname
+ const getScreenFromPath = (location) => {
+    const pathMap = {
+      '/applications': 'Applications',
+      '/profile': 'Profile', 
+      '/membership': 'Membership'
+    };
+    return pathMap[activeScreenName] || 'Applications';
+  };
+  const activeScreen = getScreenFromPath(activeScreenName)
 
   return (
     <div

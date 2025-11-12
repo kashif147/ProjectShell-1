@@ -43,32 +43,33 @@ const mapLocalDraftToApplication = (draft) => ({
 export const getAllApplications = createAsyncThunk(
   'applications/getAllApplications',
   async (status = '', { rejectWithValue }) => {
+    debugger
     try {
       const token = localStorage.getItem('token');
-
       const localDraftsRaw = localStorage.getItem('gardaApplicationDrafts');
       const localDrafts = localDraftsRaw ? JSON.parse(localDraftsRaw) : [];
       const normalizedDrafts = localDrafts.map(mapLocalDraftToApplication);
-
       let apiApplications = [];
-
       // ✅ COMPREHENSIVE FIX: Map all status values to API format
       const normalizeStatus = (statusValue) => {
+        if (!statusValue) return '';
+        const value = statusValue.toLowerCase();
         const statusMap = {
           'inprogress': 'in-progress',
-          'in-progress': 'in-progress', // already correct
+          'in-progress': 'in-progress',
           'approved': 'approved',
           'rejected': 'rejected',
           'submitted': 'submitted',
           'draft': 'draft'
         };
-        return statusMap[statusValue] || statusValue;
+        return statusMap[value] || value;
       };
+
 
       if (Array.isArray(status)) {
         const normalizedStatus = status.map(normalizeStatus);
         console.log('📊 Status mapping:', { input: status, output: normalizedStatus });
-        
+
         const includesDraft = normalizedStatus.includes('draft');
         const filteredStatus = normalizedStatus.filter((s) => s !== 'draft');
 
@@ -80,7 +81,8 @@ export const getAllApplications = createAsyncThunk(
         if (filteredStatus.length > 0) {
           const queryParams = filteredStatus.map((s) => `type=${s}`).join('&');
           const url = `${api}?${queryParams}`;
-          console.log('🔄 Final API URL:', url);
+          debugger
+          console.log('Final API URL:', url);
           const response = await axios.get(url, {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -98,7 +100,7 @@ export const getAllApplications = createAsyncThunk(
       if (typeof status === 'string' && status !== '') {
         const normalizedStatus = normalizeStatus(status);
         console.log('📊 Single status mapping:', { input: status, output: normalizedStatus });
-        
+
         if (normalizedStatus === 'draft') {
           return normalizedDrafts;
         } else {

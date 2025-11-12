@@ -26,8 +26,6 @@ const Sidebar = () => {
   const { permissions, roles } = useAuthorization();
 
   // Debug logging
-  console.log("Sidebar Debug - menuLblState:", menuLblState);
-  console.log("Sidebar Debug - location.pathname:", location.pathname);
   const [isPinned, setIsPinned] = useState(() => {
     const saved = localStorage.getItem("sidebar-pinned");
     return saved ? JSON.parse(saved) : false;
@@ -35,10 +33,6 @@ const Sidebar = () => {
 
   // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
-
-  // Debug: Log menu label state changes
-  console.log("Sidebar Debug - menuLblState:", menuLblState);
-  console.log("Sidebar Debug - activeKey:", activeKey);
 
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = useMemo(
@@ -57,50 +51,29 @@ const Sidebar = () => {
   );
 
   // Debug: Log available itemsMap keys
-  console.log(
-    "Sidebar Debug - Available itemsMap keys:",
-    Object.keys(itemsMap)
-  );
 
   // Filter menu items based on user permissions and roles
   const menuItems = useMemo(() => {
     // Get the base menu items for the active module
     const baseMenuItems = itemsMap[activeKey] || [];
-    // Debug: Log current permissions and roles
-    console.log("Sidebar Debug - Current permissions:", permissions);
-    console.log("Sidebar Debug - Current roles:", roles);
-    console.log("Sidebar Debug - Active key:", activeKey);
-    console.log("Sidebar Debug - Base menu items:", baseMenuItems);
-    console.log(
-      "Sidebar Debug - Base menu items length:",
-      baseMenuItems.length
-    );
+  
 
     // Debug each menu item's requirements
-    console.log("Sidebar Debug - Checking each menu item:");
-    baseMenuItems.forEach((item, index) => {
-      console.log(`Item ${index}: ${item.key}`, {
-        requiredPermissions: item.permissions,
-        requiredRoles: item.roles,
-        userPermissions: permissions,
-        userRoles: roles,
-        hasPermission:
-          item.permissions?.some((p) => permissions.includes(p)) || true,
-        hasRole: item.roles?.some((r) => roles.includes(r)) || true,
-      });
-    });
+baseMenuItems.forEach((item, index) => {
+  const hasPermission =
+    item.permissions?.some((p) => permissions.includes(p)) || true;
+  const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
+
+  // You can use hasPermission and hasRole for further logic if needed
+});
+
 
     const filtered = filterMenuItemsByAuth(baseMenuItems, permissions, roles);
-    console.log("Sidebar Debug - Filtered menu items:", filtered);
-    console.log("Sidebar Debug - Filtered menu items length:", filtered.length);
-
     return filtered;
   }, [itemsMap, activeKey, permissions, roles]);
 
   // Transform menu items for collapsed/expanded view
   const transformedMenuItems = useMemo(() => {
-    console.log("Sidebar Debug - Transforming menu items:", menuItems);
-    console.log("Sidebar Debug - isPinned:", isPinned);
 
     const transformed = menuItems.map((item) => {
       if (isPinned) {
@@ -111,7 +84,7 @@ const Sidebar = () => {
             <Tooltip
               title={item.label.props.children}
               placement="right"
-              overlayClassName="sidebar-tooltip"
+              // overlayClassName="sidebar-tooltip"
             >
               <div className="icon-only-item">{item.icon}</div>
             </Tooltip>
@@ -123,12 +96,6 @@ const Sidebar = () => {
         return item;
       }
     });
-
-    console.log("Sidebar Debug - Transformed menu items:", transformed);
-    console.log(
-      "Sidebar Debug - Transformed menu items length:",
-      transformed.length
-    );
 
     return transformed;
   }, [menuItems, isPinned]);
@@ -331,13 +298,6 @@ const Sidebar = () => {
     : isPinned
     ? "80px"
     : "200px";
-
-  console.log("Sidebar Debug - Rendering sidebar with:", {
-    sideBarWidth,
-    isPinned,
-    transformedMenuItemsLength: transformedMenuItems.length,
-    selectedKey,
-  });
 
   return (
     <div
