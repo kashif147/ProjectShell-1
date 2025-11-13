@@ -1,3 +1,4 @@
+// In your Toolbar component
 import React from "react";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
@@ -18,68 +19,32 @@ const Toolbar = () => {
     resetFilters 
   } = useFilters();
 
-  // ✅ Convert filter state to API parameters
- const getApiParametersFromFilters = () => {
-  debugger
-  const apiParams = [];
-
-  // Handle Application Status filter
-  if (filtersState['Application Status']?.selectedValues?.length > 0) {
-    const statusValues = filtersState['Application Status'].selectedValues;
-    const apiStatusParams = statusValues.map(status => 
-      status.toLowerCase() // ✅ JUST lowercase, KEEP THE HYPHEN
-    );
-    apiParams.push(...apiStatusParams);
-    debugger
-  }
-  
-  // Handle Membership Category filter
-  // if (filtersState['Membership Category']?.selectedValues?.length > 0) {
-  //   const categoryValues = filtersState['Membership Category'].selectedValues;
-  //   const apiCategoryParams = categoryValues.map(category => 
-  //     category.toLowerCase()
-  //   );
-  //   apiParams.push(...apiCategoryParams);
-  // }
-  
-  return apiParams;
-};
-
-  // ✅ Call API with current filters
- // In Toolbar.js - FIX THIS FUNCTION
-const callApplicationsWithFilters = () => {
-  const apiParams = getApiParametersFromFilters();
-  if (apiParams.length > 0) {
-    dispatch(getAllApplications(apiParams)); 
-  } else {
-    // dispatch(getAllApplications(''));
-  }
-};
-
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
+    
+    // ✅ Update filter state in context
     updateFilterValues(label, selectedValues);
     updateFilterOperator(label, operator);
-    debugger
-    // ✅ Auto-call API when relevant filters are applied
-    if (['Application Status', 'Membership Category'].includes(label)) {
-      callApplicationsWithFilters();
-    }
   };
 
   const handleSearch = () => {
-    // ✅ Use current filters for search
-    callApplicationsWithFilters();
+    // ✅ Pass the entire filtersState from context to the slice
+    console.log("🔍 Dispatching with filters:", filtersState);
+    dispatch(getAllApplications(filtersState)); // ✅ Pass filters as parameter
   };
 
   const handleReset = () => {
+    // ✅ Reset filters in context
     resetFilters();
-    // ✅ Reset to all applications
-    dispatch(getAllApplications());
+    console.log("🔄 Filters reset");
+    // Fetch all applications (pass empty object)
+    dispatch(getAllApplications({}));
   };
-     const location = useLocation();
-     const activeScreenName = location?.pathname
- const getScreenFromPath = (location) => {
+
+  const location = useLocation();
+  const activeScreenName = location?.pathname;
+  
+  const getScreenFromPath = () => {
     const pathMap = {
       '/applications': 'Applications',
       '/profile': 'Profile', 
@@ -87,7 +52,8 @@ const callApplicationsWithFilters = () => {
     };
     return pathMap[activeScreenName] || 'Applications';
   };
-  const activeScreen = getScreenFromPath(activeScreenName)
+  
+  const activeScreen = getScreenFromPath();
 
   return (
     <div
@@ -124,14 +90,26 @@ const callApplicationsWithFilters = () => {
 
         <Button
           onClick={handleReset}
-          style={{backgroundColor:'#091e420a', borderRadius:'4px',border:'none', height:'32px',fontWeight:'500'}}
+          style={{
+            backgroundColor: '#091e420a', 
+            borderRadius: '4px',
+            border: 'none', 
+            height: '32px',
+            fontWeight: '500'
+          }}
         >
           Reset
         </Button>
 
         <Button
           onClick={handleSearch}
-          style={{backgroundColor:'#091e420a', borderRadius:'4px',border:'none', height:'32px',fontWeight:'500'}}
+          style={{
+            backgroundColor: '#091e420a', 
+            borderRadius: '4px',
+            border: 'none', 
+            height: '32px',
+            fontWeight: '500'
+          }}
         >
           Search
         </Button>

@@ -19,24 +19,38 @@ const MultiFilterDropdown = ({
   const [open, setOpen] = useState(false);
   const hoverTimer = useRef(null);
 
-  // ✅ No need for local state - use props directly and apply changes immediately
-
   const handleCheckboxChange = (value) => {
     const newSelectedValues = selectedValues.includes(value)
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
-    debugger
+    console.log(newSelectedValues,"new")
     // ✅ Call onApply immediately with new selection
     onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
-    debugger
   };
+
   const handleReset = () => {
     // ✅ Apply empty selection immediately
     onApply?.({ label, operator: "==", selectedValues: [] });
   };
 
   const handleApply = () => {
-    // ✅ Already applied immediately, just close dropdown
+    // ✅ Show all selected filters in console when Apply is clicked
+    console.log("🎯 APPLY BUTTON CLICKED - Selected Filters:", {
+      filterLabel: label,
+      operator: propOperator,
+      selectedValues: selectedValues,
+      selectedCount: selectedValues.length,
+      totalOptions: options.length,
+      isAllSelected: selectedValues.length === options.length
+    });
+
+    // ✅ Additional check for "all selected" scenario
+    if (selectedValues.length === options.length) {
+      console.log("✅ ALL FILTERS ARE SELECTED for:", label);
+      console.log("📋 Selected values:", selectedValues);
+    }
+
+    // Close dropdown
     setOpen(false);
   };
 

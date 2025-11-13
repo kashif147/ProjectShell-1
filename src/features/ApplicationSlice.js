@@ -14,7 +14,6 @@ const mapLocalDraftToApplication = (draft) => ({
   createdAt: draft.createdAt || new Date().toISOString(),
   updatedAt: draft.updatedAt || new Date().toISOString(),
 
-  // 👇 match API shape fields
   personalInfo: {
     surname: draft.surname || '',
     forename: draft.forename || '',
@@ -35,22 +34,35 @@ const mapLocalDraftToApplication = (draft) => ({
     ...draft.approvalDetails,
   },
   meta: {
-    isLocalDraft: true, // 🔹 helps UI distinguish
+    isLocalDraft: true,
   },
-  ...draft, // keep everything else
+  ...draft,
 });
 
 export const getAllApplications = createAsyncThunk(
   'applications/getAllApplications',
-  async (status = '', { rejectWithValue }) => {
-    debugger
+  async (filters = {}, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem('token');
       const localDraftsRaw = localStorage.getItem('gardaApplicationDrafts');
       const localDrafts = localDraftsRaw ? JSON.parse(localDraftsRaw) : [];
       const normalizedDrafts = localDrafts.map(mapLocalDraftToApplication);
       let apiApplications = [];
-      // ✅ COMPREHENSIVE FIX: Map all status values to API format
+
+      console.log('🎯 Filters received in slice:', filters);
+
+      // ✅ Extract Application Status from filters
+      const applicationStatusFilter = filters['Application Status'];
+      const statusValues = applicationStatusFilter?.selectedValues || [];
+      const operator = applicationStatusFilter?.operator || '==';
+
+      console.log('📊 Processing Application Status:', {
+        statusValues,
+        operator,
+        filterKeys: Object.keys(filters)
+      });
+
+      // ✅ Status normalization
       const normalizeStatus = (statusValue) => {
         if (!statusValue) return '';
         const value = statusValue.toLowerCase();
@@ -65,58 +77,102 @@ export const getAllApplications = createAsyncThunk(
         return statusMap[value] || value;
       };
 
-
-      if (Array.isArray(status)) {
-        const normalizedStatus = status.map(normalizeStatus);
-        console.log('📊 Status mapping:', { input: status, output: normalizedStatus });
+      // ✅ Handle Application Status filtering
+      if (Array.isArray(statusValues) && statusValues.length > 0) {
+        const normalizedStatus = statusValues.map(normalizeStatus);
+        console.log('📊 Status mapping:', { input: statusValues, output: normalizedStatus });
 
         const includesDraft = normalizedStatus.includes('draft');
         const filteredStatus = normalizedStatus.filter((s) => s !== 'draft');
 
-        // ... rest of the code remains the same
-        if (includesDraft && filteredStatus.length === 0) {
-          return normalizedDrafts;
-        }
+        // If operator is "not equal" (!=)
+        if (operator === '!=') {
+          console.log('🔍 Using NOT EQUAL operator');
+          
+          // Define all possible status values
+          const allStatusValues = ['in-progress', 'approved', 'rejected', 'submitted'];
+          
+          // For "!=" operator, we want statuses that are NOT in the selected values
+          const excludedStatuses = filteredStatus;
+          const includedStatuses = allStatusValues.filter(status => 
+            !excludedStatuses.includes(status)
+          );
 
-        if (filteredStatus.length > 0) {
-          const queryParams = filteredStatus.map((s) => `type=${s}`).join('&');
-          const url = `${api}?${queryParams}`;
-          debugger
-          console.log('Final API URL:', url);
-          const response = await axios.get(url, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          apiApplications = response.data?.data?.applications || [];
-          return includesDraft
-            ? [...apiApplications, ...normalizedDrafts]
-            : apiApplications;
+          console.log('🚫 Excluded statuses:', excludedStatuses);
+          console.log('✅ Included statuses:', includedStatuses);
+
+          // If only draft is selected with != operator, we want all API applications
+          if (includesDraft && filteredStatus.length === 0) {
+            console.log('📝 != operator with only draft selected - returning all API apps + drafts');
+            const response = await axios.get(api, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            apiApplications = response.data?.data?.applications || [];
+            return [...apiApplications, ...normalizedDrafts];
+          }
+
+          // If there are API statuses to exclude
+          if (includedStatuses.length > 0) {
+            const queryParams = includedStatuses.map((s) => `type=${s}`).join('&');
+            const url = `${api}?${queryParams}`;
+            
+            console.log('🔗 Final API URL for != operator:', url);
+            const response = await axios.get(url, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            apiApplications = response.data?.data?.applications || [];
+            
+            // For != operator with draft included, we want to EXCLUDE drafts from the result
+            if (includesDraft) {
+              console.log('🚫 Excluding drafts from results due to != operator');
+              return apiApplications; // Return only API applications, exclude drafts
+            } else {
+              return [...apiApplications, ...normalizedDrafts];
+            }
+          } else {
+            // If all statuses are excluded, return empty array for API applications
+            console.log('📭 All API statuses excluded - returning only drafts if applicable');
+            return includesDraft ? [] : normalizedDrafts;
+          }
+        } 
+        // Original logic for "equal" operator (==)
+        else {
+          console.log('🔍 Using EQUAL operator');
+
+          // If only draft is selected
+          if (includesDraft && filteredStatus.length === 0) {
+            return normalizedDrafts;
+          }
+
+          // If API statuses are selected
+          if (filteredStatus.length > 0) {
+            const queryParams = filteredStatus.map((s) => `type=${s}`).join('&');
+            const url = `${api}?${queryParams}`;
+            
+            console.log('🔗 Final API URL for == operator:', url);
+            const response = await axios.get(url, {
+              headers: {
+                Authorization: `Bearer ${token}`,
+                'Content-Type': 'application/json',
+              },
+            });
+            apiApplications = response.data?.data?.applications || [];
+            
+            return includesDraft
+              ? [...apiApplications, ...normalizedDrafts]
+              : apiApplications;
+          }
         }
       }
 
-      // ... rest of the cases remain the same
-      if (typeof status === 'string' && status !== '') {
-        const normalizedStatus = normalizeStatus(status);
-        console.log('📊 Single status mapping:', { input: status, output: normalizedStatus });
-
-        if (normalizedStatus === 'draft') {
-          return normalizedDrafts;
-        } else {
-          const url = `${api}?type=${normalizedStatus}`;
-          console.log('🔄 Final API URL:', url);
-          const response = await axios.get(url, {
-            headers: {
-              Authorization: `Bearer ${token}`,
-              'Content-Type': 'application/json',
-            },
-          });
-          apiApplications = response.data?.data?.applications || [];
-          return apiApplications;
-        }
-      }
-
+      // ✅ Get all applications when no filters or empty filters
+      console.log('🔄 No Application Status filter - fetching all applications');
       const response = await axios.get(api, {
         headers: {
           Authorization: `Bearer ${token}`,

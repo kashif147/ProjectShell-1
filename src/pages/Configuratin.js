@@ -1966,27 +1966,30 @@ function Configuratin() {
       sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
       sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
     },
-    {
-      title: "Lookup Type",
-      dataIndex: ["lookuptypeId", "lookuptype"], // Ensure correct path
-      key: "lookuptype",
-      render: (_, record) => (
-        <div>{record?.lookuptypeId?.lookuptype || "N/A"}</div>
-      ),
+  {
+  title: "Lookup Type",
+  key: "lookuptype",
+  dataIndex: ["lookuptypeId", "lookuptype"],
 
-      // Filters must be unique and properly extracted
-      filters: Array.from(
-        new Set(
-          lookups?.map((item) => item?.lookuptypeId?.lookuptype).filter(Boolean)
-        )
-      ).map((value) => ({ text: value, value })),
+  render: (_, record) => (
+    <div>{record?.lookuptypeId?.lookuptype || "N/A"}</div>
+  ),
 
-      // Filtering logic
-      onFilter: (value, record) => {
-        // console.log("Filtering for:", value, "against", record?.lookuptypeId?.lookuptype);
-        return String(record?.lookuptypeId?.lookuptype) === String(value);
-      },
-    },
+  // Generate unique filters from the same table data
+  filters: Array.from(
+    new Set(
+      (lookups || [])
+        .map((item) => item?.lookuptypeId?.lookuptype)
+        .filter(Boolean)
+    )
+  ).map((value) => ({ text: value, value })),
+
+  // Perform case-insensitive filtering
+  onFilter: (value, record) => {
+    const lookupType = record?.lookuptypeId?.lookuptype || "";
+    return lookupType.toLowerCase() === value.toLowerCase();
+  },
+},
     {
       title: " Display Name",
       dataIndex: "DisplayName",
@@ -6639,7 +6642,7 @@ function Configuratin() {
       <MyDrawer
         title="Lookup Type"
         open={drawerOpen?.LookupType}
-        isPagination={true}
+        isPagination={false}
         onClose={() => {
           openCloseDrawerFtn("LookupType");
           IsUpdateFtn("LookupType", false);
@@ -6663,18 +6666,23 @@ function Configuratin() {
           );
           dispatch(getLookupTypes());
         }}
-        total={regions?.length}
+        //   onChange={handlePageChange}
+        // total={lookupsTypes?.length}
+      
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
             <Col span={24}>
-              <CustomSelect
+              <MyInput
                 label="Lookup Type"
                 name="lookuptype"
                 value={drawerIpnuts?.LookupType?.lookuptype || ""}
                 options={[{ label: "Lookup Type", value: "Lookup Type" }]}
+                 onChange={(e) =>
+                  drawrInptChng("LookupType", "lookuptype", e.target.value)
+                }
                 isSimple={true}
-                disabled={false}
+                disabled={isDisable}
                 required
                 hasError={!!errors?.LookupType?.lookuptype}
               />
@@ -6729,8 +6737,12 @@ function Configuratin() {
           <div className="mt-4 config-tbl-container">
             <h6 className="mb-3 text-primary">Existing Lookup Types</h6>
             <Table
-              pagination={false}
+              pagination={true}
               columns={columnLookupType}
+              //    dataSource={lookupsTypes.slice(
+              //   (current - 1) * pageSize,
+              //   current * pageSize
+              // )}
               dataSource={lookupsTypes}
               className="drawer-tbl"
               rowClassName={(record, index) =>
@@ -6894,7 +6906,7 @@ function Configuratin() {
       <MyDrawer
         title="Lookup"
         open={drawerOpen?.Lookup}
-        isPagination={true}
+        isPagination={false}
         onClose={() => {
           openCloseDrawerFtn("Lookup");
           IsUpdateFtn("Lookup", false);
@@ -6917,9 +6929,9 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-        total={lookups?.length}
-        onChange={handlePageChange}
-        pageSize={pageSize}
+        // total={lookups?.length}
+        // onChange={handlePageChange}
+        // pageSize={pageSize}
       >
         <div className="drawer-main-container p-4">
           <Row gutter={24}>
@@ -6927,13 +6939,14 @@ function Configuratin() {
               <CustomSelect
                 label="Lookup Type"
                 name="lookuptype"
+                isIDs={true}
                 value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
                 options={lookupsTypesSelect}
                 isSimple={true}
                 required
                 onChange={(value) => {
-                  drawrInptChng("Lookup", "Parentlookupid", String(value));
-                  drawrInptChng("Lookup", "lookuptypeId", String(value));
+                  drawrInptChng("Lookup", "lookuptypeId", String(value.target.value));
+                  // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
                 hasError={!!errors?.Lookup?.lookuptypeId}
               />
@@ -7016,12 +7029,13 @@ function Configuratin() {
 
           <div className="mt-4 config-tbl-container">
             <Table
-              pagination={false}
+              pagination={true}
               columns={columnLookup}
-              dataSource={lookups.slice(
-                (current - 1) * pageSize,
-                current * pageSize
-              )}
+              // dataSource={lookups.slice(
+              //   (current - 1) * pageSize,
+              //   current * pageSize
+              // )}
+              dataSource={lookups}
               loading={lookupsloading}
               className="drawer-tbl"
               rowClassName={(record, index) =>

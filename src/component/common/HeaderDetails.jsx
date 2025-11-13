@@ -165,15 +165,15 @@ function HeaderDetails() {
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
-  const handleApplyStatusFilter = () => {
-    if (statusValues.length === 0) return;
-    const allStatuses = ["submitted", "approved", "rejected", "in-progress"];
-    const finalStatuses =
-      statusOperator === "=="
-        ? statusValues
-        : allStatuses.filter((status) => !statusValues.includes(status));
-    dispatch(getAllApplications(finalStatuses));
-  };
+  // const handleApplyStatusFilter = () => {
+  //   if (statusValues.length === 0) return;
+  //   const allStatuses = ["submitted", "approved", "rejected", "in-progress"];
+  //   const finalStatuses =
+  //     statusOperator === "=="
+  //       ? statusValues
+  //       : allStatuses.filter((status) => !statusValues.includes(status));
+  //   dispatch(getAllApplications(finalStatuses));
+  // };
 
   function filterSearchableColumns(data) {
     if (data) {

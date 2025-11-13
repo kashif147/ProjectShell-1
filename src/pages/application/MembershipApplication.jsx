@@ -11,35 +11,37 @@ function MembershipApplication() {
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
+useEffect(()=>{
+  dispatch(getAllApplications())
+},[])
+  // useEffect(() => {
+  //   const relevantFilters = ['Application Status', 'Membership Category'];
+  //   const hasRelevantFilters = relevantFilters.some(
+  //     filter => filtersState[filter]?.selectedValues?.length > 0
+  //   );
 
-  useEffect(() => {
-    const relevantFilters = ['Application Status', 'Membership Category'];
-    const hasRelevantFilters = relevantFilters.some(
-      filter => filtersState[filter]?.selectedValues?.length > 0
-    );
-
-    if (hasRelevantFilters) {
-      const apiParams = [];
+  //   if (hasRelevantFilters) {
+  //     const apiParams = [];
       
-      if (filtersState['Application Status']?.selectedValues?.length > 0) {
-        const statusParams = filtersState['Application Status'].selectedValues.map(
-          status => status.toLowerCase().replace('-', '')
-        );
-        apiParams.push(...statusParams);
-      }
+  //     if (filtersState['Application Status']?.selectedValues?.length > 0) {
+  //       const statusParams = filtersState['Application Status'].selectedValues.map(
+  //         status => status.toLowerCase().replace('-', '')
+  //       );
+  //       apiParams.push(...statusParams);
+  //     }
       
-      if (filtersState['Membership Category']?.selectedValues?.length > 0) {
-        const categoryParams = filtersState['Membership Category'].selectedValues.map(
-          category => category.toLowerCase()
-        );
-        apiParams.push(...categoryParams);
-      }
+  //     if (filtersState['Membership Category']?.selectedValues?.length > 0) {
+  //       const categoryParams = filtersState['Membership Category'].selectedValues.map(
+  //         category => category.toLowerCase()
+  //       );
+  //       apiParams.push(...categoryParams);
+  //     }
       
-      dispatch(getAllApplications(apiParams));
-    } else {
-      dispatch(getAllApplications());
-    }
-  }, [filtersState, dispatch]);
+  //     // dispatch(getAllApplications(apiParams));
+  //   } else {
+  //     // dispatch(getAllApplications());
+  //   }
+  // }, [filtersState, dispatch]);
   console.log(applications, "ptdc");
 
   return (

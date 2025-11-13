@@ -60,25 +60,25 @@ function ApplicationMgtDrawer({
   } = useSelector((state) => state.lookupsWorkLocation);
   console.log(hierarchyData, "lk")
   const { filtersState } = useFilters();
-  const getApplicationStatusFilters = () => {
-    if (filtersState['Application Status']?.selectedValues?.length > 0) {
-      const statusMapping = {
-        'In-Progress': 'in-progress', // ✅ CORRECT: with hyphen
-        'Approved': 'approved',
-        'Rejected': 'rejected',
-        'Submitted': 'submitted',
-        'Draft': 'draft'
-      };
-      const statusValues = filtersState['Application Status'].selectedValues;
-      return statusValues.map(status => statusMapping[status] || status.toLowerCase());
-    }
-    return [];
-  };
+  // const getApplicationStatusFilters = () => {
+  //   if (filtersState['Application Status']?.selectedValues?.length > 0) {
+  //     const statusMapping = {
+  //       'In-Progress': 'in-progress', // ✅ CORRECT: with hyphen
+  //       'Approved': 'approved',
+  //       'Rejected': 'rejected',
+  //       'Submitted': 'submitted',
+  //       'Draft': 'draft'
+  //     };
+  //     const statusValues = filtersState['Application Status'].selectedValues;
+  //     return statusValues.map(status => statusMapping[status] || status.toLowerCase());
+  //   }
+  //   return [];
+  // };
 
-  const refreshApplicationsWithStatusFilters = () => {
-    const statusFilters = getApplicationStatusFilters();
-    dispatch(getAllApplications(statusFilters));
-  };
+  // const refreshApplicationsWithStatusFilters = () => {
+  //   const statusFilters = getApplicationStatusFilters();
+  //   dispatch(getAllApplications(statusFilters));
+  // };
   const [actionModal, setActionModal] = useState({
     open: false,
     type: null, // 'approve' or 'reject'
@@ -138,7 +138,7 @@ function ApplicationMgtDrawer({
       );
 
       MyAlert("success", "Application rejected successfully!");
-      refreshApplicationsWithStatusFilters()
+      // refreshApplicationsWithStatusFilters()
       // navigate('/Applications');
       // onClose();
       setRejectionData({ reason: "", note: "" });
@@ -240,7 +240,7 @@ function ApplicationMgtDrawer({
   } = useSelector((state) => state.categoryLookup);
   useEffect(() => {
     dispatch(fetchCountries());
-    refreshApplicationsWithStatusFilters()
+    // refreshApplicationsWithStatusFilters()
   }, [dispatch]);
   useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
@@ -312,7 +312,7 @@ function ApplicationMgtDrawer({
           );
 
           MyAlert("success", `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`);
-          refreshApplicationsWithStatusFilters();
+          // refreshApplicationsWithStatusFilters();
           navigate('/Applications')
           return;
         }
@@ -377,7 +377,7 @@ function ApplicationMgtDrawer({
         }
 
         MyAlert("success", successMessage);
-        refreshApplicationsWithStatusFilters();
+        // refreshApplicationsWithStatusFilters();
 
       } catch (error) {
         console.error("Error approving application:", error);
@@ -1330,7 +1330,7 @@ const handleSave = async () => {
 
       MyAlert("success", successMessage);
       disableFtn(true);
-      refreshApplicationsWithStatusFilters();
+      // refreshApplicationsWithStatusFilters();
 
       // Reset modal and rejection data (only for reject)
       if (action === "rejected") {
