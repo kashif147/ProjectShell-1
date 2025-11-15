@@ -34,6 +34,8 @@ const AddClaims = lazy(() => import("./pages/Claims/AddClaims"));
 const Login = lazy(() => import("./pages/auth/Login"));
 const LandingPage = lazy(() => import("./component/msft/LandingPage"));
 const Reports = lazy(() => import("./pages/repots/Reports"));
+const TempletsSummary = lazy(() => import("./pages/templete/TempletsSummary"));
+const TempleteConfig = lazy(() => import("./pages/templete/TemplateConfiguration"));
 const CorspndncDetail = lazy(() =>
   import("./pages/Correspondences/CorspndncDetail")
 );
@@ -246,6 +248,23 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
+                    <Route
+                      path="templeteSummary"
+                      element={
+                        <ProtectedRoute>
+                          <TempletsSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="templeteConfig"
+                      element={
+                        <ProtectedRoute>
+                          <TempleteConfig />
+                        </ProtectedRoute>
+                      }
+                    />
+                    
 
                     <Route
                       path="ClaimSummary"

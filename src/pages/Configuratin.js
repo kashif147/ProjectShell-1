@@ -4502,6 +4502,7 @@ function Configuratin() {
             paddingBottom: "100px",
             scrollbarWidth: "none",
             msOverflowStyle: "none",
+          
           }}
         >
           {sections.map((section, idx) => {
@@ -4510,7 +4511,7 @@ function Configuratin() {
             );
 
             return (
-              <div key={`${section.title}-${idx}`} className="">
+              <div key={`${section.title}-${idx}`}style={{marginBottom:'5rem'}}>
                 <h5 className="fw-semibold mb-4 text-primary">
                   {section.title}
                 </h5>

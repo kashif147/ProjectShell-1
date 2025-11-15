@@ -12,7 +12,7 @@ function MembershipApplication() {
     (state) => state.applications
   );
 useEffect(()=>{
-  dispatch(getAllApplications())
+  dispatch(getAllApplications(filtersState))
 },[])
   // useEffect(() => {
   //   const relevantFilters = ['Application Status', 'Membership Category'];

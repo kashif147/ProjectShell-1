@@ -103,7 +103,6 @@ const Breadcrumb = () => {
       page: "Add Claim",
       icon: "➕",
     },
-
     // Correspondence Pages
     "/CorrespondencesSummary": {
       module: "Correspondence",
@@ -131,7 +130,6 @@ const Breadcrumb = () => {
       page: "Notes & Letters",
       icon: "📝",
     },
-
     // Finance Pages
     "/Batches": {
       module: "Finance",
@@ -283,6 +281,16 @@ const Breadcrumb = () => {
     "/Configuratin": {
       module: "Configuration",
       page: "System Configuration",
+      icon: "⚙️",
+    },
+    "/templeteConfig": {
+      module: "Configuration",
+      page: "Templete Config",
+      icon: "⚙️",
+    },
+    "/templeteSummary": {
+      module: "Configuration",
+      page: "Templete Summary",
       icon: "⚙️",
     },
 
