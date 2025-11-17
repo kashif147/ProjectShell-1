@@ -127,51 +127,49 @@ const TemplateManagement = () => {
     return (
         <div className="template-management-wrapper p-4">
             {/* Search and Filter Section */}
-           <div className="row g-3 align-items-end">
+            <div className="row g-3 align-items-end">
 
-  {/* 4 columns - Search Input */}
-  <div className="col-12 col-md-4">
-    <MyInput
-      label="Search"
-      placeholder="Search by template name..."
-      name="Search"
-      prefixIcon="search"
-      onChange={handleSearch}
-    />
-  </div>
+                {/* 4 columns - Search Input */}
+                <div className="col-12 col-md-4">
+                    <MyInput
+                        label="Search"
+                        placeholder="Search by template name..."
+                        name="Search"
+                        prefixIcon="search"
+                        onChange={handleSearch}
+                    />
+                </div>
 
-  {/* 2 columns - Category Select */}
-  <div className="col-12 col-md-2">
-    <CustomSelect
-      label="All Categories"
-      placeholder="All Categories"
-      options={[
-        { value: 'welcome', label: 'Welcome' },
-        { value: 'account', label: 'Account' },
-        { value: 'payment', label: 'Payment' },
-        { value: 'marketing', label: 'Marketing' },
-      ]}
-      onChange={handleCategoryChange}
-    />
-  </div>
+                {/* 2 columns - Category Select */}
+                <div className="col-12 col-md-2">
+                    <CustomSelect
+                        label="All Categories"
+                        placeholder="All Categories"
+                        options={[
+                            { value: 'welcome', label: 'Welcome' },
+                            { value: 'account', label: 'Account' },
+                            { value: 'payment', label: 'Payment' },
+                            { value: 'marketing', label: 'Marketing' },
+                        ]}
+                        onChange={handleCategoryChange}
+                    />
+                </div>
 
-  {/* 2 columns - Status Select */}
-  <div className="col-12 col-md-2">
-    <CustomSelect
-      label="Any Status"
-      placeholder="Any Status"
-      options={[
-        { value: 'active', label: 'Active' },
-        { value: 'inactive', label: 'Inactive' },
-      ]}
-      onChange={handleStatusChange}
-    />
-  </div>
+                {/* 2 columns - Status Select */}
+                <div className="col-12 col-md-2">
+                    <CustomSelect
+                        label="Any Status"
+                        placeholder="Any Status"
+                        options={[
+                            { value: 'active', label: 'Active' },
+                            { value: 'inactive', label: 'Inactive' },
+                        ]}
+                        onChange={handleStatusChange}
+                    />
+                </div>
+                <div className="col-12 col-md-3"></div>
 
-  {/* Remaining 4 columns (empty) */}
-  <div className="col-12 col-md-4"></div>
-
-</div>
+            </div>
 
             <Table
                 columns={columns}

@@ -10,6 +10,7 @@ import {
   Modal
 } from 'antd';
 import ReactQuill from 'react-quill';
+import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import {
   BoldOutlined,
@@ -41,11 +42,10 @@ const TemplateConfiguration = () => {
   const [templateType, setTemplateType] = useState('');
   const [selectedVariables, setSelectedVariables] = useState(new Set());
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
-  const [previewMode, setPreviewMode] = useState('letter'); // 'letter' or 'email'
   const quillRef = useRef(null);
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef('');
-
+  const navigate = useNavigate();
   // Available variables for drag and drop
   const availableVariables = [
     { id: '1', name: '{category_name}' },
@@ -56,6 +56,10 @@ const TemplateConfiguration = () => {
     { id: '6', name: '{member_name}' },
     { id: '7', name: '{reg_no}' },
     { id: '8', name: '{date}' },
+    { id: '9', name: '{email}' },
+    { id: '10', name: '{phone}' },
+    { id: '11', name: '{address}' },
+    { id: '12', name: '{city}' },
   ];
 
   // Category options - using {key, label} format for CustomSelect
@@ -97,13 +101,7 @@ const TemplateConfiguration = () => {
   };
 
   // Preview handlers
-  const handlePreviewAsLetter = () => {
-    setPreviewMode('letter');
-    setIsPreviewModalVisible(true);
-  };
-
-  const handlePreviewAsEmail = () => {
-    setPreviewMode('email');
+  const handlePreview = () => {
     setIsPreviewModalVisible(true);
   };
 
@@ -456,161 +454,31 @@ const TemplateConfiguration = () => {
     }
   };
 
-  // Custom toolbar component to match the screenshot
-  const CustomToolbar = () => (
-    <div style={{
-      border: '1px solid #d9d9d9',
-      borderBottom: 'none',
-      padding: '8px 12px',
-      backgroundColor: '#fafafa',
-      display: 'flex',
-      alignItems: 'center',
-      gap: '8px',
-      borderRadius: '6px 6px 0 0'
-    }}>
-      <Space size={0}>
-        <button
-          type="button"
-          onClick={handleBold}
-          style={{
-            fontWeight: 'bold',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <BoldOutlined />
-        </button>
-        <button
-          type="button"
-          onClick={handleItalic}
-          style={{
-            fontStyle: 'italic',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <ItalicOutlined />
-        </button>
-        <button
-          type="button"
-          onClick={handleUnderline}
-          style={{
-            textDecoration: 'underline',
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <UnderlineOutlined />
-        </button>
-        <Divider type="vertical" style={{ height: '16px', margin: '0 4px' }} />
-        <button
-          type="button"
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <FontSizeOutlined />
-        </button>
-        <Divider type="vertical" style={{ height: '16px', margin: '0 4px' }} />
-        <button
-          type="button"
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <UnorderedListOutlined />
-        </button>
-        <button
-          type="button"
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <OrderedListOutlined />
-        </button>
-        <Divider type="vertical" style={{ height: '16px', margin: '0 4px' }} />
-        <button
-          type="button"
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <LinkOutlined />
-        </button>
-        <button
-          type="button"
-          style={{
-            border: 'none',
-            background: 'none',
-            cursor: 'pointer',
-            padding: '4px'
-          }}
-        >
-          <PictureOutlined />
-        </button>
-      </Space>
-    </div>
-  );
-
-  // Split available variables into two columns
-  const midPoint = Math.ceil(availableVariables.length / 2);
-  const firstColumnVariables = availableVariables.slice(0, midPoint);
-  const secondColumnVariables = availableVariables.slice(midPoint);
-
   return (
     <div className='px-4' style={{ minHeight: '100vh' }}>
-      <div style={{ marginTop: '1px', marginBottom:'5px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-              <Button
-                type="default"
-                icon={<EyeOutlined />}
-                onClick={handlePreviewAsLetter}
-                size="large"
-              >
-                Preview as Letter
-              </Button>
-              <Button
-                type="primary"
-                icon={<MailOutlined />}
-                onClick={handlePreviewAsEmail}
-                size="large"
-              >
-                Preview as Email
-              </Button>
-              <Button
-                type="primary"
-                // icon={<MailOutlined />}
-                onClick={handlePreviewAsEmail}
-                size="large"
-              >
-               Save
-              </Button>
-            </div>
+      {/* Preview Buttons - Top Right */}
+      <div style={{ marginTop: '1px', marginBottom: '5px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
+
+        <Button
+          // type="primary"
+          onClick={()=> navigate('/templeteSummary')}
+          className='butn primary-btn'
+        // size="large"
+        >
+          Save
+        </Button>
+      </div>
+
+      {/* Three Column Layout */}
       <Row gutter={24} style={{ minHeight: '80vh' }}>
-        {/* Left Column - Email Content Builder (70%) */}
-        <Col span={17}>
+        {/* Left Column - Template Information (20%) */}
+        <Col span={5}>
           <Card
-            title="Email Content Builder"
+            title="Template Information"
             headStyle={{
               backgroundColor: '#eef4ff',
-              color: '#2f6bff'
+              // color: '#2f6bff'
+              color: '#215e97'
             }}
             style={{
               height: '100%',
@@ -621,6 +489,90 @@ const TemplateConfiguration = () => {
           >
             <div style={{ marginBottom: '16px' }}>
               <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
+                Template Name
+              </Text>
+              <MyInput
+                value={templateName}
+                onChange={(e) => setTemplateName(e.target.value)}
+                placeholder="Enter template name"
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
+                Description
+              </Text>
+              <MyInput
+                value={description}
+                onChange={(e) => setDescription(e.target.value)}
+                placeholder="Enter template description"
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
+                Category
+              </Text>
+              <CustomSelect
+                label=""
+                name="category"
+                value={category}
+                onChange={handleCategoryChange}
+                options={categoryOptions}
+                placeholder="Select category"
+                isIDs={true}
+              />
+            </div>
+
+            <div style={{ marginBottom: '0px' }}>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
+                Template Type
+              </Text>
+              <CustomSelect
+                label=""
+                name="templateType"
+                value={templateType}
+                onChange={handleTemplateTypeChange}
+                options={getTemplateTypeOptions()}
+                placeholder={category ? "Select template type" : "Select category first"}
+                disabled={!category}
+                isIDs={true}
+              />
+            </div>
+          </Card>
+        </Col>
+
+        {/* Middle Column - Email Content Builder (60%) */}
+        {/* Middle Column - Email Content Builder (60%) */}
+        {/* Middle Column - Email Content Builder (60%) */}
+        <Col span={14}>
+          <Card
+            title="Email Content Builder"
+            headStyle={{
+              backgroundColor: '#eef4ff',
+              // color: '#2f6bff',
+              color: '#215e97',
+
+              borderBottom: '1px solid #f0f0f0'
+            }}
+            style={{
+              height: '100%',
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+            bodyStyle={{
+              height: 'calc(100% - 57px)',
+              padding: '0',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
+          >
+            {/* Subject Section */}
+            <div style={{
+              padding: '16px 16px 12px 16px',
+              borderBottom: '1px solid #f0f0f0'
+            }}>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
                 Subject
               </Text>
               <MyInput
@@ -630,29 +582,42 @@ const TemplateConfiguration = () => {
               />
             </div>
 
-            <div style={{ flex: 1 }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Body
-              </Text>
-              <div style={{ marginBottom: '8px' }}>
-                <Text style={{ color: '#666', fontSize: '14px' }}>
-                  Insert Variable
+            {/* Body Section */}
+            <div style={{
+              flex: 1,
+              padding: '16px',
+              display: 'flex',
+              flexDirection: 'column',
+              minHeight: 0 // This prevents flex children from overflowing
+            }}>
+              <div className='d-flex justify-content-between'>
+                <Text strong style={{ color: '#000', display: 'block', marginBottom: '8px' }}>
+                  Body
                 </Text>
-              </div>
+                <Button
+                  // type="primary"
+                  icon={<EyeOutlined />}
+                  onClick={handlePreview}
 
-              {/* Custom Toolbar */}
-              <CustomToolbar />
+                  size="small"
+                >
+                  Preview
+                </Button>
+              </div>
 
               {/* React Quill Editor with Drop Zone */}
               <div
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
                 style={{
+                  flex: 1,
                   border: '1px solid #d9d9d9',
-                  borderTop: 'none',
-                  borderRadius: '0 0 6px 6px',
-                  minHeight: '300px',
-                  height: 'calc(100% - 100px)'
+                  borderRadius: '6px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  marginBottom: '5px',
+                  minHeight: 0, // Prevents overflow
+                  overflow: 'hidden' // Contains the editor
                 }}
               >
                 <ReactQuill
@@ -672,101 +637,48 @@ const TemplateConfiguration = () => {
                   theme="snow"
                   style={{
                     border: 'none',
-                    height: '100%'
+                    flex: 1,
+                    display: 'flex',
+                    flexDirection: 'column'
                   }}
                 />
               </div>
             </div>
-
-            {/* Preview Buttons */}
-            
           </Card>
         </Col>
 
-        {/* Right Column - Template Information & Variables (30%) */}
-        <Col span={7}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', height: '100%' }}>
-            {/* Template Information Card */}
-            <Card
-              title="Template Information"
-              headStyle={{
-                backgroundColor: '#eef4ff',
-                color: '#2f6bff'
-              }}
-              style={{
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
-              }}
-            >
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                  Template Name
-                </Text>
-                <MyInput
-                  value={templateName}
-                  onChange={(e) => setTemplateName(e.target.value)}
-                  placeholder="Enter template name"
-                />
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                  Description
-                </Text>
-                <MyInput
-                  value={description}
-                  onChange={(e) => setDescription(e.target.value)}
-                  placeholder="Enter template description"
-                />
-              </div>
-
-              <div style={{ marginBottom: '16px' }}>
-                <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                  Category
-                </Text>
-                <CustomSelect
-                  label=""
-                  name="category"
-                  value={category}
-                  onChange={handleCategoryChange}
-                  options={categoryOptions}
-                  placeholder="Select category"
-                  isIDs={true}
-                />
-              </div>
-
-              <div style={{ marginBottom: '0px' }}>
-                <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                  Template Type
-                </Text>
-                <CustomSelect
-                  label=""
-                  name="templateType"
-                  value={templateType}
-                  onChange={handleTemplateTypeChange}
-                  options={getTemplateTypeOptions()}
-                  placeholder={category ? "Select template type" : "Select category first"}
-                  disabled={!category}
-                  isIDs={true}
-                />
-              </div>
-            </Card>
-
-            {/* Draggable Variables Card */}
-            <Card
-              title="Draggable Variables"
-              headStyle={{
-                backgroundColor: '#eef4ff',
-                color: '#2f6bff'
-              }}
-              style={{
-                borderRadius: '8px',
-                boxShadow: '0 2px 8px rgba(0,0,0,0.1)',
-                flex: 1
-              }}
-              bodyStyle={{ height: 'calc(100% - 57px)', overflow: 'auto' }}
-            >
-              <div style={{ marginBottom: '12px' }}>
+        {/* Right Column - Draggable Variables (20%) */}
+        <Col span={5}>
+          <Card
+            title="Draggable Variables"
+            headStyle={{
+              backgroundColor: '#eef4ff',
+              color: '#215e97'
+              // color: '#2f6bff'
+            }}
+            style={{
+              height: '100%',
+              borderRadius: '8px',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
+            }}
+            bodyStyle={{
+              height: 'calc(100% - 57px)',
+              display: 'flex',
+              flexDirection: 'column',
+              padding: '0'
+            }}
+          >
+            {/* Sticky Search Section */}
+            <div style={{
+              padding: '16px',
+              borderBottom: '1px solid #f0f0f0',
+              backgroundColor: 'white',
+              position: 'sticky',
+              top: 0,
+              zIndex: 1,
+              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+            }}>
+              <div style={{ marginBottom: '8px' }}>
                 <MyInput
                   type="search"
                   placeholder="Search variables..."
@@ -777,15 +689,28 @@ const TemplateConfiguration = () => {
                 display: 'block',
                 fontSize: '12px',
                 color: '#666',
-                marginBottom: '12px'
               }}>
                 Drag and drop these tags into the email body.
               </Text>
+            </div>
 
+            {/* Scrollable Content Area */}
+            <div style={{
+              flex: 1,
+              overflow: 'auto',
+              padding: '16px',
+              paddingTop: '12px'
+            }}>
               {/* Selected Variables Section */}
               {selectedVariables.size > 0 && (
-                <div style={{ marginBottom: '16px', padding: '12px', backgroundColor: '#f9f9f9', borderRadius: '6px' }}>
-                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#2f6bff' }}>
+                <div style={{
+                  marginBottom: '16px',
+                  padding: '12px',
+                  backgroundColor: '#f9f9f9',
+                  borderRadius: '6px',
+                  border: '1px solid #e8e8e8'
+                }}>
+                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#215e97' }}>
                     Selected Variables
                   </Text>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
@@ -797,10 +722,11 @@ const TemplateConfiguration = () => {
                           style={{
                             padding: '4px 8px',
                             backgroundColor: '#eef4ff',
-                            border: '1px solid #2f6bff',
+                            // border: '1px solid #2f6bff',
+                            border: '1px solid #215e97',
                             borderRadius: '4px',
-                            fontSize: '12px',
-                            color: '#2f6bff',
+                            fontSize: '11px',
+                            color: '#215e97',
                             display: 'flex',
                             alignItems: 'center',
                             gap: '4px'
@@ -823,141 +749,77 @@ const TemplateConfiguration = () => {
               )}
 
               {/* Draggable Variables in Two Columns */}
-              <div style={{ display: 'flex', gap: '8px' }}>
-                {/* First Column */}
-                <div style={{ flex: 1 }}>
-                  {firstColumnVariables.map((variable, index) => (
-                    <div
-                      key={variable.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, variable.name, variable.id)}
-                      onClick={() => handleVariableClick(variable.name, variable.id)}
-                      style={{
-                        marginBottom: '6px',
-                        padding: '6px 8px',
-                        backgroundColor: selectedVariables.has(variable.id) ? '#eef4ff' : '#fff',
-                        border: selectedVariables.has(variable.id) ? '2px solid #2f6bff' : '1px solid #d9d9d9',
-                        borderRadius: '4px',
-                        cursor: 'grab',
-                        fontSize: '12px',
-                        userSelect: 'none',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        if (!selectedVariables.has(variable.id)) {
-                          e.currentTarget.style.backgroundColor = '#f5f5f5';
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        if (!selectedVariables.has(variable.id)) {
-                          e.currentTarget.style.backgroundColor = '#fff';
-                        }
-                      }}
-                    >
-                      {variable.name}
-                    </div>
-                  ))}
-                </div>
-
-                {/* Second Column */}
-                <div style={{ flex: 1 }}>
-                  {secondColumnVariables.map((variable, index) => (
-                    <div
-                      key={variable.id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, variable.name, variable.id)}
-                      onClick={() => handleVariableClick(variable.name, variable.id)}
-                      style={{
-                        marginBottom: '6px',
-                        padding: '6px 8px',
-                        backgroundColor: selectedVariables.has(variable.id) ? '#eef4ff' : '#fff',
-                        border: selectedVariables.has(variable.id) ? '2px solid #2f6bff' : '1px solid #d9d9d9',
-                        borderRadius: '4px',
-                        cursor: 'grab',
-                        fontSize: '12px',
-                        userSelect: 'none',
-                        transition: 'all 0.2s'
-                      }}
-                      onMouseOver={(e) => {
-                        if (!selectedVariables.has(variable.id)) {
-                          e.currentTarget.style.backgroundColor = '#f5f5f5';
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        if (!selectedVariables.has(variable.id)) {
-                          e.currentTarget.style.backgroundColor = '#fff';
-                        }
-                      }}
-                    >
-                      {variable.name}
-                    </div>
-                  ))}
-                </div>
+              <div style={{
+                display: 'grid',
+                gridTemplateColumns: '1fr 1fr',
+                gap: '8px'
+              }}>
+                {availableVariables.map((variable) => (
+                  <div
+                    key={variable.id}
+                    draggable
+                    onDragStart={(e) => handleDragStart(e, variable.name, variable.id)}
+                    onClick={() => handleVariableClick(variable.name, variable.id)}
+                    style={{
+                      padding: '8px 6px',
+                      backgroundColor: selectedVariables.has(variable.id) ? '#eef4ff' : '#f8f9fa',
+                      border: selectedVariables.has(variable.id) ? '2px solid #215e97' : '1px solid #d9d9d9',
+                      borderRadius: '6px',
+                      cursor: 'grab',
+                      fontSize: '11px',
+                      userSelect: 'none',
+                      transition: 'all 0.2s',
+                      textAlign: 'center',
+                      minHeight: '32px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      wordBreak: 'break-word'
+                    }}
+                    onMouseOver={(e) => {
+                      if (!selectedVariables.has(variable.id)) {
+                        e.currentTarget.style.backgroundColor = '#e6f7ff';
+                        e.currentTarget.style.transform = 'translateY(-1px)';
+                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                      }
+                    }}
+                    onMouseOut={(e) => {
+                      if (!selectedVariables.has(variable.id)) {
+                        e.currentTarget.style.backgroundColor = '#f8f9fa';
+                        e.currentTarget.style.transform = 'translateY(0)';
+                        e.currentTarget.style.boxShadow = 'none';
+                      }
+                    }}
+                  >
+                    {variable.name}
+                  </div>
+                ))}
               </div>
-            </Card>
-          </div>
+            </div>
+          </Card>
         </Col>
       </Row>
 
-      {/* Preview Modal */}
-      {/* Preview Modal */}
+      {/* PDF Preview Modal */}
+      {/* PDF Preview Modal */}
       <Modal
+        className="template-preview-modal"
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-              {previewMode === 'letter' ? (
-                <FileTextOutlined style={{ color: 'white', fontSize: '18px' }} />
-              ) : (
-                <MailOutlined style={{ color: 'white', fontSize: '18px' }} />
-              )}
+              <FileTextOutlined style={{ color: 'white', fontSize: '18px' }} />
               <Text strong style={{ fontSize: '16px', color: 'white' }}>
-                {previewMode === 'letter' ? 'Letter Document Preview' : 'Email Client Preview'}
+                Preview
               </Text>
-            </div>
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <Button
-                type={previewMode === 'letter' ? 'primary' : 'default'}
-                icon={<FileTextOutlined />}
-                size="small"
-                onClick={() => setPreviewMode('letter')}
-                style={{
-                  borderRadius: '6px',
-                  borderColor: previewMode === 'letter' ? '#2f6bff' : '#d9d9d9',
-                  color: previewMode === 'letter' ? 'white' : 'inherit'
-                }}
-              >
-                Letter View
-              </Button>
-              <Button
-                type={previewMode === 'email' ? 'primary' : 'default'}
-                icon={<MailOutlined />}
-                size="small"
-                onClick={() => setPreviewMode('email')}
-                style={{
-                  borderRadius: '6px',
-                  borderColor: previewMode === 'email' ? '#2f6bff' : '#d9d9d9',
-                  color: previewMode === 'email' ? 'white' : 'inherit'
-                }}
-              >
-                Email View
-              </Button>
             </div>
           </div>
         }
         open={isPreviewModalVisible}
         onCancel={handleClosePreview}
-        footer={[
-          <Button key="print" icon={<PrinterOutlined />} onClick={() => window.print()}>
-            Print
-          </Button>,
-          <Button key="close" type="primary" onClick={handleClosePreview}>
-            Close Preview
-          </Button>
-        ]}
-        width={previewMode === 'letter' ? '90%' : '700px'}
-        style={{ top: 20 }}
+        footer={null}
+        width={'45%'}
+        style={{ top: 5 }}
         bodyStyle={{ padding: '0' }}
-        // Add this to style the entire modal header background
         styles={{
           header: {
             background: '#2f6bff',
@@ -967,260 +829,76 @@ const TemplateConfiguration = () => {
           }
         }}
       >
-        {previewMode === 'letter' ? (
-          // Enhanced Letter Preview - Professional A4 document
+        {/* PDF/Letter Preview - Professional A4 document */}
+        <div style={{
+          background: 'linear-gradient(45deg, #f8f9fa 25%, transparent 25%), linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8f9fa 75%), linear-gradient(-45deg, transparent 75%, #f8f9fa 75%)',
+          backgroundSize: '20px 20px',
+          backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
+          padding: '40px',
+          display: 'flex',
+          justifyContent: 'center',
+          minHeight: '50vh'
+        }}>
           <div style={{
-            background: 'linear-gradient(45deg, #f8f9fa 25%, transparent 25%), linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8f9fa 75%), linear-gradient(-45deg, transparent 75%, #f8f9fa 75%)',
-            backgroundSize: '20px 20px',
-            backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
-            padding: '40px',
-            display: 'flex',
-            justifyContent: 'center',
-            minHeight: '80vh'
+            width: '210mm',
+            minHeight: '297mm',
+            backgroundColor: 'white',
+            padding: '25mm',
+            boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
+            border: '1px solid #e8e8e8',
+            position: 'relative',
+            fontFamily: "'Times New Roman', Times, serif",
+            lineHeight: '1.5',
+            fontSize: '12pt'
           }}>
+            {/* Letter Header */}
             <div style={{
-              width: '210mm',
-              minHeight: '297mm',
-              backgroundColor: 'white',
-              padding: '25mm',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.15)',
-              border: '1px solid #e8e8e8',
-              position: 'relative',
-              fontFamily: "'Times New Roman', Times, serif",
-              lineHeight: '1.5',
-              fontSize: '12pt'
+              borderBottom: '2px solid #2f6bff',
+              paddingBottom: '20px',
+              marginBottom: '25px'
             }}>
-              {/* Letter Header */}
-              <div style={{
-                borderBottom: '2px solid #2f6bff',
-                paddingBottom: '20px',
-                marginBottom: '25px'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
-                  <div>
-                    <Text strong style={{ fontSize: '16pt', color: '#2f6bff' }}>
-                      {templateName || 'Company Name'}
-                    </Text>
-                    <div style={{ fontSize: '10pt', color: '#666', marginTop: '4px' }}>
-                      123 Business Street, City, State 12345
-                      <br />
-                      Phone: (555) 123-4567 | Email: info@company.com
-                    </div>
-                  </div>
-                  <div style={{ textAlign: 'right' }}>
-                    <div style={{ fontSize: '10pt', color: '#666' }}>
-                      Date: {new Date().toLocaleDateString()}
-                      <br />
-                      Ref: {templateType || 'TEMPLATE-001'}
-                    </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '10px' }}>
+                <div>
+                  <Text strong style={{ fontSize: '16pt', color: '#2f6bff' }}>
+                    {templateName || 'Company Name'}
+                  </Text>
+                  <div style={{ fontSize: '10pt', color: '#666', marginTop: '4px' }}>
+                    123 Business Street, City, State 12345
+                    <br />
+                    Phone: (555) 123-4567 | Email: info@company.com
                   </div>
                 </div>
-
-                <div style={{ marginTop: '15px' }}>
-                  <Text strong style={{ fontSize: '14pt', display: 'block', marginBottom: '5px' }}>
-                    SUBJECT: {subject}
-                  </Text>
-                </div>
-              </div>
-
-              {/* Letter Body */}
-              <div style={{
-                marginBottom: '30px',
-                minHeight: '400px'
-              }}>
-                <div
-                  style={{
-                    lineHeight: '1.6',
-                    textAlign: 'justify'
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: emailContent.replace(/\n/g, '<br>')
-                  }}
-                />
-              </div>
-
-              {/* Letter Footer */}
-              <div style={{
-                borderTop: '1px solid #e8e8e8',
-                paddingTop: '20px',
-                marginTop: '40px'
-              }}>
-                <div style={{ marginBottom: '15px' }}>
-                  <Text strong style={{ display: 'block', marginBottom: '5px' }}>
-                    Sincerely,
-                  </Text>
-                  <div style={{ height: '60px', marginBottom: '10px' }}></div> {/* Signature space */}
-                  <Text strong style={{ display: 'block' }}>
-                    [Your Name]
-                  </Text>
-                  <Text style={{ fontSize: '10pt', color: '#666' }}>
-                    {templateName || 'Position'} | {category ? category.replace('_', ' ').toUpperCase() : 'Department'}
-                  </Text>
-                </div>
-              </div>
-
-              {/* Page Number */}
-              <div style={{
-                position: 'absolute',
-                bottom: '15mm',
-                right: '25mm',
-                fontSize: '10pt',
-                color: '#999'
-              }}>
-                Page 1 of 1
-              </div>
-            </div>
-          </div>
-        ) : (
-          // Enhanced Email Preview - Modern Email Client
-          <div style={{
-            backgroundColor: '#f5f7fa',
-            padding: '20px',
-            minHeight: '600px',
-            display: 'flex',
-            justifyContent: 'center'
-          }}>
-            <div style={{
-              width: '100%',
-              maxWidth: '600px',
-              backgroundColor: 'white',
-              borderRadius: '12px',
-              boxShadow: '0 4px 20px rgba(0,0,0,0.1)',
-              overflow: 'hidden',
-              fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif"
-            }}>
-              {/* Email Header Bar */}
-              <div style={{
-                backgroundColor: '#2f6bff',
-                padding: '16px 20px',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '12px'
-              }}>
-                <MailOutlined style={{ color: 'white', fontSize: '18px' }} />
-                <Text strong style={{ color: 'white', fontSize: '14px' }}>
-                  New Message
-                </Text>
-                <div style={{ flex: 1 }}></div>
-                <div style={{ display: 'flex', gap: '8px' }}>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ff5f57' }}></div>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#ffbd2e' }}></div>
-                  <div style={{ width: '12px', height: '12px', borderRadius: '50%', backgroundColor: '#28ca42' }}></div>
-                </div>
-              </div>
-
-              {/* Email Toolbar */}
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '12px 20px',
-                borderBottom: '1px solid #e8e8e8',
-                display: 'flex',
-                gap: '8px'
-              }}>
-                <Button size="small" type="text" style={{ color: '#666', fontSize: '12px' }}>Reply</Button>
-                <Button size="small" type="text" style={{ color: '#666', fontSize: '12px' }}>Reply All</Button>
-                <Button size="small" type="text" style={{ color: '#666', fontSize: '12px' }}>Forward</Button>
-                <div style={{ flex: 1 }}></div>
-                <Button size="small" type="text" style={{ color: '#666', fontSize: '12px' }}>
-                  <MoreOutlined />
-                </Button>
-              </div>
-
-              {/* Email Header Info */}
-              <div style={{
-                padding: '20px',
-                borderBottom: '1px solid #f0f0f0'
-              }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '12px' }}>
-                  <Text strong style={{ fontSize: '16px' }}>
-                    {subject}
-                  </Text>
-                  <Text style={{ fontSize: '12px', color: '#666' }}>
-                    Today, {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
-                  </Text>
-                </div>
-
-                <div style={{ display: 'flex', gap: '16px', fontSize: '13px' }}>
-                  <div>
-                    <Text strong style={{ color: '#666', display: 'block', marginBottom: '2px' }}>From:</Text>
-                    <Text>no-reply@company.com</Text>
-                  </div>
-                  <div>
-                    <Text strong style={{ color: '#666', display: 'block', marginBottom: '2px' }}>To:</Text>
-                    <Text>customer@example.com</Text>
+                <div style={{ textAlign: 'right' }}>
+                  <div style={{ fontSize: '10pt', color: '#666' }}>
+                    Date: {new Date().toLocaleDateString()}
+                    <br />
+                    Ref: {templateType || 'TEMPLATE-001'}
                   </div>
                 </div>
               </div>
 
-              {/* Email Body */}
-              <div style={{
-                padding: '30px 20px',
-                minHeight: '400px',
-                lineHeight: '1.6'
-              }}>
-                <div
-                  style={{
-                    fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-                    fontSize: '14px',
-                    color: '#333'
-                  }}
-                  dangerouslySetInnerHTML={{ __html: emailContent }}
-                />
-              </div>
-
-              {/* Email Signature */}
-              <div style={{
-                padding: '20px',
-                borderTop: '1px solid #f0f0f0',
-                backgroundColor: '#fafafa'
-              }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-                  <div style={{
-                    width: '40px',
-                    height: '40px',
-                    borderRadius: '50%',
-                    backgroundColor: '#2f6bff',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    color: 'white',
-                    fontWeight: 'bold',
-                    fontSize: '14px'
-                  }}>
-                    {templateName ? templateName.charAt(0).toUpperCase() : 'C'}
-                  </div>
-                  <div>
-                    <Text strong style={{ display: 'block', fontSize: '14px' }}>
-                      {templateName || 'Company Name'}
-                    </Text>
-                    <Text style={{ fontSize: '12px', color: '#666' }}>
-                      {description || 'Professional Email Service'}
-                    </Text>
-                    <div style={{ fontSize: '11px', color: '#888', marginTop: '4px' }}>
-                      <div>📧 info@company.com</div>
-                      <div>🌐 www.company.com</div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Email Footer */}
-              <div style={{
-                backgroundColor: '#f8f9fa',
-                padding: '16px 20px',
-                borderTop: '1px solid #e8e8e8',
-                textAlign: 'center'
-              }}>
-                <Text style={{ fontSize: '11px', color: '#999' }}>
-                  This email was sent from the Email Template Builder • {new Date().getFullYear()} •
-                  <Button type="link" size="small" style={{ fontSize: '11px', padding: '0 4px', height: 'auto' }}>
-                    Unsubscribe
-                  </Button>
+              <div style={{ marginTop: '15px' }}>
+                <Text strong style={{ fontSize: '14pt', display: 'block', marginBottom: '5px' }}>
+                  SUBJECT: {subject}
                 </Text>
               </div>
             </div>
+            <div style={{
+              // marginBottom: '30px',
+              minHeight: '400px'
+            }}>
+              <div
+                style={{
+                  lineHeight: '1.6',
+                  textAlign: 'justify'
+                }}
+                dangerouslySetInnerHTML={{
+                  __html: emailContent.replace(/\n/g, '<br>')
+                }}
+              />
+            </div>
           </div>
-        )}
+        </div>
       </Modal>
     </div>
   );

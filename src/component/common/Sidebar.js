@@ -265,6 +265,10 @@ baseMenuItems.forEach((item, index) => {
         navigate("/PolicyClientExample", {
           state: { search: "Policy Client Example" },
         });
+      case "Templetes":
+        navigate("/templeteSummary", {
+          state: { search: "Templetes" },
+        });
         break;
       default:
         navigate("/NotDesignedYet");

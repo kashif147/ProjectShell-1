@@ -165,16 +165,6 @@ function HeaderDetails() {
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
-  // const handleApplyStatusFilter = () => {
-  //   if (statusValues.length === 0) return;
-  //   const allStatuses = ["submitted", "approved", "rejected", "in-progress"];
-  //   const finalStatuses =
-  //     statusOperator === "=="
-  //       ? statusValues
-  //       : allStatuses.filter((status) => !statusValues.includes(status));
-  //   dispatch(getAllApplications(finalStatuses));
-  // };
-
   function filterSearchableColumns(data) {
     if (data) {
       const filteredResults = globleFilters?.reduce((acc, i) => {
@@ -538,7 +528,8 @@ function HeaderDetails() {
             location?.pathname == "/Sms" ||
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
-            location?.pathname == "/Popout") && (
+            location?.pathname == "/Popout" ||
+            location?.pathname == "/templeteSummary") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
@@ -548,82 +539,101 @@ function HeaderDetails() {
                   </h2>
 
                   <div className="d-flex">
-                    {nav === "/CorrespondencesSummary" ||
-                      nav === "/Sms" ||
-                      nav === "/Emails" ? (
-                      <div style={{ marginRight: "50px" }}>
-                        <New />
-                      </div>
-                    ) : nav === "/ClaimSummary" ? (
-                      <CreateClaim />
-                    ) : (
-                      nav === "/Reconciliation" ? null : (
-                        <Button
-                          onClick={() => {
-                            if (nav == "/Applications") {
-                              // setisGardaDrwer(!isGardaDrwer);
-                              navigate('/applicationMgt')
-                            } else if (nav == "/ClaimSummary") {
-                              handlClaimDrawerChng();
-                            } else if (nav == "/Transfers")
-                              setTransferDrawer(!TransferDrawer);
-                            else if (nav === "/RosterSummary")
-                              setrosterDrawer(!rosterDrawer);
-                            else if (nav === "/Summary")
-                              // setisGardaDrwer(!isGardaDrwer);
-                              navigate('/applicationMgt')
-                            else if (
-                              nav === "/RemindersSummary" ||
-                              nav === "/Cancallation" ||
-                              nav === "/Batches" ||
-                              nav === "/Import" ||
-                              nav === "/onlinePayment" ||
-                              nav === "/Deductions" ||
-                              nav === "/StandingOrders" ||
-                              nav === "/Cheque" ||
-                              nav === "/CornMarket"
-                            ) {
-                              setIsBatchOpen(!isBatchOpen);
-                            } else if (nav === "/ChangCateSumm") {
-                              setisDrawerOpen(!isDrawerOpen);
-                            }
-                          }}
-                          style={{
-                            marginRight: "50px",
-                            color: "white",
-                            borderRadius: "3px",
-                            backgroundColor: "#45669d",
-                          }}
-                          className="butn"
-                        >
-                          Create
-                        </Button>)
-                    )}
-                    <SimpleMenu
-                      title={
-                        <>
-                          <Button className="me-1 gray-btn butn">Export</Button>
-                        </>
-                      }
-                      data={exportbtn}
-                      isSearched={true}
-                      isCheckBox={false}
-                      actions={genaratePdf}
-                    />
-
-                    <Button className="me-1 gray-btn butn">Share</Button>
-                    <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                    {currentKey && (
+                    {/* For templateSummary, only show Create button */}
+                    {nav === "/templeteSummary" ? (
                       <Button
-                        className="me-1 gray-btn butn"
-                        onClick={() => toggleView(currentKey)}
+                        onClick={() => {
+                          navigate('/templeteConfig', { state: { state: "Templetes" } });
+                        }}
+                        style={{
+                          marginRight: "50px", // This gives the margin right
+                          color: "white",
+                          borderRadius: "3px",
+                          backgroundColor: "#45669d",
+                        }}
+                        className="butn"
                       >
-                        {viewMode[currentKey] === "card"
-                          ? "Card view"
-                          : "Grid view"}
+                        Create
                       </Button>
+                    ) : (
+                      <>
+                        {nav === "/CorrespondencesSummary" ||
+                          nav === "/Sms" ||
+                          nav === "/Emails" ? (
+                          <div style={{ marginRight: "50px" }}>
+                            <New />
+                          </div>
+                        ) : nav === "/ClaimSummary" ? (
+                          <CreateClaim />
+                        ) : (
+                          nav === "/Reconciliation" ? null : (
+                            <Button
+                              onClick={() => {
+                                if (nav == "/Applications") {
+                                  navigate('/applicationMgt')
+                                } else if (nav == "/ClaimSummary") {
+                                  handlClaimDrawerChng();
+                                } else if (nav == "/Transfers")
+                                  setTransferDrawer(!TransferDrawer);
+                                else if (nav === "/RosterSummary")
+                                  setrosterDrawer(!rosterDrawer);
+                                else if (nav === "/Summary")
+                                  navigate('/applicationMgt')
+                                else if (
+                                  nav === "/RemindersSummary" ||
+                                  nav === "/Cancallation" ||
+                                  nav === "/Batches" ||
+                                  nav === "/Import" ||
+                                  nav === "/onlinePayment" ||
+                                  nav === "/Deductions" ||
+                                  nav === "/StandingOrders" ||
+                                  nav === "/Cheque" ||
+                                  nav === "/CornMarket"
+                                ) {
+                                  setIsBatchOpen(!isBatchOpen);
+                                } else if (nav === "/ChangCateSumm") {
+                                  setisDrawerOpen(!isDrawerOpen);
+                                }
+                              }}
+                              style={{
+                                marginRight: "50px",
+                                color: "white",
+                                borderRadius: "3px",
+                                backgroundColor: "#45669d",
+                              }}
+                              className="butn"
+                            >
+                              Create
+                            </Button>
+                          )
+                        )}
+                        <SimpleMenu
+                          title={
+                            <>
+                              <Button className="me-1 gray-btn butn">Export</Button>
+                            </>
+                          }
+                          data={exportbtn}
+                          isSearched={true}
+                          isCheckBox={false}
+                          actions={genaratePdf}
+                        />
+
+                        <Button className="me-1 gray-btn butn">Share</Button>
+                        <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
+                        {currentKey && (
+                          <Button
+                            className="me-1 gray-btn butn"
+                            onClick={() => toggleView(currentKey)}
+                          >
+                            {viewMode[currentKey] === "card"
+                              ? "Card view"
+                              : "Grid view"}
+                          </Button>
+                        )}
+                        <ActionDropdown items={menuItems} />
+                      </>
                     )}
-                    <ActionDropdown items={menuItems} />
                   </div>
                 </div>
                 {nav == "/Reconciliation" ? (
@@ -656,7 +666,7 @@ function HeaderDetails() {
                       />
                     </Row>
                   </div>
-                ) : (
+                ) : nav !== "/templeteSummary" && (
                   <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
                     <Toolbar />
                     <div className="d-flex">
