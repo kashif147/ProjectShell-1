@@ -202,7 +202,7 @@
 //         render: (price, record) => {
 //           const currency = record.currency || "EUR";
 //           const symbol =
-//             currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
+//             currency === "EUR" ? "€" : currency === "USD" ? "€" : "£";
 //           return `${symbol}${price || 0}`;
 //         },
 //       });
@@ -215,7 +215,7 @@
 //           render: (price, record) => {
 //             const currency = record.currency || "EUR";
 //             const symbol =
-//               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
+//               currency === "EUR" ? "€" : currency === "USD" ? "€" : "£";
 //             return `${symbol}${price || 0}`;
 //           },
 //         },
@@ -226,7 +226,7 @@
 //           render: (price, record) => {
 //             const currency = record.currency || "EUR";
 //             const symbol =
-//               currency === "EUR" ? "€" : currency === "USD" ? "$" : "£";
+//               currency === "EUR" ? "€" : currency === "USD" ? "€" : "£";
 //             return `${symbol}${price || 0}`;
 //           },
 //         }
@@ -443,7 +443,7 @@
 //             {formData.currency === "EUR"
 //               ? "€"
 //               : formData.currency === "USD"
-//                 ? "$"
+//                 ? "€"
 //                 : "£"}
 //             )
 //           </label>
@@ -467,7 +467,7 @@
 //               {formData.currency === "EUR"
 //                 ? "€"
 //                 : formData.currency === "USD"
-//                   ? "$"
+//                   ? "€"
 //                   : "£"}
 //               )
 //             </label>
@@ -490,7 +490,7 @@
 //               {formData.currency === "EUR"
 //                 ? "€"
 //                 : formData.currency === "USD"
-//                   ? "$"
+//                   ? "€"
 //                   : "£"}
 //               )
 //             </label>

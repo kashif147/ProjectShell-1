@@ -251,15 +251,6 @@ export const subscriptionItems = [
     label: <div className="sidebar-label">Membership Dashboard</div>,
   },
   {
-    key: "Profiles",
-    icon: (
-      <div className="icon">
-        <FaUserCog />
-      </div>
-    ),
-    label: <div className="sidebar-label">Profiles</div>,
-  },
-  {
     key: "Applications",
     icon: (
       <div className="icon">
@@ -268,6 +259,16 @@ export const subscriptionItems = [
     ),
     label: <div className="sidebar-label">Applications</div>,
   },
+  {
+    key: "Profiles",
+    icon: (
+      <div className="icon">
+        <FaUserCog />
+      </div>
+    ),
+    label: <div className="sidebar-label">Profiles</div>,
+  },
+
   {
     key: "Reminders",
     icon: (

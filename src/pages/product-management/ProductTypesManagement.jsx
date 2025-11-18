@@ -377,7 +377,7 @@ if (productType?.name === "Membership") {
       let price = record?.currentPricing?.price;
       price = convertSandToEuro(price)
       const currencyStr = String(currency || "").toUpperCase();
-      const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+      const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
       return price != null ? `${symbol}${price}.00` : "-";
     },
   });
@@ -392,7 +392,7 @@ if (productType?.name === "Membership") {
         let price = record?.currentPricing?.memberPrice;
         price = convertSandToEuro(price)
         const currencyStr = String(currency || "").toUpperCase();
-        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
         return price != null ? `${symbol}${price}.00` : "-";
       },
     },
@@ -405,7 +405,7 @@ if (productType?.name === "Membership") {
         let price = record?.currentPricing?.nonMemberPrice;
             price = convertSandToEuro(price)
         const currencyStr = String(currency || "").toUpperCase();
-        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "$" : "";
+        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
 
         return price != null ? `${symbol}${price}.00` : "-";
       },

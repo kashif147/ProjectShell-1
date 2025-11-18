@@ -118,7 +118,7 @@ function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
       memberNumber: '12345',
       workLocation: 'New York',
       status: 'Active',
-      outstandingAmount: '$100',
+      outstandingAmount: '€100',
       paymentType: 'Credit Card',
       lastPaymentDate: '2023-01-01',
       membershipExpiryDate: '2024-01-01',

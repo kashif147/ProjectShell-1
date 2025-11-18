@@ -239,7 +239,7 @@ const handleSubmit = async (e) => {
                 {formData.currency === "EUR"
                   ? "€"
                   : formData.currency === "USD"
-                    ? "$"
+                    ? "€"
                     : "£"}
                 )
               </label>
@@ -265,7 +265,7 @@ const handleSubmit = async (e) => {
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "$"
+                      ? "€"
                       : "£"}
                   )
                 </label>
@@ -290,7 +290,7 @@ const handleSubmit = async (e) => {
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "$"
+                      ? "€"
                       : "£"}
                   )
                 </label>

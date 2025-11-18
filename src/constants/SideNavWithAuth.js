@@ -218,18 +218,18 @@ export const subscriptionItems = [
     ["MEMBER", "MO", "AMO", "GS", "DGS", "SU"]
   ),
   createMenuItem(
-    "Profiles",
-    <FaUserCog />,
-    "Profiles",
-    ["crm:member:read", "crm:member:list"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
-  ),
-  createMenuItem(
     "Applications",
     <FaClipboardList />,
     "Applications",
     ["crm:application:read", "crm:application:list"],
     ["MO", "AMO", "GS", "DGS", "SU"]
+  ),
+  createMenuItem(
+    "Profiles",
+    <FaUserCog />,
+    "Profiles",
+    ["crm:member:read", "crm:member:list"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
     "Reminders",
