@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useMemo } from "react";
 import { SiActigraph } from "react-icons/si";
-import { FaRegMap, FaRocketchat } from "react-icons/fa6";
+import { FaLeaf, FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
 import { LuRefreshCw } from "react-icons/lu";
 // import { selectGroupedLookups, selectGroupedLookupsByType } from "../features/LookupsSlice";
@@ -25,6 +25,7 @@ import {
   Globe,
   Building2,
   MapPin,
+  University,
   MapPinned,
   Mail,
   Layout,
@@ -42,6 +43,7 @@ import {
   Boxes,
   Search,
   Phone,
+  Bookmark,
   HelpCircle,
   Users,
   search,
@@ -58,19 +60,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useTableColumns } from "../context/TableColumnsContext ";
 import MyConfirm from "../component/common/MyConfirm";
 import {
-  ProvinceOutlined,
   CountyOutlined,
-  MaritalStatusOutlined,
-  StationOutlined,
-  Gender,
-  PostCodeOutlined,
-  DistrictsOutlined,
-  DivisionsOutlined,
-  BoardOutlined,
-  CouncilOutlined,
-  CitiesOutlined,
-  LanguageOutlined,
-  Title,
 } from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
 import { TbUsersGroup } from "react-icons/tb";
@@ -98,14 +88,24 @@ import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
 import { fetchCountries } from "../features/CountriesSlice";
+import { getBookmarks } from "../features/templete/BookmarkActions";
 
 // i have different drwers for configuration of lookups for the system
 
 function Configuratin() {
-  const insertDataFtn = async (url, data, successNotification, failureNotification, callback) => {
+  const dispatch = useDispatch();
+  const {
+    bookmarks,
+    bookmarksLoading,
+    bookmarksError,
+  } = useSelector((state) => state.bookmarks);
+  const insertDataFtn = async (url, data, successNotification, failureNotification, callback, isCoum) => {
     const token = localStorage.getItem("token");
+    debugger
+    // Determine the base URL based on isCoum flag
+    const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
     try {
-      const response = await axios.post(`${baseURL}${url}`, data, {
+      const response = await axios.post(`${baseUrl}${url}`, data, {
         headers: {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
@@ -126,14 +126,14 @@ function Configuratin() {
         error?.response?.data?.error?.message ||
         error?.message ||
         "Something went wrong";
-      
 
       // ✅ Trigger failure alert properly
-
-
       return MyAlert("error", failureNotification, errMsg);
     }
   };
+  useEffect(() => {
+    dispatch(getBookmarks())
+  }, [dispatch])
   const columnsSolicitors = [
     {
       title: "Surname",
@@ -224,47 +224,50 @@ function Configuratin() {
     },
   ];
 
-  const updateFtn = async (
-    // apiURL = baseURL,
-    endPoint,
-    data1,
-    callback,
-    msg = "updated successfully",
-  ) => {
-    try {
-      const token = localStorage.getItem("token");
-      // ✅ If `id` exists in data1 but not in URL, append it
-      let finalEndPoint = endPoint;
-      if (data1?.id && !endPoint.includes(data1.id)) {
-        finalEndPoint = `${endPoint}/${data1.id}`;
-      }
-
-      const { id, ...finalData } = data1;
-      
-
-      const response = await axios.put(`${baseURL}${endPoint}`, data1, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
-      console.log("Update Response:", response);
-      if (response?.status === 200) {
-
-        MyAlert("success", msg);
-        if (typeof callback === "function") {
-          callback(); // wait in case it's async
-        }
-        return response.data;
-      } else {
-        MyAlert("error", "notificationsMsg?.updating?.falier");
-
-      }
-    } catch (error) {
-      console.error("API Error:", error.response?.data || error.message);
-      // throw error;
+const updateFtn = async (
+  endPoint,
+  data1,
+  callback,
+  msg = "updated successfully",
+  isCoum = false // Add isCoum parameter with default false
+) => {
+  try {
+    const token = localStorage.getItem("token");
+    
+    // ✅ Determine base URL based on isCoum flag
+    const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
+    
+    // ✅ If `id` exists in data1 but not in URL, append it
+    let finalEndPoint = endPoint;
+    if (data1?.id && !endPoint.includes(data1.id)) {
+      finalEndPoint = `${endPoint}/${data1.id}`;
     }
-  };
+
+    const { id, ...finalData } = data1;
+
+    const response = await axios.put(`${baseUrl}${finalEndPoint}`, finalData, {
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-Type": "application/json",
+      },
+    });
+    
+    console.log("Update Response:", response);
+    
+    if (response?.status === 200) {
+      MyAlert("success", msg);
+      if (typeof callback === "function") {
+        callback(); // wait in case it's async
+      }
+      return response.data;
+    } else {
+      MyAlert("error", "notificationsMsg?.updating?.falier");
+    }
+  } catch (error) {
+    console.error("API Error:", error.response?.data || error.message);
+    // throw error;
+  }
+};
   const updateCountiesFtn = async (
     // apiURL = baseURL,
     endPoint,
@@ -281,7 +284,7 @@ function Configuratin() {
       }
 
       const { id, ...finalData } = data1;
-      
+
 
       const response = await axios.put(`${baseURL}${finalEndPoint}`, finalData, {
         headers: {
@@ -344,7 +347,79 @@ function Configuratin() {
       return null;
     }
   };
+  const columnBookmark = [
+    {
+      title: 'Key',
+      dataIndex: 'key',
+      key: 'key',
+      width: '20%',
+    },
+    {
+      title: 'Label',
+      dataIndex: 'label',
+      key: 'label',
+      width: '25%',
+    },
+    {
+      title: 'Path',
+      dataIndex: 'path',
+      key: 'path',
+      width: '30%',
+    },
+    {
+      title: 'Data Type',
+      dataIndex: 'dataType',
+      key: 'dataType',
+      width: '15%',
+      // render: (dataType) => (
+      //   <Tag color={getDataTypeColor(dataType)}>
+      //     {dataType?.toUpperCase()}
+      //   </Tag>
+      // ),
+    },
+    {
+      title: 'Status',
+      dataIndex: 'isactive',
+      key: 'isactive',
+      width: '10%',
+      // render: (isactive) => (
+      //   <Tag color={isactive ? 'green' : 'red'}>
+      //     {isactive ? 'Active' : 'Inactive'}
+      //   </Tag>
+      // ),
 
+    },
+    {
+      title: "Action",
+      dataIndex: "action",
+      key: "action",
+      align: "center",
+      render: (_, record) => (
+        <Space size="middle">
+          <FaEdit
+            size={16}
+            style={{ marginRight: "10px" }}
+            onClick={() => {
+              IsUpdateFtn("Bookmarks", !IsUpdateFtn?.Bookmarks, record);
+              addIdKeyToLookup(record?._id, "Bookmarks");
+            }}
+          />
+          <AiFillDelete
+            size={16}
+            onClick={() =>
+              MyConfirm({
+                title: "Confirm Deletion",
+                message: "Do You Want To Delete This Item?",
+                onConfirm: async () => {
+                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getBookmarks()))
+                },
+              })
+            }
+          />
+        </Space>
+      ),
+    },
+  ];
 
   const navigate = useNavigate();
   const [data, setdata] = useState({
@@ -410,7 +485,7 @@ function Configuratin() {
     ContactType: "",
     DisplayName: "",
   });
-  const dispatch = useDispatch();
+
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
   const { countriesData } = useSelector((state) => state.countries);
@@ -445,6 +520,7 @@ function Configuratin() {
   const [drawerOpen, setDrawerOpen] = useState({
     counties: false,
     Countries: false,
+    StudyLocation: false,
     Provinces: false,
     Cities: false,
     PostCode: false,
@@ -472,6 +548,7 @@ function Configuratin() {
     Reasons: false,
     RosterType: false,
     Sections: false,
+    Bookmarks: false,
   });
   const [selectLokups, setselectLokups] = useState({
     Provinces: [],
@@ -513,6 +590,7 @@ function Configuratin() {
     RosterType: false,
     Solicitors: false,
     Sections: false,
+    Bookmarks: false,
   });
 
   useMemo(() => {
@@ -700,6 +778,12 @@ function Configuratin() {
   };
 
   let drawerInputsInitalValues = {
+    Bookmarks: {
+      "key": "",
+      "label": "",
+      "path": "",
+      "dataType": ""
+    },
     Solicitors: {
       forename: "",
       surname: "",
@@ -735,6 +819,16 @@ function Configuratin() {
     // },
 
     //worklocation
+    Station: {
+      lookuptypeId: "68d0369c662428d1c504b3aa",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+    },
     Station: {
       lookuptypeId: "68d0369c662428d1c504b3aa",
       DisplayName: "",
@@ -990,6 +1084,7 @@ function Configuratin() {
   };
 
   const [drawerIpnuts, setdrawerIpnuts] = useState(drawerInputsInitalValues);
+  console.log("drawerIpnuts", drawerIpnuts);
   const drawrInptChng = (drawer, field, value) => {
     setdrawerIpnuts((prevState) => {
       // Check if the field is nested inside ContactAddress
@@ -1018,7 +1113,7 @@ function Configuratin() {
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
-
+    debugger
     if (value == false) {
       setisUpdateRec((prev) => ({
         ...prev,
@@ -1069,14 +1164,14 @@ function Configuratin() {
   };
 
   const openCloseDrawerFtn = (name) => {
-    
+
     setDrawerOpen((prevState) => {
       const wasOpen = prevState[name]; // Check if it was open before
       const newState = {
         ...prevState,
         [name]: !prevState[name],
       };
-      
+
       if (wasOpen) {
         disableFtn(true); // Execute only when closing
       }
@@ -1108,7 +1203,7 @@ function Configuratin() {
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
-    
+    debugger
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
 
@@ -1119,7 +1214,7 @@ function Configuratin() {
           id: idValue,
         },
       };
-      
+
     });
   };
 
@@ -1966,30 +2061,30 @@ function Configuratin() {
       sorter: (a, b) => a.code.localeCompare(b.code), // Assumes RegionCode is a string
       sortDirections: ["ascend", "descend"], // Optional: Sets the sort order directions
     },
-  {
-  title: "Lookup Type",
-  key: "lookuptype",
-  dataIndex: ["lookuptypeId", "lookuptype"],
+    {
+      title: "Lookup Type",
+      key: "lookuptype",
+      dataIndex: ["lookuptypeId", "lookuptype"],
 
-  render: (_, record) => (
-    <div>{record?.lookuptypeId?.lookuptype || "N/A"}</div>
-  ),
+      render: (_, record) => (
+        <div>{record?.lookuptypeId?.lookuptype || "N/A"}</div>
+      ),
 
-  // Generate unique filters from the same table data
-  filters: Array.from(
-    new Set(
-      (lookups || [])
-        .map((item) => item?.lookuptypeId?.lookuptype)
-        .filter(Boolean)
-    )
-  ).map((value) => ({ text: value, value })),
+      // Generate unique filters from the same table data
+      filters: Array.from(
+        new Set(
+          (lookups || [])
+            .map((item) => item?.lookuptypeId?.lookuptype)
+            .filter(Boolean)
+        )
+      ).map((value) => ({ text: value, value })),
 
-  // Perform case-insensitive filtering
-  onFilter: (value, record) => {
-    const lookupType = record?.lookuptypeId?.lookuptype || "";
-    return lookupType.toLowerCase() === value.toLowerCase();
-  },
-},
+      // Perform case-insensitive filtering
+      onFilter: (value, record) => {
+        const lookupType = record?.lookuptypeId?.lookuptype || "";
+        return lookupType.toLowerCase() === value.toLowerCase();
+      },
+    },
     {
       title: " Display Name",
       dataIndex: "DisplayName",
@@ -2050,10 +2145,10 @@ function Configuratin() {
     },
   ];
   const groupByLookupType = function (data) {
-    
+
     return data.reduce((grouped, item) => {
       const lookupType = item.lookuptypeId.lookuptype;
-      
+
       if (!grouped[lookupType]) {
         grouped[lookupType] = [];
       }
@@ -4104,8 +4199,8 @@ function Configuratin() {
 
     const currentInput = drawerIpnuts?.[drawerType] || {};
 
-    // Code is required for all
-    if (!currentInput.code) {
+    // Code is required for all EXCEPT Bookmarks
+    if (drawerType !== "Bookmarks" && !currentInput.code) {
       newErrors[drawerType].code = true;
     }
 
@@ -4124,6 +4219,22 @@ function Configuratin() {
         newErrors[drawerType].contactType = true;
       }
     }
+    // Special case: "Bookmarks" uses 'key' and 'label' instead of 'lookupname'
+    else if (drawerType === "Bookmarks") {
+      if (!currentInput.key) {
+        newErrors[drawerType].key = true;
+      }
+      if (!currentInput.label) {
+        newErrors[drawerType].label = true;
+      }
+      if (!currentInput.path) {
+        newErrors[drawerType].path = true;
+      }
+      if (!currentInput.dataType) {
+        newErrors[drawerType].dataType = true;
+      }
+      // Note: code is NOT required for Bookmarks
+    }
     // Default case: other drawers use 'lookupname'
     else {
       if (!currentInput.lookupname) {
@@ -4141,6 +4252,7 @@ function Configuratin() {
     }
 
     setErrors(newErrors);
+    debugger
 
     // Return true if no errors
     const noErrors = Object.keys(newErrors[drawerType]).length === 0;
@@ -4310,12 +4422,22 @@ function Configuratin() {
           label: "Work Location",
         }, // orange-500
         {
+          key: "Study Location",
+          icon: <University size={24} color="#f97316" />,
+          label: "Study Location",
+        }, // orange-500
+        {
           key: "Cities",
           icon: <Building2 size={24} color="#10b981" />,
           label: "Cities",
         }, // emerald-500
         {
           key: "PostCode",
+          icon: <Mail size={24} color="#0ea5e9" />,
+          label: "Post Codes",
+        }, // sky-500
+        {
+          key: "",
           icon: <Mail size={24} color="#0ea5e9" />,
           label: "Post Codes",
         }, // sky-500
@@ -4424,6 +4546,11 @@ function Configuratin() {
           icon: <File size={24} color="#818cf8" />,
           label: "Document Type",
         }, // indigo-400
+        {
+          key: "Bookmarks",
+          icon: <Bookmark size={24} color="#818cf8" />,
+          label: "Bookmarks",
+        }, // indigo-400
       ],
     },
     {
@@ -4502,7 +4629,7 @@ function Configuratin() {
             paddingBottom: "100px",
             scrollbarWidth: "none",
             msOverflowStyle: "none",
-          
+
           }}
         >
           {sections.map((section, idx) => {
@@ -4511,7 +4638,7 @@ function Configuratin() {
             );
 
             return (
-              <div key={`${section.title}-${idx}`}style={{marginBottom:'5rem'}}>
+              <div key={`${section.title}-${idx}`} style={{ marginBottom: '5rem' }}>
                 <h5 className="fw-semibold mb-4 text-primary">
                   {section.title}
                 </h5>
@@ -6026,7 +6153,7 @@ function Configuratin() {
                     hasError={!!errors?.Districts?.Parentlookupid}
                     value={drawerIpnuts?.Districts?.Parentlookupid}
                     onChange={(val) => {
-                      
+
                       drawrInptChng("Districts", "Parentlookupid", val.target.value)
                     }
                     }
@@ -6527,6 +6654,179 @@ function Configuratin() {
         </div>
       </MyDrawer>
       <MyDrawer
+        title="Study Location"
+        // isContact={true}
+        open={drawerOpen?.StudyLocation}
+        isPagination={true}
+        onClose={() => openCloseDrawerFtn("StudyLocation")}
+        add={() => {
+          if (!validateForm("Station")) return;
+          insertDataFtn(
+            `/api/lookup`,
+            drawerIpnuts?.Station,
+            "Data inserted successfully:",
+            "Data did not insert:",
+            () => {
+              resetCounteries("Station", () => dispatch(getAllLookups()));
+            }
+          );
+          dispatch(getAllLookups());
+        }}
+        isEdit={isUpdateRec?.Station}
+        update={async () => {
+          if (!validateForm("Station")) return;
+          await updateFtn("/api/lookup", drawerIpnuts?.Station, () =>
+            resetCounteries("Station", () => dispatch(getAllLookups()))
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Station", false);
+        }}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          <div className="mb-4 pb-4">
+            <Row gutter={24}>
+              <Col span={24}>
+                <CustomSelect
+                  label="Type"
+                  name="type"
+                  placeholder="Work Location"
+                  disabled={true}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Work Location Name"
+                  name="lookupname"
+                  value={drawerIpnuts?.Station?.lookupname}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "lookupname", val)
+                  }
+                  disabled={isDisable}
+                  hasError={!!errors?.Station?.lookupname}
+                  errorMessage={errors?.Station?.lookupname}
+                  required
+                />
+              </Col>
+              <Col span={12}>
+                <MyInput
+                  label="Code"
+                  name="code"
+                  value={drawerIpnuts?.Station?.code}
+                  onChange={(val) => drawrInptChng("Station", "code", val)}
+                  disabled={isDisable}
+                  hasError={!!errors?.Station?.code}
+                  errorMessage={errors?.Station?.code}
+                  required
+                />
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
+                <MyInput
+                  label="Display Name"
+                  name="DisplayName"
+                  value={drawerIpnuts?.Station?.DisplayName}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "DisplayName", val)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+              <Col span={12}>
+                <div style={{ display: "flex", gap: "8px" }}>
+                  {/* Region Select */}
+                  <div style={{ flex: 1 }}>
+                    <CustomSelect
+                      label="Region"
+                      placeholder="Select Region"
+                      options={selectLokups?.Divisions}
+                      disabled={isDisable}
+                      required
+                      hasError={!!errors?.Districts?.Parentlookupid}
+                      value={drawerIpnuts?.Districts?.Parentlookupid}
+                      onChange={(val) =>
+                        drawrInptChng("Districts", "Parentlookupid", val)
+                      }
+                    />
+                  </div>
+
+                  {/* Button with fake label for alignment */}
+                  <div style={{ display: "flex", flexDirection: "column" }}>
+                    {/* empty label space to match CustomSelect */}
+                    <label style={{ height: 20, visibility: "hidden" }}>
+                      label
+                    </label>
+                    <Button
+                      className="butn primary-btn detail-btn"
+                      style={{ height: 40 }}
+                      onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
+                    >
+                      +
+                    </Button>
+                  </div>
+                </div>
+              </Col>
+            </Row>
+
+            <Row gutter={24}>
+              <Col span={12}>
+                <Checkbox
+                  disabled={isDisable}
+                  checked={drawerIpnuts?.Station?.isactive}
+                  onChange={(e) =>
+                    drawrInptChng("Station", "isactive", e.target.checked)
+                  }
+                >
+                  Active
+                </Checkbox>
+              </Col>
+            </Row>
+          </div>
+
+          {/* Popout Btn aligned right and bottom with inputs */}
+          <div
+            style={{
+              display: "flex",
+              justifyContent: "flex-end",
+              alignItems: "flex-end",
+            }}
+          >
+            <Button
+              style={{ height: 40, marginBottom: 4 }}
+              onClick={() =>
+                navigate("/Popout", { state: { search: "Work Location" } })
+              }
+            >
+              <FaArrowUpRightFromSquare />
+            </Button>
+          </div>
+
+          <div className="mt-4 config-tbl-container">
+            <h6 className=" mb-3 text-primary">Existing Work Locations</h6>
+            <Table
+              pagination={true}
+              columns={columnStations}
+              dataSource={groupedLookups?.workLocation}
+              className="drawer-tbl"
+              loading={lookupsloading}
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
+      <MyDrawer
         title="Contact Types"
         open={drawerOpen?.ContactType}
 
@@ -6667,9 +6967,9 @@ function Configuratin() {
           );
           dispatch(getLookupTypes());
         }}
-        //   onChange={handlePageChange}
-        // total={lookupsTypes?.length}
-      
+      //   onChange={handlePageChange}
+      // total={lookupsTypes?.length}
+
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
@@ -6679,7 +6979,7 @@ function Configuratin() {
                 name="lookuptype"
                 value={drawerIpnuts?.LookupType?.lookuptype || ""}
                 options={[{ label: "Lookup Type", value: "Lookup Type" }]}
-                 onChange={(e) =>
+                onChange={(e) =>
                   drawrInptChng("LookupType", "lookuptype", e.target.value)
                 }
                 isSimple={true}
@@ -6930,9 +7230,9 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-        // total={lookups?.length}
-        // onChange={handlePageChange}
-        // pageSize={pageSize}
+      // total={lookups?.length}
+      // onChange={handlePageChange}
+      // pageSize={pageSize}
       >
         <div className="drawer-main-container p-4">
           <Row gutter={24}>
@@ -7049,7 +7349,146 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+      <MyDrawer
+        title="Bookmarks"
+        open={drawerOpen?.Bookmarks}
+        isPagination={false}
+        onClose={() => {
+          openCloseDrawerFtn("Bookmarks");
+          IsUpdateFtn("Bookmarks", false);
+        }}
+         update={async () => {
+          await updateFtn("/bookmarks/fields", drawerIpnuts?.Bookmarks, () =>
+            resetCounteries("Bookmarks", () => dispatch(getAllLookups())),
+          "updated successfully",
+          true
+          );
+          dispatch(getAllLookups());
+          IsUpdateFtn("Bookmarks", false);
+        }}
+        add={async () => {
+          if (!validateForm("Bookmarks")) return;
+          debugger
+          // Prepare the data object with all required fields
+          const bookmarkData = {
+            // code: drawerIpnuts?.Bookmarks?.code || "",
+            key: drawerIpnuts?.Bookmarks?.key || "",
+            label: drawerIpnuts?.Bookmarks?.label || "",
+            path: drawerIpnuts?.Bookmarks?.path || "",
+            dataType: drawerIpnuts?.Bookmarks?.dataType || "",
+            // Add other required fields for your bookmark
+          };
 
+          await insertDataFtn(
+            `/bookmarks/fields`,
+            bookmarkData, // Add the data parameter (was missing)
+            "Bookmark created successfully",
+            "Failed to create bookmark",
+            () => {
+              // Add callback function (was missing)
+              // resetBookmark(() => dispatch(getBookmarks()));
+              dispatch(getBookmarks());
+              openCloseDrawerFtn("Bookmarks"); // Close drawer after success
+            },
+            true
+          );
+        }}
+        isEdit={isUpdateRec?.Bookmarks}
+      >
+        <div className="drawer-main-cntainer p-4 me-2 ms-2">
+          {/* Key + Label */}
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Key:"
+                name="key"
+                value={drawerIpnuts?.Bookmarks?.key}
+                onChange={(e) =>
+                  drawrInptChng("Bookmarks", "key", e.target.value)
+                }
+                placeholder="Enter key (e.g., memberName)"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Bookmarks?.key}
+              />
+            </Col>
+            <Col span={12}>
+              <MyInput
+                label="Label:"
+                name="label"
+                value={drawerIpnuts?.Bookmarks?.label}
+                onChange={(e) =>
+                  drawrInptChng("Bookmarks", "label", e.target.value)
+                }
+                placeholder="Enter display label (e.g., Member Name)"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Bookmarks?.label}
+              />
+            </Col>
+          </Row>
+
+          {/* Path */}
+          <Row gutter={24}>
+            <Col span={12}>
+              <MyInput
+                label="Path:"
+                name="path"
+                value={drawerIpnuts?.Lookup?.path}
+                onChange={(e) =>
+                  drawrInptChng("Bookmarks", "path", e.target.value)
+                }
+                placeholder="Enter data path (e.g., profile.personalInfo.forename)"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Bookmarks?.path}
+              />
+            </Col>
+            <Col span={12}>
+              <CustomSelect
+                label="Data Type:"
+                name="dataType"
+                value={drawerIpnuts?.Bookmarks?.dataType}
+                onChange={(value) =>
+                  drawrInptChng("Bookmarks", "dataType", value.target.value)
+                }
+                options={[
+                  { label: "String", value: "string" },
+                  { label: "Number", value: "number" },
+                  { label: "Date", value: "date" },
+                  { label: "Boolean", value: "boolean" },
+                  { label: "Array", value: "array" },
+                  { label: "Object", value: "object" }
+                ]}
+                placeholder="Select data type"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Bookmarks?.dataType}
+              />
+            </Col>
+          </Row>
+
+          {/* Existing Bookmarks Table */}
+          <div className="mt-4 config-tbl-container">
+            <h6 className="mb-3 text-primary">Existing Bookmarks</h6>
+            <Table
+              pagination={true}
+              columns={columnBookmark}
+              dataSource={bookmarks}
+              loading={bookmarksLoading}
+              className="drawer-tbl"
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{
+                type: selectionType,
+                ...rowSelection,
+              }}
+              bordered
+            />
+          </div>
+        </div>
+      </MyDrawer>
       <MyDrawer
         title="Gender"
         open={drawerOpen?.Gender}

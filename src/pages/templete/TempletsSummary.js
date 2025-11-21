@@ -6,7 +6,7 @@ import MyInput from '../../component/common/MyInput';
 
 
 const TemplateManagement = () => {
-    // Mock data based on your image
+ 
     const dataSource = [
         {
             key: '1',
@@ -38,7 +38,6 @@ const TemplateManagement = () => {
         },
     ];
 
-    // Columns configuration
     const columns = [
         {
             title: 'TEMPLATE NAME',
@@ -170,7 +169,6 @@ const TemplateManagement = () => {
                 <div className="col-12 col-md-3"></div>
 
             </div>
-
             <Table
                 columns={columns}
                 dataSource={dataSource}

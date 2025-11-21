@@ -33,6 +33,7 @@ import hierarchicalLookupsReducer from '../features/lookupHierarchySlice';
 import hierarchicalDataByLocationReducer from '../features/HierarchicalDataByLocationSlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
+import bookmarkReducer from "../features/templete/BookmarkActions";
 const store = configureStore({
   reducer: {
     auth: authReducer, // Authentication state
@@ -63,6 +64,7 @@ const store = configureStore({
     countries: countriesReducer,
     batches: batchReducer,
     lookupsWorkLocation: lookupsWorkLocationReducer,
+     bookmarks: bookmarkReducer,
     // lookupHierarchy: lookupHierarchyReducer,
   },
 });

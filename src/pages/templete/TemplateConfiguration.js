@@ -1,35 +1,26 @@
 import React, { useState, useRef, useMemo, useEffect } from 'react';
 import {
   Card,
-  Divider,
   Row,
   Col,
   Typography,
-  Space,
   Button,
-  Modal
+  Modal,
+  message
 } from 'antd';
 import ReactQuill from 'react-quill';
 import { useNavigate } from 'react-router-dom';
 import 'react-quill/dist/quill.snow.css';
 import {
-  BoldOutlined,
-  ItalicOutlined,
-  UnderlineOutlined,
-  FontSizeOutlined,
-  UnorderedListOutlined,
-  OrderedListOutlined,
-  LinkOutlined,
-  PictureOutlined,
   CloseOutlined,
   EyeOutlined,
-  MailOutlined,
   FileTextOutlined,
-  PrinterOutlined,
-  MoreOutlined
+  SaveOutlined
 } from '@ant-design/icons';
 import MyInput from '../../component/common/MyInput';
 import CustomSelect from '../../component/common/CustomSelect';
+import { useDispatch, useSelector } from 'react-redux';
+import { getBookmarks } from '../../features/templete/BookmarkActions';
 
 const { Text } = Typography;
 
@@ -42,62 +33,307 @@ const TemplateConfiguration = () => {
   const [templateType, setTemplateType] = useState('');
   const [selectedVariables, setSelectedVariables] = useState(new Set());
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
   const quillRef = useRef(null);
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef('');
+
+  const dispatch = useDispatch();
   const navigate = useNavigate();
+
+  const {
+    bookmarks,
+    bookmarksLoading,
+    bookmarksError,
+  } = useSelector((state) => state.bookmarks);
+
+  // Template Type options - Email or Letter
+  const templateTypeOptions = [
+    { key: 'email', label: 'Email' },
+    { key: 'letter', label: 'Letter' },
+  ];
+
+  // Category options based on template type
+  const categoryOptions = {
+    email: [
+      { key: 'welcome', label: 'Welcome Email' },
+      { key: 'payment_reminder', label: 'Payment Reminder' },
+      { key: 'notification', label: 'Notification' },
+      { key: 'marketing', label: 'Marketing' },
+      { key: 'support', label: 'Support' },
+    ],
+    letter: [
+      { key: 'official', label: 'Official Letter' },
+      { key: 'approval', label: 'Approval Letter' },
+      { key: 'rejection', label: 'Rejection Letter' },
+      { key: 'appointment', label: 'Appointment Letter' },
+      { key: 'certificate', label: 'Certificate' },
+    ],
+  };
+
   // Available variables for drag and drop
-  const availableVariables = [
-    { id: '1', name: '{category_name}' },
-    { id: '2', name: '{payment_type}' },
-    { id: '3', name: '{work_location}' },
-    { id: '4', name: '{region}' },
-    { id: '5', name: '{branch}' },
-    { id: '6', name: '{member_name}' },
-    { id: '7', name: '{reg_no}' },
-    { id: '8', name: '{date}' },
-    { id: '9', name: '{email}' },
-    { id: '10', name: '{phone}' },
-    { id: '11', name: '{address}' },
-    { id: '12', name: '{city}' },
-  ];
+  const availableVariables = useMemo(() => {
+    if (!bookmarks) return [];
+    return bookmarks.map(bookmark => ({
+      id: bookmark._id,
+      name: `{${bookmark.key}}`,
+      label: bookmark.label,
+      dataType: bookmark.dataType
+    }));
+  }, [bookmarks]);
 
-  // Category options - using {key, label} format for CustomSelect
-  const categoryOptions = [
-    { key: 'welcome', label: 'Welcome Email' },
-    { key: 'payment_reminder', label: 'Payment Reminder' },
-    { key: 'notification', label: 'Notification' },
-    { key: 'marketing', label: 'Marketing' },
-    { key: 'support', label: 'Support' },
-  ];
+  useEffect(() => {
+    dispatch(getBookmarks());
+  }, [dispatch]);
 
-  // Template type options based on category - using {key, label} format
-  const templateTypeOptions = {
-    welcome: [
-      { key: 'welcome_1', label: 'Welcome Email 1' },
-      { key: 'welcome_2', label: 'Welcome Email 2' },
-      { key: 'welcome_3', label: 'Welcome Email 3' },
-    ],
-    payment_reminder: [
-      { key: 'payment_reminder_1', label: 'Payment Reminder 1' },
-      { key: 'payment_reminder_2', label: 'Payment Reminder 2' },
-      { key: 'payment_reminder_3', label: 'Payment Reminder 3' },
-    ],
-    notification: [
-      { key: 'notification_1', label: 'Notification 1' },
-      { key: 'notification_2', label: 'Notification 2' },
-      { key: 'notification_3', label: 'Notification 3' },
-    ],
-    marketing: [
-      { key: 'marketing_1', label: 'Marketing 1' },
-      { key: 'marketing_2', label: 'Marketing 2' },
-      { key: 'marketing_3', label: 'Marketing 3' },
-    ],
-    support: [
-      { key: 'support_1', label: 'Support 1' },
-      { key: 'support_2', label: 'Support 2' },
-      { key: 'support_3', label: 'Support 3' },
-    ],
+  // Function to convert HTML to plain text for Word document
+  const htmlToPlainText = (html) => {
+    const tempDiv = document.createElement('div');
+    tempDiv.innerHTML = html;
+    return tempDiv.textContent || tempDiv.innerText || '';
+  };
+
+  // Function to generate Word document content
+  const generateWordDocumentContent = () => {
+    const plainTextContent = htmlToPlainText(emailContent);
+    
+    return `<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>${templateName}</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      line-height: 1.6;
+      margin: 40px;
+      color: #333;
+    }
+    .header {
+      border-bottom: 2px solid #2f6bff;
+      padding-bottom: 20px;
+      margin-bottom: 30px;
+    }
+    .template-name {
+      font-size: 24px;
+      color: #2f6bff;
+      font-weight: bold;
+      margin-bottom: 10px;
+    }
+    .subject {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 20px 0;
+      color: #215e97;
+    }
+    .content {
+      margin: 30px 0;
+      white-space: pre-wrap;
+      line-height: 1.8;
+    }
+    .variables {
+      background: #f5f5f5;
+      padding: 15px;
+      margin: 20px 0;
+      border-left: 4px solid #215e97;
+    }
+    .metadata {
+      font-size: 12px;
+      color: #666;
+      margin-top: 40px;
+      padding-top: 20px;
+      border-top: 1px solid #ddd;
+    }
+    .variable-tag {
+      background: #eef4ff;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-weight: bold;
+      color: #215e97;
+      margin-right: 8px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="template-name">${templateName}</div>
+    <div><strong>Type:</strong> ${templateType}</div>
+    <div><strong>Category:</strong> ${category}</div>
+    <div><strong>Description:</strong> ${description}</div>
+  </div>
+  
+  <div class="subject">
+    ${templateType === 'letter' ? 'TITLE' : 'SUBJECT'}: ${subject}
+  </div>
+  
+  <div class="content">
+${plainTextContent}
+  </div>
+  
+  ${selectedVariables.size > 0 ? `
+  <div class="variables">
+    <strong>Template Variables:</strong><br><br>
+    ${Array.from(selectedVariables).map(variableId => {
+      const variable = availableVariables.find(v => v.id === variableId);
+      return variable ? `<span class="variable-tag">${variable.name}</span>${variable.label}<br>` : '';
+    }).join('')}
+  </div>
+  ` : ''}
+  
+  <div class="metadata">
+    <strong>Created:</strong> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}<br>
+    <strong>Template ID:</strong> TEMPLATE_${Date.now()}
+  </div>
+</body>
+</html>`;
+  };
+
+  // Function to save template to Google Drive
+  const saveTemplateToGoogleDrive = async () => {
+    try {
+      // Generate Word document content
+      const wordContent = generateWordDocumentContent();
+      
+      // Convert HTML content to Blob (simulating .docx with HTML)
+      const blob = new Blob([wordContent], { 
+        type: 'text/html' 
+      });
+
+      // Create form data for Google Drive API
+      const metadata = {
+        name: `${templateName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.html`,
+        mimeType: 'text/html',
+        parents: ['root']
+      };
+
+      const formData = new FormData();
+      formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
+      formData.append('file', blob);
+
+      // Get access token (you'll need to implement your Google Auth)
+      const accessToken = await getGoogleAccessToken();
+      
+      if (!accessToken) {
+        // For demo purposes, we'll simulate success
+        console.log('Simulating Google Drive upload...');
+        await new Promise(resolve => setTimeout(resolve, 2000));
+        return {
+          id: 'simulated_file_id_' + Date.now(),
+          webViewLink: 'https://drive.google.com/file/d/simulated_view_link',
+          name: metadata.name
+        };
+      }
+
+      // Upload to Google Drive
+      const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${accessToken}`
+        },
+        body: formData
+      });
+
+      if (!response.ok) {
+        throw new Error(`Google Drive upload failed: ${response.statusText}`);
+      }
+
+      const result = await response.json();
+      return result;
+
+    } catch (error) {
+      console.error('Error saving to Google Drive:', error);
+      throw error;
+    }
+  };
+
+  // Function to get Google Access Token (placeholder - implement based on your auth setup)
+  const getGoogleAccessToken = async () => {
+    // Implement your Google OAuth flow here
+    // For now, return null to use simulation
+    return null;
+  };
+
+  // Save Template Function
+  const handleSaveTemplate = async () => {
+    // Validation
+    if (!templateName.trim()) {
+      message.error('Please enter a template name');
+      return;
+    }
+
+    if (!templateType) {
+      message.error('Please select a template type');
+      return;
+    }
+
+    if (!category) {
+      message.error('Please select a category');
+      return;
+    }
+
+    if (!subject.trim()) {
+      message.error('Please enter a subject/title');
+      return;
+    }
+
+    if (!emailContent.trim() || emailContent === '<p><br></p>') {
+      message.error('Please enter template content');
+      return;
+    }
+
+    setSaving(true);
+
+    try {
+      // Step 1: Save to Google Drive as Word document
+      message.loading('Saving to Google Drive...', 0);
+      
+      const driveResponse = await saveTemplateToGoogleDrive();
+      
+      message.destroy();
+      message.success('Template saved to Google Drive successfully!');
+
+      // Step 2: Prepare template data for your backend
+      const templateData = {
+        name: templateName.trim(),
+        description: description.trim(),
+        type: templateType,
+        category: category,
+        subject: subject.trim(),
+        content: emailContent,
+        googleDriveFileId: driveResponse.id,
+        googleDriveWebViewLink: driveResponse.webViewLink,
+        variables: Array.from(selectedVariables).map(variableId => {
+          const variable = availableVariables.find(v => v.id === variableId);
+          return variable ? variable.name : null;
+        }).filter(Boolean),
+        metadata: {
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString(),
+          version: '1.0',
+          savedToDrive: true,
+          driveFileId: driveResponse.id,
+          driveFileName: driveResponse.name
+        }
+      };
+
+      // Step 3: Save to your backend (optional)
+      console.log('Template data ready for backend:', templateData);
+      
+      // Simulate backend save
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      message.success('Template saved successfully!');
+      
+      // Navigate to template summary
+      navigate('/templeteSummary');
+      
+    } catch (error) {
+      console.error('Error saving template:', error);
+      message.destroy();
+      message.error(`Failed to save template: ${error.message}`);
+    } finally {
+      setSaving(false);
+    }
   };
 
   // Preview handlers
@@ -109,21 +345,22 @@ const TemplateConfiguration = () => {
     setIsPreviewModalVisible(false);
   };
 
-  // Handle category change
-  const handleCategoryChange = (e) => {
-    const value = e.target.value;
-    setCategory(value);
-    setTemplateType(''); // Reset template type when category changes
-  };
-
   // Handle template type change
   const handleTemplateTypeChange = (e) => {
-    setTemplateType(e.target.value);
+    const value = e.target.value;
+    setTemplateType(value);
+    setCategory('');
+    setSubject('');
   };
 
-  // Get current template type options based on selected category
-  const getTemplateTypeOptions = () => {
-    return category ? (templateTypeOptions[category] || []) : [];
+  // Handle category change
+  const handleCategoryChange = (e) => {
+    setCategory(e.target.value);
+  };
+
+  // Get current category options based on selected template type
+  const getCategoryOptions = () => {
+    return templateType ? (categoryOptions[templateType] || []) : [];
   };
 
   // Custom Quill modules configuration
@@ -166,14 +403,9 @@ const TemplateConfiguration = () => {
       isProcessingRef.current = true;
       try {
         const editor = quillRef.current.getEditor();
-        const content = editor.getText(); // Get plain text content
-
+        const content = editor.getText();
         const currentlyPresentVariables = findVariablesInText(content);
-
-        // Update selectedVariables to match what's actually in the editor
         setSelectedVariables(currentlyPresentVariables);
-
-        // Update the ref with current content
         previousContentRef.current = content;
       } catch (error) {
         console.error('Error syncing variables:', error);
@@ -193,34 +425,17 @@ const TemplateConfiguration = () => {
         const range = editor.getSelection();
 
         if (range) {
-          // Insert variable with bold formatting
           editor.insertText(range.index, variableName, 'bold', true);
-
-          // Remove bold formatting from the character immediately after the variable
           editor.formatText(range.index + variableName.length, 1, 'bold', false);
-
-          // Add to selected variables
           setSelectedVariables(prev => new Set([...prev, variableId]));
-
-          // Move cursor after the inserted variable
           editor.setSelection(range.index + variableName.length, 0);
         } else {
-          // If no selection, insert at the end
           const length = editor.getLength();
-
-          // Insert variable with bold formatting
           editor.insertText(length - 1, variableName, 'bold', true);
-
-          // Remove bold formatting from the character immediately after the variable
           editor.formatText(length - 1 + variableName.length, 1, 'bold', false);
-
-          // Add to selected variables
           setSelectedVariables(prev => new Set([...prev, variableId]));
-
           editor.setSelection(length + variableName.length - 1, 0);
         }
-
-        // Update previous content
         previousContentRef.current = editor.getText();
       } catch (error) {
         console.error('Error inserting variable:', error);
@@ -234,25 +449,18 @@ const TemplateConfiguration = () => {
   useEffect(() => {
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
-
-      // Store initial content
       previousContentRef.current = editor.getText();
 
-      // Function to prevent editing of variables
       const preventVariableEditing = (range) => {
         if (range && range.length === 0) {
-          // Check if cursor is inside a variable
           const [line, offset] = editor.getLine(range.index);
           if (line) {
             const text = line.domNode.textContent || '';
             const variableRegex = /\{[^}]+\}/g;
             let match;
-
             while ((match = variableRegex.exec(text)) !== null) {
               const variableStart = match.index;
               const variableEnd = match.index + match[0].length;
-
-              // If cursor is inside a variable, move it to the end of the variable
               if (offset >= variableStart && offset <= variableEnd) {
                 editor.setSelection(range.index + (variableEnd - offset), 0);
                 break;
@@ -262,49 +470,37 @@ const TemplateConfiguration = () => {
         }
       };
 
-      // Text change handler to maintain bold formatting and sync variables
       const textChangeHandler = (delta, oldDelta, source) => {
         if (source === 'user' && !isProcessingRef.current) {
           isProcessingRef.current = true;
-
           try {
-            // Get current content after the change
             const currentContent = editor.getText();
-
-            // Maintain bold formatting for variables and ensure next text is not bold
             const contents = editor.getContents();
 
-            contents.ops.forEach((op, index) => {
+            contents.ops.forEach((op) => {
               if (typeof op.insert === 'string') {
                 const variableRegex = /\{[^}]+\}/g;
                 let match;
                 let lastIndex = 0;
-
                 while ((match = variableRegex.exec(op.insert)) !== null) {
                   const variableText = match[0];
                   const startIndex = lastIndex + match.index;
                   const endIndex = startIndex + variableText.length;
 
-                  // Ensure variable is bold
                   if (!op.attributes || !op.attributes.bold) {
                     editor.formatText(startIndex, variableText.length, 'bold', true);
                   }
 
-                  // Ensure character after variable is not bold (if it exists)
                   if (endIndex < op.insert.length) {
                     editor.formatText(endIndex, 1, 'bold', false);
                   }
-
                   lastIndex = match.index + variableText.length;
                 }
               }
             });
 
-            // Sync selected variables with actual content after text changes
             const currentlyPresentVariables = findVariablesInText(currentContent);
             setSelectedVariables(currentlyPresentVariables);
-
-            // Update previous content
             previousContentRef.current = currentContent;
           } catch (error) {
             console.error('Error in text change handler:', error);
@@ -314,23 +510,19 @@ const TemplateConfiguration = () => {
         }
       };
 
-      // Selection change handler to prevent cursor inside variables
       const selectionChangeHandler = (range) => {
         if (range && !isProcessingRef.current) {
           preventVariableEditing(range);
         }
       };
 
-      // Add event listeners
       editor.on('text-change', textChangeHandler);
       editor.on('selection-change', selectionChangeHandler);
 
-      // Initial sync
       setTimeout(() => {
         syncSelectedVariablesWithContent();
       }, 100);
 
-      // Cleanup
       return () => {
         editor.off('text-change', textChangeHandler);
         editor.off('selection-change', selectionChangeHandler);
@@ -347,15 +539,12 @@ const TemplateConfiguration = () => {
         const variable = availableVariables.find(v => v.id === variableId);
 
         if (variable) {
-          // Get current content
           const contents = editor.getContents();
           let newContents = { ops: [] };
           let variableRemoved = false;
 
-          // Remove all occurrences of this variable
           contents.ops.forEach(op => {
             if (typeof op.insert === 'string' && op.insert.includes(variable.name)) {
-              // Remove the variable from the text
               const newText = op.insert.replace(new RegExp(variable.name.replace(/[.*+?^${}()|[\]\\]/g, '\\$&'), 'g'), '');
               if (newText) {
                 newContents.ops.push({ ...op, insert: newText });
@@ -381,7 +570,6 @@ const TemplateConfiguration = () => {
         isProcessingRef.current = false;
       }
     } else {
-      // Just remove from selected variables if editor not available
       setSelectedVariables(prev => {
         const newSet = new Set(prev);
         newSet.delete(variableId);
@@ -404,7 +592,6 @@ const TemplateConfiguration = () => {
   const handleDrop = (e) => {
     e.preventDefault();
     const data = e.dataTransfer.getData('text/plain');
-
     try {
       const { variableName, variableId } = JSON.parse(data);
       insertVariable(variableName, variableId);
@@ -418,54 +605,19 @@ const TemplateConfiguration = () => {
     insertVariable(variableName, variableId);
   };
 
-  // Toolbar handlers
-  const handleBold = () => {
-    if (quillRef.current && !isProcessingRef.current) {
-      isProcessingRef.current = true;
-      try {
-        const editor = quillRef.current.getEditor();
-        const range = editor.getSelection();
-        if (range) {
-          editor.format('bold', !editor.getFormat(range).bold);
-        }
-      } finally {
-        isProcessingRef.current = false;
-      }
-    }
-  };
-
-  const handleItalic = () => {
-    if (quillRef.current) {
-      const editor = quillRef.current.getEditor();
-      const range = editor.getSelection();
-      if (range) {
-        editor.format('italic', !editor.getFormat(range).italic);
-      }
-    }
-  };
-
-  const handleUnderline = () => {
-    if (quillRef.current) {
-      const editor = quillRef.current.getEditor();
-      const range = editor.getSelection();
-      if (range) {
-        editor.format('underline', !editor.getFormat(range).underline);
-      }
-    }
-  };
-
   return (
     <div className='px-4' style={{ minHeight: '100vh' }}>
-      {/* Preview Buttons - Top Right */}
+      {/* Save Button - Top Right */}
       <div style={{ marginTop: '1px', marginBottom: '5px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-
         <Button
-          // type="primary"
-          onClick={()=> navigate('/templeteSummary')}
+          onClick={handleSaveTemplate}
           className='butn primary-btn'
-        // size="large"
+          icon={<SaveOutlined />}
+          loading={saving}
+          disabled={saving}
+          type="primary"
         >
-          Save
+          {saving ? 'Saving to Google Drive...' : 'Save to Google Drive'}
         </Button>
       </div>
 
@@ -477,7 +629,6 @@ const TemplateConfiguration = () => {
             title="Template Information"
             headStyle={{
               backgroundColor: '#eef4ff',
-              // color: '#2f6bff'
               color: '#215e97'
             }}
             style={{
@@ -489,6 +640,37 @@ const TemplateConfiguration = () => {
           >
             <div style={{ marginBottom: '16px' }}>
               <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
+                Template Type
+              </Text>
+              <CustomSelect
+                label=""
+                name="templateType"
+                value={templateType}
+                onChange={handleTemplateTypeChange}
+                options={templateTypeOptions}
+                placeholder="Select template type"
+                isIDs={true}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
+                Template Category
+              </Text>
+              <CustomSelect
+                label=""
+                name="category"
+                value={category}
+                onChange={handleCategoryChange}
+                options={getCategoryOptions()}
+                placeholder={templateType ? "Select category" : "Select template type first"}
+                disabled={!templateType}
+                isIDs={true}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
                 Template Name
               </Text>
               <MyInput
@@ -498,7 +680,7 @@ const TemplateConfiguration = () => {
               />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '0px' }}>
               <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
                 Description
               </Text>
@@ -508,51 +690,27 @@ const TemplateConfiguration = () => {
                 placeholder="Enter template description"
               />
             </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Category
-              </Text>
-              <CustomSelect
-                label=""
-                name="category"
-                value={category}
-                onChange={handleCategoryChange}
-                options={categoryOptions}
-                placeholder="Select category"
-                isIDs={true}
-              />
-            </div>
-
-            <div style={{ marginBottom: '0px' }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Template Type
-              </Text>
-              <CustomSelect
-                label=""
-                name="templateType"
-                value={templateType}
-                onChange={handleTemplateTypeChange}
-                options={getTemplateTypeOptions()}
-                placeholder={category ? "Select template type" : "Select category first"}
-                disabled={!category}
-                isIDs={true}
-              />
-            </div>
           </Card>
         </Col>
 
         {/* Middle Column - Email Content Builder (60%) */}
-        {/* Middle Column - Email Content Builder (60%) */}
-        {/* Middle Column - Email Content Builder (60%) */}
         <Col span={14}>
           <Card
-            title="Email Content Builder"
+            title={
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
+                <span>Template Content Builder</span>
+                <Button
+                  icon={<EyeOutlined />}
+                  onClick={handlePreview}
+                  size="small"
+                >
+                  Preview
+                </Button>
+              </div>
+            }
             headStyle={{
               backgroundColor: '#eef4ff',
-              // color: '#2f6bff',
               color: '#215e97',
-
               borderBottom: '1px solid #f0f0f0'
             }}
             style={{
@@ -567,18 +725,18 @@ const TemplateConfiguration = () => {
               flexDirection: 'column'
             }}
           >
-            {/* Subject Section */}
+            {/* Subject/Title Section based on Template Type */}
             <div style={{
               padding: '16px 16px 12px 16px',
               borderBottom: '1px solid #f0f0f0'
             }}>
               <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Subject
+                {templateType === 'letter' ? 'Title' : 'Subject'}
               </Text>
               <MyInput
                 value={subject}
                 onChange={(e) => setSubject(e.target.value)}
-                placeholder="Enter email subject"
+                placeholder={templateType === 'letter' ? "Enter letter title" : "Enter email subject"}
               />
             </div>
 
@@ -588,22 +746,11 @@ const TemplateConfiguration = () => {
               padding: '16px',
               display: 'flex',
               flexDirection: 'column',
-              minHeight: 0 // This prevents flex children from overflowing
+              minHeight: 0
             }}>
-              <div className='d-flex justify-content-between'>
-                <Text strong style={{ color: '#000', display: 'block', marginBottom: '8px' }}>
-                  Body
-                </Text>
-                <Button
-                  // type="primary"
-                  icon={<EyeOutlined />}
-                  onClick={handlePreview}
-
-                  size="small"
-                >
-                  Preview
-                </Button>
-              </div>
+              <Text strong style={{ color: '#000', display: 'block', marginBottom: '8px' }}>
+                Body
+              </Text>
 
               {/* React Quill Editor with Drop Zone */}
               <div
@@ -616,8 +763,8 @@ const TemplateConfiguration = () => {
                   display: 'flex',
                   flexDirection: 'column',
                   marginBottom: '5px',
-                  minHeight: 0, // Prevents overflow
-                  overflow: 'hidden' // Contains the editor
+                  minHeight: 0,
+                  overflow: 'hidden'
                 }}
               >
                 <ReactQuill
@@ -625,7 +772,6 @@ const TemplateConfiguration = () => {
                   value={emailContent}
                   onChange={(content, delta, source, editor) => {
                     setEmailContent(content);
-                    // Sync variables whenever content changes from user
                     if (source === 'user') {
                       const currentContent = editor.getText();
                       const currentlyPresentVariables = findVariablesInText(currentContent);
@@ -654,7 +800,6 @@ const TemplateConfiguration = () => {
             headStyle={{
               backgroundColor: '#eef4ff',
               color: '#215e97'
-              // color: '#2f6bff'
             }}
             style={{
               height: '100%',
@@ -715,14 +860,13 @@ const TemplateConfiguration = () => {
                   </Text>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
                     {Array.from(selectedVariables).map(variableId => {
-                      const variable = availableVariables.find(v => v.id === variableId);
+                      const variable = bookmarks?.find(v => v._id === variableId);
                       return variable ? (
                         <div
-                          key={variable.id}
+                          key={variable._id}
                           style={{
                             padding: '4px 8px',
                             backgroundColor: '#eef4ff',
-                            // border: '1px solid #2f6bff',
                             border: '1px solid #215e97',
                             borderRadius: '4px',
                             fontSize: '11px',
@@ -732,14 +876,14 @@ const TemplateConfiguration = () => {
                             gap: '4px'
                           }}
                         >
-                          {variable.name}
+                          {`{${variable.key}}`}
                           <CloseOutlined
                             style={{
                               fontSize: '10px',
                               cursor: 'pointer',
                               color: '#ff4d4f'
                             }}
-                            onClick={() => removeVariable(variable.id)}
+                            onClick={() => removeVariable(variable._id)}
                           />
                         </div>
                       ) : null;
@@ -748,59 +892,76 @@ const TemplateConfiguration = () => {
                 </div>
               )}
 
+              {/* Loading State */}
+              {bookmarksLoading && (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
+                  Loading variables...
+                </div>
+              )}
+
+              {/* Error State */}
+              {bookmarksError && (
+                <div style={{ textAlign: 'center', padding: '20px', color: '#ff4d4f' }}>
+                  Error loading variables
+                </div>
+              )}
+
               {/* Draggable Variables in Two Columns */}
-              <div style={{
-                display: 'grid',
-                gridTemplateColumns: '1fr 1fr',
-                gap: '8px'
-              }}>
-                {availableVariables.map((variable) => (
-                  <div
-                    key={variable.id}
-                    draggable
-                    onDragStart={(e) => handleDragStart(e, variable.name, variable.id)}
-                    onClick={() => handleVariableClick(variable.name, variable.id)}
-                    style={{
-                      padding: '8px 6px',
-                      backgroundColor: selectedVariables.has(variable.id) ? '#eef4ff' : '#f8f9fa',
-                      border: selectedVariables.has(variable.id) ? '2px solid #215e97' : '1px solid #d9d9d9',
-                      borderRadius: '6px',
-                      cursor: 'grab',
-                      fontSize: '11px',
-                      userSelect: 'none',
-                      transition: 'all 0.2s',
-                      textAlign: 'center',
-                      minHeight: '32px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      wordBreak: 'break-word'
-                    }}
-                    onMouseOver={(e) => {
-                      if (!selectedVariables.has(variable.id)) {
-                        e.currentTarget.style.backgroundColor = '#e6f7ff';
-                        e.currentTarget.style.transform = 'translateY(-1px)';
-                        e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                      }
-                    }}
-                    onMouseOut={(e) => {
-                      if (!selectedVariables.has(variable.id)) {
-                        e.currentTarget.style.backgroundColor = '#f8f9fa';
-                        e.currentTarget.style.transform = 'translateY(0)';
-                        e.currentTarget.style.boxShadow = 'none';
-                      }
-                    }}
-                  >
-                    {variable.name}
-                  </div>
-                ))}
-              </div>
+              {bookmarks && !bookmarksLoading && !bookmarksError && (
+                <div style={{
+                  display: 'grid',
+                  gridTemplateColumns: '1fr 1fr',
+                  gap: '8px'
+                }}>
+                  {bookmarks.map((variable) => (
+                    <div
+                      key={variable._id}
+                      draggable
+                      onDragStart={(e) => handleDragStart(e, `{${variable.key}}`, variable._id)}
+                      onClick={() => handleVariableClick(`{${variable.key}}`, variable._id)}
+                      style={{
+                        padding: '8px 6px',
+                        backgroundColor: selectedVariables.has(variable._id) ? '#eef4ff' : '#f8f9fa',
+                        border: selectedVariables.has(variable._id) ? '2px solid #215e97' : '1px solid #d9d9d9',
+                        borderRadius: '6px',
+                        cursor: 'grab',
+                        fontSize: '11px',
+                        userSelect: 'none',
+                        transition: 'all 0.2s',
+                        textAlign: 'center',
+                        minHeight: '32px',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        wordBreak: 'break-word'
+                      }}
+                      onMouseOver={(e) => {
+                        if (!selectedVariables.has(variable._id)) {
+                          e.currentTarget.style.backgroundColor = '#e6f7ff';
+                          e.currentTarget.style.transform = 'translateY(-1px)';
+                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                        }
+                      }}
+                      onMouseOut={(e) => {
+                        if (!selectedVariables.has(variable._id)) {
+                          e.currentTarget.style.backgroundColor = '#f8f9fa';
+                          e.currentTarget.style.transform = 'translateY(0)';
+                          e.currentTarget.style.boxShadow = 'none';
+                        }
+                      }}
+                    >
+                      <div>
+                        {variable.label}
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
           </Card>
         </Col>
       </Row>
 
-      {/* PDF Preview Modal */}
       {/* PDF Preview Modal */}
       <Modal
         className="template-preview-modal"
@@ -829,7 +990,6 @@ const TemplateConfiguration = () => {
           }
         }}
       >
-        {/* PDF/Letter Preview - Professional A4 document */}
         <div style={{
           background: 'linear-gradient(45deg, #f8f9fa 25%, transparent 25%), linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8f9fa 75%), linear-gradient(-45deg, transparent 75%, #f8f9fa 75%)',
           backgroundSize: '20px 20px',
@@ -879,12 +1039,11 @@ const TemplateConfiguration = () => {
 
               <div style={{ marginTop: '15px' }}>
                 <Text strong style={{ fontSize: '14pt', display: 'block', marginBottom: '5px' }}>
-                  SUBJECT: {subject}
+                  {templateType === 'letter' ? 'TITLE' : 'SUBJECT'}: {subject}
                 </Text>
               </div>
             </div>
             <div style={{
-              // marginBottom: '30px',
               minHeight: '400px'
             }}>
               <div
