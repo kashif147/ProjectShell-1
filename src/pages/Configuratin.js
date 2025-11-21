@@ -224,50 +224,50 @@ function Configuratin() {
     },
   ];
 
-const updateFtn = async (
-  endPoint,
-  data1,
-  callback,
-  msg = "updated successfully",
-  isCoum = false // Add isCoum parameter with default false
-) => {
-  try {
-    const token = localStorage.getItem("token");
-    
-    // ✅ Determine base URL based on isCoum flag
-    const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
-    
-    // ✅ If `id` exists in data1 but not in URL, append it
-    let finalEndPoint = endPoint;
-    if (data1?.id && !endPoint.includes(data1.id)) {
-      finalEndPoint = `${endPoint}/${data1.id}`;
-    }
+  const updateFtn = async (
+    endPoint,
+    data1,
+    callback,
+    msg = "updated successfully",
+    isCoum = false // Add isCoum parameter with default false
+  ) => {
+    try {
+      const token = localStorage.getItem("token");
 
-    const { id, ...finalData } = data1;
+      // ✅ Determine base URL based on isCoum flag
+      const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
-    const response = await axios.put(`${baseUrl}${finalEndPoint}`, finalData, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-        "Content-Type": "application/json",
-      },
-    });
-    
-    console.log("Update Response:", response);
-    
-    if (response?.status === 200) {
-      MyAlert("success", msg);
-      if (typeof callback === "function") {
-        callback(); // wait in case it's async
+      // ✅ If `id` exists in data1 but not in URL, append it
+      let finalEndPoint = endPoint;
+      if (data1?.id && !endPoint.includes(data1.id)) {
+        finalEndPoint = `${endPoint}/${data1.id}`;
       }
-      return response.data;
-    } else {
-      MyAlert("error", "notificationsMsg?.updating?.falier");
+
+      const { id, ...finalData } = data1;
+
+      const response = await axios.put(`${baseUrl}${finalEndPoint}`, finalData, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
+
+      console.log("Update Response:", response);
+
+      if (response?.status === 200) {
+        MyAlert("success", msg);
+        if (typeof callback === "function") {
+          callback(); // wait in case it's async
+        }
+        return response.data;
+      } else {
+        MyAlert("error", "notificationsMsg?.updating?.falier");
+      }
+    } catch (error) {
+      console.error("API Error:", error.response?.data || error.message);
+      // throw error;
     }
-  } catch (error) {
-    console.error("API Error:", error.response?.data || error.message);
-    // throw error;
-  }
-};
+  };
   const updateCountiesFtn = async (
     // apiURL = baseURL,
     endPoint,
@@ -309,12 +309,15 @@ const updateFtn = async (
       // throw error;
     }
   };
-  const deleteFtn = async (url1, body = null, callback, showAlert = true) => {
+  const deleteFtn = async (url1, body = null, callback, showAlert = true, isCoum = false) => {
     const token = localStorage.getItem("token");
+
+    // ✅ Determine base URL based on isCoum flag
+    const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     const config = {
       method: "delete",
-      url: `${baseURL}/api/${url1}`,
+      url: `${baseUrl}/api/${url1}`,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -326,7 +329,7 @@ const updateFtn = async (
     try {
       const response = await axios.request(config);
 
-      // ✅ safely call callback only if it’s a function
+      // ✅ safely call callback only if it's a function
       if (typeof callback === "function") {
         await callback();
       }
@@ -411,7 +414,13 @@ const updateFtn = async (
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getBookmarks()))
+                  await deleteFtn(
+                    `bookmarks/fields/${record?._id}`, // Fixed URL - removed leading slash
+                    null, // No body needed when using URL parameter
+                    () => dispatch(getBookmarks()), // Fixed callback - pass function reference
+                    true, // showAlert
+                    true  // isCoum
+                  )
                 },
               })
             }
@@ -7357,11 +7366,11 @@ const updateFtn = async (
           openCloseDrawerFtn("Bookmarks");
           IsUpdateFtn("Bookmarks", false);
         }}
-         update={async () => {
+        update={async () => {
           await updateFtn("/bookmarks/fields", drawerIpnuts?.Bookmarks, () =>
             resetCounteries("Bookmarks", () => dispatch(getAllLookups())),
-          "updated successfully",
-          true
+            "updated successfully",
+            true
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Bookmarks", false);
