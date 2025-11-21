@@ -271,22 +271,22 @@ function BatchMemberSummary() {
       >
         <Col span={4}>
           <label>Total Arrears (€)</label>
-          <input value={`€${formatCurrency(displayArrears)}`} disabled style={inputStyle} />
+          <input value={formatCurrency(displayArrears)} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <MyInput 
             label="Total Current (€)" 
-            value={`€${formatCurrency(displayTotalCurrent)}`} 
+            value={formatCurrency(displayTotalCurrent)} 
             disabled 
           />
         </Col>
         <Col span={4}>
           <label>Total Advance (€)</label>
-          <input value={`€${formatCurrency(displayAdvance)}`} disabled style={inputStyle} />
+          <input value={formatCurrency(displayAdvance)} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Batch Total (€)</label>
-          <input value={`€${formatCurrency(displayTotal)}`} disabled style={inputStyle} />
+          <input value={formatCurrency(displayTotal)} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
           <label>Total Records</label>

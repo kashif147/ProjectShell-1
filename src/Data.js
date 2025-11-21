@@ -1876,14 +1876,14 @@ export const detailsData = [
         },
       ],
     },
-    stats: { sent: 73, pending: 77, failed: 95, total: "$135,957" }
+    stats: { sent: 73, pending: 77, failed: 95, total: "€135,957" }
   },
   {
     id: '2',
     date: "10/12/2024",
     user: "Sarah Johnson",
     title: "Quarterly Invoice Reminders - Q4 2024",
-    stats: { sent: 73, pending: 77, failed: 95, total: "$135,957" },
+    stats: { sent: 73, pending: 77, failed: 95, total: "€135,957" },
     members: {
       R1: [
         {
@@ -2346,7 +2346,7 @@ export const detailsData = [
         },
       ],
     },
-    stats: { sent: 73, pending: 77, failed: 95, total: "$135,957" }
+    stats: { sent: 73, pending: 77, failed: 95, total: "€135,957" }
   },
   {
     id: '4',
@@ -2691,7 +2691,7 @@ export const detailsData = [
         },
       ],
     },
-    stats: { sent: 73, pending: 77, failed: 95, total: "$135,957" }
+    stats: { sent: 73, pending: 77, failed: 95, total: "€135,957" }
   },
   {
     id: '5',

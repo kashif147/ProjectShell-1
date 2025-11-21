@@ -90,12 +90,15 @@ export const deleteFtn = async (url, callback) => {
 export function formatCurrency(amount) {
   if (amount === null || amount === undefined || isNaN(amount)) return "€0.00";
 
-  return new Intl.NumberFormat("en-IE", {
+  const formatted = new Intl.NumberFormat("en-IE", {
     style: "currency",
     currency: "EUR",
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
+  
+  // Replace any double euro signs with single euro sign
+  return formatted.replace(/€€+/g, "€");
 }
 export const updateFtn = async (
   apiURL = baseURL,

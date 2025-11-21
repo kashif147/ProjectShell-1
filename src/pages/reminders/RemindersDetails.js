@@ -269,7 +269,7 @@ function RemindersDetails() {
             reminderKey: "R1",
             title: "Reminder 1 Details",
             count: totalR1,
-            stats: { sent: 73, pending: 77, failed: 95, total: "$135,957" },
+            stats: { sent: 73, pending: 77, failed: 95, total: "€135,957" },
             data: selectedId?.members?.R1
         },
         {

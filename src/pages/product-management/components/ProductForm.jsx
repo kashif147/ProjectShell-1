@@ -223,7 +223,7 @@ debugger
                 {formData.currency === "EUR"
                   ? "€"
                   : formData.currency === "USD"
-                    ? "$"
+                    ? "€"
                     : "£"}
                 )
               </label>
@@ -249,7 +249,7 @@ debugger
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "$"
+                      ? "€"
                       : "£"}
                   )
                 </label>
@@ -274,7 +274,7 @@ debugger
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "$"
+                      ? "€"
                       : "£"}
                   )
                 </label>

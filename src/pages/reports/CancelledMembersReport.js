@@ -28,7 +28,6 @@ import {
   DownloadOutlined,
   PrinterOutlined,
   UserDeleteOutlined,
-  DollarOutlined,
   CalendarOutlined,
   BarChartOutlined,
   PieChartOutlined,
@@ -500,7 +499,7 @@ function CancelledMembersReport() {
               <Statistic
                 title="Outstanding Balance"
                 value={totalOutstandingBalance}
-                prefix={<DollarOutlined />}
+                prefix="€"
                 valueStyle={{ color: "#ff4d4f" }}
                 precision={2}
               />
@@ -511,7 +510,7 @@ function CancelledMembersReport() {
               <Statistic
                 title="Avg. Membership Fee"
                 value={averageMembershipFee}
-                prefix={<DollarOutlined />}
+                prefix="€"
                 valueStyle={{ color: "#52c41a" }}
                 precision={2}
               />
