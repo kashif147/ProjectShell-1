@@ -101,9 +101,10 @@ function Configuratin() {
   } = useSelector((state) => state.bookmarks);
   const insertDataFtn = async (url, data, successNotification, failureNotification, callback, isCoum) => {
     const token = localStorage.getItem("token");
-    debugger
+
     // Determine the base URL based on isCoum flag
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
+
     try {
       const response = await axios.post(`${baseUrl}${url}`, data, {
         headers: {
@@ -115,8 +116,11 @@ function Configuratin() {
       // ✅ Handle all success codes (200–299)
       if (response.status >= 200 && response.status < 300) {
         MyAlert("success", successNotification);
-        if (typeof callback === "function") callback();
-        return response.data;
+        if (typeof callback === "function") {
+          console.log("✅ Executing callback");
+          callback();
+        }
+        return response.data; // This returns data
       }
     } catch (error) {
       console.error("Axios Error:", error?.response || error);
@@ -128,7 +132,8 @@ function Configuratin() {
         "Something went wrong";
 
       // ✅ Trigger failure alert properly
-      return MyAlert("error", failureNotification, errMsg);
+      MyAlert("error", failureNotification, errMsg); // Remove return here
+      return null; // Always return something
     }
   };
   useEffect(() => {
@@ -224,20 +229,11 @@ function Configuratin() {
     },
   ];
 
-  const updateFtn = async (
-    endPoint,
-    data1,
-    callback,
-    msg = "updated successfully",
-    isCoum = false // Add isCoum parameter with default false
-  ) => {
+  const updateFtn = async (endPoint, data1, callback, msg = "updated successfully", isCoum = false) => {
     try {
       const token = localStorage.getItem("token");
-
-      // ✅ Determine base URL based on isCoum flag
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
-      // ✅ If `id` exists in data1 but not in URL, append it
       let finalEndPoint = endPoint;
       if (data1?.id && !endPoint.includes(data1.id)) {
         finalEndPoint = `${endPoint}/${data1.id}`;
@@ -257,15 +253,17 @@ function Configuratin() {
       if (response?.status === 200) {
         MyAlert("success", msg);
         if (typeof callback === "function") {
-          callback(); // wait in case it's async
+          callback();
         }
         return response.data;
       } else {
-        MyAlert("error", "notificationsMsg?.updating?.falier");
+        MyAlert("error", "Update failed");
+        return null; // ← Add this
       }
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
-      // throw error;
+      MyAlert("error", "Update failed", error.response?.data?.message || error.message);
+      return null; // ← Add this
     }
   };
   const updateCountiesFtn = async (
@@ -315,9 +313,14 @@ function Configuratin() {
     // ✅ Determine base URL based on isCoum flag
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
+    // ✅ Construct URL - only add /api/ for non-CUMM requests
+    const finalUrl = isCoum
+      ? `${baseUrl}/${url1}`  // No /api/ for CUMM service
+      : `${baseUrl}/api${url1.startsWith('/') ? url1 : `/${url1}`}`; // Add /api/ for regular service
+
     const config = {
       method: "delete",
-      url: `${baseUrl}/api/${url1}`,
+      url: finalUrl,
       headers: {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
@@ -380,18 +383,18 @@ function Configuratin() {
       //   </Tag>
       // ),
     },
-    {
-      title: 'Status',
-      dataIndex: 'isactive',
-      key: 'isactive',
-      width: '10%',
-      // render: (isactive) => (
-      //   <Tag color={isactive ? 'green' : 'red'}>
-      //     {isactive ? 'Active' : 'Inactive'}
-      //   </Tag>
-      // ),
+    // {
+    //   title: 'Status',
+    //   dataIndex: 'isactive',
+    //   key: 'isactive',
+    //   width: '10%',
+    // render: (isactive) => (
+    //   <Tag color={isactive ? 'green' : 'red'}>
+    //     {isactive ? 'Active' : 'Inactive'}
+    //   </Tag>
+    // ),
 
-    },
+    // },
     {
       title: "Action",
       dataIndex: "action",
@@ -429,6 +432,18 @@ function Configuratin() {
       ),
     },
   ];
+const [bookmarkSearch, setBookmarkSearch] = useState("");
+
+const filteredBookmarks = useMemo(() => {
+  if (!bookmarkSearch) return bookmarks;
+
+  const s = bookmarkSearch.toLowerCase();
+
+  return bookmarks.filter((b) =>
+    b.key?.toLowerCase().includes(s) ||
+    b.label?.toLowerCase().includes(s)
+  );
+}, [bookmarkSearch, bookmarks]);
 
   const navigate = useNavigate();
   const [data, setdata] = useState({
@@ -7367,40 +7382,40 @@ function Configuratin() {
           IsUpdateFtn("Bookmarks", false);
         }}
         update={async () => {
-          await updateFtn("/bookmarks/fields", drawerIpnuts?.Bookmarks, () =>
-            resetCounteries("Bookmarks", () => dispatch(getAllLookups())),
+          await updateFtn(
+            "/bookmarks/fields",
+            drawerIpnuts?.Bookmarks,
+            () => {
+              // Clear the form/reset state
+              resetCounteries("Bookmarks");
+              // Refresh the data
+              dispatch(getAllLookups());
+            },
             "updated successfully",
-            true
+            true // isCoum
           );
-          dispatch(getAllLookups());
           IsUpdateFtn("Bookmarks", false);
         }}
         add={async () => {
           if (!validateForm("Bookmarks")) return;
-          debugger
-          // Prepare the data object with all required fields
           const bookmarkData = {
-            // code: drawerIpnuts?.Bookmarks?.code || "",
             key: drawerIpnuts?.Bookmarks?.key || "",
             label: drawerIpnuts?.Bookmarks?.label || "",
             path: drawerIpnuts?.Bookmarks?.path || "",
             dataType: drawerIpnuts?.Bookmarks?.dataType || "",
-            // Add other required fields for your bookmark
           };
-
           await insertDataFtn(
             `/bookmarks/fields`,
-            bookmarkData, // Add the data parameter (was missing)
+            bookmarkData,
             "Bookmark created successfully",
             "Failed to create bookmark",
             () => {
-              // Add callback function (was missing)
-              // resetBookmark(() => dispatch(getBookmarks()));
-              dispatch(getBookmarks());
-              openCloseDrawerFtn("Bookmarks"); // Close drawer after success
+              // Test without resetCounteries first
+              resetCounteries("Bookmarks", dispatch(getBookmarks()))
             },
             true
           );
+          // dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Bookmarks}
       >
@@ -7443,7 +7458,7 @@ function Configuratin() {
               <MyInput
                 label="Path:"
                 name="path"
-                value={drawerIpnuts?.Lookup?.path}
+                value={drawerIpnuts?.Bookmarks?.path}
                 onChange={(e) =>
                   drawrInptChng("Bookmarks", "path", e.target.value)
                 }
@@ -7479,11 +7494,17 @@ function Configuratin() {
 
           {/* Existing Bookmarks Table */}
           <div className="mt-4 config-tbl-container">
+            <MyInput
+              label="Search Bookmarks:"
+              value={bookmarkSearch}
+              onChange={(e) => setBookmarkSearch(e.target.value)}
+              placeholder="Search by key or label..."
+            />
             <h6 className="mb-3 text-primary">Existing Bookmarks</h6>
             <Table
               pagination={true}
               columns={columnBookmark}
-              dataSource={bookmarks}
+              dataSource={filteredBookmarks}
               loading={bookmarksLoading}
               className="drawer-tbl"
               rowClassName={(record, index) =>

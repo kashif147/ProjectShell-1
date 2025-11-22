@@ -100,7 +100,7 @@ function ApplicationMgtDrawer({
     if (application && applications?.length) {
       const newIndex =
         applications.findIndex(
-          (app) => app.ApplicationId === application?.applicationId
+          (app) => app.applicationId === application?.applicationId
         ) + 1;
 
       setIndex(newIndex);

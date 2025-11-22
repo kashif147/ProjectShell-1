@@ -15,7 +15,8 @@ import {
   CloseOutlined,
   EyeOutlined,
   FileTextOutlined,
-  SaveOutlined
+  SaveOutlined,
+  DownloadOutlined
 } from '@ant-design/icons';
 import MyInput from '../../component/common/MyInput';
 import CustomSelect from '../../component/common/CustomSelect';
@@ -34,6 +35,8 @@ const TemplateConfiguration = () => {
   const [selectedVariables, setSelectedVariables] = useState(new Set());
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [savedTemplates, setSavedTemplates] = useState([]);
+  const [generatedFile, setGeneratedFile] = useState(null);
   const quillRef = useRef(null);
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef('');
@@ -96,9 +99,9 @@ const TemplateConfiguration = () => {
   // Function to generate Word document content
   const generateWordDocumentContent = () => {
     const plainTextContent = htmlToPlainText(emailContent);
-    
+
     return `<!DOCTYPE html>
-<html>
+<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
 <head>
   <meta charset="UTF-8">
   <title>${templateName}</title>
@@ -188,69 +191,81 @@ ${plainTextContent}
 </html>`;
   };
 
-  // Function to save template to Google Drive
-  const saveTemplateToGoogleDrive = async () => {
+  // Function to generate file blob and save in state
+  const generateTemplateFile = () => {
     try {
-      // Generate Word document content
       const wordContent = generateWordDocumentContent();
-      
-      // Convert HTML content to Blob (simulating .docx with HTML)
-      const blob = new Blob([wordContent], { 
-        type: 'text/html' 
+      const blob = new Blob([wordContent], {
+        type: 'application/msword'
       });
 
-      // Create form data for Google Drive API
-      const metadata = {
-        name: `${templateName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.html`,
-        mimeType: 'text/html',
-        parents: ['root']
+      const fileName = `${templateName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.doc`;
+      const fileUrl = URL.createObjectURL(blob);
+
+      const templateFile = {
+        id: `template_${Date.now()}`,
+        name: fileName,
+        blob: blob,
+        url: fileUrl,
+        content: wordContent,
+        templateData: {
+          name: templateName.trim(),
+          description: description.trim(),
+          type: templateType,
+          category: category,
+          subject: subject.trim(),
+          content: emailContent,
+          variables: Array.from(selectedVariables).map(variableId => {
+            const variable = availableVariables.find(v => v.id === variableId);
+            return variable ? variable.name : null;
+          }).filter(Boolean),
+          metadata: {
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+            version: '1.0'
+          }
+        }
       };
 
-      const formData = new FormData();
-      formData.append('metadata', new Blob([JSON.stringify(metadata)], { type: 'application/json' }));
-      formData.append('file', blob);
-
-      // Get access token (you'll need to implement your Google Auth)
-      const accessToken = await getGoogleAccessToken();
-      
-      if (!accessToken) {
-        // For demo purposes, we'll simulate success
-        console.log('Simulating Google Drive upload...');
-        await new Promise(resolve => setTimeout(resolve, 2000));
-        return {
-          id: 'simulated_file_id_' + Date.now(),
-          webViewLink: 'https://drive.google.com/file/d/simulated_view_link',
-          name: metadata.name
-        };
-      }
-
-      // Upload to Google Drive
-      const response = await fetch('https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${accessToken}`
-        },
-        body: formData
-      });
-
-      if (!response.ok) {
-        throw new Error(`Google Drive upload failed: ${response.statusText}`);
-      }
-
-      const result = await response.json();
-      return result;
-
+      setGeneratedFile(templateFile);
+      return templateFile;
     } catch (error) {
-      console.error('Error saving to Google Drive:', error);
+      console.error('Error generating template file:', error);
       throw error;
     }
   };
 
-  // Function to get Google Access Token (placeholder - implement based on your auth setup)
-  const getGoogleAccessToken = async () => {
-    // Implement your Google OAuth flow here
-    // For now, return null to use simulation
-    return null;
+  // Function to download the generated file
+  const downloadTemplateFile = () => {
+    if (generatedFile) {
+      const a = document.createElement('a');
+      a.href = generatedFile.url;
+      a.download = generatedFile.name;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      return true;
+    }
+    return false;
+  };
+
+  // Function to save template to state
+  const saveTemplateToState = () => {
+    try {
+      const templateFile = generateTemplateFile();
+
+      const newTemplate = {
+        ...templateFile,
+        savedAt: new Date().toISOString(),
+        status: 'saved'
+      };
+
+      setSavedTemplates(prev => [newTemplate, ...prev]);
+      return newTemplate;
+    } catch (error) {
+      console.error('Error saving template to state:', error);
+      throw error;
+    }
   };
 
   // Save Template Function
@@ -284,49 +299,28 @@ ${plainTextContent}
     setSaving(true);
 
     try {
-      // Step 1: Save to Google Drive as Word document
-      message.loading('Saving to Google Drive...', 0);
-      
-      const driveResponse = await saveTemplateToGoogleDrive();
-      
+      message.loading('Saving template...', 0);
+
+      // Save template to state
+      const savedTemplate = saveTemplateToState();
+
       message.destroy();
-      message.success('Template saved to Google Drive successfully!');
-
-      // Step 2: Prepare template data for your backend
-      const templateData = {
-        name: templateName.trim(),
-        description: description.trim(),
-        type: templateType,
-        category: category,
-        subject: subject.trim(),
-        content: emailContent,
-        googleDriveFileId: driveResponse.id,
-        googleDriveWebViewLink: driveResponse.webViewLink,
-        variables: Array.from(selectedVariables).map(variableId => {
-          const variable = availableVariables.find(v => v.id === variableId);
-          return variable ? variable.name : null;
-        }).filter(Boolean),
-        metadata: {
-          createdAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-          version: '1.0',
-          savedToDrive: true,
-          driveFileId: driveResponse.id,
-          driveFileName: driveResponse.name
-        }
-      };
-
-      // Step 3: Save to your backend (optional)
-      console.log('Template data ready for backend:', templateData);
-      
-      // Simulate backend save
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
       message.success('Template saved successfully!');
-      
-      // Navigate to template summary
-      navigate('/templeteSummary');
-      
+
+      // Auto-download the file
+      const downloadSuccess = downloadTemplateFile();
+      if (downloadSuccess) {
+        message.info('Template file downloaded automatically');
+      }
+
+      // Show saved templates count
+      message.info(`Total templates saved: ${savedTemplates.length + 1}`);
+
+      // Navigate to template summary after a delay
+      setTimeout(() => {
+        // navigate('/templeteSummary');
+      }, 2000);
+
     } catch (error) {
       console.error('Error saving template:', error);
       message.destroy();
@@ -334,6 +328,71 @@ ${plainTextContent}
     } finally {
       setSaving(false);
     }
+  };
+
+  // Download generated file separately
+  const handleDownloadFile = () => {
+    if (generatedFile) {
+      const success = downloadTemplateFile();
+      if (success) {
+        message.success('Template file downloaded!');
+      } else {
+        message.error('No template file available to download');
+      }
+    } else {
+      message.warning('Please save the template first to generate a file');
+    }
+  };
+
+  // View saved templates
+  const viewSavedTemplates = () => {
+    if (savedTemplates.length === 0) {
+      message.info('No templates saved yet');
+      return;
+    }
+
+    Modal.info({
+      title: 'Saved Templates',
+      width: 600,
+      content: (
+        <div>
+          <p>Total templates saved: <strong>{savedTemplates.length}</strong></p>
+          <div style={{ maxHeight: '300px', overflow: 'auto' }}>
+            {savedTemplates.map((template, index) => (
+              <Card
+                key={template.id}
+                size="small"
+                style={{ marginBottom: '8px' }}
+                title={
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span>{template.templateData.name}</span>
+                    <Button
+                      size="small"
+                      icon={<DownloadOutlined />}
+                      onClick={() => {
+                        const a = document.createElement('a');
+                        a.href = template.url;
+                        a.download = template.name;
+                        document.body.appendChild(a);
+                        a.click();
+                        document.body.removeChild(a);
+                      }}
+                    >
+                      Download
+                    </Button>
+                  </div>
+                }
+              >
+                <p><strong>Type:</strong> {template.templateData.type}</p>
+                <p><strong>Category:</strong> {template.templateData.category}</p>
+                <p><strong>Saved:</strong> {new Date(template.savedAt).toLocaleString()}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      ),
+      onOk() { },
+    });
   };
 
   // Preview handlers
@@ -617,9 +676,42 @@ ${plainTextContent}
           disabled={saving}
           type="primary"
         >
-          {saving ? 'Saving to Google Drive...' : 'Save to Google Drive'}
+          {saving ? 'Saving Template...' : 'Save Template'}
+        </Button>
+
+        <Button
+          onClick={handleDownloadFile}
+          icon={<DownloadOutlined />}
+          disabled={!generatedFile}
+        >
+          Download File
+        </Button>
+
+        <Button
+          onClick={viewSavedTemplates}
+        >
+          View Saved ({savedTemplates.length})
         </Button>
       </div>
+
+      {/* File Status */}
+      {generatedFile && (
+        <div style={{
+          marginBottom: '16px',
+          padding: '12px',
+          backgroundColor: '#f6ffed',
+          border: '1px solid #b7eb8f',
+          borderRadius: '6px'
+        }}>
+          <Text strong style={{ color: '#389e0d' }}>
+            ✓ Template file generated: {generatedFile.name}
+          </Text>
+          <br />
+          <Text type="secondary">
+            Ready to download. File saved in application state.
+          </Text>
+        </div>
+      )}
 
       {/* Three Column Layout */}
       <Row gutter={24} style={{ minHeight: '80vh' }}>
@@ -908,55 +1000,64 @@ ${plainTextContent}
 
               {/* Draggable Variables in Two Columns */}
               {bookmarks && !bookmarksLoading && !bookmarksError && (
-                <div style={{
-                  display: 'grid',
-                  gridTemplateColumns: '1fr 1fr',
-                  gap: '8px'
-                }}>
-                  {bookmarks.map((variable) => (
-                    <div
-                      key={variable._id}
-                      draggable
-                      onDragStart={(e) => handleDragStart(e, `{${variable.key}}`, variable._id)}
-                      onClick={() => handleVariableClick(`{${variable.key}}`, variable._id)}
-                      style={{
-                        padding: '8px 6px',
-                        backgroundColor: selectedVariables.has(variable._id) ? '#eef4ff' : '#f8f9fa',
-                        border: selectedVariables.has(variable._id) ? '2px solid #215e97' : '1px solid #d9d9d9',
-                        borderRadius: '6px',
-                        cursor: 'grab',
-                        fontSize: '11px',
-                        userSelect: 'none',
-                        transition: 'all 0.2s',
-                        textAlign: 'center',
-                        minHeight: '32px',
-                        display: 'flex',
-                        alignItems: 'center',
-                        justifyContent: 'center',
-                        wordBreak: 'break-word'
-                      }}
-                      onMouseOver={(e) => {
-                        if (!selectedVariables.has(variable._id)) {
-                          e.currentTarget.style.backgroundColor = '#e6f7ff';
-                          e.currentTarget.style.transform = 'translateY(-1px)';
-                          e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                        }
-                      }}
-                      onMouseOut={(e) => {
-                        if (!selectedVariables.has(variable._id)) {
-                          e.currentTarget.style.backgroundColor = '#f8f9fa';
-                          e.currentTarget.style.transform = 'translateY(0)';
-                          e.currentTarget.style.boxShadow = 'none';
-                        }
-                      }}
-                    >
-                      <div>
-                        {variable.label}
+                <div
+                  style={{
+                    maxHeight: '450px',            // 👈 adjust height as needed
+                    overflowY: 'auto',
+                    paddingRight: '4px'            // optional: prevents content from hiding behind scrollbar
+                  }}
+                >
+                  <div
+                    style={{
+                      display: 'grid',
+                      gridTemplateColumns: '1fr 1fr',
+                      gap: '8px'
+                    }}
+                  >
+                    {bookmarks.map((variable) => (
+                      <div
+                        key={variable._id}
+                        draggable
+                        onDragStart={(e) => handleDragStart(e, `{${variable.key}}`, variable._id)}
+                        onClick={() => handleVariableClick(`{${variable.key}}`, variable._id)}
+                        style={{
+                          padding: '8px 6px',
+                          backgroundColor: selectedVariables.has(variable._id) ? '#eef4ff' : '#f8f9fa',
+                          border: selectedVariables.has(variable._id) ? '2px solid #215e97' : '1px solid #d9d9d9',
+                          borderRadius: '6px',
+                          cursor: 'grab',
+                          fontSize: '11px',
+                          userSelect: 'none',
+                          transition: 'all 0.2s',
+                          textAlign: 'center',
+                          minHeight: '32px',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          wordBreak: 'break-word'
+                        }}
+                        onMouseOver={(e) => {
+                          if (!selectedVariables.has(variable._id)) {
+                            e.currentTarget.style.backgroundColor = '#e6f7ff';
+                            e.currentTarget.style.transform = 'translateY(-1px)';
+                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
+                          }
+                        }}
+                        onMouseOut={(e) => {
+                          if (!selectedVariables.has(variable._id)) {
+                            e.currentTarget.style.backgroundColor = '#f8f9fa';
+                            e.currentTarget.style.transform = 'translateY(0)';
+                            e.currentTarget.style.boxShadow = 'none';
+                          }
+                        }}
+                      >
+                        <div>{variable.label}</div>
                       </div>
-                    </div>
-                  ))}
+                    ))}
+                  </div>
                 </div>
               )}
+
             </div>
           </Card>
         </Col>
