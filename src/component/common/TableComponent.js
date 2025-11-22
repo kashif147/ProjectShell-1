@@ -350,12 +350,12 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           <span
             style={{ color: "blue", cursor: "pointer" }}
             onClick={() => {
-              const { applicationStatus, ApplicationId } = record || {};
+              const { applicationStatus, applicationId } = record || {};
               if (applicationStatus === "Draft") {
-                dispatch(getApplicationById({ id: "draft", draftId: ApplicationId }));
+                dispatch(getApplicationById({ id: "draft", draftId: applicationId }));
                 navigate("/applicationMgt", { state: { isEdit: true } });
               } else if (applicationStatus === "submitted") {
-                dispatch(getApplicationById({ id: ApplicationId }));
+                dispatch(getApplicationById({ id: applicationId }));
                 navigate("/applicationMgt", { state: { isEdit: true } });
                 setAddNewGardaDrwr(true);
                 disableFtn(false);
