@@ -29,7 +29,14 @@ export const getHierarchicalLookups = createAsyncThunk(
 const hierarchicalLookupsSlice = createSlice({
     name: 'hierarchicalLookups',
     initialState: {
-        hierarchicalLookups: JSON.parse(localStorage.getItem('hierarchicalLookups')) || [], // Initialize from localStorage if available
+        hierarchicalLookups: (() => {
+            try {
+                const stored = localStorage.getItem('hierarchicalLookups');
+                return stored && stored !== 'undefined' ? JSON.parse(stored) : [];
+            } catch (error) {
+                return [];
+            }
+        })(),
         hierarchicalLookupsLoading: false,
         hierarchicalLookupsError: null,
     },
