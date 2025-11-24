@@ -40,16 +40,27 @@ const hierarchicalLookupsSlice = createSlice({
     hierarchicalLookups: (() => {
       try {
         const stored = localStorage.getItem("hierarchicalLookups");
+        if (!stored || typeof stored !== "string") {
+          return [];
+        }
+        const trimmed = stored.trim();
         if (
-          !stored ||
-          stored === "undefined" ||
-          stored === "null" ||
-          stored.trim() === ""
+          trimmed === "" ||
+          trimmed === "undefined" ||
+          trimmed === "null" ||
+          trimmed === "{}" ||
+          trimmed === "[]"
         ) {
           return [];
         }
-        return JSON.parse(stored);
+        const parsed = JSON.parse(stored);
+        return Array.isArray(parsed) ? parsed : [];
       } catch (error) {
+        console.warn(
+          "Failed to parse hierarchicalLookups from localStorage:",
+          error
+        );
+        localStorage.removeItem("hierarchicalLookups");
         return [];
       }
     })(),

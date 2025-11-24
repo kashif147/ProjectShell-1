@@ -86,8 +86,9 @@ const Login = () => {
     const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
     const redirectUri = (
       process.env.REACT_APP_REDIRECT_URI ||
-      "https://project-shell-crm.vercel.app" ||
-      window.location.origin
+      (process.env.NODE_ENV === "development"
+        ? window.location.origin
+        : "https://project-shell-crm.vercel.app")
     ).replace(/\/+$/, "");
     const scopes = "openid profile email offline_access";
     const authUrl = new URL(

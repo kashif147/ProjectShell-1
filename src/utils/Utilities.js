@@ -332,8 +332,9 @@ export function generatePatch(original = {}, updated = {}, path = "") {
 }
 const policy = new PolicyClient(
   process.env.REACT_APP_POLICY_SERVICE_URL ||
-    "https://project-shell-crm.vercel.app" ||
-    "http://localhost:3000",
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://project-shell-crm.vercel.app"),
   {
     onTokenExpired: () => {
       // Redirect to login when token expires
