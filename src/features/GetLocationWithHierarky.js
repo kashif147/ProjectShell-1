@@ -19,12 +19,10 @@ export const getHierarchicalLookups = createAsyncThunk(
       );
 
       // Save the response data to localStorage
-      localStorage.setItem(
-        "hierarchicalLookups",
-        JSON.stringify(response.data?.results)
-      );
+      const results = response.data?.results || [];
+      localStorage.setItem("hierarchicalLookups", JSON.stringify(results));
 
-      return response.data; // Assuming the API returns hierarchical lookup data
+      return results; // Return array to match localStorage and reducer expectations
     } catch (error) {
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch hierarchical lookups"
