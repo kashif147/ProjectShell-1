@@ -839,7 +839,7 @@ const PolicyClientExample = () => {
               <Text strong>CORS Configuration Needed on Policy Service:</Text>
               <ul>
                 <li>
-                  Add <code>localhost:3000</code> to allowed origins
+                  Add <code>http://localhost:3000</code> to allowed origins
                 </li>
                 <li>
                   Allow <code>POST</code> method for policy evaluation
