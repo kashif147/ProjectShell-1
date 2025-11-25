@@ -977,7 +977,7 @@ const filteredBookmarks = useMemo(() => {
       DisplayName: "",
       lookupname: "",
       code: "",
-      Parentlookupid: "",
+      Parentlookupid: null,
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,

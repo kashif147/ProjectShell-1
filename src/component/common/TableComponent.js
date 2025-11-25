@@ -354,7 +354,8 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
               if (applicationStatus === "Draft") {
                 dispatch(getApplicationById({ id: "draft", draftId: applicationId }));
                 navigate("/applicationMgt", { state: { isEdit: true } });
-              } else if (applicationStatus === "submitted") {
+              // } else if (applicationStatus === "submitted") {
+              } else {
                 dispatch(getApplicationById({ id: applicationId }));
                 navigate("/applicationMgt", { state: { isEdit: true } });
                 setAddNewGardaDrwr(true);
