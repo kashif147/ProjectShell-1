@@ -129,7 +129,6 @@ const ProductTypesManagement = () => {
     });
   };
 
-
   const handleDeleteBoth = async (productTypeId) => {
     try {
       const token = localStorage.getItem("token");
@@ -284,6 +283,7 @@ const ProductTypesManagement = () => {
       ),
     },
   ];
+
   const createProductWithPricing = async (data, selectedProductType) => {
     try {
       const token = localStorage.getItem("token");

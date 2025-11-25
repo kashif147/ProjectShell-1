@@ -30,17 +30,17 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
 
       setFormData({
         currency: product.currentPricing.currency || "",
-        memberPrice: "€"+(product.currentPricing.memberPrice !== null && product.currentPricing.memberPrice !== undefined && product.currentPricing.memberPrice !== "")
+        memberPrice: "€" + (product.currentPricing.memberPrice !== null && product.currentPricing.memberPrice !== undefined && product.currentPricing.memberPrice !== "")
           ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.memberPrice)))
           : "",
-        nonMemberPrice: "€"+(product.currentPricing.nonMemberPrice !== null && product.currentPricing.nonMemberPrice !== undefined && product.currentPricing.nonMemberPrice !== "")
+        nonMemberPrice: "€" + (product.currentPricing.nonMemberPrice !== null && product.currentPricing.nonMemberPrice !== undefined && product.currentPricing.nonMemberPrice !== "")
           ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.nonMemberPrice)))
           : "",
         effectiveFrom: product.currentPricing.effectiveFrom || null,
         effectiveTo: product.currentPricing.effectiveTo || null,
         status: product.currentPricing.status || "Active",
         productId: product._id,
-        price: "€"+(product.currentPricing.price !== null && product.currentPricing.price !== undefined && product.currentPricing.price !== "")
+        price: "€" + (product.currentPricing.price !== null && product.currentPricing.price !== undefined && product.currentPricing.price !== "")
           ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.price)))
           : "",
       });
@@ -65,7 +65,7 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
 
       // Get the pricing ID from product's currentPricing
       const pricingId = product?.currentPricing?._id;
-      
+
       if (!pricingId) {
         // message.error("Pricing ID not found");
         return;
@@ -91,16 +91,14 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
             status: "Active",
             price: "",
           })
-          
+
           //  "Updated successfully"
         },
         "Updated Successfully"
       );
 
     } catch (error) {
-      // console.error("Error updating pricing:", error);
-          MyAlert("error", "Failed to update pricing");
-      // message.error("Failed to update pricing");
+      MyAlert("error", "Failed to update pricing");
     } finally {
       setLoading(false);
     }
@@ -116,7 +114,6 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
     { title: "Status", dataIndex: "status", key: "status" },
   ];
 
-  // Dummy history data — replace with API / product.pricingHistory
   const historyData = [
     {
       key: "1",
