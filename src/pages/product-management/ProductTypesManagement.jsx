@@ -414,7 +414,7 @@ if (productType?.name === "Membership") {
 }
     // Add remaining columns
     baseColumns.push({
-      title: "Actions2",
+      title: "Actions",
       key: "actions",
       render: (_, record, index, productType) => (
         <Space>

@@ -250,6 +250,7 @@ export async function generatePKCE() {
 }
 export function convertEuroToSand(euroAmount) {
   const euros = Number(euroAmount);
+  debugger
   if (isNaN(euros)) throw new Error("Invalid Euro amount");
   return euros * 100; // Convert to sand
 }

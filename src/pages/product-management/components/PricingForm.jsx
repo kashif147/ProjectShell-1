@@ -595,10 +595,10 @@ import { Drawer, Button, Space, Divider, Table, Switch } from "antd";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
-import { insertDataFtn,updateFtn } from "../../../utils/Utilities";
-
+import { insertDataFtn, updateFtn } from "../../../utils/Utilities";
+import { convertSandToEuro } from "../../../utils/Utilities";
 const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
-  debugger
+
   const [formData, setFormData] = useState({
     currency: "",
     memberPrice: "",
@@ -606,22 +606,36 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
     effectiveFrom: null,
     effectiveTo: null,
     status: "Active",
+    price: "",
   });
 
   useEffect(() => {
     if (product?.currentPricing) {
+      const formatToTwoDecimals = (value) => {
+        if (value === null || value === undefined || value === "") return "";
+        const num = Number(value);
+        return isNaN(num) ? "" : num.toFixed(2);
+      };
+
       setFormData({
         currency: product.currentPricing.currency || "",
-        memberPrice: product.currentPricing.memberPrice || "",
-        nonMemberPrice: product.currentPricing.nonMemberPrice || "",
+        memberPrice: "€"+(product.currentPricing.memberPrice !== null && product.currentPricing.memberPrice !== undefined && product.currentPricing.memberPrice !== "")
+          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.memberPrice)))
+          : "",
+        nonMemberPrice: "€"+(product.currentPricing.nonMemberPrice !== null && product.currentPricing.nonMemberPrice !== undefined && product.currentPricing.nonMemberPrice !== "")
+          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.nonMemberPrice)))
+          : "",
         effectiveFrom: product.currentPricing.effectiveFrom || null,
         effectiveTo: product.currentPricing.effectiveTo || null,
         status: product.currentPricing.status || "Active",
         productId: product._id,
+        price: "€"+(product.currentPricing.price !== null && product.currentPricing.price !== undefined && product.currentPricing.price !== "")
+          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.price)))
+          : "",
       });
     }
   }, [product]);
-
+  debugger
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -637,7 +651,7 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
     //   effectiveTo: formData.effectiveTo,
     //   status: formData.status,
     // }
-  
+
     // updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/api/pricing${formData?._id}`, data, 
     //   () => {
     //   onClose();
@@ -715,26 +729,41 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
             placeholder="Select currency"
           />
         </div>
+        {
+          product?.name === "Membership" ?
+            <>
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Member Price</label>
+                <MyInput
+                  type="number"
+                  value={formData.memberPrice}
+                  onChange={(e) => handleChange("memberPrice", e.target.value)}
+                  placeholder="Enter member price"
+                />
+              </div>
+              <div className="mb-3">
+                <label className="form-label fw-semibold">Non-Member Price</label>
+                <MyInput
+                  type="number"
+                  value={formData.nonMemberPrice}
+                  onChange={(e) => handleChange("nonMemberPrice", e.target.value)}
+                  placeholder="Enter non-member price"
+                />
+              </div>
+            </>
+            :
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Price</label>
+              <MyInput
+                type="number"
+                value={formData.price}
+                onChange={(e) => handleChange("price", e.target.value)}
+                placeholder="Enter non-member price"
+              />
+            </div>
 
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Member Price</label>
-          <MyInput
-            type="number"
-            value={formData.memberPrice}
-            onChange={(e) => handleChange("memberPrice", e.target.value)}
-            placeholder="Enter member price"
-          />
-        </div>
+        }
 
-        <div className="mb-3">
-          <label className="form-label fw-semibold">Non-Member Price</label>
-          <MyInput
-            type="number"
-            value={formData.nonMemberPrice}
-            onChange={(e) => handleChange("nonMemberPrice", e.target.value)}
-            placeholder="Enter non-member price"
-          />
-        </div>
 
         <div className="mb-3">
           <label className="form-label fw-semibold">Effective From</label>

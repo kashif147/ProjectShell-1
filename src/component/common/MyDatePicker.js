@@ -23,7 +23,6 @@ const MyDatePicker = ({
   isMarginBtm = true,
   extra = null,
 }) => {
-  debugger
   const [isFocused, setIsFocused] = useState(false);
   const format = "DD/MM/YYYY";
 

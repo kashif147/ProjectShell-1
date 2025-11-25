@@ -181,7 +181,7 @@ function ApplicationMgtDrawer({
       contactInfo: {
         preferredAddress: apiData?.personalDetails?.contactInfo?.preferredAddress || "",
         eircode: apiData?.personalDetails?.contactInfo?.eircode || "",
-        consent: apiData?.personalDetails?.contactInfo?.consent || true,
+        consent: apiData?.personalDetails?.contactInfo?.consent,
         buildingOrHouse: apiData?.personalDetails?.contactInfo?.buildingOrHouse || "",
         streetOrRoad: apiData?.personalDetails?.contactInfo?.streetOrRoad || "",
         areaOrTown: apiData?.personalDetails?.contactInfo?.areaOrTown || "",
@@ -195,7 +195,7 @@ function ApplicationMgtDrawer({
       },
       professionalDetails: {
         membershipCategory: apiData?.professionalDetails?.membershipCategory || "",
-        workLocation: apiData?.professionalDetails?.workLocation || "",
+        workLocation: apiData?.professionalDetails?.workLocation,
         otherWorkLocation: apiData?.professionalDetails?.otherWorkLocation || "",
         grade: apiData?.professionalDetails?.grade || "",
         otherGrade: apiData?.professionalDetails?.otherGrade || "",
@@ -227,9 +227,10 @@ function ApplicationMgtDrawer({
         valueAddedServices: apiData?.subscriptionDetails?.valueAddedServices || false,
         termsAndConditions: apiData?.subscriptionDetails?.termsAndConditions || false,
         membershipCategory: apiData?.subscriptionDetails?.membershipCategory || "",
-        dateJoined: toDayJS(apiData?.subscriptionDetails?.dateJoined),
+        dateJoined: toDayJS(apiData?.subscriptionDetails?.dateJoined || new Date()),
         paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
         submissionDate: toDayJS(apiData?.subscriptionDetails?.submissionDate),
+        exclusiveDiscountsAndOffers: apiData?.subscriptionDetails?.exclusiveDiscountsAndOffers,
       },
     };
   };
@@ -257,7 +258,7 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
-  console.log(application,"application92")
+  console.log(application, "application92")
 
   useEffect(() => {
     if (application && isEdit) {
@@ -535,13 +536,13 @@ function ApplicationMgtDrawer({
       dateJoined: dayjs(),
       submissionDate: dayjs(),
       paymentFrequency: "",
-      startDate: null
+      startDate: null,
+      exclusiveDiscountsAndOffers:false
     },
   };
   const [InfData, setInfData] = useState(inputValue);
   console.log(InfData, "InfData")
   const handleLocationChange = (selectedLookupId) => {
-    debugger
     // Get hierarchicalLookups from localStorage
     const storedLookups = localStorage.getItem('hierarchicalLookups');
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
@@ -550,7 +551,6 @@ function ApplicationMgtDrawer({
     const foundObject = hierarchicalLookups.find(item =>
       item.lookup && item.lookup._id === selectedLookupId
     );
-
     if (foundObject) {
       // Update InfData with region and branch IDs
       setInfData(prevData => ({
@@ -563,7 +563,6 @@ function ApplicationMgtDrawer({
         }
       }));
     }
-    debugger
   };
   const validateForm = () => {
     const requiredFields = [
@@ -908,129 +907,129 @@ function ApplicationMgtDrawer({
     }
   };
 
-const handleSave = async () => {
-  if (isDisable) return;
-  const isValid = validateForm();
-  if (!isValid) return;
-  setIsProcessing(true);
-  disableFtn(true);
+  const handleSave = async () => {
+    if (isDisable) return;
+    const isValid = validateForm();
+    if (!isValid) return;
+    setIsProcessing(true);
+    disableFtn(true);
 
-  try {
-    const token = localStorage.getItem("token");
-    if (!token) {
-      throw new Error("No authentication token found");
-    }
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
 
-    // ✅ Convert ONLY for API call - don't touch state
-    const apiData = dateUtils.prepareForAPI(InfData);
+      // ✅ Convert ONLY for API call - don't touch state
+      const apiData = dateUtils.prepareForAPI(InfData);
 
-    // Check if we're in edit mode and have original data
-    if (!isEdit || !originalData) {
-      throw new Error("Save operation requires edit mode and original data");
-    }
+      // Check if we're in edit mode and have original data
+      if (!isEdit || !originalData) {
+        throw new Error("Save operation requires edit mode and original data");
+      }
 
-    // ✅ Get applicationId - use the same source as handleApprove
-    const applicationId = application?.applicationId;
-    if (!applicationId) {
-      throw new Error("ApplicationId not found");
-    }
+      // ✅ Get applicationId - use the same source as handleApprove
+      const applicationId = application?.applicationId;
+      if (!applicationId) {
+        throw new Error("ApplicationId not found");
+      }
 
-    // Convert original data for comparison
-    const apiOriginalData = dateUtils.prepareForAPI(originalData);
+      // Convert original data for comparison
+      const apiOriginalData = dateUtils.prepareForAPI(originalData);
 
-    // ✅ UPDATE ALL SECTIONS (like handleSubmit - ALWAYS send all data)
-    const savePromises = [];
+      // ✅ UPDATE ALL SECTIONS (like handleSubmit - ALWAYS send all data)
+      const savePromises = [];
 
-    // 1. Personal Details - ALWAYS send if personalDetails exists
-    if (application?.personalDetails?._id) {
-      const personalPayload = cleanPayload({
-        personalInfo: apiData.personalInfo,
-        contactInfo: apiData.contactInfo,
-      });
+      // 1. Personal Details - ALWAYS send if personalDetails exists
+      if (application?.personalDetails?._id) {
+        const personalPayload = cleanPayload({
+          personalInfo: apiData.personalInfo,
+          contactInfo: apiData.contactInfo,
+        });
 
-      console.log("💾 Saving Personal Details:", personalPayload);
+        console.log("💾 Saving Personal Details:", personalPayload);
 
-      savePromises.push(
-        axios.put(
-          `${baseURL}/personal-details/${applicationId}`,
-          personalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
+        savePromises.push(
+          axios.put(
+            `${baseURL}/personal-details/${applicationId}`,
+            personalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+        );
+      }
+
+      // 2. Professional Details - ALWAYS send if professionalDetails exists
+      if (application?.professionalDetails?._id) {
+        const professionalPayload = cleanPayload({
+          professionalDetails: apiData.professionalDetails,
+        });
+
+        console.log("💾 Saving Professional Details:", professionalPayload);
+
+        savePromises.push(
+          axios.put(
+            `${baseURL}/professional-details/${applicationId}`,
+            professionalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+        );
+      }
+
+      // 3. Subscription Details - ALWAYS send if subscriptionDetails exists
+      if (application?.subscriptionDetails?._id) {
+        const subscriptionPayload = cleanPayload({
+          subscriptionDetails: apiData.subscriptionDetails,
+        });
+
+        console.log("💾 Saving Subscription Details:", subscriptionPayload);
+
+        savePromises.push(
+          axios.put(
+            `${baseURL}/subscription-details/${applicationId}`,
+            subscriptionPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            }
+          )
+        );
+      }
+
+      console.log("📦 Total save promises:", savePromises.length);
+
+      // Execute all save requests
+      if (savePromises.length > 0) {
+        await Promise.all(savePromises);
+        MyAlert("success", "Application Updated successfully!");
+        setOriginalData(InfData); // Update original data after successful save
+      } else {
+        MyAlert("info", "No sections found to update.");
+      }
+
+    } catch (error) {
+      console.error("Save error:", error);
+      MyAlert(
+        "error",
+        "Failed to save changes",
+        error?.response?.data?.error?.message || error.message
       );
+    } finally {
+      setIsProcessing(false);
+      disableFtn(false);
     }
-
-    // 2. Professional Details - ALWAYS send if professionalDetails exists
-    if (application?.professionalDetails?._id) {
-      const professionalPayload = cleanPayload({
-        professionalDetails: apiData.professionalDetails,
-      });
-
-      console.log("💾 Saving Professional Details:", professionalPayload);
-
-      savePromises.push(
-        axios.put(
-          `${baseURL}/professional-details/${applicationId}`,
-          professionalPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
-      );
-    }
-
-    // 3. Subscription Details - ALWAYS send if subscriptionDetails exists
-    if (application?.subscriptionDetails?._id) {
-      const subscriptionPayload = cleanPayload({
-        subscriptionDetails: apiData.subscriptionDetails,
-      });
-
-      console.log("💾 Saving Subscription Details:", subscriptionPayload);
-
-      savePromises.push(
-        axios.put(
-          `${baseURL}/subscription-details/${applicationId}`,
-          subscriptionPayload,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        )
-      );
-    }
-
-    console.log("📦 Total save promises:", savePromises.length);
-
-    // Execute all save requests
-    if (savePromises.length > 0) {
-      await Promise.all(savePromises);
-      MyAlert("success", "Application Updated successfully!");
-      setOriginalData(InfData); // Update original data after successful save
-    } else {
-      MyAlert("info", "No sections found to update.");
-    }
-
-  } catch (error) {
-    console.error("Save error:", error);
-    MyAlert(
-      "error",
-      "Failed to save changes",
-      error?.response?.data?.error?.message || error.message
-    );
-  } finally {
-    setIsProcessing(false);
-    disableFtn(false);
-  }
-};
+  };
   const {
     hierarchicalData,
     hierarchicalDataLoading,
@@ -1931,7 +1930,7 @@ const handleSave = async () => {
               <Col xs={24} md={12}>
                 <CustomSelect
                   label="Work Location"
-                  isIDs={true}
+                  isIDs={application?false:true}
                   name="workLocation"
                   value={InfData.professionalDetails?.workLocation}
                   required
@@ -1962,7 +1961,7 @@ const handleSave = async () => {
                   label="Branch"
                   name="branch"
                   value={InfData.professionalDetails.branch}
-                  isIDs={true}
+                  isIDs={application?false:true}
                   disabled={true}
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
@@ -1976,7 +1975,7 @@ const handleSave = async () => {
 
               <Col xs={24} md={12}>
                 <CustomSelect
-                  isIDs={true}
+                  isIDs={application?false:true}
                   label="Region"
                   name="Region"
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
@@ -2090,57 +2089,75 @@ const handleSave = async () => {
               </Col>
 
               {/* Nurse Type - Full Width */}
-              <Col span={24}>
-                <div className="ps-3 pe-3 pt-2 pb-3 bg-ly" style={{ backgroundColor: '#f0fdf4', borderRadius: "4px", border: '1px solid #a4e3ba', }}>
-                  <label className="my-input-label mb-1" style={{ color: '#14532d' }}>
-                    Please tick one of the following
-                  </label>
-                  <Radio.Group
-                    name="nursingType"
-                    value={InfData.professionalDetails?.nurseType}
-                    onChange={(e) => handleInputChange("professionalDetails", "nurseType", e.target.value)}
-                    required={InfData?.professionalDetails?.nursingAdaptationProgramme === true}
-                    disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true}
-                    style={{
-                      // display: "flex",
-                      // flexWrap: "wrap",
-                      // gap: "16px",
-                      color: '#14532d',
-                      width: "100%"
-                    }}
-                  >
-                    <div className="d-flex justify-content-between align-items-baseline flex-wrap" style={{ gap: '8px' }}>
-                      <Radio value="General Nursing" style={{ color: '#14532d', width: '14%' }}>
-                        General Nursing
-                      </Radio>
-                      <Radio value="Public Health Nurse" style={{ color: '#14532d', width: '14%' }}>
-                        Public Health Nurse
-                      </Radio>
-                      <Radio value="Mental Health Nurse" style={{ color: '#14532d', width: '14%' }}>
-                        Mental Health Nurse
-                      </Radio>
-                      <Radio value="Midwife" style={{ color: '#14532d', width: '16%' }}>
-                        Midwife
-                      </Radio>
-                      <Radio value="Sick Children's Nurse" style={{ color: '#14532d', width: '14%' }}>
-                        Sick Children's Nurse
-                      </Radio>
-                      <Radio
-                        value="Registered Nurse for Intellectual Disability"
-                        style={{
-                          color: '#14532d',
-                          width: '20%',
-                          whiteSpace: 'normal',   // 👈 allows text to wrap
-                          lineHeight: '1.2',
-                        }}
-                      >
-                        Registered Nurse for Intellectual Disability
-                      </Radio>
-                    </div>
+             <Col span={24}>
+  <div
+    className="ps-3 pe-3 pt-2 pb-3 bg-ly"
+    style={{
+      backgroundColor: '#f0fdf4',
+      borderRadius: "4px",
+      border: '1px solid #a4e3ba',
+    }}
+  >
+    <label
+      className="my-input-label mb-1"
+      style={{ color: '#14532d' }}
+    >
+      Please tick one of the following
+    </label>
 
-                  </Radio.Group>
-                </div>
-              </Col>
+    <Radio.Group
+      name="nurseType"
+      value={InfData.professionalDetails?.nurseType}
+      onChange={(e) =>
+        handleInputChange("professionalDetails", "nurseType", e.target.value)
+      }
+      required={InfData?.professionalDetails?.nursingAdaptationProgramme === true}
+      disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true}
+      style={{
+        color: '#14532d',
+        width: "100%",
+      }}
+    >
+      <div
+        className="d-flex justify-content-between align-items-baseline flex-wrap"
+        style={{ gap: '8px' }}
+      >
+        <Radio value="generalNursing" style={{ color: '#14532d', width: '14%' }}>
+          General Nursing
+        </Radio>
+
+        <Radio value="publicHealthNurse" style={{ color: '#14532d', width: '14%' }}>
+          Public Health Nurse
+        </Radio>
+
+        <Radio value="mentalHealthNurse" style={{ color: '#14532d', width: '14%' }}>
+          Mental Health Nurse
+        </Radio>
+
+        <Radio value="midwife" style={{ color: '#14532d', width: '16%' }}>
+          Midwife
+        </Radio>
+
+        <Radio value="sickChildrenNurse" style={{ color: '#14532d', width: '14%' }}>
+          Sick Children's Nurse
+        </Radio>
+
+        <Radio
+          value="intellectualDisability"
+          style={{
+            color: '#14532d',
+            width: '20%',
+            whiteSpace: 'normal',
+            lineHeight: '1.2',
+          }}
+        >
+          Registered Nurse for Intellectual Disability
+        </Radio>
+      </div>
+    </Radio.Group>
+  </div>
+</Col>
+
             </Row>
           </div>
 
@@ -2304,9 +2321,9 @@ const handleSave = async () => {
                     <Col xs={24} md={24}>
                       <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                         <Checkbox
-                          // checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                          checked={InfData?.subscriptionDetails?.exclusiveDiscountsAndOffers}
                           style={{ color: "#78350f" }}
-                          // onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
+                          onChange={(e) => handleInputChange("subscriptionDetails", "exclusiveDiscountsAndOffers", e.target.checked)}
                           // className="my-input-wrapper"
                           disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
                         >
@@ -2317,9 +2334,9 @@ const handleSave = async () => {
                     <Col xs={24} md={24}>
                       <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                         <Checkbox
-                          // checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                          checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
                           style={{ color: "#78350f" }}
-                          // onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
+                          onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
                           // className="my-input-wrapper"
                           disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
                         >
