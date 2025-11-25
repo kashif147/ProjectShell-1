@@ -6,7 +6,7 @@ export const getRedirectUri = () => {
     process.env.REACT_APP_REDIRECT_URI ||
     (process.env.NODE_ENV === "development"
       ? window.location.origin
-      : "https://project-shell-crm.vercel.app")
+      : "https://project-shell-crm.vercel.app/")
   ).replace(/\/+$/, "");
 };
 
