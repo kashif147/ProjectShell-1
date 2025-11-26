@@ -3,7 +3,6 @@ import { DatePicker } from 'antd';
 import { AiOutlineExclamationCircle } from 'react-icons/ai';
 import dayjs from "dayjs";
 import '../../styles/MySelect.css';
-import moment from 'moment';
 
 // ✅ ADD THESE TWO LINES BELOW
 import customParseFormat from "dayjs/plugin/customParseFormat";

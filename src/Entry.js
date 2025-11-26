@@ -13,103 +13,134 @@ import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
 // import RemindersDetails from "./pages/reminders/RemindersDetails";
 
-// Lazy loaded components
-const Dummy = lazy(() => import("./component/common/Dummy"));
-const Configuratin = lazy(() => import("./pages/Configuratin"));
-const ProfileDetails = lazy(() => import("./pages/Profiles/ProfileDetails"));
-const ProfileSummary = lazy(() => import("./pages/Profiles/ProfileSummary"));
-const CasesSummary = lazy(() => import("./pages/Cases/CasesSummary"));
-const CasesDetails = lazy(() => import("./pages/Cases/CasesDetails"));
-const ClaimSummary = lazy(() => import("./pages/Claims/ClaimSummary"));
-const ClaimsDetails = lazy(() => import("./pages/Claims/ClaimsDetails"));
-const ClaimsById = lazy(() => import("./pages/Claims/ClaimsById"));
-const CasesById = lazy(() => import("./pages/Cases/CasesById"));
-const Filter = lazy(() => import("./pages/Filters/Filter"));
-const TransferSummary = lazy(() => import("./pages/Transfers/TransferSummary"));
-const CorrespondencesSummary = lazy(() =>
+// Wrapper for lazy loading with retry logic
+const lazyWithRetry = (componentImport) => {
+  return lazy(async () => {
+    try {
+      return await componentImport();
+    } catch (error) {
+      // Check if it's a chunk loading error
+      if (
+        error?.name === "ChunkLoadError" ||
+        error?.message?.includes("Loading chunk") ||
+        error?.message?.includes("Failed to fetch dynamically imported module") ||
+        error?.message?.includes("ChunkLoadError")
+      ) {
+        // Schedule reload and return a placeholder component
+        setTimeout(() => {
+          window.location.reload();
+        }, 1000);
+        
+        return {
+          default: () => (
+            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+              <Spin size="large" tip="Reloading application..." />
+            </div>
+          ),
+        };
+      }
+      throw error;
+    }
+  });
+};
+
+// Lazy loaded components with retry
+const Dummy = lazyWithRetry(() => import("./component/common/Dummy"));
+const Configuratin = lazyWithRetry(() => import("./pages/Configuratin"));
+const ProfileDetails = lazyWithRetry(() => import("./pages/Profiles/ProfileDetails"));
+const ProfileSummary = lazyWithRetry(() => import("./pages/Profiles/ProfileSummary"));
+const CasesSummary = lazyWithRetry(() => import("./pages/Cases/CasesSummary"));
+const CasesDetails = lazyWithRetry(() => import("./pages/Cases/CasesDetails"));
+const ClaimSummary = lazyWithRetry(() => import("./pages/Claims/ClaimSummary"));
+const ClaimsDetails = lazyWithRetry(() => import("./pages/Claims/ClaimsDetails"));
+const ClaimsById = lazyWithRetry(() => import("./pages/Claims/ClaimsById"));
+const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
+const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
+const TransferSummary = lazyWithRetry(() => import("./pages/Transfers/TransferSummary"));
+const CorrespondencesSummary = lazyWithRetry(() =>
   import("./pages/Correspondences/CorrespondencesSummary")
 );
-const AddNewProfile = lazy(() => import("./pages/Profiles/AddNewProfile"));
-const AddClaims = lazy(() => import("./pages/Claims/AddClaims"));
-const Login = lazy(() => import("./pages/auth/Login"));
-const LandingPage = lazy(() => import("./component/msft/LandingPage"));
-const Reports = lazy(() => import("./pages/repots/Reports"));
-const TempletsSummary = lazy(() => import("./pages/templete/TempletsSummary"));
-const TempleteConfig = lazy(() => import("./pages/templete/TemplateConfiguration"));
-const CorspndncDetail = lazy(() =>
+const AddNewProfile = lazyWithRetry(() => import("./pages/Profiles/AddNewProfile"));
+const AddClaims = lazyWithRetry(() => import("./pages/Claims/AddClaims"));
+const Login = lazyWithRetry(() => import("./pages/auth/Login"));
+const LandingPage = lazyWithRetry(() => import("./component/msft/LandingPage"));
+const Reports = lazyWithRetry(() => import("./pages/repots/Reports"));
+const TempletsSummary = lazyWithRetry(() => import("./pages/templete/TempletsSummary"));
+const TempleteConfig = lazyWithRetry(() => import("./pages/templete/TemplateConfiguration"));
+const CorspndncDetail = lazyWithRetry(() =>
   import("./pages/Correspondences/CorspndncDetail")
 );
 
-const Doucmnets = lazy(() => import("./pages/Doucmnets"));
-const RosterDetails = lazy(() => import("./pages/roster/RosterDetails"));
-const RusterSummary = lazy(() => import("./pages/roster/RusterSummary"));
-const MembershipApplication = lazy(() =>
+const Doucmnets = lazyWithRetry(() => import("./pages/Doucmnets"));
+const RosterDetails = lazyWithRetry(() => import("./pages/roster/RosterDetails"));
+const RusterSummary = lazyWithRetry(() => import("./pages/roster/RusterSummary"));
+const MembershipApplication = lazyWithRetry(() =>
   import("./pages/application/MembershipApplication")
 );
-const ApplicationMgt = lazy(() =>
+const ApplicationMgt = lazyWithRetry(() =>
   import("./component/applications/ApplicationMgtDrawer")
 );
-const ApproveMembership = lazy(() =>
+const ApproveMembership = lazyWithRetry(() =>
   import("./pages/application/ApproveMembership")
 );
-const ChangCateSumm = lazy(() => import("./pages/Category/ChangCateSumm"));
-const CateById = lazy(() => import("./pages/Category/CateById"));
-const RemindersSummary = lazy(() =>
+const ChangCateSumm = lazyWithRetry(() => import("./pages/Category/ChangCateSumm"));
+const CateById = lazyWithRetry(() => import("./pages/Category/CateById"));
+const RemindersSummary = lazyWithRetry(() =>
   import("./pages/reminders/RemindersSummary")
 );
-const Cancallation = lazy(() => import("./pages/Cancallation"));
-const CancellationDetail = lazy(() =>
+const Cancallation = lazyWithRetry(() => import("./pages/Cancallation"));
+const CancellationDetail = lazyWithRetry(() =>
   import("./pages/cancellation/CancellationDetail")
 );
-const Batches = lazy(() => import("./pages/finance/Batches"));
-const Import = lazy(() => import("./pages/finance/Import"));
-const Cheque = lazy(() => import("./pages/finance/Cheque"));
-const StandingOrders = lazy(() => import("./pages/finance/StandingOrders"));
-const BatchMemberSummary = lazy(() =>
+const Batches = lazyWithRetry(() => import("./pages/finance/Batches"));
+const Import = lazyWithRetry(() => import("./pages/finance/Import"));
+const Cheque = lazyWithRetry(() => import("./pages/finance/Cheque"));
+const StandingOrders = lazyWithRetry(() => import("./pages/finance/StandingOrders"));
+const BatchMemberSummary = lazyWithRetry(() =>
   import("./pages/finance/BatchMemberSummary")
 );
-const Deductions = lazy(() => import("./pages/finance/Deductions"));
-const Reconciliation = lazy(() => import("./pages/finance/Reconciliation"));
-const NotDesignedYet = lazy(() => import("./pages/NotDesign"));
-const Sms = lazy(() => import("./pages/Correspondences/sms"));
-const Email = lazy(() => import("./pages/Correspondences/Emails"));
-const Notes = lazy(() => import("./pages/Correspondences/Notes"));
-const Popout = lazy(() => import("../src/component/common/PopOut"));
-const Members = lazy(() => import("./pages/membership/Members"));
-const RemindersDetails = lazy(() =>
+const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
+const Reconciliation = lazyWithRetry(() => import("./pages/finance/Reconciliation"));
+const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
+const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
+const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
+const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
+const Popout = lazyWithRetry(() => import("../src/component/common/PopOut"));
+const Members = lazyWithRetry(() => import("./pages/membership/Members"));
+const RemindersDetails = lazyWithRetry(() =>
   import("./pages/reminders/RemindersDetails")
 );
-const MembershipDashboard = lazy(() =>
+const MembershipDashboard = lazyWithRetry(() =>
   import("./pages/membership/MembershipDashboard")
 );
-const TenantManagement = lazy(() =>
+const TenantManagement = lazyWithRetry(() =>
   import("./pages/tenant-management/TenantManagement")
 );
-const RoleManagement = lazy(() =>
+const RoleManagement = lazyWithRetry(() =>
   import("./pages/role-management/RoleManagement")
 );
-const UserManagement = lazy(() =>
+const UserManagement = lazyWithRetry(() =>
   import("./pages/user-management/UserManagement")
 );
-const PermissionManagement = lazy(() =>
+const PermissionManagement = lazyWithRetry(() =>
   import("./pages/permission-management/PermissionManagement")
 );
-const CancelledMembersReport = lazy(() =>
+const CancelledMembersReport = lazyWithRetry(() =>
   import("./pages/reports/CancelledMembersReport")
 );
-const ReportViewerDemo = lazy(() => import("./pages/ReportViewerDemo"));
-const AuthorizationExample = lazy(() => import("./pages/AuthorizationExample"));
-const DynamicPermissionsExample = lazy(() =>
+const ReportViewerDemo = lazyWithRetry(() => import("./pages/ReportViewerDemo"));
+const AuthorizationExample = lazyWithRetry(() => import("./pages/AuthorizationExample"));
+const DynamicPermissionsExample = lazyWithRetry(() =>
   import("./pages/DynamicPermissionsExample")
 );
-const DynamicRoutePermissionsExample = lazy(() =>
+const DynamicRoutePermissionsExample = lazyWithRetry(() =>
   import("./pages/DynamicRoutePermissionsExample")
 );
-const PolicyClientExample = lazy(() => import("./pages/PolicyClientExample"));
-const ProductTypesManagement = lazy(() =>
+const PolicyClientExample = lazyWithRetry(() => import("./pages/PolicyClientExample"));
+const ProductTypesManagement = lazyWithRetry(() =>
   import("./pages/product-management/ProductTypesManagement")
 );
-const ProductManagementDemo = lazy(() =>
+const ProductManagementDemo = lazyWithRetry(() =>
   import("./pages/product-management/ProductManagementDemo")
 );
 

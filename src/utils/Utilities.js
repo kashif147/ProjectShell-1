@@ -4,7 +4,6 @@ import { notificationsMsg } from "../Data";
 import dayjs from "dayjs";
 import moment from "moment";
 import PolicyClient from "./node-policy-client";
-let token;
 export const baseURL = `${process.env.REACT_APP_POLICY_SERVICE_URL}`;
 
 export const insertDataFtn = async (

@@ -1,9 +1,8 @@
-import React, { useEffect, useState } from "react";
+import React, { useState } from "react";
 import {
   Menu,
   Dropdown,
   Button,
-  Select,
   Divider,
   Checkbox,
   Row,
@@ -34,14 +33,6 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
 
   const Location = useLocation()
   const [trueKeys, setTrueKeys] = useState([]);
-  const [trueKeys1, setTrueKeys1] = useState([]);
-
-  const handleSelectChange = (value) => {
-    updateState(title, {
-      ...menuState,
-      selectedOption: value,
-    });
-  };
 
   const checkboxChangeFtn = (key, event) => {
     const updatedCheckboxes = {
@@ -58,40 +49,11 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
       checkboxes: updatedCheckboxes,
     });
   };
-  const getTrueLookups = (filters) => {
-    return filters
-      .filter(
-        (filter) =>
-          filter.lookups &&
-          Object.values(filter.lookups).some((value) => value === true)
-      )
-      .map((filter) => ({ [filter.titleColumn]: true }));
-  };
   const screenName= Location?.state?.search
-  const getTrueLookupsArrayByTitle = (titleColumn) => {
-    const item = searchFilters[screenName]?.find((item) => item.titleColumn === titleColumn);
-
-    if (item && item.lookups) {
-      return {
-        [titleColumn]: Object.entries(item.lookups)
-          .filter(([key, value]) => value === true)
-          .map(([key]) => key),
-      };
-    }
-    return {
-      [titleColumn]: [],
-    };
-  };
-  const trueLookupsArrayByTitle = getTrueLookupsArrayByTitle(title);
   const graterEqualDD = [
     { key: "!=", label: "!= (not equal)" },
     { key: "=", label: "= (equal)" },
   ];
-  const [firstTrueLookups1, setFirstTrueLookups1] = useState(null);
-  const handleOnChange = (selectedValue) => {
-    filterGridDataFtn(title, firstTrueLookups1, selectedValue);
-    handleCompChang(firstTrueLookups1, selectedValue);
-  };
   const menu = (
     <Menu>
       <Menu.Item key="1">
@@ -128,7 +90,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
                   onChange={(e) => {
                     e.stopPropagation();
                     updateLookupValue(title, key, e.target.checked);
-                    if (e.target.checked == true) {
+                    if (e.target.checked === true) {
                       filterGridDataFtn(
                         title,
                         key,
@@ -137,7 +99,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
                         )?.comp
                       );
                     }
-                    if (e.target.checked == false) {
+                    if (e.target.checked === false) {
                       filterGridDataFtn("", "");
                     }
                   }}
@@ -160,7 +122,7 @@ const JiraLikeMenu = ({ title, data, isSimple = false }) => {
         placement="bottomLeft"
         overlayStyle={{ width: 300, padding: "0px" }}
       >
-        {isSimple == false ? (
+        {isSimple === false ? (
           <Button
             className={`${
               searchFilters[screenName]?.some(

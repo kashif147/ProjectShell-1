@@ -1,8 +1,7 @@
-import { React, useState, useEffect } from "react";
+import { React, useState, useEffect, useCallback } from "react";
 import "../../styles/Login.css";
 import { Button, Checkbox, Divider, Input, Spin, Card, Typography } from "antd";
 import { Link } from "react-router-dom";
-import { AiFillEye, AiFillEyeInvisible } from "react-icons/ai";
 import { useNavigate } from "react-router-dom";
 import { useMsal } from "@azure/msal-react";
 import { InteractionStatus } from "@azure/msal-browser";
@@ -29,7 +28,7 @@ const Login = () => {
   const { setUserData } = useAuthorization();
 
   // Function to set appropriate menu label based on user role
-  const setMenuLabelForRole = (roleCodes) => {
+  const setMenuLabelForRole = useCallback((roleCodes) => {
     if (roleCodes.includes("SU")) {
       // Super User - show Configuration module
       dispatch(updateMenuLbl({ key: "Configuration", value: true }));
@@ -52,11 +51,11 @@ const Login = () => {
       // Default fallback
       dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
     }
-  };
+  }, [dispatch]);
 
-  const { instance, inProgress } = useMsal(); // Get the MSAL instance and interaction status
+  const { inProgress } = useMsal(); // Get the MSAL instance and interaction status
   const navigate = useNavigate(); // Use the useHistory hook
-  const { loading, user, roles, permissions } = useSelector(
+  const { loading } = useSelector(
     (state) => state.auth
   );
 
@@ -102,7 +101,7 @@ const Login = () => {
     // Redirect to Microsoft login
     window.location.href = authUrl.toString();
   };
-  const handleAuthRedirect = async () => {
+  const handleAuthRedirect = useCallback(async () => {
     setAuthLoading(true);
     const urlParams = new URLSearchParams(window.location.search);
     const code = urlParams.get("code");
@@ -215,7 +214,7 @@ const Login = () => {
     }
 
     setAuthLoading(false);
-  };
+  }, [navigate, setUserData, setMenuLabelForRole]);
   useEffect(() => {
     // Check if user is already authenticated before running auth redirect
     const token = localStorage.getItem("token");
@@ -265,7 +264,7 @@ const Login = () => {
     return () => {
       document.body.classList.remove("login-page");
     };
-  }, []);
+  }, [handleAuthRedirect]);
 
   // Step 2: Handle redirect after Microsoft login
 
@@ -288,10 +287,6 @@ const Login = () => {
   });
 
   const [showPassword, setShowPassword] = useState(false);
-
-  const togglePasswordVisibility = () => {
-    setShowPassword(!showPassword);
-  };
 
   const handleLoginWithCredentional = async (e) => {
     // e.preventDefault();

@@ -9,7 +9,13 @@ export const getLookupTypes = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token'); // Retrieve token
-            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookuptype`, {
+            const apiBaseUrl = process.env.REACT_APP_POLICY_SERVICE_URL || baseURL;
+            
+            if (!apiBaseUrl) {
+                return rejectWithValue("API base URL is not configured");
+            }
+            
+            const response = await axios.get(`${apiBaseUrl}/api/lookuptype`, {
                 headers: {
                     Authorization: `Bearer ${token}`, // Include token in headers
                     'Content-Type': 'application/json',
@@ -17,6 +23,11 @@ export const getLookupTypes = createAsyncThunk(
             });
             return response.data; // Assuming the API returns an array of lookup types
         } catch (error) {
+            // Silently handle 500 errors - backend may be temporarily unavailable
+            if (error.response?.status === 500) {
+                console.warn("Lookup types service temporarily unavailable");
+                return [];
+            }
             return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookup types');
         }
     }

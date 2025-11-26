@@ -440,7 +440,7 @@ const { ProfileDetails } = useTableColumns();
       placement="right"
       width={1500}
       onClose={onClose}
-      visible={isOpen}
+      open={isOpen}
       extra={
         <>
           <Button onClick={onClose} className="butn secoundry-btn me-2">Close</Button>
