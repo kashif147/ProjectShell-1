@@ -670,7 +670,7 @@ function ApplicationMgtDrawer({
     }
 
     // ✅ FIXED: Date validation - don't use .trim() on dates
-    if (InfData?.professionalDetails?.membershipCategory === "Undergraduate Student") {
+    if (InfData?.professionalDetails?.membershipCategory === "68dae699c5b15073d66b892d") {
       if (!InfData.professionalDetails?.studyLocation?.trim()) {
         newErrors.studyLocation = "Study location is required";
       }
@@ -1948,7 +1948,7 @@ function ApplicationMgtDrawer({
                   </Col>
                 )
                   :
-                  InfData.professionalDetails?.membershipCategory == "Undergraduate Student" ? (
+                  InfData.subscriptionDetails?.membershipCategory == "68dae699c5b15073d66b892d" ? (
                     <>
                       <Col xs={24} md={12}>
                         <Row gutter={12}>
