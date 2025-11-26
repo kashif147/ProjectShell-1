@@ -186,7 +186,7 @@ function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
       placement="right"
       width={1200}
       onClose={onClose}
-      visible={isOpen}
+      open={isOpen}
       extra={
         <>
           <Button onClick={onClose} className="butn secoundry-btn me-2">

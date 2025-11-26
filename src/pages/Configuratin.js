@@ -1137,8 +1137,7 @@ const filteredBookmarks = useMemo(() => {
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
-    debugger
-    if (value == false) {
+    if (value === false) {
       setisUpdateRec((prev) => ({
         ...prev,
         [drawer]: false,
@@ -1227,7 +1226,6 @@ const filteredBookmarks = useMemo(() => {
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
-    debugger
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
 

@@ -61,7 +61,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       <Row style={{ maxHeight: "200px", overflowY: "auto" }}>
         {columnsForFilter?.map((col) => 
         col.isVisible && (
-          <Col span={24}>
+          <Col span={24} key={col.key || col.title || col.dataIndex}>
             <Checkbox
               style={{ marginBottom: "8px" }}
               onClick={(e) => {

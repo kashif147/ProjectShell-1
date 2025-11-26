@@ -480,7 +480,7 @@ function MyDrawer({
     Solicitors: [],
   });
   const IsUpdateFtn = (drawer, value, data) => {
-    if (value == false) {
+    if (value === false) {
       setisUpdateRec((prev) => ({
         ...prev,
         [drawer]: false,
@@ -832,10 +832,10 @@ await dispatch(getContacts())
             </Button>
             <Button
               className="butn primary-btn"
-              onClick={() => isUpdate?.Contacts == true ? update() : isDisable === true ? disableFtn(false) : addFtn()}
+              onClick={() => isUpdate?.Contacts === true ? update() : isDisable === true ? disableFtn(false) : addFtn()}
               onKeyDown={(event) =>
                 event.key === "Enter" &&
-                (() => isUpdate?.Contacts == true ? updatftn() : isDisable === false ? disableFtn(true) : addFtn())
+                (() => isUpdate?.Contacts === true ? updatftn() : isDisable === false ? disableFtn(true) : addFtn())
               }
             >
               {isUpdate?.Contacts === true ? "Update" : isDisable === true ? "Add" : "Submit"}
