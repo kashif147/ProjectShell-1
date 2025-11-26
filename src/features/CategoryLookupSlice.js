@@ -20,7 +20,8 @@ export const getCategoryLookup = createAsyncThunk(
       // Transform the API response to [{label: "name", value: "_id"}]
       const transformedData = response.data.data.products.map(product => ({
         label: product.name,
-        value: product._id
+        value: product._id,
+        key: product._id,
       }));
 
       return {

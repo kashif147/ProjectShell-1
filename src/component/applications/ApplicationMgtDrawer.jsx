@@ -227,7 +227,7 @@ function ApplicationMgtDrawer({
         inmoRewards: apiData?.subscriptionDetails?.inmoRewards,
         valueAddedServices: apiData?.subscriptionDetails?.valueAddedServices || false,
         termsAndConditions: apiData?.subscriptionDetails?.termsAndConditions || false,
-        membershipCategory: apiData?.subscriptionDetails?.membershipCategory || "",
+        membershipCategory: apiData?.subscriptionDetails?.membershipCategory,
         dateJoined: toDayJS(apiData?.subscriptionDetails?.dateJoined || new Date()),
         // paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
         submissionDate: toDayJS(apiData?.subscriptionDetails?.submissionDate),
@@ -240,6 +240,7 @@ function ApplicationMgtDrawer({
     error,
     currentCategoryId
   } = useSelector((state) => state.categoryLookup);
+  console.log(categoryData, "categoryData")
   useEffect(() => {
     dispatch(fetchCountries());
     // refreshApplicationsWithStatusFilters()
@@ -541,7 +542,7 @@ function ApplicationMgtDrawer({
     },
   };
   const [InfData, setInfData] = useState(inputValue);
-  console.log(InfData, "InfData")
+  console.log(application, "InfData")
   const handleLocationChange = (selectedLookupId) => {
     debugger
     // Get hierarchicalLookups from localStorage
@@ -659,7 +660,7 @@ function ApplicationMgtDrawer({
     }
 
     // ✅ FIXED: Date validation - don't use .trim() on dates
-    if (InfData?.professionalDetails?.membershipCategory === "Retired Associate") {
+    if (InfData?.subscriptionDetails?.membershipCategory === "68dae699c5b15073d66b892c") {
       if (!InfData.professionalDetails?.retiredDate) {
         newErrors.retiredDate = "Retired date is required";
       }
@@ -1077,6 +1078,7 @@ function ApplicationMgtDrawer({
   } = useSelector((state) => state.hierarchicalDataByLocation);
   console.log(hierarchicalData, "hierarchicalData")
   const handleInputChange = (section, field, value) => {
+    debugger
     if (section === "subscriptionDetails" && field === "membershipStatus") {
       setInfData((prev) => {
         const updated = {
@@ -1109,8 +1111,8 @@ function ApplicationMgtDrawer({
         ...prev,
         professionalDetails: {
           ...prev.professionalDetails,
-          region: "",
-          branch: ""
+          workLocation: value,
+          // branch: ""
         },
       }));
       handleLocationChange(value)
@@ -1915,7 +1917,7 @@ function ApplicationMgtDrawer({
                 />
               </Col>
               {
-                InfData.professionalDetails?.membershipCategory === "Retired Associate" ? (
+                InfData.subscriptionDetails?.membershipCategory === "68dae699c5b15073d66b892c" ? (
                   <Col xs={24} md={12}>
                     <Row gutter={[8, 8]}>
                       <Col xs={24} md={12}>
@@ -1923,8 +1925,8 @@ function ApplicationMgtDrawer({
                           label="Retired Date"
                           name="retiredDate"
                           value={InfData?.professionalDetails?.retiredDate}
-                          disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
-                          required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
+                          disabled={isDisable || InfData?.subscriptionDetails?.membershipCategory !== "68dae699c5b15073d66b892c"}
+                          required={InfData?.subscriptionDetails?.membershipCategory === "68dae699c5b15073d66b892c"}
                           onChange={(date, dateString) => {
                             handleInputChange("professionalDetails", "retiredDate", date);
                           }}
@@ -1936,8 +1938,8 @@ function ApplicationMgtDrawer({
                           label="Pension No"
                           name="pensionNo"
                           value={InfData.professionalDetails?.pensionNo}
-                          disabled={isDisable || InfData?.professionalDetails?.membershipCategory !== "Retired Associate"}
-                          required={InfData?.professionalDetails?.membershipCategory === "Retired Associate"}
+                          disabled={isDisable || InfData?.subscriptionDetails?.membershipCategory !== "68dae699c5b15073d66b892c"}
+                          required={InfData?.subscriptionDetails?.membershipCategory === "68dae699c5b15073d66b892c"}
                           onChange={(e) => handleInputChange("professionalDetails", "pensionNo", e.target.value)}
                           hasError={!!errors?.pensionNo}
                         />
