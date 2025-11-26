@@ -110,8 +110,17 @@ const staticColumns = {
     { dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"], title: "Telephone", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
     { dataIndex: ["personalDetails", "contactInfo", "personalEmail"], title: "Personal Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
     { dataIndex: ["personalDetails", "contactInfo", "workEmail"], title: "Work Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
-    { dataIndex: ["personalDetails", "contactInfo", "consentSMS"], title: "Consent SMS", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
-    { dataIndex: ["personalDetails", "contactInfo", "consentEmail"], title: "Consent Email", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+    {
+      dataIndex: ["personalDetails", "contactInfo", "consent"],
+      title: "Consent",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      editable: false,
+      render: (value) => value ? "Yes" : "No"
+    },
+    // { dataIndex: ["personalDetails", "contactInfo", "consentEmail"], title: "Consent Email", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
 
     // 🔹 Approval Info
     { dataIndex: ["personalDetails", "approvalDetails", "approvedBy"], title: "Approved By", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: false },
@@ -287,72 +296,72 @@ const staticColumns = {
   ],
 
   BatchMemberSummary: [
-  {
-    title: "First name",
-    dataIndex: "First name",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-    render: (_, record) => `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
-  },
-  {
-    dataIndex: "First name",
-    title: "Last name",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Membership No",
-    title: "Membership No",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Value for Periods Selected",
-    title: "Value for Periods Selected",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Arrears",
-    title: "Arrears",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Comments",
-    title: "Comments",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Advance",
-    title: "Advance",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 100,
-  },
-  {
-    dataIndex: "Total Amount",
-    title: "Total Amount",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 100,
-  },
-],
+    {
+      title: "First name",
+      dataIndex: "First name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (_, record) => `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
+    },
+    {
+      dataIndex: "First name",
+      title: "Last name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Membership No",
+      title: "Membership No",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Value for Periods Selected",
+      title: "Value for Periods Selected",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Arrears",
+      title: "Arrears",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Comments",
+      title: "Comments",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Advance",
+      title: "Advance",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+    {
+      dataIndex: "Total Amount",
+      title: "Total Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+  ],
   members: [
     { dataIndex: "MembershipNo", title: "Membership No", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
     { dataIndex: "FullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
@@ -1151,26 +1160,26 @@ export const TableColumnsProvider = ({ children }) => {
   }, [regionLookups, transformLookupData]);
 
   // General lookups processing
-useEffect(() => {
-  if (lookups && Array.isArray(lookups)) {
-    const lookupTypes = {
-      gender: "68c85f21302e5600dc8477da",
-      Duties: "68c85f22302e5600dc847805",
-      MaritalStatus: "68c85f21302e5600dc8477e1",
-      Titles: "68c85f21302e5600dc8477d6",
-      Ranks: "68c85f22302e5600dc847809",
-    };
+  useEffect(() => {
+    if (lookups && Array.isArray(lookups)) {
+      const lookupTypes = {
+        gender: "68c85f21302e5600dc8477da",
+        Duties: "68c85f22302e5600dc847805",
+        MaritalStatus: "68c85f21302e5600dc8477e1",
+        Titles: "68c85f21302e5600dc8477d6",
+        Ranks: "68c85f22302e5600dc847809",
+      };
 
-    const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
-      acc[key] = lookups.filter(
-        (item) => item?.lookuptypeId?._id === lookupTypes[key]
-      );
-      return acc;
-    }, {});
+      const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
+        acc[key] = lookups.filter(
+          (item) => item?.lookuptypeId?._id === lookupTypes[key]
+        );
+        return acc;
+      }, {});
 
-    setLookupsData((prevState) => ({ ...prevState, ...updatedLookups }));
-  }
-}, [lookups]);
+      setLookupsData((prevState) => ({ ...prevState, ...updatedLookups }));
+    }
+  }, [lookups]);
 
 
   useEffect(() => {

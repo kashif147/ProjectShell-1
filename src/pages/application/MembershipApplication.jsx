@@ -20,9 +20,10 @@ function MembershipApplication() {
   const formatApplicationDates = (applicationData) => {
     if (!applicationData) return applicationData;
 
+
     const formatDate = (dateString) => {
       if (!dateString) return null;
-      return dayjs(dateString).format('DD/MM/YYYY');
+      return dayjs(dateString).format('DD/MM/YYYY HH:MM');
     };
 
     return {

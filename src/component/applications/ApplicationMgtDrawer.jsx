@@ -194,7 +194,7 @@ function ApplicationMgtDrawer({
         workEmail: apiData?.personalDetails?.contactInfo?.workEmail || "",
       },
       professionalDetails: {
-        membershipCategory: apiData?.professionalDetails?.membershipCategory || "",
+        // membershipCategory: apiData?.professionalDetails?.membershipCategory || "",
         workLocation: apiData?.professionalDetails?.workLocation,
         otherWorkLocation: apiData?.professionalDetails?.otherWorkLocation || "",
         grade: apiData?.professionalDetails?.grade || "",
@@ -215,6 +215,7 @@ function ApplicationMgtDrawer({
         payrollNo: apiData?.subscriptionDetails?.payrollNo || "",
         membershipStatus: apiData?.subscriptionDetails?.membershipStatus || "",
         otherIrishTradeUnion: apiData?.subscriptionDetails?.otherIrishTradeUnion || false,
+        otherIrishTradeUnionName: apiData?.subscriptionDetails?.otherIrishTradeUnionName || "",
         otherScheme: apiData?.subscriptionDetails?.otherScheme || false,
         recuritedBy: apiData?.subscriptionDetails?.recuritedBy || "",
         recuritedByMembershipNo: apiData?.subscriptionDetails?.recuritedByMembershipNo || "",
@@ -223,12 +224,12 @@ function ApplicationMgtDrawer({
         secondarySection: apiData?.subscriptionDetails?.secondarySection || "",
         otherSecondarySection: apiData?.subscriptionDetails?.otherSecondarySection || "",
         incomeProtectionScheme: apiData?.subscriptionDetails?.incomeProtectionScheme || false,
-        inmoRewards: apiData?.subscriptionDetails?.inmoRewards || false,
+        inmoRewards: apiData?.subscriptionDetails?.inmoRewards,
         valueAddedServices: apiData?.subscriptionDetails?.valueAddedServices || false,
         termsAndConditions: apiData?.subscriptionDetails?.termsAndConditions || false,
         membershipCategory: apiData?.subscriptionDetails?.membershipCategory || "",
         dateJoined: toDayJS(apiData?.subscriptionDetails?.dateJoined || new Date()),
-        paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
+        // paymentFrequency: apiData?.subscriptionDetails?.paymentFrequency !== null,
         submissionDate: toDayJS(apiData?.subscriptionDetails?.submissionDate),
         exclusiveDiscountsAndOffers: apiData?.subscriptionDetails?.exclusiveDiscountsAndOffers,
       },
@@ -461,7 +462,7 @@ function ApplicationMgtDrawer({
 
   const hasProfessionalDetailsChanged = (original, current) => {
     const professionalFields = [
-      'membershipCategory', 'workLocation', 'otherWorkLocation', 'grade',
+      'workLocation', 'otherWorkLocation', 'grade',
       'otherGrade', 'nmbiNumber', 'nurseType', 'nursingAdaptationProgramme',
       'region', 'branch', 'pensionNo', 'isRetired', 'retiredDate',
       'studyLocation', 'graduationDate'
@@ -500,7 +501,6 @@ function ApplicationMgtDrawer({
       workEmail: "",
     },
     professionalDetails: {
-      membershipCategory: "",
       workLocation: "",
       otherWorkLocation: "",
       grade: "",
@@ -513,10 +513,10 @@ function ApplicationMgtDrawer({
       isRetired: false,
       pensionNo: "",
       retiredDate: null,
-
       graduationDate: null
     },
     subscriptionDetails: {
+      membershipCategory: "",
       paymentType: "",
       payrollNo: "",
       membershipStatus: "",
@@ -532,17 +532,18 @@ function ApplicationMgtDrawer({
       inmoRewards: false,
       valueAddedServices: false,
       termsAndConditions: false,
-      membershipCategory: "",
       dateJoined: dayjs(),
       submissionDate: dayjs(),
-      paymentFrequency: "",
+      // paymentFrequency: "",
       startDate: null,
-      exclusiveDiscountsAndOffers:false
+      exclusiveDiscountsAndOffers: false,
+      otherIrishTradeUnionName:""
     },
   };
   const [InfData, setInfData] = useState(inputValue);
   console.log(InfData, "InfData")
   const handleLocationChange = (selectedLookupId) => {
+    debugger
     // Get hierarchicalLookups from localStorage
     const storedLookups = localStorage.getItem('hierarchicalLookups');
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
@@ -601,7 +602,7 @@ function ApplicationMgtDrawer({
       preferredAddress: ["contactInfo", "preferredAddress"],
       personalEmail: ["contactInfo", "personalEmail"],
 
-      membershipCategory: ["professionalDetails", "membershipCategory"],
+      membershipCategory: ["subscriptionDetails", "membershipCategory"],
       workLocation: ["professionalDetails", "workLocation"],
       grade: ["professionalDetails", "grade"],
       retiredDate: ["professionalDetails", "retiredDate"],
@@ -790,7 +791,8 @@ function ApplicationMgtDrawer({
         }
       );
 
-      const applicationId = personalRes?.data?.data?.ApplicationId;
+      const applicationId = personalRes?.data?.data?.applicationId;
+      debugger
       if (!applicationId) {
         throw new Error("ApplicationId not returned from personal details API");
       }
@@ -907,6 +909,54 @@ function ApplicationMgtDrawer({
     }
   };
 
+  const hasSubscriptionDetailsChanged = (current, original) => {
+    const currentSub = current.subscriptionDetails || {};
+    const originalSub = original.subscriptionDetails || {};
+    // Check ALL subscription fields, not just critical ones
+    const allSubscriptionFields = [
+      'paymentType',
+      'payrollNo',
+      'membershipStatus',
+      'otherIrishTradeUnion',
+      'otherScheme',
+      'recuritedBy',           // ← THIS WAS MISSING!
+      'recuritedByMembershipNo', // ← THIS WAS MISSING!
+      'primarySection',
+      'otherPrimarySection',
+      'secondarySection',
+      'otherSecondarySection',
+      'incomeProtectionScheme',
+      'inmoRewards',
+      'valueAddedServices',
+      'termsAndConditions',
+      'membershipCategory',
+      'exclusiveDiscountsAndOffers',
+      'dateJoined',
+      'submissionDate'
+    ];
+
+    const hasAnyChange = allSubscriptionFields.some(field => {
+      const currentVal = currentSub[field];
+      const originalVal = originalSub[field];
+
+      // Only consider it a change if both values exist and are different
+      if (currentVal && originalVal) {
+        return currentVal !== originalVal;
+      }
+
+      // If one exists and the other doesn't, it's a change
+      return Boolean(currentVal) !== Boolean(originalVal);
+    });
+    
+    console.log('🔍 Subscription Change (All Fields):', {
+      hasAnyChange,
+      current: currentSub,
+      original: originalSub
+    });
+
+    return hasAnyChange;
+  };
+
   const handleSave = async () => {
     if (isDisable) return;
     const isValid = validateForm();
@@ -919,35 +969,26 @@ function ApplicationMgtDrawer({
       if (!token) {
         throw new Error("No authentication token found");
       }
-
-      // ✅ Convert ONLY for API call - don't touch state
       const apiData = dateUtils.prepareForAPI(InfData);
-
-      // Check if we're in edit mode and have original data
       if (!isEdit || !originalData) {
         throw new Error("Save operation requires edit mode and original data");
       }
 
-      // ✅ Get applicationId - use the same source as handleApprove
       const applicationId = application?.applicationId;
       if (!applicationId) {
         throw new Error("ApplicationId not found");
       }
 
-      // Convert original data for comparison
       const apiOriginalData = dateUtils.prepareForAPI(originalData);
-
-      // ✅ UPDATE ALL SECTIONS (like handleSubmit - ALWAYS send all data)
       const savePromises = [];
-
-      // 1. Personal Details - ALWAYS send if personalDetails exists
-      if (application?.personalDetails?._id) {
+      if (applicationId &&
+        hasPersonalDetailsChanged(apiData, apiOriginalData)) {
         const personalPayload = cleanPayload({
           personalInfo: apiData.personalInfo,
           contactInfo: apiData.contactInfo,
         });
 
-        console.log("💾 Saving Personal Details:", personalPayload);
+        console.log("💾 Saving Personal Details (changed):", personalPayload);
 
         savePromises.push(
           axios.put(
@@ -963,14 +1004,14 @@ function ApplicationMgtDrawer({
         );
       }
 
-      // 2. Professional Details - ALWAYS send if professionalDetails exists
-      if (application?.professionalDetails?._id) {
+      // 2. Check Professional Details changes
+      if (applicationId &&
+        hasProfessionalDetailsChanged(apiData, apiOriginalData)) {
         const professionalPayload = cleanPayload({
           professionalDetails: apiData.professionalDetails,
         });
 
-        console.log("💾 Saving Professional Details:", professionalPayload);
-
+        console.log("💾 Saving Professional Details (changed):", professionalPayload);
         savePromises.push(
           axios.put(
             `${baseURL}/professional-details/${applicationId}`,
@@ -985,14 +1026,12 @@ function ApplicationMgtDrawer({
         );
       }
 
-      // 3. Subscription Details - ALWAYS send if subscriptionDetails exists
-      if (application?.subscriptionDetails?._id) {
+      if (applicationId &&
+        hasSubscriptionDetailsChanged(apiData, apiOriginalData)) {
         const subscriptionPayload = cleanPayload({
           subscriptionDetails: apiData.subscriptionDetails,
         });
-
-        console.log("💾 Saving Subscription Details:", subscriptionPayload);
-
+        debugger
         savePromises.push(
           axios.put(
             `${baseURL}/subscription-details/${applicationId}`,
@@ -1007,15 +1046,15 @@ function ApplicationMgtDrawer({
         );
       }
 
-      console.log("📦 Total save promises:", savePromises.length);
+      console.log("📦 Total save promises (changed sections only):", savePromises.length);
 
-      // Execute all save requests
+      // Execute only changed section saves
       if (savePromises.length > 0) {
         await Promise.all(savePromises);
         MyAlert("success", "Application Updated successfully!");
         setOriginalData(InfData); // Update original data after successful save
       } else {
-        MyAlert("info", "No sections found to update.");
+        MyAlert("info", "No changes detected to save.");
       }
 
     } catch (error) {
@@ -1030,6 +1069,7 @@ function ApplicationMgtDrawer({
       disableFtn(false);
     }
   };
+
   const {
     hierarchicalData,
     hierarchicalDataLoading,
@@ -1037,7 +1077,34 @@ function ApplicationMgtDrawer({
   } = useSelector((state) => state.hierarchicalDataByLocation);
   console.log(hierarchicalData, "hierarchicalData")
   const handleInputChange = (section, field, value) => {
-    if (field === "workLocation") {
+    if (section === "subscriptionDetails" && field === "membershipStatus") {
+      setInfData((prev) => {
+        const updated = {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: value,
+          },
+        };
+
+        // ✅ CLEAR ALL STATUS-DEPENDENT FIELDS when membership status changes
+        const statusDependentFields = {
+          // Fields that should be cleared when status changes
+          graduate: ['exclusiveDiscountsAndOffers', 'incomeProtectionScheme'],
+          new: ['inmoRewards'] // Add any new-specific fields here
+        };
+
+        // Clear fields that are dependent on the previous status
+        Object.values(statusDependentFields).forEach(fields => {
+          fields.forEach(dependentField => {
+            updated.subscriptionDetails[dependentField] = false;
+          });
+        });
+
+        return updated;
+      });
+    }
+    else if (field === "workLocation") {
       setInfData((prev) => ({
         ...prev,
         professionalDetails: {
@@ -1046,27 +1113,21 @@ function ApplicationMgtDrawer({
           branch: ""
         },
       }));
-      // dispatch(getWorkLocationHierarchy(value))
       handleLocationChange(value)
     }
-    setInfData((prev) => {
-      let updated = {
-        ...prev,
-        [section]: {
-          ...prev[section],
-          [field]: value,
-        },
-      };
+    else {
+      setInfData((prev) => {
+        let updated = {
+          ...prev,
+          [section]: {
+            ...prev[section],
+            [field]: value,
+          },
+        };
+        return updated;
+      });
+    }
 
-      // Example: auto update branch & region based on workLocation
-
-
-      // Generate patch from observer
-
-      return updated;
-    });
-
-    // Clear errors if any
     setErrors((prevErrors) => {
       if (prevErrors?.[field]) {
         const { [field]: removed, ...rest } = prevErrors;
@@ -1152,25 +1213,19 @@ function ApplicationMgtDrawer({
     if (application && isEdit) {
       const status = application.applicationStatus?.toLowerCase();
       setCurrentApplication(application);
-      const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
-      if (readOnlyStatuses.includes(status)) {
-        disableFtn(true); // Disable form for read-only statuses
 
-        // ✅ UPDATE CHECKBOXES BASED ON STATUS
-        setSelected(prev => ({
-          ...prev,
-          Approve: status === 'approved',
-          Reject: status === 'rejected'
-        }));
-      } else {
-        // For editable applications, reset checkboxes to default
-        setSelected(prev => ({
-          ...prev,
-          Approve: false,
-          Reject: false
-        }));
-        disableFtn(false);
-      }
+      // Disable form only for approved and in-progress
+      const shouldDisableForm = ['approved', 'in-progress'].includes(status);
+      disableFtn(shouldDisableForm);
+
+      // ✅ Set checkboxes based on actual status
+      setSelected(prev => ({
+        ...prev,
+        Approve: status === 'approved',
+        Reject: status === 'rejected'
+      }));
+      debugger
+
     } else {
       // For new applications, use default state
       setSelected(select);
@@ -1183,9 +1238,9 @@ function ApplicationMgtDrawer({
 
     // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
     const status = application?.applicationStatus?.toLowerCase();
-    const readOnlyStatuses = ['approved', 'rejected', 'in-progress'];
+    const readOnlyStatuses = ['approved', 'in-progress'];
 
-    if (readOnlyStatuses.includes(status) && (name === "Approve" || name === "Reject")) {
+    if (readOnlyStatuses.includes(status) && (name === "Approve")) {
       return; // Don't allow changes for read-only statuses
     }
 
@@ -1198,7 +1253,7 @@ function ApplicationMgtDrawer({
       }));
     }
 
-    if (name === "Approve" && checked === true) {
+    if (name === "Approve" && checked === true && isEdit) {
       // ✅ REMOVED MODAL - Direct approval
       setSelected((prev) => ({
         ...prev,
@@ -1220,6 +1275,12 @@ function ApplicationMgtDrawer({
       setSelected((prev) => ({
         ...prev,
         [name]: false,
+      }));
+    }
+    if (!isEdit && (name === "Approve" || name === "Reject") && checked === true) {
+      setSelected((prev) => ({
+        ...prev,
+        [name]: true,
       }));
     }
   };
@@ -1426,7 +1487,7 @@ function ApplicationMgtDrawer({
               checked={selected.Approve}
               disabled={
                 isEdit
-                  ? (selected.Reject || selected.actionCompleted || isDisable)
+                  ? ( selected.actionCompleted || isDisable)
                   : isDisable // Only disabled in non-edit mode when isDisable is true
               }
               onChange={handleChange}
@@ -1436,9 +1497,14 @@ function ApplicationMgtDrawer({
             <Checkbox
               name="Reject"
               disabled={
-                isEdit
-                  ? (selected.Approve || selected.actionCompleted || isDisable)
-                  : true // Always disabled in non-edit mode
+                // If form is disabled, Reject is always disabled
+                isDisable ||
+                // In non-edit mode, Reject is always disabled  
+                (!isEdit) ||
+                // In edit mode, disable if Approve is checked
+                (isEdit && selected.Approve) ||
+                // In edit mode, disable if action is completed
+                (isEdit && selected.actionCompleted)
               }
               checked={selected.Reject}
               onChange={handleChange}
@@ -1648,6 +1714,7 @@ function ApplicationMgtDrawer({
                     onLoad={(ref) => (inputRef.current = ref)}
                     onPlacesChanged={handlePlacesChanged}
                     placeholder="Enter Eircode (e.g., D01X4X0)"
+                    disabled={isDisable}
                   >
                     <MyInput
                       label="Search by address or Eircode"
@@ -1655,6 +1722,7 @@ function ApplicationMgtDrawer({
                       placeholder="Enter Eircode (e.g., D01X4X0)"
                       disabled={isDisable}
                       onChange={() => { }}
+
                     />
                   </StandaloneSearchBox>
                 )}
@@ -1711,6 +1779,7 @@ function ApplicationMgtDrawer({
                   placeholder="Enter Eircode"
                   value={InfData?.contactInfo?.eircode}
                   onChange={(e) => handleInputChange("contactInfo", "eircode", e.target.value)}
+                  disabled={isDisable}
                 />
               </Col>
 
@@ -1836,11 +1905,12 @@ function ApplicationMgtDrawer({
                 <CustomSelect
                   label="Membership Category"
                   name="membershipCategory"
-                  value={InfData.professionalDetails?.membershipCategory}
+                  value={InfData.subscriptionDetails?.membershipCategory}
+                  isIDs={true}
                   options={categoryData}
                   required
                   disabled={isDisable}
-                  onChange={(e) => handleInputChange("professionalDetails", "membershipCategory", e.target.value)}
+                  onChange={(e) => handleInputChange("subscriptionDetails", "membershipCategory", e.target.value)}
                   hasError={!!errors?.membershipCategory}
                 />
               </Col>
@@ -1930,7 +2000,7 @@ function ApplicationMgtDrawer({
               <Col xs={24} md={12}>
                 <CustomSelect
                   label="Work Location"
-                  isIDs={application?false:true}
+                  isIDs={application ? false : true}
                   name="workLocation"
                   value={InfData.professionalDetails?.workLocation}
                   required
@@ -1961,7 +2031,7 @@ function ApplicationMgtDrawer({
                   label="Branch"
                   name="branch"
                   value={InfData.professionalDetails.branch}
-                  isIDs={application?false:true}
+                  isIDs={application ? false : true}
                   disabled={true}
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
@@ -1975,7 +2045,7 @@ function ApplicationMgtDrawer({
 
               <Col xs={24} md={12}>
                 <CustomSelect
-                  isIDs={application?false:true}
+                  isIDs={application ? false : true}
                   label="Region"
                   name="Region"
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
@@ -2089,74 +2159,74 @@ function ApplicationMgtDrawer({
               </Col>
 
               {/* Nurse Type - Full Width */}
-             <Col span={24}>
-  <div
-    className="ps-3 pe-3 pt-2 pb-3 bg-ly"
-    style={{
-      backgroundColor: '#f0fdf4',
-      borderRadius: "4px",
-      border: '1px solid #a4e3ba',
-    }}
-  >
-    <label
-      className="my-input-label mb-1"
-      style={{ color: '#14532d' }}
-    >
-      Please tick one of the following
-    </label>
+              <Col span={24}>
+                <div
+                  className="ps-3 pe-3 pt-2 pb-3 bg-ly"
+                  style={{
+                    backgroundColor: '#f0fdf4',
+                    borderRadius: "4px",
+                    border: '1px solid #a4e3ba',
+                  }}
+                >
+                  <label
+                    className="my-input-label mb-1"
+                    style={{ color: '#14532d' }}
+                  >
+                    Please tick one of the following
+                  </label>
 
-    <Radio.Group
-      name="nurseType"
-      value={InfData.professionalDetails?.nurseType}
-      onChange={(e) =>
-        handleInputChange("professionalDetails", "nurseType", e.target.value)
-      }
-      required={InfData?.professionalDetails?.nursingAdaptationProgramme === true}
-      disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true}
-      style={{
-        color: '#14532d',
-        width: "100%",
-      }}
-    >
-      <div
-        className="d-flex justify-content-between align-items-baseline flex-wrap"
-        style={{ gap: '8px' }}
-      >
-        <Radio value="generalNursing" style={{ color: '#14532d', width: '14%' }}>
-          General Nursing
-        </Radio>
+                  <Radio.Group
+                    name="nurseType"
+                    value={InfData.professionalDetails?.nurseType}
+                    onChange={(e) =>
+                      handleInputChange("professionalDetails", "nurseType", e.target.value)
+                    }
+                    required={InfData?.professionalDetails?.nursingAdaptationProgramme === true}
+                    disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true}
+                    style={{
+                      color: '#14532d',
+                      width: "100%",
+                    }}
+                  >
+                    <div
+                      className="d-flex justify-content-between align-items-baseline flex-wrap"
+                      style={{ gap: '8px' }}
+                    >
+                      <Radio value="generalNursing" style={{ color: '#14532d', width: '14%' }}>
+                        General Nursing
+                      </Radio>
 
-        <Radio value="publicHealthNurse" style={{ color: '#14532d', width: '14%' }}>
-          Public Health Nurse
-        </Radio>
+                      <Radio value="publicHealthNurse" style={{ color: '#14532d', width: '14%' }}>
+                        Public Health Nurse
+                      </Radio>
 
-        <Radio value="mentalHealthNurse" style={{ color: '#14532d', width: '14%' }}>
-          Mental Health Nurse
-        </Radio>
+                      <Radio value="mentalHealthNurse" style={{ color: '#14532d', width: '14%' }}>
+                        Mental Health Nurse
+                      </Radio>
 
-        <Radio value="midwife" style={{ color: '#14532d', width: '16%' }}>
-          Midwife
-        </Radio>
+                      <Radio value="midwife" style={{ color: '#14532d', width: '16%' }}>
+                        Midwife
+                      </Radio>
 
-        <Radio value="sickChildrenNurse" style={{ color: '#14532d', width: '14%' }}>
-          Sick Children's Nurse
-        </Radio>
+                      <Radio value="sickChildrenNurse" style={{ color: '#14532d', width: '14%' }}>
+                        Sick Children's Nurse
+                      </Radio>
 
-        <Radio
-          value="intellectualDisability"
-          style={{
-            color: '#14532d',
-            width: '20%',
-            whiteSpace: 'normal',
-            lineHeight: '1.2',
-          }}
-        >
-          Registered Nurse for Intellectual Disability
-        </Radio>
-      </div>
-    </Radio.Group>
-  </div>
-</Col>
+                      <Radio
+                        value="intellectualDisability"
+                        style={{
+                          color: '#14532d',
+                          width: '20%',
+                          whiteSpace: 'normal',
+                          lineHeight: '1.2',
+                        }}
+                      >
+                        Registered Nurse for Intellectual Disability
+                      </Radio>
+                    </div>
+                  </Radio.Group>
+                </div>
+              </Col>
 
             </Row>
           </div>
@@ -2208,10 +2278,9 @@ function ApplicationMgtDrawer({
                     name="paymentType"
                     required
                     // options={paymentTypeOptions}
-
                     options={[
-                      { value: "Payroll Deduction", label: "Payroll Deduction" },
-                      { value: "Card Payment", label: "Card Payment" },
+                      { value: "Salary Deduction", label: "Salary Deduction" },
+                      { value: "Credit Card", label: "Credit Card" },
                       // { value: "Direct Debit", label: "Direct Debit" },
                     ]}
                     disabled={isDisable}
@@ -2225,8 +2294,8 @@ function ApplicationMgtDrawer({
                     name="payrollNo"
                     value={InfData?.subscriptionDetails?.payrollNo}
                     hasError={!!errors?.payrollNo}
-                    required={InfData?.subscriptionDetails?.paymentType === "Payroll Deduction"}
-                    disabled={InfData?.subscriptionDetails?.paymentType !== "Payroll Deduction"}
+                    required={InfData?.subscriptionDetails?.paymentType === "Salary Deduction"}
+                    disabled={InfData?.subscriptionDetails?.paymentType !== "Salary Deduction"}
                     onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
                   />
                 </div>
@@ -2383,11 +2452,12 @@ function ApplicationMgtDrawer({
                     <Col xs={24} md={24}>
                       <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
                         <Checkbox
-                          // checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
+                          checked={InfData?.subscriptionDetails?.inmoRewards}
                           style={{ color: "#78350f" }}
-                          // onChange={(e) => handleInputChange("subscriptionDetails", "incomeProtectionScheme", e.target.checked)}
+                          onChange={(e) => handleInputChange("subscriptionDetails", "inmoRewards", e.target.checked)}
                           // className="my-input-wrapper"
-                          disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
+                          disabled={isDisable}
+                        // disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
                         >
 
                           Tick here to join{" "}
@@ -2483,7 +2553,7 @@ function ApplicationMgtDrawer({
                   </div>
                   {
                     InfData.subscriptionDetails?.otherIrishTradeUnion &&
-                    <MyInput onChange={() => { }} />
+                    <MyInput value={InfData.subscriptionDetails?.otherIrishTradeUnionName}  onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)} />
                   }
                 </div>
               </Col>
@@ -2602,6 +2672,7 @@ function ApplicationMgtDrawer({
                     checked={InfData?.subscriptionDetails?.valueAddedServices}
                     style={{ color: "#78350f" }}
                     onChange={(e) => handleInputChange("subscriptionDetails", "valueAddedServices", e.target.checked)}
+                    disabled={isDisable}
                   // className="my-input-wrapper"
                   >
                     Tick here to allow our partners to contact you about Value added Services by Email and SMS
@@ -2615,6 +2686,7 @@ function ApplicationMgtDrawer({
                     checked={InfData?.subscriptionDetails?.termsAndConditions}
                     onChange={(e) => handleInputChange("subscriptionDetails", "termsAndConditions", e.target.checked)}
                     style={{ color: "#78350f" }}
+                    disabled={isDisable}
                   >
                     I have read and agree to the{" "}
                     <a href="#" style={{ color: "#78350f", textDecoration: "underline" }}>
