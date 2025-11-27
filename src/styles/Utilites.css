@@ -154,9 +154,36 @@
   font-weight: 500;
 }
 
-.ant-modal-confirm-body-wrapper{
+.ant-tabs-content-holder {
+  background-color: transparent !important;
+}
+
+/* Membership Form Scrolling Styles */
+.membership-form-container {
+  scrollbar-width: thin;
+  scrollbar-color: #c1c1c1 #f5f5f5;
+}
+
+.membership-form-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.membership-form-container::-webkit-scrollbar-track {
+  background: #f5f5f5;
+  border-radius: 4px;
+}
+
+.membership-form-container::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+}
+
+.membership-form-container::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+.ant-modal-confirm-body-wrapper {
   padding-top: 8px !important;
   padding-left: 8px !important;
   padding-right: 8px !important;
 }
-

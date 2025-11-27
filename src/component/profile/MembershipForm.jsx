@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Row, Col, Divider, Card, Checkbox, Radio } from "antd";
+import { Row, Col, Card, Checkbox, Radio } from "antd";
 import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
@@ -7,11 +7,7 @@ import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
 
-
-const MembershipForm = () => {
-  // const { data: countryOptions, } = useSelector(
-  //   (state) => state.countries
-  // );
+const MembershipForm = ({ isEditMode = false }) => {
   // Internal form state
   const [formData, setFormData] = useState({
     title: "",
@@ -21,13 +17,27 @@ const MembershipForm = () => {
     dateOfBirth: null,
     countryPrimaryQualification: "",
     addressLine1: "",
+    addressLine2: "",
     townCity: "",
+    countyState: "",
+    eircode: "",
+    country: "",
+    preferredAddress: "Home/Personal",
+    consentCorrespondence: false,
+    mobileNumber: "",
+    telephoneNumber: "",
+    preferredEmail: "Personal",
+    personalEmail: "",
+    workEmail: "",
     studyLocation: "",
+    startDate: null,
     graduationDate: null,
     workLocation: "",
+    otherWorkLocation: "",
     branch: "",
     region: "",
     grade: "",
+    otherGrade: "",
     retiredDate: null,
     pensionNumber: "",
     membershipNumber: "",
@@ -38,537 +48,996 @@ const MembershipForm = () => {
     paymentType: "",
     payrollNumber: "",
     consent: false,
-    mobileNumber: "",
-    personalEmail: "",
-    nursingProgramme: "Yes",
+    nursingProgramme: "No",
     nmbiNumber: "",
-    nursingSpecialization: [],
+    nursingSpecialization: "",
+    memberStatus: "",
     memberOfOtherUnion: "No",
     otherUnionName: "",
-    otherUnionScheme: "Yes",
+    otherUnionScheme: "No",
     joinINMOIncomeProtection: false,
     joinRewards: false,
+    exclusiveDiscountsOffers: false,
     allowPartnerContact: false,
     agreeDataProtection: false,
+    recruitedBy: "",
+    recruitedByMembershipNo: "",
+    primarySection: "",
+    otherPrimarySection: "",
+    secondarySection: "",
+    otherSecondarySection: "",
     Reason: "",
-    telephoneNumber: '',
   });
   const lookupData = {
-    titles: ["Mr", "Mrs", "Miss", "Dr"],
-    genders: ["Male", "Female", "Other"],
-    countries: ["Pakistan", "USA", "UK", "Other"],
-    studyLocations: ["Local", "Abroad"],
-    workLocations: ["HQ", "Branch1", "Branch2"],
-    branches: ["Branch A", "Branch B", "Branch C"],
-    regions: ["North", "South", "East", "West"],
-    grades: ["Grade 1", "Grade 2", "Grade 3"],
-    membershipStatus: ["Active", "Inactive", "Suspended"],
-    membershipCategory: ["Regular", "Premium", "VIP"],
-    paymentTypes: ["Cash", "Cheque", "Bank Transfer"],
+    titles: [
+      { key: "mr", label: "Mr" },
+      { key: "mrs", label: "Mrs" },
+      { key: "miss", label: "Miss" },
+      { key: "dr", label: "Dr" },
+    ],
+    genders: [
+      { key: "male", label: "Male" },
+      { key: "female", label: "Female" },
+      { key: "other", label: "Other" },
+    ],
+    countries: [
+      { key: "pakistan", label: "Pakistan" },
+      { key: "usa", label: "USA" },
+      { key: "uk", label: "UK" },
+      { key: "other", label: "Other" },
+    ],
+    studyLocations: [
+      { key: "local", label: "Local" },
+      { key: "abroad", label: "Abroad" },
+    ],
+    workLocations: [
+      { key: "hq", label: "HQ" },
+      { key: "branch1", label: "Branch1" },
+      { key: "branch2", label: "Branch2" },
+      { key: "other", label: "Other" },
+    ],
+    branches: [
+      { key: "branch-a", label: "Branch A" },
+      { key: "branch-b", label: "Branch B" },
+      { key: "branch-c", label: "Branch C" },
+    ],
+    regions: [
+      { key: "north", label: "North" },
+      { key: "south", label: "South" },
+      { key: "east", label: "East" },
+      { key: "west", label: "West" },
+    ],
+    grades: [
+      { key: "grade-1", label: "Grade 1" },
+      { key: "grade-2", label: "Grade 2" },
+      { key: "grade-3", label: "Grade 3" },
+      { key: "other", label: "Other" },
+    ],
+    membershipStatus: [
+      { key: "active", label: "Active" },
+      { key: "inactive", label: "Inactive" },
+      { key: "suspended", label: "Suspended" },
+    ],
+    membershipCategory: [
+      { key: "regular", label: "Regular" },
+      { key: "premium", label: "Premium" },
+      { key: "vip", label: "VIP" },
+    ],
+    paymentTypes: [
+      { key: "cash", label: "Cash" },
+      { key: "cheque", label: "Cheque" },
+      { key: "bank-transfer", label: "Bank Transfer" },
+    ],
   };
+
   const handleChange = (field, value) => {
     setFormData({ ...formData, [field]: value });
   };
+
+  const handleSaveDraft = () => {
+    console.log("Saving draft:", formData);
+  };
+
+  const handleSubmit = () => {
+    console.log("Submitting form:", formData);
+  };
+
   const NursingSpecializationSelectOptn = [
     { label: "General Nurse", value: "general-nurse" },
     { label: "Public Health Nurse", value: "public-health-nurse" },
     { label: "Mental Health Nurse", value: "mental-health-nurse" },
     { label: "Midwife", value: "midwife" },
     { label: "Sick Children's Nurse", value: "sick-children-nurse" },
-    { label: "Registered Nurse for Intellectual Disability", value: "intellectual-disability-nurse" },
+    {
+      label: "Registered Nurse for Intellectual Disability",
+      value: "intellectual-disability-nurse",
+    },
   ];
 
   return (
-
     <div
-      className="mt-2 pe-4 pb-4 mb-2"
+      className="mt-2 pe-4 pb-4 mb-2 membership-form-container"
       style={{
-        height: "80vh",        // fixed height
-        maxHeight: "80vh",     // don’t allow to expand more
-        overflowY: "auto",      // vertical scroll
-  // no horizontal scroll
-        // display: "block",       // force block context
-        backgroundColor: "#fff" // just for clarity
+        height: "calc(100vh - 120px - 4vh)",
+        maxHeight: "calc(100vh - 120px - 4vh)",
+        overflowY: "auto",
+        overflowX: "hidden",
+        position: "relative",
+        scrollBehavior: "smooth",
+        paddingRight: "12px",
+        paddingBottom: isEditMode ? "250px" : "150px",
       }}
     >
-      <Row gutter={32}>
-        {/* Personal Information */}
+      <Row gutter={[24, 24]}>
+        {/* Column 1: Personal Information */}
         <Col span={8}>
-          <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
-            <div
-              className="d-flex align-items-center p-2 ps-2 mb-1"
-              style={{ backgroundColor: "#eef4ff" }}
+          <div style={{ height: "100%" }}>
+            {/* Personal Information Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
             >
-              <div
-                style={{
-                  backgroundColor: "#ede6fa",
-                  padding: "6px 8px",
-                  borderRadius: "6px",
-                  marginRight: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IoBagRemoveOutline
-                  style={{ color: "#bf86f3", fontSize: "18px" }}
-                />
-              </div>
-              <h2
+              <h3
                 style={{
                   fontSize: "16px",
-                  margin: 0,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
                   color: "#1a1a1a",
                 }}
               >
                 Personal Information
-              </h2>
-            </div>
-            <div className="pe-2 ps-2">
+              </h3>
               <CustomSelect
                 label="Title"
-                placeholder="Select title"
+                placeholder="Select a title"
                 options={lookupData.titles}
                 value={formData.title}
-                onChange={(val) => handleChange("title", val)}
+                onChange={(e) => handleChange("title", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
+              />
+              <MyInput
+                label="Forename(s)"
+                placeholder="Enter your forename(s)"
+                value={formData.forename}
+                onChange={(e) => handleChange("forename", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
               />
               <MyInput
                 label="Surname"
+                placeholder="Enter your surname"
                 value={formData.surname}
                 onChange={(e) => handleChange("surname", e.target.value)}
-              />
-              <MyInput
-                label="Forename"
-                value={formData.forename}
-                onChange={(e) => handleChange("forename", e.target.value)}
-              />
-              <CustomSelect
-                label="Gender"
-                options={lookupData.genders}
-                value={formData.gender}
-                onChange={(val) => handleChange("gender", val)}
+                disabled={!isEditMode}
+                required={true}
               />
               <MyDatePicker
                 label="Date of Birth"
+                placeholder="mm/dd/yyyy"
                 value={formData.dateOfBirth}
                 onChange={(date) => handleChange("dateOfBirth", date)}
+                disabled={!isEditMode}
+                required={true}
+              />
+              <CustomSelect
+                label="Gender"
+                placeholder="Select your gender"
+                options={lookupData.genders}
+                value={formData.gender}
+                onChange={(e) => handleChange("gender", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
               />
               <CustomSelect
                 label="Country of Primary Qualification"
+                placeholder="Select a country"
                 options={lookupData.countries}
                 value={formData.countryPrimaryQualification}
-                onChange={(val) =>
-                  handleChange("countryPrimaryQualification", val)
+                onChange={(e) =>
+                  handleChange("countryPrimaryQualification", e.target.value)
                 }
+                disabled={!isEditMode}
+                required={true}
+              />
+            </Card>
+
+            {/* Correspondence Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Correspondence Details
+              </h3>
+              <div style={{ marginBottom: "16px" }}>
+                <label className="my-input-label">
+                  Preferred Address <span className="required-star">*</span>
+                </label>
+                <Radio.Group
+                  value={formData.preferredAddress}
+                  onChange={(e) =>
+                    handleChange("preferredAddress", e.target.value)
+                  }
+                  disabled={!isEditMode}
+                >
+                  <Radio value="Home/Personal">Home/Personal</Radio>
+                  <Radio value="Work">Work</Radio>
+                </Radio.Group>
+              </div>
+              <MyInput
+                label="Search for your address"
+                placeholder="Search address"
+                value={formData.addressLine1}
+                onChange={(e) => handleChange("addressLine1", e.target.value)}
+                disabled={!isEditMode}
               />
               <MyInput
                 label="Address Line 1"
                 value={formData.addressLine1}
                 onChange={(e) => handleChange("addressLine1", e.target.value)}
-                extra={
-                  <span className="text-xs text-gray-500">
-                    <Checkbox>NaTA</Checkbox>
-                  </span>
-                }
+                disabled={!isEditMode}
+                required={true}
               />
               <MyInput
                 label="Address Line 2"
-                value={formData.addressLine1}
-                onChange={(e) => handleChange("addressLine1", e.target.value)}
-              />
-              <MyInput
-                label="Address Line "
-                value={formData.addressLine1}
-                onChange={(e) => handleChange("addressLine1", e.target.value)}
-              />
-              <MyInput
-                label="Address Line "
-                value={formData.addressLine1}
-                onChange={(e) => handleChange("addressLine1", e.target.value)}
-              />
-              <MyInput
-                label="Eircode"
-                name="Eircode"
-                placeholder="Enter Eircode"
-                value={formData?.eircode}
-              />
-              <CustomSelect
-                label="country"
-                name="country"
-                value={formData.country}
-                // options={countryOptions}
-                required
-              // disabled={isDisable}
-              // onChange={(e) => handleInputChange("country", e.target.value)}
-              // hasError={!!errors?.country}
+                value={formData.addressLine2}
+                onChange={(e) => handleChange("addressLine2", e.target.value)}
+                disabled={!isEditMode}
               />
               <MyInput
                 label="Town/City"
                 value={formData.townCity}
                 onChange={(e) => handleChange("townCity", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
               />
-              <Checkbox
-                checked={formData.consent}
-                onChange={(e) => handleChange("consent", e.target.checked)}
+              <MyInput
+                label="County/State"
+                value={formData.countyState}
+                onChange={(e) => handleChange("countyState", e.target.value)}
+                disabled={!isEditMode}
+              />
+              <MyInput
+                label="Eircode/Postcode"
+                placeholder="Enter Eircode"
+                value={formData.eircode}
+                onChange={(e) => handleChange("eircode", e.target.value)}
+                disabled={!isEditMode}
+              />
+              <CustomSelect
+                label="Country"
+                placeholder="Select country"
+                options={lookupData.countries}
+                value={formData.country}
+                onChange={(e) => handleChange("country", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
+              />
+            </Card>
+
+            {/* Contact Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
               >
-                Consent to receive communication from INMO
-              </Checkbox>
+                Contact Details
+              </h3>
               <MyInput
                 label="Mobile Number"
                 value={formData.mobileNumber}
                 onChange={(e) => handleChange("mobileNumber", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
               />
+              <MyInput
+                label="Home / Work Tel Number"
+                placeholder="Optional"
+                value={formData.telephoneNumber}
+                onChange={(e) =>
+                  handleChange("telephoneNumber", e.target.value)
+                }
+                disabled={!isEditMode}
+              />
+              <div style={{ marginBottom: "16px" }}>
+                <label className="my-input-label">
+                  Preferred Email <span className="required-star">*</span>
+                </label>
+                <Radio.Group
+                  value={formData.preferredEmail}
+                  onChange={(e) =>
+                    handleChange("preferredEmail", e.target.value)
+                  }
+                  disabled={!isEditMode}
+                >
+                  <Radio value="Personal">Personal</Radio>
+                  <Radio value="Work">Work</Radio>
+                </Radio.Group>
+              </div>
               <MyInput
                 label="Personal Email"
                 value={formData.personalEmail}
                 onChange={(e) => handleChange("personalEmail", e.target.value)}
+                disabled={!isEditMode}
+                required={formData.preferredEmail === "Personal"}
               />
               <MyInput
                 label="Work Email"
+                placeholder="Optional"
                 value={formData.workEmail}
                 onChange={(e) => handleChange("workEmail", e.target.value)}
+                disabled={!isEditMode}
+                required={formData.preferredEmail === "Work"}
               />
-              <MyInput
-                label="Home / Work Tel Number"
-                name="telephoneNumber"
-                type="number"
-                value={formData.telephoneNumber}
-                onChange={(e) => handleChange("telephoneNumber", e.target.value)}
-              />
-            </div>
+            </Card>
           </div>
         </Col>
 
-        {/* Professional Details */}
+        {/* Column 2: Professional Details */}
         <Col span={8}>
-          <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
-            <div
-              className="d-flex align-items-center p-2 ps-2 mb-1"
-              style={{ backgroundColor: "#f7f4ff" }}
+          <div style={{ height: "100%" }}>
+            {/* Employment Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
             >
-              <div
-                style={{
-                  backgroundColor: "#ede6fa",
-                  padding: "6px 8px",
-                  borderRadius: "6px",
-                  marginRight: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <IoBagRemoveOutline
-                  style={{ color: "#bf86f3", fontSize: "18px" }}
-                />
-              </div>
-              <h2
+              <h3
                 style={{
                   fontSize: "16px",
-                  margin: 0,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
                   color: "#1a1a1a",
                 }}
               >
-                Professional Details
-              </h2>
-            </div>
-            <div className="ps-2 pe-2">
-              <CustomSelect
-                label="Study Location"
-                options={lookupData.studyLocations}
-                value={formData.studyLocation}
-                onChange={(val) => handleChange("studyLocation", val)}
-              />
-              <MyDatePicker
-                label="Graduation Date"
-                value={formData.graduationDate}
-                onChange={(date) => handleChange("graduationDate", date)}
-              />
+                Employment Details
+              </h3>
               <CustomSelect
                 label="Work Location"
+                placeholder="Select Location..."
                 options={lookupData.workLocations}
                 value={formData.workLocation}
-                onChange={(val) => handleChange("workLocation", val)}
-                extra={"IRO Name"}
+                onChange={(e) => handleChange("workLocation", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
+              />
+              <MyInput
+                label="Other Work Location"
+                placeholder="Enabled if 'Other' is selected"
+                disabled={!isEditMode || formData.workLocation !== "Other"}
+                value={formData.otherWorkLocation}
+                onChange={(e) =>
+                  handleChange("otherWorkLocation", e.target.value)
+                }
+                required={formData.workLocation === "Other"}
               />
               <CustomSelect
                 label="Branch"
+                placeholder="Select Branch..."
                 options={lookupData.branches}
                 value={formData.branch}
-                onChange={(val) => handleChange("branch", val)}
+                onChange={(e) => handleChange("branch", e.target.value)}
+                disabled={!isEditMode}
               />
               <CustomSelect
                 label="Region"
+                placeholder="Select Region..."
                 options={lookupData.regions}
                 value={formData.region}
-                onChange={(val) => handleChange("region", val)}
+                onChange={(e) => handleChange("region", e.target.value)}
+                disabled={!isEditMode}
               />
               <CustomSelect
                 label="Grade"
+                placeholder="Select Grade..."
                 options={lookupData.grades}
                 value={formData.grade}
-                onChange={(val) => handleChange("grade", val)}
+                onChange={(e) => handleChange("grade", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
               />
               <MyInput
                 label="Other Grade"
-                name="otherGrade"
+                placeholder="Enabled if 'Other' is selected"
+                disabled={!isEditMode || formData.grade !== "Other"}
+                value={formData.otherGrade}
+                onChange={(e) => handleChange("otherGrade", e.target.value)}
+                required={formData.grade === "Other"}
+              />
+            </Card>
+
+            {/* Educational Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Educational Details
+              </h3>
+              <CustomSelect
+                label="Study Location"
+                placeholder="Select Study Location..."
+                options={lookupData.studyLocations}
+                value={formData.studyLocation}
+                onChange={(e) => handleChange("studyLocation", e.target.value)}
+                disabled={!isEditMode}
+              />
+              <MyDatePicker
+                label="Start Date"
+                placeholder="Select start date"
+                value={formData.startDate}
+                onChange={(date) => handleChange("startDate", date)}
+                disabled={!isEditMode}
+              />
+              <MyDatePicker
+                label="Graduation Date"
+                placeholder="Select graduation date"
+                value={formData.graduationDate}
+                onChange={(date) => handleChange("graduationDate", date)}
+                disabled={!isEditMode}
+              />
+              <CustomSelect
+                label="Branch"
+                placeholder="Select Branch..."
+                options={lookupData.branches}
+                value={formData.branch}
+                onChange={(e) => handleChange("branch", e.target.value)}
+                disabled={!isEditMode}
+              />
+              <CustomSelect
+                label="Region"
+                placeholder="Select Region..."
+                options={lookupData.regions}
+                value={formData.region}
+                onChange={(e) => handleChange("region", e.target.value)}
+                disabled={!isEditMode}
+              />
+            </Card>
+
+            {/* Nursing Registration & Specialization Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Nursing Registration & Specialization
+              </h3>
+              <div style={{ marginBottom: "16px" }}>
+                <label className="my-input-label">
+                  Are you currently on a nursing adaptation program?
+                </label>
+                <Radio.Group
+                  value={formData.nursingProgramme}
+                  onChange={(e) =>
+                    handleChange("nursingProgramme", e.target.value)
+                  }
+                  disabled={!isEditMode}
+                >
+                  <Radio value="Yes">Yes</Radio>
+                  <Radio value="No">No</Radio>
+                </Radio.Group>
+              </div>
+              <MyInput
+                label="NMBI No. / An Bord Altranais Number"
+                placeholder="Enabled if adaptation is 'Yes'"
+                disabled={!isEditMode || formData.nursingProgramme !== "Yes"}
+                value={formData.nmbiNumber}
+                onChange={(e) => handleChange("nmbiNumber", e.target.value)}
+              />
+              <div style={{ marginBottom: "16px" }}>
+                <label className="my-input-label">Primary Nurse Type</label>
+                <Radio.Group
+                  value={formData.nursingSpecialization}
+                  onChange={(e) =>
+                    handleChange("nursingSpecialization", e.target.value)
+                  }
+                  disabled={!isEditMode}
+                >
+                  <Radio value="general-nurse">General Nurse</Radio>
+                  <Radio value="public-health-nurse">Public Health Nurse</Radio>
+                  <Radio value="mental-health-nurse">Mental Health Nurse</Radio>
+                </Radio.Group>
+              </div>
+            </Card>
+
+            {/* Section Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Section Details
+              </h3>
+              <CustomSelect
+                label="Primary Section"
+                placeholder="Select Primary Section"
+                value={formData.primarySection}
+                onChange={(e) => handleChange("primarySection", e.target.value)}
+                options={[
+                  { key: "section1", label: "Section 1" },
+                  { key: "section2", label: "Section 2" },
+                  { key: "section3", label: "Section 3" },
+                  { key: "section4", label: "Section 4" },
+                  { key: "section5", label: "Section 5" },
+                  { key: "other", label: "Other" },
+                ]}
+                disabled={!isEditMode}
+                required={true}
+              />
+              <MyInput
+                label="Other"
+                value={formData.otherPrimarySection}
+                onChange={(e) =>
+                  handleChange("otherPrimarySection", e.target.value)
+                }
+                disabled={!isEditMode}
+                required={formData.primarySection === "Other"}
+              />
+              <CustomSelect
+                label="Secondary Section (Optional)"
+                placeholder="Select Secondary Section (Optional)"
+                value={formData.secondarySection}
+                onChange={(e) =>
+                  handleChange("secondarySection", e.target.value)
+                }
+                options={[
+                  { key: "section1", label: "Section 1" },
+                  { key: "section2", label: "Section 2" },
+                  { key: "section3", label: "Section 3" },
+                  { key: "section4", label: "Section 4" },
+                  { key: "section5", label: "Section 5" },
+                  { key: "other", label: "Other" },
+                ]}
+                disabled={!isEditMode}
+              />
+              <MyInput
+                label="Other"
+                value={formData.otherSecondarySection}
+                onChange={(e) =>
+                  handleChange("otherSecondarySection", e.target.value)
+                }
+                disabled={!isEditMode}
+              />
+            </Card>
+          </div>
+        </Col>
+
+        {/* Column 3: Finalize Profile */}
+        <Col span={8}>
+          <div style={{ height: "100%" }}>
+            {/* Subscription Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Subscription Details
+              </h3>
+              <CustomSelect
+                label="Membership category"
+                placeholder="Select Category..."
+                options={lookupData.membershipCategory}
+                value={formData.membershipCategory}
+                onChange={(e) =>
+                  handleChange("membershipCategory", e.target.value)
+                }
+                disabled={!isEditMode}
+                required={true}
               />
               <MyDatePicker
                 label="Retired Date"
                 value={formData.retiredDate}
                 onChange={(date) => handleChange("retiredDate", date)}
-                extra={
-                  <span className="text-xs text-gray-500">
-                    <Checkbox>Retired</Checkbox>
-                  </span>
-                }
+                disabled={!isEditMode}
+                required={formData.membershipCategory === "retired_associate"}
               />
               <MyInput
-                label="Pension Number"
+                label="Pension No."
                 value={formData.pensionNumber}
                 onChange={(e) => handleChange("pensionNumber", e.target.value)}
+                disabled={!isEditMode}
+                required={formData.membershipCategory === "retired_associate"}
               />
-              <label className="my-input-label">
-                Nursing Adaptation Programme
-              </label>
-              <Radio.Group
-                className="mb-2"
-                value={formData.nursingProgramme}
-                onChange={(e) => handleChange("nursingProgramme", e.target.value)}
-              >
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </Radio.Group>
-              <MyInput
-                label="NMBI No / An Bord Altranais Number"
-                value={formData.nmbiNumber}
-                onChange={(e) => handleChange("nmbiNumber", e.target.value)}
-              />
-              <CustomSelect
-                label="Nursing Specialization"
-                placeholder="Select specialization"
-                options={NursingSpecializationSelectOptn}
-                value={formData?.nursingSpecialization}
-              // onChange={onChange}
-              />
-              <CustomSelect
-                name="memberStatus"
-                label="Please select the most appropriate option below"
-                value={formData?.memberStatus || ''}
-                // onChange={(e) => handleInputChange(e)}
-                placeholder="Select option..."
-                options={[
-                  { key: 'new', label: 'You are a new member' },
-                  { key: 'graduate', label: 'You are newly graduated' },
-                  {
-                    key: 'rejoin',
-                    label: 'You were previously a member of the INMO, and are rejoining',
-                  },
-                  {
-                    key: 'careerBreak',
-                    label: 'You are returning from a career break',
-                  },
-                  {
-                    key: 'nursingAbroad',
-                    label: 'You are returning from nursing abroad',
-                  },
-                ]}
-              />
-              <Checkbox
-                className="mb-3"
-                checked={formData.joinINMOIncomeProtection}
-                onChange={(e) =>
-                  handleChange("joinINMOIncomeProtection", e.target.checked)
-                }
-              >
-                Tick here to join INMO Income Protection Scheme
-              </Checkbox>
-              <Checkbox
-                className="mb-3"
-                checked={formData.joinRewards}
-                onChange={(e) => handleChange("joinRewards", e.target.checked)}
-              >
-                Tick here to join Rewards for INMO members
-              </Checkbox>
-              <Checkbox
-                className="mb-3"
-                checked={formData.allowPartnerContact}
-                onChange={(e) =>
-                  handleChange("allowPartnerContact", e.target.checked)
-                }
-              >
-                Tick here to allow our partners to contact you about Value added
-                Services by Email and SMS
-              </Checkbox>
-              <Checkbox
-                className="mb-3"
-                checked={formData.agreeDataProtection}
-                onChange={(e) =>
-                  handleChange("agreeDataProtection", e.target.checked)
-                }
-              >
-                I have read and agree to the INMO Data Protection Statement, the INMO
-                Privacy Statement and the INMO Conditions of Membership
-              </Checkbox>
-            </div>
-          </div>
-        </Col>
+            </Card>
 
-        {/* Subscription Details */}
-        <Col span={8}>
-          <div style={{ border: "2px solid #f8f3f3ff", height: '92rem' }}>
-            <div
-              className="d-flex align-items-center p-2 ps-2 mb-1"
-              style={{ backgroundColor: "#fad1b8ff" }}
+            {/* Payment Information Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
             >
-              <div
-                style={{
-                  backgroundColor: "#ede6fa",
-                  padding: "6px 8px",
-                  borderRadius: "6px",
-                  marginRight: "8px",
-                  display: "flex",
-                  alignItems: "center",
-                  justifyContent: "center",
-                }}
-              >
-                <CiCreditCard1
-                  style={{ color: "#ec6d28", fontSize: "18px" }}
-                />
-              </div>
-              <h2
+              <h3
                 style={{
                   fontSize: "16px",
-                  margin: 0,
-                  fontWeight: 500,
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
                   color: "#1a1a1a",
                 }}
               >
-                Subscription Details
-              </h2>
-            </div>
-            <div className="pe-2 ps-2">
-              <MyInput
-                label="Membership Number"
-                value={formData.membershipNumber}
-                onChange={(e) =>
-                  handleChange("membershipNumber", e.target.value)
-                }
-              />
-              <CustomSelect
-                label="Membership Status"
-                options={lookupData.membershipStatus}
-                value={formData.membershipStatus}
-                onChange={(val) => handleChange("membershipStatus", val)}
-              />
-              <CustomSelect
-                label="Membership Category"
-                options={lookupData.membershipCategory}
-                value={formData.membershipCategory}
-                onChange={(val) => handleChange("membershipCategory", val)}
-              />
-              <MyDatePicker
-                label="Joining Date"
-                value={formData.joiningDate}
-                onChange={(date) => handleChange("joiningDate", date)}
-              />
-              <MyDatePicker
-                label="Expiry Date"
-                value={formData.expiryDate}
-                onChange={(date) => handleChange("expiryDate", date)}
-              />
-              <MyInput
-                label="Reason"
-                value={formData.Reason}
-                onChange={(e) => handleChange("Reason", e.target.value)}
-                extra
-              />
+                Payment Information
+              </h3>
               <CustomSelect
                 label="Payment Type"
+                placeholder="Select Payment Type"
                 options={lookupData.paymentTypes}
                 value={formData.paymentType}
-                onChange={(val) => handleChange("paymentType", val)}
+                onChange={(e) => handleChange("paymentType", e.target.value)}
+                disabled={!isEditMode}
+                required={true}
               />
               <MyInput
-                label="Payroll Number"
+                label="Payroll No."
+                placeholder="Enter Payroll No."
                 value={formData.payrollNumber}
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
+                disabled={!isEditMode}
               />
-              <p className="my-input-label">
-                Are you a member of another Trade Union?
-              </p>
-              <Radio.Group
-                className="mb-2"
-                value={formData.memberOfOtherUnion}
-                onChange={(e) =>
-                  handleChange("memberOfOtherUnion", e.target.value)
-                }
+            </Card>
+
+            {/* Third Party Consent Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
               >
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </Radio.Group>
+                Consent Management
+              </h3>
+
+              {/* INMO Consent Section */}
+              <div style={{ marginBottom: "24px" }}>
+                <h4
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    marginBottom: "12px",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  INMO Consent
+                </h4>
+                <Checkbox
+                  checked={formData.consentCorrespondence}
+                  onChange={(e) =>
+                    handleChange("consentCorrespondence", e.target.checked)
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  disabled={!isEditMode}
+                >
+                  I consent to receive correspondence from INMO
+                </Checkbox>
+              </div>
+
+              {/* Line Separator */}
+              <div
+                style={{
+                  borderTop: "1px solid #e8e8e8",
+                  marginTop: "24px",
+                  marginBottom: "24px",
+                }}
+              ></div>
+
+              {/* Additional Service and Terms Section */}
+              <div>
+                <h4
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    marginBottom: "12px",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Additional Service and Terms
+                </h4>
+                <Checkbox
+                  checked={formData.allowPartnerContact}
+                  onChange={(e) =>
+                    handleChange("allowPartnerContact", e.target.checked)
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  disabled={!isEditMode}
+                >
+                  I consent to being contacted by INMO partners about exclusive
+                  member offers.
+                </Checkbox>
+              </div>
+
+              {/* Line Separator */}
+              <div
+                style={{
+                  borderTop: "1px solid #e8e8e8",
+                  marginTop: "24px",
+                  marginBottom: "24px",
+                }}
+              ></div>
+
+              {/* Corn Market Section */}
+              <div>
+                <h4
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    marginBottom: "12px",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Corn Market
+                </h4>
+                <Checkbox
+                  checked={formData.joinRewards}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    if (isChecked) {
+                      // If Rewards is checked, uncheck the other two
+                      handleChange("exclusiveDiscountsOffers", false);
+                      handleChange("joinINMOIncomeProtection", false);
+                    }
+                    handleChange("joinRewards", isChecked);
+                  }}
+                  style={{
+                    marginBottom: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  disabled={
+                    !isEditMode ||
+                    formData.exclusiveDiscountsOffers ||
+                    formData.joinINMOIncomeProtection
+                  }
+                >
+                  Rewards for INMO members
+                </Checkbox>
+                <Checkbox
+                  checked={formData.exclusiveDiscountsOffers}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    if (isChecked) {
+                      // If this is checked, uncheck Rewards
+                      handleChange("joinRewards", false);
+                    }
+                    handleChange("exclusiveDiscountsOffers", isChecked);
+                  }}
+                  style={{
+                    marginBottom: "12px",
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  disabled={!isEditMode || formData.joinRewards}
+                >
+                  Exclusive Discounts and Offers
+                </Checkbox>
+                <Checkbox
+                  checked={formData.joinINMOIncomeProtection}
+                  onChange={(e) => {
+                    const isChecked = e.target.checked;
+                    if (isChecked) {
+                      // If this is checked, uncheck Rewards
+                      handleChange("joinRewards", false);
+                    }
+                    handleChange("joinINMOIncomeProtection", isChecked);
+                  }}
+                  style={{ display: "flex", alignItems: "center" }}
+                  disabled={!isEditMode || formData.joinRewards}
+                >
+                  Income Protection and Consent
+                </Checkbox>
+              </div>
+            </Card>
+
+            {/* Additional Memberships Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Additional Memberships
+              </h3>
+              <div style={{ marginBottom: "16px" }}>
+                <label className="my-input-label">
+                  Are you a member of another Trade Union?
+                </label>
+                <Radio.Group
+                  value={formData.memberOfOtherUnion}
+                  onChange={(e) =>
+                    handleChange("memberOfOtherUnion", e.target.value)
+                  }
+                  disabled={!isEditMode}
+                >
+                  <Radio value="Yes">Yes</Radio>
+                  <Radio value="No">No</Radio>
+                </Radio.Group>
+              </div>
               <MyInput
-                label="If yes, which Union? *"
+                label="Which Union?"
                 value={formData.otherUnionName}
                 onChange={(e) => handleChange("otherUnionName", e.target.value)}
+                disabled={!isEditMode}
               />
-              <p className="my-input-label ">
-                Are you or were you a member of another Irish trade Union salary
-                or Income Protection Scheme?
-              </p>
-              <Radio.Group
-                className="mb-4"
-                value={formData.otherUnionScheme}
-                onChange={(e) =>
-                  handleChange("otherUnionScheme", e.target.value)
-                }
+              <div style={{ marginTop: "16px" }}>
+                <label className="my-input-label">
+                  Have you previously been a member of an Irish trade union
+                  income protection scheme?
+                </label>
+                <Radio.Group
+                  value={formData.otherUnionScheme}
+                  onChange={(e) =>
+                    handleChange("otherUnionScheme", e.target.value)
+                  }
+                  disabled={!isEditMode}
+                >
+                  <Radio value="Yes">Yes</Radio>
+                  <Radio value="No">No</Radio>
+                </Radio.Group>
+              </div>
+            </Card>
+
+            {/* Recruitment Details Card */}
+            <Card
+              style={{
+                marginBottom: "20px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
               >
-                <Radio value="Yes">Yes</Radio>
-                <Radio value="No">No</Radio>
-              </Radio.Group>
+                Recruitment Details
+              </h3>
               <MyInput
-                label="Recurited By"
-                name="recuritedBy" />
-              <MyInput
-                label="Recurited By (Membership No)"
-                name="recuritedByMembershipNo" />
-              <CustomSelect
-                label="Primary Section"
-                name="primarySection"
-                options={[
-                  { value: 'section1', label: 'Section 1' },
-                  { value: 'section2', label: 'Section 2' },
-                  { value: 'section3', label: 'Section 3' },
-                  { value: 'section4', label: 'Section 4' },
-                  { value: 'section5', label: 'Section 5' },
-                  { value: 'other', label: 'Other' },
-                ]}
+                label="Recruited By"
+                placeholder="Enter full name"
+                value={formData.recruitedBy}
+                onChange={(e) => handleChange("recruitedBy", e.target.value)}
+                disabled={!isEditMode}
               />
               <MyInput
-                label="Other Primary Section"
-                name="otherPrimarySection"
+                label="Membership Number"
+                placeholder="Enter membership number"
+                value={formData.recruitedByMembershipNo}
+                onChange={(e) =>
+                  handleChange("recruitedByMembershipNo", e.target.value)
+                }
+                disabled={!isEditMode}
               />
-              <CustomSelect
-                label="Secondary Section"
-                name="secondarySection"
-                // value={InfData.secondarySection}
-                options={[
-                  { value: 'section1', label: 'Section 1' },
-                  { value: 'section2', label: 'Section 2' },
-                  { value: 'section3', label: 'Section 3' },
-                  { value: 'section4', label: 'Section 4' },
-                  { value: 'section5', label: 'Section 5' },
-                  { value: 'other', label: 'Other' },
-                ]} />
-              <MyInput
-                label="Other Secondary Section"
-                name="otherSecondarySection" />
-            </div>
+            </Card>
           </div>
         </Col>
       </Row>
-
     </div>
   );
 };

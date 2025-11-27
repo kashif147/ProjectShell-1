@@ -1,40 +1,49 @@
-import { useState, useEffect } from 'react'
-import ChatComponent from '../../component/corespondence/ChatComponent'
-import '../../styles/Correspondence.css'
-import { Radio, Tabs, Input, Button, Select, Table, Checkbox, Space, Tooltip } from 'antd';
+import { useState, useEffect } from "react";
+import ChatComponent from "../../component/corespondence/ChatComponent";
+import "../../styles/Correspondence.css";
+import {
+  Radio,
+  Tabs,
+  Input,
+  Button,
+  Select,
+  Table,
+  Checkbox,
+  Space,
+  Tooltip,
+} from "antd";
 import { FiRefreshCcw } from "react-icons/fi";
 import { CiMenuBurger } from "react-icons/ci";
-import icon from '../../assets/images/Vector.png'
+import icon from "../../assets/images/Vector.png";
 import { FiCornerUpLeft } from "react-icons/fi";
 import { RiCornerUpLeftDoubleLine } from "react-icons/ri";
 import { FiCornerUpRight } from "react-icons/fi";
-import { useMsal } from '@azure/msal-react';
+import { useMsal } from "@azure/msal-react";
 // import { getGraphClient } from '../graphClient';
-import { getGraphClient } from '../../component/msft/graphClient';
+import { getGraphClient } from "../../component/msft/graphClient";
 import { PiArrowSquareIn } from "react-icons/pi";
 import { BiSolidPrinter } from "react-icons/bi";
-import MyDrawer from '../../component/common/MyDrawer';
-import MySelect from '../../component/common/MySelect';
+import MyDrawer from "../../component/common/MyDrawer";
+import MySelect from "../../component/common/MySelect";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { FaEdit } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
-import { emails } from '../../Data';
-import ProfileHeader from '../../component/common/ProfileHeader';
+import { emails } from "../../Data";
+import ProfileHeader from "../../component/common/ProfileHeader";
 function CorspndncDetail() {
   const { TextArea } = Input;
   const { Search } = Input;
   const [key, setKey] = useState();
-  const [path, setPath] = useState('/projectShell');
+  const [path, setPath] = useState("/projectShell");
 
-
-  const [emailsData, setemailsData] = useState(emails)
+  const [emailsData, setemailsData] = useState(emails);
   const [searchText, setSearchText] = useState("");
   useEffect(() => {
     if (searchText) {
-      debugger
+      debugger;
       const lowerSearch = searchText.toLowerCase();
 
-      const filtered = emails.value.filter(item => {
+      const filtered = emails.value.filter((item) => {
         const subject = item.subject?.toLowerCase() || "";
         const bodyPreview = item.bodyPreview?.toLowerCase() || "";
         const content = item.body?.content?.toLowerCase() || "";
@@ -50,7 +59,6 @@ function CorspndncDetail() {
     }
   }, [searchText]);
 
-
   const refreshFileList = () => {
     // This will trigger the useEffect in FileList
     setPath((prevPath) => prevPath);
@@ -60,16 +68,16 @@ function CorspndncDetail() {
   const openCloseDrawerFtn = (name) => {
     setDrawerOpen((prevState) => ({
       ...prevState,
-      [name]: !prevState[name]
-    }))
-  }
+      [name]: !prevState[name],
+    }));
+  };
   const [drawerOpen, setDrawerOpen] = useState({
-    NewCall: false
-  })
+    NewCall: false,
+  });
 
   const createDocument = async () => {
     const graphClient = getGraphClient(instance, accounts);
-    const timestamp = new Date().toISOString().replace(/[-:.]/g, '');
+    const timestamp = new Date().toISOString().replace(/[-:.]/g, "");
     const documentName = `NewDocument_${timestamp}.docx`;
 
     const driveItem = {
@@ -79,102 +87,101 @@ function CorspndncDetail() {
 
     try {
       // Use currentPath instead of hardcoded '/projectShell'
-      const response = await graphClient.api(`/me/drive/root:${path}:/children`).post(driveItem);
+      const response = await graphClient
+        .api(`/me/drive/root:${path}:/children`)
+        .post(driveItem);
       if (response && response.webUrl) {
         setFileUrl(response.webUrl);
         // alert('Document Created. Please rename and save it in Word Online.');
-        window.open(response.webUrl, '_blank');
+        window.open(response.webUrl, "_blank");
         refreshFileList(); // Refresh the file list after creating the document
       } else {
         // alert('Error: Failed to create document.');
-
       }
     } catch (error) {
-      console.error('Error creating document:', error.message);
+      console.error("Error creating document:", error.message);
       // alert('Error: Failed to create document.');
     }
   };
   const options = [
     {
-      label: 'New Email',
-      value: 'New Email',
+      label: "New Email",
+      value: "New Email",
     },
     {
-      label: 'New Call',
-      value: 'New Call',
+      label: "New Call",
+      value: "New Call",
     },
     {
-      label: 'New Letter',
-      value: 'New Letter',
+      label: "New Letter",
+      value: "New Letter",
     },
     {
-      label: 'New SMS',
-      value: 'New SMS',
+      label: "New SMS",
+      value: "New SMS",
     },
-
   ];
   const bondOptions = [
     {
-      label: 'In bound',
-      value: 'In bound',
+      label: "In bound",
+      value: "In bound",
     },
     {
-      label: 'Out',
-      value: 'Out bound',
+      label: "Out",
+      value: "Out bound",
     },
-
   ];
   const [activeMails, setActiveMails] = useState();
   function getEmailById(id) {
-    setActiveMails(emailsData?.value.find(email => email.id === id) || null)
+    setActiveMails(emailsData?.value.find((email) => email.id === id) || null);
   }
   console.log("emails", activeMails);
   function EmailBody({ htmlContent }) {
-    return (
-      <div dangerouslySetInnerHTML={{ __html: htmlContent }} />
-    );
+    return <div dangerouslySetInnerHTML={{ __html: htmlContent }} />;
   }
   function forwardEmail() {
-    const baseUrl = 'https://outlook.office.com/mail/deeplink/compose';
+    const baseUrl = "https://outlook.office.com/mail/deeplink/compose";
 
-    let body = activeMails?.body?.content || '';
-    let subject = activeMails?.subject || '';
+    let body = activeMails?.body?.content || "";
+    let subject = activeMails?.subject || "";
     const params = new URLSearchParams({
-      subject,  // Correct param name here
+      subject, // Correct param name here
       body,
     });
 
     const url = `${baseUrl}?${params.toString()}`;
-    window.open(url, '_blank');
+    window.open(url, "_blank");
   }
   // isSimple:false,
   const callHistoryData = [
     {
       id: 1,
       Subject: "Project Kickoff Meeting",
-      ShortDis: "Discussed initial timelines and milestones for the new product launch.",
+      ShortDis:
+        "Discussed initial timelines and milestones for the new product launch.",
       time: "2025-06-04T10:15:00Z",
       caller: "Alice Johnson",
       duration: "00:35:20",
-      isSimple:false,
+      isSimple: false,
     },
     {
       id: 2,
       Subject: "Follow-up on Design Review",
       ShortDis: "Reviewed the latest UI mockups and provided feedback.",
       time: "2025-06-03T16:30:00Z",
-      isSimple:false,
+      isSimple: false,
       caller: "Bob Smith",
       duration: "00:20:45",
     },
     {
       id: 3,
       Subject: "Client Support Call",
-      ShortDis: "Assisted client with setup and troubleshooting network issues.",
+      ShortDis:
+        "Assisted client with setup and troubleshooting network issues.",
       time: "2025-06-02T09:00:00Z",
       caller: "Customer Support",
       duration: "00:45:00",
-      isSimple:false,
+      isSimple: false,
     },
     {
       id: 4,
@@ -182,7 +189,7 @@ function CorspndncDetail() {
       ShortDis: "Brief sync about pending tasks.",
       time: "2025-06-01T14:00:00Z",
       caller: "Team Lead",
-      isSimple:false,
+      isSimple: false,
       duration: "00:10:00",
     },
     {
@@ -192,316 +199,529 @@ function CorspndncDetail() {
       time: "2025-05-31T11:00:00Z",
       caller: "Project Manager",
       duration: "01:00:00",
-      isSimple:false,
+      isSimple: false,
     },
   ];
 
   const items = [
     {
-      key: '1',
-      label: <div className='d-flex align-items-center'>
-        <img alt='' src={icon} style={{ width: '18px', height: '18px', marginRight: '4px' }} />
-        <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
-          Email
-        </h4>
-        <div className='d-flex justify-content-center align-items-center' style={{ width: "31px", height: '20px', backgroundColor: '#E6F7FF', borderRadius: '100px', margin: '0px' }}>
-          <h4 className='' style={{ color: "#215E97", fontSize: '10px', fontWeight: '400', margin: '0px' }}>99</h4>
-        </div>
-      </div>
-      ,
-      children: <div className='d-flex' style={{ backgroundColor: 'rgba(9, 30, 66, 0.04)' }} >
-        <div className='chat-container pe-4 mt-2 pt-2 rounded-sm'>
-          <div className='d-flex justify-content-evenly align-items-center' >
-            <Radio.Group
-              block
-              options={bondOptions}
-              defaultValue="In bound"
-              optionType="button"
-              buttonStyle="solid"
-            />
-            <Search
-              placeholder="Search"
-              // onSearch={onSearch}
-              onChange={(e) => setSearchText(e.target.value)}
+      key: "1",
+      label: (
+        <div className="d-flex align-items-center">
+          <img
+            alt=""
+            src={icon}
+            style={{ width: "18px", height: "18px", marginRight: "4px" }}
+          />
+          <h4
+            style={{ fontSize: "15px", fontWeight: "400", marginLeft: "10px" }}
+          >
+            Email
+          </h4>
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{
+              width: "31px",
+              height: "20px",
+              backgroundColor: "#E6F7FF",
+              borderRadius: "100px",
+              margin: "0px",
+            }}
+          >
+            <h4
+              className=""
               style={{
-                width: 200,
+                color: "#215E97",
+                fontSize: "10px",
+                fontWeight: "400",
+                margin: "0px",
               }}
-            />
-            <CiMenuBurger fontSize={"24px"} />
-            <FiRefreshCcw fontSize={"24px"} />
+            >
+              99
+            </h4>
           </div>
-          {/* <ChatComponent isborder={true} /> */}
-          <div className='pt-2'>
-            {
-              emails?.value?.map((item, index) => (
-                <ChatComponent key={index} Subject={item?.subject} ShortDis={item?.bodyPreview}
-                  onclick={() => getEmailById(item?.id)} />
-              ))
-            }
-          </div>
-          {/* <ChatComponent />
+        </div>
+      ),
+      children: (
+        <div
+          className="d-flex"
+          style={{ backgroundColor: "rgba(9, 30, 66, 0.04)" }}
+        >
+          <div
+            className="chat-container pe-4 mt-2 rounded-sm"
+            style={{
+              paddingTop: "16px",
+              paddingBottom: "16px",
+              overflowY: "auto",
+            }}
+          >
+            <div className="d-flex justify-content-evenly align-items-center mb-3">
+              <Radio.Group
+                block
+                options={bondOptions}
+                defaultValue="In bound"
+                optionType="button"
+                buttonStyle="solid"
+              />
+              <Search
+                placeholder="Search"
+                // onSearch={onSearch}
+                onChange={(e) => setSearchText(e.target.value)}
+                style={{
+                  width: 200,
+                }}
+              />
+              <CiMenuBurger fontSize={"24px"} />
+              <FiRefreshCcw fontSize={"24px"} />
+            </div>
+            {/* <ChatComponent isborder={true} /> */}
+            <div
+              style={{
+                display: "flex",
+                flexDirection: "column",
+                paddingRight: "16px",
+                paddingLeft: "16px",
+              }}
+            >
+              {emails?.value?.map((item, index) => (
+                <div
+                  key={index}
+                  style={{
+                    borderBottom:
+                      index < emails.value.length - 1
+                        ? "1px solid rgba(0, 0, 0, 0.06)"
+                        : "none",
+                    paddingBottom:
+                      index < emails.value.length - 1 ? "8px" : "0",
+                    marginBottom: index < emails.value.length - 1 ? "8px" : "0",
+                  }}
+                >
+                  <ChatComponent
+                    Subject={item?.subject}
+                    ShortDis={item?.bodyPreview}
+                    onclick={() => getEmailById(item?.id)}
+                  />
+                </div>
+              ))}
+            </div>
+            {/* <ChatComponent />
                     <ChatComponent />
                     <ChatComponent />
                     <ChatComponent />
                     <ChatComponent />
                     <ChatComponent />
                     <ChatComponent /> */}
-        </div>
-        <div className='chat-detail-container mt-2 pt-2 rounded-sm'>
-          <div className='d-flex align-items-baseline justify-content-between'>
-            <h2 style={{ fontSize: '24px', fontWeight: '700' }}>{activeMails?.subject}</h2>
-            <div >
-              <Tooltip title="Back">
-                <Button
-                  type="text"
-                  icon={<FiCornerUpLeft style={{ fontSize: 26, color: '#215E97' }} />}
-                  style={{ transition: 'color 0.3s' }}
-                />
-              </Tooltip>
-
-              <Tooltip title="Double Back">
-                <Button
-                  type="text"
-                  icon={<RiCornerUpLeftDoubleLine style={{ fontSize: 26, color: '#215E97' }} />}
-                />
-              </Tooltip>
-
-              <Tooltip title="Forward Email">
-                <Button
-                  type="text"
-                  onClick={forwardEmail}
-                  icon={<FiCornerUpRight style={{ fontSize: 26, color: '#215E97' }} />}
-                />
-              </Tooltip>
-
-              <Tooltip title="Inward">
-                <Button
-                  type="text"
-                  icon={<PiArrowSquareIn style={{ fontSize: 26, color: '#215E97' }} />}
-                />
-              </Tooltip>
-            </div>
           </div>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginLeft: '25px', marginTop: '15px' }}>  John Doe &lt;john.doe@gra.ie&gt;</h2>
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: '10px' }}> To: &nbsp;&nbsp;&nbsp;&nbsp;<span style={{ fontSize: "13px", fontWeight: 400, color: '#00000073' }}>{activeMails?.sender?.emailAddress?.address}</span> </h2>
-          {/* <h2 style={{ fontSize: '28px', color: '#000000D9', marginTop: '25px' }}>Introduction</h2>
+          <div
+            className="chat-detail-container mt-2 rounded-sm"
+            style={{ paddingTop: "16px" }}
+          >
+            <div className="d-flex align-items-baseline justify-content-between">
+              <h2 style={{ fontSize: "24px", fontWeight: "700" }}>
+                {activeMails?.subject}
+              </h2>
+              <div>
+                <Tooltip title="Back">
+                  <Button
+                    type="text"
+                    icon={
+                      <FiCornerUpLeft
+                        style={{ fontSize: 26, color: "#215E97" }}
+                      />
+                    }
+                    style={{ transition: "color 0.3s" }}
+                  />
+                </Tooltip>
+
+                <Tooltip title="Double Back">
+                  <Button
+                    type="text"
+                    icon={
+                      <RiCornerUpLeftDoubleLine
+                        style={{ fontSize: 26, color: "#215E97" }}
+                      />
+                    }
+                  />
+                </Tooltip>
+
+                <Tooltip title="Forward Email">
+                  <Button
+                    type="text"
+                    onClick={forwardEmail}
+                    icon={
+                      <FiCornerUpRight
+                        style={{ fontSize: 26, color: "#215E97" }}
+                      />
+                    }
+                  />
+                </Tooltip>
+
+                <Tooltip title="Inward">
+                  <Button
+                    type="text"
+                    icon={
+                      <PiArrowSquareIn
+                        style={{ fontSize: 26, color: "#215E97" }}
+                      />
+                    }
+                  />
+                </Tooltip>
+              </div>
+            </div>
+            <h2
+              style={{
+                fontSize: "16px",
+                fontWeight: "600",
+                marginLeft: "25px",
+                marginTop: "15px",
+              }}
+            >
+              {" "}
+              John Doe &lt;john.doe@gra.ie&gt;
+            </h2>
+            <h2
+              style={{ fontSize: "16px", fontWeight: "600", marginTop: "10px" }}
+            >
+              {" "}
+              To: &nbsp;&nbsp;&nbsp;&nbsp;
+              <span
+                style={{
+                  fontSize: "13px",
+                  fontWeight: 400,
+                  color: "#00000073",
+                }}
+              >
+                {activeMails?.sender?.emailAddress?.address}
+              </span>{" "}
+            </h2>
+            {/* <h2 style={{ fontSize: '28px', color: '#000000D9', marginTop: '25px' }}>Introduction</h2>
           <h2 style={{ fontSize: '13px', fontWeight: '400' }}>
             In the process of internal desktop applications development, many different design specs and implementations would be involved, which might cause designers and developers difficulties and duplication and reduce the efficiency of development.
           </h2>
           <h2 style={{ fontSize: '13px', fontWeight: '400', marginTop: '5px' }}>
             After massive project practice and summaries, Ant Design, a design language for background applications, is refined by Ant UED Team, which aims to uniform the user interface specs for internal background projects, lower the unnecessary cost of design differences and implementation and liberate the resources of design and front-end development                    </h2> */}
-          {
-            activeMails && (
-              <h2 style={{ fontSize: '14px', fontWeight: '400', marginTop: '12px' }}> <EmailBody htmlContent={activeMails?.body?.content} />
+            {activeMails && (
+              <h2
+                style={{
+                  fontSize: "14px",
+                  fontWeight: "400",
+                  marginTop: "12px",
+                }}
+              >
+                {" "}
+                <EmailBody htmlContent={activeMails?.body?.content} />
               </h2>
-            )
-          }
-
+            )}
+          </div>
         </div>
-      </div>,
+      ),
     },
     {
-      key: '2',
-      label: <div className='d-flex align-items-center'>
-        <img src={icon} alt="" style={{ width: '18px', height: '18px', marginRight: '4px' }} />
-        <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
-          Calls
-        </h4>
-        <div className='d-flex justify-content-center align-items-center' style={{ width: "31px", height: '20px', backgroundColor: '#E6F7FF', borderRadius: '100px', margin: '0px' }}>
-          <h4 className='' style={{ color: "#215E97", fontSize: '10px', fontWeight: '400', margin: '0px' }}>5</h4>
-        </div>
-      </div>,
-      children: <div className='me-4 call-container pt-4'>
-        <div className='row'>
-          <div className='col-md-4'>
+      key: "2",
+      label: (
+        <div className="d-flex align-items-center">
+          <img
+            src={icon}
+            alt=""
+            style={{ width: "18px", height: "18px", marginRight: "4px" }}
+          />
+          <h4
+            style={{ fontSize: "15px", fontWeight: "400", marginLeft: "10px" }}
+          >
+            Calls
+          </h4>
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{
+              width: "31px",
+              height: "20px",
+              backgroundColor: "#E6F7FF",
+              borderRadius: "100px",
+              margin: "0px",
+            }}
+          >
+            <h4
+              className=""
+              style={{
+                color: "#215E97",
+                fontSize: "10px",
+                fontWeight: "400",
+                margin: "0px",
+              }}
+            >
+              5
+            </h4>
           </div>
-          <div className='col-md-4'>
-            <Search style={{ width: "75%", height: '36px', marginRight: '10px' }} />
-            <CiMenuBurger fontSize={24} />
+        </div>
+      ),
+      children: (
+        <div className="me-4 call-container pt-4">
+          <div className="row">
+            <div className="col-md-4"></div>
+            <div className="col-md-4">
+              <Search
+                style={{ width: "75%", height: "36px", marginRight: "10px" }}
+              />
+              <CiMenuBurger fontSize={24} />
+            </div>
           </div>
-        </div>
-        <div className='d-flex justify-content-around top-des call-container'>
-          <h4 style={{ fontSize: '14px', fontWeight: '600' }}>
-            Subject matter: <span style={{ fontSize: '14px', fontWeight: '400' }}> [Message]:</span>
-          </h4>
-          <h4>
-            Message For :
-          </h4>
-          <h4>
-            Source Division :
-          </h4>
-          <h4>
-            Reg No :
-          </h4>
-          <h4>
-            Name :
-          </h4>
-          <h4>
-            Callback No :
-          </h4>
-          <h4>
-            Callback No :
-          </h4>
-        </div>
-        <div className='call-container'>
-
-          {/* <ChatComponent isSimple={false} isborder={true} />
+          <div className="d-flex justify-content-around top-des call-container">
+            <h4 style={{ fontSize: "14px", fontWeight: "600" }}>
+              Subject matter:{" "}
+              <span style={{ fontSize: "14px", fontWeight: "400" }}>
+                {" "}
+                [Message]:
+              </span>
+            </h4>
+            <h4>Message For :</h4>
+            <h4>Source Division :</h4>
+            <h4>Reg No :</h4>
+            <h4>Name :</h4>
+            <h4>Callback No :</h4>
+            <h4>Callback No :</h4>
+          </div>
+          <div className="call-container">
+            {/* <ChatComponent isSimple={false} isborder={true} />
           <ChatComponent isSimple={false} Subject={'test test test test test test subject '} ShortDis={'Testing Short Description. Testing Short Description. Testing Short Description.'}  />
           <ChatComponent isSimple={false} />
           <ChatComponent isSimple={false} />
           <ChatComponent isSimple={false} /> */}
-          {callHistoryData.map((chatProps, index) => (
-            <ChatComponent key={index} {...chatProps} />
-          ))}
+            {callHistoryData.map((chatProps, index) => (
+              <ChatComponent key={index} {...chatProps} />
+            ))}
+          </div>
         </div>
-      </div>,
+      ),
     },
     {
-      key: '3',
-      label: <div className='d-flex align-items-center'>
-        <img src={icon} alt="" style={{ width: '18px', height: '18px', marginRight: '4px' }} />
-        <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
-          Letters
-        </h4>
-        <div className='d-flex justify-content-center align-items-center' style={{ width: "31px", height: '20px', backgroundColor: '#E6F7FF', borderRadius: '100px', margin: '0px' }}>
-          <h4 className='' style={{ color: "#215E97", fontSize: '10px', fontWeight: '400', margin: '0px' }}>1</h4>
-        </div>
-      </div>
-      ,
-      children: <div className='d-flex '>
-        <div className='chat-container pe-4'>
-          <div className='d-flex justify-content-center align-items-center' style={{ height: '70px' }}>
-            <>
-              <Search
-                placeholder="Search"
-                // onSearch={onSearch}
-                style={{
-                  width: "65%",
-                  borderRadius: "10px"
-                }}
-              />
-              <CiMenuBurger fontSize={"24px"} className='ms-4' />
-            </>
+      key: "3",
+      label: (
+        <div className="d-flex align-items-center">
+          <img
+            src={icon}
+            alt=""
+            style={{ width: "18px", height: "18px", marginRight: "4px" }}
+          />
+          <h4
+            style={{ fontSize: "15px", fontWeight: "400", marginLeft: "10px" }}
+          >
+            Letters
+          </h4>
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{
+              width: "31px",
+              height: "20px",
+              backgroundColor: "#E6F7FF",
+              borderRadius: "100px",
+              margin: "0px",
+            }}
+          >
+            <h4
+              className=""
+              style={{
+                color: "#215E97",
+                fontSize: "10px",
+                fontWeight: "400",
+                margin: "0px",
+              }}
+            >
+              1
+            </h4>
           </div>
-          <ChatComponent isborder={true} />
-          <ChatComponent />
-          <ChatComponent />
-          <ChatComponent />
-          <ChatComponent />
-          <ChatComponent />
-          <ChatComponent />
-          <ChatComponent />
         </div>
-        <div className='chat-detail-container'>
-          <div className='d-flex align-items-baseline justify-content-end'>
-            <div >
-              <BiSolidPrinter fontSize={'27px'} color='#215E97' />
+      ),
+      children: (
+        <div className="d-flex ">
+          <div className="chat-container pe-4">
+            <div
+              className="d-flex justify-content-center align-items-center"
+              style={{ height: "70px" }}
+            >
+              <>
+                <Search
+                  placeholder="Search"
+                  // onSearch={onSearch}
+                  style={{
+                    width: "65%",
+                    borderRadius: "10px",
+                  }}
+                />
+                <CiMenuBurger fontSize={"24px"} className="ms-4" />
+              </>
+            </div>
+            <ChatComponent isborder={true} />
+            <ChatComponent />
+            <ChatComponent />
+            <ChatComponent />
+            <ChatComponent />
+            <ChatComponent />
+            <ChatComponent />
+            <ChatComponent />
+          </div>
+          <div className="chat-detail-container">
+            <div className="d-flex align-items-baseline justify-content-end">
+              <div>
+                <BiSolidPrinter fontSize={"27px"} color="#215E97" />
+              </div>
+            </div>
+
+            <h2
+              style={{ fontSize: "16px", fontWeight: "600", marginTop: "10px" }}
+            >
+              Birthday Wish Letter Sample
+            </h2>
+            <h2
+              className="lh-base"
+              style={{
+                fontSize: "14px",
+                fontWeight: "400",
+                marginBottom: "30px",
+              }}
+            >
+              From:
+              <br></br>
+              Leanne Koocher ,<br></br>
+              7889, Pearl Street<br></br>
+              Behind first Lane ,<br></br>
+              Vellore, Shanghai 4945<br></br>
+              China.
+            </h2>
+            <h2
+              className="lh-base"
+              style={{
+                fontSize: "14px",
+                fontWeight: "400",
+                marginBottom: "30px",
+              }}
+            >
+              To:<br></br>
+              Natty Peterson,<br></br>
+              5839, DuckLane 5,<br></br>
+              Quad, KG 48495<br></br>
+              21 May, 2014.<br></br>
+            </h2>
+            <h2
+              className="lh-base"
+              style={{
+                fontSize: "14px",
+                fontWeight: "400",
+                marginBottom: "10px",
+              }}
+            >
+              Dear Natty, SUBJECT: LETTER OF BIRTHDAY WISHES<br></br>
+              How are you, hope you are doing well. The letter which I am
+              writing to you, it is with a heart full of excitement, joy and
+              happiness. First of all I would like to feel sorry that I am not
+              available there with you as I got some urgent work .Why I am
+              writing this letter to you is quite obvious considering the fact
+              that we are celebrating your birthday. Natty, although you are
+              still a young lady, your life has been a blessing to all those
+              around you. I must say that being your friend and companion over
+              the years is one of my greatest sources of joy and happiness. I
+              personally learnt so many things from you which is good for my
+              future .You have positively affected my life in various ways, even
+              in ways that you have never thought of yourself. At the end I wish
+              you a good luck for your life. May you live long in good health
+              and wealth. Affectionately yours, Leanne
+            </h2>
+          </div>
+        </div>
+      ),
+    },
+    {
+      key: "4",
+      label: (
+        <div className="d-flex align-items-center">
+          <img
+            src={icon}
+            alt=""
+            style={{ width: "18px", height: "18px", marginRight: "4px" }}
+          />
+          <h4
+            style={{ fontSize: "15px", fontWeight: "400", marginLeft: "10px" }}
+          >
+            SMS
+          </h4>
+          <div
+            className="d-flex justify-content-center align-items-center"
+            style={{
+              width: "31px",
+              height: "20px",
+              backgroundColor: "#E6F7FF",
+              borderRadius: "100px",
+              margin: "0px",
+            }}
+          >
+            <h4
+              className=""
+              style={{
+                color: "#215E97",
+                fontSize: "10px",
+                fontWeight: "400",
+                margin: "0px",
+              }}
+            >
+              99
+            </h4>
+          </div>
+        </div>
+      ),
+      children: (
+        <div className="me-4 call-container pt-4">
+          <div className="row">
+            <div className="col-md-4"></div>
+            <div className="col-md-4">
+              <Search
+                style={{ width: "75%", height: "36px", marginRight: "10px" }}
+              />
+              <CiMenuBurger fontSize={24} />
             </div>
           </div>
-
-          <h2 style={{ fontSize: '16px', fontWeight: '600', marginTop: '10px' }}>
-            Birthday Wish Letter Sample
-          </h2>
-          <h2 className='lh-base' style={{ fontSize: '14px', fontWeight: '400', marginBottom: '30px' }}>
-            From:
-            <br></br>
-            Leanne Koocher ,
-            <br></br>
-            7889, Pearl Street<br></br>
-            Behind first Lane ,<br></br>
-            Vellore, Shanghai 4945<br></br>
-            China.
-          </h2>
-          <h2 className='lh-base' style={{ fontSize: '14px', fontWeight: '400', marginBottom: '30px' }}>
-            To:<br></br>
-            Natty Peterson,<br></br>
-            5839, DuckLane 5,<br></br>
-            Quad, KG 48495<br></br>
-            21 May, 2014.<br></br>
-          </h2>
-          <h2 className='lh-base' style={{ fontSize: '14px', fontWeight: '400', marginBottom: '10px' }}>
-
-
-            Dear Natty,
-            SUBJECT: LETTER OF BIRTHDAY WISHES<br></br>
-            How are you, hope you are doing well. The letter which I am writing to you, it is with a heart full of excitement, joy and happiness. First of all I would like to feel sorry that I am not available there with you as I got some urgent work .Why I am writing this letter to you is quite obvious considering the fact that we are celebrating your birthday. Natty, although you are still a young lady, your life has been a blessing to all those around you.
-            I must say that being your friend and companion over the years is one of my greatest sources of joy and happiness. I personally learnt so many things from you which is good for my future .You have positively affected my life in various ways, even in ways that you have never thought of yourself. At the end I wish you a good luck for your life. May you live long in good health and wealth.
-            Affectionately yours,
-            Leanne
-          </h2>
-        </div>
-      </div>,
-    },
-    {
-      key: '4',
-      label: <div className='d-flex align-items-center'>
-        <img src={icon} alt='' style={{ width: '18px', height: '18px', marginRight: '4px' }} />
-        <h4 style={{ fontSize: '15px', fontWeight: '400', marginLeft: "10px" }}>
-          SMS
-        </h4>
-        <div className='d-flex justify-content-center align-items-center' style={{ width: "31px", height: '20px', backgroundColor: '#E6F7FF', borderRadius: '100px', margin: '0px' }}>
-          <h4 className='' style={{ color: "#215E97", fontSize: '10px', fontWeight: '400', margin: '0px' }}>99</h4>
-        </div>
-      </div>
-      ,
-      children: <div className='me-4 call-container pt-4'>
-        <div className='row'>
-          <div className='col-md-4'>
+          <div className="d-flex justify-content-around top-des call-container">
+            <h4 style={{ fontSize: "14px", fontWeight: "600" }}>
+              Subject matter:{" "}
+              <span style={{ fontSize: "14px", fontWeight: "400" }}>
+                {" "}
+                [Message]:
+              </span>
+            </h4>
+            <h4>Message For :</h4>
+            <h4>Source Division :</h4>
+            <h4>Reg No :</h4>
+            <h4>Name :</h4>
+            <h4>Callback No :</h4>
+            <h4>Callback No :</h4>
           </div>
-          <div className='col-md-4'>
-            <Search style={{ width: "75%", height: '36px', marginRight: '10px' }} />
-            <CiMenuBurger fontSize={24} />
+          <div className="call-container">
+            <ChatComponent isSimple={false} isborder={true} />
+            <ChatComponent isSimple={false} />
+            <ChatComponent isSimple={false} />
+            <ChatComponent isSimple={false} />
+            <ChatComponent isSimple={false} />
           </div>
         </div>
-        <div className='d-flex justify-content-around top-des call-container'>
-          <h4 style={{ fontSize: '14px', fontWeight: '600' }}>
-            Subject matter: <span style={{ fontSize: '14px', fontWeight: '400' }}> [Message]:</span>
-          </h4>
-          <h4>
-            Message For :
-          </h4>
-          <h4>
-            Source Division :
-          </h4>
-          <h4>
-            Reg No :
-          </h4>
-          <h4>
-            Name :
-          </h4>
-          <h4>
-            Callback No :
-          </h4>
-          <h4>
-            Callback No :
-          </h4>
-        </div>
-        <div className='call-container'>
-
-          <ChatComponent isSimple={false} isborder={true} />
-          <ChatComponent isSimple={false} />
-          <ChatComponent isSimple={false} />
-          <ChatComponent isSimple={false} />
-          <ChatComponent isSimple={false} />
-        </div>
-      </div>,
+      ),
     },
   ];
 
-  const [activeKey, setactiveKey] = useState("1")
+  const [activeKey, setactiveKey] = useState("1");
   const handleOptionSelect = (value) => {
     switch (value) {
       case "New Email":
         setactiveKey("1");
-        window.open('https://outlook.office.com/mail/deeplink/compose', '_blank');
+        window.open(
+          "https://outlook.office.com/mail/deeplink/compose",
+          "_blank"
+        );
         break;
       case "New Call":
         setactiveKey("2");
-        openCloseDrawerFtn('NewCall')
+        openCloseDrawerFtn("NewCall");
         break;
       case "New Letter":
         setactiveKey("3");
-        createDocument()
+        createDocument();
         break;
       case "New SMS":
         setactiveKey("4");
@@ -512,21 +732,18 @@ function CorspndncDetail() {
   };
   const handleNewFtn = () => {
     if (activeKey === "1") {
-      window.open('https://outlook.office.com/mail/deeplink/compose', '_blank');
+      window.open("https://outlook.office.com/mail/deeplink/compose", "_blank");
+    } else if (activeKey === "2") {
+      openCloseDrawerFtn("NewCall");
+    } else if (activeKey === "3") {
+      createDocument();
     }
-    else if (activeKey === "2") {
-      openCloseDrawerFtn('NewCall')
-    }
-    else if (activeKey === "3") {
-      createDocument()
-    }
-  }
-  const [selectionType, setSelectionType] = useState('checkbox');
+  };
+  const [selectionType, setSelectionType] = useState("checkbox");
   const rowSelection = {
-    onChange: () => {
-    },
+    onChange: () => {},
     getCheckboxProps: (record) => ({
-      disabled: record.name === 'Disabled User',
+      disabled: record.name === "Disabled User",
       name: record.name,
     }),
   };
@@ -572,8 +789,7 @@ function CorspndncDetail() {
       dataIndex: "callResolved",
       key: "callResolved",
       render: (index, record) => (
-        <Checkbox checked={record?.callResolved}>
-        </Checkbox>
+        <Checkbox checked={record?.callResolved}></Checkbox>
       ),
     },
     {
@@ -596,24 +812,24 @@ function CorspndncDetail() {
           <FaEdit
             size={16}
             style={{ marginRight: "10px" }}
-          //   onClick={() => {
-          //     IsUpdateFtn("Lookup", !IsUpdateFtn?.Lookup, record);
-          //     addIdKeyToLookup(record?._id, "Lookup");
-          //   }}
+            //   onClick={() => {
+            //     IsUpdateFtn("Lookup", !IsUpdateFtn?.Lookup, record);
+            //     addIdKeyToLookup(record?._id, "Lookup");
+            //   }}
           />
           <AiFillDelete
             size={16}
-          //   onClick={() =>
-          //     MyConfirm({
-          //       title: "Confirm Deletion",
-          //       message: "Do You Want To Delete This Item?",
-          //       onConfirm: async () => {
-          //         await deleteFtn(`${baseURL}/region`, record?._id);
-          //         dispatch(getAllLookups());
-          //         resetCounteries("Lookup");
-          //       },
-          //     }) 
-          //   }
+            //   onClick={() =>
+            //     MyConfirm({
+            //       title: "Confirm Deletion",
+            //       message: "Do You Want To Delete This Item?",
+            //       onConfirm: async () => {
+            //         await deleteFtn(`${baseURL}/region`, record?._id);
+            //         dispatch(getAllLookups());
+            //         resetCounteries("Lookup");
+            //       },
+            //     })
+            //   }
           />
         </Space>
       ),
@@ -621,63 +837,75 @@ function CorspndncDetail() {
   ];
 
   return (
-    <div className='d-flex' style={{ width: '100%' }}>
-      <div
-      >
-        <ProfileHeader />
-      </div>
+    <div className="d-flex" style={{ width: "100%" }}>
+      <ProfileHeader />
       <Tabs
-        style={{ width: '100%' }}
+        style={{ width: "100%" }}
         defaultActiveKey="1"
         items={items}
         onChange={(e) => setactiveKey(e)}
         tabBarExtraContent={
           <>
-            <Button className='new-btn' onClick={handleNewFtn}>
-              {activeKey === "1" ? "New Email" : activeKey === "2" ? "New Call" : activeKey === "3" ? "New Letter" : activeKey === "4" ? "New SMS" : null}
+            <Button className="new-btn" onClick={handleNewFtn}>
+              {activeKey === "1"
+                ? "New Email"
+                : activeKey === "2"
+                ? "New Call"
+                : activeKey === "3"
+                ? "New Letter"
+                : activeKey === "4"
+                ? "New SMS"
+                : null}
             </Button>
             <Select
               key={key} // Force reset on each selection
               onChange={handleOptionSelect} // Trigger internal function
-              style={{ borderLeft: 'none', borderColor: 'red', backgroundColor: "#215E97" }}
+              style={{
+                borderLeft: "none",
+                borderColor: "red",
+                backgroundColor: "#215E97",
+              }}
               // Set dropdown button width
               value={null}
-              dropdownStyle={{ width: '10%' }}
+              dropdownStyle={{ width: "10%" }}
             >
               {options.map((option) => (
-                <Select.Option key={option.key} value={option.label}>
-
-                </Select.Option>
+                <Select.Option
+                  key={option.key}
+                  value={option.label}
+                ></Select.Option>
               ))}
             </Select>
           </>
         }
       />
 
-
-
-
-      <MyDrawer title='New Call' open={drawerOpen?.NewCall} isPagination={true}
-        onClose={() => { openCloseDrawerFtn('NewCall') }}
-      //         IsUpdateFtn('Lookup', false, )
-      //       }}
-      // add={async () => {
-      //   await insertDataFtn(
-      //     `${baseURL}/region`,
-      //     { 'region': drawerIpnuts?.Lookup },
-      //     'Data inserted successfully',
-      //     'Data did not insert',
-      //     () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
-      //   );
-      //   dispatch(getAllLookups())
-      // }}
-      // isEdit={isUpdateRec?.Lookup}
-      // update={
-      //   async () => {
-      //    await updateFtn('/region', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
-      //    dispatch(getAllLookups())
-      //    IsUpdateFtn('Lookup', false, )
-      //   }}
+      <MyDrawer
+        title="New Call"
+        open={drawerOpen?.NewCall}
+        isPagination={true}
+        onClose={() => {
+          openCloseDrawerFtn("NewCall");
+        }}
+        //         IsUpdateFtn('Lookup', false, )
+        //       }}
+        // add={async () => {
+        //   await insertDataFtn(
+        //     `${baseURL}/region`,
+        //     { 'region': drawerIpnuts?.Lookup },
+        //     'Data inserted successfully',
+        //     'Data did not insert',
+        //     () => resetCounteries('Lookup', () => dispatch(getAllLookups()))
+        //   );
+        //   dispatch(getAllLookups())
+        // }}
+        // isEdit={isUpdateRec?.Lookup}
+        // update={
+        //   async () => {
+        //    await updateFtn('/region', drawerIpnuts?.Lookup,() => resetCounteries('Lookup', () => dispatch(getAllLookups())))
+        //    dispatch(getAllLookups())
+        //    IsUpdateFtn('Lookup', false, )
+        //   }}
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -737,8 +965,7 @@ function CorspndncDetail() {
               <div className="inpt-con">
                 <p className="star">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
-                  />
+                  <Input className="inp" />
                 </div>
                 <p className="error"></p>
               </div>
@@ -750,13 +977,12 @@ function CorspndncDetail() {
               <div className="inpt-con">
                 <p className="star-white">*</p>
                 <div className="inpt-sub-con">
-                  <Input className="inp"
-                  />
+                  <Input className="inp" />
                 </div>
                 <p className="error"></p>
               </div>
             </div>
-            <div className="drawer-inpts-container" style={{ height: '150px' }}>
+            <div className="drawer-inpts-container" style={{ height: "150px" }}>
               <div className="drawer-lbl-container">
                 <p>Message :</p>
               </div>
@@ -779,7 +1005,9 @@ function CorspndncDetail() {
                   <Checkbox
                     // onChange={(e) => drawrInptChng('LookupType', 'isActive', e.target.checked)}
                     checked={true}
-                  >Call resolved at Reception</Checkbox>
+                  >
+                    Call resolved at Reception
+                  </Checkbox>
                 </div>
                 <p className="error"></p>
               </div>
@@ -805,7 +1033,7 @@ function CorspndncDetail() {
         </div>
       </MyDrawer>
     </div>
-  )
+  );
 }
 
-export default CorspndncDetail
+export default CorspndncDetail;
