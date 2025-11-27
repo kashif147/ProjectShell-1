@@ -209,6 +209,7 @@ function ApplicationMgtDrawer({
         pensionNo: apiData?.professionalDetails?.pensionNo || "",
         studyLocation: apiData?.professionalDetails?.studyLocation,
         graduationDate: toDayJS(apiData?.professionalDetails?.graduationDate), // ✅ ADD THIS LINE
+        startDate: toDayJS(apiData?.professionalDetails?.startDate), // ✅ ADD THIS LINE    
       },
       subscriptionDetails: {
         paymentType: apiData?.subscriptionDetails?.paymentType || "",
@@ -466,7 +467,7 @@ function ApplicationMgtDrawer({
       'workLocation', 'otherWorkLocation', 'grade',
       'otherGrade', 'nmbiNumber', 'nurseType', 'nursingAdaptationProgramme',
       'region', 'branch', 'pensionNo', 'isRetired', 'retiredDate',
-      'studyLocation', 'graduationDate'
+      'studyLocation', 'graduationDate', 'startDate'
     ];
 
     return professionalFields.some(field => {
@@ -514,7 +515,8 @@ function ApplicationMgtDrawer({
       isRetired: false,
       pensionNo: "",
       retiredDate: null,
-      graduationDate: null
+      graduationDate: null,
+      startDate:null
     },
     subscriptionDetails: {
       membershipCategory: "",
@@ -538,33 +540,35 @@ function ApplicationMgtDrawer({
       // paymentFrequency: "",
       startDate: null,
       exclusiveDiscountsAndOffers: false,
-      otherIrishTradeUnionName:""
+      otherIrishTradeUnionName: ""
     },
   };
   const [InfData, setInfData] = useState(inputValue);
-  console.log(application, "InfData")
+  console.log(InfData, "InfData")
   const handleLocationChange = (selectedLookupId) => {
     debugger
     // Get hierarchicalLookups from localStorage
     const storedLookups = localStorage.getItem('hierarchicalLookups');
     const hierarchicalLookups = storedLookups ? JSON.parse(storedLookups) : [];
-
+    debugger
     // Find the selected object in hierarchicalLookups
     const foundObject = hierarchicalLookups.find(item =>
       item.lookup && item.lookup._id === selectedLookupId
     );
+    debugger
     if (foundObject) {
       // Update InfData with region and branch IDs
       setInfData(prevData => ({
         ...prevData,
         professionalDetails: {
           ...prevData.professionalDetails,
-          workLocation: selectedLookupId, // Set the selected location ID
-          region: foundObject.region?._id || "", // Set region ID
-          branch: foundObject.branch?._id || "" // Set branch ID
+          workLocation: foundObject?.lookup?.lookupname, // Set the selected location ID
+          region: foundObject.region?.lookupname || "", // Set region ID
+          branch: foundObject.branch?.lookupname || "" // Set branch ID
         }
       }));
     }
+    debugger
   };
   const validateForm = () => {
     const requiredFields = [
@@ -607,6 +611,7 @@ function ApplicationMgtDrawer({
       workLocation: ["professionalDetails", "workLocation"],
       grade: ["professionalDetails", "grade"],
       retiredDate: ["professionalDetails", "retiredDate"],
+      startDate: ["professionalDetails", "startDate"],
       pensionNo: ["professionalDetails", "pensionNo"],
 
       paymentType: ["subscriptionDetails", "paymentType"],
@@ -676,6 +681,9 @@ function ApplicationMgtDrawer({
       }
       if (!InfData.professionalDetails?.graduationDate) {
         newErrors.graduationDate = "Graduation date is required";
+      }
+      if (!InfData.professionalDetails?.startDate) {
+        newErrors.startDate = "required";
       }
     }
 
@@ -917,11 +925,13 @@ function ApplicationMgtDrawer({
     const allSubscriptionFields = [
       'paymentType',
       'payrollNo',
+      'paymentFrequency',      // ← ADDED THIS!
       'membershipStatus',
       'otherIrishTradeUnion',
+      'otherIrishTradeUnionName', // ← ADDED THIS!
       'otherScheme',
-      'recuritedBy',           // ← THIS WAS MISSING!
-      'recuritedByMembershipNo', // ← THIS WAS MISSING!
+      'recuritedBy',
+      'recuritedByMembershipNo',
       'primarySection',
       'otherPrimarySection',
       'secondarySection',
@@ -948,7 +958,7 @@ function ApplicationMgtDrawer({
       // If one exists and the other doesn't, it's a change
       return Boolean(currentVal) !== Boolean(originalVal);
     });
-    
+
     console.log('🔍 Subscription Change (All Fields):', {
       hasAnyChange,
       current: currentSub,
@@ -1107,15 +1117,35 @@ function ApplicationMgtDrawer({
       });
     }
     else if (field === "workLocation") {
-      setInfData((prev) => ({
-        ...prev,
-        professionalDetails: {
-          ...prev.professionalDetails,
-          workLocation: value,
-          // branch: ""
-        },
-      }));
-      handleLocationChange(value)
+      // Check if value is an object (when isObjectValue is true)
+      if (typeof value === 'object' && value !== null) {
+        // For object value, extract id and label
+        const locationId = value.key || value.id || value.value;
+        const locationLabel = value.label || value.name || '';
+
+        setInfData((prev) => ({
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            workLocation: locationLabel, // Save label in state
+            // branch: ""
+          },
+        }));
+
+        // Pass only the ID to handleLocationChange
+        handleLocationChange(locationId);
+      } else {
+        // For string value (existing behavior)
+        setInfData((prev) => ({
+          ...prev,
+          professionalDetails: {
+            ...prev.professionalDetails,
+            workLocation: value,
+            // branch: ""
+          },
+        }));
+        handleLocationChange(value);
+      }
     }
     else {
       setInfData((prev) => {
@@ -1217,7 +1247,7 @@ function ApplicationMgtDrawer({
       setCurrentApplication(application);
 
       // Disable form only for approved and in-progress
-      const shouldDisableForm = ['approved', 'in-progress'].includes(status);
+      const shouldDisableForm = ['approved',].includes(status);
       disableFtn(shouldDisableForm);
 
       // ✅ Set checkboxes based on actual status
@@ -1240,7 +1270,7 @@ function ApplicationMgtDrawer({
 
     // ✅ PREVENT CHANGING APPROVE/REJECT FOR READ-ONLY STATUSES
     const status = application?.applicationStatus?.toLowerCase();
-    const readOnlyStatuses = ['approved', 'in-progress'];
+    const readOnlyStatuses = ['approved',];
 
     if (readOnlyStatuses.includes(status) && (name === "Approve")) {
       return; // Don't allow changes for read-only statuses
@@ -1288,8 +1318,10 @@ function ApplicationMgtDrawer({
   };
   const handleApplicationAction = async (action) => {
     if (isEdit && !originalData) return;
-
+    const isValid = validateForm();
+    if (!isValid) return;
     setIsProcessing(true);
+    disableFtn(true);
 
     try {
       const token = localStorage.getItem('token');
@@ -1297,37 +1329,48 @@ function ApplicationMgtDrawer({
         throw new Error('No authentication token found');
       }
 
-      // ✅ USE dateUtils INSTEAD OF convertDatesToISO
       const apiInfData = dateUtils.prepareForAPI(InfData);
       const apiOriginalData = dateUtils.prepareForAPI(originalData);
 
+      // Debug subscription changes
+      const subscriptionChanged = hasSubscriptionDetailsChanged(apiOriginalData, apiInfData);
+      const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
+      const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
+
+      console.log('🔍 Changes Detected:', {
+        personalChanged,
+        professionalChanged,
+        subscriptionChanged
+      });
+
       // Prepare status payload
       const statusPayload = {
-        applicationStatus: action, // "approved" or "rejected"
-        comments: action === "rejected"
-          ? rejectionData.reason
-          : "Application approved" // Default comment for approval
+        applicationStatus: action,
+        comments: action === "rejected" ? rejectionData.reason : "Application approved"
       };
 
-      // Validate rejection reason (only for reject)
+      // Validate rejection reason
       if (action === "rejected" && !rejectionData.reason) {
         MyAlert("error", "Please select a rejection reason");
         setIsProcessing(false);
         return;
       }
 
-      // Handle approval with changes (only for edit mode)
-      if (isEdit && action === "approved") {
+      const applicationId = application?.applicationId;
+
+      // Handle updates for both approval AND rejection
+      if (isEdit && (action === "approved" || action === "rejected")) {
         const proposedPatch = generatePatch(apiOriginalData, apiInfData);
 
-        if (proposedPatch && proposedPatch.length > 0) {
+        // For approval, send the patch to the approval endpoint
+        if (action === "approved" && proposedPatch && proposedPatch.length > 0) {
           const obj = {
             submission: apiOriginalData,
             proposedPatch: proposedPatch,
           };
 
           await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
             obj,
             {
               headers: {
@@ -1336,39 +1379,70 @@ function ApplicationMgtDrawer({
               },
             }
           );
+        }
 
-          // Update changed sections with API DATA (not state data)
-          const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
-          const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
+        // ✅ UPDATE: Update Personal Details if changed (for both approval and rejection)
+        if (personalChanged) {
+          const personalPayload = cleanPayload({
+            personalInfo: apiInfData.personalInfo,
+            contactInfo: apiInfData.contactInfo,
+          });
+          console.log('💾 Saving Personal Details:', personalPayload);
+          await axios.put(
+            `${baseURL}/personal-details/${applicationId}`,
+            personalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              }
+            }
+          );
+        }
 
-          if (personalChanged && application?.personalDetails?._id) {
-            const personalPayload = cleanPayload({
-              personalInfo: apiInfData.personalInfo,
-              contactInfo: apiInfData.contactInfo,
-            });
-            await axios.put(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-              personalPayload,
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-            );
-          }
+        // ✅ UPDATE: Update Professional Details if changed (for both approval and rejection)
+        if (professionalChanged) {
+          const professionalPayload = cleanPayload({
+            professionalDetails: apiInfData.professionalDetails,
+          });
+          console.log('💾 Saving Professional Details:', professionalPayload);
+          await axios.put(
+            `${baseURL}/professional-details/${applicationId}`,
+            professionalPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              }
+            }
+          );
+        }
 
-          if (professionalChanged && application?.professionalDetails?._id) {
-            const professionalPayload = cleanPayload({
-              professionalDetails: apiInfData.professionalDetails,
-            });
-            await axios.put(
-              `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-              professionalPayload,
-              { headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` } }
-            );
-          }
+        // ✅ UPDATE: Update Subscription Details if changed (for both approval and rejection)
+        if (subscriptionChanged) {
+          const subscriptionPayload = cleanPayload({
+            subscriptionDetails: apiInfData.subscriptionDetails,
+          });
+          console.log('💾 Saving Subscription Details:', subscriptionPayload);
+          console.log('📝 Subscription URL:', `${baseURL}/subscription-details/${applicationId}`);
+
+          await axios.put(
+            `${baseURL}/subscription-details/${applicationId}`,
+            subscriptionPayload,
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`
+              }
+            }
+          );
+          console.log('✅ Subscription update successful');
         }
       }
 
       // Update application status
       await axios.put(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${applicationId}`,
         statusPayload,
         {
           headers: {
@@ -1378,23 +1452,22 @@ function ApplicationMgtDrawer({
         }
       );
 
-      // ✅ SUCCESS: Now update the checkbox state
+      // Update checkbox state
       setSelected(prev => ({
         ...prev,
         Approve: action === 'approved',
         Reject: action === 'rejected'
       }));
 
-      // Success handling
+      // Success message
       const successMessage = action === "approved"
         ? "Application approved successfully!"
         : "Application rejected successfully!";
 
       MyAlert("success", successMessage);
       disableFtn(true);
-      // refreshApplicationsWithStatusFilters();
 
-      // Reset modal and rejection data (only for reject)
+      // Reset modal for rejection
       if (action === "rejected") {
         setActionModal({ open: false, type: null });
         setRejectionData({ reason: "", note: "" });
@@ -1412,7 +1485,7 @@ function ApplicationMgtDrawer({
         error?.response?.data?.error?.message || error.message
       );
 
-      // ❌ On error, ensure checkboxes are unchecked
+      // Reset checkboxes on error
       setSelected(prev => ({
         ...prev,
         Approve: false,
@@ -1420,6 +1493,7 @@ function ApplicationMgtDrawer({
       }));
     } finally {
       setIsProcessing(false);
+      disableFtn(true);
     }
   };
 
@@ -1468,7 +1542,7 @@ function ApplicationMgtDrawer({
   }
   return (
     <div>
-      <div style={{ backgroundColor: '#f6f7f8', minHeight: '100vh' }}>
+      <div style={{ backgroundColor: '#f6f7f8', }}>
         <div style={{ marginRight: "2.25rem" }} className="d-flex justify-content-between align-items-center py-3">
           <div><Breadcrumb /></div>
           <div className="d-flex align-items-center gap-3">
@@ -1489,7 +1563,7 @@ function ApplicationMgtDrawer({
               checked={selected.Approve}
               disabled={
                 isEdit
-                  ? ( selected.actionCompleted || isDisable)
+                  ? (selected.actionCompleted || isDisable)
                   : isDisable // Only disabled in non-edit mode when isDisable is true
               }
               onChange={handleChange}
@@ -1956,6 +2030,7 @@ function ApplicationMgtDrawer({
                             <CustomSelect
                               onChange={(e) => handleInputChange("professionalDetails", "studyLocation", e.target.value)}
                               label="Study Location"
+                              disabled={isDisable}
                               required
                               options={[
                                 { value: "Trinity College Dublin", label: "Trinity College Dublin" },
@@ -1975,11 +2050,13 @@ function ApplicationMgtDrawer({
                                 }
                               }}
                               required
+                              disabled={isDisable}
                               value={InfData?.professionalDetails?.startDate} />
                           </Col>
                           <Col xs={24} md={8}>
                             <MyDatePicker1 label="Graduation date"
                               required
+                              disabled={isDisable}
                               onChange={(date, datestring) => {
                                 {
                                   handleInputChange("professionalDetails", "graduationDate", date)
@@ -2002,16 +2079,16 @@ function ApplicationMgtDrawer({
               <Col xs={24} md={12}>
                 <CustomSelect
                   label="Work Location"
-                  isIDs={application ? false : true}
                   name="workLocation"
-                  value={InfData.professionalDetails?.workLocation}
+                  isObjectValue={true} // Enable object return
+                  isIDs={false} // Use IDs for option values
+                  value={InfData.professionalDetails?.workLocation} // This will show the label
                   required
                   options={workLocationOptions}
                   disabled={isDisable}
                   onChange={(e) => {
                     handleInputChange("professionalDetails", "workLocation", e.target.value)
-                  }
-                  }
+                  }}
                   hasError={!!errors?.workLocation}
                 />
               </Col>
@@ -2033,7 +2110,7 @@ function ApplicationMgtDrawer({
                   label="Branch"
                   name="branch"
                   value={InfData.professionalDetails.branch}
-                  isIDs={application ? false : true}
+                  // isIDs={application ? false : true}
                   disabled={true}
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
                   onChange={(e) => handleInputChange("professionalDetails", "branch", e.target.value)}
@@ -2047,7 +2124,7 @@ function ApplicationMgtDrawer({
 
               <Col xs={24} md={12}>
                 <CustomSelect
-                  isIDs={application ? false : true}
+                  // isIDs={application ? false : true}
                   label="Region"
                   name="Region"
                   placeholder={`${workLocationLoading ? "Loading..." : "Select"}`}
@@ -2154,7 +2231,7 @@ function ApplicationMgtDrawer({
                   label="NMBI No/An Board Altranais Number"
                   name="nmbiNumber"
                   value={InfData?.professionalDetails?.nmbiNumber}
-                  disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true}
+                  disabled={InfData?.professionalDetails?.nursingAdaptationProgramme !== true || isDisable}
                   required={InfData?.professionalDetails?.nursingAdaptationProgramme === true}
                   onChange={(e) => handleInputChange("professionalDetails", "nmbiNumber", e.target.value)}
                 />
@@ -2202,7 +2279,7 @@ function ApplicationMgtDrawer({
                         Public Health Nurse
                       </Radio>
 
-                      <Radio value="mentalHealthNurse" style={{ color: '#14532d', width: '14%' }}>
+                      <Radio value="mentalHealth" style={{ color: '#14532d', width: '14%' }}>
                         Mental Health Nurse
                       </Radio>
 
@@ -2297,7 +2374,7 @@ function ApplicationMgtDrawer({
                     value={InfData?.subscriptionDetails?.payrollNo}
                     hasError={!!errors?.payrollNo}
                     required={InfData?.subscriptionDetails?.paymentType === "Salary Deduction"}
-                    disabled={InfData?.subscriptionDetails?.paymentType !== "Salary Deduction"}
+                    disabled={InfData?.subscriptionDetails?.paymentType !== "Salary Deduction"||isDisable}
                     onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
                   />
                 </div>
@@ -2555,7 +2632,7 @@ function ApplicationMgtDrawer({
                   </div>
                   {
                     InfData.subscriptionDetails?.otherIrishTradeUnion &&
-                    <MyInput value={InfData.subscriptionDetails?.otherIrishTradeUnionName}  onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)} />
+                    <MyInput  value={InfData.subscriptionDetails?.otherIrishTradeUnionName} onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)} />
                   }
                 </div>
               </Col>

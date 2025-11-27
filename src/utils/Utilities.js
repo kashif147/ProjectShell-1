@@ -346,6 +346,7 @@ export const dateUtils = {
     if (apiData.professionalDetails) {
       convertDateField(apiData.professionalDetails, 'retiredDate');
       convertDateField(apiData.professionalDetails, 'graduationDate');
+      convertDateField(apiData.professionalDetails, 'startDate');
     }
     
     if (apiData.subscriptionDetails) {
