@@ -1,5 +1,5 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
-import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio } from "antd";
+import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio, Select } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
@@ -79,9 +79,14 @@ function HeaderDetails() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
+  const [sortOption, setSortOption] = useState(null);
 
   const handleDateChange = (val) => {
     setValue(val); // val is a dayjs or null
+  };
+
+  const handleSortChange = (value) => {
+    setSortOption(value);
   };
 
   const showHidSavModal = () => {
@@ -653,17 +658,37 @@ function HeaderDetails() {
                   </div>
                 ) : nav == "/RemindersSummary" || nav == "/Cancallation" ? (
                   <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                    <Row className="align-items-baseline w-100">
-                      <DatePicker
-                        picker="year"
-                        format="YYYY"
-                        value={value}
-                        onChange={(e) => handleDateChange(e)}
-                        inputReadOnly={false} // allow typing
-                        allowClear={false} // keep a value always; set true if you want clear
-                        style={{ width: 220 }} // compact width for year
-                        placeholder="Select year"
-                      />
+                    <Row className="align-items-baseline w-100" gutter={12}>
+                      <Col>
+                        <DatePicker
+                          picker="year"
+                          format="YYYY"
+                          value={value}
+                          onChange={(e) => handleDateChange(e)}
+                          inputReadOnly={false} // allow typing
+                          allowClear={false} // keep a value always; set true if you want clear
+                          style={{ width: 220 }} // compact width for year
+                          placeholder="Select year"
+                        />
+                      </Col>
+                      {nav == "/RemindersSummary" && (
+                        <Col>
+                          <Select
+                            placeholder="Sort by"
+                            value={sortOption}
+                            onChange={handleSortChange}
+                            allowClear
+                            style={{ width: 180 }}
+                          >
+                            <Select.Option value="date-asc">Date (Ascending)</Select.Option>
+                            <Select.Option value="date-desc">Date (Descending)</Select.Option>
+                            <Select.Option value="title-asc">Title (A-Z)</Select.Option>
+                            <Select.Option value="title-desc">Title (Z-A)</Select.Option>
+                            <Select.Option value="user-asc">User (A-Z)</Select.Option>
+                            <Select.Option value="user-desc">User (Z-A)</Select.Option>
+                          </Select>
+                        </Col>
+                      )}
                     </Row>
                   </div>
                 ) : nav !== "/templeteSummary" && (

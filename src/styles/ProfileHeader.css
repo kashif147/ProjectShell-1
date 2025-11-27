@@ -1,20 +1,452 @@
+.member-header-container {
+  width: 22%;
+  display: flex;
+  flex-direction: column;
+  margin: 0 8px;
+  padding: 8px;
+  height: calc(100vh - 120px);
+  max-height: calc(100vh - 120px);
+}
+
+.member-header-single-card {
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Profile Header Top Section */
+.member-header-top {
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  padding: 12px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.member-edit-btn {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  background-color: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 20px;
+  padding: 6px 12px;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  cursor: pointer;
+  font-size: 12px;
+  transition: all 0.3s ease;
+}
+
+.member-edit-btn:hover {
+  background-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+
+.edit-icon {
+  font-size: 14px;
+}
+
+.member-profile-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-top: 5px;
+}
+
+.member-avatar {
+  width: 80px;
+  height: 80px;
+  border-radius: 50%;
+  background-color: rgba(255, 255, 255, 0.2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 8px;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.avatar-icon {
+  font-size: 40px;
+  color: white;
+}
+
+.member-name {
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  margin: 0 0 4px 0;
+}
+
+.member-details {
+  color: rgba(255, 255, 255, 0.9);
+  font-size: 12px;
+  margin: 0 0 6px 0;
+}
+
+.member-status-badge {
+  background-color: #52c41a;
+  color: white;
+  padding: 4px 12px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 500;
+  display: inline-block;
+}
+
+/* Contact Information Section - on blue background */
+.member-contact-section-blue {
+  padding: 8px 0 0 0;
+  margin-top: 8px;
+  flex-shrink: 0;
+}
+
+.contact-item-blue {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: white;
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+
+.contact-item-blue:last-child {
+  margin-bottom: 0;
+}
+
+.contact-icon-blue {
+  color: white;
+  font-size: 14px;
+  min-width: 18px;
+}
+
+/* Legacy Contact Information Section - kept for backward compatibility */
+.member-contact-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.contact-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: #333;
+  font-size: 14px;
+  margin-bottom: 12px;
+}
+
+.contact-item:last-child {
+  margin-bottom: 0;
+}
+
+.contact-icon {
+  color: #4a90e2;
+  font-size: 16px;
+  min-width: 20px;
+}
+
+/* Membership Details Section */
+.member-details-section {
+  background-color: white;
+  padding: 10px 12px;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.detail-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 6px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.detail-row:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.detail-icon {
+  color: #4a90e2;
+  font-size: 14px;
+  min-width: 18px;
+}
+
+.detail-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+}
+
+.detail-label {
+  font-weight: 600;
+  color: #333;
+  font-size: 12px;
+}
+
+.detail-value {
+  color: #666;
+  font-size: 12px;
+}
+
+.member-id {
+  color: #1890ff;
+  cursor: pointer;
+  font-weight: 500;
+}
+
+.member-id:hover {
+  text-decoration: underline;
+}
+
+/* Financial Details Card */
+.member-financial-card {
+  background-color: white;
+  padding: 10px 12px;
+  border-top: 1px solid #f0f0f0;
+  flex-shrink: 0;
+}
+
+.financial-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  padding-bottom: 6px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.financial-title {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+  color: #333;
+  font-size: 12px;
+}
+
+.financial-title span {
+  color: #333;
+}
+
+.warning-icon {
+  color: #faad14;
+  font-size: 16px;
+}
+
+.balance-amount {
+  color: #faad14;
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.financial-details {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.financial-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+}
+
+.financial-label {
+  color: #333;
+  font-weight: 500;
+}
+
+.financial-value {
+  color: #333;
+  font-weight: 500;
+}
+
+/* Grade and Category Section - on blue background */
+.member-grade-section-blue {
+  background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
+  padding: 10px 12px;
+  flex-shrink: 0;
+}
+
+.grade-row-blue {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 4px;
+  font-size: 12px;
+  color: white;
+}
+
+.grade-row-blue:last-child {
+  margin-bottom: 0;
+}
+
+.grade-label-blue {
+  font-weight: 600;
+  color: white;
+}
+
+.grade-value-blue {
+  color: white;
+}
+
+/* Legacy Grade and Category Section - kept for backward compatibility */
+.member-grade-section {
+  background-color: white;
+  border-radius: 8px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.grade-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+  font-size: 12px;
+}
+
+.grade-row:last-child {
+  margin-bottom: 0;
+}
+
+.grade-label {
+  font-weight: 600;
+  color: #595959;
+}
+
+.grade-value {
+  color: #595959;
+}
+
+/* Cancel Membership Button */
+.member-cancel-btn {
+  width: calc(100% - 24px);
+  margin: 10px 12px;
+  background-color: rgba(255, 77, 79, 0.1);
+  border: 1px solid rgba(255, 77, 79, 0.3);
+  border-radius: 20px;
+  padding: 8px 20px;
+  color: #ff4d4f;
+  font-size: 12px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  flex-shrink: 0;
+}
+
+.member-cancel-btn:hover {
+  background-color: rgba(255, 77, 79, 0.15);
+  border-color: rgba(255, 77, 79, 0.4);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(255, 77, 79, 0.2);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1200px) {
+  .member-header-container {
+    width: 25%;
+  }
+}
+
+@media (max-width: 992px) {
+  .member-header-container {
+    width: 100%;
+    height: auto;
+    margin: 0;
+  }
+}
+
+/* Legacy styles kept for backward compatibility */
 .centered-text {
-    font-weight: bold;
-    font-size: 14px;
-    color: #6B7AAB;
-    text-align: center;
-  }
-  
-  .centered-text-large {
-    font-weight: bold;
-    font-size: 20px;
-    color: #c97a2f;
-    text-align: center;
-  }
-  .centered-text-deceased {
-    font-weight: bold;
-    font-size: 14px;
-    color: #FF7F7F;
-    text-align: center;
-  }
-  
+  font-weight: bold;
+  font-size: 14px;
+  color: #6b7aab;
+  text-align: center;
+}
+
+.centered-text-large {
+  font-weight: bold;
+  font-size: 20px;
+  color: #c97a2f;
+  text-align: center;
+}
+
+.centered-text-deceased {
+  font-weight: bold;
+  font-size: 14px;
+  color: #ff7f7f;
+  text-align: center;
+}
+
+/* Cancel Membership Modal Styling */
+.cancel-membership-modal .ant-modal-content {
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.cancel-membership-modal .ant-modal-header {
+  padding: 16px 24px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.cancel-membership-modal .ant-modal-title {
+  font-size: 18px;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.cancel-membership-modal .ant-modal-body {
+  padding: 0;
+  max-height: calc(100vh - 200px);
+  overflow-y: auto;
+}
+
+.cancel-membership-modal .ant-modal-footer {
+  padding: 16px 24px;
+  border-top: 1px solid #f0f0f0;
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.cancel-membership-modal .ant-modal-footer .ant-btn {
+  min-width: 120px;
+  height: 36px;
+  border-radius: 6px;
+  font-weight: 500;
+}
+
+.cancel-membership-modal .ant-modal-footer .ant-btn-primary {
+  background-color: #ff4d4f;
+  border-color: #ff4d4f;
+}
+
+.cancel-membership-modal
+  .ant-modal-footer
+  .ant-btn-primary:hover:not(:disabled) {
+  background-color: #ff7875;
+  border-color: #ff7875;
+}
+
+.cancel-membership-modal .ant-modal-footer .ant-btn-primary:disabled {
+  background-color: #ffccc7;
+  border-color: #ffccc7;
+  opacity: 0.6;
+  cursor: not-allowed;
+}
