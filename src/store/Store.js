@@ -34,6 +34,8 @@ import hierarchicalDataByLocationReducer from '../features/HierarchicalDataByLoc
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
 import bookmarkReducer from "../features/templete/BookmarkActions";
+import profileReducer from "../features/profiles/ProfileSlice";
+
 const store = configureStore({
   reducer: {
     auth: authReducer, // Authentication state
@@ -47,6 +49,7 @@ const store = configureStore({
     hierarchicalLookups: hierarchicalLookupsReducer,
     refresh: refreshReducer,
     contactType: contactTypeReducer,
+    profile: profileReducer,
     contact: contactReducer,
     menuLbl: menuLblReducer,
     // countries: countriesReducer,
