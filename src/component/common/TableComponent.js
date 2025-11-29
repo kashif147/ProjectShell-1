@@ -38,6 +38,7 @@ import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { set } from "react-hook-form";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 const EditableContext = React.createContext(null);
 
 
@@ -312,7 +313,8 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
               <Link
                 to="/Details"
                 state={{ search: screenName, name: record?.fullName, code: record?.regNo }}
-                onClick={() => getProfile([record], index)}
+                // onClick={() => getProfile([record], index)}
+                onClick={() => dispatch(getProfileDetailsById(record?._id))}
               >
                 <span style={{ textOverflow: "ellipsis" }}>{text}</span>
               </Link>

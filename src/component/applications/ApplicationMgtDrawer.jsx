@@ -2146,13 +2146,6 @@ function ApplicationMgtDrawer({
                   required
                   disabled={isDisable}
                   onChange={(e) => handleInputChange("professionalDetails", "grade", e.target.value)}
-                  // options={[
-                  //   { value: "junior", label: "Junior" },
-                  //   { value: "senior", label: "Senior" },
-                  //   { value: "lead", label: "Lead" },
-                  //   { value: "manager", label: "Manager" },
-                  //   { value: "other", label: "Other" },
-                  // ]}
                   options={gradeOptions}
                   hasError={!!errors?.grade}
                 />

@@ -35,6 +35,7 @@ import countriesReducer from "../features/CountriesSlice"; // Countries slice
 import batchReducer  from '../features/BatchesSlice'
 import bookmarkReducer from "../features/templete/BookmarkActions";
 import profileReducer from "../features/profiles/ProfileSlice";
+import profileDetailsReducer from "../features/profiles/ProfileDetailsSlice";
 
 const store = configureStore({
   reducer: {
@@ -57,6 +58,7 @@ const store = configureStore({
     applicationDetails: applicationDetailsReducer,
       hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
     tenants: tenantReducer,
+     profileDetails: profileDetailsReducer,
     users: userReducer,
     roles: roleReducer,
     permissions: permissionReducer,

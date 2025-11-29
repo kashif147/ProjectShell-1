@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useEffect, useState } from "react";
 import { Row, Col, Card, Checkbox, Radio } from "antd";
 import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
@@ -6,8 +6,107 @@ import CustomSelect from "../common/CustomSelect";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import utc from 'dayjs/plugin/utc';
+import timezone from 'dayjs/plugin/timezone';
+import dayjs from "dayjs";
+
+
 
 const MembershipForm = ({ isEditMode = false }) => {
+  const { profileDetails, loading, error } = useSelector((state) => state.profileDetails);
+  const {
+    titleOptions,
+    genderOptions,
+    workLocationOptions,
+    gradeOptions,
+    sectionOptions,
+    membershipCategoryOptions,
+    paymentTypeOptions,
+    branchOptions,
+    regionOptions,
+    secondarySectionOptions,
+    countryOptions
+  } = useSelector(state => state.lookups);
+  console.log(profileDetails, "trt")
+  dayjs.extend(utc);
+  dayjs.extend(timezone);
+
+  const convertUTCToLocalDate = (utcDateString) => {
+    if (!utcDateString) return null;
+
+    // Convert UTC to local timezone and format as dd/mm/yyyy
+    return dayjs.utc(utcDateString).local().format('DD/MM/YYYY');
+  };
+
+  useEffect(() => {
+    // ✅ Fix: Check if profileDetails exists (it's an object, not array)
+    if (profileDetails) {
+      setFormData(prevState => ({
+        ...prevState,
+        // Personal Info
+        title: profileDetails.personalInfo?.title || "",
+        surname: profileDetails.personalInfo?.surname || "",
+        forename: profileDetails.personalInfo?.forename || "",
+        gender: profileDetails.personalInfo?.gender || "",
+        dateOfBirth: convertUTCToLocalDate(profileDetails.personalInfo?.dateOfBirth),
+        countryPrimaryQualification: profileDetails.personalInfo?.countryPrimaryQualification || "",
+
+        // Contact Info
+        addressLine1: profileDetails.contactInfo?.buildingOrHouse || "",
+        addressLine2: profileDetails.contactInfo?.streetOrRoad || "",
+        townCity: profileDetails.contactInfo?.areaOrTown || "",
+        countyState: profileDetails.contactInfo?.countyCityOrPostCode || "",
+        eircode: profileDetails.contactInfo?.eircode || "",
+        country: profileDetails.contactInfo?.country || "",
+        preferredAddress: profileDetails.contactInfo?.preferredAddress === "home" ? "Home/Personal" : "Work",
+        mobileNumber: profileDetails.contactInfo?.mobileNumber || "",
+        telephoneNumber: profileDetails.contactInfo?.telephoneNumber || "",
+        preferredEmail: profileDetails.contactInfo?.preferredEmail === "work" ? "Work" : "Personal",
+        personalEmail: profileDetails.contactInfo?.personalEmail || "",
+        workEmail: profileDetails.contactInfo?.workEmail || "",
+
+        // Professional Details
+        studyLocation: profileDetails.professionalDetails?.studyLocation || "",
+        startDate: convertUTCToLocalDate(profileDetails.professionalDetails?.startDate),
+        graduationDate: convertUTCToLocalDate(profileDetails.professionalDetails?.graduationDate),
+        workLocation: profileDetails.professionalDetails?.workLocation || "",
+        otherWorkLocation: profileDetails.professionalDetails?.otherWorkLocation || "",
+        branch: profileDetails.professionalDetails?.branch || "",
+        region: profileDetails.professionalDetails?.region || "",
+        grade: profileDetails.professionalDetails?.grade || "",
+        otherGrade: profileDetails.professionalDetails?.otherGrade || "",
+        retiredDate: convertUTCToLocalDate(profileDetails.professionalDetails?.retiredDate),
+        pensionNumber: profileDetails.professionalDetails?.pensionNo || "",
+        nmbiNumber: profileDetails.professionalDetails?.nmbiNumber || "",
+        nursingProgramme: profileDetails.professionalDetails?.nursingAdaptationProgramme ? "Yes" : "No",
+        nursingSpecialization: profileDetails.professionalDetails?.nurseType || "",
+
+        // Membership Info
+        membershipNumber: profileDetails.membershipNumber || "",
+        joiningDate: convertUTCToLocalDate(profileDetails.firstJoinedDate),
+        expiryDate: convertUTCToLocalDate(profileDetails.deactivatedAt),
+        submissionDate: convertUTCToLocalDate(profileDetails.submissionDate),
+
+        // Preferences
+        consent: profileDetails.preferences?.consent ,
+
+        // Corn Market
+        joinINMOIncomeProtection: profileDetails.cornMarket?.incomeProtectionScheme ,
+        joinRewards: profileDetails.cornMarket?.inmoRewards ,
+        exclusiveDiscountsOffers: profileDetails.cornMarket?.exclusiveDiscountsAndOffers ,
+
+        // Additional Information
+        memberOfOtherUnion: profileDetails.additionalInformation?.otherIrishTradeUnion ,
+        otherUnionName: profileDetails.additionalInformation?.otherIrishTradeUnionName || "",
+        otherUnionScheme: profileDetails.additionalInformation?.otherScheme ? "Yes" : "No",
+
+        // Recruitment Details
+        recruitedBy: profileDetails.recruitmentDetails?.recuritedBy || "",
+        recruitedByMembershipNo: profileDetails.recruitmentDetails?.recuritedByMembershipNo || "",
+      }));
+    }
+  }, [profileDetails]);
   // Internal form state
   const [formData, setFormData] = useState({
     title: "",
@@ -67,7 +166,9 @@ const MembershipForm = ({ isEditMode = false }) => {
     secondarySection: "",
     otherSecondarySection: "",
     Reason: "",
+    exclusiveDiscountsAndOffers: false,
   });
+
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },
@@ -433,7 +534,8 @@ const MembershipForm = ({ isEditMode = false }) => {
               <CustomSelect
                 label="Work Location"
                 placeholder="Select Location..."
-                options={lookupData.workLocations}
+                // options={lookupData.workLocations}
+                options={workLocationOptions}
                 value={formData.workLocation}
                 onChange={(e) => handleChange("workLocation", e.target.value)}
                 disabled={!isEditMode}
@@ -452,7 +554,7 @@ const MembershipForm = ({ isEditMode = false }) => {
               <CustomSelect
                 label="Branch"
                 placeholder="Select Branch..."
-                options={lookupData.branches}
+                options={branchOptions}
                 value={formData.branch}
                 onChange={(e) => handleChange("branch", e.target.value)}
                 disabled={!isEditMode}
@@ -460,7 +562,7 @@ const MembershipForm = ({ isEditMode = false }) => {
               <CustomSelect
                 label="Region"
                 placeholder="Select Region..."
-                options={lookupData.regions}
+                options={regionOptions}
                 value={formData.region}
                 onChange={(e) => handleChange("region", e.target.value)}
                 disabled={!isEditMode}
@@ -468,7 +570,7 @@ const MembershipForm = ({ isEditMode = false }) => {
               <CustomSelect
                 label="Grade"
                 placeholder="Select Grade..."
-                options={lookupData.grades}
+                options={gradeOptions}
                 value={formData.grade}
                 onChange={(e) => handleChange("grade", e.target.value)}
                 disabled={!isEditMode}
@@ -591,13 +693,13 @@ const MembershipForm = ({ isEditMode = false }) => {
               <div style={{ marginBottom: "16px" }}>
                 <label className="my-input-label">Primary Nurse Type</label>
                 <Radio.Group
-                  value={formData.nursingSpecialization}
+                  value={formData.nurseType}
                   onChange={(e) =>
-                    handleChange("nursingSpecialization", e.target.value)
+                    handleChange("nurseType", e.target.value)
                   }
                   disabled={!isEditMode}
                 >
-                  <Radio value="general-nurse">General Nurse</Radio>
+                  <Radio value="generalNursing">General Nurse</Radio>
                   <Radio value="public-health-nurse">Public Health Nurse</Radio>
                   <Radio value="mental-health-nurse">Mental Health Nurse</Radio>
                 </Radio.Group>
@@ -630,14 +732,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="Select Primary Section"
                 value={formData.primarySection}
                 onChange={(e) => handleChange("primarySection", e.target.value)}
-                options={[
-                  { key: "section1", label: "Section 1" },
-                  { key: "section2", label: "Section 2" },
-                  { key: "section3", label: "Section 3" },
-                  { key: "section4", label: "Section 4" },
-                  { key: "section5", label: "Section 5" },
-                  { key: "other", label: "Other" },
-                ]}
+                 options={sectionOptions}
                 disabled={!isEditMode}
                 required={true}
               />
@@ -657,14 +752,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("secondarySection", e.target.value)
                 }
-                options={[
-                  { key: "section1", label: "Section 1" },
-                  { key: "section2", label: "Section 2" },
-                  { key: "section3", label: "Section 3" },
-                  { key: "section4", label: "Section 4" },
-                  { key: "section5", label: "Section 5" },
-                  { key: "other", label: "Other" },
-                ]}
+               options={secondarySectionOptions}
                 disabled={!isEditMode}
               />
               <MyInput
@@ -754,7 +842,11 @@ const MembershipForm = ({ isEditMode = false }) => {
               <CustomSelect
                 label="Payment Type"
                 placeholder="Select Payment Type"
-                options={lookupData.paymentTypes}
+                options={[
+                  { value: "Salary Deduction", label: "Salary Deduction" },
+                  { value: "Credit Card", label: "Credit Card" },
+                  // { value: "Direct Debit", label: "Direct Debit" },
+                ]}
                 value={formData.paymentType}
                 onChange={(e) => handleChange("paymentType", e.target.value)}
                 disabled={!isEditMode}
@@ -804,7 +896,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   INMO Consent
                 </h4>
                 <Checkbox
-                  checked={formData.consentCorrespondence}
+                  checked={formData.consent}
                   onChange={(e) =>
                     handleChange("consentCorrespondence", e.target.checked)
                   }
@@ -840,7 +932,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   Additional Service and Terms
                 </h4>
                 <Checkbox
-                  checked={formData.allowPartnerContact}
+                  checked={formData.exclusiveDiscountsAndOffers}
                   onChange={(e) =>
                     handleChange("allowPartnerContact", e.target.checked)
                   }
@@ -864,7 +956,6 @@ const MembershipForm = ({ isEditMode = false }) => {
                 }}
               ></div>
 
-              {/* Corn Market Section */}
               <div>
                 <h4
                   style={{
@@ -963,9 +1054,9 @@ const MembershipForm = ({ isEditMode = false }) => {
                   Are you a member of another Trade Union?
                 </label>
                 <Radio.Group
-                  value={formData.memberOfOtherUnion}
+                  value={formData.otherIrishTradeUnion}
                   onChange={(e) =>
-                    handleChange("memberOfOtherUnion", e.target.value)
+                    handleChange("otherIrishTradeUnion", e.target.value)
                   }
                   disabled={!isEditMode}
                 >

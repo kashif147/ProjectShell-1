@@ -22,6 +22,77 @@ const loginImage =
   "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D&auto=format&fit=crop&w=2070&q=80";
 
 const { Title, Text } = Typography;
+const textToArrayBuffer = (text) => new TextEncoder().encode(text);
+const base64ToUint8Array = (base64) =>
+  Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+
+async function deriveKeyFromSecret(secret) {
+  const secretBuffer = textToArrayBuffer(secret);
+
+  const hash = await crypto.subtle.digest("SHA-256", secretBuffer);
+  const salt = new Uint8Array(hash).slice(0, 64);
+
+  const keyMaterial = await crypto.subtle.importKey(
+    "raw",
+    secretBuffer,
+    "PBKDF2",
+    false,
+    ["deriveBits", "deriveKey"]
+  );
+
+  return await crypto.subtle.deriveKey(
+    {
+      name: "PBKDF2",
+      salt,
+      iterations: 100000,
+      hash: "SHA-256",
+    },
+    keyMaterial,
+    {
+      name: "AES-GCM",
+      length: 256,
+    },
+    false,
+    ["decrypt"]
+  );
+}
+async function decryptAES256GCM(encrypted, ivB64, authTagB64, key) {
+  const iv = base64ToUint8Array(ivB64);
+  const authTag = base64ToUint8Array(authTagB64);
+  const encryptedData = base64ToUint8Array(encrypted);
+
+  const combined = new Uint8Array(encryptedData.length + authTag.length);
+  combined.set(encryptedData);
+  combined.set(authTag, encryptedData.length);
+
+  const decrypted = await crypto.subtle.decrypt(
+    {
+      name: "AES-GCM",
+      iv,
+      tagLength: 128,
+    },
+    key,
+    combined
+  );
+
+  return new TextDecoder().decode(decrypted);
+}
+
+async function decryptTokenReact(encryptedToken, ) {
+  const jwtSecret = process.env.REACT_APP_JWT_SECRET
+  debugger
+  if (!encryptedToken) throw new Error("Encrypted token missing");
+  if (!jwtSecret) throw new Error("JWT_SECRET missing");
+
+  const parts = encryptedToken.split(":");
+  if (parts.length !== 3)
+    throw new Error("Invalid encrypted token format (must be iv:tag:data)");
+
+  const [ivBase64, authTagBase64, encrypted] = parts;
+  const key = await deriveKeyFromSecret(jwtSecret);
+
+  return await decryptAES256GCM(encrypted, ivBase64, authTagBase64, key);
+}
 
 const Login = () => {
   const dispatch = useDispatch();
@@ -156,10 +227,16 @@ const Login = () => {
 
       // Save tokens to localStorage if presents
       if (data && data.accessToken) {
-        let token = data.accessToken.replace(/^Bearer\s/, "");
-        localStorage.setItem("token", token);
-        let decode = decodeToken(token);
+        debugger
+        let token = data.accessToken;
+        const token1 = await decryptTokenReact(token)
+        localStorage.setItem("token", token1);
+        debugger
+        debugger
+        let decode = decodeToken(token1);
+        debugger
         localStorage.setItem("userData", JSON.stringify(decode));
+        debugger
 
         // Extract roles and permissions from the decoded JWT token
         const userRoles = decode.roles || [];
