@@ -4,7 +4,6 @@ import { notificationsMsg } from "../Data";
 import dayjs from "dayjs";
 import moment from "moment";
 import PolicyClient from "./node-policy-client";
-let token;
 export const baseURL = `${process.env.REACT_APP_POLICY_SERVICE_URL}`;
 
 export const insertDataFtn = async (
@@ -16,7 +15,7 @@ export const insertDataFtn = async (
   callback
 ) => {
   const token = localStorage.getItem("token");
-  debugger
+  debugger;
 
   try {
     const response = await axios.post(`${apiURL}${url}`, data, {
@@ -31,7 +30,7 @@ export const insertDataFtn = async (
     console.log("Response data:", response.data);
 
     // ✅ Accept any 2xx status as success
-    if (response.status === 200||response.status===201 ) {
+    if (response.status === 200 || response.status === 201) {
       MyAlert("success", successNotification);
       if (callback && typeof callback === "function") callback();
       return response.data;
@@ -39,7 +38,7 @@ export const insertDataFtn = async (
       MyAlert(
         "error",
         failureNotification,
-       response?.response?.data?.error?.message || "Unknown error"
+        response?.response?.data?.error?.message || "Unknown error"
       );
       return null;
     }
@@ -74,18 +73,24 @@ export const deleteFtn = async (url, callback) => {
       MyAlert("success", "You Have Successfully Deleted.");
       // ✅ Always call callback after success
       // if (callback && typeof callback === "function") {
-            if (callback && typeof callback === "function") {
+      if (callback && typeof callback === "function") {
         await callback();
       }
     }
 
     return response.data;
   } catch (error) {
-    console.error("Error deleting record:", error?.response?.data?.error?.message || error.message);
-    MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
+    console.error(
+      "Error deleting record:",
+      error?.response?.data?.error?.message || error.message
+    );
+    MyAlert(
+      "error",
+      "Please Try Again",
+      error?.response?.data?.error?.message || ""
+    );
   }
 };
-
 
 export function formatCurrency(amount) {
   if (amount === null || amount === undefined || isNaN(amount)) return "€0.00";
@@ -96,7 +101,7 @@ export function formatCurrency(amount) {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   }).format(amount);
-  
+
   // Replace any double euro signs with single euro sign
   return formatted.replace(/€€+/g, "€");
 }
@@ -105,9 +110,9 @@ export const updateFtn = async (
   endPoint,
   data1,
   callback,
-  msg = notificationsMsg?.updating?.sucess    
+  msg = notificationsMsg?.updating?.sucess
 ) => {
-  debugger
+  debugger;
   try {
     const token = localStorage.getItem("token");
     let finalEndPoint = endPoint;
@@ -125,22 +130,27 @@ export const updateFtn = async (
     });
     console.log("Update Response:", response);
     if (response?.status === 200) {
-
       MyAlert("success", msg);
       if (typeof callback === "function") {
         await callback(); // wait in case it's async
       }
       return response.data;
     } else {
-      MyAlert("error", notificationsMsg?.updating?.falier, response?.error?.message || "Unknown error");
-
+      MyAlert(
+        "error",
+        notificationsMsg?.updating?.falier,
+        response?.error?.message || "Unknown error"
+      );
     }
   } catch (error) {
     console.error("Error deleting region:", error);
-    return MyAlert("error", "Please Try Again", error?.response?.data?.error?.message || "");
+    return MyAlert(
+      "error",
+      "Please Try Again",
+      error?.response?.data?.error?.message || ""
+    );
   }
 };
-
 
 export const calculateAgeFtn = (input) => {
   const dob = dayjs(input); // Create Day.js object
@@ -208,13 +218,19 @@ export const cleanPayload = (obj) => {
         return acc;
       }, {});
 
-    if (cleanedObj.subscriptionDetails && cleanedObj.subscriptionDetails.submissionDate) {
+    if (
+      cleanedObj.subscriptionDetails &&
+      cleanedObj.subscriptionDetails.submissionDate
+    ) {
       delete cleanedObj.subscriptionDetails.submissionDate;
     }
-    if (cleanedObj.professionalDetails && cleanedObj.professionalDetails.startDate) {
+    if (
+      cleanedObj.professionalDetails &&
+      cleanedObj.professionalDetails.startDate
+    ) {
       delete cleanedObj.professionalDetails.startDate;
     }
-    
+
     return cleanedObj;
   }
   return obj;
@@ -315,7 +331,10 @@ export function generatePatch(original = {}, updated = {}, path = "") {
   return patches;
 }
 const policy = new PolicyClient(
-  process.env.REACT_APP_POLICY_SERVICE_URL || "http://localhost:3000",
+  process.env.REACT_APP_POLICY_SERVICE_URL ||
+    (process.env.NODE_ENV === "development"
+      ? "http://localhost:3000"
+      : "https://project-shell-crm.vercel.app"),
   {
     onTokenExpired: () => {
       // Redirect to login when token expires
@@ -326,13 +345,12 @@ const policy = new PolicyClient(
 
 export default policy;
 
-
 export const dateUtils = {
   prepareForAPI: (data) => {
     if (!data) return data;
-    
+
     const apiData = JSON.parse(JSON.stringify(data)); // Deep clone
-    
+
     const convertDateField = (obj, field) => {
       if (obj && obj[field] && dayjs.isDayjs(obj[field])) {
         obj[field] = obj[field].isValid() ? obj[field].toISOString() : null;
@@ -340,19 +358,19 @@ export const dateUtils = {
     };
 
     if (apiData.personalInfo) {
-      convertDateField(apiData.personalInfo, 'dateOfBirth');
+      convertDateField(apiData.personalInfo, "dateOfBirth");
     }
-    
+
     if (apiData.professionalDetails) {
       convertDateField(apiData.professionalDetails, 'retiredDate');
       convertDateField(apiData.professionalDetails, 'graduationDate');
       convertDateField(apiData.professionalDetails, 'startDate');
     }
-    
+
     if (apiData.subscriptionDetails) {
-      convertDateField(apiData.subscriptionDetails, 'dateJoined');
+      convertDateField(apiData.subscriptionDetails, "dateJoined");
     }
 
     return apiData;
-  }
+  },
 };

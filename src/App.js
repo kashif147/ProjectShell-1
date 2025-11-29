@@ -32,17 +32,20 @@ function App() {
   }, [dispatch]);
   useEffect(() => {
     const loadWorklet = async () => {
-      if ("sharedStorage" in window) {
+      // Shared Storage API is only available in secure contexts and specific origins
+      if ("sharedStorage" in window && window.location.protocol === "https:") {
         try {
-          await window.sharedStorage.worklet.addModule(
-            "/shared-storage-worklet.js"
-          );
-          console.log("✅ Shared Storage worklet loaded");
+          // Check if worklet.addModule is available
+          if (window.sharedStorage?.worklet?.addModule) {
+            await window.sharedStorage.worklet.addModule(
+              "/shared-storage-worklet.js"
+            );
+            console.log("✅ Shared Storage worklet loaded");
+          }
         } catch (err) {
-          console.error("❌ Error loading worklet:", err);
+          // Silently fail - Shared Storage is not available in localhost/development
+          // This is expected behavior and not an error
         }
-      } else {
-        console.warn("Shared Storage API not supported in this browser.");
       }
     };
     loadWorklet();

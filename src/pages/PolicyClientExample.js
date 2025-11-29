@@ -842,6 +842,10 @@ const PolicyClientExample = () => {
                   Add <code>http://localhost:3000</code> to allowed origins
                 </li>
                 <li>
+                  Add <code>https://project-shell-crm.vercel.app</code> to
+                  allowed origins
+                </li>
+                <li>
                   Allow <code>POST</code> method for policy evaluation
                 </li>
                 <li>

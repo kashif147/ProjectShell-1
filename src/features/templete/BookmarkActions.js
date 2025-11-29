@@ -2,19 +2,25 @@
 
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
-// import { baseURL } from "../utils/Utilities";
-const baseURL = `${process.env.REACT_APP_CUMM}`;
+
 // Fetch all bookmarks
 export const getBookmarks = createAsyncThunk(
   "bookmarks/getBookmarks",
   async (_, { rejectWithValue }) => {
-    debugger
     try {
         const token = localStorage.getItem("token");
-        const apiUrl = `${process.env.REACT_APP_CUMM}/bookmarks/fields`;
+        const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
+        
+        if (!bookmarkBaseUrl) {
+          // Silently return empty array if bookmark service is not configured
+          console.warn("REACT_APP_CUMM is not configured, bookmarks feature disabled");
+          return [];
+        }
+        
+        const apiUrl = `${bookmarkBaseUrl}/bookmarks/fields`;
         
         const response = await axios.get(
-            `${apiUrl}`,
+            apiUrl,
             {
                 headers: {
                     Authorization: `Bearer ${token}`,
@@ -22,10 +28,14 @@ export const getBookmarks = createAsyncThunk(
                 },
             }
         );
-        debugger
       console.log(response.data, "Bookmarks API Response");
       return response.data?.data?.fields;
     } catch (error) {
+      // Silently handle 404 errors - bookmark service may not be available
+      if (error.response?.status === 404) {
+        console.warn("Bookmark service not available");
+        return [];
+      }
       return rejectWithValue(
         error.response?.data?.message || "Failed to fetch bookmarks"
       );
@@ -39,10 +49,15 @@ export const createBookmark = createAsyncThunk(
   async (bookmarkData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const apiUrl = process.env.REACT_APP_CUMM_API_URL;
+      const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
+      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
+      
+      if (!bookmarkBaseUrl) {
+        return rejectWithValue("Bookmark service URL is not configured");
+      }
       
       const response = await axios.post(
-        `${baseURL}${apiUrl}`,
+        `${bookmarkBaseUrl}${apiUrl}`,
         bookmarkData,
         {
           headers: {
@@ -67,10 +82,15 @@ export const updateBookmark = createAsyncThunk(
   async ({ id, bookmarkData }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const apiUrl = process.env.REACT_APP_CUMM_API_URL;
+      const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
+      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
+      
+      if (!bookmarkBaseUrl) {
+        return rejectWithValue("Bookmark service URL is not configured");
+      }
       
       const response = await axios.put(
-        `${baseURL}${apiUrl}/${id}`,
+        `${bookmarkBaseUrl}${apiUrl}/${id}`,
         bookmarkData,
         {
           headers: {
@@ -95,10 +115,15 @@ export const deleteBookmark = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const apiUrl = process.env.REACT_APP_CUMM_API_URL;
+      const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
+      const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
+      
+      if (!bookmarkBaseUrl) {
+        return rejectWithValue("Bookmark service URL is not configured");
+      }
       
       await axios.delete(
-        `${baseURL}${apiUrl}/${id}`,
+        `${bookmarkBaseUrl}${apiUrl}/${id}`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

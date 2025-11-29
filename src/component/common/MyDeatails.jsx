@@ -3,7 +3,6 @@
 import { React, useEffect, useState } from "react";
 
 import {
-  Tabs,
   message,
   Button,
   Radio,
@@ -13,13 +12,11 @@ import {
   Space,
 } from "antd";
 import {
-  LoadingOutlined,
   UploadOutlined,
-  DownOutlined,
   UserOutlined,
 } from "@ant-design/icons";
 import MySelect from "../common/MySelect";
-import { Input, Row, Col, Checkbox, Dropdown, Upload } from "antd";
+import { Input, Row, Col, Checkbox, Upload } from "antd";
 import moment from "moment";
 import MyDrawer from "./MyDrawer";
 import { useLocation } from "react-router-dom";
@@ -27,7 +24,6 @@ import { getAllLookups } from "../../features/LookupsSlice";
 import { useSelector, useDispatch,shallowEqual } from 'react-redux'
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import "../../styles/MyDetails.css";
-import { BsThreeDots } from "react-icons/bs";
 import { IoSettingsOutline } from "react-icons/io5";
 import { useForm } from "react-hook-form";
 import MyDatePicker from "./MyDatePicker";
@@ -40,51 +36,16 @@ import { getPartners } from "../../features/PartnersSlice";
 import { getChildren } from "../../features/ChildrenSlice";
 import { baseURL } from "../../utils/Utilities";
 import axios from "axios";
-import { Resizable } from "react-resizable";
 const { TextArea } = Input;
-
-const CheckboxGroup = Checkbox.Group;
-const getBase64 = (img, callback) => {
-  const reader = new FileReader();
-  reader.addEventListener("load", () => callback(reader.result));
-  reader.readAsDataURL(img);
-};
-
-const plainOptions = ["Male", "Female", "Other"];
-const options = [
-  { label: "Male", value: "Male" },
-  { label: "Female", value: "Female" },
-  { label: "Other", value: "Other", title: "Other" },
-];
-const optionsWithDisabled = [
-  { label: "Male", value: "Male" },
-  { label: "Female", value: "Female" },
-  { label: "Other", value: "Other", disabled: true },
-];
-
-const beforeUpload = (file) => {
-  const isJpgOrPng = file.type === "image/jpeg" || file.type === "image/png";
-  if (!isJpgOrPng) {
-    message.error("You can only upload JPG/PNG file!");
-  }
-  const isLt2M = file.size / 1024 / 1024 < 2;
-  if (!isLt2M) {
-    message.error("Image must smaller than 2MB!");
-  }
-  return isJpgOrPng && isLt2M;
-};
 
 function MyDeatails() {
   const dispatch = useDispatch();
-  const { ProfileDetails,resetFtn, topSearchData, rowIndex, lookupsData, lookupsForSelect, selectLokups } = useTableColumns();
-  const { partner, partnerloading, error } = useSelector((state) => state.partner, shallowEqual);
-  const { children, childrenError, childrenLoading } = useSelector((state) => state.children, shallowEqual);
+  const { ProfileDetails, lookupsForSelect, selectLokups } = useTableColumns();
+  const { partner, partnerloading } = useSelector((state) => state.partner, shallowEqual);
+  const { children, childrenLoading } = useSelector((state) => state.children, shallowEqual);
 
   const {
     register,
-    handleSubmit,
-    watch,
-    formState: { errors },
   } = useForm();
   const [InfData, setInfData] = useState();
   const [InfDataPartner, setInfDataPartner] = useState({
@@ -201,12 +162,9 @@ function MyDeatails() {
     setChildrenError({});
   };
   const location = useLocation();
-  const profileData = location?.state;
-  const [activeTab, setActiveTab] = useState("1");
   const [isChecked, setIsChecked] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [imageUrl, setImageUrl] = useState("");
-  const [value, setValue] = useState(1);
+  const [setLoading] = useState(false);
+  const [setImageUrl] = useState("");
   const [isTransfer, setisTransfer] = useState(false);
   const [isRank, setisRank] = useState(false);
   const [isDuty, setisDuty] = useState(false);
@@ -265,41 +223,6 @@ function MyDeatails() {
     }
     setIsErrors((prev) => ({ ...prev, [eventOrName]: "" }));
   };
-  const handleInputChange = (name, value) => {
-    setTransferData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleInputChange1 = (name, value) => {
-    setRankData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleInputChange2 = (name, value) => {
-    setDutyData((prevState) => ({
-      ...prevState,
-      [name]: value,
-    }));
-  };
-
-  const handleChange = (info) => {
-    if (info.file.status === "uploading") {
-      setLoading(true);
-      return;
-    }
-    if (info.file.status === "done") {
-      setLoading(false);
-      setImageUrl(info.file.response.url);
-      message.success("Image uploaded successfully");
-    } else if (info.file.status === "error") {
-      setLoading(false);
-      message.error("Image upload failed.");
-    }
-  };
 
   useEffect(() => {
     if (!ProfileDetails?.length) return; // Exit early if ProfileDetails is empty
@@ -356,24 +279,6 @@ function MyDeatails() {
       setInfData({});
     };
   }, [location?.pathname]);
-  const [personalInfoChecked, setPersonalInfoChecked] = useState(false);
-
-  const [graInfoChecked, setGraInfoChecked] = useState(false);
-
-  const [membershipInfoChecked, setMembershipInfoChecked] = useState(false);
-
-  const handlePersonalInfoChange = (event) => {
-    setPersonalInfoChecked(event.target.checked);
-  };
-
-  const handleGraInfoChange = (event) => {
-    setGraInfoChecked(event.target.checked);
-  };
-
-  const handleMembershipInfoChange = (event) => {
-    setMembershipInfoChecked(event.target.checked);
-  };
-
   const options = [
     {
       label: "Male",
@@ -406,58 +311,14 @@ function MyDeatails() {
     },
   ];
 
-  const [value1, setValue1] = useState("Male");
-  const [value2, setValue2] = useState("Male");
-  const [value3, setValue3] = useState("Male");
   const [value4, setValue4] = useState("Male");
 
-  const onChange1 = ({ target: { value } }) => {
-
-    setValue1(value);
-  };
-  const onChange2 = ({ target: { value } }) => {
-    console.log("radio2 checked", value);
-    setValue2(value);
-  };
-  const onChange3 = ({ target: { value } }) => {
-    console.log("radio3 checked", value);
-    setValue3(value);
-  };
   const onChange4 = ({ target: { value } }) => {
     console.log("radio4 checked", value);
     setValue4(value);
   };
-
-  const onChange = (e) => {
-    console.log("radio checked", e.target.value);
-    setValue(e.target.value);
-  };
-  const inputsChangeFtn = () => { };
   const onCheckboxChange = (e) => {
     setIsChecked(e.target.checked);
-  };
-
-  const handleNext = () => {
-    setActiveTab("2"); // Switch to the second tab (Official Information)
-  };
-
-  const TransferOpenCloseFtn = () => setisTransfer(!isTransfer);
-  const RankOpenCloseFtn = () => setisRank(!isRank);
-  const DutyOpenCloseFtn = () => setisDuty(!isDuty);
-
-  const AddTransferFtn = () => {
-    // Lgenderogic for adding
-    console.log(TransferData);
-  };
-
-  const AddRankFtn = () => {
-    // Logic for adding gender
-    console.log(RankData);
-  };
-
-  const AddDutyFtn = () => {
-    // Logic for adding gender
-    console.log(DutyData);
   };
   function getNextBirthdayAge(birthDateStr) {
     // Parse the birth date in DD/MM/YYYY format using Moment.js
@@ -548,15 +409,6 @@ function MyDeatails() {
     const age = getNextBirthdayAge(InfData.dateOfBirth);
     setAgeOnNextBirthday((prevAge) => (prevAge !== age ? age : prevAge));
   }, [InfData?.dateOfBirth]);
-  const customRequest = ({ file, onSuccess, onError }) => {
-    setTimeout(() => {
-      if (file) {
-        onSuccess({ url: URL.createObjectURL(file) }, file);
-      } else {
-        onError(new Error("Upload failed."));
-      }
-    }, 1000);
-  };
   const childrencolumns = [
     {
       title: "Title",
@@ -708,7 +560,7 @@ function MyDeatails() {
       ),
     },
   ];
-  const [drawer, setdrawer] = useState(false);
+  const [drawer] = useState(false);
   const criticalIllnessSchemeClm = [
     {
       title: "Claim Type",
@@ -865,11 +717,6 @@ function MyDeatails() {
       ),
     },
   ];
-  const onSubmit = (data) => console.log(data);
-  const handleButtonClick = (e) => {
-    message.info("Click on left button.");
-    console.log("click left button", e);
-  };
   const handleMenuClick = (e) => {
     message.info("Click on menu item.");
     console.log("click", e);
@@ -899,10 +746,6 @@ function MyDeatails() {
       disabled: true,
     },
   ];
-  const menuProps = {
-    items,
-    onClick: handleMenuClick,
-  };
   const props = {
     action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
     onChange({ file, fileList }) {
@@ -962,7 +805,7 @@ function MyDeatails() {
                         isSimple={true}
                         options={lookupsForSelect?.Titles}
                       />
-                      <h1 className='error-text'></h1>
+                      <span className='error-text' aria-hidden="true"></span>
                     </div>
                   </div>
                 </div>
@@ -977,7 +820,7 @@ function MyDeatails() {
                         className='input'
                         value={InfData?.forename}
                       />
-                      <h1 className='error-text'></h1>
+                      <span className='error-text' aria-hidden="true"></span>
                     </div>
                   </div>
                 </div>
@@ -1474,12 +1317,10 @@ function MyDeatails() {
                         <Input
                           placeholder='Enter text'
                           style={{
-                            padding: "0px",
                             width: "100%",
                             borderRight: "1px solid #d9d9d9",
                             borderRadius: "4px 0 0 4px",
-                            padding: "0px",
-                            paddingLeft: "5px",
+                            padding: "0px 0px 0px 5px",
                             margin: "0px",
                             height: "33px",
                           }} // Adjust border style
@@ -1777,7 +1618,7 @@ function MyDeatails() {
                       options={lookupsForSelect?.Titles}
                     />
                     {submitted && iserrors.title && (
-                      <h1 className='error-text'>{iserrors.title}</h1>
+                      <span className='error-text' role="alert">{iserrors.title}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -1798,7 +1639,7 @@ function MyDeatails() {
                       onChange={handleInputPartnerChange}
                     />
                     {submitted && iserrors.forename && (
-                      <h1 className='error-text'>{iserrors.forename}</h1>
+                      <span className='error-text' role="alert">{iserrors.forename}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -1819,7 +1660,7 @@ function MyDeatails() {
                       onChange={handleInputPartnerChange}
                     />
                     {submitted && iserrors.surname && (
-                      <h1 className='error-text'>{iserrors.surname}</h1>
+                      <span className='error-text' role="alert">{iserrors.surname}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -1840,7 +1681,7 @@ function MyDeatails() {
                       onChange={handleInputPartnerChange}
                     />
                     {submitted && iserrors.maidenName && (
-                      <h1 className='error-text'>{iserrors.maidenName}</h1>
+                      <span className='error-text' role="alert">{iserrors.maidenName}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -1869,7 +1710,7 @@ function MyDeatails() {
                       format='DD/MM/YYYY'
                     />
                     {submitted && iserrors.dateOfBirth && (
-                      <h1 className='error-text'>{iserrors.dateOfBirth}</h1>
+                      <span className='error-text' role="alert">{iserrors.dateOfBirth}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -1898,7 +1739,7 @@ function MyDeatails() {
                       format='DD/MM/YYYY'
                     />
                     {submitted && iserrors.dateMarriage && (
-                      <h1 className='error-text'>{iserrors.dateMarriage}</h1>
+                      <span className='error-text' role="alert">{iserrors.dateMarriage}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -1993,7 +1834,7 @@ function MyDeatails() {
                       onChange={handleInputChangeChildren}
                     />
                     {childrenerror.title && (
-                      <h1 className='error-text'>{childrenerror.title}</h1>
+                      <span className='error-text' role="alert">{childrenerror.title}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -2014,7 +1855,7 @@ function MyDeatails() {
                       onChange={handleInputChangeChildren}
                     />
                     {childrenerror.forename && (
-                      <h1 className='error-text'>{childrenerror.forename}</h1>
+                      <span className='error-text' role="alert">{childrenerror.forename}</span>
                     )}
                   </div>
                   <p className='error'></p>
@@ -2035,7 +1876,7 @@ function MyDeatails() {
                       onChange={handleInputChangeChildren}
                     />
                     {childrenerror.surname && (
-                      <h1 className='error-text'>{childrenerror.surname}</h1>
+                      <span className='error-text' role="alert">{childrenerror.surname}</span>
                     )}
                   </div>
                   <p className='error'></p>

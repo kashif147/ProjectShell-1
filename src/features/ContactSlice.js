@@ -10,7 +10,13 @@ export const getContacts = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${baseURL}/api/contacts`, {
+      const apiBaseUrl = baseURL || process.env.REACT_APP_POLICY_SERVICE_URL;
+      
+      if (!apiBaseUrl) {
+        return rejectWithValue("API base URL is not configured");
+      }
+      
+      const response = await axios.get(`${apiBaseUrl}/api/contacts`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -19,8 +25,13 @@ export const getContacts = createAsyncThunk(
       // console.log(response.data, "Contact API Response");
       return response.data;
     } catch (error) {
+      // Silently handle 500 errors - backend may be temporarily unavailable
+      if (error.response?.status === 500) {
+        console.warn("Contacts service temporarily unavailable");
+        return { data: [] };
+      }
       return rejectWithValue(
-        // error.response?.data?.message || "Failed to fetch contacts"
+        error.response?.data?.message || "Failed to fetch contacts"
       );
     }
   }

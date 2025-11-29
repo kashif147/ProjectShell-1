@@ -17,7 +17,10 @@ const PolicyExample = () => {
   // Create policy client instance
   const policyClient = usePolicyClient(
     PolicyClient,
-    process.env.REACT_APP_POLICY_SERVICE_URL || "http://localhost:3000",
+    process.env.REACT_APP_POLICY_SERVICE_URL ||
+      (process.env.NODE_ENV === "development"
+        ? "http://localhost:3000"
+        : "https://project-shell-crm.vercel.app"),
     {
       timeout: 5000,
       retries: 3,

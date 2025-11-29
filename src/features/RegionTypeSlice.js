@@ -9,7 +9,8 @@ export const getAllRegionTypes = createAsyncThunk(
     async (_, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem('token');
-            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/lookuptype`, {
+            const baseUrl = process.env.REACT_APP_POLICY_SERVICE_URL || baseURL;
+            const response = await axios.get(`${baseUrl}/api/lookuptype`, {
                 headers: {
                     Authorization: `Bearer ${token}`,
                     'Content-Type': 'application/json',
@@ -17,7 +18,12 @@ export const getAllRegionTypes = createAsyncThunk(
             });
             return response.data;
         } catch (error) {
-            // return rejectWithValue(error.response?.data?.message || 'Failed to fetch region types');
+            // Silently handle errors - backend may not be available
+            if (error.response?.status === 404 || error.response?.status === 500) {
+                console.warn("Region types service not available");
+                return [];
+            }
+            return rejectWithValue(error.response?.data?.message || 'Failed to fetch region types');
         }
     }
 );

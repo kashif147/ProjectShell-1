@@ -42,7 +42,7 @@ import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSli
 const EditableContext = React.createContext(null);
 
 
-const DraggableHeaderCell = ({ id, style, ...props }) => {
+const DraggableHeaderCell = ({ id, style, children, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
   const customStyle = {
     cursor: "move",
@@ -57,15 +57,18 @@ const DraggableHeaderCell = ({ id, style, ...props }) => {
       }
       : {}),
   };
+  // Return content only, not th element (Ant Design Table will wrap it in th)
   return (
-    <th
+    <div
       className="custom-header"
       ref={setNodeRef}
       style={customStyle}
       {...attributes}
       {...listeners}
       {...props}
-    />
+    >
+      {children}
+    </div>
   );
 };
 
@@ -632,6 +635,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           }}
         >
           <Table
+            rowKey={(record, index) => record.key || record.id || index}
             rowClassName={() => ""}
             loading={isGrideLoading}
             components={components}
