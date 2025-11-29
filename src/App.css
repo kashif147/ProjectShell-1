@@ -191,6 +191,16 @@ select:disabled {
   /* Optional: Change the checkmark color */
 }
 
+.consent-checkbox-indeterminate .ant-checkbox-inner {
+  background-color: rgba(201, 122, 47, 0.3) !important;
+  border-color: var(--secoundry-color) !important;
+}
+
+.consent-checkbox-indeterminate .ant-checkbox-inner::after {
+  border-color: var(--secoundry-color) !important;
+  background-color: var(--secoundry-color) !important;
+}
+
 .ant-table-cell-fix-left {
   background-color: white;
   /* Ensures fixed column has background */

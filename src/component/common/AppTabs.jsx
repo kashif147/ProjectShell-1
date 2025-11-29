@@ -35,12 +35,13 @@ function AppTabs() {
   const [isReminder, setIsReminder] = useState(false);
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
+  const [isDeceased, setIsDeceased] = useState(false);
 
   const allItems = [
     {
       key: "1",
       label: "Membership",
-      children: <MyDeatails isEditMode={isEditMode} setIsEditMode={setIsEditMode} />,
+      children: <MyDeatails isEditMode={isEditMode} setIsEditMode={setIsEditMode} isDeceased={isDeceased} setIsDeceased={setIsDeceased} />,
     },
     { key: "2", label: "Finance", children: <FinanceByID /> },
     { key: "4", label: "Documents", children: <DoucmentsById /> },
@@ -215,6 +216,7 @@ function AppTabs() {
         isEditMode={isEditMode} 
         setIsEditMode={setIsEditMode} 
         showButtons={activeKey === "1"}
+        isDeceased={isDeceased}
       />
       <Tabs
         activeKey={activeKey}

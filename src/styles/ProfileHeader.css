@@ -26,6 +26,11 @@
   flex-shrink: 0;
 }
 
+/* Grayed out state for deceased members */
+.member-header-top.member-deceased {
+  background: linear-gradient(135deg, #616161 0%, #424242 100%);
+}
+
 .member-edit-btn {
   position: absolute;
   top: 16px;
@@ -98,6 +103,11 @@
   font-size: 12px;
   font-weight: 500;
   display: inline-block;
+}
+
+.member-status-badge.member-status-deceased {
+  background-color: #ffd591;
+  color: #ad6800;
 }
 
 /* Contact Information Section - on blue background */
@@ -280,6 +290,11 @@
   background: linear-gradient(135deg, #4a90e2 0%, #357abd 100%);
   padding: 10px 12px;
   flex-shrink: 0;
+}
+
+/* Grayed out state for deceased members - grade section */
+.member-grade-section-blue.member-deceased {
+  background: linear-gradient(135deg, #616161 0%, #424242 100%);
 }
 
 .grade-row-blue {

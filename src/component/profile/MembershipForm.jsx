@@ -1,23 +1,34 @@
-import { useEffect, useState } from "react";
-import { Row, Col, Card, Checkbox, Radio } from "antd";
+import React, { useState, useEffect } from "react";
+import { Row, Col, Card, Checkbox, Radio, Dropdown } from "antd";
 import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
+import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSelector, useDispatch } from "react-redux";
-import { getProfileDetailsById, clearProfileDetails } from "../../features/profiles/ProfileDetailsSlice";
-import utc from 'dayjs/plugin/utc';
-import timezone from 'dayjs/plugin/timezone';
+import {
+  getProfileDetailsById,
+  clearProfileDetails,
+} from "../../features/profiles/ProfileDetailsSlice";
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
-import { searchProfiles, clearResults } from "../../features/profiles/SearchProfile";
+import {
+  searchProfiles,
+  clearResults,
+} from "../../features/profiles/SearchProfile";
 
-
-const MembershipForm = ({ isEditMode = false }) => {
-  const { profileDetails, loading, error } = useSelector((state) => state.profileDetails);
+const MembershipForm = ({
+  isEditMode = false,
+  isDeceased: propIsDeceased = false,
+  setIsDeceased,
+}) => {
+  const { profileDetails, loading, error } = useSelector(
+    (state) => state.profileDetails
+  );
   // const { profileSearchData } = useSelector((state) => state.profile);
-  const { profileSearchData } = useSelector(
-    (state) => state.searchProfile)
+  const { profileSearchData } = useSelector((state) => state.searchProfile);
 
   const dispatch = useDispatch();
   const {
@@ -31,9 +42,9 @@ const MembershipForm = ({ isEditMode = false }) => {
     branchOptions,
     regionOptions,
     secondarySectionOptions,
-    countryOptions
-  } = useSelector(state => state.lookups);
-  console.log(profileSearchData, "trt")
+    countryOptions,
+  } = useSelector((state) => state.lookups);
+  console.log(profileSearchData, "trt");
   dayjs.extend(utc);
   dayjs.extend(timezone);
 
@@ -55,12 +66,10 @@ const MembershipForm = ({ isEditMode = false }) => {
     return dayjs.utc(utcDateString).local();
   };
 
-
   useEffect(() => {
-
     // Choose source dynamically
     const source = profileDetails || profileSearchData.results?.[0];
-    debugger
+    debugger;
     if (!source) return;
 
     setFormData((prev) => ({
@@ -72,7 +81,8 @@ const MembershipForm = ({ isEditMode = false }) => {
       forename: source.personalInfo?.forename || "",
       gender: source.personalInfo?.gender || "",
       dateOfBirth: convertUTCToLocalDate(source.personalInfo?.dateOfBirth),
-      countryPrimaryQualification: source.personalInfo?.countryPrimaryQualification || "",
+      countryPrimaryQualification:
+        source.personalInfo?.countryPrimaryQualification || "",
 
       // Contact Info
       addressLine1: source.contactInfo?.buildingOrHouse || "",
@@ -95,17 +105,23 @@ const MembershipForm = ({ isEditMode = false }) => {
       // Professional Details
       studyLocation: source.professionalDetails?.studyLocation || "",
       startDate: convertUTCToLocalDate(source.professionalDetails?.startDate),
-      graduationDate: convertUTCToLocalDate(source.professionalDetails?.graduationDate),
+      graduationDate: convertUTCToLocalDate(
+        source.professionalDetails?.graduationDate
+      ),
       workLocation: source.professionalDetails?.workLocation || "",
       otherWorkLocation: source.professionalDetails?.otherWorkLocation || "",
       branch: source.professionalDetails?.branch || "",
       region: source.professionalDetails?.region || "",
       grade: source.professionalDetails?.grade || "",
       otherGrade: source.professionalDetails?.otherGrade || "",
-      retiredDate: convertUTCToLocalDate(source.professionalDetails?.retiredDate),
+      retiredDate: convertUTCToLocalDate(
+        source.professionalDetails?.retiredDate
+      ),
       pensionNumber: source.professionalDetails?.pensionNo || "",
       nmbiNumber: source.professionalDetails?.nmbiNumber || "",
-      nursingProgramme: source.professionalDetails?.nursingAdaptationProgramme ? "Yes" : "No",
+      nursingProgramme: source.professionalDetails?.nursingAdaptationProgramme
+        ? "Yes"
+        : "No",
       nursingSpecialization: source.professionalDetails?.nurseType || "",
 
       // Membership Info
@@ -124,14 +140,17 @@ const MembershipForm = ({ isEditMode = false }) => {
 
       // Additional Information
       memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion,
-      otherUnionName: source.additionalInformation?.otherIrishTradeUnionName || "",
-      otherUnionScheme: source.additionalInformation?.otherScheme ? "Yes" : "No",
+      otherUnionName:
+        source.additionalInformation?.otherIrishTradeUnionName || "",
+      otherUnionScheme: source.additionalInformation?.otherScheme
+        ? "Yes"
+        : "No",
 
       // Recruitment Details
       recruitedBy: source.recruitmentDetails?.recuritedBy || "",
-      recruitedByMembershipNo: source.recruitmentDetails?.recuritedByMembershipNo || "",
+      recruitedByMembershipNo:
+        source.recruitmentDetails?.recuritedByMembershipNo || "",
     }));
-
   }, [profileDetails, profileSearchData]);
 
   // Internal form state
@@ -142,14 +161,20 @@ const MembershipForm = ({ isEditMode = false }) => {
     gender: "",
     dateOfBirth: null,
     countryPrimaryQualification: "",
+    searchAddress: "",
     addressLine1: "",
     addressLine2: "",
+    nata: false,
     townCity: "",
     countyState: "",
     eircode: "",
     country: "",
     preferredAddress: "Home/Personal",
     consentCorrespondence: false,
+    consentSMS: false,
+    consentEmail: false,
+    consentPost: false,
+    consentApp: false,
     mobileNumber: "",
     telephoneNumber: "",
     preferredEmail: "Personal",
@@ -158,6 +183,7 @@ const MembershipForm = ({ isEditMode = false }) => {
     studyLocation: "",
     startDate: null,
     graduationDate: null,
+    discipline: "",
     workLocation: "",
     otherWorkLocation: "",
     branch: "",
@@ -171,8 +197,16 @@ const MembershipForm = ({ isEditMode = false }) => {
     membershipCategory: "",
     joiningDate: null,
     expiryDate: null,
+    renewalDate: null,
+    firstReminderDate: null,
+    secondReminderDate: null,
+    thirdReminderDate: null,
     paymentType: "",
     payrollNumber: "",
+    isDeceased: propIsDeceased || false,
+    dateDeceased: null,
+    dateCancelled: null,
+    cancellationReason: "",
     consent: false,
     nursingProgramme: "No",
     nmbiNumber: "",
@@ -218,6 +252,15 @@ const MembershipForm = ({ isEditMode = false }) => {
       { key: "local", label: "Local" },
       { key: "abroad", label: "Abroad" },
     ],
+    disciplines: [
+      { key: "nursing", label: "Nursing" },
+      { key: "medicine", label: "Medicine" },
+      { key: "pharmacy", label: "Pharmacy" },
+      { key: "physiotherapy", label: "Physiotherapy" },
+      { key: "occupational-therapy", label: "Occupational Therapy" },
+      { key: "radiography", label: "Radiography" },
+      { key: "other", label: "Other" },
+    ],
     workLocations: [
       { key: "hq", label: "HQ" },
       { key: "branch1", label: "Branch1" },
@@ -259,7 +302,104 @@ const MembershipForm = ({ isEditMode = false }) => {
   };
 
   const handleChange = (field, value) => {
-    setFormData({ ...formData, [field]: value });
+    const updatedData = { ...formData, [field]: value };
+    // Uncheck NATA if addressLine1 is changed
+    if (field === "addressLine1" && formData.nata) {
+      updatedData.nata = false;
+    }
+    // Auto-check SMS, Email, Post, and App when consentCorrespondence is checked
+    if (field === "consentCorrespondence" && value === true) {
+      updatedData.consentSMS = true;
+      updatedData.consentEmail = true;
+      updatedData.consentPost = true;
+      updatedData.consentApp = true;
+    }
+    // Auto-uncheck SMS, Email, Post, and App when consentCorrespondence is unchecked
+    if (field === "consentCorrespondence" && value === false) {
+      updatedData.consentSMS = false;
+      updatedData.consentEmail = false;
+      updatedData.consentPost = false;
+      updatedData.consentApp = false;
+    }
+    // Update consentCorrespondence based on individual checkboxes
+    if (
+      ["consentSMS", "consentEmail", "consentPost", "consentApp"].includes(
+        field
+      )
+    ) {
+      const allChecked =
+        (field === "consentSMS" ? value : updatedData.consentSMS) &&
+        (field === "consentEmail" ? value : updatedData.consentEmail) &&
+        (field === "consentPost" ? value : updatedData.consentPost) &&
+        (field === "consentApp" ? value : updatedData.consentApp);
+      const anyChecked =
+        (field === "consentSMS" ? value : updatedData.consentSMS) ||
+        (field === "consentEmail" ? value : updatedData.consentEmail) ||
+        (field === "consentPost" ? value : updatedData.consentPost) ||
+        (field === "consentApp" ? value : updatedData.consentApp);
+
+      // If all are checked, set consentCorrespondence to true
+      // If none are checked, set consentCorrespondence to false
+      // If some are checked (indeterminate), keep consentCorrespondence as false but we'll handle indeterminate state in render
+      if (allChecked) {
+        updatedData.consentCorrespondence = true;
+      } else if (!anyChecked) {
+        updatedData.consentCorrespondence = false;
+      }
+    }
+    // Handle marking member as deceased
+    if (field === "isDeceased" && value === true) {
+      updatedData.membershipStatus = "inactive";
+      updatedData.dateCancelled = new Date();
+      updatedData.cancellationReason = "Deceased";
+      // Update parent component
+      if (setIsDeceased) setIsDeceased(true);
+    }
+    // If unmarking as deceased, allow editing again and reset status
+    if (field === "isDeceased" && value === false) {
+      updatedData.membershipStatus = "";
+      updatedData.dateCancelled = null;
+      updatedData.cancellationReason = "";
+      // Update parent component
+      if (setIsDeceased) setIsDeceased(false);
+    }
+    setFormData(updatedData);
+  };
+
+  // Sync isDeceased prop with formData and apply deceased logic
+  useEffect(() => {
+    if (
+      propIsDeceased !== undefined &&
+      propIsDeceased !== formData.isDeceased
+    ) {
+      const updatedData = { ...formData, isDeceased: propIsDeceased };
+      // Apply deceased logic when marking as deceased
+      if (propIsDeceased === true) {
+        updatedData.membershipStatus = "inactive";
+        updatedData.dateCancelled = new Date();
+        updatedData.cancellationReason = "Deceased";
+      } else {
+        // Reset when unmarking
+        updatedData.membershipStatus = "";
+        updatedData.dateCancelled = null;
+        updatedData.cancellationReason = "";
+      }
+      setFormData(updatedData);
+    }
+  }, [propIsDeceased]);
+
+  // Check if form should be read-only (either not in edit mode or member is deceased)
+  const isFormReadOnly = !isEditMode || formData.isDeceased;
+
+  // Calculate indeterminate state for main checkbox
+  const isIndeterminate = () => {
+    const checkedCount = [
+      formData.consentSMS,
+      formData.consentEmail,
+      formData.consentPost,
+      formData.consentApp,
+    ].filter(Boolean).length;
+    return checkedCount > 0 && checkedCount < 4;
   };
 
   const handleSaveDraft = () => {
@@ -293,9 +433,26 @@ const MembershipForm = ({ isEditMode = false }) => {
         position: "relative",
         scrollBehavior: "smooth",
         paddingRight: "12px",
-        paddingBottom: isEditMode ? "250px" : "150px",
+        paddingBottom: isEditMode ? "300px" : "200px",
       }}
     >
+      {formData.isDeceased && (
+        <div
+          style={{
+            backgroundColor: "#fff7e6",
+            border: "1px solid #ffd591",
+            borderRadius: "4px",
+            padding: "12px 16px",
+            marginBottom: "16px",
+            color: "#ad6800",
+            fontSize: "14px",
+            fontWeight: 500,
+          }}
+        >
+          ⚠️ Member is marked as deceased. Profile is read-only and subscription
+          has been cancelled.
+        </div>
+      )}
       <Row gutter={[24, 24]}>
         {/* Column 1: Personal Information */}
         <Col span={8}>
@@ -303,31 +460,68 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Personal Information Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
               bodyStyle={{ padding: "16px" }}
             >
-              <h3
+              <div
                 style={{
-                  fontSize: "16px",
-                  fontWeight: 600,
+                  display: "flex",
+                  justifyContent: "space-between",
+                  alignItems: "center",
                   marginBottom: "16px",
                   paddingBottom: "12px",
                   borderBottom: "1px solid #e8e8e8",
-                  color: "#1a1a1a",
                 }}
               >
-                Personal Information
-              </h3>
+                <h3
+                  style={{
+                    fontSize: "16px",
+                    fontWeight: 600,
+                    margin: 0,
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Personal Information
+                </h3>
+                <Dropdown
+                  menu={{
+                    items: [
+                      {
+                        key: "markDeceased",
+                        label: propIsDeceased
+                          ? "Unmark as Deceased"
+                          : "Mark as Deceased",
+                        onClick: () => {
+                          if (setIsDeceased) {
+                            setIsDeceased(!propIsDeceased);
+                          }
+                        },
+                      },
+                    ],
+                  }}
+                  trigger={["click"]}
+                  placement="bottomRight"
+                >
+                  <BsThreeDotsVertical
+                    style={{
+                      cursor: "pointer",
+                      fontSize: "20px",
+                      color: "#1a1a1a",
+                      padding: "4px",
+                    }}
+                  />
+                </Dropdown>
+              </div>
               <CustomSelect
                 label="Title"
                 placeholder="Select a title"
                 options={lookupData.titles}
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
@@ -335,7 +529,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="Enter your forename(s)"
                 value={formData.forename}
                 onChange={(e) => handleChange("forename", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
@@ -343,7 +537,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="Enter your surname"
                 value={formData.surname}
                 onChange={(e) => handleChange("surname", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyDatePicker
@@ -351,7 +545,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="mm/dd/yyyy"
                 value={formData.dateOfBirth}
                 onChange={(date) => handleChange("dateOfBirth", date)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <CustomSelect
@@ -360,7 +554,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={lookupData.genders}
                 value={formData.gender}
                 onChange={(e) => handleChange("gender", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <CustomSelect
@@ -371,7 +565,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("countryPrimaryQualification", e.target.value)
                 }
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
             </Card>
@@ -379,7 +573,7 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Correspondence Details Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -406,7 +600,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   onChange={(e) =>
                     handleChange("preferredAddress", e.target.value)
                   }
-                  disabled={!isEditMode}
+                  disabled={isFormReadOnly}
                 >
                   <Radio value="Home/Personal">Home/Personal</Radio>
                   <Radio value="Work">Work</Radio>
@@ -415,42 +609,51 @@ const MembershipForm = ({ isEditMode = false }) => {
               <MyInput
                 label="Search for your address"
                 placeholder="Search address"
-                value={formData.addressLine1}
-                onChange={(e) => handleChange("addressLine1", e.target.value)}
-                disabled={!isEditMode}
+                value={formData.searchAddress}
+                onChange={(e) => handleChange("searchAddress", e.target.value)}
+                disabled={isFormReadOnly}
               />
               <MyInput
                 label="Address Line 1"
                 value={formData.addressLine1}
                 onChange={(e) => handleChange("addressLine1", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
+                extra={
+                  <Checkbox
+                    checked={formData.nata}
+                    onChange={(e) => handleChange("nata", e.target.checked)}
+                    disabled={isFormReadOnly}
+                  >
+                    NATA
+                  </Checkbox>
+                }
               />
               <MyInput
                 label="Address Line 2"
                 value={formData.addressLine2}
                 onChange={(e) => handleChange("addressLine2", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <MyInput
                 label="Town/City"
                 value={formData.townCity}
                 onChange={(e) => handleChange("townCity", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
                 label="County/State"
                 value={formData.countyState}
                 onChange={(e) => handleChange("countyState", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <MyInput
                 label="Eircode/Postcode"
                 placeholder="Enter Eircode"
                 value={formData.eircode}
                 onChange={(e) => handleChange("eircode", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <CustomSelect
                 label="Country"
@@ -458,7 +661,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={lookupData.countries}
                 value={formData.country}
                 onChange={(e) => handleChange("country", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
             </Card>
@@ -466,7 +669,7 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Contact Details Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -488,7 +691,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 label="Mobile Number"
                 value={formData.mobileNumber}
                 onChange={(e) => handleChange("mobileNumber", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
@@ -498,7 +701,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("telephoneNumber", e.target.value)
                 }
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <div style={{ marginBottom: "16px" }}>
                 <label className="my-input-label">
@@ -509,7 +712,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   onChange={(e) =>
                     handleChange("preferredEmail", e.target.value)
                   }
-                  disabled={!isEditMode}
+                  disabled={isFormReadOnly}
                 >
                   <Radio value="Personal">Personal</Radio>
                   <Radio value="Work">Work</Radio>
@@ -519,7 +722,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 label="Personal Email"
                 value={formData.personalEmail}
                 onChange={(e) => handleChange("personalEmail", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={formData.preferredEmail === "Personal"}
               />
               <MyInput
@@ -527,9 +730,147 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="Optional"
                 value={formData.workEmail}
                 onChange={(e) => handleChange("workEmail", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={formData.preferredEmail === "Work"}
               />
+            </Card>
+
+            {/* Third Party Consent Card */}
+            <Card
+              style={{
+                marginBottom: "80px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Consent Management
+              </h3>
+
+              {/* INMO Consent Section */}
+              <div style={{ marginBottom: "24px" }}>
+                <h4
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    marginBottom: "12px",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  INMO Consent
+                </h4>
+                <Checkbox
+                  checked={formData.consentCorrespondence}
+                  indeterminate={isIndeterminate()}
+                  onChange={(e) =>
+                    handleChange("consentCorrespondence", e.target.checked)
+                  }
+                  className={
+                    isIndeterminate() ? "consent-checkbox-indeterminate" : ""
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    marginBottom: "12px",
+                  }}
+                  disabled={isFormReadOnly}
+                >
+                  I consent to receive correspondence from INMO
+                </Checkbox>
+                <div
+                  style={{
+                    marginLeft: "24px",
+                    display: "flex",
+                    flexDirection: "row",
+                    gap: "16px",
+                    alignItems: "center",
+                  }}
+                >
+                  <Checkbox
+                    checked={formData.consentSMS}
+                    onChange={(e) =>
+                      handleChange("consentSMS", e.target.checked)
+                    }
+                    disabled={isFormReadOnly}
+                  >
+                    SMS
+                  </Checkbox>
+                  <Checkbox
+                    checked={formData.consentEmail}
+                    onChange={(e) =>
+                      handleChange("consentEmail", e.target.checked)
+                    }
+                    disabled={isFormReadOnly}
+                  >
+                    Email
+                  </Checkbox>
+                  <Checkbox
+                    checked={formData.consentPost}
+                    onChange={(e) =>
+                      handleChange("consentPost", e.target.checked)
+                    }
+                    disabled={isFormReadOnly}
+                  >
+                    Post
+                  </Checkbox>
+                  <Checkbox
+                    checked={formData.consentApp}
+                    onChange={(e) =>
+                      handleChange("consentApp", e.target.checked)
+                    }
+                    disabled={isFormReadOnly}
+                  >
+                    App
+                  </Checkbox>
+                </div>
+              </div>
+
+              {/* Line Separator */}
+              <div
+                style={{
+                  borderTop: "1px solid #e8e8e8",
+                  marginTop: "24px",
+                  marginBottom: "24px",
+                }}
+              ></div>
+
+              {/* Additional Service and Terms Section */}
+              <div>
+                <h4
+                  style={{
+                    fontSize: "14px",
+                    fontWeight: 600,
+                    marginBottom: "12px",
+                    color: "#1a1a1a",
+                  }}
+                >
+                  Additional Service and Terms
+                </h4>
+                <Checkbox
+                  checked={formData.allowPartnerContact}
+                  onChange={(e) =>
+                    handleChange("allowPartnerContact", e.target.checked)
+                  }
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                  }}
+                  disabled={isFormReadOnly}
+                >
+                  I consent to being contacted by INMO partners about exclusive
+                  member offers.
+                </Checkbox>
+              </div>
             </Card>
           </div>
         </Col>
@@ -540,7 +881,7 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Employment Details Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -566,13 +907,13 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={workLocationOptions}
                 value={formData.workLocation}
                 onChange={(e) => handleChange("workLocation", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
                 label="Other Work Location"
                 placeholder="Enabled if 'Other' is selected"
-                disabled={!isEditMode || formData.workLocation !== "Other"}
+                disabled={isFormReadOnly || formData.workLocation !== "Other"}
                 value={formData.otherWorkLocation}
                 onChange={(e) =>
                   handleChange("otherWorkLocation", e.target.value)
@@ -585,7 +926,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={branchOptions}
                 value={formData.branch}
                 onChange={(e) => handleChange("branch", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <CustomSelect
                 label="Region"
@@ -593,7 +934,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={regionOptions}
                 value={formData.region}
                 onChange={(e) => handleChange("region", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <CustomSelect
                 label="Grade"
@@ -601,13 +942,13 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={gradeOptions}
                 value={formData.grade}
                 onChange={(e) => handleChange("grade", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
                 label="Other Grade"
                 placeholder="Enabled if 'Other' is selected"
-                disabled={!isEditMode || formData.grade !== "Other"}
+                disabled={isFormReadOnly || formData.grade !== "Other"}
                 value={formData.otherGrade}
                 onChange={(e) => handleChange("otherGrade", e.target.value)}
                 required={formData.grade === "Other"}
@@ -617,7 +958,7 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Educational Details Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -641,44 +982,36 @@ const MembershipForm = ({ isEditMode = false }) => {
                 options={lookupData.studyLocations}
                 value={formData.studyLocation}
                 onChange={(e) => handleChange("studyLocation", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <MyDatePicker
                 label="Start Date"
-                placeholder="Select start date"
+                placeholder="Select start date (Optional)"
                 value={formData.startDate}
                 onChange={(date) => handleChange("startDate", date)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <MyDatePicker
                 label="Graduation Date"
                 placeholder="Select graduation date"
                 value={formData.graduationDate}
                 onChange={(date) => handleChange("graduationDate", date)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <CustomSelect
-                label="Branch"
-                placeholder="Select Branch..."
-                options={lookupData.branches}
-                value={formData.branch}
-                onChange={(e) => handleChange("branch", e.target.value)}
-                disabled={!isEditMode}
-              />
-              <CustomSelect
-                label="Region"
-                placeholder="Select Region..."
-                options={lookupData.regions}
-                value={formData.region}
-                onChange={(e) => handleChange("region", e.target.value)}
-                disabled={!isEditMode}
+                label="Discipline"
+                placeholder="Select Discipline..."
+                options={lookupData.disciplines}
+                value={formData.discipline}
+                onChange={(e) => handleChange("discipline", e.target.value)}
+                disabled={isFormReadOnly}
               />
             </Card>
 
             {/* Nursing Registration & Specialization Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -705,7 +1038,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   onChange={(e) =>
                     handleChange("nursingProgramme", e.target.value)
                   }
-                  disabled={!isEditMode}
+                  disabled={isFormReadOnly}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -714,7 +1047,7 @@ const MembershipForm = ({ isEditMode = false }) => {
               <MyInput
                 label="NMBI No. / An Bord Altranais Number"
                 placeholder="Enabled if adaptation is 'Yes'"
-                disabled={!isEditMode || formData.nursingProgramme !== "Yes"}
+                disabled={isFormReadOnly || formData.nursingProgramme !== "Yes"}
                 value={formData.nmbiNumber}
                 onChange={(e) => handleChange("nmbiNumber", e.target.value)}
               />
@@ -725,7 +1058,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   onChange={(e) =>
                     handleChange("nursingSpecialization", e.target.value)
                   }
-                  disabled={!isEditMode}
+                  disabled={isFormReadOnly}
                 >
                   <Radio value="generalNursing">General Nurse</Radio>
                   <Radio value="public-health-nurse">Public Health Nurse</Radio>
@@ -737,7 +1070,7 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Section Details Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -770,7 +1103,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("otherPrimarySection", e.target.value)
                 }
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={formData.primarySection === "Other"}
               />
               <CustomSelect
@@ -789,7 +1122,46 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("otherSecondarySection", e.target.value)
                 }
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
+              />
+            </Card>
+
+            {/* Recruitment Details Card */}
+            <Card
+              style={{
+                marginBottom: "16px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
+                style={{
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
+                }}
+              >
+                Recruitment Details
+              </h3>
+              <MyInput
+                label="Recruited By"
+                placeholder="Enter full name"
+                value={formData.recruitedBy}
+                onChange={(e) => handleChange("recruitedBy", e.target.value)}
+                disabled={isFormReadOnly}
+              />
+              <MyInput
+                label="Membership Number"
+                placeholder="Enter membership number"
+                value={formData.recruitedByMembershipNo}
+                onChange={(e) =>
+                  handleChange("recruitedByMembershipNo", e.target.value)
+                }
+                disabled={isFormReadOnly}
               />
             </Card>
           </div>
@@ -801,7 +1173,7 @@ const MembershipForm = ({ isEditMode = false }) => {
             {/* Subscription Details Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -819,6 +1191,7 @@ const MembershipForm = ({ isEditMode = false }) => {
               >
                 Subscription Details
               </h3>
+
               <CustomSelect
                 label="Membership category"
                 placeholder="Select Category..."
@@ -827,29 +1200,56 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("membershipCategory", e.target.value)
                 }
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyDatePicker
-                label="Retired Date"
-                value={formData.retiredDate}
-                onChange={(date) => handleChange("retiredDate", date)}
-                disabled={!isEditMode}
-                required={formData.membershipCategory === "retired_associate"}
+                label="Start Date"
+                placeholder="Select start date"
+                value={formData.joiningDate}
+                onChange={(date) => handleChange("joiningDate", date)}
+                disabled={true}
+              />
+              <MyDatePicker
+                label="Renewal Date"
+                placeholder="Select renewal date"
+                value={formData.renewalDate}
+                onChange={(date) => handleChange("renewalDate", date)}
+                disabled={true}
+              />
+              <CustomSelect
+                label="Membership Status"
+                placeholder="Select Status..."
+                options={lookupData.membershipStatus}
+                value={formData.membershipStatus}
+                onChange={(e) =>
+                  handleChange("membershipStatus", e.target.value)
+                }
+                disabled={isFormReadOnly}
+                required={true}
+              />
+              <MyDatePicker
+                label="Cancellation / Resignation Date"
+                placeholder="Select cancellation date"
+                value={formData.dateCancelled}
+                onChange={(date) => handleChange("dateCancelled", date)}
+                disabled={true}
               />
               <MyInput
-                label="Pension No."
-                value={formData.pensionNumber}
-                onChange={(e) => handleChange("pensionNumber", e.target.value)}
-                disabled={!isEditMode}
-                required={formData.membershipCategory === "retired_associate"}
+                label="Cancellation / Resignation Reason"
+                placeholder="Enter cancellation reason"
+                value={formData.cancellationReason}
+                onChange={(e) =>
+                  handleChange("cancellationReason", e.target.value)
+                }
+                disabled={true}
               />
             </Card>
 
             {/* Payment Information Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -877,7 +1277,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 ]}
                 value={formData.paymentType}
                 onChange={(e) => handleChange("paymentType", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
@@ -885,14 +1285,14 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="Enter Payroll No."
                 value={formData.payrollNumber}
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
             </Card>
 
-            {/* Third Party Consent Card */}
+            {/* Reminders Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -908,158 +1308,71 @@ const MembershipForm = ({ isEditMode = false }) => {
                   color: "#1a1a1a",
                 }}
               >
-                Consent Management
+                Reminders
               </h3>
-
-              {/* INMO Consent Section */}
-              <div style={{ marginBottom: "24px" }}>
-                <h4
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    marginBottom: "12px",
-                    color: "#1a1a1a",
-                  }}
-                >
-                  INMO Consent
-                </h4>
-                <Checkbox
-                  checked={formData.consent}
-                  onChange={(e) =>
-                    handleChange("consentCorrespondence", e.target.checked)
-                  }
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  disabled={!isEditMode}
-                >
-                  I consent to receive correspondence from INMO
-                </Checkbox>
-              </div>
-
-              {/* Line Separator */}
-              <div
+              <MyDatePicker
+                label="First Reminder"
+                placeholder="Select first reminder date"
+                value={formData.firstReminderDate}
+                onChange={(date) => handleChange("firstReminderDate", date)}
+                disabled={true}
+              />
+              <MyDatePicker
+                label="Second Reminder"
+                placeholder="Select second reminder date"
+                value={formData.secondReminderDate}
+                onChange={(date) => handleChange("secondReminderDate", date)}
+                disabled={true}
+              />
+              <MyDatePicker
+                label="Third Reminder"
+                placeholder="Select third reminder date"
+                value={formData.thirdReminderDate}
+                onChange={(date) => handleChange("thirdReminderDate", date)}
+                disabled={true}
+              />
+            </Card>
+            {/* Retirement Details Card */}
+            <Card
+              style={{
+                marginBottom: "16px",
+                border: "1px solid #e8e8e8",
+                borderRadius: "8px",
+              }}
+              bodyStyle={{ padding: "16px" }}
+            >
+              <h3
                 style={{
-                  borderTop: "1px solid #e8e8e8",
-                  marginTop: "24px",
-                  marginBottom: "24px",
+                  fontSize: "16px",
+                  fontWeight: 600,
+                  marginBottom: "16px",
+                  paddingBottom: "12px",
+                  borderBottom: "1px solid #e8e8e8",
+                  color: "#1a1a1a",
                 }}
-              ></div>
-
-              {/* Additional Service and Terms Section */}
-              <div>
-                <h4
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    marginBottom: "12px",
-                    color: "#1a1a1a",
-                  }}
-                >
-                  Additional Service and Terms
-                </h4>
-                <Checkbox
-                  checked={formData.exclusiveDiscountsAndOffers}
-                  onChange={(e) =>
-                    handleChange("allowPartnerContact", e.target.checked)
-                  }
-                  style={{
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  disabled={!isEditMode}
-                >
-                  I consent to being contacted by INMO partners about exclusive
-                  member offers.
-                </Checkbox>
-              </div>
-
-              {/* Line Separator */}
-              <div
-                style={{
-                  borderTop: "1px solid #e8e8e8",
-                  marginTop: "24px",
-                  marginBottom: "24px",
-                }}
-              ></div>
-
-              <div>
-                <h4
-                  style={{
-                    fontSize: "14px",
-                    fontWeight: 600,
-                    marginBottom: "12px",
-                    color: "#1a1a1a",
-                  }}
-                >
-                  Corn Market
-                </h4>
-                <Checkbox
-                  checked={formData.joinRewards}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked;
-                    if (isChecked) {
-                      // If Rewards is checked, uncheck the other two
-                      handleChange("exclusiveDiscountsOffers", false);
-                      handleChange("joinINMOIncomeProtection", false);
-                    }
-                    handleChange("joinRewards", isChecked);
-                  }}
-                  style={{
-                    marginBottom: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  disabled={
-                    !isEditMode ||
-                    formData.exclusiveDiscountsOffers ||
-                    formData.joinINMOIncomeProtection
-                  }
-                >
-                  Rewards for INMO members
-                </Checkbox>
-                <Checkbox
-                  checked={formData.exclusiveDiscountsOffers}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked;
-                    if (isChecked) {
-                      // If this is checked, uncheck Rewards
-                      handleChange("joinRewards", false);
-                    }
-                    handleChange("exclusiveDiscountsOffers", isChecked);
-                  }}
-                  style={{
-                    marginBottom: "12px",
-                    display: "flex",
-                    alignItems: "center",
-                  }}
-                  disabled={!isEditMode || formData.joinRewards}
-                >
-                  Exclusive Discounts and Offers
-                </Checkbox>
-                <Checkbox
-                  checked={formData.joinINMOIncomeProtection}
-                  onChange={(e) => {
-                    const isChecked = e.target.checked;
-                    if (isChecked) {
-                      // If this is checked, uncheck Rewards
-                      handleChange("joinRewards", false);
-                    }
-                    handleChange("joinINMOIncomeProtection", isChecked);
-                  }}
-                  style={{ display: "flex", alignItems: "center" }}
-                  disabled={!isEditMode || formData.joinRewards}
-                >
-                  Income Protection and Consent
-                </Checkbox>
-              </div>
+              >
+                Retirement Details
+              </h3>
+              <MyDatePicker
+                label="Retirement Date"
+                value={formData.retiredDate}
+                onChange={(date) => handleChange("retiredDate", date)}
+                disabled={isFormReadOnly}
+                required={formData.membershipCategory === "retired_associate"}
+              />
+              <MyInput
+                label="Pension No."
+                value={formData.pensionNumber}
+                onChange={(e) => handleChange("pensionNumber", e.target.value)}
+                disabled={isFormReadOnly}
+                required={formData.membershipCategory === "retired_associate"}
+              />
             </Card>
 
             {/* Additional Memberships Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -1086,7 +1399,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   onChange={(e) =>
                     handleChange("otherIrishTradeUnion", e.target.value)
                   }
-                  disabled={!isEditMode}
+                  disabled={isFormReadOnly}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -1096,7 +1409,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 label="Which Union?"
                 value={formData.otherUnionName}
                 onChange={(e) => handleChange("otherUnionName", e.target.value)}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <div style={{ marginTop: "16px" }}>
                 <label className="my-input-label">
@@ -1108,7 +1421,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                   onChange={(e) =>
                     handleChange("otherUnionScheme", e.target.value)
                   }
-                  disabled={!isEditMode}
+                  disabled={isFormReadOnly}
                 >
                   <Radio value="Yes">Yes</Radio>
                   <Radio value="No">No</Radio>
@@ -1116,10 +1429,10 @@ const MembershipForm = ({ isEditMode = false }) => {
               </div>
             </Card>
 
-            {/* Recruitment Details Card */}
+            {/* Corn Market Card */}
             <Card
               style={{
-                marginBottom: "20px",
+                marginBottom: "16px",
                 border: "1px solid #e8e8e8",
                 borderRadius: "8px",
               }}
@@ -1135,24 +1448,66 @@ const MembershipForm = ({ isEditMode = false }) => {
                   color: "#1a1a1a",
                 }}
               >
-                Recruitment Details
+                CornMarket
               </h3>
-              <MyInput
-                label="Recruited By"
-                placeholder="Enter full name"
-                value={formData.recruitedBy}
-                onChange={(e) => handleChange("recruitedBy", e.target.value)}
-                disabled={!isEditMode}
-              />
-              <MyInput
-                label="Membership Number"
-                placeholder="Enter membership number"
-                value={formData.recruitedByMembershipNo}
-                onChange={(e) =>
-                  handleChange("recruitedByMembershipNo", e.target.value)
+              <Checkbox
+                checked={formData.joinRewards}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  if (isChecked) {
+                    // If Rewards is checked, uncheck the other two
+                    handleChange("exclusiveDiscountsOffers", false);
+                    handleChange("joinINMOIncomeProtection", false);
+                  }
+                  handleChange("joinRewards", isChecked);
+                }}
+                style={{
+                  marginBottom: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                disabled={
+                  !isEditMode ||
+                  formData.exclusiveDiscountsOffers ||
+                  formData.joinINMOIncomeProtection
                 }
-                disabled={!isEditMode}
-              />
+              >
+                Rewards for INMO members
+              </Checkbox>
+              <Checkbox
+                checked={formData.exclusiveDiscountsOffers}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  if (isChecked) {
+                    // If this is checked, uncheck Rewards
+                    handleChange("joinRewards", false);
+                  }
+                  handleChange("exclusiveDiscountsOffers", isChecked);
+                }}
+                style={{
+                  marginBottom: "12px",
+                  display: "flex",
+                  alignItems: "center",
+                }}
+                disabled={isFormReadOnly || formData.joinRewards}
+              >
+                Exclusive Discounts and Offers
+              </Checkbox>
+              <Checkbox
+                checked={formData.joinINMOIncomeProtection}
+                onChange={(e) => {
+                  const isChecked = e.target.checked;
+                  if (isChecked) {
+                    // If this is checked, uncheck Rewards
+                    handleChange("joinRewards", false);
+                  }
+                  handleChange("joinINMOIncomeProtection", isChecked);
+                }}
+                style={{ display: "flex", alignItems: "center" }}
+                disabled={isFormReadOnly || formData.joinRewards}
+              >
+                Income Protection and Consent
+              </Checkbox>
             </Card>
           </div>
         </Col>

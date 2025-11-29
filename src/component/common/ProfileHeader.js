@@ -16,7 +16,7 @@ import MyDatePicker from "./MyDatePicker";
 import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
 
-function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false }) {
+function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false, isDeceased = false }) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
@@ -29,7 +29,7 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false 
     dob: "03.22.1990",
     gender: "M",
     age: "36A Yrs",
-    status: "Active Member",
+    status: isDeceased ? "Deceased" : "Active Member",
     memberId: "45217A",
     joined: "01/01/2016",
     expires: "01/01/2026",
@@ -86,7 +86,7 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false 
     <div className="member-header-container">
       <div className="member-header-single-card">
         {/* Profile Header Section */}
-        <div className="member-header-top">
+        <div className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}>
           {showButtons && (
             <button
               className="member-edit-btn"
@@ -105,7 +105,9 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false 
             <p className="member-details">
               {memberData.dob} ({memberData.gender}) {memberData.age}
             </p>
-            <span className="member-status-badge">{memberData.status}</span>
+            <span className={`member-status-badge ${isDeceased ? "member-status-deceased" : ""}`}>
+              {memberData.status}
+            </span>
           </div>
 
           {/* Contact Information Section - on blue background */}
@@ -150,15 +152,6 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false 
               <span className="detail-value">{memberData.expires}</span>
             </div>
           </div>
-          <div className="detail-row">
-            <FaShieldAlt className="detail-icon" />
-            <div className="detail-content">
-              <span className="detail-label">Status:</span>
-              <span className="detail-value">
-                {memberData.membershipStatus}
-              </span>
-            </div>
-          </div>
         </div>
 
         {/* Financial Details Card */}
@@ -187,7 +180,7 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false 
         </div>
 
         {/* Grade and Category Section - on blue background */}
-        <div className="member-grade-section-blue">
+        <div className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}>
           <div className="grade-row-blue">
             <span className="grade-label-blue">Grade:</span>
             <span className="grade-value-blue">{memberData.grade}</span>
