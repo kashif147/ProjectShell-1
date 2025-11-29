@@ -6,15 +6,20 @@ import CustomSelect from "../common/CustomSelect";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { useSelector, useDispatch } from "react-redux";
-import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import { getProfileDetailsById, clearProfileDetails } from "../../features/profiles/ProfileDetailsSlice";
 import utc from 'dayjs/plugin/utc';
 import timezone from 'dayjs/plugin/timezone';
 import dayjs from "dayjs";
-
+import { searchProfiles, clearResults } from "../../features/profiles/SearchProfile";
 
 
 const MembershipForm = ({ isEditMode = false }) => {
   const { profileDetails, loading, error } = useSelector((state) => state.profileDetails);
+  // const { profileSearchData } = useSelector((state) => state.profile);
+  const { profileSearchData } = useSelector(
+    (state) => state.searchProfile)
+
+  const dispatch = useDispatch();
   const {
     titleOptions,
     genderOptions,
@@ -28,10 +33,21 @@ const MembershipForm = ({ isEditMode = false }) => {
     secondarySectionOptions,
     countryOptions
   } = useSelector(state => state.lookups);
-  console.log(profileDetails, "trt")
+  console.log(profileSearchData, "trt")
   dayjs.extend(utc);
   dayjs.extend(timezone);
 
+  useEffect(() => {
+    return () => {
+      dispatch(clearProfileDetails());
+    };
+  }, []);
+
+  useEffect(() => {
+    return () => {
+      dispatch(clearResults());
+    };
+  }, [dispatch]);
   const convertUTCToLocalDate = (utcDateString) => {
     if (!utcDateString) return null;
 
@@ -39,74 +55,85 @@ const MembershipForm = ({ isEditMode = false }) => {
     return dayjs.utc(utcDateString).local();
   };
 
+
   useEffect(() => {
-    // ✅ Fix: Check if profileDetails exists (it's an object, not array)
-    if (profileDetails) {
-      setFormData(prevState => ({
-        ...prevState,
-        // Personal Info
-        title: profileDetails.personalInfo?.title || "",
-        surname: profileDetails.personalInfo?.surname || "",
-        forename: profileDetails.personalInfo?.forename || "",
-        gender: profileDetails.personalInfo?.gender || "",
-        dateOfBirth: convertUTCToLocalDate(profileDetails.personalInfo?.dateOfBirth),
-        countryPrimaryQualification: profileDetails.personalInfo?.countryPrimaryQualification || "",
 
-        // Contact Info
-        addressLine1: profileDetails.contactInfo?.buildingOrHouse || "",
-        addressLine2: profileDetails.contactInfo?.streetOrRoad || "",
-        townCity: profileDetails.contactInfo?.areaOrTown || "",
-        countyState: profileDetails.contactInfo?.countyCityOrPostCode || "",
-        eircode: profileDetails.contactInfo?.eircode || "",
-        country: profileDetails.contactInfo?.country || "",
-        preferredAddress: profileDetails.contactInfo?.preferredAddress === "home" ? "Home/Personal" : "Work",
-        mobileNumber: profileDetails.contactInfo?.mobileNumber || "",
-        telephoneNumber: profileDetails.contactInfo?.telephoneNumber || "",
-        preferredEmail: profileDetails.contactInfo?.preferredEmail === "work" ? "Work" : "Personal",
-        personalEmail: profileDetails.contactInfo?.personalEmail || "",
-        workEmail: profileDetails.contactInfo?.workEmail || "",
+    // Choose source dynamically
+    const source = profileDetails || profileSearchData.results?.[0];
+    debugger
+    if (!source) return;
 
-        // Professional Details
-        studyLocation: profileDetails.professionalDetails?.studyLocation || "",
-        startDate: convertUTCToLocalDate(profileDetails.professionalDetails?.startDate),
-        graduationDate: convertUTCToLocalDate(profileDetails.professionalDetails?.graduationDate),
-        workLocation: profileDetails.professionalDetails?.workLocation || "",
-        otherWorkLocation: profileDetails.professionalDetails?.otherWorkLocation || "",
-        branch: profileDetails.professionalDetails?.branch || "",
-        region: profileDetails.professionalDetails?.region || "",
-        grade: profileDetails.professionalDetails?.grade || "",
-        otherGrade: profileDetails.professionalDetails?.otherGrade || "",
-        retiredDate: convertUTCToLocalDate(profileDetails.professionalDetails?.retiredDate),
-        pensionNumber: profileDetails.professionalDetails?.pensionNo || "",
-        nmbiNumber: profileDetails.professionalDetails?.nmbiNumber || "",
-        nursingProgramme: profileDetails.professionalDetails?.nursingAdaptationProgramme ? "Yes" : "No",
-        nursingSpecialization: profileDetails.professionalDetails?.nurseType || "",
+    setFormData((prev) => ({
+      ...prev,
 
-        // Membership Info
-        membershipNumber: profileDetails.membershipNumber || "",
-        joiningDate: convertUTCToLocalDate(profileDetails.firstJoinedDate),
-        expiryDate: convertUTCToLocalDate(profileDetails.deactivatedAt),
-        submissionDate: convertUTCToLocalDate(profileDetails.submissionDate),
+      // Personal Info
+      title: source.personalInfo?.title || "",
+      surname: source.personalInfo?.surname || "",
+      forename: source.personalInfo?.forename || "",
+      gender: source.personalInfo?.gender || "",
+      dateOfBirth: convertUTCToLocalDate(source.personalInfo?.dateOfBirth),
+      countryPrimaryQualification: source.personalInfo?.countryPrimaryQualification || "",
 
-        // Preferences
-        consent: profileDetails.preferences?.consent ,
+      // Contact Info
+      addressLine1: source.contactInfo?.buildingOrHouse || "",
+      addressLine2: source.contactInfo?.streetOrRoad || "",
+      townCity: source.contactInfo?.areaOrTown || "",
+      countyState: source.contactInfo?.countyCityOrPostCode || "",
+      eircode: source.contactInfo?.eircode || "",
+      country: source.contactInfo?.country || "",
+      preferredAddress:
+        source.contactInfo?.preferredAddress === "home"
+          ? "Home/Personal"
+          : "Work",
+      mobileNumber: source.contactInfo?.mobileNumber || "",
+      telephoneNumber: source.contactInfo?.telephoneNumber || "",
+      preferredEmail:
+        source.contactInfo?.preferredEmail === "work" ? "Work" : "Personal",
+      personalEmail: source.contactInfo?.personalEmail || "",
+      workEmail: source.contactInfo?.workEmail || "",
 
-        // Corn Market
-        joinINMOIncomeProtection: profileDetails.cornMarket?.incomeProtectionScheme ,
-        joinRewards: profileDetails.cornMarket?.inmoRewards ,
-        exclusiveDiscountsOffers: profileDetails.cornMarket?.exclusiveDiscountsAndOffers ,
+      // Professional Details
+      studyLocation: source.professionalDetails?.studyLocation || "",
+      startDate: convertUTCToLocalDate(source.professionalDetails?.startDate),
+      graduationDate: convertUTCToLocalDate(source.professionalDetails?.graduationDate),
+      workLocation: source.professionalDetails?.workLocation || "",
+      otherWorkLocation: source.professionalDetails?.otherWorkLocation || "",
+      branch: source.professionalDetails?.branch || "",
+      region: source.professionalDetails?.region || "",
+      grade: source.professionalDetails?.grade || "",
+      otherGrade: source.professionalDetails?.otherGrade || "",
+      retiredDate: convertUTCToLocalDate(source.professionalDetails?.retiredDate),
+      pensionNumber: source.professionalDetails?.pensionNo || "",
+      nmbiNumber: source.professionalDetails?.nmbiNumber || "",
+      nursingProgramme: source.professionalDetails?.nursingAdaptationProgramme ? "Yes" : "No",
+      nursingSpecialization: source.professionalDetails?.nurseType || "",
 
-        // Additional Information
-        memberOfOtherUnion: profileDetails.additionalInformation?.otherIrishTradeUnion ,
-        otherUnionName: profileDetails.additionalInformation?.otherIrishTradeUnionName || "",
-        otherUnionScheme: profileDetails.additionalInformation?.otherScheme ? "Yes" : "No",
+      // Membership Info
+      membershipNumber: source.membershipNumber || "",
+      joiningDate: convertUTCToLocalDate(source.firstJoinedDate),
+      expiryDate: convertUTCToLocalDate(source.deactivatedAt),
+      submissionDate: convertUTCToLocalDate(source.submissionDate),
 
-        // Recruitment Details
-        recruitedBy: profileDetails.recruitmentDetails?.recuritedBy || "",
-        recruitedByMembershipNo: profileDetails.recruitmentDetails?.recuritedByMembershipNo || "",
-      }));
-    }
-  }, [profileDetails]);
+      // Preferences
+      consent: source.preferences?.consent,
+
+      // Corn Market
+      joinINMOIncomeProtection: source.cornMarket?.incomeProtectionScheme,
+      joinRewards: source.cornMarket?.inmoRewards,
+      exclusiveDiscountsOffers: source.cornMarket?.exclusiveDiscountsAndOffers,
+
+      // Additional Information
+      memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion,
+      otherUnionName: source.additionalInformation?.otherIrishTradeUnionName || "",
+      otherUnionScheme: source.additionalInformation?.otherScheme ? "Yes" : "No",
+
+      // Recruitment Details
+      recruitedBy: source.recruitmentDetails?.recuritedBy || "",
+      recruitedByMembershipNo: source.recruitmentDetails?.recuritedByMembershipNo || "",
+    }));
+
+  }, [profileDetails, profileSearchData]);
+
   // Internal form state
   const [formData, setFormData] = useState({
     title: "",
@@ -733,7 +760,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 placeholder="Select Primary Section"
                 value={formData.primarySection}
                 onChange={(e) => handleChange("primarySection", e.target.value)}
-                 options={sectionOptions}
+                options={sectionOptions}
                 disabled={!isEditMode}
                 required={true}
               />
@@ -753,7 +780,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 onChange={(e) =>
                   handleChange("secondarySection", e.target.value)
                 }
-               options={secondarySectionOptions}
+                options={secondarySectionOptions}
                 disabled={!isEditMode}
               />
               <MyInput

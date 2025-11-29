@@ -32,10 +32,11 @@ import categoryLookupReducer from '../features/CategoryLookupSlice';
 import hierarchicalLookupsReducer from '../features/lookupHierarchySlice';
 import hierarchicalDataByLocationReducer from '../features/HierarchicalDataByLocationSlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
-import batchReducer  from '../features/BatchesSlice'
+import batchReducer from '../features/BatchesSlice'
 import bookmarkReducer from "../features/templete/BookmarkActions";
 import profileReducer from "../features/profiles/ProfileSlice";
 import profileDetailsReducer from "../features/profiles/ProfileDetailsSlice";
+import searchProfileReducer from '../features/profiles/SearchProfile';
 
 const store = configureStore({
   reducer: {
@@ -43,6 +44,7 @@ const store = configureStore({
     regions: regionReducer, // Regions state
     lookups: lookupsReducer,
     lookupsTypes: lookupsTypeReducer,
+    searchProfile: searchProfileReducer,
     regionTypes: regionTypeReducer,
     categoryLookup: categoryLookupReducer,
     partner: partnerReducer,
@@ -56,9 +58,9 @@ const store = configureStore({
     // countries: countriesReducer,
     applications: applicationReducer,
     applicationDetails: applicationDetailsReducer,
-      hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
+    hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
     tenants: tenantReducer,
-     profileDetails: profileDetailsReducer,
+    profileDetails: profileDetailsReducer,
     users: userReducer,
     roles: roleReducer,
     permissions: permissionReducer,
@@ -69,7 +71,7 @@ const store = configureStore({
     countries: countriesReducer,
     batches: batchReducer,
     lookupsWorkLocation: lookupsWorkLocationReducer,
-     bookmarks: bookmarkReducer,
+    bookmarks: bookmarkReducer,
     // lookupHierarchy: lookupHierarchyReducer,
   },
 });

@@ -1,13 +1,18 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// ✅ Async thunk to fetch profile by ID
+// -----------------------------------------------------
+// Thunk: Fetch Profile Details By ID
+// -----------------------------------------------------
 export const getProfileDetailsById = createAsyncThunk(
   "profileDetails/getProfileDetailsById",
   async (id, { rejectWithValue }) => {
     try {
-      const response = await axios.get(`${process.env.REACT_APP_PROFILE_SERVICE_URL}/profile/${id}`);
-      // assuming API returns { status, data }
+      const response = await axios.get(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/profile/${id}`
+      );
+
+      // API format: { status: "success", data: {...} }
       if (response.data.status === "success") {
         return response.data.data;
       } else {
@@ -19,6 +24,9 @@ export const getProfileDetailsById = createAsyncThunk(
   }
 );
 
+// -----------------------------------------------------
+// Slice
+// -----------------------------------------------------
 const profileDetailsSlice = createSlice({
   name: "profileDetails",
   initialState: {
@@ -26,19 +34,24 @@ const profileDetailsSlice = createSlice({
     loading: false,
     error: null,
   },
+
   reducers: {
+    // -------------------------------------------------
+    // CLEAR FUNCTION requested by you
+    // -------------------------------------------------
     clearProfileDetails: (state) => {
       state.profileDetails = null;
       state.loading = false;
       state.error = null;
     },
   },
+
   extraReducers: (builder) => {
     builder
       .addCase(getProfileDetailsById.pending, (state) => {
         state.loading = true;
         state.error = null;
-        state.profileDetails = null;
+        state.profileDetails = null; // reset before fetch
       })
       .addCase(getProfileDetailsById.fulfilled, (state, action) => {
         state.loading = false;
