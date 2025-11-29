@@ -129,7 +129,6 @@ const ProductTypesManagement = () => {
     });
   };
 
-
   const handleDeleteBoth = async (productTypeId) => {
     try {
       const token = localStorage.getItem("token");
@@ -284,6 +283,7 @@ const ProductTypesManagement = () => {
       ),
     },
   ];
+
   const createProductWithPricing = async (data, selectedProductType) => {
     try {
       const token = localStorage.getItem("token");
@@ -414,7 +414,7 @@ if (productType?.name === "Membership") {
 }
     // Add remaining columns
     baseColumns.push({
-      title: "Actions2",
+      title: "Actions",
       key: "actions",
       render: (_, record, index, productType) => (
         <Space>

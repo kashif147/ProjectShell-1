@@ -977,7 +977,7 @@ const filteredBookmarks = useMemo(() => {
       DisplayName: "",
       lookupname: "",
       code: "",
-      Parentlookupid: "",
+      Parentlookupid: null,
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
@@ -7252,9 +7252,6 @@ const filteredBookmarks = useMemo(() => {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-      // total={lookups?.length}
-      // onChange={handlePageChange}
-      // pageSize={pageSize}
       >
         <div className="drawer-main-container p-4">
           <Row gutter={24}>
@@ -7325,10 +7322,10 @@ const filteredBookmarks = useMemo(() => {
               <MyInput
                 label="Parent Lookup"
                 name="ParentLookup"
-                value={drawerIpnuts?.Lookup?.ParentLookup || ""}
-                onChange={(e) =>
-                  drawrInptChng("Lookup", "ParentLookup", e.target.value)
-                }
+                // value={drawerIpnuts?.Lookup?.ParentLookup || ""}
+                onChange={(e) => {}}
+                  // drawrInptChng("Lookup", "ParentLookup", e.target.value)
+                
                 placeholder="Parent lookup"
                 disabled={isDisable}
               />

@@ -266,6 +266,7 @@ export async function generatePKCE() {
 }
 export function convertEuroToSand(euroAmount) {
   const euros = Number(euroAmount);
+  debugger
   if (isNaN(euros)) throw new Error("Invalid Euro amount");
   return euros * 100; // Convert to sand
 }
@@ -361,8 +362,9 @@ export const dateUtils = {
     }
 
     if (apiData.professionalDetails) {
-      convertDateField(apiData.professionalDetails, "retiredDate");
-      convertDateField(apiData.professionalDetails, "graduationDate");
+      convertDateField(apiData.professionalDetails, 'retiredDate');
+      convertDateField(apiData.professionalDetails, 'graduationDate');
+      convertDateField(apiData.professionalDetails, 'startDate');
     }
 
     if (apiData.subscriptionDetails) {

@@ -47,6 +47,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
+import { searchProfiles } from "../../features/profiles/SearchProfile";
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
   const { permissions, roles } = useAuthorization();
@@ -128,10 +129,10 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   ];
 
   // Filter app items based on user permissions and roles
-const accessibleApps = appItems.filter((app) => {
+  const accessibleApps = appItems.filter((app) => {
     // If no permissions/roles required, show the app
     if (!app.permissions?.length && !app.roles?.length) {
-        return true;
+      return true;
     }
 
     // Check if user has wildcard permission (grants all permissions)
@@ -139,16 +140,16 @@ const accessibleApps = appItems.filter((app) => {
 
     // Check permissions
     const hasRequiredPermission =
-        hasWildcardPermission ||
-        !app.permissions?.length ||
-        app.permissions.some((permission) => permissions.includes(permission));
+      hasWildcardPermission ||
+      !app.permissions?.length ||
+      app.permissions.some((permission) => permissions.includes(permission));
 
     // Check roles
     const hasRequiredRole =
-        !app.roles?.length || app.roles.some((role) => roles.includes(role));
+      !app.roles?.length || app.roles.some((role) => roles.includes(role));
 
     return hasRequiredPermission && hasRequiredRole;
-});
+  });
 
   const filteredItems = accessibleApps.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase())
@@ -264,6 +265,7 @@ export const AppLauncher = () => {
 
 const { Search } = Input;
 function Header() {
+  const dispatch = useDispatch();
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("");
   const navigate = useNavigate();
@@ -284,144 +286,7 @@ function Header() {
     Array.isArray(ProfileDetails) && ProfileDetails.length > 0
       ? ProfileDetails[0]
       : null;
-  const navLinks = [
-    {
-      key: "1",
-      label: (
-        <Link
-          to="Summary"
-          state={{ search: "Profile" }}
-          className="link"
-          style={{ textDecoration: "none" }}
-        >
-          Summary
-        </Link>
-      ),
-    },
-    {
-      key: "",
-      label: (
-        <Link className="link" to="Dummy" state={{ search: "Profile" }}>
-          Dummy Page
-        </Link>
-      ),
-    },
-  ];
-  const CasesnavLinks = [
-    {
-      key: "1",
-      label: (
-        <Link
-          to="CasesSummary"
-          state={{ search: "Cases" }}
-          className="link"
-          style={{ textDecoration: "none" }}
-        >
-          Summary
-        </Link>
-      ),
-    },
-    {
-      key: "",
-      label: (
-        <Link className="link" to="Dummy" state={{ search: "Cases" }}>
-          Dummy Page
-        </Link>
-      ),
-    },
-  ];
-  const ClaimsnavLinks = [
-    {
-      key: "1",
-      label: (
-        <Link
-          to="ClaimSummary"
-          state={{ search: "Claims" }}
-          className="link"
-          style={{ textDecoration: "none" }}
-        >
-          Summary
-        </Link>
-      ),
-    },
-    {
-      key: "",
-      label: (
-        <Link className="link" to="Dummy" state={{ search: "Claims" }}>
-          Dummy Page
-        </Link>
-      ),
-    },
-  ];
-  const ReportsnavLinks = [
-    {
-      key: "1",
-      label: (
-        <Link
-          to="Report1"
-          state={{ search: "Reports" }}
-          className="link"
-          style={{ textDecoration: "none" }}
-        >
-          Report1
-        </Link>
-      ),
-    },
-    {
-      key: "",
-      label: (
-        <Link className="link" to="Reports" state={{ search: "Reports" }}>
-          Report 2
-        </Link>
-      ),
-    },
-  ];
-  const CorrespondencesLink = [
-    {
-      key: "1",
-      label: (
-        <Link
-          to="/CorrespondencesSummary"
-          state={{ search: "Correspondence" }}
-          className="link"
-          style={{ textDecoration: "none" }}
-        >
-          Summary
-        </Link>
-      ),
-    },
-    {
-      key: "",
-      label: (
-        <Link className="link" to="Dummy" state={{ search: "Correspondences" }}>
-          Dummy Page
-        </Link>
-      ),
-    },
-  ];
-  const Roster = [
-    {
-      key: "1",
-      label: (
-        <Link
-          to="/RosterSummary"
-          state={{ search: "Rouster" }}
-          className="link"
-          style={{ textDecoration: "none" }}
-        >
-          Summary
-        </Link>
-      ),
-    },
-    {
-      key: "",
-      label: (
-        <Link className="link" to="Dummy" state={{ search: "Correspondences" }}>
-          Dummy Page
-        </Link>
-      ),
-    },
-  ];
+
   let arr = [];
   const reportLink =
     ReportsTitle?.map((i, index) => {
@@ -484,22 +349,35 @@ function Header() {
         <div style={{ width: "33%" }}>
           <Search
             placeholder="Reg No"
+            value={regNo}
             onChange={(e) => setregNo(e.target.value)}
-            onKeyDown={async (e) => {
-              if (e.key === "Enter") {
-                filterByRegNo(regNo);
-                await navigate("/Details", {
+            onSearch={async (value) => {
+              try {
+                if (!value.trim()) return;
+
+                // Wait for API success:
+                const result = await dispatch(searchProfiles(value)).unwrap();
+
+                // result = response.data from your thunk
+                // Example: { fullName: "...", regNo: "..." }
+
+                navigate("/Details", {
                   state: {
-                    name: profile?.fullName,
-                    code: profile?.regNo,
+                    name: result?.fullName,
+                    code: result?.regNo,
                     search: "Profile",
                   },
                 });
+              } catch (error) {
+                console.error("Profile search failed:", error);
+                // Optionally show error message
+                // message.error("Profile not found");
               }
             }}
             className="top-search"
-            style={{ marginRight: "", width: "100%" }}
+            style={{ width: "100%" }}
           />
+
         </div>
 
         <div

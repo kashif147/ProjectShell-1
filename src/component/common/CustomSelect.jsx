@@ -15,9 +15,40 @@ const CustomSelect = ({
   placeholder = 'Select...',
   isMarginBtm = true,
   extra = null,
-  isIDs=false,
+  isIDs = false,
+  isObjectValue = false,
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+
+  const handleSelectChange = (e) => {
+    const selectedValue = e.target.value;
+    
+    if (isObjectValue) {
+      // Find the complete option object
+      const selectedOption = options.find(opt => 
+        isIDs ? opt.key === selectedValue : opt.label === selectedValue
+      );
+      
+      if (selectedOption) {
+        // Create a custom event with the object
+        const customEvent = {
+          ...e,
+          target: {
+            ...e.target,
+            value: selectedOption // Pass the entire object
+          }
+        };
+        onChange(customEvent);
+        return;
+      }
+    }
+    
+    // Default behavior - pass string value
+    onChange(e);
+  };
+
+  // Normalize value to handle undefined, null, or empty string
+  const normalizedValue = value || '';
 
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
@@ -47,34 +78,27 @@ const CustomSelect = ({
       >
         <select
           name={name || 'Select'}
-          value={value || ''}
-          onChange={onChange}
+          value={normalizedValue}
+          onChange={handleSelectChange}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           className={`my-input-field-select ${hasError ? 'error' : ''} ${disabled ? 'disabled-select' : ''
             }`}
           disabled={disabled}
         >
-          {placeholder && (
-            <option
-              value=""
-              disabled
-              hidden
-              className={hasError ? 'placeholder-error' : ''}
-            >
-              {placeholder}
-            </option>
-          )}
+          {/* Placeholder option - NOT disabled so users can select it to "deselect" */}
+          <option value="" className={hasError ? 'placeholder-error' : ''}>
+            {placeholder}
+          </option>
+          
           {options.map((opt) => {
             return (
-              <option key={opt.key} value={isIDs?opt.key:opt.label}>
+              <option key={opt.key} value={isIDs ? opt.key : opt.label}>
                 {opt.label}
               </option>
             );
           })}
         </select>
-        
-        {/* Error Icon - Add this */}
       </div>
     </div>
   );

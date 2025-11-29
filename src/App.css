@@ -66,7 +66,7 @@
 
 input:disabled,
 select:disabled {
-  color: #434242;
+  color: #212529 !important;
 }
 
 .radio-text {
@@ -189,6 +189,16 @@ select:disabled {
 .ant-checkbox-checked .ant-checkbox-inner::after {
   border-color: white;
   /* Optional: Change the checkmark color */
+}
+
+.consent-checkbox-indeterminate .ant-checkbox-inner {
+  background-color: rgba(201, 122, 47, 0.3) !important;
+  border-color: var(--secoundry-color) !important;
+}
+
+.consent-checkbox-indeterminate .ant-checkbox-inner::after {
+  border-color: var(--secoundry-color) !important;
+  background-color: var(--secoundry-color) !important;
 }
 
 .ant-table-cell-fix-left {

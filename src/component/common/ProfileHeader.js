@@ -1,127 +1,256 @@
-import React, { useState } from 'react';
-import { FiUpload } from "react-icons/fi";
-import { useLocation } from 'react-router-dom';
-import { useTableColumns } from '../../context/TableColumnsContext ';
-import { Card, Avatar, Button, Tag, Divider, Tooltip } from "antd";
-import { UserOutlined } from "@ant-design/icons";
-import { WarningOutlined } from "@ant-design/icons";
+import React, { useState } from "react";
+import { Modal, Button } from "antd";
+import {
+  FaMapMarkerAlt,
+  FaEnvelope,
+  FaPhone,
+  FaIdCard,
+  FaCalendarAlt,
+  FaClock,
+  FaShieldAlt,
+  FaExclamationTriangle,
+  FaEdit,
+  FaUser,
+} from "react-icons/fa";
+import MyDatePicker from "./MyDatePicker";
+import CustomSelect from "./CustomSelect";
+import "../../styles/ProfileHeader.css";
 
-function ProfileHeader() {
-    const [imageUrl, setImageUrl] = useState("");
-    const { ProfileDetails } = useTableColumns()
-    const [loading, setLoading] = useState(false);
-    const location = useLocation();
-    const reminderDate = "1/10/2025";
-    const reminder2 = "Second reminder";
-    const customRequest = ({ file, onSuccess, onError }) => {
-        setTimeout(() => {
-            if (file) {
-                onSuccess({ url: URL.createObjectURL(file) }, file);
-            } else {
-                onError(new Error("Upload failed."));
-            }
-        }, 1000);
-    };
-    const handleChange1 = (info) => {
-        if (info.file.status === "uploading") {
-            setLoading(true);
-            return;
-        }
-        if (info.file.status === "done") {
-            setLoading(false);
-            setImageUrl(info.file.response.url);
-            // message.success("Image uploaded successfully");
-        } else if (info.file.status === "error") {
-            setLoading(false);
-            // message.error("Image upload failed.");
-        }
-    };
+function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false, isDeceased = false }) {
+  const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [cancelFormData, setCancelFormData] = useState({
+    dateResigned: null,
+    reason: "",
+  });
 
-    return (
-        <div className='d-flex flex-column ms-2 me-2 pe-2 ps-2 pt-2' style={{ width: '22%', height: '88vh', backgroundColor: '#e6f8ff' }}>
-            <Card
-                style={{ borderRadius: 8, backgroundColor: '##e6f8ff' }}
+  // Sample data - replace with actual data from props or state
+  const memberData = {
+    name: "Jack Smith",
+    dob: "03.22.1990",
+    gender: "M",
+    age: "36A Yrs",
+    status: isDeceased ? "Deceased" : "Active Member",
+    memberId: "45217A",
+    joined: "01/01/2016",
+    expires: "01/01/2026",
+    balance: "€200",
+    lastPayment: "€74.7",
+    paymentDate: "1/02/2025",
+    paymentCode: "MB-2025-001",
+    address: "123 Main Street, New York",
+    email: "jack.smith@email.com",
+    phone: "(817) 234-3244",
+    grade: "General - All Grades",
+    category: "Undergraduate Student",
+    membershipStatus: "STOC Member",
+  };
 
+  const cancellationReasons = [
+    { key: "voluntary", label: "Voluntary Resignation" },
+    { key: "retirement", label: "Retirement" },
+    { key: "relocation", label: "Relocation" },
+    { key: "financial", label: "Financial Reasons" },
+    { key: "dissatisfaction", label: "Dissatisfaction with Services" },
+    { key: "other", label: "Other" },
+  ];
+
+  const handleCancelClick = () => {
+    setIsCancelModalVisible(true);
+  };
+
+  const handleCancelModalClose = () => {
+    setIsCancelModalVisible(false);
+    setCancelFormData({
+      dateResigned: null,
+      reason: "",
+    });
+  };
+
+  const handleCancelSubmit = () => {
+    if (!cancelFormData.dateResigned || !cancelFormData.reason) {
+      return;
+    }
+
+    // Handle cancellation submission here
+    console.log("Cancellation submitted:", cancelFormData);
+
+    // Close modal and reset form
+    handleCancelModalClose();
+  };
+
+  const handleFormChange = (field, value) => {
+    setCancelFormData({ ...cancelFormData, [field]: value });
+  };
+
+  return (
+    <div className="member-header-container">
+      <div className="member-header-single-card">
+        {/* Profile Header Section */}
+        <div className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}>
+          {showButtons && (
+            <button
+              className="member-edit-btn"
+              onClick={() => setIsEditMode && setIsEditMode(!isEditMode)}
             >
-                <div style={{ textAlign: "center", marginBottom: 16 }}>
-                    <Avatar size={64} style={{ backgroundColor: "#e6f7ff" }} icon={<UserOutlined />} />
-                    <div style={{ marginTop: 8, fontWeight: 600, fontSize: 16 }}>Jack Smith</div>
-                    <div style={{ color: "#8c8c8c", fontSize: 12 }}>(M) 36A Yrs</div>
-                    <Tag color="#52c41a" style={{ marginTop: 4 }}>
-                        Active Member
-                    </Tag>
-                </div>
+              <FaEdit className="edit-icon" />
+              <span>{isEditMode ? "Cancel" : "Edit"}</span>
+            </button>
+          )}
 
-                <div style={{ marginBottom: 12, }}>
-                    <div>
-                        <strong>Member ID:</strong>{" "}
-                        <span style={{ color: "#1890ff", cursor: "pointer" }}>45217A</span>
-                    </div>
-                    <div>
-                        <strong>Joined:</strong> 01/01/2016
-                    </div>
-                    <div>
-                        <strong>Expires:</strong> 01/01/2026
-                    </div>
-                    <div>
-                        <Divider />
-                        <div
-                            style={{
-                                display: "flex",
-                                justifyContent: "space-between", // 👈 pushes icon to the opposite side
-                                alignItems: "center",
-                                // optional fixed width
+          <div className="member-profile-section">
+            <div className="member-avatar">
+              <FaUser className="avatar-icon" />
+            </div>
+            <h2 className="member-name">{memberData.name}</h2>
+            <p className="member-details">
+              {memberData.dob} ({memberData.gender}) {memberData.age}
+            </p>
+            <span className={`member-status-badge ${isDeceased ? "member-status-deceased" : ""}`}>
+              {memberData.status}
+            </span>
+          </div>
 
-                            }}
-                        >
-                            <div>
-                                <strong>Balance:</strong>{" "}
-                                <span style={{ color: "#52c41a", fontWeight: 600 }}>€200</span>
-                            </div>
-                            <Tooltip
-                                title={
-                                    <div>
-                                        <div>Reminder Date: {reminderDate}</div>
-                                        <div>{reminder2}</div>
-                                    </div>
-                                }
-                                placement="topRight"
-                            >
-                                <WarningOutlined style={{ color: "orange", fontSize: 18, cursor: "pointer" }} />
-                            </Tooltip>
-                        </div>
-                    </div>
-                    <div>
-                        <strong>Last Payment:</strong> €74.7<br></br>
-                        <strong>Last Payment Date:</strong> 1/02/2025<br></br>
-                        <strong>Quick payment code  :</strong> MB-2025-001
-                    </div>
-                </div>
-                <div style={{ display: "flex", gap: 8, marginBottom: 12 }}>
-                    <Button danger style={{ flex: 1 }}>
-                        Cancel
-                    </Button>
-                </div>
-            </Card>
-
-            <Card className='mt-2'>
-                <div style={{ fontSize: 12, color: "#595959", }}>
-                    <div>
-                        <strong>Grade:</strong> General - All Grades
-                    </div>
-                    <div>
-                        <strong>Category:</strong> Undergraduate Student
-                    </div>
-                    <div>
-                        <strong>Status:</strong> STOC Member
-                    </div>
-                </div>
-
-            </Card>
-
-
+          {/* Contact Information Section - on blue background */}
+          <div className="member-contact-section-blue">
+            <div className="contact-item-blue">
+              <FaMapMarkerAlt className="contact-icon-blue" />
+              <span>{memberData.address}</span>
+            </div>
+            <div className="contact-item-blue">
+              <FaEnvelope className="contact-icon-blue" />
+              <span>{memberData.email}</span>
+            </div>
+            <div className="contact-item-blue">
+              <FaPhone className="contact-icon-blue" />
+              <span>Cell: {memberData.phone}</span>
+            </div>
+          </div>
         </div>
-    )
+
+        {/* Membership Details Section */}
+        <div className="member-details-section">
+          <div className="detail-row">
+            <FaIdCard className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Member ID:</span>
+              <span className="detail-value member-id">
+                {memberData.memberId}
+              </span>
+            </div>
+          </div>
+          <div className="detail-row">
+            <FaCalendarAlt className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Joined:</span>
+              <span className="detail-value">{memberData.joined}</span>
+            </div>
+          </div>
+          <div className="detail-row">
+            <FaClock className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Expires:</span>
+              <span className="detail-value">{memberData.expires}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Financial Details Card */}
+        <div className="member-financial-card">
+          <div className="financial-header">
+            <div className="financial-title">
+              <FaExclamationTriangle className="warning-icon" />
+              <span>Balance</span>
+            </div>
+            <span className="balance-amount">{memberData.balance}</span>
+          </div>
+          <div className="financial-details">
+            <div className="financial-row">
+              <span className="financial-label">Last Payment:</span>
+              <span className="financial-value">{memberData.lastPayment}</span>
+            </div>
+            <div className="financial-row">
+              <span className="financial-label">Payment Date:</span>
+              <span className="financial-value">{memberData.paymentDate}</span>
+            </div>
+            <div className="financial-row">
+              <span className="financial-label">Payment Code:</span>
+              <span className="financial-value">{memberData.paymentCode}</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Grade and Category Section - on blue background */}
+        <div className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}>
+          <div className="grade-row-blue">
+            <span className="grade-label-blue">Grade:</span>
+            <span className="grade-value-blue">{memberData.grade}</span>
+          </div>
+          <div className="grade-row-blue">
+            <span className="grade-label-blue">Category:</span>
+            <span className="grade-value-blue">{memberData.category}</span>
+          </div>
+        </div>
+
+        {/* Cancel Membership Button */}
+        {showButtons && (
+          <button className="member-cancel-btn" onClick={handleCancelClick}>
+            Cancel Membership
+          </button>
+        )}
+      </div>
+
+      {/* Cancel Membership Modal */}
+      <Modal
+        title="Cancel Membership"
+        open={isCancelModalVisible}
+        onCancel={handleCancelModalClose}
+        footer={[
+          <Button key="cancel" onClick={handleCancelModalClose}>
+            Cancel
+          </Button>,
+          <Button
+            key="submit"
+            type="primary"
+            danger
+            onClick={handleCancelSubmit}
+            disabled={!cancelFormData.dateResigned || !cancelFormData.reason}
+          >
+            Confirm Cancellation
+          </Button>,
+        ]}
+        width={520}
+        centered
+        className="cancel-membership-modal"
+      >
+        <div
+          style={{
+            padding: "24px 16px",
+            minHeight: "120px",
+          }}
+        >
+          <div style={{ marginBottom: "20px" }}>
+            <MyDatePicker
+              label="Date Resigned"
+              placeholder="Select date resigned"
+              value={cancelFormData.dateResigned}
+              onChange={(date) => handleFormChange("dateResigned", date)}
+              required
+            />
+          </div>
+          <div>
+            <CustomSelect
+              label="Reason for Cancellation"
+              placeholder="Select reason"
+              options={cancellationReasons}
+              value={cancelFormData.reason}
+              onChange={(e) => handleFormChange("reason", e.target.value)}
+              required
+            />
+          </div>
+        </div>
+      </Modal>
+    </div>
+  );
 }
 
-export default ProfileHeader;   
+export default ProfileHeader;

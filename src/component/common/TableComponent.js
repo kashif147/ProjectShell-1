@@ -38,6 +38,7 @@ import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { set } from "react-hook-form";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 const EditableContext = React.createContext(null);
 
 
@@ -299,227 +300,190 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         </Space>
       ),
     },
-    ...columnsDragbe.map((col) => ({
-      ...col,
-      title: (
-        <DraggableHeaderCell id={col.key} key={col.key}>
-          {col.title}
-        </DraggableHeaderCell>
-      ),
-      render: (text, record, index) =>
-        col.title === "Full Name" ? (
-          <Link
-            to="/Details"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
-        ) : col.title === "Claim No" ? (
-          <Link
-            to="/ClaimsById"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
-        ) : col.title === "Roster ID" ? (
-          <Link
-            to="/Roster"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
-        ) : col.title === "Application ID" ? (
-          <span
-            style={{ color: "blue", cursor: "pointer" }}
-            onClick={() => {
-              const { applicationStatus, applicationId } = record || {};
-              if (applicationStatus === "Draft") {
-                dispatch(getApplicationById({ id: "draft", draftId: applicationId }));
-                navigate("/applicationMgt", { state: { isEdit: true } });
-              } else if (applicationStatus === "submitted") {
-                dispatch(getApplicationById({ id: applicationId }));
-                navigate("/applicationMgt", { state: { isEdit: true } });
-                setAddNewGardaDrwr(true);
-                disableFtn(false);
-              }
-            }}
-          >
-            View
-          </span>
-        ) : col.title === "Change To" ? (
-          <Link
-            to="/ChangeCatById"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
-
-        ) : (col.title === "Batch Name") ? (
-          <Link
-            to="/BatchMemberSummary"
-            state={{
-              search: screenName,
-              batchName: text,
-              batchId: record?.id || record?.key,
-
-            }}
-            onClick={() => {
-              // const {  id } = record || {};
-              debugger
-              const batchPaths = [
-                "/Batches",
-                "/Import",
-                "/onlinePayment",
-                "/Cheque",
-                "/StandingOrders",
-                "/Deductions",
-              ];
-              if (batchPaths.includes(location.pathname)) {
-                // 🔹 For batch-related pages, get batch by ID
-                const batch = getBatchById(record?.id);
-                debugger
-                if (batch) {
-                  setExcelData(batch); // assuming setExcel updates ExcelContext state
-                  console.log("Batch loaded:", batch);
-                } else {
-                  // console.warn("No batch found with ID:", id);
-                }
-
-              }
-            }}
-
-          >
-            {`${text}`}
-          </Link>
-        ) : col.title === "Correspondence ID" ? (
-          <Link
-            to="/CorspndncDetail"
-            state={{
-              search: screenName,
-              name: record?.fullName,
-              code: record?.regNo,
-              Forename: record?.forename,
-              Fullname: record?.surname,
-              DateOfBirth: record?.dateOfBirth,
-            }}
-            onClick={() => getProfile([record], index)}
-          >
-            <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-          </Link>
-        ) : (
-          <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-        ),
-      sorter:
-        col.title === "Full Name"
-          ? {
-            compare: (a, b) =>
-              a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-            multiple: 3,
-          }
-          : col.title === "Station"
-            ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 2,
-            }
-            : col.title === "Duty"
-              ? {
-                compare: (a, b) =>
-                  a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-                multiple: 1,
-              }
-              : col.title === "Reg No"
-                ? {
-                  compare: (a, b) =>
-                    a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-                  multiple: 1,
-                }
-                : col.title === "Correspondence ID"
-                  ? {
-                    compare: (a, b) =>
-                      a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-                    multiple: 1,
+  ...columnsDragbe.map((col) => ({
+  ...col,
+  title: (
+    <DraggableHeaderCell id={col.key} key={col.key}>
+      {col.title}
+    </DraggableHeaderCell>
+  ),
+  render: col.render
+    ? col.render // ✅ Use custom render if defined in column
+    : (text, record, index) => {
+        switch (col.title) {
+          case "Full Name":
+            return (
+              <Link
+                to="/Details"
+                state={{ search: screenName, name: record?.fullName, code: record?.regNo }}
+                // onClick={() => getProfile([record], index)}
+                onClick={() => dispatch(getProfileDetailsById(record?._id))}
+              >
+                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+              </Link>
+            );
+          case "Claim No":
+            return (
+              <Link
+                to="/ClaimsById"
+                state={{
+                  search: screenName,
+                  name: record?.fullName,
+                  code: record?.regNo,
+                  Forename: record?.forename,
+                  Fullname: record?.surname,
+                  DateOfBirth: record?.dateOfBirth,
+                }}
+                onClick={() => getProfile([record], index)}
+              >
+                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+              </Link>
+            );
+          case "Roster ID":
+            return (
+              <Link
+                to="/Roster"
+                state={{
+                  search: screenName,
+                  name: record?.fullName,
+                  code: record?.regNo,
+                  Forename: record?.forename,
+                  Fullname: record?.surname,
+                  DateOfBirth: record?.dateOfBirth,
+                }}
+                onClick={() => getProfile([record], index)}
+              >
+                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+              </Link>
+            );
+          case "Application ID":
+            return (
+              <span
+                style={{ color: "blue", cursor: "pointer" }}
+                onClick={() => {
+                  const { applicationStatus, applicationId } = record || {};
+                  if (applicationStatus === "Draft") {
+                    dispatch(getApplicationById({ id: "draft", draftId: applicationId }));
+                    navigate("/applicationMgt", { state: { isEdit: true } });
+                  } else {
+                    dispatch(getApplicationById({ id: applicationId }));
+                    navigate("/applicationMgt", { state: { isEdit: true } });
+                    setAddNewGardaDrwr(true);
+                    disableFtn(false);
                   }
-                  : undefined,
-      sortDirections: ["ascend", "descend"],
-      filters:
-        col.title === "Station" || col.title === "Current Station"
-          ? [
-            { text: "GALC", value: "GALC" },
-            { text: "DUBC", value: "DUBC" },
-            { text: "STOC", value: "STOC" },
-          ]
-          : col.title === "Division"
-            ? [
-              { text: "0026", value: "0026" },
-              { text: "0031", value: "0031" },
-              { text: "0045", value: "0045" },
-            ]
-            : col.title === "Approval Status"
-              ? [
-                { text: "Approved", value: "Approved" },
-                { text: "Pending", value: "Pending" },
-                { text: "Rejected", value: "Rejected" },
-              ]
-              : col.title === "Current Station"
-                ? [
-                  { text: "0026", value: "0026" },
-                  { text: "0031", value: "0031" },
-                  { text: "0045", value: "0045" },
-                ]
-                : col.title === "Method of Contact"
-                  ? [
-                    { text: "Call", value: "Call" },
-                    { text: "Email", value: "Email" },
-                    { text: "Letter", value: "Letter" },
-                    { text: "Letter", value: "Letter" },
-                  ]
-                  : undefined,
-      onFilter: (value, record) => {
-        if (col.title === "Station" || col.title === "Current Station") {
-          return record[col.dataIndex] === value;
-        } else if (col.title === "Division") {
-          return record[col.dataIndex] === value;
-        } else if (col.title === "Approval Status") {
-          return record[col.dataIndex] === value;
-        } else if (col.title === "Method of Contact") {
-          return record[col.dataIndex] === value;
+                }}
+              >
+                View
+              </span>
+            );
+          case "Change To":
+            return (
+              <Link
+                to="/ChangeCatById"
+                state={{
+                  search: screenName,
+                  name: record?.fullName,
+                  code: record?.regNo,
+                  Forename: record?.forename,
+                  Fullname: record?.surname,
+                  DateOfBirth: record?.dateOfBirth,
+                }}
+                onClick={() => getProfile([record], index)}
+              >
+                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+              </Link>
+            );
+          case "Batch Name":
+            return (
+              <Link
+                to="/BatchMemberSummary"
+                state={{ search: screenName, batchName: text, batchId: record?.id || record?.key }}
+                onClick={() => {
+                  const batchPaths = ["/Batches", "/Import", "/onlinePayment", "/Cheque", "/StandingOrders", "/Deductions"];
+                  if (batchPaths.includes(location.pathname)) {
+                    const batch = getBatchById(record?.id);
+                    if (batch) setExcelData(batch);
+                  }
+                }}
+              >
+                {text}
+              </Link>
+            );
+          case "Correspondence ID":
+            return (
+              <Link
+                to="/CorspndncDetail"
+                state={{
+                  search: screenName,
+                  name: record?.fullName,
+                  code: record?.regNo,
+                  Forename: record?.forename,
+                  Fullname: record?.surname,
+                  DateOfBirth: record?.dateOfBirth,
+                }}
+                onClick={() => getProfile([record], index)}
+              >
+                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+              </Link>
+            );
+          default:
+            return <span style={{ textOverflow: "ellipsis" }}>{text}</span>;
         }
-        // else if (col.title=="Method of Contact"){
-        //   return record[col.dataIndex]===value;
-        // }
-        return true;
       },
-    })),
+  sorter:
+    col.title === "Full Name"
+      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 3 }
+      : col.title === "Station"
+      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 2 }
+      : col.title === "Duty"
+      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 1 }
+      : col.title === "Reg No"
+      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 1 }
+      : col.title === "Correspondence ID"
+      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 1 }
+      : undefined,
+  sortDirections: ["ascend", "descend"],
+  filters:
+    col.title === "Station" || col.title === "Current Station"
+      ? [
+          { text: "GALC", value: "GALC" },
+          { text: "DUBC", value: "DUBC" },
+          { text: "STOC", value: "STOC" },
+        ]
+      : col.title === "Division"
+      ? [
+          { text: "0026", value: "0026" },
+          { text: "0031", value: "0031" },
+          { text: "0045", value: "0045" },
+        ]
+      : col.title === "Approval Status"
+      ? [
+          { text: "Approved", value: "Approved" },
+          { text: "Pending", value: "Pending" },
+          { text: "Rejected", value: "Rejected" },
+        ]
+      : col.title === "Current Station"
+      ? [
+          { text: "0026", value: "0026" },
+          { text: "0031", value: "0031" },
+          { text: "0045", value: "0045" },
+        ]
+      : col.title === "Method of Contact"
+      ? [
+          { text: "Call", value: "Call" },
+          { text: "Email", value: "Email" },
+          { text: "Letter", value: "Letter" },
+        ]
+      : undefined,
+  onFilter: (value, record) => {
+    if (col.title === "Station" || col.title === "Current Station") return record[col.dataIndex] === value;
+    if (col.title === "Division") return record[col.dataIndex] === value;
+    if (col.title === "Approval Status") return record[col.dataIndex] === value;
+    if (col.title === "Method of Contact") return record[col.dataIndex] === value;
+    return true;
+  },
+}))
+
   ];
 
   const pageSize = 8;

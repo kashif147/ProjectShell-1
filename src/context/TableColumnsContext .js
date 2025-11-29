@@ -12,30 +12,73 @@ const TableColumnsContext = createContext();
 // Static column configurations
 const staticColumns = {
   Profile: [
-    { dataIndex: "regNo", title: "Membership No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "fullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "email", title: "Email", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "mobileNo", title: "Mobile No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "dob", title: "Date of Birth", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "gender", title: "Gender", ellipsis: true, isGride: true, isVisible: true, width: 120 },
-    { dataIndex: "address", title: "Address", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "notAtAddress", title: "Not at this Address", ellipsis: true, isGride: true, isVisible: true, width: 180 },
-    { dataIndex: "membershipCategory", title: "Membership Category", ellipsis: true, isGride: true, isVisible: true, width: 180 },
-    { dataIndex: "station", title: "Work Location", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "branch", title: "Branch", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "region", title: "Region", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "grade", title: "Grade", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "sectionPrimary", title: "Section (Primary)", ellipsis: true, isGride: true, isVisible: true, width: 180 },
-    { dataIndex: "dateRetired", title: "Retired Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "pensionNo", title: "Pension Number", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "payrollNo", title: "Payroll No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "nmbiNo", title: "NMBI No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
-    { dataIndex: "speciality", title: "Speciality", ellipsis: true, isGride: true, isVisible: true, width: 180 },
-    { dataIndex: "anotherUnionMember", title: "Another Union Member", ellipsis: true, isGride: true, isVisible: true, width: 200 },
-    { dataIndex: "consent", title: "Consent", ellipsis: true, isGride: true, isVisible: true, width: 120 },
-    { dataIndex: "incomeProtection", title: "Income Protection", ellipsis: true, isGride: true, isVisible: true, width: 180 },
-    { dataIndex: "inmoRewards", title: "INMO Rewards", ellipsis: true, isGride: true, isVisible: true, width: 180 },
-    { dataIndex: "partnerConsent", title: "Partner Consent", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+    // ======================= PROFILE BASICS =======================
+    { dataIndex: "membershipNumber", title: "Membership No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["personalInfo", "forename"], title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200 },
+
+    { dataIndex: ["contactInfo", "personalEmail"], title: "Email", ellipsis: true, isGride: true, isVisible: true, width: 200 },
+
+    { dataIndex: ["contactInfo", "mobileNumber"], title: "Mobile No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["personalInfo", "dateOfBirth"], title: "Date of Birth", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["personalInfo", "gender"], title: "Gender", ellipsis: true, isGride: true, isVisible: true, width: 120 },
+
+    // ======================= ADDRESS =======================
+    { dataIndex: ["contactInfo", "fullAddress"], title: "Address", ellipsis: true, isGride: true, isVisible: true, width: 200 },
+
+    { dataIndex: ["contactDetails", "contactInfo", "notAtAddress"], title: "Not at this Address", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+
+    // ======================= MEMBERSHIP =======================
+    { dataIndex: ["professionalDetails", "membershipCategory"], title: "Membership Category", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+
+    // ======================= PROFESSIONAL =======================
+    { dataIndex: ["professionalDetails", "workLocation"], title: "Work Location", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "branch"], title: "Branch", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "region"], title: "Region", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "grade"], title: "Grade", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "nurseType"], title: "Section (Primary)", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+
+    { dataIndex: ["professionalDetails", "retiredDate"], title: "Retired Date", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "pensionNo"], title: "Pension Number", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "payrollNo"], title: "Payroll No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "nmbiNumber"], title: "NMBI No", ellipsis: true, isGride: true, isVisible: true, width: 150 },
+
+    { dataIndex: ["professionalDetails", "otherGrade"], title: "Speciality", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+
+    // ======================= OTHER UNION =======================
+    { dataIndex: ["additionalInformation", "otherIrishTradeUnion"], 
+       render: (value, record) => (record?.additionalInformation?.otherIrishTradeUnion ? "Yes" : "No"),
+      title: "Another Union Member", ellipsis: true, isGride: true, isVisible: true, width: 200 },
+
+    // ======================= CONSENTS =======================
+    {
+      dataIndex: ["preferences", "consent"],
+      title: "Consent",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value, record) => (record?.preferences?.consent ? "Yes" : "No"),
+    }
+,
+  { dataIndex: ["cornMarket", "incomeProtectionScheme"],
+     render: (value, record) => (record?.cornMarket?.incomeProtectionScheme ? "Yes" : "No"),
+    title: "Income Protection", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+
+    { dataIndex: ["cornMarket", "inmoRewards"], 
+       render: (value, record) => (record?.cornMarket?.inmoRewards ? "Yes" : "No"),
+      title: "INMO Rewards", ellipsis: true, isGride: true, isVisible: true, width: 180 },
+
+    { dataIndex: ["preferences", "valueAddedServices"], title: "Partner Consent", ellipsis: true, isGride: true, isVisible: true, width: 180, },
   ]
   ,
   ChangCateSumm: [
@@ -77,7 +120,6 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      render: (value) => value ? convertToLocalTime(value) : "-",
     },
     {
       dataIndex: "updatedAt",
@@ -87,7 +129,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      render: (value) => value ? convertToLocalTime(value) : "-",
+      // render: (value) => value ? convertToLocalTime(value) : "-",
     },
 
     // 🔹 Personal Info
@@ -110,8 +152,17 @@ const staticColumns = {
     { dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"], title: "Telephone", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: true },
     { dataIndex: ["personalDetails", "contactInfo", "personalEmail"], title: "Personal Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
     { dataIndex: ["personalDetails", "contactInfo", "workEmail"], title: "Work Email", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: true },
-    { dataIndex: ["personalDetails", "contactInfo", "consentSMS"], title: "Consent SMS", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
-    { dataIndex: ["personalDetails", "contactInfo", "consentEmail"], title: "Consent Email", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
+    {
+      dataIndex: ["personalDetails", "contactInfo", "consent"],
+      title: "Consent",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      editable: false,
+      render: (value) => value ? "Yes" : "No"
+    },
+    // { dataIndex: ["personalDetails", "contactInfo", "consentEmail"], title: "Consent Email", ellipsis: true, isGride: true, isVisible: true, width: 120, editable: false },
 
     // 🔹 Approval Info
     { dataIndex: ["personalDetails", "approvalDetails", "approvedBy"], title: "Approved By", ellipsis: true, isGride: true, isVisible: true, width: 150, editable: false },
@@ -123,7 +174,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      render: (value) => value ? convertToLocalTime(value) : "-",
+      // render: (value) => value ? convertToLocalTime(value) : "-",
     },
   ]
   ,
@@ -287,72 +338,72 @@ const staticColumns = {
   ],
 
   BatchMemberSummary: [
-  {
-    title: "First name",
-    dataIndex: "First name",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-    render: (_, record) => `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
-  },
-  {
-    dataIndex: "First name",
-    title: "Last name",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Membership No",
-    title: "Membership No",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Value for Periods Selected",
-    title: "Value for Periods Selected",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Arrears",
-    title: "Arrears",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Comments",
-    title: "Comments",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Advance",
-    title: "Advance",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 100,
-  },
-  {
-    dataIndex: "Total Amount",
-    title: "Total Amount",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 100,
-  },
-],
+    {
+      title: "First name",
+      dataIndex: "First name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (_, record) => `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
+    },
+    {
+      dataIndex: "First name",
+      title: "Last name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Membership No",
+      title: "Membership No",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Value for Periods Selected",
+      title: "Value for Periods Selected",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Arrears",
+      title: "Arrears",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Comments",
+      title: "Comments",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Advance",
+      title: "Advance",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+    {
+      dataIndex: "Total Amount",
+      title: "Total Amount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+  ],
   members: [
     { dataIndex: "MembershipNo", title: "Membership No", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
     { dataIndex: "FullName", title: "Full Name", ellipsis: true, isGride: true, isVisible: true, width: 200, editable: false },
@@ -1151,26 +1202,26 @@ export const TableColumnsProvider = ({ children }) => {
   }, [regionLookups, transformLookupData]);
 
   // General lookups processing
-useEffect(() => {
-  if (lookups && Array.isArray(lookups)) {
-    const lookupTypes = {
-      gender: "68c85f21302e5600dc8477da",
-      Duties: "68c85f22302e5600dc847805",
-      MaritalStatus: "68c85f21302e5600dc8477e1",
-      Titles: "68c85f21302e5600dc8477d6",
-      Ranks: "68c85f22302e5600dc847809",
-    };
+  useEffect(() => {
+    if (lookups && Array.isArray(lookups)) {
+      const lookupTypes = {
+        gender: "68c85f21302e5600dc8477da",
+        Duties: "68c85f22302e5600dc847805",
+        MaritalStatus: "68c85f21302e5600dc8477e1",
+        Titles: "68c85f21302e5600dc8477d6",
+        Ranks: "68c85f22302e5600dc847809",
+      };
 
-    const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
-      acc[key] = lookups.filter(
-        (item) => item?.lookuptypeId?._id === lookupTypes[key]
-      );
-      return acc;
-    }, {});
+      const updatedLookups = Object.keys(lookupTypes).reduce((acc, key) => {
+        acc[key] = lookups.filter(
+          (item) => item?.lookuptypeId?._id === lookupTypes[key]
+        );
+        return acc;
+      }, {});
 
-    setLookupsData((prevState) => ({ ...prevState, ...updatedLookups }));
-  }
-}, [lookups]);
+      setLookupsData((prevState) => ({ ...prevState, ...updatedLookups }));
+    }
+  }, [lookups]);
 
 
   useEffect(() => {

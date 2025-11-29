@@ -1,69 +1,91 @@
-import React from 'react'
-import TableComponent from '../../component/common/TableComponent'
-import { useView } from '../../context/ViewContext';
-import RemindersCard from '../../RemindersCard';
+import React, { useState } from 'react';
+import { Pagination } from 'antd';
+import { useNavigate } from 'react-router-dom';
+import { useReminders } from '../../context/CampaignDetailsProvider';
+import { useTableColumns } from '../../context/TableColumnsContext ';
+import { campaigns } from '../../Data';
+import ReminderListItem from '../../component/reminders/ReminderListItem';
 
 function RemindersSummary() {
-  const { viewMode } = useView();
-       const tableData = [
-            {
-              "key": "1",
-              "regNo": "45217A",
-              "fullName": "Jack Smith",
-              // ... (all existing fields remain unchanged) ...
-              "stationPhone": "0946 744 188",
-              // New reminder fields:
-              "batchName": "Batch-2023-11",
-              "batchDate": "15/11/2023",
-              "batchStatus": "Pending",
-              "createdAt": "10/11/2023 09:30",
-              "createdBy": "admin1",
-              "Count": 5
-            },
-            {
-              "key": "2",
-              "regNo": "93824B",
-              "fullName": "Mary Johnson",
-              // ... (all existing fields remain unchanged) ...
-              "stationPhone": "1234 567 890",
-              // New reminder fields:
-              "batchName": "Batch-2023-11",
-              "batchDate": "15/11/2023",
-              "batchStatus": "Approved",
-              "createdAt": "10/11/2023 10:15",
-              "createdBy": "admin2",
-              "Count": 3
-            },
-            // ... (all other records follow same pattern) ...
-            {
-              "key": "27",
-              "regNo": "19463AA",
-              "fullName": "Ethan Moore",
-              // ... (all existing fields remain unchanged) ...
-              "stationPhone": "0876 543 210",
-              // New reminder fields:
-              "batchName": "Batch-2023-12",
-              "batchDate": "01/12/2023",
-              "batchStatus": "Rejected",
-              "createdAt": "28/11/2023 14:45",
-              "createdBy": "admin3",
-              "Count": 7
-            }
-          ];
+  const navigate = useNavigate();
+  const { getRemindersById } = useReminders();
+  const { disableFtn } = useTableColumns();
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize] = useState(10);
+
+  const handleView = (item) => {
+    navigate('/RemindersDetails');
+    getRemindersById(item?.id);
+    if (item?.isSelected === true) {
+      disableFtn(true);
+    } else {
+      disableFtn(false);
+    }
+  };
+
+  const handleEdit = (item) => {
+    console.log('Edit item:', item);
+  };
+
+  const filteredData = campaigns;
+
+  const paginatedData = filteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize
+  );
+
   return (
-    <div className='' >
-      {
-      viewMode?.reminder === "card" ?
-    <TableComponent data={tableData}  screenName="Reminders" />
-    :
-     viewMode?.reminder === "grid"?
-    <div className='me-4 ms-4 ps-1 pe-1 pb-4 mb-2 overflow-auto' style={{height:'80vh',backgroundColor:'rgba(253, 253, 253, 1)'}}>
-      <RemindersCard />
+    <div style={{ 
+      padding: '24px', 
+      backgroundColor: '#f5f5f5', 
+      height: '100vh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden'
+    }}>
+      {/* List Items - Scrollable Area */}
+      <div style={{ 
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+        marginBottom: '16px',
+        paddingRight: '8px',
+      }}>
+        {paginatedData.map((item) => (
+          <ReminderListItem
+            key={item.id}
+            item={item}
+            onView={handleView}
+            onEdit={handleEdit}
+          />
+        ))}
       </div>
-      :null
-      }
+
+      {/* Pagination - Fixed at Bottom */}
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center',
+        paddingTop: '16px',
+        borderTop: '1px solid #e8e8e8',
+        flexShrink: 0
+      }}>
+        <div style={{ color: '#8c8c8c', fontSize: '14px' }}>
+          Pagination
+        </div>
+        <Pagination
+          current={currentPage}
+          pageSize={pageSize}
+          total={filteredData.length}
+          onChange={(page) => setCurrentPage(page)}
+          showSizeChanger={false}
+        />
+        <div style={{ color: '#8c8c8c', fontSize: '14px' }}>
+          Pagination
+        </div>
+      </div>
     </div>
-  )
+  );
 }
 
-export default RemindersSummary
+export default RemindersSummary;
