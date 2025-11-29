@@ -17,6 +17,7 @@ function ProfileSummary() {
   return (
     <div className="" style={{ width: "100%" }}>
       <TableComponent
+      isGrideLoading={loading}
         data={results}
         screenName="Profile"
         redirect="/Details"

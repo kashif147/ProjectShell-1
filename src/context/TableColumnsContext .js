@@ -120,7 +120,6 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      render: (value) => value ? convertToLocalTime(value) : "-",
     },
     {
       dataIndex: "updatedAt",
@@ -130,7 +129,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      render: (value) => value ? convertToLocalTime(value) : "-",
+      // render: (value) => value ? convertToLocalTime(value) : "-",
     },
 
     // 🔹 Personal Info
@@ -175,7 +174,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      render: (value) => value ? convertToLocalTime(value) : "-",
+      // render: (value) => value ? convertToLocalTime(value) : "-",
     },
   ]
   ,

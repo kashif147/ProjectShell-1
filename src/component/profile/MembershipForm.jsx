@@ -36,7 +36,7 @@ const MembershipForm = ({ isEditMode = false }) => {
     if (!utcDateString) return null;
 
     // Convert UTC to local timezone and format as dd/mm/yyyy
-    return dayjs.utc(utcDateString).local().format('DD/MM/YYYY');
+    return dayjs.utc(utcDateString).local();
   };
 
   useEffect(() => {
@@ -259,7 +259,7 @@ const MembershipForm = ({ isEditMode = false }) => {
     <div
       className="mt-2 pe-4 pb-4 mb-2 membership-form-container"
       style={{
-        height: "calc(100vh - 120px - 4vh)",
+        height: "calc(92vh - 120px - 4vh)",
         maxHeight: "calc(100vh - 120px - 4vh)",
         overflowY: "auto",
         overflowX: "hidden",
@@ -535,6 +535,7 @@ const MembershipForm = ({ isEditMode = false }) => {
                 label="Work Location"
                 placeholder="Select Location..."
                 // options={lookupData.workLocations}
+                isObjectValue={true}
                 options={workLocationOptions}
                 value={formData.workLocation}
                 onChange={(e) => handleChange("workLocation", e.target.value)}
@@ -693,9 +694,9 @@ const MembershipForm = ({ isEditMode = false }) => {
               <div style={{ marginBottom: "16px" }}>
                 <label className="my-input-label">Primary Nurse Type</label>
                 <Radio.Group
-                  value={formData.nurseType}
+                  value={formData.nursingSpecialization}
                   onChange={(e) =>
-                    handleChange("nurseType", e.target.value)
+                    handleChange("nursingSpecialization", e.target.value)
                   }
                   disabled={!isEditMode}
                 >

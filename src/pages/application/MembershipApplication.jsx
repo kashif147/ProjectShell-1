@@ -6,6 +6,7 @@ import MultiFilterDropdown from "../../component/common/MultiFilterDropdown";
 import { Spin } from "antd";
 import { useFilters } from "../../context/FilterContext";
 import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
 function MembershipApplication() {
   const dispatch = useDispatch();
@@ -21,10 +22,12 @@ function MembershipApplication() {
     if (!applicationData) return applicationData;
 
 
-    const formatDate = (dateString) => {
-      if (!dateString) return null;
-      return dayjs(dateString).format('DD/MM/YYYY HH:MM');
-    };
+dayjs.extend(utc);
+
+const formatDate = (dateString) => {
+  if (!dateString) return null;
+  return dayjs.utc(dateString).format("DD/MM/YYYY HH:mm"); // stays in UTC
+};
 
     return {
       ...applicationData,
@@ -62,6 +65,7 @@ function MembershipApplication() {
       // Format top-level dates
       createdAt: formatDate(applicationData.createdAt),
       updatedAt: formatDate(applicationData.updatedAt),
+
       
       // Format approvalDetails dates
       approvalDetails: applicationData.approvalDetails ? {
