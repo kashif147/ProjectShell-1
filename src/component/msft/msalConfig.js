@@ -14,12 +14,13 @@ export const getRedirectUri = () => {
   // If running in Node (SSR or server context, not browser), just use env value
   if (typeof window === "undefined") {
     return (
-      process.env.REACT_APP_REDIRECT_URI_VER || REACT_APP_REDIRECT_URI || ""
+      // process.env.REACT_APP_REDIRECT_URI_VER ||
+      process.env.REACT_APP_REDIRECT_URI || ""
     );
   }
 
   const envOverride =
-    process.env.REACT_APP_REDIRECT_URI_VER ||
+    // process.env.REACT_APP_REDIRECT_URI_VER ||
     process.env.REACT_APP_REDIRECT_URI;
   if (envOverride) {
     return envOverride.replace(/\/+$/, "");
