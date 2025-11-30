@@ -25,7 +25,7 @@ export const getRedirectUri = () => {
   const defaultRedirect =
     process.env.NODE_ENV === "development"
       ? window.location.origin
-      : "https://project-shell-crm.vercel.app";
+      : "https://project-shell-crm.vercel.app/";
 
   return defaultRedirect.replace(/\/+$/, "");
 };

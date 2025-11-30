@@ -1,30 +1,32 @@
 // lookupsSlice.js
-import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
-import axios from 'axios';
+import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
+import axios from "axios";
 
 const API_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 const getAuthHeaders = () => ({
-  Authorization: `Bearer ${localStorage.getItem('token')}`,
-  'Content-Type': 'application/json',
+  Authorization: `Bearer ${localStorage.getItem("token")}`,
+  "Content-Type": "application/json",
 });
 
 // Only GET operation
 export const getAllLookups = createAsyncThunk(
-  'lookups/getAllLookups',
+  "lookups/getAllLookups",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${API_URL}/api/lookup`, { 
-        headers: getAuthHeaders() 
+      const { data } = await axios.get(`${API_URL}/api/lookup`, {
+        headers: getAuthHeaders(),
       });
       return data;
     } catch (error) {
-      return rejectWithValue(error.response?.data?.message || 'Failed to fetch lookups');
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch lookups"
+      );
     }
   }
 );
 
 const lookupsSlice = createSlice({
-  name: 'lookups',
+  name: "lookups",
   initialState: {
     // Separate states for each lookup type with label-value format
     titleOptions: [],
@@ -38,9 +40,11 @@ const lookupsSlice = createSlice({
     regionOptions: [],
     secondarySectionOptions: [],
     countryOptions: [],
-    
+
     // Raw API response (optional - remove if not needed)
     lookups: [],
+    loading: false,
+    error: null,
   },
   reducers: {
     clearLookupsError: (state) => {
@@ -60,11 +64,17 @@ const lookupsSlice = createSlice({
       state.secondarySectionOptions = [];
       state.countryOptions = [];
       state.lookups = [];
-    }
+    },
   },
   extraReducers: (builder) => {
     builder
+      .addCase(getAllLookups.pending, (state) => {
+        state.loading = true;
+        state.error = null;
+      })
       .addCase(getAllLookups.fulfilled, (state, { payload }) => {
+        state.loading = false;
+        state.error = null;
         state.lookups = payload;
         state.titleOptions = [];
         state.genderOptions = [];
@@ -79,45 +89,45 @@ const lookupsSlice = createSlice({
         state.countryOptions = [];
 
         if (Array.isArray(payload)) {
-          payload.forEach(item => {
+          payload.forEach((item) => {
             const lookuptype = item.lookuptypeId?.lookuptype;
             const optionItem = {
               value: item._id,
               key: item._id,
-              label: item.lookupname
+              label: item.lookupname,
             };
             switch (lookuptype) {
-              case 'Title':
+              case "Title":
                 state.titleOptions.push(optionItem);
                 break;
-              case 'Gender':
+              case "Gender":
                 state.genderOptions.push(optionItem);
                 break;
-              case 'workLocation':
+              case "workLocation":
                 state.workLocationOptions.push(optionItem);
                 break;
-              case 'Grade':
+              case "Grade":
                 state.gradeOptions.push(optionItem);
                 break;
-              case 'Section':
+              case "Section":
                 state.sectionOptions.push(optionItem);
                 break;
-              case 'MembershipCategory':
+              case "MembershipCategory":
                 state.membershipCategoryOptions.push(optionItem);
                 break;
-              case 'PaymentType':
+              case "PaymentType":
                 state.paymentTypeOptions.push(optionItem);
                 break;
-              case 'Branch':
+              case "Branch":
                 state.branchOptions.push(optionItem);
                 break;
-              case 'Region':
+              case "Region":
                 state.regionOptions.push(optionItem);
                 break;
-              case 'Secondary Section':
+              case "Secondary Section":
                 state.secondarySectionOptions.push(optionItem);
                 break;
-              case 'Country':
+              case "Country":
                 state.countryOptions.push(optionItem);
                 break;
               default:
@@ -127,9 +137,9 @@ const lookupsSlice = createSlice({
         }
 
         const otherOption = {
-          id: 'Other',
-          value: 'Other',
-          label: 'Other'
+          id: "Other",
+          value: "Other",
+          label: "Other",
         };
 
         // Add "Other" to Secondary Section
@@ -150,6 +160,10 @@ const lookupsSlice = createSlice({
         if (state.workLocationOptions.length > 0) {
           state.workLocationOptions.push(otherOption);
         }
+      })
+      .addCase(getAllLookups.rejected, (state, action) => {
+        state.loading = false;
+        state.error = action.payload;
       });
   },
 });

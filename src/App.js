@@ -2,7 +2,7 @@ import "./App.css";
 import "./styles/Utilites.css";
 import "./styles/GlobalChatbot.css";
 import Entry from "./Entry";
-import React, { useEffect } from "react";
+import React, { useEffect, useRef } from "react";
 import AuthProvider from "./pages/auth/AuthProvider";
 import { ChatbotProvider } from "./context/ChatbotContext";
 import { App as AntApp, notification } from "antd";
@@ -14,22 +14,57 @@ import "antd/dist/reset.css";
 function App() {
   const dispatch = useDispatch();
   const [api, contextHolder] = notification.useNotification();
-  const { 
-    hierarchicalLookups, 
-    hierarchicalLookupsLoading, 
-    hierarchicalLookupsError 
+  const hasFetchedRef = useRef(false);
+
+  const {
+    hierarchicalLookups,
+    hierarchicalLookupsLoading,
+    hierarchicalLookupsError,
   } = useSelector((state) => state.hierarchicalLookups);
+
+  const { lookups, loading: lookupsLoading } = useSelector(
+    (state) => state.lookups
+  );
+
   // Make AntD notification globally available for MyAlert.js
   notification.success = api.success;
   notification.error = api.error;
   notification.info = api.info;
   notification.warning = api.warning;
+
   useEffect(() => {
-    dispatch(getAllLookups())
-  }, [])
-    useEffect(() => {
-    dispatch(getHierarchicalLookups());
-  }, [dispatch]);
+    // Only fetch lookups if user is authenticated (token exists)
+    // This prevents API calls when landing on the login page
+    const token = localStorage.getItem("token");
+    if (!token) {
+      hasFetchedRef.current = false;
+      return;
+    }
+
+    // Only fetch if data doesn't exist, not already loading, and haven't fetched in this session
+    if (
+      !lookupsLoading &&
+      (!lookups || lookups.length === 0) &&
+      !hasFetchedRef.current
+    ) {
+      hasFetchedRef.current = true;
+      dispatch(getAllLookups());
+    }
+
+    // Only fetch hierarchical if data doesn't exist and not already loading
+    if (
+      !hierarchicalLookupsLoading &&
+      (!hierarchicalLookups || hierarchicalLookups.length === 0)
+    ) {
+      dispatch(getHierarchicalLookups());
+    }
+  }, [
+    dispatch,
+    lookups,
+    lookupsLoading,
+    hierarchicalLookups,
+    hierarchicalLookupsLoading,
+  ]);
   useEffect(() => {
     const loadWorklet = async () => {
       // Shared Storage API is only available in secure contexts and specific origins
@@ -66,4 +101,3 @@ function App() {
 }
 
 export default App;
-
