@@ -274,7 +274,8 @@ function MyDeatails() {
     if (!lookupsLoading && (!lookups || lookups.length === 0)) {
       dispatch(getAllLookups());
     }
-  }, [dispatch, lookups, lookupsLoading]); // ✅ Check if data exists before fetching
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
   const handleInputChangeWhole = (field, value) => {
     setInfData((prev) => ({

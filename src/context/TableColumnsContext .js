@@ -3985,15 +3985,8 @@ export const TableColumnsProvider = ({ children }) => {
     if (!lookupsloading && (!lookups || lookups.length === 0)) {
       dispatch(getAllLookups());
     }
-  }, [
-    dispatch,
-    contactTypes,
-    contactTypesloading,
-    regions,
-    loading,
-    lookups,
-    lookupsloading,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
   useEffect(() => {
     if (report) {

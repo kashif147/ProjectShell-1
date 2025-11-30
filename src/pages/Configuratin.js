@@ -54,7 +54,7 @@ import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { FaRegCircleQuestion } from "react-icons/fa6";
-import { getAllLookups } from "../features/LookupsSlice";
+import { getAllLookups, resetLookups } from "../features/LookupsSlice";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useTableColumns } from "../context/TableColumnsContext ";
@@ -79,13 +79,16 @@ import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 // import { getLookupTypes } from "../features/LookupTypeSlice";
 import { getAllRegionTypes } from "../features/RegionTypeSlice";
-import { getContactTypes } from "../features/ContactTypeSlice";
-import { getContacts } from "../features/ContactSlice";
+import {
+  getContactTypes,
+  resetContactTypes,
+} from "../features/ContactTypeSlice";
+import { getContacts, resetContacts } from "../features/ContactSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
-import { fetchCountries } from "../features/CountriesSlice";
+import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
 import { getBookmarks } from "../features/templete/BookmarkActions";
 
 // i have different drwers for configuration of lookups for the system
@@ -221,9 +224,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do you want to delete this solicitor?",
                 onConfirm: async () => {
-                  await deleteFtn(`contacts/${record?._id}`, null, () =>
-                    dispatch(getContacts())
-                  );
+                  await deleteFtn(`contacts/${record?._id}`, null, () => {
+                    dispatch(resetContacts());
+                    dispatch(getContacts());
+                  });
                 },
               })
             }
@@ -378,6 +382,29 @@ function Configuratin() {
       return null;
     }
   };
+
+  // Helper function to refresh data after mutations
+  // Resets the state first (so condition allows fetch) then fetches fresh data
+  const refreshLookups = () => {
+    dispatch(resetLookups());
+    dispatch(getAllLookups());
+  };
+
+  const refreshContacts = () => {
+    dispatch(resetContacts());
+    dispatch(getContacts());
+  };
+
+  const refreshContactTypes = () => {
+    dispatch(resetContactTypes());
+    dispatch(getContactTypes());
+  };
+
+  const refreshCountries = () => {
+    dispatch(clearCountriesData());
+    dispatch(fetchCountries());
+  };
+
   const columnBookmark = [
     {
       title: "Key",
@@ -779,19 +806,8 @@ function Configuratin() {
     if (!countriesLoading && (!countriesData || countriesData.length === 0)) {
       dispatch(fetchCountries());
     }
-  }, [
-    dispatch,
-    lookups,
-    lookupsloading,
-    contacts,
-    contactsLoading,
-    lookupsTypes,
-    lookupsTypesloading,
-    regionTypes,
-    regionTypesLoading,
-    countriesData,
-    countriesLoading,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
 
   const [ContactTypeData, setContactTypeData] = useState({
     ReigonTypeId: "",
@@ -1729,11 +1745,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups())
-                  );
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               });
             }}
@@ -1801,9 +1816,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup`, { id: record?._id }, () =>
-                    dispatch(getAllLookups())
-                  );
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               });
             }}
@@ -1872,11 +1888,9 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups())
-                  );
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    refreshLookups();
+                  });
                 },
               });
             }}
@@ -2078,11 +2092,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups())
-                  );
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               })
             }
@@ -2238,11 +2251,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                    dispatch(getAllLookups())
-                  );
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               })
             }
@@ -6417,16 +6429,16 @@ function Configuratin() {
               "Data did not insert:",
               () => {
                 resetCounteries("Divisions");
-                dispatch(getAllLookups());
+                refreshLookups();
               }
             );
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () =>
-              resetCounteries("Divisions", () => dispatch(getAllLookups()))
-            );
-            dispatch(getAllLookups());
+            await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () => {
+              resetCounteries("Divisions");
+              refreshLookups();
+            });
             IsUpdateFtn("Divisions", false);
           }}
           isEdit={isUpdateRec?.Divisions}
@@ -6560,16 +6572,16 @@ function Configuratin() {
             "Data did not insert:",
             () => {
               resetCounteries("Divisions");
-              dispatch(getAllLookups());
+              refreshLookups();
             }
           );
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () =>
-            resetCounteries("Divisions", () => dispatch(getAllLookups()))
-          );
-          dispatch(getAllLookups());
+          await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () => {
+            resetCounteries("Divisions");
+            refreshLookups();
+          });
           IsUpdateFtn("Divisions", false);
         }}
       >
@@ -8488,17 +8500,19 @@ function Configuratin() {
             drawerIpnuts?.Trainings,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Trainings", () => dispatch(getAllLookups()))
+            () => {
+              resetCounteries("Trainings");
+              refreshLookups();
+            }
           );
-          dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Trainings}
         update={async () => {
           if (!validateForm("Trainings")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Trainings, () =>
-            resetCounteries("Trainings", () => dispatch(getAllLookups()))
-          );
-          dispatch(getAllLookups());
+          await updateFtn("/api/lookup", drawerIpnuts?.Trainings, () => {
+            resetCounteries("Trainings");
+            refreshLookups();
+          });
           IsUpdateFtn("Trainings", false);
         }}
       >

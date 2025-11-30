@@ -58,13 +58,8 @@ function App() {
     ) {
       dispatch(getHierarchicalLookups());
     }
-  }, [
-    dispatch,
-    lookups,
-    lookupsLoading,
-    hierarchicalLookups,
-    hierarchicalLookupsLoading,
-  ]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [dispatch]);
   useEffect(() => {
     const loadWorklet = async () => {
       // Shared Storage API is only available in secure contexts and specific origins

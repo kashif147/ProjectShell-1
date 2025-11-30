@@ -22,6 +22,28 @@ export const getAllLookups = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch lookups"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { lookups } = getState();
+      // Don't dispatch if already loading
+      if (lookups.loading) {
+        return false; // Prevent duplicate request
+      }
+      // Don't retry if there's a recent error (within last 30 seconds) - prevents infinite loops on CORS errors
+      if (lookups.error && lookups.lastErrorTime) {
+        const timeSinceError = Date.now() - lookups.lastErrorTime;
+        if (timeSinceError < 30000) {
+          return false; // Prevent retry on recent error
+        }
+      }
+      // Allow fetch if data doesn't exist or is empty
+      if (!lookups.lookups || lookups.lookups.length === 0) {
+        return true; // Allow fetch
+      }
+      // Prevent if data already exists
+      return false;
+    },
   }
 );
 
@@ -45,6 +67,7 @@ const lookupsSlice = createSlice({
     lookups: [],
     loading: false,
     error: null,
+    lastErrorTime: null,
   },
   reducers: {
     clearLookupsError: (state) => {
@@ -70,11 +93,12 @@ const lookupsSlice = createSlice({
     builder
       .addCase(getAllLookups.pending, (state) => {
         state.loading = true;
-        state.error = null;
+        // Don't clear error on pending - keep it to prevent retries
       })
       .addCase(getAllLookups.fulfilled, (state, { payload }) => {
         state.loading = false;
         state.error = null;
+        state.lastErrorTime = null;
         state.lookups = payload;
         state.titleOptions = [];
         state.genderOptions = [];
@@ -164,6 +188,7 @@ const lookupsSlice = createSlice({
       .addCase(getAllLookups.rejected, (state, action) => {
         state.loading = false;
         state.error = action.payload;
+        state.lastErrorTime = Date.now();
       });
   },
 });

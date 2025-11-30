@@ -233,6 +233,9 @@ const Login = () => {
       return;
     }
 
+    const redirectUri = getRedirectUri();
+    console.log("handleAuthRedirect - Redirect URI:", redirectUri);
+
     try {
       const response = await fetch(
         "https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net/auth/azure-crm",
@@ -242,6 +245,7 @@ const Login = () => {
           body: JSON.stringify({
             code: code, // backend expects this
             codeVerifier: codeVerifier,
+            redirectUri: redirectUri, // must match the one used in authorization request
           }),
         }
       );
