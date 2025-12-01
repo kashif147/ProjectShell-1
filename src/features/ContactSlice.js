@@ -11,11 +11,11 @@ export const getContacts = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const apiBaseUrl = baseURL || process.env.REACT_APP_POLICY_SERVICE_URL;
-      
+
       if (!apiBaseUrl) {
         return rejectWithValue("API base URL is not configured");
       }
-      
+
       const response = await axios.get(`${apiBaseUrl}/api/contacts`, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -34,6 +34,28 @@ export const getContacts = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch contacts"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { contact } = getState();
+      // Don't dispatch if already loading
+      if (contact.contactsLoading) {
+        return false; // Prevent duplicate request
+      }
+      // Don't retry if there's a recent error (within last 30 seconds) - prevents infinite loops on CORS errors
+      if (contact.error && contact.lastErrorTime) {
+        const timeSinceError = Date.now() - contact.lastErrorTime;
+        if (timeSinceError < 30000) {
+          return false; // Prevent retry on recent error
+        }
+      }
+      // Allow fetch if data doesn't exist or is empty
+      if (!contact.contacts || contact.contacts.length === 0) {
+        return true; // Allow fetch
+      }
+      // Prevent if data already exists
+      return false;
+    },
   }
 );
 
@@ -43,23 +65,34 @@ const contactSlice = createSlice({
     contacts: [],
     contactsLoading: false,
     error: null,
+    lastErrorTime: null,
   },
-  reducers: {},
+  reducers: {
+    resetContacts: (state) => {
+      state.contacts = [];
+      state.contactsLoading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getContacts.pending, (state) => {
         state.contactsLoading = true;
-        state.error = null;
+        // Don't clear error on pending - keep it to prevent retries
       })
       .addCase(getContacts.fulfilled, (state, action) => {
         state.contactsLoading = false;
         state.contacts = action.payload.data;
+        state.error = null;
+        state.lastErrorTime = null;
       })
       .addCase(getContacts.rejected, (state, action) => {
         state.contactsLoading = false;
         state.error = action.payload;
+        state.lastErrorTime = Date.now();
       });
   },
 });
 
+export const { resetContacts } = contactSlice.actions;
 export default contactSlice.reducer;

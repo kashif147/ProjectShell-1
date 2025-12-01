@@ -8,26 +8,25 @@ export const getBookmarks = createAsyncThunk(
   "bookmarks/getBookmarks",
   async (_, { rejectWithValue }) => {
     try {
-        const token = localStorage.getItem("token");
-        const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
-        
-        if (!bookmarkBaseUrl) {
-          // Silently return empty array if bookmark service is not configured
-          console.warn("REACT_APP_CUMM is not configured, bookmarks feature disabled");
-          return [];
-        }
-        
-        const apiUrl = `${bookmarkBaseUrl}/bookmarks/fields`;
-        
-        const response = await axios.get(
-            apiUrl,
-            {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json",
-                },
-            }
+      const token = localStorage.getItem("token");
+      const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
+
+      if (!bookmarkBaseUrl) {
+        // Silently return empty array if bookmark service is not configured
+        console.warn(
+          "REACT_APP_CUMM is not configured, bookmarks feature disabled"
         );
+        return [];
+      }
+
+      const apiUrl = `${bookmarkBaseUrl}/bookmarks/fields`;
+
+      const response = await axios.get(apiUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       console.log(response.data, "Bookmarks API Response");
       return response.data?.data?.fields;
     } catch (error) {
@@ -40,6 +39,21 @@ export const getBookmarks = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch bookmarks"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { bookmarks } = getState();
+      // Don't dispatch if already loading
+      if (bookmarks.bookmarksLoading) {
+        return false; // Prevent duplicate request
+      }
+      // Allow fetch if data doesn't exist or is empty
+      if (!bookmarks.bookmarks || bookmarks.bookmarks.length === 0) {
+        return true; // Allow fetch
+      }
+      // Prevent if data already exists
+      return false;
+    },
   }
 );
 
@@ -51,11 +65,11 @@ export const createBookmark = createAsyncThunk(
       const token = localStorage.getItem("token");
       const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
       const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
-      
+
       if (!bookmarkBaseUrl) {
         return rejectWithValue("Bookmark service URL is not configured");
       }
-      
+
       const response = await axios.post(
         `${bookmarkBaseUrl}${apiUrl}`,
         bookmarkData,
@@ -84,11 +98,11 @@ export const updateBookmark = createAsyncThunk(
       const token = localStorage.getItem("token");
       const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
       const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
-      
+
       if (!bookmarkBaseUrl) {
         return rejectWithValue("Bookmark service URL is not configured");
       }
-      
+
       const response = await axios.put(
         `${bookmarkBaseUrl}${apiUrl}/${id}`,
         bookmarkData,
@@ -117,20 +131,17 @@ export const deleteBookmark = createAsyncThunk(
       const token = localStorage.getItem("token");
       const bookmarkBaseUrl = process.env.REACT_APP_CUMM;
       const apiUrl = process.env.REACT_APP_CUMM_API_URL || "/bookmarks";
-      
+
       if (!bookmarkBaseUrl) {
         return rejectWithValue("Bookmark service URL is not configured");
       }
-      
-      await axios.delete(
-        `${bookmarkBaseUrl}${apiUrl}/${id}`,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+
+      await axios.delete(`${bookmarkBaseUrl}${apiUrl}/${id}`, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
       console.log("Bookmark deleted successfully");
       return id;
     } catch (error) {

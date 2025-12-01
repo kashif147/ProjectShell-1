@@ -8,7 +8,8 @@ import {
   Table,
   Checkbox,
   Radio,
-  Row, Col
+  Row,
+  Col,
 } from "antd";
 import MySelect from "./MySelect";
 
@@ -26,10 +27,13 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { ExcelContext } from "../../context/ExcelContext";
 import { insertDataFtn } from "../../utils/Utilities";
 import { useFormState } from "react-dom";
-import { getContactTypes } from "../../features/ContactTypeSlice";
+import {
+  getContactTypes,
+  resetContactTypes,
+} from "../../features/ContactTypeSlice";
 import MyConfirm from "../common/MyConfirm";
 import { deleteFtn, updateFtn } from "../../utils/Utilities";
-import { getContacts } from "../../features/ContactSlice";
+import { getContacts, resetContacts } from "../../features/ContactSlice";
 import CommonPopConfirm from "./CommonPopConfirm";
 import { baseURL } from "../../utils/Utilities";
 import { useNavigate, useLocation } from "react-router-dom";
@@ -39,7 +43,6 @@ import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import MemberSearch from "../profile/MemberSearch";
 import "../../styles/Configuration.css";
-
 
 function MyDrawer({
   title,
@@ -98,21 +101,21 @@ function MyDrawer({
     (state) => state.contactType
   );
   const { contacts, contactsLoading } = useSelector((state) => state.contact);
-  const [contactTypelookup, setcontactTypelookup] = useState([])
+  const [contactTypelookup, setcontactTypelookup] = useState([]);
   useEffect(() => {
     if (contactTypes) {
-      let arr = []
-      let obj = {}
+      let arr = [];
+      let obj = {};
       contactTypes.map((ct) => {
         obj = {
           label: ct?.contactType,
-          value: ct?._id
-        }
-        arr.push(obj)
-      })
-      setcontactTypelookup(arr)
+          value: ct?._id,
+        };
+        arr.push(obj);
+      });
+      setcontactTypelookup(arr);
     }
-  }, [contactTypes])
+  }, [contactTypes]);
 
   const drawerInputsInitalValues = {
     Solicitors: {
@@ -128,17 +131,33 @@ function MyDrawer({
         eircode: "",
       },
       contactTypeId: "68ea77798ff5d8c2b3f175c4",
-      isactive: true,     // ✅ added based on API field
-      isDeleted: false,   // keep this if your app uses soft-delete flag
+      isactive: true, // ✅ added based on API field
+      isDeleted: false, // keep this if your app uses soft-delete flag
     },
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
+
   useEffect(() => {
     if (contactDrawer) {
-      dispatch(getContactTypes());
-      dispatch(getContacts());
+      // Only fetch if data doesn't exist and not already loading
+      if (
+        !contactTypesloading &&
+        (!contactTypes || contactTypes.length === 0)
+      ) {
+        dispatch(getContactTypes());
+      }
+      if (!contactsLoading && (!contacts || contacts.length === 0)) {
+        dispatch(getContacts());
+      }
     }
-  }, [contactDrawer]);
+  }, [
+    contactDrawer,
+    dispatch,
+    contactTypes,
+    contactTypesloading,
+    contacts,
+    contactsLoading,
+  ]);
 
   const Navigate = useNavigate();
   const location = useLocation();
@@ -228,7 +247,6 @@ function MyDrawer({
   });
 
   const validateSolicitors = (drawerType) => {
-
     let newErrors = { [drawerType]: {} };
 
     if (drawerType === "Solicitors") {
@@ -245,7 +263,7 @@ function MyDrawer({
     }
 
     setErrors(newErrors);
-    debugger
+    debugger;
     return Object.keys(newErrors[drawerType]).length === 0;
   };
 
@@ -512,15 +530,15 @@ function MyDrawer({
     }));
   };
   function simplifyContact(contact) {
-  // Create a shallow copy to avoid mutating the original
-  const cleaned = { ...contact };
+    // Create a shallow copy to avoid mutating the original
+    const cleaned = { ...contact };
 
-  if (cleaned.contactTypeId && cleaned.contactTypeId._id) {
-    cleaned.contactTypeId = cleaned.contactTypeId._id;
+    if (cleaned.contactTypeId && cleaned.contactTypeId._id) {
+      cleaned.contactTypeId = cleaned.contactTypeId._id;
+    }
+
+    return cleaned;
   }
-
-  return cleaned;
-}
   const columnsSolicitors = [
     {
       title: "Surname",
@@ -600,8 +618,12 @@ function MyDrawer({
                 title: "Confirm Deletion",
                 message: "Do you want to delete this solicitor?",
                 onConfirm: async () => {
-                  await deleteFtn(`${baseURL}/api/contacts/${record?._id}`, null, () => resetCounteries("Solicitors",dispatch(getContacts())));
-await dispatch(getContacts())
+                  await deleteFtn(
+                    `${baseURL}/api/contacts/${record?._id}`,
+                    null,
+                    () => resetCounteries("Solicitors", dispatch(getContacts()))
+                  );
+                  await dispatch(getContacts());
                 },
               })
             }
@@ -628,20 +650,29 @@ await dispatch(getContacts())
       "Data inserted successfully:",
       "Data did not insert:",
       () => {
-        resetCounteries("Solicitors", dispatch(getContacts()));
+        resetCounteries("Solicitors", () => {
+          dispatch(resetContacts());
+          dispatch(getContacts());
+        });
       }
     );
   };
-  const updatftn = async() => {
-          const simplified = simplifyContact(drawerIpnuts?.Solicitors);
-            if (!validateSolicitors("Solicitors")) return;
-            await updateFtn(`/api/contacts/${drawerIpnuts?.Solicitors?.id}`, simplified, () =>
-              resetCounteries("Solicitors", () => dispatch(getContacts()))
-  
-          )
-            // dispatch(getAllLookups());
-            // IsUpdateFtn("Solicitors", false);
-          }
+  const updatftn = async () => {
+    const simplified = simplifyContact(drawerIpnuts?.Solicitors);
+    if (!validateSolicitors("Solicitors")) return;
+    await updateFtn(
+      `/api/contacts/${drawerIpnuts?.Solicitors?.id}`,
+      simplified,
+      () => {
+        resetCounteries("Solicitors", () => {
+          dispatch(resetContacts());
+          dispatch(getContacts());
+        });
+      }
+    );
+    // dispatch(getAllLookups());
+    // IsUpdateFtn("Solicitors", false);
+  };
   useMemo(() => {
     if (contacts && Array.isArray(contacts)) {
       setdata((prevState) => ({
@@ -759,7 +790,10 @@ await dispatch(getContacts())
 
             {/* Add / Update / Submit */}
             {isDisable ? (
-              <Button className="butn primary-btn" onClick={() => disableFtn(false)}>
+              <Button
+                className="butn primary-btn"
+                onClick={() => disableFtn(false)}
+              >
                 Add
               </Button>
             ) : (
@@ -783,7 +817,10 @@ await dispatch(getContacts())
                 <Button className="gray-btn butn me-1" onClick={PrevFtn}>
                   <FaAngleLeft className="deatil-header-icon" />
                 </Button>
-                <p className="m-0" style={{ fontWeight: 500, fontSize: "14px" }}>
+                <p
+                  className="m-0"
+                  style={{ fontWeight: 500, fontSize: "14px" }}
+                >
                   {nextPrevData?.currentApp} of {nextPrevData?.total}
                 </p>
                 <Button className="gray-btn butn ms-1" onClick={nextFtn}>
@@ -795,7 +832,6 @@ await dispatch(getContacts())
         )
       }
     >
-
       <div
         className="drawer-main-cntainer"
         style={{ backgroundColor: "#f6f9fc" }}
@@ -832,19 +868,33 @@ await dispatch(getContacts())
             </Button>
             <Button
               className="butn primary-btn"
-              onClick={() => isUpdate?.Contacts === true ? update() : isDisable === true ? disableFtn(false) : addFtn()}
+              onClick={() =>
+                isUpdate?.Contacts === true
+                  ? update()
+                  : isDisable === true
+                  ? disableFtn(false)
+                  : addFtn()
+              }
               onKeyDown={(event) =>
                 event.key === "Enter" &&
-                (() => isUpdate?.Contacts === true ? updatftn() : isDisable === false ? disableFtn(true) : addFtn())
+                (() =>
+                  isUpdate?.Contacts === true
+                    ? updatftn()
+                    : isDisable === false
+                    ? disableFtn(true)
+                    : addFtn())
               }
             >
-              {isUpdate?.Contacts === true ? "Update" : isDisable === true ? "Add" : "Submit"}
+              {isUpdate?.Contacts === true
+                ? "Update"
+                : isDisable === true
+                ? "Add"
+                : "Submit"}
             </Button>
           </Space>
         }
       >
         <div className="drawer-main-container">
-
           {/* Personal Information */}
           <h4 className="">Personal Information</h4>
           <div className="drawer-section">
@@ -855,7 +905,9 @@ await dispatch(getContacts())
                   placeholder="Select Contact Type"
                   options={contactTypelookup}
                   value={drawerIpnuts?.Solicitors?.contactTypeId}
-                  onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "contactTypeId", e.target.value)
+                  }
                   disabled={true}
                   required
                   hasError={!!errors?.Solicitors?.contactTypeId}
@@ -870,7 +922,9 @@ await dispatch(getContacts())
                   options={lookupsForSelect?.Titles}
                   disabled={true}
                   value={drawerIpnuts?.Solicitors?.title}
-                  onChange={(e) => drawrInptChng("Solicitors", "title", e.target.value)}
+                  onChange={(e) =>
+                    drawrInptChng("Solicitors", "title", e.target.value)
+                  }
                 />
               </Col>
 
@@ -947,9 +1001,15 @@ await dispatch(getContacts())
               <Col xs={24} md={12}>
                 <MyInput
                   label="Building or House:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse}
+                  value={
+                    drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse
+                  }
                   onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.buildingOrHouse", e.target.value)
+                    drawrInptChng(
+                      "Solicitors",
+                      "contactAddress.buildingOrHouse",
+                      e.target.value
+                    )
                   }
                   disabled={isDisable}
                   hasError={!!errors?.Solicitors?.buildingOrHouse}
@@ -962,7 +1022,11 @@ await dispatch(getContacts())
                   label="Street or Road:"
                   value={drawerIpnuts?.Solicitors?.contactAddress?.streetOrRoad}
                   onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.streetOrRoad", e.target.value)
+                    drawrInptChng(
+                      "Solicitors",
+                      "contactAddress.streetOrRoad",
+                      e.target.value
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -973,7 +1037,11 @@ await dispatch(getContacts())
                   label="Area or Town:"
                   value={drawerIpnuts?.Solicitors?.contactAddress?.areaOrTown}
                   onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.areaOrTown", e.target.value)
+                    drawrInptChng(
+                      "Solicitors",
+                      "contactAddress.areaOrTown",
+                      e.target.value
+                    )
                   }
                   disabled={isDisable}
                   hasError={!!errors?.Solicitors?.areaOrTown}
@@ -984,9 +1052,16 @@ await dispatch(getContacts())
               <Col xs={24} md={12}>
                 <MyInput
                   label="County, City or Postcode:"
-                  value={drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode}
+                  value={
+                    drawerIpnuts?.Solicitors?.contactAddress
+                      ?.cityCountyOrPostCode
+                  }
                   onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.cityCountyOrPostCode", e.target.value)
+                    drawrInptChng(
+                      "Solicitors",
+                      "contactAddress.cityCountyOrPostCode",
+                      e.target.value
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -997,7 +1072,11 @@ await dispatch(getContacts())
                   label="Eircode:"
                   value={drawerIpnuts?.Solicitors?.contactAddress?.eircode}
                   onChange={(e) =>
-                    drawrInptChng("Solicitors", "contactAddress.eircode", e.target.value)
+                    drawrInptChng(
+                      "Solicitors",
+                      "contactAddress.eircode",
+                      e.target.value
+                    )
                   }
                   disabled={isDisable}
                 />
@@ -1120,40 +1199,40 @@ await dispatch(getContacts())
               )}
               {(recData?.timeDur === "Year" ||
                 recData?.timeDur === "Month") && (
-                  <div className="d-flex flex-column pt-4">
-                    <Checkbox>On December 16</Checkbox>
-                    <Checkbox>On third Monday of December</Checkbox>
-                    <div className="pt-3 d-flex flex-column">
-                      <p>
-                        Occur on day 16 of every month
-                        {isEndDate === true &&
-                          (recData?.timeDur === "Year" ||
-                            recData?.timeDur === "Month") && (
-                            <span
-                              onClick={() => setisEndDate(false)}
-                              style={{ cursor: "pointer", color: "#215E97" }}
-                            >
-                              {" "}
-                              Choose an end date
-                            </span>
-                          )}
-                      </p>
-                      {isEndDate === false && (
-                        <div className="d-flex ">
-                          <div style={{ width: "50%" }} className="me-4">
-                            <MyDatePicker />
-                          </div>
-                          <p
+                <div className="d-flex flex-column pt-4">
+                  <Checkbox>On December 16</Checkbox>
+                  <Checkbox>On third Monday of December</Checkbox>
+                  <div className="pt-3 d-flex flex-column">
+                    <p>
+                      Occur on day 16 of every month
+                      {isEndDate === true &&
+                        (recData?.timeDur === "Year" ||
+                          recData?.timeDur === "Month") && (
+                          <span
+                            onClick={() => setisEndDate(false)}
                             style={{ cursor: "pointer", color: "#215E97" }}
-                            onClick={() => setisEndDate(true)}
                           >
-                            Remove end Date
-                          </p>
+                            {" "}
+                            Choose an end date
+                          </span>
+                        )}
+                    </p>
+                    {isEndDate === false && (
+                      <div className="d-flex ">
+                        <div style={{ width: "50%" }} className="me-4">
+                          <MyDatePicker />
                         </div>
-                      )}
-                    </div>
+                        <p
+                          style={{ cursor: "pointer", color: "#215E97" }}
+                          onClick={() => setisEndDate(true)}
+                        >
+                          Remove end Date
+                        </p>
+                      </div>
+                    )}
                   </div>
-                )}
+                </div>
+              )}
               {/* <div>
                 {
                   isEndDate === false && (
@@ -1316,7 +1395,7 @@ await dispatch(getContacts())
             >
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={() => { }}>
+            <Button className="butn primary-btn" onClick={() => {}}>
               Add
             </Button>
           </Space>
