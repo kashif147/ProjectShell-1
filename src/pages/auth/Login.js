@@ -1,4 +1,4 @@
-import { React, useState, useEffect, useCallback } from "react";
+import { React, useState, useEffect, useCallback, useRef } from "react";
 import "../../styles/Login.css";
 import { Button, Checkbox, Divider, Input, Spin, Card, Typography } from "antd";
 import { Link } from "react-router-dom";
@@ -99,36 +99,43 @@ const Login = () => {
   const { setUserData } = useAuthorization();
 
   // Function to set appropriate menu label based on user role
-  const setMenuLabelForRole = useCallback((roleCodes) => {
-    if (roleCodes.includes("SU")) {
-      // Super User - show Configuration module
-      dispatch(updateMenuLbl({ key: "Configuration", value: true }));
-    } else if (roleCodes.includes("GS") || roleCodes.includes("DGS")) {
-      // General Secretary roles - show Configuration module
-      dispatch(updateMenuLbl({ key: "Configuration", value: true }));
-    } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
-      // Membership Officer roles - show Subscriptions & Rewards
-      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
-    } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
-      // Account Manager roles - show Finance
-      dispatch(updateMenuLbl({ key: "Finance", value: true }));
-    } else if (roleCodes.includes("IRO")) {
-      // Industrial Relations Officer - show Issue Management
-      dispatch(updateMenuLbl({ key: "Issue Management", value: true }));
-    } else if (roleCodes.includes("MEMBER")) {
-      // Regular member - show Subscriptions & Rewards
-      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
-    } else {
-      // Default fallback
-      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
-    }
-  }, [dispatch]);
+  const setMenuLabelForRole = useCallback(
+    (roleCodes) => {
+      if (roleCodes.includes("SU")) {
+        // Super User - show Configuration module
+        dispatch(updateMenuLbl({ key: "Configuration", value: true }));
+      } else if (roleCodes.includes("GS") || roleCodes.includes("DGS")) {
+        // General Secretary roles - show Configuration module
+        dispatch(updateMenuLbl({ key: "Configuration", value: true }));
+      } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
+        // Membership Officer roles - show Subscriptions & Rewards
+        dispatch(
+          updateMenuLbl({ key: "Subscriptions & Rewards", value: true })
+        );
+      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+        // Account Manager roles - show Finance
+        dispatch(updateMenuLbl({ key: "Finance", value: true }));
+      } else if (roleCodes.includes("IRO")) {
+        // Industrial Relations Officer - show Issue Management
+        dispatch(updateMenuLbl({ key: "Issue Management", value: true }));
+      } else if (roleCodes.includes("MEMBER")) {
+        // Regular member - show Subscriptions & Rewards
+        dispatch(
+          updateMenuLbl({ key: "Subscriptions & Rewards", value: true })
+        );
+      } else {
+        // Default fallback
+        dispatch(
+          updateMenuLbl({ key: "Subscriptions & Rewards", value: true })
+        );
+      }
+    },
+    [dispatch]
+  );
 
   const { inProgress } = useMsal(); // Get the MSAL instance and interaction status
   const navigate = useNavigate(); // Use the useHistory hook
-  const { loading } = useSelector(
-    (state) => state.auth
-  );
+  const { loading } = useSelector((state) => state.auth);
 
   function decodeToken(token) {
     try {
@@ -148,14 +155,22 @@ const Login = () => {
   }
   const [authLoading, setAuthLoading] = useState(false);
   const [showTraditionalLogin, setShowTraditionalLogin] = useState(false);
+  const isProcessingAuthRef = useRef(false);
+  const processedCodeRef = useRef(null);
+
   // Step 1: Login button click
   const handleLogin = async () => {
+    // Reset auth processing refs when starting a new login
+    isProcessingAuthRef.current = false;
+    processedCodeRef.current = null;
+
     const { codeVerifier, codeChallenge } = await generatePKCE();
     // Save codeVerifier for later token exchange
     localStorage.setItem("pkce_code_verifier", codeVerifier);
     const tenantId = "39866a06-30bc-4a89-80c6-9dd9357dd453";
     const clientId = "ad25f823-e2d3-43e2-bea5-a9e6c9b0dbae";
-    const redirectUri = getRedirectUri();
+    // const redirectUri = getRedirectUri();
+    const redirectUri = "http://localhost:3000"
     const scopes = "openid profile email offline_access";
     const authUrl = new URL(
       `https://login.microsoftonline.com/${tenantId}/oauth2/v2.0/authorize`
@@ -173,18 +188,34 @@ const Login = () => {
     window.location.href = authUrl.toString();
   };
   const handleAuthRedirect = useCallback(async () => {
-    setAuthLoading(true);
-    const urlParams = new URLSearchParams(window.location.search);
-    const code = urlParams.get("code");
-
-    console.log("handleAuthRedirect - URL params:", window.location.search);
-    console.log("handleAuthRedirect - Code:", code);
-
-    if (!code) {
-      console.log("handleAuthRedirect - No code found, ending auth redirect");
-      setAuthLoading(false);
+    // Prevent multiple concurrent calls
+    if (isProcessingAuthRef.current) {
+      console.log(
+        "handleAuthRedirect - Already processing, skipping duplicate call"
+      );
       return;
     }
+
+    const urlParams = new URLSearchParams(window.location.search);
+    const code = urlParams.get("code");
+    if (!code) {
+      console.log("handleAuthRedirect - No code found, ending auth redirect");
+      return;
+    }
+
+    // Check if this code was already processed
+    if (processedCodeRef.current === code) {
+      console.log("handleAuthRedirect - Code already processed, skipping");
+      return;
+    }
+
+    // Mark as processing and store the code immediately
+    isProcessingAuthRef.current = true;
+    processedCodeRef.current = code;
+    setAuthLoading(true);
+
+    // Clean up URL immediately to prevent re-triggering
+    window.history.replaceState({}, document.title, window.location.pathname);
 
     const codeVerifier = localStorage.getItem("pkce_code_verifier");
     console.log(
@@ -194,9 +225,14 @@ const Login = () => {
 
     if (!codeVerifier) {
       console.error("Missing PKCE code_verifier from sessionStorage");
+      isProcessingAuthRef.current = false;
       setAuthLoading(false);
       return;
     }
+
+    const redirectUri = getRedirectUri();
+    console.log("handleAuthRedirect - Redirect URI:", redirectUri);
+
     try {
       const response = await fetch(
         "https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net/auth/azure-crm",
@@ -206,6 +242,7 @@ const Login = () => {
           body: JSON.stringify({
             code: code, // backend expects this
             codeVerifier: codeVerifier,
+            redirectUri: redirectUri, // must match the one used in authorization request
           }),
         }
       );
@@ -216,6 +253,7 @@ const Login = () => {
           response.status,
           response.statusText
         );
+        isProcessingAuthRef.current = false;
         setAuthLoading(false);
         return;
       }
@@ -229,7 +267,7 @@ const Login = () => {
       if (data && data.accessToken) {
         debugger
         let token = data.accessToken;
-        const token1 = await decryptTokenReact(token)
+        const token1 = await decryptTokenReact(token);
         localStorage.setItem("token", token1);
         debugger
         debugger
@@ -276,20 +314,22 @@ const Login = () => {
           const expiryTime = Date.now() + data.expires_in * 1000;
           localStorage.setItem("token_expiry", expiryTime.toString());
         }
-
-        // Clean up URL so code isn't visible
-        window.history.replaceState({}, document.title, "/");
       } else {
         console.error("No data received from backend");
+        isProcessingAuthRef.current = false;
         setAuthLoading(false);
         return;
       }
     } catch (err) {
       console.error("Token exchange failed:", err);
+      // Reset processing flag on error to allow retry
+      processedCodeRef.current = null;
+      isProcessingAuthRef.current = false;
       setAuthLoading(false);
       return;
     }
 
+    isProcessingAuthRef.current = false;
     setAuthLoading(false);
   }, [navigate, setUserData, setMenuLabelForRole]);
   useEffect(() => {
@@ -303,9 +343,18 @@ const Login = () => {
     console.log("Login useEffect - userData exists:", !!userData);
     console.log("Login useEffect - URL code:", code);
     console.log("Login useEffect - Current URL:", window.location.href);
+    console.log(
+      "Login useEffect - isProcessingAuth:",
+      isProcessingAuthRef.current
+    );
+    console.log("Login useEffect - processedCode:", processedCodeRef.current);
 
     // Check if we're coming back from Azure AD authentication
-    if (code) {
+    if (
+      code &&
+      !isProcessingAuthRef.current &&
+      processedCodeRef.current !== code
+    ) {
       console.log(
         "Login useEffect - Azure AD redirect detected, running handleAuthRedirect"
       );
@@ -341,7 +390,7 @@ const Login = () => {
     return () => {
       document.body.classList.remove("login-page");
     };
-  }, [handleAuthRedirect]);
+  }, [handleAuthRedirect, navigate]);
 
   // Step 2: Handle redirect after Microsoft login
 
