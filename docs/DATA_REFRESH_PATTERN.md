@@ -7,6 +7,7 @@ All insert, update, and delete operations must refresh data after successful mut
 ## Problem
 
 Previous implementations had issues where:
+
 1. Data wasn't refreshed after mutations, causing stale UI
 2. Refresh was attempted but blocked by Redux condition checks
 3. Inconsistent patterns across different operations
@@ -16,6 +17,7 @@ Previous implementations had issues where:
 ### Pattern: Reset + Refresh
 
 After any successful mutation (insert/update/delete), we must:
+
 1. **Reset the Redux state** - Clear existing data so condition checks allow refetching
 2. **Fetch fresh data** - Call the API to get the latest data
 
@@ -81,33 +83,25 @@ await insertDataFtn(
 #### Update Operation
 
 ```javascript
-await updateFtn(
-  `/api/lookup/${id}`,
-  data,
-  () => {
-    // Reset + refresh
-    dispatch(resetLookups());
-    dispatch(getAllLookups());
-    // Or use helper:
-    // refreshLookups();
-  }
-);
+await updateFtn(`/api/lookup/${id}`, data, () => {
+  // Reset + refresh
+  dispatch(resetLookups());
+  dispatch(getAllLookups());
+  // Or use helper:
+  // refreshLookups();
+});
 ```
 
 #### Delete Operation
 
 ```javascript
-await deleteFtn(
-  `/lookup/${id}`,
-  null,
-  () => {
-    // Reset + refresh
-    dispatch(resetLookups());
-    dispatch(getAllLookups());
-    // Or use helper:
-    // refreshLookups();
-  }
-);
+await deleteFtn(`/lookup/${id}`, null, () => {
+  // Reset + refresh
+  dispatch(resetLookups());
+  dispatch(getAllLookups());
+  // Or use helper:
+  // refreshLookups();
+});
 ```
 
 ## Implementation Status
@@ -115,10 +109,12 @@ await deleteFtn(
 ### ✅ Completed
 
 1. **Reset Actions Added:**
+
    - Added `resetContacts()` to `ContactSlice`
    - All other reset actions already existed
 
 2. **Helper Functions Created:**
+
    - `refreshLookups()` in `Configuratin.js`
    - `refreshContacts()` in `Configuratin.js`
    - `refreshContactTypes()` in `Configuratin.js`
@@ -148,19 +144,19 @@ For each insert/update/delete operation:
 
 ```javascript
 // Before
-callback: () => dispatch(getAllLookups())
+callback: () => dispatch(getAllLookups());
 
 // After
 callback: () => {
   dispatch(resetLookups());
   dispatch(getAllLookups());
-}
+};
 ```
 
 Or use the helper function if available:
 
 ```javascript
-callback: () => refreshLookups()
+callback: () => refreshLookups();
 ```
 
 ## Best Practices
@@ -182,4 +178,3 @@ callback: () => refreshLookups()
 - The reset actions clear the state immediately, allowing the condition checks in async thunks to permit refetching
 - This pattern ensures data consistency across the application
 - All operations should follow this pattern going forward
-

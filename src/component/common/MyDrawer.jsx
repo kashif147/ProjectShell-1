@@ -263,7 +263,7 @@ function MyDrawer({
     }
 
     setErrors(newErrors);
-    debugger;
+
     return Object.keys(newErrors[drawerType]).length === 0;
   };
 

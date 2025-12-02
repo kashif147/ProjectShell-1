@@ -40,7 +40,6 @@ function CorspndncDetail() {
   const [searchText, setSearchText] = useState("");
   useEffect(() => {
     if (searchText) {
-      debugger;
       const lowerSearch = searchText.toLowerCase();
 
       const filtered = emails.value.filter((item) => {

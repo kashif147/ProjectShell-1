@@ -29,8 +29,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
   }, [product, productType]);
 
   const handleClose = () => {
-    resetForm();     // ✅ clear form
-    onClose?.();     // ✅ then close drawer
+    resetForm(); // ✅ clear form
+    onClose?.(); // ✅ then close drawer
   };
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
@@ -51,13 +51,11 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       // Set default values for new product
       setFormData((prev) => ({
         ...prev,
-
       }));
     } else if (isProductType) {
       // Set default values for new product type
       setFormData((prev) => ({
         ...prev,
-
       }));
     }
   }, [product, productType, isProduct, isProductType]);
@@ -74,7 +72,6 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       [field]: value,
     }));
 
-
     if (errors[field]) {
       setErrors((prev) => ({
         ...prev,
@@ -88,10 +85,14 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     let newErrors = {};
 
     if (!formData.name?.trim())
-      newErrors.name = `${isProductType ? "Product type" : "Product"} name is required`;
+      newErrors.name = `${
+        isProductType ? "Product type" : "Product"
+      } name is required`;
 
     if (!formData.code?.trim())
-      newErrors.code = `${isProductType ? "Product type" : "Product"} code is required`;
+      newErrors.code = `${
+        isProductType ? "Product type" : "Product"
+      } code is required`;
 
     if (!formData.description?.trim())
       newErrors.description = "Description is required";
@@ -106,62 +107,60 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       if (!formData.effectiveFrom)
         newErrors.effectiveFrom = "Effective from date is required";
     }
-    debugger
+
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-
-const handleSubmit = async (e) => {
-  if (!validate(e)) {
-    return;
-  }
-
-  setLoading(true);
-  try {
-    // Prepare data for submission
-    const submissionData = { ...formData };
-
-    // 🔹 Helper: Convert Euro → Sand
-    const euroToSand = (value) => {
-      const num = Number(value);
-      if (isNaN(num)) return 0;
-      return Math.round(num * 100); // 1 Euro = 100 Sand
-    };
-
-    // 🔹 Convert prices only if the keys exist
-    if ("memberPrice" in formData) {
-      submissionData.memberPrice = euroToSand(formData.memberPrice);
-    }
-    if ("nonMemberPrice" in formData) {
-      submissionData.nonMemberPrice = euroToSand(formData.nonMemberPrice);
+  const handleSubmit = async (e) => {
+    if (!validate(e)) {
+      return;
     }
 
-    // 🔹 For membership products, use same price for both
-    if (isProduct && productType?.category === "MEMBERSHIP") {
-      submissionData.nonMemberPrice = submissionData.memberPrice;
+    setLoading(true);
+    try {
+      // Prepare data for submission
+      const submissionData = { ...formData };
+
+      // 🔹 Helper: Convert Euro → Sand
+      const euroToSand = (value) => {
+        const num = Number(value);
+        if (isNaN(num)) return 0;
+        return Math.round(num * 100); // 1 Euro = 100 Sand
+      };
+
+      // 🔹 Convert prices only if the keys exist
+      if ("memberPrice" in formData) {
+        submissionData.memberPrice = euroToSand(formData.memberPrice);
+      }
+      if ("nonMemberPrice" in formData) {
+        submissionData.nonMemberPrice = euroToSand(formData.nonMemberPrice);
+      }
+
+      // 🔹 For membership products, use same price for both
+      if (isProduct && productType?.category === "MEMBERSHIP") {
+        submissionData.nonMemberPrice = submissionData.memberPrice;
+      }
+
+      // 🔹 Add or update meta fields
+      if (isProductType && !product) {
+        // submissionData.createdAt = new Date().toISOString();
+        // submissionData.createdBy = "current_user";
+      } else if (isProductType && product) {
+        // submissionData.updatedAt = new Date().toISOString();
+        // submissionData.updatedBy = "current_user";
+      }
+
+      // 🔹 Submit data
+      await onSubmit(submissionData);
+      resetForm();
+      onClose?.();
+    } catch (error) {
+      console.error("Error submitting form:", error);
+    } finally {
+      setLoading(false);
     }
-
-    // 🔹 Add or update meta fields
-    if (isProductType && !product) {
-      // submissionData.createdAt = new Date().toISOString();
-      // submissionData.createdBy = "current_user";
-    } else if (isProductType && product) {
-      // submissionData.updatedAt = new Date().toISOString();
-      // submissionData.updatedBy = "current_user";
-    }
-
-    // 🔹 Submit data
-    await onSubmit(submissionData);
-    resetForm();
-    onClose?.();
-  } catch (error) {
-    console.error("Error submitting form:", error);
-  } finally {
-    setLoading(false);
-  }
-};
-
+  };
 
   return (
     <form
@@ -182,8 +181,9 @@ const handleSubmit = async (e) => {
           onChange={(e) => handleInputChange("name", e.target.value)}
           hasError={!!errors.name}
           errorMessage={errors.name}
-          placeholder={`Enter ${isProductType ? "product type" : "product"
-            } name`}
+          placeholder={`Enter ${
+            isProductType ? "product type" : "product"
+          } name`}
         />
       </div>
 
@@ -195,8 +195,9 @@ const handleSubmit = async (e) => {
           onChange={(e) => handleInputChange("code", e.target.value)}
           hasError={!!errors.code}
           errorMessage={errors.code}
-          placeholder={`Enter unique ${isProductType ? "product type" : "product"
-            } code`}
+          placeholder={`Enter unique ${
+            isProductType ? "product type" : "product"
+          } code`}
         />
       </div>
 
@@ -225,7 +226,9 @@ const handleSubmit = async (e) => {
             <CustomSelect
               name="currency"
               value={formData.currency}
-              onChange={(value) => handleInputChange("currency", value.target.value)}
+              onChange={(value) =>
+                handleInputChange("currency", value.target.value)
+              }
               options={CURRENCY_OPTIONS}
               placeholder="Select currency"
             />
@@ -239,8 +242,8 @@ const handleSubmit = async (e) => {
                 {formData.currency === "EUR"
                   ? "€"
                   : formData.currency === "USD"
-                    ? "€"
-                    : "£"}
+                  ? "€"
+                  : "£"}
                 )
               </label>
               <MyInput
@@ -265,8 +268,8 @@ const handleSubmit = async (e) => {
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "€"
-                      : "£"}
+                    ? "€"
+                    : "£"}
                   )
                 </label>
                 <MyInput
@@ -290,8 +293,8 @@ const handleSubmit = async (e) => {
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "€"
-                      : "£"}
+                    ? "€"
+                    : "£"}
                   )
                 </label>
                 <MyInput

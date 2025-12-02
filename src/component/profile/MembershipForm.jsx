@@ -69,7 +69,7 @@ const MembershipForm = ({
   useEffect(() => {
     // Choose source dynamically
     const source = profileDetails || profileSearchData.results?.[0];
-    debugger;
+
     if (!source) return;
 
     setFormData((prev) => ({

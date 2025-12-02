@@ -13,14 +13,13 @@ import {
   Divider,
   Badge,
   Avatar,
-  Tooltip
+  Tooltip,
 } from "antd";
 import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { getAllRolesList } from "../../constants/Roles";
 import { useDispatch, useSelector } from "react-redux";
 import { assignRolesToUser } from "../../features/UserSlice";
 import { getAllRoles } from "../../features/RoleSlice";
-
 
 const { Search } = Input;
 
@@ -49,11 +48,10 @@ const UserRoleAssignment = ({ user, onClose }) => {
   }, [user]);
   console.log("Selected Roles:", selectedRoles);
   useEffect(() => {
-    dispatch(getAllRoles())
-  }, [dispatch])
+    dispatch(getAllRoles());
+  }, [dispatch]);
 
   const allRoles = roles;
-  debugger
 
   const groupedRoles = allRoles.reduce((acc, role) => {
     const category = role.category;
@@ -63,9 +61,8 @@ const UserRoleAssignment = ({ user, onClose }) => {
     acc[category].push(role);
     return acc;
   }, {});
-  debugger
-  const filteredRoles = Object.keys(groupedRoles).reduce((acc, category) => {
 
+  const filteredRoles = Object.keys(groupedRoles).reduce((acc, category) => {
     const categoryRoles = groupedRoles[category].filter(
       (role) =>
         role.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -76,7 +73,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
     }
     return acc;
   }, {});
-  debugger
+
   const handleRoleToggle = (roleId, checked) => {
     if (checked) {
       setSelectedRoles([...selectedRoles, roleId]);
@@ -150,8 +147,9 @@ const UserRoleAssignment = ({ user, onClose }) => {
   };
 
   const getUserInitials = (user) => {
-    return `${user.userFirstName?.[0] || ""}${user.userLastName?.[0] || ""
-      }`.toUpperCase();
+    return `${user.userFirstName?.[0] || ""}${
+      user.userLastName?.[0] || ""
+    }`.toUpperCase();
   };
 
   return (
@@ -195,7 +193,6 @@ const UserRoleAssignment = ({ user, onClose }) => {
                 }}
               >
                 {getUserInitials(user)}
-
               </Avatar>
               <div className="ml-3">
                 <h5 className="mb-1">{user?.userFullName}</h5>
@@ -250,7 +247,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
             {Object.keys(filteredRoles).map((category) => {
               const categoryRoles = filteredRoles[category];
               const isFullySelected = isCategoryFullySelected(categoryRoles);
-              debugger
+
               const isPartiallySelected =
                 isCategoryPartiallySelected(categoryRoles);
 
@@ -298,10 +295,8 @@ const UserRoleAssignment = ({ user, onClose }) => {
                             <Checkbox
                               checked={selectedRoles.includes(role._id)}
                               onChange={(e) => {
-                                debugger
-                                handleRoleToggle(role._id, e.target.checked)
-                              }
-                              }
+                                handleRoleToggle(role._id, e.target.checked);
+                              }}
                             >
                               <div className="role-content">
                                 <div className="role-name">{role.name}</div>
@@ -311,19 +306,30 @@ const UserRoleAssignment = ({ user, onClose }) => {
                                 <div className="role-permissions">
                                   <Tooltip
                                     title={
-                                      <div style={{ maxWidth: 300, maxHeight: 200, overflowY: "auto" }}>
-                                        {role.permissions?.length > 0 ? (
-                                          role.permissions.map((perm) => (
-                                            <div key={perm._id}>{perm.name}</div>
-                                          ))
-                                        ) : (
-                                          "No permissions assigned"
-                                        )}
+                                      <div
+                                        style={{
+                                          maxWidth: 300,
+                                          maxHeight: 200,
+                                          overflowY: "auto",
+                                        }}
+                                      >
+                                        {role.permissions?.length > 0
+                                          ? role.permissions.map((perm) => (
+                                              <div key={perm._id}>
+                                                {perm.name}
+                                              </div>
+                                            ))
+                                          : "No permissions assigned"}
                                       </div>
                                     }
                                   >
-                                    <Tag color="blue" size="small" style={{ cursor: "pointer" }}>
-                                      {role.permissions?.length || 0} permissions
+                                    <Tag
+                                      color="blue"
+                                      size="small"
+                                      style={{ cursor: "pointer" }}
+                                    >
+                                      {role.permissions?.length || 0}{" "}
+                                      permissions
                                     </Tag>
                                   </Tooltip>
                                 </div>
