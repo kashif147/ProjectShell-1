@@ -37,6 +37,8 @@ import bookmarkReducer from "../features/templete/BookmarkActions";
 import profileReducer from "../features/profiles/ProfileSlice";
 import profileDetailsReducer from "../features/profiles/ProfileDetailsSlice";
 import searchProfileReducer from '../features/profiles/SearchProfile';
+import getTemplateReducer from "../features/templete/GetTemplateSlice";
+import templeteDetailsReducer from "../features/templete/templeteDetailsSlice"; 
 
 const store = configureStore({
   reducer: {
@@ -72,6 +74,8 @@ const store = configureStore({
     batches: batchReducer,
     lookupsWorkLocation: lookupsWorkLocationReducer,
     bookmarks: bookmarkReducer,
+    getTemplate: getTemplateReducer,
+    templeteDetails: templeteDetailsReducer,
     // lookupHierarchy: lookupHierarchyReducer,
   },
 });

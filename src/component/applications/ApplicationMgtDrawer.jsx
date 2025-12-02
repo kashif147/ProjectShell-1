@@ -109,49 +109,7 @@ function ApplicationMgtDrawer({
   const showLoader = applicationsLoading || loading;
   const { lookupsForSelect, isDisable, disableFtn } = useTableColumns();
 
-  const handleReject = async () => {
-    if (!rejectionData.reason) {
-      return;
-    }
 
-    try {
-      const token = localStorage.getItem('token');
-      if (!token) {
-        throw new Error('No authentication token found');
-      }
-
-      const statusPayload = {
-        applicationStatus: "rejected",
-        comments: rejectionData.reason, // Include rejection reason if needed
-        applicationStatus: "rejected" // Include rejection note if needed
-      };
-
-      await axios.put(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-        statusPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
-
-      MyAlert("success", "Application rejected successfully!");
-      // refreshApplicationsWithStatusFilters()
-      // navigate('/Applications');
-      // onClose();
-      setRejectionData({ reason: "", note: "" });
-
-    } catch (error) {
-      console.error("Error rejecting application:", error);
-      MyAlert(
-        "error",
-        "Failed to reject application",
-        error?.response?.data?.error?.message || error.message
-      );
-    }
-  };
   const dispatch = useDispatch();
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(state => state.countries);
 
@@ -283,116 +241,116 @@ function ApplicationMgtDrawer({
   }, [hierarchyData, workLocationLoading]);
 
   // REPLACE your current handleApprove with this:
-  const handleApprove = async (key) => {
-    if (isEdit && originalData) {
-      // ✅ Convert both for API only - state remains unchanged
-      const apiInfData = dateUtils.prepareForAPI(InfData);
-      const apiOriginalData = dateUtils.prepareForAPI(originalData);
+  // const handleApprove = async (key) => {
+  //   if (isEdit && originalData) {
+  //     // ✅ Convert both for API only - state remains unchanged
+  //     const apiInfData = dateUtils.prepareForAPI(InfData);
+  //     const apiOriginalData = dateUtils.prepareForAPI(originalData);
 
-      const proposedPatch = generatePatch(apiOriginalData, apiInfData);
-      const obj = {
-        submission: apiOriginalData,
-        proposedPatch: proposedPatch,
-      };
+  //     const proposedPatch = generatePatch(apiOriginalData, apiInfData);
+  //     const obj = {
+  //       submission: apiOriginalData,
+  //       proposedPatch: proposedPatch,
+  //     };
 
-      try {
-        const token = localStorage.getItem('token');
-        if (!token) {
-          throw new Error('No authentication token found');
-        }
+  //     try {
+  //       const token = localStorage.getItem('token');
+  //       if (!token) {
+  //         throw new Error('No authentication token found');
+  //       }
 
-        if (!proposedPatch || proposedPatch.length === 0) {
-          const newStatus = key?.toLowerCase() === "rejected" ? "rejected" : "approved";
-          const statusPayload = { applicationStatus: newStatus };
-          const statusResponse = await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${application?.applicationId}`,
-            statusPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
+  //       if (!proposedPatch || proposedPatch.length === 0) {
+  //         const newStatus = key?.toLowerCase() === "rejected" ? "rejected" : "approved";
+  //         const statusPayload = { applicationStatus: newStatus };
+  //         const statusResponse = await axios.put(
+  //           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}`,
+  //           statusPayload,
+  //           {
+  //             headers: {
+  //               "Content-Type": "application/json",
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           }
+  //         );
 
-          MyAlert("success", `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`);
-          // refreshApplicationsWithStatusFilters();
-          navigate('/Applications')
-          return;
-        }
+  //         MyAlert("success", `Application ${newStatus === "approved" ? "approved" : "rejected"} successfully!`);
+  //         // refreshApplicationsWithStatusFilters();
+  //         navigate('/Applications')
+  //         return;
+  //       }
 
-        const approveResponse = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
-          obj,
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
+  //       const approveResponse = await axios.post(
+  //         `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${application?.applicationId}/approve`,
+  //         obj,
+  //         {
+  //           headers: {
+  //             "Content-Type": "application/json",
+  //             Authorization: `Bearer ${token}`,
+  //           },
+  //         }
+  //       );
 
-        // Check for section changes using API data (not state data)
-        const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
-        const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
+  //       // Check for section changes using API data (not state data)
+  //       const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
+  //       const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
 
-        if (personalChanged && application?.personalDetails?._id) {
-          const personalPayload = cleanPayload({
-            personalInfo: apiInfData.personalInfo,
-            contactInfo: apiInfData.contactInfo,
-          });
+  //       if (personalChanged && application?.personalDetails?._id) {
+  //         const personalPayload = cleanPayload({
+  //           personalInfo: apiInfData.personalInfo,
+  //           contactInfo: apiInfData.contactInfo,
+  //         });
 
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
-            personalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
+  //         await axios.put(
+  //           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/personal-details/${application?.applicationId}`,
+  //           personalPayload,
+  //           {
+  //             headers: {
+  //               "Content-Type": "application/json",
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           }
+  //         );
+  //       }
 
-        if (professionalChanged && application?.professionalDetails?._id) {
-          const professionalPayload = cleanPayload({
-            professionalDetails: apiInfData.professionalDetails,
-          });
+  //       if (professionalChanged && application?.professionalDetails?._id) {
+  //         const professionalPayload = cleanPayload({
+  //           professionalDetails: apiInfData.professionalDetails,
+  //         });
 
-          await axios.put(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
-            professionalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
+  //         await axios.put(
+  //           `${process.env.REACT_APP_PROFILE_SERVICE_URL}/professional-details/${application?.applicationId}`,
+  //           professionalPayload,
+  //           {
+  //             headers: {
+  //               "Content-Type": "application/json",
+  //               Authorization: `Bearer ${token}`,
+  //             },
+  //           }
+  //         );
+  //       }
 
-        let successMessage = "Application approved successfully!";
-        if (personalChanged && professionalChanged) {
-          successMessage = "Application approved and all details updated successfully!";
-        } else if (personalChanged) {
-          successMessage = "Application approved and personal details updated successfully!";
-        } else if (professionalChanged) {
-          successMessage = "Application approved and professional details updated successfully!";
-        }
+  //       let successMessage = "Application approved successfully!";
+  //       if (personalChanged && professionalChanged) {
+  //         successMessage = "Application approved and all details updated successfully!";
+  //       } else if (personalChanged) {
+  //         successMessage = "Application approved and personal details updated successfully!";
+  //       } else if (professionalChanged) {
+  //         successMessage = "Application approved and professional details updated successfully!";
+  //       }
 
-        MyAlert("success", successMessage);
-        // refreshApplicationsWithStatusFilters();
+  //       MyAlert("success", successMessage);
+  //       // refreshApplicationsWithStatusFilters();
 
-      } catch (error) {
-        console.error("Error approving application:", error);
-        MyAlert(
-          "error",
-          "Failed to approve application",
-          error?.response?.data?.error?.message || error.message
-        );
-      }
-    }
-  };
+  //     } catch (error) {
+  //       console.error("Error approving application:", error);
+  //       MyAlert(
+  //         "error",
+  //         "Failed to approve application",
+  //         error?.response?.data?.error?.message || error.message
+  //       );
+  //     }
+  //   }
+  // };
   const { lookups, groupedLookups } = useSelector(state => state.lookups);
   const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
@@ -516,7 +474,7 @@ function ApplicationMgtDrawer({
       pensionNo: "",
       retiredDate: null,
       graduationDate: null,
-      startDate:null
+      startDate: null
     },
     subscriptionDetails: {
       membershipCategory: "",
@@ -544,7 +502,7 @@ function ApplicationMgtDrawer({
     },
   };
   const [InfData, setInfData] = useState(inputValue);
-  console.log(InfData, "InfData")
+
   const handleLocationChange = (selectedLookupId) => {
     debugger
     // Get hierarchicalLookups from localStorage
@@ -1317,6 +1275,7 @@ function ApplicationMgtDrawer({
     }
   };
   const handleApplicationAction = async (action) => {
+    debugger
     if (isEdit && !originalData) return;
     const isValid = validateForm();
     if (!isValid) return;
@@ -1332,6 +1291,10 @@ function ApplicationMgtDrawer({
       const apiInfData = dateUtils.prepareForAPI(InfData);
       const apiOriginalData = dateUtils.prepareForAPI(originalData);
 
+      // Debug the data being compared
+      console.log('🔍 Original Data:', JSON.stringify(apiOriginalData, null, 2));
+      console.log('🔍 New Data:', JSON.stringify(apiInfData, null, 2));
+
       // Debug subscription changes
       const subscriptionChanged = hasSubscriptionDetailsChanged(apiOriginalData, apiInfData);
       const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
@@ -1343,114 +1306,139 @@ function ApplicationMgtDrawer({
         subscriptionChanged
       });
 
-      // Prepare status payload
-      const statusPayload = {
-        applicationStatus: action,
-        comments: action === "rejected" ? rejectionData.reason : "Application approved"
-      };
-
-      // Validate rejection reason
-      if (action === "rejected" && !rejectionData.reason) {
-        MyAlert("error", "Please select a rejection reason");
-        setIsProcessing(false);
-        return;
-      }
-
       const applicationId = application?.applicationId;
 
-      // Handle updates for both approval AND rejection
-      if (isEdit && (action === "approved" || action === "rejected")) {
-        const proposedPatch = generatePatch(apiOriginalData, apiInfData);
+      // Generate patch - this seems to be creating "add" for everything
+      const proposedPatch = generatePatch(apiOriginalData, apiInfData);
+      const singleStepPatch= generateCreatePatch(apiInfData);
 
-        // For approval, send the patch to the approval endpoint
-        if (action === "approved" && proposedPatch && proposedPatch.length > 0) {
-          const obj = {
-            submission: apiOriginalData,
-            proposedPatch: proposedPatch,
-          };
+      // Debug the patch generation
+      console.log('📝 Generated Patch:', JSON.stringify(proposedPatch, null, 2));
+      console.log('🔢 Patch length:', proposedPatch?.length || 0);
 
-          await axios.post(
-            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
-            obj,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`,
-              },
-            }
-          );
-        }
+      // Check if patch is empty (no changes)
+      const hasChanges = proposedPatch && proposedPatch.length > 0;
+      console.log('🔄 Has changes?', hasChanges);
 
-        // ✅ UPDATE: Update Personal Details if changed (for both approval and rejection)
-        if (personalChanged) {
-          const personalPayload = cleanPayload({
-            personalInfo: apiInfData.personalInfo,
-            contactInfo: apiInfData.contactInfo,
-          });
-          console.log('💾 Saving Personal Details:', personalPayload);
-          await axios.put(
-            `${baseURL}/personal-details/${applicationId}`,
-            personalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
+      // Handle APPROVAL
+      if (action === "approved") {
+        // ALWAYS send the approval endpoint for single-step approval
+        // But only include the patch if there are actual changes
+        const approvalPayload = {
+          submission: apiOriginalData || {}, // Ensure this is never undefined
+          proposedPatch: hasChanges ? proposedPatch : singleStepPatch // Empty array for no changes
+        };
+
+        console.log('📤 Sending approval request...');
+        console.log('📍 Endpoint:', `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`);
+        console.log('📦 Payload:', JSON.stringify(approvalPayload, null, 2));
+
+        // SINGLE-STEP APPROVAL: Always call this endpoint
+        const approvalResponse = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+          approvalPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        console.log('✅ Approval API response:', approvalResponse.data);
+        console.log('✅ Approval API call successful');
+
+        // Update details separately if there are changes
+        if (isEdit && hasChanges) {
+          // ✅ UPDATE: Update Personal Details if changed
+          if (personalChanged) {
+            const personalPayload = cleanPayload({
+              personalInfo: apiInfData.personalInfo,
+              contactInfo: apiInfData.contactInfo,
+            });
+            console.log('💾 Saving Personal Details:', personalPayload);
+            await axios.put(
+              `${baseURL}/personal-details/${applicationId}`,
+              personalPayload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                }
               }
-            }
-          );
-        }
+            );
+          }
 
-        // ✅ UPDATE: Update Professional Details if changed (for both approval and rejection)
-        if (professionalChanged) {
-          const professionalPayload = cleanPayload({
-            professionalDetails: apiInfData.professionalDetails,
-          });
-          console.log('💾 Saving Professional Details:', professionalPayload);
-          await axios.put(
-            `${baseURL}/professional-details/${applicationId}`,
-            professionalPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
+          // ✅ UPDATE: Update Professional Details if changed
+          if (professionalChanged) {
+            const professionalPayload = cleanPayload({
+              professionalDetails: apiInfData.professionalDetails,
+            });
+            console.log('💾 Saving Professional Details:', professionalPayload);
+            await axios.put(
+              `${baseURL}/professional-details/${applicationId}`,
+              professionalPayload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                }
               }
-            }
-          );
-        }
+            );
+          }
 
-        // ✅ UPDATE: Update Subscription Details if changed (for both approval and rejection)
-        if (subscriptionChanged) {
-          const subscriptionPayload = cleanPayload({
-            subscriptionDetails: apiInfData.subscriptionDetails,
-          });
-          console.log('💾 Saving Subscription Details:', subscriptionPayload);
-          console.log('📝 Subscription URL:', `${baseURL}/subscription-details/${applicationId}`);
+          // ✅ UPDATE: Update Subscription Details if changed
+          if (subscriptionChanged) {
+            const subscriptionPayload = cleanPayload({
+              subscriptionDetails: apiInfData.subscriptionDetails,
+            });
+            console.log('💾 Saving Subscription Details:', subscriptionPayload);
+            console.log('📝 Subscription URL:', `${baseURL}/subscription-details/${applicationId}`);
 
-          await axios.put(
-            `${baseURL}/subscription-details/${applicationId}`,
-            subscriptionPayload,
-            {
-              headers: {
-                "Content-Type": "application/json",
-                Authorization: `Bearer ${token}`
+            await axios.put(
+              `${baseURL}/subscription-details/${applicationId}`,
+              subscriptionPayload,
+              {
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization: `Bearer ${token}`
+                }
               }
-            }
-          );
-          console.log('✅ Subscription update successful');
+            );
+            console.log('✅ Subscription update successful');
+          }
         }
       }
-
-      // Update application status
-      await axios.put(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/status/${applicationId}`,
-        statusPayload,
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
+      // Handle REJECTION
+      else if (action === "rejected") {
+        // Validate rejection reason
+        if (!rejectionData.reason) {
+          MyAlert("error", "Please select a rejection reason");
+          setIsProcessing(false);
+          return;
         }
-      );
+
+        console.log('📤 Sending rejection request...');
+
+        // For rejection, send minimal payload
+        const rejectionPayload = {
+          submission: apiOriginalData || {},
+          proposedPatch: singleStepPatch,
+          comments: rejectionData.reason
+        };
+
+        await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+          rejectionPayload,
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+        console.log('✅ Rejection successful');
+      }
 
       // Update checkbox state
       setSelected(prev => ({
@@ -1478,7 +1466,9 @@ function ApplicationMgtDrawer({
       }
 
     } catch (error) {
-      console.error(`Error ${action} application:`, error);
+      console.error(`❌ Error ${action} application:`, error);
+      console.error('Error details:', error.response?.data || error.message);
+
       MyAlert(
         "error",
         `Failed to ${action} application`,
@@ -2367,7 +2357,7 @@ function ApplicationMgtDrawer({
                     value={InfData?.subscriptionDetails?.payrollNo}
                     hasError={!!errors?.payrollNo}
                     required={InfData?.subscriptionDetails?.paymentType === "Salary Deduction"}
-                    disabled={InfData?.subscriptionDetails?.paymentType !== "Salary Deduction"||isDisable}
+                    disabled={InfData?.subscriptionDetails?.paymentType !== "Salary Deduction" || isDisable}
                     onChange={(e) => handleInputChange("subscriptionDetails", "payrollNo", e.target.value)}
                   />
                 </div>
@@ -2625,7 +2615,7 @@ function ApplicationMgtDrawer({
                   </div>
                   {
                     InfData.subscriptionDetails?.otherIrishTradeUnion &&
-                    <MyInput  value={InfData.subscriptionDetails?.otherIrishTradeUnionName} onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)} />
+                    <MyInput value={InfData.subscriptionDetails?.otherIrishTradeUnionName} onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)} />
                   }
                 </div>
               </Col>
