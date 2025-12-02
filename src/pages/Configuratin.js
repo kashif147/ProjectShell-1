@@ -4444,7 +4444,6 @@ function Configuratin() {
     }
 
     setErrors(newErrors);
-    debugger;
 
     // Return true if no errors
     const noErrors = Object.keys(newErrors[drawerType]).length === 0;

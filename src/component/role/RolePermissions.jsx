@@ -34,13 +34,12 @@ const RolePermissions = ({ role, onClose }) => {
 
   useEffect(() => {
     if (role) {
-      debugger
       setSelectedPermissions(role.permissions || []);
     }
   }, [role]);
   useEffect(() => {
-    dispatch(getAllPermissions())
-  }, [dispatch])
+    dispatch(getAllPermissions());
+  }, [dispatch]);
 
   const allPermissions = permissions.map((permission) => ({
     id: permission.key,

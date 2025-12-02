@@ -15,35 +15,331 @@ import {
   CloseOutlined,
   EyeOutlined,
   FileTextOutlined,
-  SaveOutlined,
-  DownloadOutlined
+  SaveOutlined
 } from '@ant-design/icons';
 import MyInput from '../../component/common/MyInput';
 import CustomSelect from '../../component/common/CustomSelect';
 import { useDispatch, useSelector } from 'react-redux';
 import { getBookmarks } from '../../features/templete/BookmarkActions';
+import MyAlert from '../../component/common/MyAlert'; // Assuming you have MyAlert component
 
 const { Text } = Typography;
 
+// Constants
+const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
+const ALLOWED_FILE_TYPES = [
+  'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+];
+
+// Enhanced API call with better error handling
+
+
+// Helper function to convert HTML to plain text
+const htmlToPlainText = (html) => {
+  if (!html) return '';
+
+  const tempDiv = document.createElement('div');
+  tempDiv.innerHTML = html;
+
+  // Replace <br> with newlines
+  const text = tempDiv.innerHTML
+    .replace(/<br\s*\/?>/gi, '\n')
+    .replace(/<p>/gi, '')
+    .replace(/<\/p>/gi, '\n\n')
+    .replace(/<div>/gi, '')
+    .replace(/<\/div>/gi, '\n');
+
+  // Remove remaining HTML tags
+  const textContent = text.replace(/<[^>]*>/g, '');
+
+  // Decode HTML entities
+  const txt = document.createElement('textarea');
+  txt.innerHTML = textContent;
+  return txt.value.trim();
+};
+
+// Function to create a simple .docx file
+const createDocxFile = async ({
+  name,
+  description,
+  category,
+  type,
+  subject,
+  content,
+  variables = []
+}) => {
+  try {
+    // Convert HTML content to plain text
+    const plainTextContent = htmlToPlainText(content);
+
+    // Create a minimal DOCX structure with XML
+    const docContent = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:wordDocument xmlns:w="http://schemas.microsoft.com/office/word/2003/wordml">
+  <w:body>
+    <!-- Template Name -->
+    <w:p>
+      <w:r>
+        <w:t>${name}</w:t>
+      </w:r>
+    </w:p>
+    
+    <!-- Metadata -->
+    <w:p>
+      <w:r>
+        <w:t>Type: ${type || 'Not specified'}</w:t>
+      </w:r>
+    </w:p>
+    
+    <w:p>
+      <w:r>
+        <w:t>Category: ${category || 'Not specified'}</w:t>
+      </w:r>
+    </w:p>
+    
+    <w:p>
+      <w:r>
+        <w:t>Description: ${description || 'No description'}</w:t>
+      </w:r>
+    </w:p>
+    
+    <!-- Subject/Title -->
+    <w:p>
+      <w:r>
+        <w:t>${type === 'letter' ? 'TITLE' : 'SUBJECT'}: ${subject || 'No subject'}</w:t>
+      </w:r>
+    </w:p>
+    
+    <!-- Content -->
+    <w:p>
+      <w:r>
+        <w:t>CONTENT:</w:t>
+      </w:r>
+    </w:p>
+    
+    ${plainTextContent.split('\n').map(line => `
+    <w:p>
+      <w:r>
+        <w:t>${line}</w:t>
+      </w:r>
+    </w:p>
+    `).join('')}
+    
+    <!-- Variables Section -->
+    ${variables.length > 0 ? `
+    <w:p>
+      <w:r>
+        <w:t>TEMPLATE VARIABLES:</w:t>
+      </w:r>
+    </w:p>
+    
+    ${variables.map(variable => `
+    <w:p>
+      <w:r>
+        <w:t>${variable}</w:t>
+      </w:r>
+    </w:p>
+    `).join('')}
+    ` : ''}
+    
+    <!-- Footer -->
+    <w:p>
+      <w:r>
+        <w:t>Created: ${new Date().toLocaleString()}</w:t>
+      </w:r>
+    </w:p>
+  </w:body>
+</w:wordDocument>`;
+
+    // Create the complete DOCX file structure
+    const zipContent = {
+      '[Content_Types].xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/>
+</Types>`,
+      '_rels/.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/>
+</Relationships>`,
+      'word/_rels/document.xml.rels': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
+</Relationships>`,
+      'word/document.xml': docContent,
+      'word/styles.xml': `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<w:styles xmlns:w="http://schemas.microsoft.com/office/word/2003/wordml">
+  <w:style w:type="paragraph" w:styleId="Normal">
+    <w:name w:val="Normal"/>
+    <w:pPr>
+      <w:spacing w:after="120"/>
+    </w:pPr>
+    <w:rPr>
+      <w:sz w:val="20"/>
+    </w:rPr>
+  </w:style>
+</w:styles>`
+    };
+
+    // Convert to Blob (simplified approach)
+    const zipBlob = new Blob([JSON.stringify(zipContent)], { type: 'application/zip' });
+
+    // Create File object
+    const fileName = `${name.replace(/[^a-zA-Z0-9]/g, '_')}_${Date.now()}.docx`;
+    const file = new File([zipBlob], fileName, {
+      type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+    });
+
+    return {
+      file,
+      fileName,
+      fileSize: file.size,
+      metadata: {
+        name,
+        description,
+        category,
+        type,
+        subject,
+        content: plainTextContent,
+        variables,
+        createdAt: new Date().toISOString()
+      }
+    };
+  } catch (error) {
+    console.error('Error creating DOCX file:', error);
+    throw new Error(`Failed to create document: ${error.message}`);
+  }
+};
+
 const TemplateConfiguration = () => {
-  const [emailContent, setEmailContent] = useState(`Hi {member_name},\n\nWelcome to our platform! We're thrilled to have you on board.\n\nYour registration number is {reg_no}. You can get started by exploring your new dashboard.\n\nBest regards,\nThe Team`);
-  const [templateName, setTemplateName] = useState('Welcome Email');
-  const [description, setDescription] = useState('Sent to new users upon successful registration.');
-  const [subject, setSubject] = useState('Welcome to Our Platform, {member_name}!');
+  // Set all initial values to empty
+  const [emailContent, setEmailContent] = useState('');
+  const [templateName, setTemplateName] = useState('');
+  const [description, setDescription] = useState('');
+  const [subject, setSubject] = useState('');
   const [category, setCategory] = useState('');
-  const [templateType, setTemplateType] = useState('');
+  const [tempolateType, setTemplateType] = useState('');
   const [selectedVariables, setSelectedVariables] = useState(new Set());
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
-  const [savedTemplates, setSavedTemplates] = useState([]);
   const [generatedFile, setGeneratedFile] = useState(null);
+  const [validationErrors, setValidationErrors] = useState({});
+  const [touchedFields, setTouchedFields] = useState({});
   const quillRef = useRef(null);
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef('');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
+const uploadTemplateAPI = async ({ file, name, description, category, tempolateType }) => {
+  const token = localStorage.getItem('token');
 
+  if (!token) {
+    throw new Error('No authentication token found');
+  }
+
+  // Validate file
+  if (!file) {
+    throw new Error('No file provided');
+  }
+
+  if (file.size > MAX_FILE_SIZE) {
+    throw new Error(`File size exceeds limit (${Math.round(MAX_FILE_SIZE / (1024 * 1024))}MB)`);
+  }
+
+  if (!ALLOWED_FILE_TYPES.includes(file.type)) {
+    throw new Error('Invalid file type. Please upload a .docx file.');
+  }
+
+  const formData = new FormData();
+  formData.append('file', file);
+  formData.append('name', name.trim());
+  formData.append('description', description.trim());
+  formData.append('category', category.trim());
+  formData.append('tempolateType', tempolateType.trim());
+
+  try {
+    console.log('Uploading template:', {
+      fileName: file.name,
+      fileSize: `${Math.round(file.size / 1024)}KB`,
+      fileType: file.type,
+      name: name.trim(),
+      description: description.trim(),
+      category: category.trim(),
+      tempolateType: tempolateType.trim()
+    });
+
+    const response = await fetch(`${process.env.REACT_APP_CUMM || ''}/templates/upload`, {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${token}`,
+      },
+      body: formData
+    });
+
+    const responseText = await response.text();
+    console.log('API Response Status:', response.status);
+    console.log('API Response:', responseText);
+    if (response?.status === 201) {
+      MyAlert("success", "Template uploaded successfully",);
+      navigate('/templeteSummary');
+    }
+    if (!response.ok) {
+      let errorMessage = `Upload failed (${response.status})`;
+
+      try {
+        const errorData = JSON.parse(responseText);
+        errorMessage = errorData.message || errorData.error || JSON.stringify(errorData);
+
+        // Handle specific error cases
+        switch (response.status) {
+          case 400:
+            errorMessage = `Bad request: ${errorMessage}`;
+            break;
+          case 401:
+            localStorage.removeItem('token');
+            localStorage.removeItem('userData');
+            errorMessage = 'Session expired. Please log in again.';
+            setTimeout(() => window.location.href = '/login', 2000);
+            break;
+          case 413:
+            errorMessage = 'File size too large. Maximum size is 50MB.';
+            break;
+          case 415:
+            errorMessage = 'Unsupported file type. Please upload a .docx file.';
+            break;
+          case 500:
+            errorMessage = 'Server error. Please try again later.';
+            break;
+          default:
+            break;
+        }
+      } catch {
+        // If response is not JSON, use the text
+        if (responseText) {
+          errorMessage = responseText;
+        }
+      }
+
+      throw new Error(errorMessage);
+    }
+
+    // Parse successful response
+    try {
+      const result = JSON.parse(responseText);
+      console.log('Upload successful:', result);
+      return result;
+    } catch {
+      throw new Error('Invalid response from server');
+    }
+  } catch (error) {
+    console.error('Upload API error:', error);
+    if (error.name === 'TypeError' && error.message.includes('fetch')) {
+      throw new Error('Network error. Please check your connection.');
+    }
+    throw error;
+  }
+};
   const {
     bookmarks,
     bookmarksLoading,
@@ -89,340 +385,123 @@ const TemplateConfiguration = () => {
     dispatch(getBookmarks());
   }, [dispatch]);
 
-  // Function to convert HTML to plain text for Word document
-  const htmlToPlainText = (html) => {
-    const tempDiv = document.createElement('div');
-    tempDiv.innerHTML = html;
-    return tempDiv.textContent || tempDiv.innerText || '';
-  };
+  // Form validation
+  const validateForm = () => {
+    const errors = {};
 
-  // Function to generate Word document content
-  const generateWordDocumentContent = () => {
-    const plainTextContent = htmlToPlainText(emailContent);
-
-    return `<!DOCTYPE html>
-<html xmlns:o='urn:schemas-microsoft-com:office:office' xmlns:w='urn:schemas-microsoft-com:office:word' xmlns='http://www.w3.org/TR/REC-html40'>
-<head>
-  <meta charset="UTF-8">
-  <title>${templateName}</title>
-  <style>
-    body {
-      font-family: Arial, sans-serif;
-      line-height: 1.6;
-      margin: 40px;
-      color: #333;
-    }
-    .header {
-      border-bottom: 2px solid #2f6bff;
-      padding-bottom: 20px;
-      margin-bottom: 30px;
-    }
-    .template-name {
-      font-size: 24px;
-      color: #2f6bff;
-      font-weight: bold;
-      margin-bottom: 10px;
-    }
-    .subject {
-      font-size: 18px;
-      font-weight: bold;
-      margin: 20px 0;
-      color: #215e97;
-    }
-    .content {
-      margin: 30px 0;
-      white-space: pre-wrap;
-      line-height: 1.8;
-    }
-    .variables {
-      background: #f5f5f5;
-      padding: 15px;
-      margin: 20px 0;
-      border-left: 4px solid #215e97;
-    }
-    .metadata {
-      font-size: 12px;
-      color: #666;
-      margin-top: 40px;
-      padding-top: 20px;
-      border-top: 1px solid #ddd;
-    }
-    .variable-tag {
-      background: #eef4ff;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-weight: bold;
-      color: #215e97;
-      margin-right: 8px;
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <div class="template-name">${templateName}</div>
-    <div><strong>Type:</strong> ${templateType}</div>
-    <div><strong>Category:</strong> ${category}</div>
-    <div><strong>Description:</strong> ${description}</div>
-  </div>
-  
-  <div class="subject">
-    ${templateType === 'letter' ? 'TITLE' : 'SUBJECT'}: ${subject}
-  </div>
-  
-  <div class="content">
-${plainTextContent}
-  </div>
-  
-  ${selectedVariables.size > 0 ? `
-  <div class="variables">
-    <strong>Template Variables:</strong><br><br>
-    ${Array.from(selectedVariables).map(variableId => {
-      const variable = availableVariables.find(v => v.id === variableId);
-      return variable ? `<span class="variable-tag">${variable.name}</span>${variable.label}<br>` : '';
-    }).join('')}
-  </div>
-  ` : ''}
-  
-  <div class="metadata">
-    <strong>Created:</strong> ${new Date().toLocaleDateString()} ${new Date().toLocaleTimeString()}<br>
-    <strong>Template ID:</strong> TEMPLATE_${Date.now()}
-  </div>
-</body>
-</html>`;
-  };
-
-  // Function to generate file blob and save in state
-  const generateTemplateFile = () => {
-    try {
-      const wordContent = generateWordDocumentContent();
-      const blob = new Blob([wordContent], {
-        type: 'application/msword'
-      });
-
-      const fileName = `${templateName.replace(/[^a-zA-Z0-9]/g, '_')}_${new Date().toISOString().split('T')[0]}.doc`;
-      const fileUrl = URL.createObjectURL(blob);
-
-      const templateFile = {
-        id: `template_${Date.now()}`,
-        name: fileName,
-        blob: blob,
-        url: fileUrl,
-        content: wordContent,
-        templateData: {
-          name: templateName.trim(),
-          description: description.trim(),
-          type: templateType,
-          category: category,
-          subject: subject.trim(),
-          content: emailContent,
-          variables: Array.from(selectedVariables).map(variableId => {
-            const variable = availableVariables.find(v => v.id === variableId);
-            return variable ? variable.name : null;
-          }).filter(Boolean),
-          metadata: {
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            version: '1.0'
-          }
-        }
-      };
-
-      setGeneratedFile(templateFile);
-      return templateFile;
-    } catch (error) {
-      console.error('Error generating template file:', error);
-      throw error;
-    }
-  };
-
-  // Function to download the generated file
-  const downloadTemplateFile = () => {
-    if (generatedFile) {
-      const a = document.createElement('a');
-      a.href = generatedFile.url;
-      a.download = generatedFile.name;
-      document.body.appendChild(a);
-      a.click();
-      document.body.removeChild(a);
-      return true;
-    }
-    return false;
-  };
-
-  // Function to save template to state
-  const saveTemplateToState = () => {
-    try {
-      const templateFile = generateTemplateFile();
-
-      const newTemplate = {
-        ...templateFile,
-        savedAt: new Date().toISOString(),
-        status: 'saved'
-      };
-
-      setSavedTemplates(prev => [newTemplate, ...prev]);
-      return newTemplate;
-    } catch (error) {
-      console.error('Error saving template to state:', error);
-      throw error;
-    }
-  };
-
-  // Save Template Function
-  const handleSaveTemplate = async () => {
-    // Validation
     if (!templateName.trim()) {
-      message.error('Please enter a template name');
-      return;
+      errors.templateName = 'Template name is required';
+    } else if (templateName.length > 200) {
+      errors.templateName = 'Template name must be less than 200 characters';
     }
 
-    if (!templateType) {
-      message.error('Please select a template type');
-      return;
+    if (!tempolateType) {
+      errors.tempolateType = 'Template type is required';
     }
 
     if (!category) {
-      message.error('Please select a category');
-      return;
+      errors.category = 'Category is required';
     }
 
     if (!subject.trim()) {
-      message.error('Please enter a subject/title');
-      return;
+      errors.subject = 'Subject/Title is required';
+    } else if (subject.length > 500) {
+      errors.subject = 'Subject/Title must be less than 500 characters';
     }
 
     if (!emailContent.trim() || emailContent === '<p><br></p>') {
-      message.error('Please enter template content');
-      return;
+      errors.emailContent = 'Template content is required';
     }
 
-    setSaving(true);
-
-    try {
-      message.loading('Saving template...', 0);
-
-      // Save template to state
-      const savedTemplate = saveTemplateToState();
-
-      message.destroy();
-      message.success('Template saved successfully!');
-
-      // Auto-download the file
-      const downloadSuccess = downloadTemplateFile();
-      if (downloadSuccess) {
-        message.info('Template file downloaded automatically');
-      }
-
-      // Show saved templates count
-      message.info(`Total templates saved: ${savedTemplates.length + 1}`);
-
-      // Navigate to template summary after a delay
-      setTimeout(() => {
-        // navigate('/templeteSummary');
-      }, 2000);
-
-    } catch (error) {
-      console.error('Error saving template:', error);
-      message.destroy();
-      message.error(`Failed to save template: ${error.message}`);
-    } finally {
-      setSaving(false);
+    if (description && description.length > 1000) {
+      errors.description = 'Description must be less than 1000 characters';
     }
+
+    setValidationErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  // Download generated file separately
-  const handleDownloadFile = () => {
-    if (generatedFile) {
-      const success = downloadTemplateFile();
-      if (success) {
-        message.success('Template file downloaded!');
-      } else {
-        message.error('No template file available to download');
-      }
-    } else {
-      message.warning('Please save the template first to generate a file');
+  // Field validation (individual)
+  const validateField = (name, value) => {
+    const errors = { ...validationErrors };
+
+    switch (name) {
+      case 'templateName':
+        if (!value.trim()) {
+          errors.templateName = 'Template name is required';
+        } else if (value.length > 200) {
+          errors.templateName = 'Template name must be less than 200 characters';
+        } else {
+          delete errors.templateName;
+        }
+        break;
+
+      case 'tempolateType':
+        if (!value) {
+          errors.tempolateType = 'Template type is required';
+        } else {
+          delete errors.tempolateType;
+        }
+        break;
+
+      case 'category':
+        if (!value) {
+          errors.category = 'Category is required';
+        } else {
+          delete errors.category;
+        }
+        break;
+
+      case 'subject':
+        if (!value.trim()) {
+          errors.subject = 'Subject/Title is required';
+        } else if (value.length > 500) {
+          errors.subject = 'Subject/Title must be less than 500 characters';
+        } else {
+          delete errors.subject;
+        }
+        break;
+
+      case 'description':
+        if (value && value.length > 1000) {
+          errors.description = 'Description must be less than 1000 characters';
+        } else {
+          delete errors.description;
+        }
+        break;
+
+      case 'emailContent':
+        if (!value.trim() || value === '<p><br></p>') {
+          errors.emailContent = 'Template content is required';
+        } else {
+          delete errors.emailContent;
+        }
+        break;
+
+      default:
+        break;
     }
+
+    setValidationErrors(errors);
   };
 
-  // View saved templates
-  const viewSavedTemplates = () => {
-    if (savedTemplates.length === 0) {
-      message.info('No templates saved yet');
-      return;
-    }
+  // Handle field blur
+  const handleFieldBlur = (fieldName) => {
+    setTouchedFields(prev => ({ ...prev, [fieldName]: true }));
+  };
 
-    Modal.info({
-      title: 'Saved Templates',
-      width: 600,
-      content: (
-        <div>
-          <p>Total templates saved: <strong>{savedTemplates.length}</strong></p>
-          <div style={{ maxHeight: '300px', overflow: 'auto' }}>
-            {savedTemplates.map((template, index) => (
-              <Card
-                key={template.id}
-                size="small"
-                style={{ marginBottom: '8px' }}
-                title={
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span>{template.templateData.name}</span>
-                    <Button
-                      size="small"
-                      icon={<DownloadOutlined />}
-                      onClick={() => {
-                        const a = document.createElement('a');
-                        a.href = template.url;
-                        a.download = template.name;
-                        document.body.appendChild(a);
-                        a.click();
-                        document.body.removeChild(a);
-                      }}
-                    >
-                      Download
-                    </Button>
-                  </div>
-                }
-              >
-                <p><strong>Type:</strong> {template.templateData.type}</p>
-                <p><strong>Category:</strong> {template.templateData.category}</p>
-                <p><strong>Saved:</strong> {new Date(template.savedAt).toLocaleString()}</p>
-              </Card>
-            ))}
-          </div>
-        </div>
-      ),
-      onOk() { },
+  // Find variables in text
+  const findVariablesInText = (text) => {
+    const foundVariables = new Set();
+    availableVariables.forEach(variable => {
+      if (text.includes(variable.name)) {
+        foundVariables.add(variable.id);
+      }
     });
+    return foundVariables;
   };
 
-  // Preview handlers
-  const handlePreview = () => {
-    setIsPreviewModalVisible(true);
-  };
-
-  const handleClosePreview = () => {
-    setIsPreviewModalVisible(false);
-  };
-
-  // Handle template type change
-  const handleTemplateTypeChange = (e) => {
-    const value = e.target.value;
-    setTemplateType(value);
-    setCategory('');
-    setSubject('');
-  };
-
-  // Handle category change
-  const handleCategoryChange = (e) => {
-    setCategory(e.target.value);
-  };
-
-  // Get current category options based on selected template type
-  const getCategoryOptions = () => {
-    return templateType ? (categoryOptions[templateType] || []) : [];
-  };
-
-  // Custom Quill modules configuration
+  // Quill config
   const modules = useMemo(() => ({
     toolbar: {
       container: [
@@ -445,36 +524,7 @@ ${plainTextContent}
     'link', 'image'
   ];
 
-  // Function to find variables in text
-  const findVariablesInText = (text) => {
-    const foundVariables = new Set();
-    availableVariables.forEach(variable => {
-      if (text.includes(variable.name)) {
-        foundVariables.add(variable.id);
-      }
-    });
-    return foundVariables;
-  };
-
-  // Function to sync selected variables with editor content
-  const syncSelectedVariablesWithContent = () => {
-    if (quillRef.current && !isProcessingRef.current) {
-      isProcessingRef.current = true;
-      try {
-        const editor = quillRef.current.getEditor();
-        const content = editor.getText();
-        const currentlyPresentVariables = findVariablesInText(content);
-        setSelectedVariables(currentlyPresentVariables);
-        previousContentRef.current = content;
-      } catch (error) {
-        console.error('Error syncing variables:', error);
-      } finally {
-        isProcessingRef.current = false;
-      }
-    }
-  };
-
-  // Function to insert variable with bold formatting and remove bold from next text
+  // Insert variable into editor
   const insertVariable = (variableName, variableId) => {
     if (quillRef.current && !isProcessingRef.current) {
       isProcessingRef.current = true;
@@ -504,92 +554,7 @@ ${plainTextContent}
     }
   };
 
-  // Function to protect variables from editing
-  useEffect(() => {
-    if (quillRef.current) {
-      const editor = quillRef.current.getEditor();
-      previousContentRef.current = editor.getText();
-
-      const preventVariableEditing = (range) => {
-        if (range && range.length === 0) {
-          const [line, offset] = editor.getLine(range.index);
-          if (line) {
-            const text = line.domNode.textContent || '';
-            const variableRegex = /\{[^}]+\}/g;
-            let match;
-            while ((match = variableRegex.exec(text)) !== null) {
-              const variableStart = match.index;
-              const variableEnd = match.index + match[0].length;
-              if (offset >= variableStart && offset <= variableEnd) {
-                editor.setSelection(range.index + (variableEnd - offset), 0);
-                break;
-              }
-            }
-          }
-        }
-      };
-
-      const textChangeHandler = (delta, oldDelta, source) => {
-        if (source === 'user' && !isProcessingRef.current) {
-          isProcessingRef.current = true;
-          try {
-            const currentContent = editor.getText();
-            const contents = editor.getContents();
-
-            contents.ops.forEach((op) => {
-              if (typeof op.insert === 'string') {
-                const variableRegex = /\{[^}]+\}/g;
-                let match;
-                let lastIndex = 0;
-                while ((match = variableRegex.exec(op.insert)) !== null) {
-                  const variableText = match[0];
-                  const startIndex = lastIndex + match.index;
-                  const endIndex = startIndex + variableText.length;
-
-                  if (!op.attributes || !op.attributes.bold) {
-                    editor.formatText(startIndex, variableText.length, 'bold', true);
-                  }
-
-                  if (endIndex < op.insert.length) {
-                    editor.formatText(endIndex, 1, 'bold', false);
-                  }
-                  lastIndex = match.index + variableText.length;
-                }
-              }
-            });
-
-            const currentlyPresentVariables = findVariablesInText(currentContent);
-            setSelectedVariables(currentlyPresentVariables);
-            previousContentRef.current = currentContent;
-          } catch (error) {
-            console.error('Error in text change handler:', error);
-          } finally {
-            isProcessingRef.current = false;
-          }
-        }
-      };
-
-      const selectionChangeHandler = (range) => {
-        if (range && !isProcessingRef.current) {
-          preventVariableEditing(range);
-        }
-      };
-
-      editor.on('text-change', textChangeHandler);
-      editor.on('selection-change', selectionChangeHandler);
-
-      setTimeout(() => {
-        syncSelectedVariablesWithContent();
-      }, 100);
-
-      return () => {
-        editor.off('text-change', textChangeHandler);
-        editor.off('selection-change', selectionChangeHandler);
-      };
-    }
-  }, []);
-
-  // Function to remove variable
+  // Remove variable
   const removeVariable = (variableId) => {
     if (quillRef.current && !isProcessingRef.current) {
       isProcessingRef.current = true;
@@ -637,7 +602,7 @@ ${plainTextContent}
     }
   };
 
-  // Native HTML5 Drag and Drop Handlers
+  // Drag & drop handlers
   const handleDragStart = (e, variableName, variableId) => {
     e.dataTransfer.setData('text/plain', JSON.stringify({ variableName, variableId }));
     e.dataTransfer.effectAllowed = 'copy';
@@ -659,10 +624,186 @@ ${plainTextContent}
     }
   };
 
-  // Click to insert as fallback
   const handleVariableClick = (variableName, variableId) => {
     insertVariable(variableName, variableId);
   };
+
+  // Handle input changes with validation
+  const handleTemplateNameChange = (e) => {
+    const value = e.target.value;
+    setTemplateName(value);
+    if (touchedFields.templateName) {
+      validateField('templateName', value);
+    }
+  };
+
+  const handleDescriptionChange = (e) => {
+    const value = e.target.value;
+    setDescription(value);
+    if (touchedFields.description) {
+      validateField('description', value);
+    }
+  };
+
+  const handleSubjectChange = (e) => {
+    const value = e.target.value;
+    setSubject(value);
+    if (touchedFields.subject) {
+      validateField('subject', value);
+    }
+  };
+
+  const handleTemplateTypeChange = (e) => {
+    const value = e.target.value;
+    setTemplateType(value);
+    setCategory('');
+    setSubject('');
+    if (touchedFields.tempolateType) {
+      validateField('tempolateType', value);
+    }
+  };
+
+  const handleCategoryChange = (e) => {
+    const value = e.target.value;
+    setCategory(value);
+    if (touchedFields.category) {
+      validateField('category', value);
+    }
+  };
+
+  const handleEmailContentChange = (content) => {
+    setEmailContent(content);
+    if (touchedFields.emailContent) {
+      validateField('emailContent', content);
+    }
+
+    // Update variables from content
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      const currentContent = editor.getText();
+      const currentlyPresentVariables = findVariablesInText(currentContent);
+      setSelectedVariables(currentlyPresentVariables);
+    }
+  };
+
+  // Main save function
+  const handleSaveTemplate = async () => {
+    // Mark all fields as touched for validation
+    setTouchedFields({
+      templateName: true,
+      tempolateType: true,
+      category: true,
+      subject: true,
+      description: true,
+      emailContent: true
+    });
+
+    // Validate form
+    if (!validateForm()) {
+      // Show MyAlert with errors
+      const errorMessages = Object.values(validationErrors);
+      if (errorMessages.length > 0) {
+        // Assuming MyAlert accepts a message prop
+        // If MyAlert needs different structure, adjust accordingly
+        message.error(errorMessages[0]); // Show first error
+      }
+      return;
+    }
+
+    setSaving(true);
+    message.loading('Creating and uploading template...', 0);
+
+    try {
+      // Extract variable names
+      const variableNames = Array.from(selectedVariables).map(variableId => {
+        const variable = availableVariables.find(v => v.id === variableId);
+        return variable ? variable.name : null;
+      }).filter(Boolean);
+
+      // Step 1: Create DOCX file
+      const docResult = await createDocxFile({
+        name: templateName.trim(),
+        description: description.trim(),
+        category: category.trim(),
+        type: tempolateType,
+        subject: subject.trim(),
+        content: emailContent,
+        variables: variableNames
+      });
+
+      // Step 2: Upload to API
+      const result = await uploadTemplateAPI({
+        file: docResult.file,
+        name: templateName.trim(),
+        description: description.trim(),
+        category: category.trim(),
+        tempolateType: tempolateType
+      });
+
+      // Update state with generated file info
+      setGeneratedFile({
+        id: `template_${Date.now()}`,
+        name: docResult.fileName,
+        size: docResult.fileSize,
+        metadata: docResult.metadata
+      });
+
+      // Success message
+      message.destroy();
+      message.success('Template uploaded successfully!');
+
+      console.log('Upload result:', result);
+
+    } catch (error) {
+      console.error('Save template error:', error);
+      message.destroy();
+      message.error(error.message || 'Failed to save template');
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  // Preview handlers
+  const handlePreview = () => {
+    setIsPreviewModalVisible(true);
+  };
+
+  const handleClosePreview = () => {
+    setIsPreviewModalVisible(false);
+  };
+
+  const getCategoryOptions = () => {
+    return tempolateType ? (categoryOptions[tempolateType] || []) : [];
+  };
+
+  // Auto-sync variables with editor content
+  useEffect(() => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+
+      const textChangeHandler = () => {
+        if (!isProcessingRef.current) {
+          isProcessingRef.current = true;
+          try {
+            const currentContent = editor.getText();
+            const currentlyPresentVariables = findVariablesInText(currentContent);
+            setSelectedVariables(currentlyPresentVariables);
+            previousContentRef.current = currentContent;
+          } catch (error) {
+            console.error('Error syncing variables:', error);
+          } finally {
+            isProcessingRef.current = false;
+          }
+        }
+      };
+
+      editor.on('text-change', textChangeHandler);
+
+      return () => {
+        editor.off('text-change', textChangeHandler);
+      };
+    }
+  }, []);
 
   return (
     <div className='px-4' style={{ minHeight: '100vh' }}>
@@ -678,23 +819,9 @@ ${plainTextContent}
         >
           {saving ? 'Saving Template...' : 'Save Template'}
         </Button>
-
-        <Button
-          onClick={handleDownloadFile}
-          icon={<DownloadOutlined />}
-          disabled={!generatedFile}
-        >
-          Download File
-        </Button>
-
-        <Button
-          onClick={viewSavedTemplates}
-        >
-          View Saved ({savedTemplates.length})
-        </Button>
       </div>
 
-      {/* File Status */}
+      {/* File Status - Using MyAlert if available, otherwise keep current style */}
       {generatedFile && (
         <div style={{
           marginBottom: '16px',
@@ -704,11 +831,11 @@ ${plainTextContent}
           borderRadius: '6px'
         }}>
           <Text strong style={{ color: '#389e0d' }}>
-            ✓ Template file generated: {generatedFile.name}
+            ✓ Template file generated and uploaded: {generatedFile.name}
           </Text>
           <br />
           <Text type="secondary">
-            Ready to download. File saved in application state.
+            Size: {Math.round(generatedFile.size / 1024)}KB • Type: DOCX
           </Text>
         </div>
       )}
@@ -731,55 +858,76 @@ ${plainTextContent}
             bodyStyle={{ height: 'calc(100% - 57px)' }}
           >
             <div style={{ marginBottom: '16px' }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Template Type
-              </Text>
               <CustomSelect
-                label=""
-                name="templateType"
-                value={templateType}
+                label="Template Type"
+                name="tempolateType"
+                value={tempolateType}
                 onChange={handleTemplateTypeChange}
+                onBlur={() => handleFieldBlur('tempolateType')}
                 options={templateTypeOptions}
                 placeholder="Select template type"
                 isIDs={true}
+                hasError={!!validationErrors.tempolateType && touchedFields.tempolateType}
+                errorMessage={validationErrors.tempolateType}
+                required={true}
               />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Template Category
-              </Text>
               <CustomSelect
-                label=""
+                label="Template Category"
                 name="category"
                 value={category}
                 onChange={handleCategoryChange}
+                onBlur={() => handleFieldBlur('category')}
                 options={getCategoryOptions()}
-                placeholder={templateType ? "Select category" : "Select template type first"}
-                disabled={!templateType}
+                placeholder={tempolateType ? "Select category" : "Select template type first"}
+                disabled={!tempolateType}
                 isIDs={true}
+                hasError={!!validationErrors.category && touchedFields.category}
+                errorMessage={validationErrors.category}
+                required={true}
               />
             </div>
 
             <div style={{ marginBottom: '16px' }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Template Name
-              </Text>
               <MyInput
+                label="Template Name"
+                name="templateName"
                 value={templateName}
-                onChange={(e) => setTemplateName(e.target.value)}
+                onChange={handleTemplateNameChange}
+                onBlur={() => handleFieldBlur('templateName')}
                 placeholder="Enter template name"
+                required={true}
+                hasError={!!validationErrors.templateName && touchedFields.templateName}
+                errorMessage={validationErrors.templateName}
+              />
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <MyInput
+                label="Description"
+                name="description"
+                value={description}
+                onChange={handleDescriptionChange}
+                onBlur={() => handleFieldBlur('description')}
+                placeholder="Enter template description"
+                hasError={!!validationErrors.description && touchedFields.description}
+                errorMessage={validationErrors.description}
               />
             </div>
 
             <div style={{ marginBottom: '0px' }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                Description
-              </Text>
               <MyInput
-                value={description}
-                onChange={(e) => setDescription(e.target.value)}
-                placeholder="Enter template description"
+                label={tempolateType === 'letter' ? 'Title' : 'Subject'}
+                name="subject"
+                value={subject}
+                onChange={handleSubjectChange}
+                onBlur={() => handleFieldBlur('subject')}
+                placeholder={tempolateType === 'letter' ? "Enter letter title" : "Enter email subject"}
+                required={true}
+                hasError={!!validationErrors.subject && touchedFields.subject}
+                errorMessage={validationErrors.subject}
               />
             </div>
           </Card>
@@ -822,13 +970,15 @@ ${plainTextContent}
               padding: '16px 16px 12px 16px',
               borderBottom: '1px solid #f0f0f0'
             }}>
-              <Text strong style={{ color: '#000', display: 'block', marginBottom: '4px' }}>
-                {templateType === 'letter' ? 'Title' : 'Subject'}
-              </Text>
               <MyInput
+                label={tempolateType === 'letter' ? 'Title' : 'Subject'}
+                name="modalSubject"
                 value={subject}
-                onChange={(e) => setSubject(e.target.value)}
-                placeholder={templateType === 'letter' ? "Enter letter title" : "Enter email subject"}
+                onChange={handleSubjectChange}
+                placeholder={tempolateType === 'letter' ? "Enter letter title" : "Enter email subject"}
+                required={true}
+                hasError={!!validationErrors.subject && touchedFields.subject}
+                errorMessage={validationErrors.subject}
               />
             </div>
 
@@ -843,14 +993,20 @@ ${plainTextContent}
               <Text strong style={{ color: '#000', display: 'block', marginBottom: '8px' }}>
                 Body
               </Text>
+              {validationErrors.emailContent && touchedFields.emailContent && (
+                <Text type="danger" style={{ display: 'block', marginBottom: '8px', fontSize: '12px' }}>
+                  {validationErrors.emailContent}
+                </Text>
+              )}
 
               {/* React Quill Editor with Drop Zone */}
               <div
                 onDragOver={handleDragOver}
                 onDrop={handleDrop}
+                onBlur={() => handleFieldBlur('emailContent')}
                 style={{
                   flex: 1,
-                  border: '1px solid #d9d9d9',
+                  border: validationErrors.emailContent && touchedFields.emailContent ? '1px solid #ff4d4f' : '1px solid #d9d9d9',
                   borderRadius: '6px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -863,12 +1019,7 @@ ${plainTextContent}
                   ref={quillRef}
                   value={emailContent}
                   onChange={(content, delta, source, editor) => {
-                    setEmailContent(content);
-                    if (source === 'user') {
-                      const currentContent = editor.getText();
-                      const currentlyPresentVariables = findVariablesInText(currentContent);
-                      setSelectedVariables(currentlyPresentVariables);
-                    }
+                    handleEmailContentChange(content);
                   }}
                   modules={modules}
                   formats={formats}
@@ -917,6 +1068,7 @@ ${plainTextContent}
             }}>
               <div style={{ marginBottom: '8px' }}>
                 <MyInput
+                  label=""
                   type="search"
                   placeholder="Search variables..."
                 />
@@ -1000,13 +1152,7 @@ ${plainTextContent}
 
               {/* Draggable Variables in Two Columns */}
               {bookmarks && !bookmarksLoading && !bookmarksError && (
-                <div
-                  style={{
-                    maxHeight: '450px',            // 👈 adjust height as needed
-                    overflowY: 'auto',
-                    paddingRight: '4px'            // optional: prevents content from hiding behind scrollbar
-                  }}
-                >
+                <div style={{ paddingRight: '4px' }}>
                   <div
                     style={{
                       display: 'grid',
@@ -1036,20 +1182,6 @@ ${plainTextContent}
                           justifyContent: 'center',
                           wordBreak: 'break-word'
                         }}
-                        onMouseOver={(e) => {
-                          if (!selectedVariables.has(variable._id)) {
-                            e.currentTarget.style.backgroundColor = '#e6f7ff';
-                            e.currentTarget.style.transform = 'translateY(-1px)';
-                            e.currentTarget.style.boxShadow = '0 2px 4px rgba(0,0,0,0.1)';
-                          }
-                        }}
-                        onMouseOut={(e) => {
-                          if (!selectedVariables.has(variable._id)) {
-                            e.currentTarget.style.backgroundColor = '#f8f9fa';
-                            e.currentTarget.style.transform = 'translateY(0)';
-                            e.currentTarget.style.boxShadow = 'none';
-                          }
-                        }}
                       >
                         <div>{variable.label}</div>
                       </div>
@@ -1063,7 +1195,7 @@ ${plainTextContent}
         </Col>
       </Row>
 
-      {/* PDF Preview Modal */}
+      {/* Preview Modal */}
       <Modal
         className="template-preview-modal"
         title={
@@ -1133,14 +1265,14 @@ ${plainTextContent}
                   <div style={{ fontSize: '10pt', color: '#666' }}>
                     Date: {new Date().toLocaleDateString()}
                     <br />
-                    Ref: {templateType || 'TEMPLATE-001'}
+                    Ref: {tempolateType || 'TEMPLATE-001'}
                   </div>
                 </div>
               </div>
 
               <div style={{ marginTop: '15px' }}>
                 <Text strong style={{ fontSize: '14pt', display: 'block', marginBottom: '5px' }}>
-                  {templateType === 'letter' ? 'TITLE' : 'SUBJECT'}: {subject}
+                  {tempolateType === 'letter' ? 'TITLE' : 'SUBJECT'}: {subject}
                 </Text>
               </div>
             </div>

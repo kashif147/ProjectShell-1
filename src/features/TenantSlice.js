@@ -3,7 +3,7 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 import MyAlert from "../component/common/MyAlert";
 // import { baseURL } from "../utils/Utilities";
-const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL
+const baseURL = process.env.REACT_APP_POLICY_SERVICE_URL;
 
 // Fetch all tenants
 export const getAllTenants = createAsyncThunk(
@@ -11,12 +11,15 @@ export const getAllTenants = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token"); // 🔹 assumes token is stored
-      const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/tenants`, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.get(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/tenants`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       return response.data; // 🔹 API response
     } catch (error) {
@@ -65,7 +68,6 @@ export const addTenant = createAsyncThunk(
 export const updateTenant = createAsyncThunk(
   "tenants/updateTenant",
   async ({ id, updatedTenant }, { rejectWithValue }) => {
-    debugger
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
@@ -98,16 +100,15 @@ export const deleteTenant = createAsyncThunk(
         },
       });
       if (res.status === 200) {
-         MyAlert("success","You have successfully deleted.")
-         getAllTenants()
-        }
-        return id; // returning the id for filtering in the reducer
-      } catch (error) {
-        return rejectWithValue(
-          // error.response?.data?.message || "Failed to delete tenant"
-          MyAlert("error","Failed to delete. Please try again later")
-          
-          );
+        MyAlert("success", "You have successfully deleted.");
+        getAllTenants();
+      }
+      return id; // returning the id for filtering in the reducer
+    } catch (error) {
+      return rejectWithValue(
+        // error.response?.data?.message || "Failed to delete tenant"
+        MyAlert("error", "Failed to delete. Please try again later")
+      );
     }
   }
 );
