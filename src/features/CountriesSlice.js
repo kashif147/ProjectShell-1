@@ -2,33 +2,55 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
 export const fetchCountries = createAsyncThunk(
-    "countries/fetchCountries",
-    async (_, { rejectWithValue }) => {
-        try {
-            const token = localStorage.getItem('token');
-            const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/countries`, {
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    'Content-Type': 'application/json',
-                },
-            });
-            return response.data?.data;
-        } catch (error) {
-            return rejectWithValue(error.response?.data?.message || 'Failed to fetch countries');
+  "countries/fetchCountries",
+  async (_, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/countries`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
         }
+      );
+      return response.data?.data;
+    } catch (error) {
+      return rejectWithValue(
+        error.response?.data?.message || "Failed to fetch countries"
+      );
     }
+  },
+  {
+    condition: (_, { getState }) => {
+      const { countries } = getState();
+      // Don't dispatch if already loading
+      if (countries.loadingC) {
+        return false; // Prevent duplicate request
+      }
+      // Allow fetch if data doesn't exist or is empty
+      if (!countries.countriesData || countries.countriesData.length === 0) {
+        return true; // Allow fetch
+      }
+      // Prevent if data already exists
+      return false;
+    },
+  }
 );
 
 // Helper function to transform countries data to label-value format
 const transformCountriesData = (countriesData) => {
-    if (!Array.isArray(countriesData)) {
-        return [];
-    }
+  if (!Array.isArray(countriesData)) {
+    return [];
+  }
 
-    return countriesData.map(country => ({
-        label: country.displayname || country.name || 'Unknown',
-        value: country._id
-    })).filter(item => item.value); // Remove items with null/undefined values
+  return countriesData
+    .map((country) => ({
+      label: country.displayname || country.name || "Unknown",
+      value: country._id,
+    }))
+    .filter((item) => item.value); // Remove items with null/undefined values
 };
 
 const countriesSlice = createSlice({
@@ -42,12 +64,12 @@ const countriesSlice = createSlice({
   reducers: {
     // Optional: Add synchronous actions if needed
     clearCountriesError: (state) => {
-        state.errorC = null;
+      state.errorC = null;
     },
     clearCountriesData: (state) => {
-        state.countriesData = [];
-        state.countriesOptions = [];
-    }
+      state.countriesData = [];
+      state.countriesOptions = [];
+    },
   },
   extraReducers: (builder) => {
     builder
@@ -58,7 +80,7 @@ const countriesSlice = createSlice({
       .addCase(fetchCountries.fulfilled, (state, action) => {
         state.loadingC = false;
         state.countriesData = action.payload;
-        
+
         // Transform and set the countries options data
         state.countriesOptions = transformCountriesData(action.payload);
       })
@@ -71,6 +93,7 @@ const countriesSlice = createSlice({
 });
 
 // Export actions
-export const { clearCountriesError, clearCountriesData } = countriesSlice.actions;
+export const { clearCountriesError, clearCountriesData } =
+  countriesSlice.actions;
 
 export default countriesSlice.reducer;

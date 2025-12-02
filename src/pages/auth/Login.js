@@ -78,9 +78,9 @@ async function decryptAES256GCM(encrypted, ivB64, authTagB64, key) {
   return new TextDecoder().decode(decrypted);
 }
 
-async function decryptTokenReact(encryptedToken, ) {
-  const jwtSecret = process.env.REACT_APP_JWT_SECRET
-  debugger
+async function decryptTokenReact(encryptedToken) {
+  const jwtSecret = process.env.REACT_APP_JWT_SECRET;
+  debugger;
   if (!encryptedToken) throw new Error("Encrypted token missing");
   if (!jwtSecret) throw new Error("JWT_SECRET missing");
 
@@ -265,16 +265,16 @@ const Login = () => {
 
       // Save tokens to localStorage if presents
       if (data && data.accessToken) {
-        debugger
+        debugger;
         let token = data.accessToken;
         const token1 = await decryptTokenReact(token);
         localStorage.setItem("token", token1);
-        debugger
-        debugger
+        debugger;
+        debugger;
         let decode = decodeToken(token1);
-        debugger
+        debugger;
         localStorage.setItem("userData", JSON.stringify(decode));
-        debugger
+        debugger;
 
         // Extract roles and permissions from the decoded JWT token
         const userRoles = decode.roles || [];

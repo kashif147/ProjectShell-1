@@ -54,14 +54,12 @@ import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { FaArrowUpRightFromSquare } from "react-icons/fa6";
 import { FaRegCircleQuestion } from "react-icons/fa6";
-import { getAllLookups } from "../features/LookupsSlice";
+import { getAllLookups, resetLookups } from "../features/LookupsSlice";
 import axios from "axios";
 import { useDispatch, useSelector } from "react-redux";
 import { useTableColumns } from "../context/TableColumnsContext ";
 import MyConfirm from "../component/common/MyConfirm";
-import {
-  CountyOutlined,
-} from "../utils/Icons";
+import { CountyOutlined } from "../utils/Icons";
 import { TiContacts } from "react-icons/ti";
 import { TbUsersGroup } from "react-icons/tb";
 import { TbFileSettings } from "react-icons/tb";
@@ -81,25 +79,33 @@ import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 // import { getLookupTypes } from "../features/LookupTypeSlice";
 import { getAllRegionTypes } from "../features/RegionTypeSlice";
-import { getContactTypes } from "../features/ContactTypeSlice";
-import { getContacts } from "../features/ContactSlice";
+import {
+  getContactTypes,
+  resetContactTypes,
+} from "../features/ContactTypeSlice";
+import { getContacts, resetContacts } from "../features/ContactSlice";
 import { getLookupTypes } from "../features/LookupTypeSlice";
 import { set } from "react-hook-form";
 import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
-import { fetchCountries } from "../features/CountriesSlice";
+import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
 import { getBookmarks } from "../features/templete/BookmarkActions";
 
 // i have different drwers for configuration of lookups for the system
 
 function Configuratin() {
   const dispatch = useDispatch();
-  const {
-    bookmarks,
-    bookmarksLoading,
-    bookmarksError,
-  } = useSelector((state) => state.bookmarks);
-  const insertDataFtn = async (url, data, successNotification, failureNotification, callback, isCoum) => {
+  const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
+    (state) => state.bookmarks
+  );
+  const insertDataFtn = async (
+    url,
+    data,
+    successNotification,
+    failureNotification,
+    callback,
+    isCoum
+  ) => {
     const token = localStorage.getItem("token");
 
     // Determine the base URL based on isCoum flag
@@ -137,8 +143,8 @@ function Configuratin() {
     }
   };
   useEffect(() => {
-    dispatch(getBookmarks())
-  }, [dispatch])
+    dispatch(getBookmarks());
+  }, [dispatch]);
   const columnsSolicitors = [
     {
       title: "Surname",
@@ -218,8 +224,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do you want to delete this solicitor?",
                 onConfirm: async () => {
-                  await deleteFtn(`contacts/${record?._id}`, null, () => dispatch(getContacts()));
-
+                  await deleteFtn(`contacts/${record?._id}`, null, () => {
+                    dispatch(resetContacts());
+                    dispatch(getContacts());
+                  });
                 },
               })
             }
@@ -229,7 +237,13 @@ function Configuratin() {
     },
   ];
 
-  const updateFtn = async (endPoint, data1, callback, msg = "updated successfully", isCoum = false) => {
+  const updateFtn = async (
+    endPoint,
+    data1,
+    callback,
+    msg = "updated successfully",
+    isCoum = false
+  ) => {
     try {
       const token = localStorage.getItem("token");
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
@@ -241,12 +255,16 @@ function Configuratin() {
 
       const { id, ...finalData } = data1;
 
-      const response = await axios.put(`${baseUrl}${finalEndPoint}`, finalData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.put(
+        `${baseUrl}${finalEndPoint}`,
+        finalData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       console.log("Update Response:", response);
 
@@ -262,7 +280,11 @@ function Configuratin() {
       }
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
-      MyAlert("error", "Update failed", error.response?.data?.message || error.message);
+      MyAlert(
+        "error",
+        "Update failed",
+        error.response?.data?.message || error.message
+      );
       return null; // ← Add this
     }
   };
@@ -271,7 +293,7 @@ function Configuratin() {
     endPoint,
     data1,
     callback,
-    msg = "updated successfully",
+    msg = "updated successfully"
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -283,16 +305,18 @@ function Configuratin() {
 
       const { id, ...finalData } = data1;
 
-
-      const response = await axios.put(`${baseURL}${finalEndPoint}`, finalData, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      });
+      const response = await axios.put(
+        `${baseURL}${finalEndPoint}`,
+        finalData,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
       console.log("Update Response:", response);
       if (response?.status === 200) {
-
         MyAlert("success", msg);
         if (typeof callback === "function") {
           await callback(); // wait in case it's async
@@ -300,14 +324,19 @@ function Configuratin() {
         return response.data;
       } else {
         MyAlert("error", "notificationsMsg?.updating?.falier");
-
       }
     } catch (error) {
       console.error("API Error:", error.response?.data || error.message);
       // throw error;
     }
   };
-  const deleteFtn = async (url1, body = null, callback, showAlert = true, isCoum = false) => {
+  const deleteFtn = async (
+    url1,
+    body = null,
+    callback,
+    showAlert = true,
+    isCoum = false
+  ) => {
     const token = localStorage.getItem("token");
 
     // ✅ Determine base URL based on isCoum flag
@@ -315,8 +344,8 @@ function Configuratin() {
 
     // ✅ Construct URL - only add /api/ for non-CUMM requests
     const finalUrl = isCoum
-      ? `${baseUrl}/${url1}`  // No /api/ for CUMM service
-      : `${baseUrl}/api${url1.startsWith('/') ? url1 : `/${url1}`}`; // Add /api/ for regular service
+      ? `${baseUrl}/${url1}` // No /api/ for CUMM service
+      : `${baseUrl}/api${url1.startsWith("/") ? url1 : `/${url1}`}`; // Add /api/ for regular service
 
     const config = {
       method: "delete",
@@ -353,30 +382,53 @@ function Configuratin() {
       return null;
     }
   };
+
+  // Helper function to refresh data after mutations
+  // Resets the state first (so condition allows fetch) then fetches fresh data
+  const refreshLookups = () => {
+    dispatch(resetLookups());
+    dispatch(getAllLookups());
+  };
+
+  const refreshContacts = () => {
+    dispatch(resetContacts());
+    dispatch(getContacts());
+  };
+
+  const refreshContactTypes = () => {
+    dispatch(resetContactTypes());
+    dispatch(getContactTypes());
+  };
+
+  const refreshCountries = () => {
+    dispatch(clearCountriesData());
+    dispatch(fetchCountries());
+  };
+
   const columnBookmark = [
     {
-      title: 'Key',
-      dataIndex: 'key',
-      key: 'key',
-      width: '20%',
+      title: "Key",
+      dataIndex: "key",
+      key: "key",
+      width: "20%",
     },
     {
-      title: 'Label',
-      dataIndex: 'label',
-      key: 'label',
-      width: '25%',
+      title: "Label",
+      dataIndex: "label",
+      key: "label",
+      width: "25%",
     },
     {
-      title: 'Path',
-      dataIndex: 'path',
-      key: 'path',
-      width: '30%',
+      title: "Path",
+      dataIndex: "path",
+      key: "path",
+      width: "30%",
     },
     {
-      title: 'Data Type',
-      dataIndex: 'dataType',
-      key: 'dataType',
-      width: '15%',
+      title: "Data Type",
+      dataIndex: "dataType",
+      key: "dataType",
+      width: "15%",
       // render: (dataType) => (
       //   <Tag color={getDataTypeColor(dataType)}>
       //     {dataType?.toUpperCase()}
@@ -422,8 +474,8 @@ function Configuratin() {
                     null, // No body needed when using URL parameter
                     () => dispatch(getBookmarks()), // Fixed callback - pass function reference
                     true, // showAlert
-                    true  // isCoum
-                  )
+                    true // isCoum
+                  );
                 },
               })
             }
@@ -432,18 +484,18 @@ function Configuratin() {
       ),
     },
   ];
-const [bookmarkSearch, setBookmarkSearch] = useState("");
+  const [bookmarkSearch, setBookmarkSearch] = useState("");
 
-const filteredBookmarks = useMemo(() => {
-  if (!bookmarkSearch) return bookmarks;
+  const filteredBookmarks = useMemo(() => {
+    if (!bookmarkSearch) return bookmarks;
 
-  const s = bookmarkSearch.toLowerCase();
+    const s = bookmarkSearch.toLowerCase();
 
-  return bookmarks.filter((b) =>
-    b.key?.toLowerCase().includes(s) ||
-    b.label?.toLowerCase().includes(s)
-  );
-}, [bookmarkSearch, bookmarks]);
+    return bookmarks.filter(
+      (b) =>
+        b.key?.toLowerCase().includes(s) || b.label?.toLowerCase().includes(s)
+    );
+  }, [bookmarkSearch, bookmarks]);
 
   const navigate = useNavigate();
   const [data, setdata] = useState({
@@ -476,8 +528,7 @@ const filteredBookmarks = useMemo(() => {
   // const groupedLookups = useSelector(selectGroupedLookups);
   // const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
 
-
-  const groupedlookupsForSelect = []
+  const groupedlookupsForSelect = [];
   const [searchQuery, setSearchQuery] = useState("");
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
@@ -514,7 +565,6 @@ const filteredBookmarks = useMemo(() => {
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
   const { countriesData } = useSelector((state) => state.countries);
 
-
   const { lookupsTypes, lookupsTypesloading } = useSelector(
     (state) => state.lookupsTypes
   );
@@ -525,21 +575,24 @@ const filteredBookmarks = useMemo(() => {
     (state) => state.contactType
   );
   const { contacts, contactsLoading } = useSelector((state) => state.contact);
-  const [contactTypelookup, setcontactTypelookup] = useState([])
+  const { loadingC: countriesLoading } = useSelector(
+    (state) => state.countries
+  );
+  const [contactTypelookup, setcontactTypelookup] = useState([]);
   useEffect(() => {
     if (contactTypes) {
-      let arr = []
-      let obj = {}
+      let arr = [];
+      let obj = {};
       contactTypes.map((ct) => {
         obj = {
           label: ct?.contactType,
-          value: ct?._id
-        }
-        arr.push(obj)
-      })
-      setcontactTypelookup(arr)
+          value: ct?._id,
+        };
+        arr.push(obj);
+      });
+      setcontactTypelookup(arr);
     }
-  }, [contactTypes])
+  }, [contactTypes]);
   const { lookupsForSelect, disableFtn, isDisable } = useTableColumns();
   const [drawerOpen, setDrawerOpen] = useState({
     counties: false,
@@ -712,7 +765,6 @@ const filteredBookmarks = useMemo(() => {
     setdata((prevState) => ({ ...prevState, ...filteredData }));
   }, [lookups]);
 
-
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
       setdata((prevState) => ({
@@ -725,12 +777,36 @@ const filteredBookmarks = useMemo(() => {
   }, [regions]);
 
   useEffect(() => {
-    dispatch(getContacts());
-    dispatch(getAllRegionTypes());
-    // dispatch(getContactTypes());
-    dispatch(getLookupTypes());
-    dispatch(getAllLookups());
-    dispatch(fetchCountries());
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
+    // Only fetch contacts if they don't exist and not already loading
+    if (!contactsLoading && (!contacts || contacts.length === 0)) {
+      dispatch(getContacts());
+    }
+
+    // Only fetch lookup types if they don't exist and not already loading
+    // Note: getAllRegionTypes and getLookupTypes call the same endpoint
+    // We only call getLookupTypes to avoid duplicate API calls
+    if (
+      !lookupsTypesloading &&
+      (!lookupsTypes || lookupsTypes.length === 0) &&
+      !regionTypesLoading &&
+      (!regionTypes || regionTypes.length === 0)
+    ) {
+      dispatch(getLookupTypes());
+    }
+
+    // Only fetch lookups if they don't exist and not already loading
+    if (!lookupsloading && (!lookups || lookups.length === 0)) {
+      dispatch(getAllLookups());
+    }
+
+    // Only fetch countries if they don't exist and not already loading
+    if (!countriesLoading && (!countriesData || countriesData.length === 0)) {
+      dispatch(fetchCountries());
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [dispatch]);
 
   const [ContactTypeData, setContactTypeData] = useState({
@@ -803,10 +879,10 @@ const filteredBookmarks = useMemo(() => {
 
   let drawerInputsInitalValues = {
     Bookmarks: {
-      "key": "",
-      "label": "",
-      "path": "",
-      "dataType": ""
+      key: "",
+      label: "",
+      path: "",
+      dataType: "",
     },
     Solicitors: {
       forename: "",
@@ -821,8 +897,8 @@ const filteredBookmarks = useMemo(() => {
         eircode: "",
       },
       contactTypeId: "68e94242aa4ff1e89eefa827",
-      isactive: true,     // ✅ added based on API field
-      isDeleted: false,   // keep this if your app uses soft-delete flag
+      isactive: true, // ✅ added based on API field
+      isDeleted: false, // keep this if your app uses soft-delete flag
     },
 
     RegionType: {
@@ -1102,8 +1178,7 @@ const filteredBookmarks = useMemo(() => {
       displayname: "",
       name: "",
       code: "",
-      callingCodes: ""
-
+      callingCodes: "",
     },
   };
 
@@ -1166,13 +1241,12 @@ const filteredBookmarks = useMemo(() => {
         ...filteredData,
       },
     }));
-
   };
   const transformLookupTypes = (data) => {
-    return data.map(item => ({
+    return data.map((item) => ({
       value: item._id,
       key: item._id,
-      label: item.lookuptype
+      label: item.lookuptype,
     }));
   };
   const lookupsTypesSelect = transformLookupTypes(lookupsTypes);
@@ -1187,7 +1261,6 @@ const filteredBookmarks = useMemo(() => {
   };
 
   const openCloseDrawerFtn = (name) => {
-
     setDrawerOpen((prevState) => {
       const wasOpen = prevState[name]; // Check if it was open before
       const newState = {
@@ -1236,7 +1309,6 @@ const filteredBookmarks = useMemo(() => {
           id: idValue,
         },
       };
-
     });
   };
 
@@ -1399,8 +1471,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
-
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -1475,8 +1550,9 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`, null, () => dispatch(fetchCountries()));
-                  ;
+                  await deleteFtn(`countries/${record?._id}`, null, () =>
+                    dispatch(fetchCountries())
+                  );
                 },
               });
             }}
@@ -1546,8 +1622,9 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`, () => dispatch(fetchCountries()));
-                  ;
+                  await deleteFtn(`countries/${record?._id}`, () =>
+                    dispatch(fetchCountries())
+                  );
                 },
               });
             }}
@@ -1668,7 +1745,10 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               });
             }}
@@ -1736,7 +1816,10 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup`, { id: record?._id }, () => dispatch(getAllLookups()));
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               });
             }}
@@ -1805,7 +1888,9 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    refreshLookups();
+                  });
                 },
               });
             }}
@@ -1869,7 +1954,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                   dispatch(getAllLookups());
                 },
               });
@@ -1935,7 +2024,9 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`contact-types/${record?._id}`, null, () => dispatch(getContactTypes()))
+                  await deleteFtn(`contact-types/${record?._id}`, null, () =>
+                    dispatch(getContactTypes())
+                  );
                 },
               });
             }}
@@ -2001,7 +2092,10 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               })
             }
@@ -2157,7 +2251,10 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()));
+                  await deleteFtn(`/lookup/${record?._id}`, null, () => {
+                    dispatch(resetLookups());
+                    dispatch(getAllLookups());
+                  });
                 },
               })
             }
@@ -2167,7 +2264,6 @@ const filteredBookmarks = useMemo(() => {
     },
   ];
   const groupByLookupType = function (data) {
-
     return data.reduce((grouped, item) => {
       const lookupType = item.lookuptypeId.lookuptype;
 
@@ -2247,7 +2343,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2320,7 +2420,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2383,7 +2487,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2460,7 +2568,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2533,7 +2645,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2606,7 +2722,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2679,7 +2799,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2750,7 +2874,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -2824,7 +2952,12 @@ const filteredBookmarks = useMemo(() => {
               MyConfirm({
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
-                onConfirm: async () => deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                onConfirm: async () =>
+                  deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  ),
               })
             }
           />
@@ -2903,8 +3036,12 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
-                }
+                  deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
+                },
               })
             }
           />
@@ -2983,7 +3120,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -3059,7 +3200,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -3138,7 +3283,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -3209,7 +3358,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -3280,7 +3433,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -3833,7 +3990,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do you want to delete this item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -4177,7 +4338,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -4190,7 +4355,7 @@ const filteredBookmarks = useMemo(() => {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => { },
+    onChange: (selectedRowKeys, selectedRows) => {},
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -4265,7 +4430,12 @@ const filteredBookmarks = useMemo(() => {
     }
 
     // Parent lookup required for some types
-    const requiresParentLookup = ["Districts", "Cities", "Counteries", "Station"];
+    const requiresParentLookup = [
+      "Districts",
+      "Cities",
+      "Counteries",
+      "Station",
+    ];
     if (
       requiresParentLookup.includes(drawerType) &&
       !currentInput.Parentlookupid
@@ -4274,13 +4444,12 @@ const filteredBookmarks = useMemo(() => {
     }
 
     setErrors(newErrors);
-    debugger
+    debugger;
 
     // Return true if no errors
     const noErrors = Object.keys(newErrors[drawerType]).length === 0;
     return noErrors;
   };
-
 
   const validateSolicitors = (drawerType) => {
     let newErrors = { [drawerType]: {} };
@@ -4328,17 +4497,17 @@ const filteredBookmarks = useMemo(() => {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => { };
+  const addmembershipFtn = () => {};
 
-  const AddpartnershipFtn = () => { };
+  const AddpartnershipFtn = () => {};
 
-  const AddprofileModalFtn = () => { };
+  const AddprofileModalFtn = () => {};
 
-  const AddRegionTypeModalFtn = () => { };
+  const AddRegionTypeModalFtn = () => {};
 
-  const AddContactTypeModalFtn = () => { };
+  const AddContactTypeModalFtn = () => {};
 
-  const AddSubscriptionsFtn = () => { };
+  const AddSubscriptionsFtn = () => {};
   const columnClaimType = [
     {
       title: "Code",
@@ -4393,7 +4562,11 @@ const filteredBookmarks = useMemo(() => {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`lookup/`, { id: record?._id }, dispatch(getAllLookups()))
+                  await deleteFtn(
+                    `lookup/`,
+                    { id: record?._id },
+                    dispatch(getAllLookups())
+                  );
                 },
               })
             }
@@ -4613,7 +4786,10 @@ const filteredBookmarks = useMemo(() => {
   ];
 
   return (
-    <div className="bg-gray-50 mb-4 configuration-main" style={{ paddingBottom: "120px" }}>
+    <div
+      className="bg-gray-50 mb-4 configuration-main"
+      style={{ paddingBottom: "120px" }}
+    >
       {/* <div className="text-center mb-4">
         <h1 className="fw-bold mb-1">Configuration</h1>
         <p className="text-muted mb-0">System configuration and lookup management</p>
@@ -4651,7 +4827,6 @@ const filteredBookmarks = useMemo(() => {
             paddingBottom: "100px",
             scrollbarWidth: "none",
             msOverflowStyle: "none",
-
           }}
         >
           {sections.map((section, idx) => {
@@ -4660,7 +4835,10 @@ const filteredBookmarks = useMemo(() => {
             );
 
             return (
-              <div key={`${section.title}-${idx}`} style={{ marginBottom: '5rem' }}>
+              <div
+                key={`${section.title}-${idx}`}
+                style={{ marginBottom: "5rem" }}
+              >
                 <h5 className="fw-semibold mb-4 text-primary">
                   {section.title}
                 </h5>
@@ -4744,6 +4922,9 @@ const filteredBookmarks = useMemo(() => {
           pagination={false}
           dataSource={membership}
           className="drawer-tbl"
+          rowKey={(record, index) =>
+            record._id || record.id || record.key || index
+          }
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -4838,6 +5019,9 @@ const filteredBookmarks = useMemo(() => {
           pagination={false}
           dataSource={partnership}
           className="drawer-tbl"
+          rowKey={(record, index) =>
+            record._id || record.id || record.key || index
+          }
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -4904,6 +5088,9 @@ const filteredBookmarks = useMemo(() => {
           pagination={false}
           dataSource={gender} // Replace with appropriate data
           className="drawer-tbl"
+          rowKey={(record, index) =>
+            record._id || record.id || record.key || index
+          }
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -4960,6 +5147,9 @@ const filteredBookmarks = useMemo(() => {
           pagination={false}
           dataSource={partnership}
           className="drawer-tbl"
+          rowKey={(record, index) =>
+            record._id || record.id || record.key || index
+          }
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -5239,6 +5429,9 @@ const filteredBookmarks = useMemo(() => {
           pagination={false}
           dataSource={RegionTy}
           className="drawer-tbl"
+          rowKey={(record, index) =>
+            record._id || record.id || record.key || index
+          }
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -5332,6 +5525,9 @@ const filteredBookmarks = useMemo(() => {
           pagination={false}
           dataSource={ContactTy}
           className="drawer-tbl"
+          rowKey={(record, index) =>
+            record._id || record.id || record.key || index
+          }
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -5404,8 +5600,6 @@ const filteredBookmarks = useMemo(() => {
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
             <Col span={24}>
-
-
               <CustomSelect
                 label="Type:"
                 placeholder="County"
@@ -5468,10 +5662,11 @@ const filteredBookmarks = useMemo(() => {
                 label="Province:"
                 placeholder="Select Province"
                 options={groupedlookupsForSelect?.Provinces}
-
                 value={"Province"}
                 disabled={isDisable}
-                onChange={(e) => drawrInptChng("counties", "Parentlookupid", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("counties", "Parentlookupid", e.target.value)
+                }
                 required
                 hasError={!!errors?.counties?.parentLookup}
               />
@@ -5496,6 +5691,9 @@ const filteredBookmarks = useMemo(() => {
               loading={lookupsloading}
               dataSource={groupedLookups?.County}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -5507,7 +5705,7 @@ const filteredBookmarks = useMemo(() => {
             />
           </div>
         </div>
-      </MyDrawer >
+      </MyDrawer>
       <MyDrawer
         title="Provinces"
         open={drawerOpen?.Provinces}
@@ -5613,6 +5811,9 @@ const filteredBookmarks = useMemo(() => {
               loading={lookupsloading}
               dataSource={groupedLookups?.Provinces}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -5645,8 +5846,10 @@ const filteredBookmarks = useMemo(() => {
         isEdit={isUpdateRec?.Countries}
         update={async () => {
           if (!validateForm("Countries")) return;
-          await updateCountiesFtn(`/api/countries`, drawerIpnuts?.Countries, () =>
-            resetCounteries("Countries", () => dispatch(getAllLookups()))
+          await updateCountiesFtn(
+            `/api/countries`,
+            drawerIpnuts?.Countries,
+            () => resetCounteries("Countries", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Countries", false);
@@ -5724,7 +5927,6 @@ const filteredBookmarks = useMemo(() => {
                 hasError={!!errors?.Countries?.callingCodes}
               />
             </Col>
-
           </Row>
           <Row>
             {/* <Col span={12}>
@@ -5748,6 +5950,9 @@ const filteredBookmarks = useMemo(() => {
               loading={lookupsloading}
               dataSource={countriesData}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -5915,6 +6120,9 @@ const filteredBookmarks = useMemo(() => {
               loading={lookupsloading}
               dataSource={data?.Cities}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6060,6 +6268,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Post Code"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6175,10 +6386,12 @@ const filteredBookmarks = useMemo(() => {
                     hasError={!!errors?.Districts?.Parentlookupid}
                     value={drawerIpnuts?.Districts?.Parentlookupid}
                     onChange={(val) => {
-
-                      drawrInptChng("Districts", "Parentlookupid", val.target.value)
-                    }
-                    }
+                      drawrInptChng(
+                        "Districts",
+                        "Parentlookupid",
+                        val.target.value
+                      );
+                    }}
                   />
                 </div>
 
@@ -6221,6 +6434,9 @@ const filteredBookmarks = useMemo(() => {
               loading={lookupsloading}
               dataSource={groupedLookups?.Branch}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6249,16 +6465,16 @@ const filteredBookmarks = useMemo(() => {
               "Data did not insert:",
               () => {
                 resetCounteries("Divisions");
-                dispatch(getAllLookups());
+                refreshLookups();
               }
             );
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () =>
-              resetCounteries("Divisions", () => dispatch(getAllLookups()))
-            );
-            dispatch(getAllLookups());
+            await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () => {
+              resetCounteries("Divisions");
+              refreshLookups();
+            });
             IsUpdateFtn("Divisions", false);
           }}
           isEdit={isUpdateRec?.Divisions}
@@ -6362,6 +6578,9 @@ const filteredBookmarks = useMemo(() => {
                 dataSource={groupedLookups?.Region}
                 loading={lookupsloading}
                 className="drawer-tbl"
+                rowKey={(record, index) =>
+                  record._id || record.id || record.key || index
+                }
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -6392,16 +6611,16 @@ const filteredBookmarks = useMemo(() => {
             "Data did not insert:",
             () => {
               resetCounteries("Divisions");
-              dispatch(getAllLookups());
+              refreshLookups();
             }
           );
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () =>
-            resetCounteries("Divisions", () => dispatch(getAllLookups()))
-          );
-          dispatch(getAllLookups());
+          await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () => {
+            resetCounteries("Divisions");
+            refreshLookups();
+          });
           IsUpdateFtn("Divisions", false);
         }}
       >
@@ -6490,6 +6709,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups?.Region}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6663,6 +6885,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
               loading={lookupsloading}
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6836,6 +7061,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
               loading={lookupsloading}
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6851,7 +7079,6 @@ const filteredBookmarks = useMemo(() => {
       <MyDrawer
         title="Contact Types"
         open={drawerOpen?.ContactType}
-
         isPagination={true}
         onClose={() => openCloseDrawerFtn("ContactType")}
         add={() => {
@@ -6863,17 +7090,20 @@ const filteredBookmarks = useMemo(() => {
             "Data did not insert:",
             () => {
               resetCounteries("ContactType", () => dispatch(getContactTypes()));
-              dispatch(getContactTypes())
+              dispatch(getContactTypes());
             }
           );
         }}
         isEdit={isUpdateRec?.ContactType}
         update={async () => {
           if (!validateForm("ContactType")) return;
-          await updateFtn(`/api/contact-types/${drawerIpnuts?.ContactType?.id}`, drawerIpnuts?.ContactType, () =>
-            resetCounteries("ContactType", () => dispatch(getContactTypes()))
+          await updateFtn(
+            `/api/contact-types/${drawerIpnuts?.ContactType?.id}`,
+            drawerIpnuts?.ContactType,
+            () =>
+              resetCounteries("ContactType", () => dispatch(getContactTypes()))
           );
-          dispatch(getContactTypes())
+          dispatch(getContactTypes());
           // dispatch(getAllLookups());
           // IsUpdateFtn("Divisions", false);
         }}
@@ -6901,7 +7131,11 @@ const filteredBookmarks = useMemo(() => {
                   name="ContactType"
                   value={drawerIpnuts?.ContactType?.contactType}
                   onChange={(val) =>
-                    drawrInptChng("ContactType", "contactType", val.target.value)
+                    drawrInptChng(
+                      "ContactType",
+                      "contactType",
+                      val.target.value
+                    )
                   }
                   disabled={isDisable}
                   hasError={!!errors?.ContactType?.contactType}
@@ -6917,7 +7151,11 @@ const filteredBookmarks = useMemo(() => {
                   name="DisplayName"
                   value={drawerIpnuts?.ContactType?.displayName}
                   onChange={(val) =>
-                    drawrInptChng("ContactType", "displayName", val.target.value)
+                    drawrInptChng(
+                      "ContactType",
+                      "displayName",
+                      val.target.value
+                    )
                   }
                   disabled={isDisable}
                   hasError={!!errors?.contactType?.displayName}
@@ -6949,6 +7187,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={contactTypes}
               loading={contactTypesloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -6989,9 +7230,8 @@ const filteredBookmarks = useMemo(() => {
           );
           dispatch(getLookupTypes());
         }}
-      //   onChange={handlePageChange}
-      // total={lookupsTypes?.length}
-
+        //   onChange={handlePageChange}
+        // total={lookupsTypes?.length}
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
@@ -7068,6 +7308,9 @@ const filteredBookmarks = useMemo(() => {
               // )}
               dataSource={lookupsTypes}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -7211,6 +7454,9 @@ const filteredBookmarks = useMemo(() => {
               columns={columnRegionType}
               dataSource={regionTypes}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -7265,7 +7511,11 @@ const filteredBookmarks = useMemo(() => {
                 isSimple={true}
                 required
                 onChange={(value) => {
-                  drawrInptChng("Lookup", "lookuptypeId", String(value.target.value));
+                  drawrInptChng(
+                    "Lookup",
+                    "lookuptypeId",
+                    String(value.target.value)
+                  );
                   // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
                 hasError={!!errors?.Lookup?.lookuptypeId}
@@ -7324,8 +7574,8 @@ const filteredBookmarks = useMemo(() => {
                 name="ParentLookup"
                 // value={drawerIpnuts?.Lookup?.ParentLookup || ""}
                 onChange={(e) => {}}
-                  // drawrInptChng("Lookup", "ParentLookup", e.target.value)
-                
+                // drawrInptChng("Lookup", "ParentLookup", e.target.value)
+
                 placeholder="Parent lookup"
                 disabled={isDisable}
               />
@@ -7358,6 +7608,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={lookups}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -7406,7 +7659,7 @@ const filteredBookmarks = useMemo(() => {
             "Failed to create bookmark",
             () => {
               // Test without resetCounteries first
-              resetCounteries("Bookmarks", dispatch(getBookmarks()))
+              resetCounteries("Bookmarks", dispatch(getBookmarks()));
             },
             true
           );
@@ -7477,7 +7730,7 @@ const filteredBookmarks = useMemo(() => {
                   { label: "Date", value: "date" },
                   { label: "Boolean", value: "boolean" },
                   { label: "Array", value: "array" },
-                  { label: "Object", value: "object" }
+                  { label: "Object", value: "object" },
                 ]}
                 placeholder="Select data type"
                 disabled={isDisable}
@@ -7502,6 +7755,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={filteredBookmarks}
               loading={bookmarksLoading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -7630,6 +7886,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups?.Gender}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -7775,9 +8034,12 @@ const filteredBookmarks = useMemo(() => {
             <Table
               pagination={false}
               columns={columnCity}
-              dataSource={groupedLookups['City']}
+              dataSource={groupedLookups["City"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -7904,6 +8166,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups?.Title}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8024,9 +8289,12 @@ const filteredBookmarks = useMemo(() => {
             <Table
               pagination={false}
               columns={columnRosterTypes}
-              dataSource={groupedLookups['Roster Type']}
+              dataSource={groupedLookups["Roster Type"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8149,6 +8417,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Marital Status"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8279,6 +8550,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.ProjectTypes}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8291,7 +8565,6 @@ const filteredBookmarks = useMemo(() => {
           </div>
         </div>
       </MyDrawer>
-
 
       <MyDrawer
         title="Trainings"
@@ -8308,22 +8581,23 @@ const filteredBookmarks = useMemo(() => {
             drawerIpnuts?.Trainings,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Trainings", () => dispatch(getAllLookups()))
+            () => {
+              resetCounteries("Trainings");
+              refreshLookups();
+            }
           );
-          dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Trainings}
         update={async () => {
           if (!validateForm("Trainings")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Trainings, () =>
-            resetCounteries("Trainings", () => dispatch(getAllLookups()))
-          );
-          dispatch(getAllLookups());
+          await updateFtn("/api/lookup", drawerIpnuts?.Trainings, () => {
+            resetCounteries("Trainings");
+            refreshLookups();
+          });
           IsUpdateFtn("Trainings", false);
         }}
       >
         <div className="drawer-main-container">
-
           <Row gutter={24}>
             {/* Lookup Type - full width */}
             <Col span={24}>
@@ -8405,6 +8679,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.Trainings}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8417,9 +8694,6 @@ const filteredBookmarks = useMemo(() => {
           </div>
         </div>
       </MyDrawer>
-
-
-
 
       <MyDrawer
         title="Document Type"
@@ -8538,6 +8812,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.DocumentType}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8562,7 +8839,12 @@ const filteredBookmarks = useMemo(() => {
         }}
         add={async () => {
           if (!validateForm("ClaimType")) return;
-          await insertDataFtn(`/api/lookup`, drawerIpnuts?.ClaimType, "Data inserted successfully", "Data did not insert");
+          await insertDataFtn(
+            `/api/lookup`,
+            drawerIpnuts?.ClaimType,
+            "Data inserted successfully",
+            "Data did not insert"
+          );
           resetCounteries("ClaimType", () => dispatch(getAllLookups()));
         }}
         isEdit={isUpdateRec?.ClaimType}
@@ -8658,6 +8940,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.ClaimType}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8679,8 +8964,12 @@ const filteredBookmarks = useMemo(() => {
         }}
         add={async () => {
           if (!validateForm("Schemes")) return;
-          await insertDataFtn(`/api/lookup`, drawerIpnuts?.Schemes, "Data inserted successfully", "Data did not insert", () =>
-            resetCounteries("Schemes", () => dispatch(getAllLookups()))
+          await insertDataFtn(
+            `/api/lookup`,
+            drawerIpnuts?.Schemes,
+            "Data inserted successfully",
+            "Data did not insert",
+            () => resetCounteries("Schemes", () => dispatch(getAllLookups()))
           );
         }}
         isEdit={isUpdateRec?.Schemes}
@@ -8776,6 +9065,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8797,8 +9089,12 @@ const filteredBookmarks = useMemo(() => {
         }}
         add={async () => {
           if (!validateForm("Reasons")) return;
-          await insertDataFtn(`/api/lookup`, drawerIpnuts?.Reasons, "Data inserted successfully", "Data did not insert", () =>
-            resetCounteries("Reasons", () => dispatch(getAllLookups()))
+          await insertDataFtn(
+            `/api/lookup`,
+            drawerIpnuts?.Reasons,
+            "Data inserted successfully",
+            "Data did not insert",
+            () => resetCounteries("Reasons", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
         }}
@@ -8895,6 +9191,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.Reasons}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -8972,6 +9271,7 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) => record._id || record.id || record.key || index}
               rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
               rowSelection={{ type: selectionType, ...rowSelection }}
               bordered
@@ -9089,6 +9389,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Duties"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -9209,6 +9512,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Ranks"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -9338,6 +9644,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Boards"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -9467,6 +9776,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Council"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -9506,7 +9818,9 @@ const filteredBookmarks = useMemo(() => {
         update={async () => {
           if (!validateForm("CorrespondenceType")) return;
           await updateFtn("/api/lookup", drawerIpnuts?.CorrespondenceType, () =>
-            resetCounteries("CorrespondenceType", () => dispatch(getAllLookups()))
+            resetCounteries("CorrespondenceType", () =>
+              dispatch(getAllLookups())
+            )
           );
           dispatch(getAllLookups());
           IsUpdateFtn("CorrespondenceType", false);
@@ -9616,6 +9930,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.CorrespondenceType}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -9754,6 +10071,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={groupedLookups["Spoken Languages"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -9766,7 +10086,6 @@ const filteredBookmarks = useMemo(() => {
           </div>
         </div>
       </MyDrawer>
-
 
       <MyDrawer
         title="Solicitors"
@@ -9781,17 +10100,18 @@ const filteredBookmarks = useMemo(() => {
             "Data inserted successfully",
             "Data did not insert",
             () => {
-              resetCounteries("Solicitors", () => dispatch(getContacts()))
-              dispatch(getContacts())
+              resetCounteries("Solicitors", () => dispatch(getContacts()));
+              dispatch(getContacts());
             }
           );
         }}
         update={async () => {
           const simplified = simplifyContact(drawerIpnuts?.Solicitors);
           if (!validateSolicitors("Solicitors")) return;
-          await updateFtn(`/api/contacts/${drawerIpnuts?.Solicitors?.id}`, simplified, () =>
-            resetCounteries("Solicitors", () => dispatch(getContacts()))
-
+          await updateFtn(
+            `/api/contacts/${drawerIpnuts?.Solicitors?.id}`,
+            simplified,
+            () => resetCounteries("Solicitors", () => dispatch(getContacts()))
           );
           // dispatch(getAllLookups());
           // IsUpdateFtn("Solicitors", false);
@@ -9808,7 +10128,9 @@ const filteredBookmarks = useMemo(() => {
                 placeholder="Select Contact Type"
                 options={contactTypelookup}
                 value={drawerIpnuts?.Solicitors?.contactTypeId}
-                onChange={(e) => drawrInptChng("Solicitors", "contactTypeId", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "contactTypeId", e.target.value)
+                }
                 disabled={true}
                 required
                 hasError={!!errors?.Solicitors?.contactTypeId}
@@ -9823,7 +10145,9 @@ const filteredBookmarks = useMemo(() => {
                 options={lookupsForSelect?.Titles}
                 disabled={true}
                 value={drawerIpnuts?.Solicitors?.title}
-                onChange={(e) => drawrInptChng("Solicitors", "title", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng("Solicitors", "title", e.target.value)
+                }
               />
             </Col>
 
@@ -9888,9 +10212,15 @@ const filteredBookmarks = useMemo(() => {
             <Col xs={24} md={12}>
               <MyInput
                 label="Building or House:"
-                value={drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse}
+                value={
+                  drawerIpnuts?.Solicitors?.contactAddress?.buildingOrHouse
+                }
                 onChange={(e) =>
-                  drawrInptChng("Solicitors", "contactAddress.buildingOrHouse", e.target.value)
+                  drawrInptChng(
+                    "Solicitors",
+                    "contactAddress.buildingOrHouse",
+                    e.target.value
+                  )
                 }
                 disabled={isDisable}
                 hasError={!!errors?.Solicitors?.buildingOrHouse}
@@ -9903,7 +10233,11 @@ const filteredBookmarks = useMemo(() => {
                 label="Street or Road:"
                 value={drawerIpnuts?.Solicitors?.contactAddress?.streetOrRoad}
                 onChange={(e) =>
-                  drawrInptChng("Solicitors", "contactAddress.streetOrRoad", e.target.value)
+                  drawrInptChng(
+                    "Solicitors",
+                    "contactAddress.streetOrRoad",
+                    e.target.value
+                  )
                 }
                 disabled={isDisable}
               />
@@ -9914,7 +10248,11 @@ const filteredBookmarks = useMemo(() => {
                 label="Area or Town:"
                 value={drawerIpnuts?.Solicitors?.contactAddress?.areaOrTown}
                 onChange={(e) =>
-                  drawrInptChng("Solicitors", "contactAddress.areaOrTown", e.target.value)
+                  drawrInptChng(
+                    "Solicitors",
+                    "contactAddress.areaOrTown",
+                    e.target.value
+                  )
                 }
                 disabled={isDisable}
                 hasError={!!errors?.Solicitors?.areaOrTown}
@@ -9925,9 +10263,15 @@ const filteredBookmarks = useMemo(() => {
             <Col xs={24} md={12}>
               <MyInput
                 label="County, City or Postcode:"
-                value={drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode}
+                value={
+                  drawerIpnuts?.Solicitors?.contactAddress?.cityCountyOrPostCode
+                }
                 onChange={(e) =>
-                  drawrInptChng("Solicitors", "contactAddress.cityCountyOrPostCode", e.target.value)
+                  drawrInptChng(
+                    "Solicitors",
+                    "contactAddress.cityCountyOrPostCode",
+                    e.target.value
+                  )
                 }
                 disabled={isDisable}
               />
@@ -9938,7 +10282,11 @@ const filteredBookmarks = useMemo(() => {
                 label="Eircode:"
                 value={drawerIpnuts?.Solicitors?.contactAddress?.eircode}
                 onChange={(e) =>
-                  drawrInptChng("Solicitors", "contactAddress.eircode", e.target.value)
+                  drawrInptChng(
+                    "Solicitors",
+                    "contactAddress.eircode",
+                    e.target.value
+                  )
                 }
                 disabled={isDisable}
               />
@@ -9951,6 +10299,9 @@ const filteredBookmarks = useMemo(() => {
                 dataSource={data?.Solicitors}
                 loading={contactsLoading}
                 className="drawer-tbl"
+                rowKey={(record, index) =>
+                  record._id || record.id || record.key || index
+                }
                 rowClassName={(record, index) =>
                   index % 2 !== 0 ? "odd-row" : "even-row"
                 }
@@ -9962,13 +10313,8 @@ const filteredBookmarks = useMemo(() => {
               />
             </Col>
           </Row>
-
         </div>
-
-
-
       </MyDrawer>
-
 
       <MyDrawer
         title="Committees"
@@ -9997,16 +10343,80 @@ const filteredBookmarks = useMemo(() => {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-      // width="680"
+        // width="680"
       >
-        <div className="drawer-main-cntainer p-4"> {/* Type */}
-          <Row gutter={24}> <Col span={24}> <CustomSelect label="Type:" isSimple={true} placeholder="Committee" disabled={true} options={lookupsType} value={drawerIpnuts?.Committees?.RegionTypeID} onChange={(value) => drawrInptChng("Committees", "RegionTypeID", String(value))} required hasError={!!errors?.Committees?.RegionTypeID} /> </Col> </Row>
+        <div className="drawer-main-cntainer p-4">
+          {" "}
+          {/* Type */}
+          <Row gutter={24}>
+            {" "}
+            <Col span={24}>
+              {" "}
+              <CustomSelect
+                label="Type:"
+                isSimple={true}
+                placeholder="Committee"
+                disabled={true}
+                options={lookupsType}
+                value={drawerIpnuts?.Committees?.RegionTypeID}
+                onChange={(value) =>
+                  drawrInptChng("Committees", "RegionTypeID", String(value))
+                }
+                required
+                hasError={!!errors?.Committees?.RegionTypeID}
+              />{" "}
+            </Col>{" "}
+          </Row>
           {/* Code + Committee Name */}
-          <Row gutter={24}> <Col span={12}> <MyInput label="Code:" name="RegionCode" value={drawerIpnuts?.Committees?.RegionCode || ""} onChange={(e) => drawrInptChng("Committees", "RegionCode", e.target.value)} placeholder="Enter code" disabled={isDisable} required hasError={!!errors?.Committees?.RegionCode} /> </Col>
-            <Col span={12}> <MyInput label="Committee Name:" name="RegionName" value={drawerIpnuts?.Committees?.RegionName || ""} onChange={(e) => drawrInptChng("Committees", "RegionName", e.target.value)} placeholder="Enter committee name" disabled={isDisable} required hasError={!!errors?.Committees?.RegionName} /> </Col>
-          </Row> {/* Display Name + Active */}
-          <Row gutter={24}> <Col span={12}>
-            <MyInput label="Display Name:" name="DisplayName" value={drawerIpnuts?.Committees?.DisplayName || ""} onChange={(e) => drawrInptChng("Committees", "DisplayName", e.target.value)} placeholder="Enter display name" disabled={isDisable} hasError={!!errors?.Committees?.DisplayName} /> </Col>
+          <Row gutter={24}>
+            {" "}
+            <Col span={12}>
+              {" "}
+              <MyInput
+                label="Code:"
+                name="RegionCode"
+                value={drawerIpnuts?.Committees?.RegionCode || ""}
+                onChange={(e) =>
+                  drawrInptChng("Committees", "RegionCode", e.target.value)
+                }
+                placeholder="Enter code"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Committees?.RegionCode}
+              />{" "}
+            </Col>
+            <Col span={12}>
+              {" "}
+              <MyInput
+                label="Committee Name:"
+                name="RegionName"
+                value={drawerIpnuts?.Committees?.RegionName || ""}
+                onChange={(e) =>
+                  drawrInptChng("Committees", "RegionName", e.target.value)
+                }
+                placeholder="Enter committee name"
+                disabled={isDisable}
+                required
+                hasError={!!errors?.Committees?.RegionName}
+              />{" "}
+            </Col>
+          </Row>{" "}
+          {/* Display Name + Active */}
+          <Row gutter={24}>
+            {" "}
+            <Col span={12}>
+              <MyInput
+                label="Display Name:"
+                name="DisplayName"
+                value={drawerIpnuts?.Committees?.DisplayName || ""}
+                onChange={(e) =>
+                  drawrInptChng("Committees", "DisplayName", e.target.value)
+                }
+                placeholder="Enter display name"
+                disabled={isDisable}
+                hasError={!!errors?.Committees?.DisplayName}
+              />{" "}
+            </Col>
             <Col span={10}>
               <CustomSelect
                 label="Parent:"
@@ -10044,10 +10454,23 @@ const filteredBookmarks = useMemo(() => {
             </Col>
           </Row>
           {/* Parent */}
-
           <div className="mt-4 config-tbl-container">
             <h6 className="mb-3 text-primary">Existing Committees</h6>
-            <Table pagination={false} columns={Committeescolumns} dataSource={groupedLookups?.Committees || []} loading={lookupsloading} className="drawer-tbl" rowKey={(record) => record._id || record.id || record.RegionCode} rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"} rowSelection={{ type: selectionType, ...rowSelection, }} bordered /> </div> </div>
+            <Table
+              pagination={false}
+              columns={Committeescolumns}
+              dataSource={groupedLookups?.Committees || []}
+              loading={lookupsloading}
+              className="drawer-tbl"
+              rowKey={(record) => record._id || record.id || record.RegionCode}
+              rowClassName={(record, index) =>
+                index % 2 !== 0 ? "odd-row" : "even-row"
+              }
+              rowSelection={{ type: selectionType, ...rowSelection }}
+              bordered
+            />{" "}
+          </div>{" "}
+        </div>
       </MyDrawer>
 
       <MyDrawer
@@ -10161,6 +10584,9 @@ const filteredBookmarks = useMemo(() => {
               dataSource={data?.Sections}
               loading={lookupsloading}
               className="drawer-tbl"
+              rowKey={(record, index) =>
+                record._id || record.id || record.key || index
+              }
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
               }
@@ -10173,7 +10599,7 @@ const filteredBookmarks = useMemo(() => {
           </div>
         </div>
       </MyDrawer>
-    </div >
+    </div>
     // </div>
   );
 }

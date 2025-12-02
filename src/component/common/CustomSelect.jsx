@@ -91,9 +91,9 @@ const CustomSelect = ({
             {placeholder}
           </option>
           
-          {options.map((opt) => {
+          {options.map((opt, index) => {
             return (
-              <option key={opt.key} value={isIDs ? opt.key : opt.label}>
+              <option key={opt.key || opt.value || opt.label || index} value={isIDs ? opt.key : opt.label}>
                 {opt.label}
               </option>
             );
