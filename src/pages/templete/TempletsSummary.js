@@ -233,6 +233,7 @@ const TempletsSummary = () => {
                 columns={columns}
                 dataSource={filteredData}
                 loading={loading}
+                 scroll={{ y: 400 }} 
                 bordered
                 pagination={{
                     total: filteredData.length,
