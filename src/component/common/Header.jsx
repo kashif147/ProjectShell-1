@@ -45,6 +45,7 @@ import { PiDotsNineLight } from "react-icons/pi";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { useDispatch, useSelector } from "react-redux";
 import { useAuthorization } from "../../context/AuthorizationContext";
+import { clearAuth } from "../../features/AuthSlice";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
@@ -62,7 +63,6 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     dispatch(updateMenuLbl({ key, value }));
     closeDropdown();
   };
-
 
   const appItems = [
     {
@@ -268,7 +268,9 @@ function Header() {
   const dispatch = useDispatch();
   const [token, settoken] = useState(null);
   const [regNo, setregNo] = useState("");
+  const isLoggingOutRef = useRef(false);
   const navigate = useNavigate();
+  const { clearAuth: clearAuthContext } = useAuthorization();
 
   // Debug logging
   console.log("Header Debug - Component rendered");
@@ -300,25 +302,62 @@ function Header() {
       };
     }) || [];
   const logout = async () => {
-    try {
-      const token = localStorage.getItem("token");
+    if (isLoggingOutRef.current) return; // Prevent multiple logout attempts
+    isLoggingOutRef.current = true;
 
-      await axios.post(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/logout`,
-        {}, // empty body
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        }
-      );
+    const token = localStorage.getItem("token");
 
-      console.log("Logout successful");
-      localStorage.removeItem("token");
-      navigate("/");
-    } catch (error) {
-      console.error("Error logging out:", error);
+    // Clear auth state immediately for better UX
+    clearAuthContext();
+    dispatch(clearAuth());
+
+    // Clear all localStorage items
+    localStorage.removeItem("token");
+    localStorage.removeItem("userData");
+    localStorage.removeItem("userRoles");
+    localStorage.removeItem("userPermissions");
+    localStorage.removeItem("token_expiry");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("userdata");
+
+    // Navigate immediately (don't wait for API)
+    navigate("/");
+
+    // Call logout API in background with timeout (non-blocking)
+    if (token) {
+      const logoutTimeout = 5000; // 5 second timeout
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), logoutTimeout);
+
+      axios
+        .post(
+          `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/logout`,
+          {},
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+            signal: controller.signal,
+            timeout: logoutTimeout,
+          }
+        )
+        .then(() => {
+          console.log("Logout API call successful");
+        })
+        .catch((error) => {
+          if (error.name === "AbortError" || error.code === "ECONNABORTED") {
+            console.warn("Logout API call timed out (non-critical)");
+          } else {
+            console.error("Logout API call failed (non-critical):", error);
+          }
+        })
+        .finally(() => {
+          clearTimeout(timeoutId);
+          isLoggingOutRef.current = false;
+        });
+    } else {
+      isLoggingOutRef.current = false;
     }
   };
   return (
@@ -377,7 +416,6 @@ function Header() {
             className="top-search"
             style={{ width: "100%" }}
           />
-
         </div>
 
         <div
