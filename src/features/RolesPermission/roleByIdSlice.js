@@ -49,7 +49,6 @@ const roleByIdSlice = createSlice({
         state.error = null;
       })
       .addCase(getRoleById.fulfilled, (state, action) => {
-          debugger
         state.roleLoading = false;
         state.role1 = action.payload;
       })

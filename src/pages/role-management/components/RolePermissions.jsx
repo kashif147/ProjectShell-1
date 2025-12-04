@@ -30,7 +30,9 @@ const RolePermissions = ({ role, onClose }) => {
 
   const [loading, setLoading] = useState(false);
 
-  const { permissions, searchQuery } = useSelector((state) => state.permissions);
+  const { permissions, searchQuery } = useSelector(
+    (state) => state.permissions
+  );
 
   // Load role’s current permissions
   useEffect(() => {
@@ -90,7 +92,9 @@ const RolePermissions = ({ role, onClose }) => {
     if (checked) {
       setSelectedPermissions((prev) => [...new Set([...prev, permissionId])]);
     } else {
-      setSelectedPermissions((prev) => prev.filter((id) => id !== permissionId));
+      setSelectedPermissions((prev) =>
+        prev.filter((id) => id !== permissionId)
+      );
     }
   };
 
@@ -99,72 +103,71 @@ const RolePermissions = ({ role, onClose }) => {
     const ids = perms.map((p) => p.id);
     const allSelected = ids.every((id) => selectedPermissions.includes(id));
 
-    setSelectedPermissions((prev) =>
-      allSelected
-        ? prev.filter((id) => !ids.includes(id)) // uncheck all
-        : [...new Set([...prev, ...ids])] // check all
+    setSelectedPermissions(
+      (prev) =>
+        allSelected
+          ? prev.filter((id) => !ids.includes(id)) // uncheck all
+          : [...new Set([...prev, ...ids])] // check all
     );
   };
 
-const userdata = JSON.parse(localStorage.getItem("userData"));
-const handleSave = async () => {
-  debugger
-  // 68c8690e40c7b7d13ba2d0a8
-  //  "permissions": [
-  //               "68c84c57f10b0fff9ac905e2",
-  //               "68c84c58f10b0fff9ac905ec"
-  //           ],
-  try {
-    setLoading(true);
+  const userdata = JSON.parse(localStorage.getItem("userData"));
+  const handleSave = async () => {
+    // 68c8690e40c7b7d13ba2d0a8
+    //  "permissions": [
+    //               "68c84c57f10b0fff9ac905e2",
+    //               "68c84c58f10b0fff9ac905ec"
+    //           ],
+    try {
+      setLoading(true);
 
-    // Compare differences
-    const added = selectedPermissions.filter(
-      (id) => !initialPermissions.includes(id)
-    );
-    debugger
-    const removed = initialPermissions.filter(
-      (id) => !selectedPermissions.includes(id)
-    );
-debugger
-    // 🔹 Assign new permissions
-    if (added.length > 0) {
-      for (const permissionId of added) {
-        await insertDataFtn(
-          process.env.REACT_APP_POLICY_SERVICE_URL,
-          "/api/users/assign-role",
-          { userId: userdata?.id, roleId: role._id },
-          () => {}
-        );
-      }
-    }
-debugger
-    // 🔹 Remove unselected permissions
-    if (removed.length > 0) {
-      for (const permissionId of removed) {
-        await insertDataFtn(
-          "/api/users/remove-role",
-          { userId: permissionId, roleId: role._id },
-          () => {}
-        );
-      }
-    }
-debugger
-    // ✅ Show single success message after both loops
-    if (added.length > 0 || removed.length > 0) {
-      message.success("Permissions updated successfully");
-    } else {
-      message.info("No changes made");
-    }
-debugger
-    onClose();
-  } catch (error) {
-    console.error("Error updating role permissions", error);
-    message.error("Failed to update permissions");
-  } finally {
-    setLoading(false);
-  }
-};
+      // Compare differences
+      const added = selectedPermissions.filter(
+        (id) => !initialPermissions.includes(id)
+      );
 
+      const removed = initialPermissions.filter(
+        (id) => !selectedPermissions.includes(id)
+      );
+
+      // 🔹 Assign new permissions
+      if (added.length > 0) {
+        for (const permissionId of added) {
+          await insertDataFtn(
+            process.env.REACT_APP_POLICY_SERVICE_URL,
+            "/api/users/assign-role",
+            { userId: userdata?.id, roleId: role._id },
+            () => {}
+          );
+        }
+      }
+
+      // 🔹 Remove unselected permissions
+      if (removed.length > 0) {
+        for (const permissionId of removed) {
+          await insertDataFtn(
+            "/api/users/remove-role",
+            { userId: permissionId, roleId: role._id },
+            () => {}
+          );
+        }
+      }
+
+      // ✅ Show single success message after both loops
+      if (added.length > 0 || removed.length > 0) {
+        message.success("Permissions updated successfully");
+      } else {
+        message.info("No changes made");
+      }
+
+      onClose();
+    } catch (error) {
+      console.error("Error updating role permissions", error);
+      message.error("Failed to update permissions");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Colors by category
   const getCategoryColor = (category) => {
@@ -208,122 +211,132 @@ debugger
         </Space>
       }
     >
-     <div className="drawer-main-cntainer">
-  {/* Search */}
-  <div className="mb-4">
-    <Search
-      placeholder="Search permissions..."
-      prefix={<SearchOutlined />}
-      style={{
-        height: "40px",
-        borderRadius: "4px",
-        border: "1px solid #d9d9d9",
-      }}
-    />
-  </div>
-
-  {/* Selected Count */}
-  <div className="mb-4">
-    <Card className="selected-permissions-card">
-      <div className="d-flex justify-content-between align-items-center">
-        <div>
-          <h5 className="mb-1">Selected Permissions</h5>
-          <p className="text-muted mb-0">
-            {selectedPermissions.length} of {allPermissions.length} permissions selected
-          </p>
-        </div>
-        <Badge
-          count={selectedPermissions.length}
-          showZero
-          color="var(--primary-color)"
-        >
-          <Tag color="var(--primary-color)" className="permission-count-tag">
-            {selectedPermissions.length}
-          </Tag>
-        </Badge>
-      </div>
-    </Card>
-  </div>
-
-  {/* Permissions by Category (expanded by default) */}
-  {Object.keys(filteredPermissions).map((category) => {
-    const categoryPermissions = filteredPermissions[category] || [];
-    const allChecked = categoryPermissions.every((p) =>
-      selectedPermissions.includes(p.id)
-    );
-    const partiallyChecked =
-      categoryPermissions.some((p) =>
-        selectedPermissions.includes(p.id)
-      ) && !allChecked;
-
-    return (
-      <Card
-        key={category}
-        className="mb-3"
-        title={
-          <div
+      <div className="drawer-main-cntainer">
+        {/* Search */}
+        <div className="mb-4">
+          <Search
+            placeholder="Search permissions..."
+            prefix={<SearchOutlined />}
             style={{
-              display: "flex",
-              justifyContent: "space-between",
-              alignItems: "center",
+              height: "40px",
+              borderRadius: "4px",
+              border: "1px solid #d9d9d9",
             }}
-          >
-            <div>
-              <Tag color={getCategoryColor(category)}>{category}</Tag>
-              <span style={{ marginLeft: 8 }}>
-                ({categoryPermissions.length} permissions)
-              </span>
+          />
+        </div>
+
+        {/* Selected Count */}
+        <div className="mb-4">
+          <Card className="selected-permissions-card">
+            <div className="d-flex justify-content-between align-items-center">
+              <div>
+                <h5 className="mb-1">Selected Permissions</h5>
+                <p className="text-muted mb-0">
+                  {selectedPermissions.length} of {allPermissions.length}{" "}
+                  permissions selected
+                </p>
+              </div>
+              <Badge
+                count={selectedPermissions.length}
+                showZero
+                color="var(--primary-color)"
+              >
+                <Tag
+                  color="var(--primary-color)"
+                  className="permission-count-tag"
+                >
+                  {selectedPermissions.length}
+                </Tag>
+              </Badge>
             </div>
-            <Checkbox
-              indeterminate={partiallyChecked}
-              checked={allChecked}
-              onChange={() => handleCategoryToggle(categoryPermissions)}
-            >
-              Select All
-            </Checkbox>
-          </div>
-        }
-      >
-        <Row gutter={[16, 16]}>
-          {categoryPermissions.map((permission) => {
-            const checked = selectedPermissions.includes(permission.id);
-            return (
-              <Col xs={24} sm={12} md={8} key={permission.id}>
-                <div className="permission-item">
+          </Card>
+        </div>
+
+        {/* Permissions by Category (expanded by default) */}
+        {Object.keys(filteredPermissions).map((category) => {
+          const categoryPermissions = filteredPermissions[category] || [];
+          const allChecked = categoryPermissions.every((p) =>
+            selectedPermissions.includes(p.id)
+          );
+          const partiallyChecked =
+            categoryPermissions.some((p) =>
+              selectedPermissions.includes(p.id)
+            ) && !allChecked;
+
+          return (
+            <Card
+              key={category}
+              className="mb-3"
+              title={
+                <div
+                  style={{
+                    display: "flex",
+                    justifyContent: "space-between",
+                    alignItems: "center",
+                  }}
+                >
+                  <div>
+                    <Tag color={getCategoryColor(category)}>{category}</Tag>
+                    <span style={{ marginLeft: 8 }}>
+                      ({categoryPermissions.length} permissions)
+                    </span>
+                  </div>
                   <Checkbox
-                    checked={checked}
-                    onChange={(e) =>
-                      handlePermissionToggle(permission.id, e.target.checked)
-                    }
+                    indeterminate={partiallyChecked}
+                    checked={allChecked}
+                    onChange={() => handleCategoryToggle(categoryPermissions)}
                   >
-                    <div className="permission-content">
-                      <div className="permission-name">{permission.name}</div>
-                      <div className="permission-string">
-                        <code style={{ fontSize: 12 }}>
-                          {permission.permission}
-                        </code>
-                      </div>
-                      <div className="permission-description">
-                        {permission.description}
-                      </div>
-                    </div>
+                    Select All
                   </Checkbox>
                 </div>
-              </Col>
-            );
-          })}
-        </Row>
-      </Card>
-    );
-  })}
+              }
+            >
+              <Row gutter={[16, 16]}>
+                {categoryPermissions.map((permission) => {
+                  const checked = selectedPermissions.includes(permission.id);
+                  return (
+                    <Col xs={24} sm={12} md={8} key={permission.id}>
+                      <div className="permission-item">
+                        <Checkbox
+                          checked={checked}
+                          onChange={(e) =>
+                            handlePermissionToggle(
+                              permission.id,
+                              e.target.checked
+                            )
+                          }
+                        >
+                          <div className="permission-content">
+                            <div className="permission-name">
+                              {permission.name}
+                            </div>
+                            <div className="permission-string">
+                              <code style={{ fontSize: 12 }}>
+                                {permission.permission}
+                              </code>
+                            </div>
+                            <div className="permission-description">
+                              {permission.description}
+                            </div>
+                          </div>
+                        </Checkbox>
+                      </div>
+                    </Col>
+                  );
+                })}
+              </Row>
+            </Card>
+          );
+        })}
 
-  {Object.keys(filteredPermissions).length === 0 && (
-    <Card className="text-center">
-      <p className="text-muted">No permissions found matching your search.</p>
-    </Card>
-  )}
-</div>
-
+        {Object.keys(filteredPermissions).length === 0 && (
+          <Card className="text-center">
+            <p className="text-muted">
+              No permissions found matching your search.
+            </p>
+          </Card>
+        )}
+      </div>
     </Drawer>
   );
 };

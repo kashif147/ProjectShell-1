@@ -2,7 +2,6 @@
 @tailwind components;
 @tailwind utilities;
 
-
 /* Import Unified Theme */
 @import "./styles/Theme.css";
 
@@ -93,7 +92,8 @@ select:disabled {
   height: auto !important;
 }
 
-.input-container {}
+.input-container {
+}
 
 .custom-icon {
   width: 60px;
@@ -238,7 +238,9 @@ select {
   color: var(--mainBlue) !important;
 }
 
-.ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-placeholder {
+.ant-select-single:not(.ant-select-customize-input)
+  .ant-select-selector
+  .ant-select-selection-placeholder {
   color: var(--labelColor) !important;
   opacity: 1;
 }
@@ -388,10 +390,13 @@ body {
   overflow: auto;
 }
 
-.title {}
+.title {
+}
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper .ant-input-prefix,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper .ant-input-suffix {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
+  .ant-input-prefix,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
+  .ant-input-suffix {
   display: flex;
   flex: none;
   justify-content: flex-end !important;
@@ -454,10 +459,17 @@ body {
   /* Show input on hover */
 }
 
-.sid-nav-main :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-item .ant-menu-item-icon,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-submenu-title .ant-menu-item-icon,
+.sid-nav-main
+  :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
+  .ant-menu-item
+  .ant-menu-item-icon,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
+  .ant-menu-submenu-title
+  .ant-menu-item-icon,
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-item .anticon,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-submenu-title .anticon {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
+  .ant-menu-submenu-title
+  .anticon {
   font-size: 22px !important;
   color: #fff;
 }
@@ -469,14 +481,18 @@ body {
   color: white !important;
 }
 
-.label-nav .ant-menu-item-icon {}
+.label-nav .ant-menu-item-icon {
+}
 
 .sid-nav-main .ant-menu-item.specific-icon .ant-menu-item-icon svg {
   color: white !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item:first-child.ant-menu-item-selected,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item:first-child.ant-menu-item-selected {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  .ant-menu-item:first-child.ant-menu-item-selected,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item:first-child.ant-menu-item-selected {
   background-color: transparent !important;
   padding-top: 15px !important;
 }
@@ -525,10 +541,15 @@ body {
   height: 50px !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline>.ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical>.ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline>.ant-menu-submenu>.ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical>.ant-menu-submenu>.ant-menu-submenu-title {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline > .ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical
+  > .ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title {
   height: 50px !important;
 }
 
@@ -536,12 +557,15 @@ body {
   background-color: var(--mainBlue) !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item-selected,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item-selected {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  .ant-menu-item-selected,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item-selected {
   background-color: rebeccapurple !important;
 }
 
-.ant-table-thead>tr>th {
+.ant-table-thead > tr > th {
   /* padding: 6px 10px !important;  Adjust the value as needed */
   padding: 4px 8px !important;
   white-space: nowrap;
@@ -553,7 +577,7 @@ body {
   color: var(--FontsColor) !important;
 }
 
-.ant-table-tbody>tr>td {
+.ant-table-tbody > tr > td {
   /* padding-top: 5px !important; */
   /* padding-bottom: 5px !important;  */
   overflow: hidden;
@@ -563,7 +587,10 @@ body {
   font-weight: 600;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(.ant-select-customize-input) .ant-select-selector {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(
+    .ant-select-customize-input
+  )
+  .ant-select-selector {
   border: none !important;
   border-radius: 3px !important;
   font-weight: bold;
@@ -599,9 +626,14 @@ body {
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
+  > .ant-menu
+  .ant-menu-submenu-title {
   color: #fff !important;
   font-family: var(--fontFamily) !important;
 }
@@ -695,7 +727,8 @@ body {
   padding: 0px !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination .ant-pagination-item-active {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination
+  .ant-pagination-item-active {
   background-color: #e9f2ff !important;
 }
 
@@ -708,7 +741,7 @@ body {
   border: 1px solid #d9d9d9 !important;
 }
 
-.Project-table .ant-table-tbody>tr>td {
+.Project-table .ant-table-tbody > tr > td {
   border-bottom: 1px solid #d9d9d9 !important;
 
   /* Add border to table rows */
@@ -742,7 +775,7 @@ body {
   /* Ensures that corners are rounded properly */
 }
 
-.ant-table-thead>tr>th {
+.ant-table-thead > tr > th {
   border-radius: 0;
   /* Removes border radius from top corners */
 }
@@ -885,13 +918,14 @@ tr {
   width: 100%;
 }
 
-.last-chalid-search-filter {}
+.last-chalid-search-filter {
+}
 
 .configuration-main {
   margin-top: 0.5rem;
 }
 
-.sid-nav-main .ant-menu>li:first-child {
+.sid-nav-main .ant-menu > li:first-child {
   background-color: transparent;
 }
 
@@ -929,7 +963,7 @@ tr {
   cursor: pointer;
 }
 
-.drawer-tbl .ant-table-thead>tr>th {
+.drawer-tbl .ant-table-thead > tr > th {
   background-color: #45669d !important;
   color: #ffffff !important;
   font-weight: bold;
@@ -960,7 +994,7 @@ tr {
   border-radius: 3px !important;
 }
 
-.Project-table .ant-table-thead>tr>th {
+.Project-table .ant-table-thead > tr > th {
   background-color: var(--mainBlue) !important;
   color: white !important;
   font-size: 14px !important;
@@ -971,19 +1005,26 @@ tr {
   border: 1px solid #c0b9e7 !important;
 }
 
-.activ-link {}
+.activ-link {
+}
 
 .link {
   text-decoration: none !important;
   font-weight: 500;
 }
 
-.sid-nav-activ :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark .ant-menu-item-selected,
-.sid-nav-activ :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark>.ant-menu .ant-menu-item-selected {
+.sid-nav-activ
+  :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
+  .ant-menu-item-selected,
+.sid-nav-activ
+  :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
+  > .ant-menu
+  .ant-menu-item-selected {
   background-color: red !important;
 }
 
-:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed>.ant-menu-item {
+:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed
+  > .ant-menu-item {
   padding-inline: 0;
 }
 
@@ -1135,19 +1176,30 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   z-index: 300;
 }
 
-.common-table .ant-table-thead>tr>th {
+.common-table .ant-table-thead > tr > th {
   background-color: #45669d;
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 480;
 }
 
-.details-header {}
+.details-header {
+}
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-submenu>.ant-menu-submenu-title {
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title {
   text-align: center;
   padding-inline: 0;
   /* Optional: remove padding if needed */
@@ -1177,14 +1229,50 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   /* Center the icons */
 }
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item .ant-menu-item-icon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .ant-menu-item-icon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item .anticon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .anticon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .anticon+span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-submenu>.ant-menu-submenu-title .anticon+span {
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-item
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .ant-menu-item-icon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item
+  .anticon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-item
+  .anticon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-item-group
+  > .ant-menu-item-group-list
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .anticon
+  + span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
+  > .ant-menu-submenu
+  > .ant-menu-submenu-title
+  .anticon
+  + span {
   display: none !important;
 }
 
@@ -1258,7 +1346,11 @@ table tbody tr:nth-child(odd) td {
 .table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td,
 .drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td,
 .report-table .ant-table-tbody > tr:nth-child(even):hover > td,
-.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td,
+.configuration-main
+  .drawer-tbl
+  .ant-table-tbody
+  > tr:nth-child(even):hover
+  > td,
 .claims-table .ant-table-tbody > tr:nth-child(even):hover > td {
   background-color: var(--btn-hover) !important;
 }
@@ -1321,7 +1413,8 @@ table tbody tr:nth-child(odd):hover td {
   /* Background color for the header */
 }
 
-.custom-grid .ag-header-cell {}
+.custom-grid .ag-header-cell {
+}
 
 .custom-grid .ag-cell {
   border-right: 0.5px solid var(--borderColor) !important;
@@ -1366,6 +1459,7 @@ table tbody tr:nth-child(odd):hover td {
   position: relative;
 }
 
+
 .editable-cell-value-wrap {
   padding: 5px 12px;
   cursor: pointer;
@@ -1378,7 +1472,7 @@ table tbody tr:nth-child(odd):hover td {
 } */
 
 /* claims table */
-.claims-table .ant-table-thead>tr>th {
+.claims-table .ant-table-thead > tr > th {
   background-color: #45669d;
   color: white !important;
   font-family: var(--fontFamily) !important;
@@ -1386,7 +1480,7 @@ table tbody tr:nth-child(odd):hover td {
   padding: 12px 12px !important;
 }
 
-.heading-tbl .ant-table-thead>tr>th {
+.heading-tbl .ant-table-thead > tr > th {
   background-color: #45669d !important;
   color: white !important;
   font-family: var(--fontFamily) !important;
@@ -1456,8 +1550,10 @@ table tbody tr:nth-child(odd):hover td {
   /* Consistent font size for buttons */
 }
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-left,
-:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-right {
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper
+  .ant-table-cell-fix-left,
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper
+  .ant-table-cell-fix-right {
   z-index: 300;
 }
 
