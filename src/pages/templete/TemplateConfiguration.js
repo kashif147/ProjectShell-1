@@ -17,8 +17,7 @@ import {
   CloseOutlined,
   EyeOutlined,
   FileTextOutlined,
-  SaveOutlined,
-  DownloadOutlined
+  SaveOutlined
 } from '@ant-design/icons';
 import MyInput from '../../component/common/MyInput';
 import CustomSelect from '../../component/common/CustomSelect';
@@ -49,13 +48,87 @@ const ALLOWED_FILE_TYPES = [
   'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
 ];
 
+// Helper function to replace placeholders with data
+const replacePlaceholdersWithData = (htmlContent) => {
+  if (!htmlContent) return '<p>No content available</p>';
+
+  // Sample data from your JSON
+  const sampleData = {
+    // Personal Info
+    surname: "Azim",
+    forename: "Fazal",
+    gender: "Male",
+    dateOfBirth: "1999-11-11",
+    countryPrimaryQualification: "Ireland",
+
+    // Contact Info
+    buildingOrHouse: "house",
+    streetOrRoad: "Ballycullen",
+    areaOrTown: "Dublin",
+    eircode: "D16 CC01",
+    countyCityOrPostCode: "County Dublin",
+    country: "Ireland",
+    mobileNumber: "+3533450987765",
+    personalEmail: "fazalazim238@gmail.com",
+    normalizedEmail: "fazalazim238@gmail.com",
+
+    // Professional Details
+    studyLocation: "Not specified",
+    startDate: "Not specified",
+    graduationDate: "Not specified",
+    workLocation: "An Castan Disability Services",
+    branch: "Meath",
+    region: "Dublin North East",
+    grade: "Advanced Nurse Practitioner",
+    nmbiNumber: "Not specified",
+
+    // Membership Info
+    membershipNumber: "A00004",
+    membershipCategory: "Active",
+    firstJoinedDate: "2025-12-03",
+
+    // Other
+    payrollNumber: "Not specified",
+    paymentType: "Not specified",
+    paymentFrequency: "Not specified",
+    subscriptionStatus: "Active",
+    dateResigned: "N/A",
+    dateCancelled: "N/A",
+
+    // Reminders
+    remindersReminderDate: "Not set",
+    remindersType: "Not set"
+  };
+
+  let replacedContent = htmlContent;
+
+  // Replace {{placeholder}} format with data
+  Object.keys(sampleData).forEach(key => {
+    const placeholder = `{{${key}}}`;
+    const value = sampleData[key];
+    replacedContent = replacedContent.replace(new RegExp(placeholder, 'g'), value);
+  });
+
+  // Also handle {placeholder} format (single braces) for backward compatibility
+  Object.keys(sampleData).forEach(key => {
+    const placeholder = `{${key}}`;
+    const value = sampleData[key];
+    replacedContent = replacedContent.replace(new RegExp(placeholder, 'g'), value);
+  });
+
+  // Add inline styles for tight line spacing
+  return replacedContent
+    .replace(/<p>/g, '<p style="margin: 0 0 4px 0; padding: 0; line-height: 1.0;">')
+    .replace(/<p([^>]*)>/g, '<p$1 style="margin: 0 0 4px 0; padding: 0; line-height: 1.0;">')
+    .replace(/<br\s*\/?>/g, '<br style="line-height: 1.0; margin: 0; padding: 0;" />');
+};
+
 // Enhanced DOCX file creator with proper HTML preservation
 const createDocxFile = async ({
   name,
   description,
   category,
   type,
-  subject,
   content,
   variables = []
 }) => {
@@ -76,19 +149,14 @@ const createDocxFile = async ({
         <style>
           body {
             font-family: 'Calibri', Arial, sans-serif;
-            line-height: 1.5;
+            line-height: 1.0;
             color: #000000;
             margin: 0;
             padding: 0;
           }
-          p {
-            margin: 0 0 12pt 0;
-          }
-          .ql-editor p {
-            margin-bottom: 12pt;
-          }
+         
           ul, ol {
-            margin: 12pt 0;
+            margin: 8pt 0;
             padding-left: 36pt;
           }
           .variables-section {
@@ -140,14 +208,6 @@ const createDocxFile = async ({
       type: "application/vnd.openxmlformats-officedocument.wordprocessingml.document"
     });
 
-    // Auto-download for debugging
-    const downloadLink = document.createElement('a');
-    downloadLink.href = URL.createObjectURL(docxBlob);
-    downloadLink.download = `created_${fileName}`;
-    document.body.appendChild(downloadLink);
-    downloadLink.click();
-    document.body.removeChild(downloadLink);
-
     console.log('✅ DOCX file created:', fileName);
     console.log('📊 File size:', Math.round(file.size / 1024), 'KB');
 
@@ -160,7 +220,6 @@ const createDocxFile = async ({
         description,
         category,
         type,
-        subject,
         content: cleanHtmlContent, // Store original HTML content
         variables,
         createdAt: new Date().toISOString()
@@ -195,21 +254,6 @@ const extractContentFromDocxBase64 = async (base64Content) => {
       type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     });
 
-    // Debug: Download the DOCX file
-    const debugFileName = `received_template_${Date.now()}.docx`;
-    const debugLink = document.createElement('a');
-    debugLink.href = URL.createObjectURL(blob);
-    debugLink.download = debugFileName;
-    document.body.appendChild(debugLink);
-    debugLink.click();
-    document.body.removeChild(debugLink);
-    console.log('🔍 Downloaded received DOCX for inspection:', debugFileName);
-
-    // For now, we'll use a simpler approach since we know it contains HTML
-    // In a real implementation, you would use a DOCX parser library
-    // For example: mammoth.js or similar
-
-    // Since we know the DOCX contains HTML, we'll read it as text
     const reader = new FileReader();
 
     return new Promise((resolve, reject) => {
@@ -218,80 +262,130 @@ const extractContentFromDocxBase64 = async (base64Content) => {
           const arrayBuffer = e.target.result;
 
           // Try to extract text from the DOCX
-          // This is a simplified approach - in production, use a proper DOCX parser
           const textDecoder = new TextDecoder('utf-8');
           let textContent = textDecoder.decode(arrayBuffer);
 
           console.log('📄 Raw DOCX content (first 2000 chars):', textContent.substring(0, 2000));
 
-          // Look for HTML content in the DOCX
           let htmlContent = '';
 
-          // Method 1: Try to find HTML tags in the content
+          // Method 1: Try to find HTML content from our saved templates
           const htmlMatch = textContent.match(/<[^>]+>/g);
           if (htmlMatch && htmlMatch.length > 0) {
             console.log('✅ Found HTML tags in DOCX');
 
-            // Extract content between <body> tags or use whole content
-            const bodyMatch = textContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
-            if (bodyMatch) {
-              htmlContent = bodyMatch[1];
+            // Try to extract from div with class ql-editor (our saved format)
+            const editorMatch = textContent.match(/<div[^>]*class\s*=\s*["']?ql-editor["']?[^>]*>([\s\S]*?)<\/div>/i);
+            if (editorMatch) {
+              htmlContent = editorMatch[1];
+              console.log('🔍 Found ql-editor content');
             } else {
-              // Try to extract from div with class ql-editor
-              const editorMatch = textContent.match(/<div[^>]*class\s*=\s*["']?ql-editor["']?[^>]*>([\s\S]*?)<\/div>/i);
-              if (editorMatch) {
-                htmlContent = editorMatch[1];
+              // Try to extract from body
+              const bodyMatch = textContent.match(/<body[^>]*>([\s\S]*?)<\/body>/i);
+              if (bodyMatch) {
+                htmlContent = bodyMatch[1];
+                console.log('🔍 Found body content');
               } else {
-                htmlContent = textContent;
+                // Use the whole HTML content
+                const htmlStart = textContent.indexOf('<html');
+                const htmlEnd = textContent.lastIndexOf('</html>');
+                if (htmlStart !== -1 && htmlEnd !== -1) {
+                  htmlContent = textContent.substring(htmlStart, htmlEnd + 7);
+                  console.log('🔍 Found HTML document');
+                } else {
+                  htmlContent = textContent;
+                  console.log('🔍 Using raw HTML content');
+                }
               }
             }
           } else {
-            // Method 2: If no HTML found, assume plain text and convert to HTML
+            // Method 2: Convert plain text to clean HTML
             console.log('📝 No HTML tags found, converting plain text to HTML');
 
-            // Clean the text
+            // Clean the text - remove control characters but keep structure
             textContent = textContent
               .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, '')
               .replace(/\r\n/g, '\n')
-              .replace(/\r/g, '\n')
-              .trim();
+              .replace(/\r/g, '\n');
 
-            // Convert plain text to HTML for Quill
-            const paragraphs = textContent.split(/\n\s*\n/);
-            htmlContent = paragraphs.map(p => {
-              if (!p.trim()) return '';
-              const lines = p.split('\n').filter(line => line.trim());
-              return `<p>${lines.join('<br>')}</p>`;
-            }).filter(p => p).join('');
+            // Convert plain text to HTML with better paragraph handling
+            // Split by double newlines (paragraphs)
+            const paragraphs = textContent.split(/\n\s*\n+/);
+
+            htmlContent = paragraphs
+              .map(p => {
+                const trimmed = p.trim();
+                if (!trimmed) return '';
+
+                // Split into lines within paragraph
+                const lines = trimmed.split('\n');
+
+                // If only one line or very short, just wrap in <p>
+                if (lines.length <= 1 || trimmed.length < 100) {
+                  return `<p>${trimmed}</p>`;
+                }
+
+                // For multiple lines, join with <br> but be conservative
+                const processedLines = lines
+                  .map(line => line.trim())
+                  .filter(line => line.length > 0);
+
+                if (processedLines.length === 0) return '';
+
+                // Join lines with space (not <br>) for normal paragraphs
+                return `<p>${processedLines.join(' ')}</p>`;
+              })
+              .filter(p => p)
+              .join('');
           }
 
-          // Clean up HTML for Quill
+          // Clean up HTML for Quill - be more conservative
           htmlContent = htmlContent
-            .replace(/<\/?o:p>/g, '') // Remove Office namespace tags
-            .replace(/<\/?span[^>]*>/g, '') // Remove span tags
-            .replace(/style="[^"]*"/g, '') // Remove styles
-            .replace(/class="[^"]*"/g, '') // Remove classes
-            .replace(/<p>\s*<\/p>/g, '') // Remove empty paragraphs
-            .replace(/\n/g, '') // Remove newlines in HTML
+            // Remove Office-specific tags
+            .replace(/<\/?o:p>/g, '')
+            .replace(/<\/?w:[^>]+>/g, '')
+            // Remove styles and classes that might affect line height
+            .replace(/style\s*=\s*["'][^"']*["']/g, '')
+            .replace(/class\s*=\s*["'][^"']*["']/g, '')
+            // Clean up paragraph tags - remove any inline styles
+            .replace(/<p[^>]*>/g, '<p>')
+            // Remove empty paragraphs
+            .replace(/<p>\s*<\/p>/g, '')
+            // Remove extra whitespace between tags
+            .replace(/>\s+</g, '><')
+            // Remove leading/trailing whitespace
             .trim();
+
+          // Ensure proper paragraph structure
+          // If we have content but no tags, wrap in <p>
+          if (htmlContent && !htmlContent.match(/<[^>]+>/)) {
+            htmlContent = `<p>${htmlContent}</p>`;
+          }
+
+          // If we have multiple lines without paragraphs, wrap in <p>
+          if (htmlContent.includes('\n') && !htmlContent.includes('<p>')) {
+            const lines = htmlContent.split('\n').filter(line => line.trim());
+            htmlContent = lines.map(line => `<p>${line.trim()}</p>`).join('');
+          }
 
           // Ensure we have valid HTML
           if (!htmlContent || htmlContent === '<p></p>') {
             htmlContent = '<p></p>';
-          } else if (!htmlContent.startsWith('<')) {
-            htmlContent = `<p>${htmlContent}</p>`;
           }
 
           console.log('✅ Extracted HTML content (first 500 chars):', htmlContent.substring(0, 500));
           console.log('📏 HTML content length:', htmlContent.length);
 
-          // Extract variables from the content
-          const variableRegex = /\{(\w+)\}/g;
+          // Extract variables from the content - handle both {{variable}} and {variable} formats
+          const variableRegex = /\{\{(\w+)\}\}|\{(\w+)\}/g;
           const variables = [];
           let match;
 
           while ((match = variableRegex.exec(htmlContent)) !== null) {
-            variables.push(match[1]);
+            const variableName = match[1] || match[2];
+            if (variableName) {
+              variables.push(variableName);
+            }
           }
 
           console.log('🔍 Found variables:', variables);
@@ -523,7 +617,6 @@ const TemplateConfiguration = () => {
       emailContent: '',
       templateName: '',
       description: '',
-      subject: '',
       category: '',
       tempolateType: '',
     },
@@ -539,7 +632,7 @@ const TemplateConfiguration = () => {
   const { templeteData, templetedetailsloading, error } = useSelector(
     (state) => state.templeteDetails
   );
-  debugger
+
   const [selectedVariables, setSelectedVariables] = useState(new Set());
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -552,6 +645,8 @@ const TemplateConfiguration = () => {
   const isProcessingRef = useRef(false);
   const previousContentRef = useRef('');
   const [isEditMode, setIsEditMode] = useState(false);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [editorHeight, setEditorHeight] = useState('400px');
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -589,21 +684,21 @@ const TemplateConfiguration = () => {
       currentData.templateName !== originalFormData.templateName ||
       currentData.description !== originalFormData.description ||
       currentData.category !== originalFormData.category ||
-      currentData.tempolateType !== originalFormData.tempolateType ||
-      currentData.subject !== originalFormData.subject;
+      currentData.tempolateType !== originalFormData.tempolateType;
 
     console.log('🔍 Metadata changed check:', {
       nameChanged: currentData.templateName !== originalFormData.templateName,
       descChanged: currentData.description !== originalFormData.description,
       categoryChanged: currentData.category !== originalFormData.category,
       typeChanged: currentData.tempolateType !== originalFormData.tempolateType,
-      subjectChanged: currentData.subject !== originalFormData.subject,
       overallChanged: changed
     });
 
     return changed;
   };
+
   const [templeteId, setTempleteId] = useState(null)
+
   // Populate form with template data from API response (base64 DOCX)
   const populateFormWithTemplateData = useCallback(async (data) => {
     console.log('🔄 Populating form with template data from API');
@@ -615,12 +710,12 @@ const TemplateConfiguration = () => {
     const formData = {
       templateName: template.name || '',
       description: template.description || '',
-      subject: template.subject || template.name || '',
       category: template.category || '',
       tempolateType: template.tempolateType || '',
       emailContent: '',
     };
     setTempleteId(template._id)
+
     // Reset form with the template data
     reset(formData);
 
@@ -733,17 +828,27 @@ const TemplateConfiguration = () => {
     ],
   };
 
-  // Available variables for drag and drop
-  const availableVariables = useMemo(() => {
+  // Filter available variables based on search term
+  const filteredAvailableVariables = useMemo(() => {
     if (!bookmarks) return [];
-    return bookmarks.map(bookmark => ({
+
+    const allVariables = bookmarks.map(bookmark => ({
       id: bookmark._id,
-      name: `{${bookmark.key}}`,
+      name: `{{${bookmark.key}}}`, // Changed to double braces
       label: bookmark.label,
       dataType: bookmark.dataType,
       key: bookmark.key
     }));
-  }, [bookmarks]);
+
+    if (!searchTerm.trim()) return allVariables;
+
+    const searchLower = searchTerm.toLowerCase();
+    return allVariables.filter(variable =>
+      variable.label.toLowerCase().includes(searchLower) ||
+      variable.key.toLowerCase().includes(searchLower) ||
+      variable.name.toLowerCase().includes(searchLower)
+    );
+  }, [bookmarks, searchTerm]);
 
   useEffect(() => {
     dispatch(getBookmarks());
@@ -778,13 +883,6 @@ const TemplateConfiguration = () => {
     category: {
       required: 'Category is required'
     },
-    subject: {
-      required: 'Subject/Title is required',
-      maxLength: {
-        value: 500,
-        message: 'Subject/Title must be less than 500 characters'
-      }
-    },
     description: {
       maxLength: {
         value: 1000,
@@ -816,10 +914,10 @@ const TemplateConfiguration = () => {
         templateId: templeteData?.template?._id
       });
 
-      // Extract variable names from selected variables
+      // Extract variable names from selected variables with {{variable}} format
       const variableNames = Array.from(selectedVariables).map(variableId => {
-        const variable = availableVariables.find(v => v.id === variableId);
-        return variable ? `{${variable.key}}` : null;
+        const variable = filteredAvailableVariables.find(v => v.id === variableId);
+        return variable ? `{{${variable.key}}}` : null;
       }).filter(Boolean);
 
       console.log('📋 Variables to include in DOCX:', variableNames);
@@ -850,7 +948,6 @@ const TemplateConfiguration = () => {
           description: data.description.trim(),
           category: data.category.trim(),
           type: data.tempolateType,
-          subject: data.subject.trim(),
           content: data.emailContent,
           variables: variableNames
         });
@@ -973,20 +1070,20 @@ const TemplateConfiguration = () => {
   const handleTemplateTypeChange = (value) => {
     setValue('tempolateType', value);
     setValue('category', '');
-    setValue('subject', '');
     trigger('tempolateType');
   };
 
   // Find variables in text
   const findVariablesInText = (text) => {
     const foundVariables = new Set();
-    const variableRegex = /\{(\w+)\}/g;
+    // Match both {{variable}} and {variable} formats
+    const variableRegex = /\{\{(\w+)\}\}|\{(\w+)\}/g;
     let match;
 
     while ((match = variableRegex.exec(text)) !== null) {
-      const variableName = match[1];
+      const variableName = match[1] || match[2]; // Get either {{variable}} or {variable}
       if (variableName) {
-        const variable = availableVariables.find(v => v.key === variableName);
+        const variable = filteredAvailableVariables.find(v => v.key === variableName);
         if (variable) {
           foundVariables.add(variable.id);
         }
@@ -997,20 +1094,21 @@ const TemplateConfiguration = () => {
   };
 
   // Quill config
-  const modules = useMemo(() => ({
-    toolbar: {
-      container: [
-        ['bold', 'italic', 'underline'],
-        [{ 'header': '1' }, { 'header': '2' }, 'blockquote'],
-        [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-        ['link', 'image'],
-        ['clean']
-      ]
-    },
+  const modules = {
+    toolbar: [
+      [{ 'header': [1, 2, 3, 4, 5, 6, false] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'align': [] }],
+      ['link', 'image'],
+      ['clean']
+    ],
     clipboard: {
       matchVisual: false,
     }
-  }), []);
+  };
 
   const formats = [
     'header', 'font', 'size',
@@ -1019,7 +1117,7 @@ const TemplateConfiguration = () => {
     'link', 'image'
   ];
 
-  // Insert variable into editor
+  // Insert variable into editor with {{variable}} format
   const insertVariable = (variableName, variableId) => {
     if (quillRef.current && !isProcessingRef.current) {
       isProcessingRef.current = true;
@@ -1028,8 +1126,8 @@ const TemplateConfiguration = () => {
         editor.focus();
         const range = editor.getSelection();
 
-        // Format variable as {variable}
-        const formattedVariable = `{${variableName}}`;
+        // Format variable as {{variable}} with double curly braces
+        const formattedVariable = `{{${variableName}}}`;
 
         if (range) {
           editor.insertText(range.index, formattedVariable);
@@ -1116,79 +1214,10 @@ const TemplateConfiguration = () => {
     return watchedTemplateType ? (categoryOptions[watchedTemplateType] || []) : [];
   };
 
-  // Debug function to download original template
-  const downloadOriginalTemplate = () => {
-    if (templeteData?.fileContent) {
-      try {
-        const binaryString = atob(templeteData.fileContent);
-        const bytes = new Uint8Array(binaryString.length);
-        for (let i = 0; i < binaryString.length; i++) {
-          bytes[i] = binaryString.charCodeAt(i);
-        }
-        const blob = new Blob([bytes], {
-          type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        });
-        const link = document.createElement('a');
-        link.href = URL.createObjectURL(blob);
-        link.download = `api_received_template_${Date.now()}.docx`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        console.log('📥 Downloaded API-received template');
-      } catch (error) {
-        console.error('❌ Error downloading template:', error);
-      }
-    }
-  };
-
   return (
     <div className='px-4' style={{ minHeight: '100vh' }}>
-      {/* Header with Save and Debug Buttons */}
+      {/* Header with Save Button */}
       <div style={{ marginTop: '1px', marginBottom: '5px', display: 'flex', gap: '12px', justifyContent: 'flex-end' }}>
-        {isEditMode && (
-          <>
-            <Button
-              onClick={() => {
-                console.log('🔍 Debug Template Data from API:', templeteData);
-                console.log('🔍 Current Form Values:', getValues());
-                console.log('🔍 Selected Variables:', Array.from(selectedVariables));
-                console.log('🔍 Original Content Length:', originalContent?.length);
-                console.log('🔍 Original Form Data:', originalFormData);
-
-                downloadOriginalTemplate();
-              }}
-              type="default"
-              icon={<FileTextOutlined />}
-            >
-              Debug API Template
-            </Button>
-
-            <Button
-              onClick={() => {
-                const values = getValues();
-                console.log('📝 Current HTML Content:', values.emailContent?.substring(0, 500));
-                console.log('🔍 Change Detection:', {
-                  contentChanged: hasContentChanged(values.emailContent),
-                  metadataChanged: hasMetadataChanged(values)
-                });
-
-                // Download current HTML
-                const blob = new Blob([values.emailContent || ''], { type: 'text/html' });
-                const link = document.createElement('a');
-                link.href = URL.createObjectURL(blob);
-                link.download = `current_editor_content_${Date.now()}.html`;
-                document.body.appendChild(link);
-                link.click();
-                document.body.removeChild(link);
-              }}
-              type="default"
-              icon={<DownloadOutlined />}
-            >
-              Download HTML
-            </Button>
-          </>
-        )}
-
         <Button
           onClick={handleSaveOrUpdateTemplate}
           className='butn primary-btn'
@@ -1200,37 +1229,6 @@ const TemplateConfiguration = () => {
           {saving ? (isEditMode ? 'Updating Template...' : 'Saving Template...') : (isEditMode ? 'Update Template' : 'Save Template')}
         </Button>
       </div>
-
-      {/* Debug Info */}
-      {/* {debugInfo && (
-        <div style={{
-          marginBottom: '16px',
-          padding: '12px',
-          backgroundColor: '#fff7e6',
-          border: '1px solid #ffd591',
-          borderRadius: '6px'
-        }}>
-          <Text strong style={{ color: '#fa8c16' }}>
-            🐞 API Template Debug Information
-          </Text>
-          <div style={{ marginTop: '8px', fontSize: '12px' }}>
-            <div><strong>Template ID:</strong> {debugInfo.templateId}</div>
-            <div><strong>Template Name:</strong> {debugInfo.templateName}</div>
-            <div><strong>Has DOCX Content:</strong> {debugInfo.hasFileContent ? 'Yes' : 'No'}</div>
-            {debugInfo.fileContentLength && (
-              <div><strong>Base64 Length:</strong> {debugInfo.fileContentLength} chars</div>
-            )}
-            {debugInfo.extractedHtmlLength && (
-              <div><strong>Extracted HTML Length:</strong> {debugInfo.extractedHtmlLength} chars</div>
-            )}
-            {debugInfo.variablesFound !== undefined && (
-              <div><strong>Variables Found:</strong> {debugInfo.variablesFound}</div>
-            )}
-            <div><strong>Edit Mode:</strong> {isEditMode ? 'Yes' : 'No'}</div>
-            <div><strong>Content Loading:</strong> {isLoadingContent ? 'Loading...' : 'Complete'}</div>
-          </div>
-        </div>
-      )} */}
 
       {/* Loading State */}
       {isLoadingContent && (
@@ -1366,7 +1364,7 @@ const TemplateConfiguration = () => {
                     value={field.value}
                     onChange={field.onChange}
                     onBlur={field.onBlur}
-                    placeholder="Enter template name"
+                    placeholder={watchedTemplateType === 'letter' ? "Enter letter title" : "Enter email subject"}
                     required={true}
                     hasError={!!errors.templateName}
                     errorMessage={errors.templateName?.message}
@@ -1375,7 +1373,7 @@ const TemplateConfiguration = () => {
               />
             </div>
 
-            <div style={{ marginBottom: '16px' }}>
+            <div style={{ marginBottom: '0px' }}>
               <Controller
                 name="description"
                 control={control}
@@ -1391,27 +1389,6 @@ const TemplateConfiguration = () => {
                     placeholder="Enter template description"
                     hasError={!!errors.description}
                     errorMessage={errors.description?.message}
-                  />
-                )}
-              />
-            </div>
-
-            <div style={{ marginBottom: '0px' }}>
-              <Controller
-                name="subject"
-                control={control}
-                rules={validationRules.subject}
-                render={({ field }) => (
-                  <MyInput
-                    label={watchedTemplateType === 'letter' ? 'Title' : 'Subject'}
-                    name="subject"
-                    value={field.value}
-                    onChange={field.onChange}
-                    onBlur={field.onBlur}
-                    placeholder={watchedTemplateType === 'letter' ? "Enter letter title" : "Enter email subject"}
-                    required={true}
-                    hasError={!!errors.subject}
-                    errorMessage={errors.subject?.message}
                   />
                 )}
               />
@@ -1465,7 +1442,8 @@ const TemplateConfiguration = () => {
               padding: '16px',
               display: 'flex',
               flexDirection: 'column',
-              minHeight: 0
+              minHeight: 0,
+              overflow: 'hidden' // Added to prevent card from scrolling
             }}>
               <Text strong style={{ color: '#000', display: 'block', marginBottom: '8px' }}>
                 Body
@@ -1495,7 +1473,8 @@ const TemplateConfiguration = () => {
                       marginBottom: '5px',
                       minHeight: 0,
                       overflow: 'hidden',
-                      opacity: isLoadingContent ? 0.5 : 1
+                      opacity: isLoadingContent ? 0.5 : 1,
+                      height: '100%'
                     }}
                   >
                     {isLoadingContent ? (
@@ -1521,9 +1500,10 @@ const TemplateConfiguration = () => {
                         theme="snow"
                         style={{
                           border: 'none',
-                          flex: 1,
                           display: 'flex',
-                          flexDirection: 'column'
+                          flexDirection: 'column',
+                          height: editorHeight, // Use dynamic or fixed height
+                          minHeight: 0
                         }}
                       />
                     )}
@@ -1535,12 +1515,13 @@ const TemplateConfiguration = () => {
         </Col>
 
         {/* Right Column - Draggable Variables (20%) */}
-        <Col span={5}>
+        <Col span={5} style={{ height: 'calc(100vh - 200px)' }}>
           <Card
             title="Draggable Variables"
             headStyle={{
               backgroundColor: '#eef4ff',
-              color: '#215e97'
+              color: '#215e97',
+              minHeight: '56px'
             }}
             style={{
               height: '100%',
@@ -1548,61 +1529,58 @@ const TemplateConfiguration = () => {
               boxShadow: '0 2px 8px rgba(0,0,0,0.1)'
             }}
             bodyStyle={{
-              height: 'calc(100% - 57px)',
+              height: 'calc(100% - 56px)',
+              padding: '0',
               display: 'flex',
-              flexDirection: 'column',
-              padding: '0'
+              flexDirection: 'column'
             }}
           >
-            {/* Sticky Search Section */}
+            {/* Search Section - Fixed height */}
             <div style={{
               padding: '16px',
               borderBottom: '1px solid #f0f0f0',
-              backgroundColor: 'white',
-              position: 'sticky',
-              top: 0,
-              zIndex: 1,
-              boxShadow: '0 1px 3px rgba(0,0,0,0.1)'
+              backgroundColor: 'white'
             }}>
               <div style={{ marginBottom: '8px' }}>
                 <MyInput
                   label=""
                   type="search"
                   placeholder="Search variables..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
                 />
               </div>
-
-              <Text style={{
-                display: 'block',
-                fontSize: '12px',
-                color: '#666',
-              }}>
+              <Text style={{ fontSize: '12px', color: '#666' }}>
                 Drag and drop these tags into the email body.
               </Text>
             </div>
 
-            {/* Scrollable Content Area */}
+            {/* Variables Content - Takes remaining space */}
             <div style={{
               flex: 1,
-              overflow: 'auto',
-              padding: '16px',
-              paddingTop: '12px'
+              display: 'flex',
+              flexDirection: 'column',
+              overflow: 'hidden'
             }}>
-              {/* Selected Variables Section */}
+              {/* Selected Variables - Auto height */}
               {selectedVariables.size > 0 && (
                 <div style={{
-                  marginBottom: '16px',
-                  padding: '12px',
+                  padding: '12px 16px',
                   backgroundColor: '#f9f9f9',
-                  borderRadius: '6px',
-                  border: '1px solid #e8e8e8'
+                  borderBottom: '1px solid #e8e8e8'
                 }}>
-                  <Text strong style={{ display: 'block', marginBottom: '8px', fontSize: '12px', color: '#215e97' }}>
+                  <Text strong style={{ fontSize: '12px', color: '#215e97', marginBottom: '8px', display: 'block' }}>
                     Selected Variables ({selectedVariables.size})
                   </Text>
-                  <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px' }}>
+                  <div style={{
+                    display: 'flex',
+                    flexWrap: 'wrap',
+                    gap: '6px',
+                    maxHeight: '60px',
+                    overflowY: 'auto'
+                  }}>
                     {Array.from(selectedVariables).map(variableId => {
-                      const variable = availableVariables.find(v => v.id === variableId);
+                      const variable = filteredAvailableVariables.find(v => v.id === variableId);
                       return variable ? (
                         <div
                           key={variable.id}
@@ -1620,11 +1598,7 @@ const TemplateConfiguration = () => {
                         >
                           {variable.name}
                           <CloseOutlined
-                            style={{
-                              fontSize: '10px',
-                              cursor: 'pointer',
-                              color: '#ff4d4f'
-                            }}
+                            style={{ fontSize: '10px', cursor: 'pointer', color: '#ff4d4f' }}
                             onClick={() => removeVariable(variable.id)}
                           />
                         </div>
@@ -1634,81 +1608,92 @@ const TemplateConfiguration = () => {
                 </div>
               )}
 
-              {/* Loading State */}
-              {bookmarksLoading && (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#666' }}>
-                  Loading variables...
-                </div>
-              )}
-
-              {/* Error State */}
-              {bookmarksError && (
-                <div style={{ textAlign: 'center', padding: '20px', color: '#ff4d4f' }}>
-                  Error loading variables
-                </div>
-              )}
-
-              {/* Draggable Variables in Two Columns */}
-              {bookmarks && !bookmarksLoading && !bookmarksError && (
-                <div style={{ paddingRight: '4px' }}>
-                  <Text strong style={{
-                    display: 'block',
-                    marginBottom: '8px',
-                    fontSize: '12px',
-                    color: '#215e97',
-                    position: 'sticky',
-                    overflow: 'hidden',
-                    top: '0',
-                    backgroundColor: 'white',
-                    paddingBottom: '8px',
-                    zIndex: 1
+              {/* Available Variables - Scrollable area */}
+              <div style={{
+                flex: 1,
+                display: 'flex',
+                flexDirection: 'column',
+                minHeight: 0,
+                overflow: 'hidden'
+              }}>
+                {/* Loading/Error States */}
+                {bookmarksLoading && (
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#666'
                   }}>
-                    Available Variables ({availableVariables.length})
-                  </Text>
-                  <div
-                    style={{
-                      display: 'grid',
-                      gridTemplateColumns: '1fr 1fr',
-                      gap: '8px',
-                      maxHeight: 'calc(100vh - 300px)', // Adjust based on your layout
-                      overflowY: 'auto',
-                      paddingRight: '4px',
-                      paddingBottom: '8px'
-                    }}
-                    className="custom-scrollbar" // Optional: for custom scrollbar styling
-                  >
-                    {availableVariables.map((variable) => (
-                      <div
-                        key={variable.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, variable.key, variable.id)}
-                        onClick={() => handleVariableClick(variable.key, variable.id)}
-                        style={{
-                          padding: '8px 6px',
-                          backgroundColor: selectedVariables.has(variable.id) ? '#eef4ff' : '#f8f9fa',
-                          border: selectedVariables.has(variable.id) ? '2px solid #215e97' : '1px solid #d9d9d9',
-                          borderRadius: '6px',
-                          cursor: 'grab',
-                          fontSize: '11px',
-                          userSelect: 'none',
-                          transition: 'all 0.2s',
-                          textAlign: 'center',
-                          minHeight: '32px',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          wordBreak: 'break-word',
-                          boxSizing: 'border-box'
-                        }}
-                        title={`Click or drag to insert ${variable.name}`}
-                      >
-                        <div>{variable.label}</div>
-                      </div>
-                    ))}
+                    Loading variables...
                   </div>
-                </div>
-              )}
+                )}
 
+                {bookmarksError && (
+                  <div style={{
+                    flex: 1,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    color: '#ff4d4f'
+                  }}>
+                    Error loading variables
+                  </div>
+                )}
+
+                {/* Available Variables List */}
+                {bookmarks && !bookmarksLoading && !bookmarksError && (
+                  <>
+                    <div style={{
+                      padding: '16px 16px 8px 16px',
+                      backgroundColor: 'white',
+                      flexShrink: 0
+                    }}>
+                      <Text strong style={{ fontSize: '12px', color: '#215e97' }}>
+                        Available Variables ({filteredAvailableVariables.length})
+                      </Text>
+                    </div>
+
+                    <div style={{
+                      flex: 1,
+                      overflowY: 'auto',
+                      padding: '0 16px 16px 16px',
+                      minHeight: 0
+                    }}>
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '8px'
+                      }}>
+                        {filteredAvailableVariables.map((variable) => (
+                          <div
+                            key={variable.id}
+                            draggable
+                            onDragStart={(e) => handleDragStart(e, variable.key, variable.id)}
+                            onClick={() => handleVariableClick(variable.key, variable.id)}
+                            style={{
+                              padding: '8px 6px',
+                              backgroundColor: selectedVariables.has(variable.id) ? '#eef4ff' : '#f8f9fa',
+                              border: selectedVariables.has(variable.id) ? '2px solid #215e97' : '1px solid #d9d9d9',
+                              borderRadius: '6px',
+                              cursor: 'grab',
+                              fontSize: '11px',
+                              textAlign: 'center',
+                              minHeight: '32px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                            title={`Click or drag to insert ${variable.name}`}
+                          >
+                            {variable.label}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  </>
+                )}
+              </div>
             </div>
           </Card>
         </Col>
@@ -1744,12 +1729,12 @@ const TemplateConfiguration = () => {
       >
         <div style={{
           background: 'linear-gradient(45deg, #f8f9fa 25%, transparent 25%), linear-gradient(-45deg, #f8f9fa 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #f8f9fa 75%), linear-gradient(-45deg, transparent 75%, #f8f9fa 75%)',
-          backgroundSize: '20px 20px',
+          // backgroundSize: '20px 20px',
           backgroundPosition: '0 0, 0 10px, 10px -10px, -10px 0px',
-          padding: '40px',
+          padding: '20px',
           display: 'flex',
           justifyContent: 'center',
-          minHeight: '50vh'
+          minHeight: '40vh'
         }}>
           <div style={{
             width: '210mm',
@@ -1760,7 +1745,7 @@ const TemplateConfiguration = () => {
             border: '1px solid #e8e8e8',
             position: 'relative',
             fontFamily: "'Times New Roman', Times, serif",
-            lineHeight: '1.5',
+            lineHeight: '1.2',
             fontSize: '12pt'
           }}>
             {/* Letter Header */}
@@ -1791,23 +1776,24 @@ const TemplateConfiguration = () => {
 
               <div style={{ marginTop: '15px' }}>
                 <Text strong style={{ fontSize: '14pt', display: 'block', marginBottom: '5px' }}>
-                  {getValues('tempolateType') === 'letter' ? 'TITLE' : 'SUBJECT'}: {getValues('subject')}
+                  {getValues('tempolateType') === 'letter' ? 'TITLE' : 'SUBJECT'}: {getValues('templateName')}
                 </Text>
               </div>
             </div>
-            <div style={{
-              minHeight: '400px'
-            }}>
-              <div
-                style={{
-                  lineHeight: '1.6',
-                  textAlign: 'justify'
-                }}
-                dangerouslySetInnerHTML={{
-                  __html: getValues('emailContent') || '<p>No content available</p>'
-                }}
-              />
-            </div>
+
+            {/* Content Area with placeholder replacement */}
+            <div
+              style={{
+                lineHeight: '1.5', // VERY TIGHT line height
+                textAlign: 'justify',
+                margin: 0,
+                marginBottom:'2px',
+                padding: 0
+              }}
+              dangerouslySetInnerHTML={{
+                __html: replacePlaceholdersWithData(getValues('emailContent') || '<p>No content available</p>')
+              }}
+            />
           </div>
         </div>
       </Modal>
