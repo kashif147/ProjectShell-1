@@ -13,7 +13,7 @@ export const loadtempletedetails = createAsyncThunk(
           Authorization: token ? `Bearer ${token}` : undefined,
         },
       });
-      return response.data?.data?.template;
+      return response.data?.data;
     } catch (error) {
       return rejectWithValue(
         error.response?.data || { message: "Failed to fetch template details" }
@@ -29,7 +29,13 @@ const templeteDetailsSlice = createSlice({
     templetedetailsloading: false,
     error: null,
   },
-  reducers: {},
+  reducers: {
+    resetTemplateDetails: (state) => {
+      state.templeteData = null;
+      state.templetedetailsloading = false;
+      state.error = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(loadtempletedetails.pending, (state) => {
@@ -47,4 +53,6 @@ const templeteDetailsSlice = createSlice({
   },
 });
 
+export const { resetTemplateDetails } = templeteDetailsSlice.actions;
 export default templeteDetailsSlice.reducer;
+

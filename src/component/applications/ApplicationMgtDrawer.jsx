@@ -1385,7 +1385,6 @@ function ApplicationMgtDrawer({
     }
   };
   const handleApplicationAction = async (action) => {
-    debugger
     if (isEdit && !originalData) return;
     const isValid = validateForm();
     if (!isValid) return;
@@ -1406,51 +1405,28 @@ function ApplicationMgtDrawer({
       console.log('🔍 New Data:', JSON.stringify(apiInfData, null, 2));
 
       // Debug subscription changes
-      const subscriptionChanged = hasSubscriptionDetailsChanged(
-        apiOriginalData,
-        apiInfData
-      );
-      const personalChanged = hasPersonalDetailsChanged(
-        apiOriginalData,
-        apiInfData
-      );
-      const professionalChanged = hasProfessionalDetailsChanged(
-        apiOriginalData,
-        apiInfData
-      );
-
-      console.log("🔍 Changes Detected:", {
-        personalChanged,
-        professionalChanged,
-        subscriptionChanged,
-      });
-
+      const subscriptionChanged = hasSubscriptionDetailsChanged(apiOriginalData, apiInfData);
+      const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
+      const professionalChanged = hasProfessionalDetailsChanged(apiOriginalData, apiInfData);
       const applicationId = application?.applicationId;
 
       // Generate patch - this seems to be creating "add" for everything
       const proposedPatch = generatePatch(apiOriginalData, apiInfData);
-      const singleStepPatch= generateCreatePatch(apiInfData);
+      const singleStepPatch = generateCreatePatch(apiInfData);
 
-      // Debug the patch generation
-      console.log('📝 Generated Patch:', JSON.stringify(proposedPatch, null, 2));
-      console.log('🔢 Patch length:', proposedPatch?.length || 0);
-
-      // Check if patch is empty (no changes)
       const hasChanges = proposedPatch && proposedPatch.length > 0;
-      console.log('🔄 Has changes?', hasChanges);
 
       // Handle APPROVAL
       if (action === "approved") {
         // ALWAYS send the approval endpoint for single-step approval
         // But only include the patch if there are actual changes
         const approvalPayload = {
-          submission: apiOriginalData || {}, // Ensure this is never undefined
-          proposedPatch: hasChanges ? proposedPatch : singleStepPatch // Empty array for no changes
+          submission: apiOriginalData || {}
         };
 
-        console.log('📤 Sending approval request...');
-        console.log('📍 Endpoint:', `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`);
-        console.log('📦 Payload:', JSON.stringify(approvalPayload, null, 2));
+        if (hasChanges) {
+          approvalPayload.proposedPatch = proposedPatch;
+        }
 
         // SINGLE-STEP APPROVAL: Always call this endpoint
         const approvalResponse = await axios.post(
@@ -1464,10 +1440,6 @@ function ApplicationMgtDrawer({
           }
         );
 
-        console.log('✅ Approval API response:', approvalResponse.data);
-        console.log('✅ Approval API call successful');
-
-        // Update details separately if there are changes
         if (isEdit && hasChanges) {
           // ✅ UPDATE: Update Personal Details if changed
           if (personalChanged) {
@@ -1537,17 +1509,15 @@ function ApplicationMgtDrawer({
           return;
         }
 
-        console.log('📤 Sending rejection request...');
-
         // For rejection, send minimal payload
         const rejectionPayload = {
           submission: apiOriginalData || {},
-          proposedPatch: singleStepPatch,
-          comments: rejectionData.reason
+          proposedPatch: hasChanges ? proposedPatch : [],
+          reason: rejectionData.reason
         };
 
         await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/approve`,
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/${applicationId}/reject`,
           rejectionPayload,
           {
             headers: {
@@ -1556,7 +1526,6 @@ function ApplicationMgtDrawer({
             },
           }
         );
-        console.log('✅ Rejection successful');
       }
 
       // Update checkbox state
@@ -1608,14 +1577,19 @@ function ApplicationMgtDrawer({
 
   function navigateApplication(direction) {
     if (index === -1 || !applications?.length) return;
-
+    debugger
     let newIndex = index;
+    debugger
 
-    if (direction === "prev" && index > 0) {
+    if (direction === "prev" && index > 1) {
+      debugger
       newIndex = index - 1;
-    } else if (direction === "next" && index < applications.length - 1) {
+    }
+    else if (direction === "next" && index < applications.length - 1) {
+      debugger
       newIndex = index + 1;
     } else {
+      debugger
       return;
     }
 
@@ -1630,7 +1604,7 @@ function ApplicationMgtDrawer({
 
       // ✅ Now use currentApplication for status checks
       const status = newApplication.applicationStatus?.toLowerCase();
-      const readOnlyStatuses = ["approved", "rejected", "in-progress"];
+      const readOnlyStatuses = ['approved', 'in-progress'];
 
       if (readOnlyStatuses.includes(status)) {
         disableFtn(true);

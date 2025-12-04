@@ -19,6 +19,9 @@
   --gray: rgba(9, 30, 66, 0.04);
 }
 
+.ql-container.ql-snow{
+  border :none !important
+}
 .full-width-radio-group-no-gap {
   display: flex !important;
   width: 100% !important;
