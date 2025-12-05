@@ -1,46 +1,36 @@
 import React, { useEffect, useState, useRef, useContext } from "react";
-import { Table, Pagination, Space, Form, Input, Checkbox, Upload } from "antd";
+import { Table, Pagination, Space, Form, Input, Checkbox } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
-import { UploadOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { LuRefreshCw } from "react-icons/lu";
 import { BsSliders, BsThreeDotsVertical } from "react-icons/bs";
 import { CgAttachment } from "react-icons/cg";
-import { AiOutlineThunderbolt } from "react-icons/ai";
 import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
-
 import SimpleMenu from "./SimpleMenu";
 import {
   DndContext,
   DragOverlay,
-  useDraggable,
-  useDroppable,
 } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
-// import ManualPaymentEntry from "../finanace/ManualPaymentEntry";
 import {
   SortableContext,
   useSortable,
   horizontalListSortingStrategy,
 } from "@dnd-kit/sortable";
-
 import { arrayMove } from "@dnd-kit/sortable";
 import CornMarketDrawer from "../cornmarket/CornMarketDrawer";
 import Gridmenu from "./Gridmenu";
-import AddNewGarda from "../details/AddNewGarda";
 import { tableData } from "../../constants/Batch";
 import TrigerReminderDrawer from "../reminders/TrigerReminderDrawer";
 import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
-import { set } from "react-hook-form";
-import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
-const EditableContext = React.createContext(null);
 
+const EditableContext = React.createContext(null);
 
 const DraggableHeaderCell = ({ id, style, children, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
@@ -49,15 +39,14 @@ const DraggableHeaderCell = ({ id, style, children, ...props }) => {
     border: `2px solid green`,
     ...(isDragging
       ? {
-        position: "relative",
-        zIndex: 9999,
-        userSelect: "none",
-        backgroundColor: "red",
-        color: "white",
-      }
+          position: "relative",
+          zIndex: 9999,
+          userSelect: "none",
+          backgroundColor: "red",
+          color: "white",
+        }
       : {}),
   };
-  // Return content only, not th element (Ant Design Table will wrap it in th)
   return (
     <div
       className="custom-header"
@@ -72,16 +61,33 @@ const DraggableHeaderCell = ({ id, style, children, ...props }) => {
   );
 };
 
-const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
-
-  const navigate = useNavigate()
+const TableComponent = ({
+  data,
+  screenName,
+  redirect,
+  isGrideLoading,
+  // PROPS FOR SELECTION CONTROL
+  rowSelection = null,
+  // Optional: Individual selection props for convenience
+  selectedRowKeys = [],
+  onSelectionChange,
+  selectionType = "checkbox",
+  enableRowSelection = true,
+  // Row click handler - NOW PASSED FROM PROPS
+  onRowClick: externalOnRowClick = null,
+  // Custom row click behavior
+  disableDefaultRowClick = false,
+  // Other props
+  ...props
+}) => {
+  const navigate = useNavigate();
   const location = useLocation();
   const {
     selectedRowIndex,
     setSelectedRowIndex,
     selectedRowData,
     setSelectedRowData,
-    setExcelData
+    setExcelData,
   } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false);
   const { applications, applicationsLoading } = useSelector(
@@ -98,13 +104,15 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
     disableFtn,
   } = useTableColumns();
   const [dataSource, setdataSource] = useState(data);
+  
   useEffect(() => {
     setdataSource(data);
   }, [data]);
+  
   const [iscancellationOpen, setIscancellationOpen] = useState(false);
   const [isCornMarOpen, setisCornMarOpen] = useState(false);
-
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
+  
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -115,26 +123,55 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         onCell: () => ({ id: `${index}` }),
       }))
   );
+  
   const dispatch = useDispatch();
-
   const fileInputRef = useRef(null);
+  
+  // **UPDATED: Row click handler that can be overridden by props**
   const handleRowClick = (record, rowIndex) => {
+    // Call external handler first if provided
+    if (externalOnRowClick) {
+      externalOnRowClick(record, rowIndex);
+      // If external handler is provided and we want to skip default behavior
+      if (disableDefaultRowClick) {
+        return;
+      }
+    }
+    
+    // Default behavior (only if not disabled)
+    if (!disableDefaultRowClick) {
+      setSelectedRowData([record]);
+      setSelectedRowIndex(rowIndex);
+    }
+  };
+  
+  // Alternative: Separate handlers for different scenarios
+  const handleRowClickWithDefault = (record, rowIndex) => {
+    // Always call external handler if provided
+    if (externalOnRowClick) {
+      externalOnRowClick(record, rowIndex);
+    }
+    
+    // Always do default behavior
     setSelectedRowData([record]);
     setSelectedRowIndex(rowIndex);
   };
-  // Function to trigger file input
+  
+  // Handle file upload
   const handleUploadClick = () => {
     if (fileInputRef.current) {
-      fileInputRef.current.value = ""; // Reset value to allow re-selection of same file
+      fileInputRef.current.value = "";
       fileInputRef.current.click();
     }
   };
+  
   const handleFileUpload = (event, key) => {
-    const file = event.target.files[0]; // Get the selected file
+    const file = event.target.files[0];
     if (file) {
       addAttributeToTableData(key);
     }
   };
+  
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -145,17 +182,10 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
         onCell: () => ({ id: `${index}` }),
       }))
   );
-  const [AddNewGardaDrwr, setAddNewGardaDrwr] = useState(false);
+  
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
-  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-
-  const reorderColumns = (list, startIndex, endIndex) => {
-    const result = Array.from(list);
-    const [removed] = result.splice(startIndex, 1);
-    result.splice(endIndex, 0, removed);
-    return result;
-  };
+  // Handle drag and drop
   const onDragEnd = ({ active, over }) => {
     if (active.id !== over?.id) {
       setColumnsDragbe((prevColumns) => {
@@ -170,6 +200,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
     }
     setDragIndex({ active: null, over: null });
   };
+  
   const onDragOver = ({ active, over }) => {
     const activeIndex = columnsDragbe.findIndex(
       (column) => column.key === active.id
@@ -183,6 +214,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       direction: overIndex > activeIndex ? "right" : "left",
     });
   };
+  
   const addAttributeToTableData = (key) => {
     setdataSource(
       dataSource?.map((item) =>
@@ -190,43 +222,89 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       )
     );
   };
-  // make columns dragable and also rendered three dots icon in each row
+  
+  // **UPDATED: Fixed getRowSelectionConfig with proper height and alignment**
+  const getRowSelectionConfig = () => {
+    // If external rowSelection is provided
+    if (rowSelection !== null) {
+      // Handle different types of rowSelection
+      if (typeof rowSelection === 'object') {
+        // Clone and remove selections property to remove dropdown menu
+        const config = { ...rowSelection };
+        config.selections = undefined; // This removes the dropdown menu
+        
+        // Ensure proper styling for alignment and height
+        if (!config.columnStyle) {
+          config.columnStyle = {};
+        }
+        config.columnStyle = {
+          ...config.columnStyle,
+          padding: '12px 8px',
+          verticalAlign: 'middle',
+        };
+        
+        return config;
+      }
+      // If it's a function or other type, return as is
+      return rowSelection;
+    }
+    
+    // If selection is disabled
+    if (!enableRowSelection) {
+      return null;
+    }
+    
+    // Default configuration WITHOUT selections menu
+    const config = {
+      type: selectionType,
+      selectedRowKeys,
+      onChange: (selectedKeys, selectedRows) => {
+        if (onSelectionChange) {
+          onSelectionChange(selectedKeys, selectedRows);
+        }
+      },
+      columnWidth: 60,
+      fixed: true,
+      // Add proper styling for alignment and height
+      columnStyle: {
+        padding: '12px 8px',
+        verticalAlign: 'middle',
+        height: 'auto',
+        minHeight: '48px',
+      },
+      // Custom render for checkbox to fix alignment
+      renderCell: (checked, record, index, originNode) => {
+        return (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            minHeight: '48px',
+            padding: '12px 0',
+          }}>
+            {originNode}
+          </div>
+        );
+      },
+    };
+    
+    // Ensure selections is undefined to prevent dropdown menu
+    config.selections = undefined;
+    
+    // Merge any additional rowSelection props
+    if (props.rowSelectionProps && typeof props.rowSelectionProps === 'object') {
+      const { selections, ...safeProps } = props.rowSelectionProps;
+      Object.assign(config, safeProps);
+      // Re-enforce no selections menu
+      config.selections = undefined;
+    }
+    
+    return config;
+  };
+  
+  // Build columns
   const draggableColumns = [
-    {
-      title: () => (
-        <Checkbox
-          style={{ marginLeft: "9px" }}
-          indeterminate={
-            selectedRowKeys.length > 0 &&
-            selectedRowKeys.length < dataSource.length
-          }
-          checked={
-            selectedRowKeys.length === dataSource.length &&
-            dataSource.length > 0
-          }
-          onChange={(e) => {
-            const checked = e.target.checked;
-            setSelectedRowKeys(
-              checked ? dataSource.map((item) => item.key) : []
-            );
-          }}
-        />
-      ),
-      key: "selection",
-      width: 50,
-      fixed: "left",
-      render: (text, record) => (
-        <Checkbox
-          checked={selectedRowKeys.includes(record.key)}
-          onChange={() => {
-            const newSelectedRowKeys = selectedRowKeys.includes(record.key)
-              ? selectedRowKeys.filter((k) => k !== record.key)
-              : [...selectedRowKeys, record.key];
-            setSelectedRowKeys(newSelectedRowKeys);
-          }}
-        />
-      ),
-    },
     {
       title: (
         <Gridmenu
@@ -260,7 +338,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
             onChange={(e) => handleFileUpload(e, record?.key)}
             style={{ display: "none" }}
           />
-          {/* Three dots icon in each columns */}
+          {/* Three dots menu */}
           <SimpleMenu
             title={
               <BsThreeDotsVertical
@@ -280,7 +358,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
-            actions={() => { }}
+            actions={() => {}}
             attachedFtn={() => {
               handleUploadClick();
             }}
@@ -289,217 +367,289 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           />
           {location?.pathname === "/BatchMemberSummary" && (
             <MdKeyboard
-              style={{ fontSize: "15px", color: "#595959", color: "inherit" }}
+              style={{ fontSize: "15px", color: "#595959" }}
               onClick={() => {
                 setmanualPayment(!isBatchmemberOpen);
                 handleRowClick(record, index);
               }}
             />
           )}
-          {/* {location.pathname === "/RemindersSummary" && <AiOutlineThunderbolt onClick={() =>  />} */}
         </Space>
       ),
     },
-  ...columnsDragbe.map((col) => ({
-  ...col,
-  title: (
-    <DraggableHeaderCell id={col.key} key={col.key}>
-      {col.title}
-    </DraggableHeaderCell>
-  ),
-  render: col.render
-    ? col.render // ✅ Use custom render if defined in column
-    : (text, record, index) => {
-        switch (col.title) {
-          case "Full Name":
-            return (
-              <Link
-                to="/Details"
-                state={{ search: screenName, name: record?.fullName, code: record?.regNo }}
-                // onClick={() => getProfile([record], index)}
-                onClick={() => dispatch(getProfileDetailsById(record?._id))}
-              >
-                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-              </Link>
-            );
-          case "Claim No":
-            return (
-              <Link
-                to="/ClaimsById"
-                state={{
-                  search: screenName,
-                  name: record?.fullName,
-                  code: record?.regNo,
-                  Forename: record?.forename,
-                  Fullname: record?.surname,
-                  DateOfBirth: record?.dateOfBirth,
-                }}
-                onClick={() => getProfile([record], index)}
-              >
-                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-              </Link>
-            );
-          case "Roster ID":
-            return (
-              <Link
-                to="/Roster"
-                state={{
-                  search: screenName,
-                  name: record?.fullName,
-                  code: record?.regNo,
-                  Forename: record?.forename,
-                  Fullname: record?.surname,
-                  DateOfBirth: record?.dateOfBirth,
-                }}
-                onClick={() => getProfile([record], index)}
-              >
-                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-              </Link>
-            );
-          case "Application ID":
-            return (
-              <span
-                style={{ color: "blue", cursor: "pointer" }}
-                onClick={() => {
-                  const { applicationStatus, applicationId } = record || {};
-                  if (applicationStatus === "Draft") {
-                    dispatch(getApplicationById({ id: "draft", draftId: applicationId }));
-                    navigate("/applicationMgt", { state: { isEdit: true } });
-                  } else {
-                    dispatch(getApplicationById({ id: applicationId }));
-                    navigate("/applicationMgt", { state: { isEdit: true } });
-                    setAddNewGardaDrwr(true);
-                    disableFtn(false);
-                  }
-                }}
-              >
-                View
-              </span>
-            );
-          case "Change To":
-            return (
-              <Link
-                to="/ChangeCatById"
-                state={{
-                  search: screenName,
-                  name: record?.fullName,
-                  code: record?.regNo,
-                  Forename: record?.forename,
-                  Fullname: record?.surname,
-                  DateOfBirth: record?.dateOfBirth,
-                }}
-                onClick={() => getProfile([record], index)}
-              >
-                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-              </Link>
-            );
-          case "Batch Name":
-            return (
-              <Link
-                to="/BatchMemberSummary"
-                state={{ search: screenName, batchName: text, batchId: record?.id || record?.key }}
-                onClick={() => {
-                  const batchPaths = ["/Batches", "/Import", "/onlinePayment", "/Cheque", "/StandingOrders", "/Deductions"];
-                  if (batchPaths.includes(location.pathname)) {
-                    const batch = getBatchById(record?.id);
-                    if (batch) setExcelData(batch);
-                  }
-                }}
-              >
-                {text}
-              </Link>
-            );
-          case "Correspondence ID":
-            return (
-              <Link
-                to="/CorspndncDetail"
-                state={{
-                  search: screenName,
-                  name: record?.fullName,
-                  code: record?.regNo,
-                  Forename: record?.forename,
-                  Fullname: record?.surname,
-                  DateOfBirth: record?.dateOfBirth,
-                }}
-                onClick={() => getProfile([record], index)}
-              >
-                <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-              </Link>
-            );
-          default:
-            return <span style={{ textOverflow: "ellipsis" }}>{text}</span>;
-        }
+    ...columnsDragbe.map((col) => ({
+      ...col,
+      title: (
+        <DraggableHeaderCell id={col.key} key={col.key}>
+          {col.title}
+        </DraggableHeaderCell>
+      ),
+      render: col.render
+        ? col.render
+        : (text, record, index) => {
+            switch (col.title) {
+              case "Full Name":
+                return (
+                  <Link
+                    to="/Details"
+                    state={{
+                      search: screenName,
+                      name: record?.fullName,
+                      code: record?.regNo,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRowClick(record, index);
+                      dispatch(getProfileDetailsById(record?._id));
+                    }}
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
+                );
+              case "Claim No":
+                return (
+                  <Link
+                    to="/ClaimsById"
+                    state={{
+                      search: screenName,
+                      name: record?.fullName,
+                      code: record?.regNo,
+                      Forename: record?.forename,
+                      Fullname: record?.surname,
+                      DateOfBirth: record?.dateOfBirth,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRowClick(record, index);
+                      getProfile([record], index);
+                    }}
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
+                );
+              case "Roster ID":
+                return (
+                  <Link
+                    to="/Roster"
+                    state={{
+                      search: screenName,
+                      name: record?.fullName,
+                      code: record?.regNo,
+                      Forename: record?.forename,
+                      Fullname: record?.surname,
+                      DateOfBirth: record?.dateOfBirth,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRowClick(record, index);
+                      getProfile([record], index);
+                    }}
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
+                );
+              case "Application ID":
+                return (
+                  <span
+                    style={{ color: "blue", cursor: "pointer" }}
+                    onClick={(e) => {
+                      e.stopPropagation(); // Prevent row click
+                      const { applicationStatus, applicationId } = record || {};
+                      if (applicationStatus === "Draft") {
+                        dispatch(
+                          getApplicationById({ id: "draft", draftId: applicationId })
+                        );
+                        navigate("/applicationMgt", { state: { isEdit: true } });
+                      } else {
+                        dispatch(getApplicationById({ id: applicationId }));
+                        navigate("/applicationMgt", { state: { isEdit: true } });
+                      }
+                    }}
+                  >
+                    View
+                  </span>
+                );
+              case "Change To":
+                return (
+                  <Link
+                    to="/ChangeCatById"
+                    state={{
+                      search: screenName,
+                      name: record?.fullName,
+                      code: record?.regNo,
+                      Forename: record?.forename,
+                      Fullname: record?.surname,
+                      DateOfBirth: record?.dateOfBirth,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRowClick(record, index);
+                      getProfile([record], index);
+                    }}
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
+                );
+              case "Batch Name":
+                return (
+                  <Link
+                    to="/BatchMemberSummary"
+                    state={{
+                      search: screenName,
+                      batchName: text,
+                      batchId: record?.id || record?.key,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRowClick(record, index);
+                      const batchPaths = [
+                        "/Batches",
+                        "/Import",
+                        "/onlinePayment",
+                        "/Cheque",
+                        "/StandingOrders",
+                        "/Deductions",
+                      ];
+                      if (batchPaths.includes(location.pathname)) {
+                        const batch = getBatchById(record?.id);
+                        if (batch) setExcelData(batch);
+                      }
+                    }}
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    {text}
+                  </Link>
+                );
+              case "Correspondence ID":
+                return (
+                  <Link
+                    to="/CorspndncDetail"
+                    state={{
+                      search: screenName,
+                      name: record?.fullName,
+                      code: record?.regNo,
+                      Forename: record?.forename,
+                      Fullname: record?.surname,
+                      DateOfBirth: record?.dateOfBirth,
+                    }}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      handleRowClick(record, index);
+                      getProfile([record], index);
+                    }}
+                    style={{ color: 'inherit', textDecoration: 'none' }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
+                );
+              default:
+                return (
+                  <span 
+                    style={{ textOverflow: "ellipsis" }}
+                    onClick={() => handleRowClick(record, index)}
+                  >
+                    {text}
+                  </span>
+                );
+            }
+          },
+      sorter:
+        col.title === "Full Name"
+          ? {
+              compare: (a, b) =>
+                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 3,
+            }
+          : col.title === "Station"
+          ? {
+              compare: (a, b) =>
+                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 2,
+            }
+          : col.title === "Duty"
+          ? {
+              compare: (a, b) =>
+                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 1,
+            }
+          : col.title === "Reg No"
+          ? {
+              compare: (a, b) =>
+                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 1,
+            }
+          : col.title === "Correspondence ID"
+          ? {
+              compare: (a, b) =>
+                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 1,
+            }
+          : undefined,
+      sortDirections: ["ascend", "descend"],
+      filters:
+        col.title === "Station" || col.title === "Current Station"
+          ? [
+              { text: "GALC", value: "GALC" },
+              { text: "DUBC", value: "DUBC" },
+              { text: "STOC", value: "STOC" },
+            ]
+          : col.title === "Division"
+          ? [
+              { text: "0026", value: "0026" },
+              { text: "0031", value: "0031" },
+              { text: "0045", value: "0045" },
+            ]
+          : col.title === "Approval Status"
+          ? [
+              { text: "Approved", value: "Approved" },
+              { text: "Pending", value: "Pending" },
+              { text: "Rejected", value: "Rejected" },
+            ]
+          : col.title === "Current Station"
+          ? [
+              { text: "0026", value: "0026" },
+              { text: "0031", value: "0031" },
+              { text: "0045", value: "0045" },
+            ]
+          : col.title === "Method of Contact"
+          ? [
+              { text: "Call", value: "Call" },
+              { text: "Email", value: "Email" },
+              { text: "Letter", value: "Letter" },
+            ]
+          : undefined,
+      onFilter: (value, record) => {
+        if (col.title === "Station" || col.title === "Current Station")
+          return record[col.dataIndex] === value;
+        if (col.title === "Division") return record[col.dataIndex] === value;
+        if (col.title === "Approval Status")
+          return record[col.dataIndex] === value;
+        if (col.title === "Method of Contact")
+          return record[col.dataIndex] === value;
+        return true;
       },
-  sorter:
-    col.title === "Full Name"
-      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 3 }
-      : col.title === "Station"
-      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 2 }
-      : col.title === "Duty"
-      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 1 }
-      : col.title === "Reg No"
-      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 1 }
-      : col.title === "Correspondence ID"
-      ? { compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]), multiple: 1 }
-      : undefined,
-  sortDirections: ["ascend", "descend"],
-  filters:
-    col.title === "Station" || col.title === "Current Station"
-      ? [
-          { text: "GALC", value: "GALC" },
-          { text: "DUBC", value: "DUBC" },
-          { text: "STOC", value: "STOC" },
-        ]
-      : col.title === "Division"
-      ? [
-          { text: "0026", value: "0026" },
-          { text: "0031", value: "0031" },
-          { text: "0045", value: "0045" },
-        ]
-      : col.title === "Approval Status"
-      ? [
-          { text: "Approved", value: "Approved" },
-          { text: "Pending", value: "Pending" },
-          { text: "Rejected", value: "Rejected" },
-        ]
-      : col.title === "Current Station"
-      ? [
-          { text: "0026", value: "0026" },
-          { text: "0031", value: "0031" },
-          { text: "0045", value: "0045" },
-        ]
-      : col.title === "Method of Contact"
-      ? [
-          { text: "Call", value: "Call" },
-          { text: "Email", value: "Email" },
-          { text: "Letter", value: "Letter" },
-        ]
-      : undefined,
-  onFilter: (value, record) => {
-    if (col.title === "Station" || col.title === "Current Station") return record[col.dataIndex] === value;
-    if (col.title === "Division") return record[col.dataIndex] === value;
-    if (col.title === "Approval Status") return record[col.dataIndex] === value;
-    if (col.title === "Method of Contact") return record[col.dataIndex] === value;
-    return true;
-  },
-}))
-
+    })),
   ];
 
+  // Pagination logic
   const pageSize = 8;
   const [currentPage, setCurrentPage] = useState(1);
-
   const [currentPageData, setCurrentPageData] = useState([]);
-  // pagination logic
+
   useEffect(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     setCurrentPageData(dataSource.slice(startIndex, endIndex));
   }, [currentPage, dataSource]);
+
   const getBatchById = (batchId) => {
     if (!Array.isArray(tableData)) return null;
     const batch = tableData.find((b) => b.id === batchId) || null;
-    if (batch) setExcelData(batch); // ✅ set into context
+    if (batch) setExcelData(batch);
     return batch;
   };
 
@@ -513,6 +663,7 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
       </Form>
     );
   };
+
   const EditableCell = ({
     title,
     editable,
@@ -524,19 +675,21 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
   }) => {
     const [editing, setEditing] = useState(false);
     const inputRef = useRef(null);
-
     const form = useContext(EditableContext);
+
     useEffect(() => {
       if (editing) {
         inputRef.current?.focus();
       }
     }, [editing]);
+
     const toggleEdit = () => {
       setEditing(!editing);
       form.setFieldsValue({
         [dataIndex]: record[dataIndex],
       });
     };
+
     const save = async () => {
       try {
         const values = await form.validateFields();
@@ -545,8 +698,9 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           ...record,
           ...values,
         });
-      } catch (errInfo) { }
+      } catch (errInfo) {}
     };
+
     let childNode = children;
     if (editable) {
       childNode = editing ? (
@@ -580,7 +734,6 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
     return <td {...restProps}>{childNode}</td>;
   };
 
-  // reports (apply filters)
   const handleSave = (row) => {
     const newData = [...dataSource];
     const index = newData.findIndex((item) => row.key === item.key);
@@ -641,11 +794,17 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
             components={components}
             columns={editableColumns}
             dataSource={currentPageData}
+            // **FIXED: Using the updated getRowSelectionConfig**
+            rowSelection={getRowSelectionConfig()}
             pagination={false}
             style={{ tableLayout: "fixed" }}
             bordered
             scroll={{ x: 1500, y: 800 }}
             size="small"
+            // **UPDATED: Row click handler uses the prop-controlled function**
+            onRow={(record, index) => ({
+              onClick: () => handleRowClick(record, index),
+            })}
           />
           <div
             className="d-flex justify-content-between align-items-center tbl-footer"
@@ -702,12 +861,6 @@ const TableComponent = ({ data, screenName, redirect, isGrideLoading }) => {
           </th>
         )}
       </DragOverlay>
-      {/* <ApplicationMgtDrawer
-        open={AddNewGardaDrwr}
-        onClose={() => setAddNewGardaDrwr(!AddNewGardaDrwr)}
-        isEdit={true}
-        title="Registration Request"
-      /> */}
       <TrigerReminderDrawer
         isOpen={TriggerReminderDrawer}
         onClose={() => setTriggerReminderDrawer(!TriggerReminderDrawer)}

@@ -879,7 +879,7 @@ const staticColumns = {
   ],
   Transfer: [
     {
-      dataIndex: "regNo",
+      dataIndex: ["profileId","membershipNumber"],
       title: "Reg No",
       ellipsis: true,
       isGride: true,
@@ -888,7 +888,7 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: "forename",
+      dataIndex: ["profileId","personalInfo","forename"],
       title: "Forename",
       ellipsis: true,
       isGride: true,
@@ -897,7 +897,7 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: "surname",
+      dataIndex: ["profileId","personalInfo","surname"],
       title: "Surname",
       ellipsis: true,
       isGride: true,
@@ -906,23 +906,23 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: "currentStation",
-      title: "Current Station",
+      dataIndex: "currentWorkLocationName",
+      title: "Current Work Location",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
     },
     {
-      dataIndex: "requestedStation",
-      title: "Requested Station",
+      dataIndex: "requestedWorkLocationName",
+      title: "Requested Work Location",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 170,
     },
     {
-      dataIndex: "transferReason",
+      dataIndex: "reason",
       title: "Transfer Reason",
       ellipsis: true,
       isGride: true,
@@ -930,7 +930,7 @@ const staticColumns = {
       width: 200,
     },
     {
-      dataIndex: "transferDate",
+      dataIndex: "requestDate",
       title: "Transfer Date",
       ellipsis: true,
       isGride: true,
@@ -938,7 +938,7 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: "approvalStatus",
+      dataIndex: "status",
       title: "Approval Status",
       ellipsis: true,
       isGride: true,
@@ -953,14 +953,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
     },
-    {
-      dataIndex: "duty",
-      title: "Duty",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
+
   ],
   Correspondence: [
     {
