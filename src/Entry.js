@@ -143,6 +143,11 @@ const ProductTypesManagement = lazyWithRetry(() =>
 const ProductManagementDemo = lazyWithRetry(() =>
   import("./pages/product-management/ProductManagementDemo")
 );
+// const ProductManagementDemo = lazyWithRetry(() =>
+//   import("./pages/product-management/ProductManagementDemo")
+// );
+const NewGraduate = lazyWithRetry(() => import("./pages/membership/NewGraduate"));
+const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
 
 function Entry() {
   const location = useLocation();
@@ -705,15 +710,6 @@ function Entry() {
                     />
 
                     <Route
-                      path="ProductManagementDemo"
-                      element={
-                        <ProtectedRoute>
-                          <ProductManagementDemo />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
                       path="CancelledMembersReport"
                       element={
                         <ProtectedRoute>
@@ -763,6 +759,30 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <PolicyClientExample />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="ProductManagementDemo"
+                      element={
+                        <ProtectedRoute>
+                          <ProductManagementDemo />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="NewGraduate"
+                      element={
+                        <ProtectedRoute>
+                          <NewGraduate />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="NewlyJoint"
+                      element={
+                        <ProtectedRoute>
+                          <NewlyJoint />
                         </ProtectedRoute>
                       }
                     />

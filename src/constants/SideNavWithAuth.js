@@ -274,6 +274,20 @@ export const subscriptionItems = [
     ["MO", "AMO", "GS", "DGS", "SU"]
   ),
   createMenuItem(
+    "New Graduate",
+    <FaGraduationCap />,
+    "New Graduate",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Newly Joint",
+    <FaUserPlus />,
+    "Newly Joint",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
     "LandingPage",
     <FaGlobe />,
     "LandingPage",

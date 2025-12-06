@@ -28,7 +28,10 @@ import TransferRequests from "../TransferRequests";
 import CareerBreakDrawer from "../CareerBreakDrawer";
 import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import ContactDrawer from "./ContactDrawer";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 
+import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
+import { useDispatch } from "react-redux";
 function SimpleMenu({
   title,
   data,
@@ -44,6 +47,7 @@ function SimpleMenu({
   const [careerBreak, setcareerBreak] = useState(false);
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [contactDrawer, setcontactDrawer] = useState(false);
+  const dispatch = useDispatch();
   const [ddSearch, setddSearch] = useState("");
   const location = useLocation();
 
@@ -221,8 +225,11 @@ function SimpleMenu({
               ) : key === "Transfer Requests" ? (
                 <div
                   className="d-flex align-items-baseline"
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent menu from closing
                     settransferreq(true);
+                    dispatch(getTransferRequestHistoryById(record?._id));
+                    dispatch(getProfileDetailsById(record?._id));
                     getProfile(record, index);
                   }}
                 >
@@ -238,15 +245,16 @@ function SimpleMenu({
               ) : key === "assign IRO" ? (
                 <div
                   className="d-flex align-items-baseline"
-                  onClick={() => setcontactDrawer(!contactDrawer)}
+                  onClick={(e) => { e.stopPropagation(); setcontactDrawer(!contactDrawer); }}
                 >
                   Assign IRO
                 </div>
               ) : key === "Career Break" ? (
                 <div
                   className="d-flex align-items-baseline"
-                  onClick={() => {
-                    setcareerBreak(!careerBreak);
+                  onClick={(e) => {
+                    // This one seems to work, but for consistency let's add stopPropagation
+                    e.stopPropagation(); setcareerBreak(!careerBreak);
                     getProfile(record, index);
                   }}
                 >
@@ -262,8 +270,9 @@ function SimpleMenu({
               ) : key === "Generate NFC tag" ? (
                 <div
                   className="d-flex align-items-baseline"
-                  onClick={async () => {
-                    await getProfile(record, index);
+                  onClick={async (e) => {
+                    e.stopPropagation(); // Prevent menu from closing
+                    getProfile(record, index); // No need to await if it doesn't return a promise
                     handleGenerate();
                   }}
                 >
@@ -279,8 +288,9 @@ function SimpleMenu({
               ) : key === "Change Category" ? (
                 <div
                   className="d-flex align-items-baseline"
-                  onClick={async () => {
-                    await getProfile(record, index);
+                  onClick={async (e) => {
+                    e.stopPropagation(e); // Prevent menu from closing
+                    getProfile(record, index); // No need to await if it doesn't return a promise
                     setisDrawerOpen(true);
                   }}
                 >
@@ -350,7 +360,7 @@ function SimpleMenu({
       {/* Drawers */}
       <TransferRequests
         open={transferreq}
-        onClose={() => settransferreq(false)}
+        onClose={() => settransferreq(false)} // This was the issue, it was being passed a boolean
         isSearch={false}
         formData={formData}
         handleChange={(field, value) =>

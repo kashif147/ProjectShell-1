@@ -40,6 +40,7 @@ import searchProfileReducer from '../features/profiles/SearchProfile';
 import getTemplateReducer from "../features/templete/GetTemplateSlice";
 import templeteDetailsReducer from "../features/templete/templeteDetailsSlice"; 
 import transferRequestReducer from '../features/profiles/TransferRequest';
+import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
 
 const store = configureStore({
   reducer: {
@@ -77,6 +78,7 @@ const store = configureStore({
     bookmarks: bookmarkReducer,
     getTemplate: getTemplateReducer,
     templeteDetails: templeteDetailsReducer,
+    transferRequestHistory: transferRequestHistoryReducer,
     
   },
 });

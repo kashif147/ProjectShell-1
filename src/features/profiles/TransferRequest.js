@@ -1,7 +1,24 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 import axios from "axios";
 
-// ✅ GET Transfer Request by ID
+export const createTransferRequest = createAsyncThunk(
+  "transferRequest/create",
+  async (requestData, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.post(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/transfer-request`,
+        requestData,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      return response.data;
+    } catch (error) {
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
+
+
 export const getTransferRequest = createAsyncThunk(
   "transferRequest/getTransferRequest",
   async (_, { rejectWithValue }) => {
@@ -30,23 +47,36 @@ const transferRequestSlice = createSlice({
   name: "transferRequest",
   initialState: {
     data: null,
-    loading: false,
-    error: null,
+    getLoading: false, // Renamed for clarity
+    getError: null,   // Renamed for clarity
+    createLoading: false,
+    createError: null,
   },
   reducers: {},
   extraReducers: (builder) => {
     builder
       .addCase(getTransferRequest.pending, (state) => {
-        state.loading = true;
-        state.error = null;
+        state.getLoading = true;
+        state.getError = null;
       })
       .addCase(getTransferRequest.fulfilled, (state, action) => {
-        state.loading = false;
+        state.getLoading = false;
         state.data = action.payload;
       })
       .addCase(getTransferRequest.rejected, (state, action) => {
-        state.loading = false;
-        state.error = action.payload;
+        state.getLoading = false;
+        state.getError = action.payload;
+      })
+      .addCase(createTransferRequest.pending, (state) => {
+        state.createLoading = true;
+        state.createError = null;
+      })
+      .addCase(createTransferRequest.fulfilled, (state, action) => {
+        state.createLoading = false;
+      })
+      .addCase(createTransferRequest.rejected, (state, action) => {
+        state.createLoading = false;
+        state.createError = action.payload;
       });
   },
 });

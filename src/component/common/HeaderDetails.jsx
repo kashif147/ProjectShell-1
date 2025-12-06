@@ -892,12 +892,7 @@ function HeaderDetails() {
         onClose={() => setisGardaDrwer(!isGardaDrwer)}
       /> */}
       {/* <AddNewGarda  /> */}
-      <TransferRequests
-        open={TransferDrawer}
-        onClose={() => setTransferDrawer(!TransferDrawer)}
-        isSearch={true}
-        isChangeCat={true}
-      />
+     
       <MyDrawer
         title="Add New Events"
         open={rosterDrawer}

@@ -134,6 +134,8 @@ baseMenuItems.forEach((item, index) => {
       "/PermissionManagement": "Permission Management",
       "/CancelledMembersReport": "Cancelled Members Report",
       "/PolicyClientExample": "Policy Client Example",
+      "/NewGraduate": "New Graduate",
+      "/NewlyJoint": "Newly Joint",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -269,6 +271,12 @@ baseMenuItems.forEach((item, index) => {
         navigate("/templeteSummary", {
           state: { search: "Templetes" },
         });
+        break;
+      case "New Graduate":
+        navigate("/NewGraduate", { state: { search: "New Graduate" } });
+        break;
+      case "Newly Joint":
+        navigate("/NewlyJoint", { state: { search: "Newly Joint" } });
         break;
       default:
         navigate("/NotDesignedYet");

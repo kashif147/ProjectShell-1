@@ -13,11 +13,14 @@ import { CatOptions } from "../Data";
 import "../styles/MyDetails.css";
 import dayjs from "dayjs";
 import SubTableComp from "./common/SubTableComp";
+import { useSelector, useDispatch } from "react-redux";
+import { createTransferRequest } from "../features/profiles/TransferRequest";
 
 const { Search } = Input;
 
 function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
   const onSearch = (value, _e, info) => console.log(info?.source, value);
+  const dispatch = useDispatch();
 
   const [formData, setFormData] = useState({
     newWorkLocation: "",
@@ -29,6 +32,14 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
   });
 
   const [errors, setErrors] = useState({});
+  const { history, loading } = useSelector(
+    (state) => state.transferRequestHistory
+  );
+  const { profileDetails } = useSelector((state) => state.profileDetails);
+  const { loading: createLoading, error: createError } = useSelector(
+    (state) => state.transferRequest
+  );
+console.log(history,"lp")
   const allBranches = Array.from(
     new Set(Object.values(workLocationDetails).map((d) => d.branch))
   );
@@ -109,18 +120,17 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
   };
   const onSubmit = () => {
     const requiredFields = ["newWorkLocation", "transferDate"];
-
     const newErrors = {};
     requiredFields.forEach((field) => {
-      if (!formData[field] || formData[field].trim?.() === "") {
+      if (!formData[field] || String(formData[field]).trim() === "") {
         newErrors[field] = "This field is required";
       }
     });
-
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return;
     }
+    // TODO: Dispatch create request action
     console.log("Submitted data:", formData);
   };
   const columnHistory = [
@@ -131,19 +141,19 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
     },
     {
       title: "Work Location From",
-      dataIndex: "stationFrom",
-      key: "stationFrom",
+      dataIndex: "currentWorkLocationName",
+      key: "currentWorkLocationName",
     },
     {
       title: "Transfer reason",
-      dataIndex: "stationFrom",
-      key: "stationFrom",
+      dataIndex: "reason",
+      key: "reason",
     },
 
     {
       title: "Work Location To",
-      dataIndex: "stationTo",
-      key: "stationTo",
+      dataIndex: "requestedWorkLocationName",
+      key: "requestedWorkLocationName",
     },
     {
       title: "Notes",
@@ -164,225 +174,147 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
     },
   ];
 
-  const historyData = [
-    {
-      key: "1",
-      transferDate: "10/06/2024",
-      stationFrom: "Dublin City University",
-      stationTo: "University College Dublin",
-      notes: "Requested transfer for further studies",
-      status: "Approved",
-      insertedAtSystem: "01/12/2023 09:00 AM",
-      insertedBySystem: "System",
-      insertedAtAdmin: "01/12/2023 10:30 AM",
-      insertedByAdmin: "Admin User",
-    },
-    {
-      key: "2",
-      transferDate: "10/07/2024",
-      stationFrom: "Limerick Institute Of Technology",
-      stationTo: "Tus (Limerick)",
-      notes: "Institute merger adjustment",
-      status: "Approved",
-      insertedAtSystem: "01/12/2023 09:00 AM",
-      insertedBySystem: "System",
-      insertedAtAdmin: "01/12/2023 10:30 AM",
-      insertedByAdmin: "Admin User",
-    },
-    {
-      key: "3",
-      transferDate: "10/08/2025",
-      stationFrom: "National University Ireland Galway",
-      stationTo: "Roscrea College",
-      notes: "Awaiting admin approval",
-      status: "Pending",
-      insertedAtSystem: "01/12/2023 09:00 AM",
-      insertedBySystem: "System",
-      insertedAtAdmin: "01/12/2023 10:30 AM",
-      insertedByAdmin: "Admin User",
-    },
-    // {
-    //   key: "4",
-    //   transferDate: "2024-09-15",
-    //   stationFrom: "Trinity College",
-    //   stationTo: "Royal College Of Surgeons",
-    //   notes: "Rejected due to incomplete application",
-    //   status: "Rejected",
-    // },
-  ];
   return (
     <MyDrawer
-      title={` ${isChangeCat ? "Transfer Request" : "Transfer History"}`}
+      title={"Transfer Request & History1"}
       open={open}
       onClose={oncloseftn}
       add={onSubmit}
       width={"1000px"}
     >
-      <div>
-        {isSearch === true && isChangeCat && (
-          <Search
-            placeholder="Input search text "
-            className="pb-4"
-            onSearch={onSearch}
-          />
-        )}
-        {isSearch === false && isChangeCat && (
-          <div className="details-drawer mb-4 mt-4">
-            <p>{`${ProfileDetails?.forename}  ${ProfileDetails?.surname}`}</p>
-            <p>{ProfileDetails?.regNo}</p>
-            <p>{ProfileDetails?.duty}</p>
-          </div>
-        )}
-        {isChangeCat && (
-          <div className="d-flex">
-            {/* Current Section (Disabled) */}
-            <div className="w-50">
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{
-                  height: "35px",
-                  backgroundColor: "#215E97",
-                  color: "white",
-                }}
-              >
-                <h3 className="text-center" style={{ fontSize: "15px" }}>
-                  Current
-                </h3>
-              </div>
-              <div className="body-container">
-                <CustomSelect
-                  label="Work Location"
-                  name="currentWorkLocation"
-                  value={ProfileDetails?.worklocation}
-                  options={[
-                    ...workLocations.map((loc) => ({ value: loc, label: loc })),
-                    { value: "other", label: "other" },
-                  ]}
-                  disabled
-                />
-                <CustomSelect
-                  label="Branch"
-                  name="currentBranch"
-                  value={ProfileDetails?.branch}
-                  disabled
-                  options={allBranches.map((branch) => ({
-                    value: branch,
-                    label: branch,
-                  }))}
-                />
-                <CustomSelect
-                  label="region"
-                  name="currentRegion"
-                  value={ProfileDetails?.region}
-                  options={allRegions.map((region) => ({
-                    value: region,
-                    label: region,
-                  }))}
-                  disabled
-                />
-                <MyInput
-                  label="Transfer Reason"
-                  name="currentDescription"
-                  type="textarea"
-                  value={ProfileDetails?.description}
-                  disabled
-                />
-              </div>
+      <div className="drawer-main-cntainer p-4">
+        <div className="details-drawer mb-4 mt-4">
+          <p>{`${profileDetails?.personalInfo?.forename || ""}  ${
+            profileDetails?.personalInfo?.surname || ""
+          }`}</p>
+          <p>{profileDetails?.membershipNumber}</p>
+          <p>{profileDetails?.professionalDetails?.grade}</p>
+        </div>
+        <div className="d-flex">
+          {/* Current Section (Disabled) */}
+          <div className="w-50">
+            <div
+              className="d-flex align-items-center justify-content-center"
+              style={{
+                height: "35px",
+                backgroundColor: "#215E97",
+                color: "white",
+              }}
+            >
+              <h3 className="text-center" style={{ fontSize: "15px" }}>
+                Current
+              </h3>
             </div>
+            <div className="body-container">
+              <CustomSelect
+                label="Work Location"
+                name="currentWorkLocation"
+                value={profileDetails?.professionalDetails?.workLocation}
+                options={workLocations.map((loc) => ({
+                  value: loc,
+                  label: loc,
+                }))}
+                disabled
+              />
+              <CustomSelect
+                label="Branch"
+                name="currentBranch"
+                value={profileDetails?.professionalDetails?.branch}
+                disabled
+                options={allBranches.map((branch) => ({
+                  value: branch,
+                  label: branch,
+                }))}
+              />
+              <CustomSelect
+                label="Region"
+                name="currentRegion"
+                value={profileDetails?.professionalDetails?.region}
+                options={allRegions.map((region) => ({
+                  value: region,
+                  label: region,
+                }))}
+                disabled
+              />
+              <MyInput
+                label="Transfer Reason"
+                name="currentDescription"
+                type="textarea"
+                value={""} // No reason for current
+                disabled
+              />
+            </div>
+          </div>
 
-            {/* New Section (Editable) */}
-            <div className="w-50 ms-4">
-              <div
-                className="d-flex align-items-center justify-content-center"
-                style={{
-                  height: "35px",
-                  backgroundColor: "#215E97",
-                  color: "white",
-                }}
+          {/* New Section (Editable) */}
+          <div className="w-50 ms-4">
+            <div
+              className="d-flex align-items-center justify-content-center"
+              style={{
+                height: "35px",
+                backgroundColor: "#215E97",
+                color: "white",
+              }}
+            >
+              <h3
+                className="text-center"
+                style={{ fontSize: "15px", margin: "0px" }}
               >
-                <h3
-                  className="text-center"
-                  style={{ fontSize: "15px", margin: "0px" }}
-                >
-                  New
-                </h3>
-              </div>
-              <div className="body-container">
-                <CustomSelect
-                  label="Work Location"
-                  name="newWorkLocation"
-                  value={formData.newWorkLocation}
-                  onChange={handleChange}
-                  required
-                  options={[
-                    ...workLocations.map((loc) => ({ value: loc, label: loc })),
-                    { value: "other", label: "other" },
-                  ]}
-                  hasError={!!errors.newWorkLocation}
-                />
-                <CustomSelect
-                  label="Branch"
-                  name="newBranch"
-                  disabled={true}
-                  value={formData.newBranch}
-                  options={allBranches.map((branch) => ({
-                    value: branch,
-                    label: branch,
-                  }))}
-                  onChange={(e) => handleChange("newBranch", e.target.value)}
-                  hasError={!!errors.newBranch}
-                />
-                <CustomSelect
-                  label="Region"
-                  name="newRegion"
-                  placeholder="Select Region"
-                  value={formData.newRegion}
-                  onChange={(value) => handleChange("newRegion", value)}
-                  disabled={true}
-                  options={allRegions.map((region) => ({
-                    value: region,
-                    label: region,
-                  }))}
-                  hasError={!!errors.newRegion}
-                />
-
-                {/* <MyInput
-                label="Transfer Date"
-                name="transferDate"
-                placeholder="DD/MM/YYYY"
+                New
+              </h3>
+            </div>
+            <div className="body-container">
+              <CustomSelect
+                label="Work Location"
+                name="newWorkLocation"
+                value={formData.newWorkLocation}
+                onChange={handleChange}
                 required
-                value={formData.transferDate}
-                onChange={(e) => handleChange('transferDate', e.target.value)}
-                hasError={!!errors.transferDate}
-              /> */}
-                <MyInput
-                  label="Memo"
-                  name="memo"
-                  type="textarea"
-                  placeholder="Enter memo"
-                  value={formData.memo}
-                  onChange={(e) => handleChange("memo", e.target.value)}
-                />
-              </div>
+                options={workLocations.map((loc) => ({
+                  value: loc,
+                  label: loc,
+                }))}
+                hasError={!!errors.newWorkLocation}
+              />
+              <CustomSelect
+                label="Branch"
+                name="newBranch"
+                disabled={true}
+                value={formData.newBranch}
+                options={allBranches.map((branch) => ({
+                  value: branch,
+                  label: branch,
+                }))}
+              />
+              <CustomSelect
+                label="Region"
+                name="newRegion"
+                value={formData.newRegion}
+                disabled={true}
+                options={allRegions.map((region) => ({
+                  value: region,
+                  label: region,
+                }))}
+              />
+              <MyInput
+                label="Memo"
+                name="memo"
+                type="textarea"
+                placeholder="Enter memo"
+                value={formData.memo}
+                onChange={(e) => handleChange("memo", e.target.value)}
+              />
             </div>
           </div>
-        )}
+        </div>
 
         <div>
-          <SubTableComp columns={columnHistory} dataSource={historyData} />
-          {/* <Table
-            pagination={false}
-
-            className="drawer-tbl"
-            rowClassName={(record, index) =>
-              index % 2 !== 0 ? 'odd-row' : 'even-row'
-            }
-            // rowSelection={{
-            //   type: selectionType,
-            //   ...rowSelection,
-            // }}
-            bordered
-          /> */}
+          <h4 className="mt-4 mb-3">Transfer History</h4>
+          <SubTableComp
+            columns={columnHistory}
+            dataSource={history}
+            loading={loading}
+          />
         </div>
       </div>
     </MyDrawer>
