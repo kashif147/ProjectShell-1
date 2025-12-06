@@ -151,7 +151,9 @@ function HeaderDetails() {
   const [contactDrawer, setcontactDrawer] = useState(false);
 
   const menuItems = [
+    { label: "Executive council approval", onClick: (e) => handleAction("Bulk Changes", e) },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
+    
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
       label: "Generate Bulk NFC Tag",
@@ -624,6 +626,7 @@ function HeaderDetails() {
                           actions={genaratePdf}
                         />
 
+                        <Button className="me-1 gray-btn butn">Executive Council</Button>
                         <Button className="me-1 gray-btn butn">Share</Button>
                         <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                         {currentKey && (
@@ -889,12 +892,7 @@ function HeaderDetails() {
         onClose={() => setisGardaDrwer(!isGardaDrwer)}
       /> */}
       {/* <AddNewGarda  /> */}
-      <TransferRequests
-        open={TransferDrawer}
-        onClose={() => setTransferDrawer(!TransferDrawer)}
-        isSearch={true}
-        isChangeCat={true}
-      />
+     
       <MyDrawer
         title="Add New Events"
         open={rosterDrawer}

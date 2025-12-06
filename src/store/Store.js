@@ -39,6 +39,8 @@ import profileDetailsReducer from "../features/profiles/ProfileDetailsSlice";
 import searchProfileReducer from '../features/profiles/SearchProfile';
 import getTemplateReducer from "../features/templete/GetTemplateSlice";
 import templeteDetailsReducer from "../features/templete/templeteDetailsSlice"; 
+import transferRequestReducer from '../features/profiles/TransferRequest';
+import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
 
 const store = configureStore({
   reducer: {
@@ -57,7 +59,6 @@ const store = configureStore({
     profile: profileReducer,
     contact: contactReducer,
     menuLbl: menuLblReducer,
-    // countries: countriesReducer,
     applications: applicationReducer,
     applicationDetails: applicationDetailsReducer,
     hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
@@ -67,6 +68,7 @@ const store = configureStore({
     roles: roleReducer,
     permissions: permissionReducer,
     roleById: roleByIdReducer,
+    transferRequest: transferRequestReducer,
     productTypes: productTypesReducer,
     products: productsReducer,
     productTypesWithProducts: productTypesWithProductsReducer,
@@ -76,7 +78,8 @@ const store = configureStore({
     bookmarks: bookmarkReducer,
     getTemplate: getTemplateReducer,
     templeteDetails: templeteDetailsReducer,
-    // lookupHierarchy: lookupHierarchyReducer,
+    transferRequestHistory: transferRequestHistoryReducer,
+    
   },
 });
 

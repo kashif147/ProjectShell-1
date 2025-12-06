@@ -316,6 +316,18 @@ const Breadcrumb = () => {
       icon: "❌",
       recordIdField: "code",
     },
+
+    // New Graduate & Newly Joint
+    "/NewGraduate": {
+      module: "Subscriptions & Rewards",
+      page: "New Graduate",
+      icon: "🎓",
+    },
+    "/NewlyJoint": {
+      module: "Subscriptions & Rewards",
+      page: "Newly Joint",
+      icon: "🤝",
+    },
   };
 
   // Get breadcrumb data for current route
