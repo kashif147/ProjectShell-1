@@ -1,0 +1,12 @@
+.cancelled-members-report {
+  min-height: 100vh;
+  background-color: #f5f5f5;
+}
+
+.ag-theme-alpine {
+  --ag-header-background-color: #fafafa;
+  --ag-header-foreground-color: #333;
+  --ag-border-color: #d9d9d9;
+  --ag-row-hover-color: #f5f5f5;
+}
+
