@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useCallback, useRef } from "react";
 import { AgGridReact } from "ag-grid-react";
 import {
   Card,
@@ -35,33 +35,44 @@ const CancelledMembersReport = () => {
     current: 1,
     pageSize: 20,
   });
+  const gridApiRef = useRef(null);
+  const lastPaginationRef = useRef({ current: 1, pageSize: 20 });
 
   const columnDefs = [
     {
       headerName: "ID",
       field: "id",
-      width: 80,
+      width: 100,
+      minWidth: 80,
+      maxWidth: 120,
       sortable: true,
       filter: true,
+      pinned: null,
     },
     {
       headerName: "Member Name",
       field: "memberName",
-      width: 200,
+      width: 220,
+      minWidth: 150,
+      flex: 1,
       sortable: true,
       filter: true,
     },
     {
       headerName: "Member Type",
       field: "memberType",
-      width: 150,
+      width: 160,
+      minWidth: 120,
+      maxWidth: 200,
       sortable: true,
       filter: true,
     },
     {
       headerName: "Payment Status",
       field: "paymentStatus",
-      width: 150,
+      width: 160,
+      minWidth: 130,
+      maxWidth: 200,
       sortable: true,
       filter: true,
       cellRenderer: (params) => {
@@ -79,7 +90,9 @@ const CancelledMembersReport = () => {
     {
       headerName: "Amount",
       field: "amount",
-      width: 120,
+      width: 140,
+      minWidth: 100,
+      maxWidth: 180,
       sortable: true,
       filter: true,
       valueFormatter: (params) => `€${params.value?.toFixed(2) || "0.00"}`,
@@ -87,46 +100,60 @@ const CancelledMembersReport = () => {
     {
       headerName: "Payment Date",
       field: "paymentDate",
-      width: 150,
+      width: 160,
+      minWidth: 130,
+      maxWidth: 200,
       sortable: true,
       filter: true,
     },
     {
       headerName: "Transaction ID",
       field: "transactionId",
-      width: 180,
+      width: 200,
+      minWidth: 150,
+      flex: 1,
       sortable: true,
       filter: true,
     },
   ];
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (currentPage, pageSize) => {
     setLoading(true);
     try {
-      const skip = (pagination.current - 1) * pagination.pageSize;
-      const take = pagination.pageSize;
+      const skip = (currentPage - 1) * pageSize;
+      const take = pageSize;
 
       const result = await reportService.getPayments(filters, skip, take);
       setRowData(result.data || []);
       setTotalRows(result.total || 0);
+      lastPaginationRef.current = { current: currentPage, pageSize };
     } catch (error) {
       console.error("Error fetching data:", error);
       message.error("Failed to fetch report data");
     } finally {
       setLoading(false);
     }
-  }, [filters, pagination]);
+  }, [filters]);
 
   useEffect(() => {
-    fetchData();
-  }, [fetchData]);
+    fetchData(pagination.current, pagination.pageSize);
+  }, [filters, pagination.current, pagination.pageSize, fetchData]);
 
   const handleFilterChange = (key, value) => {
     setFilters((prev) => ({
       ...prev,
       [key]: value,
     }));
-    setPagination((prev) => ({ ...prev, current: 1 }));
+    setPagination((prev) => {
+      if (prev.current !== 1) {
+        return { ...prev, current: 1 };
+      }
+      return prev;
+    });
+    // Reset grid to first page
+    if (gridApiRef.current) {
+      gridApiRef.current.paginationGoToPage(0);
+    }
   };
 
   const handleDateRangeChange = (dates) => {
@@ -136,7 +163,16 @@ const CancelledMembersReport = () => {
         startDate: dates[0].format("YYYY-MM-DD"),
         endDate: dates[1].format("YYYY-MM-DD"),
       }));
-      setPagination((prev) => ({ ...prev, current: 1 }));
+      setPagination((prev) => {
+        if (prev.current !== 1) {
+          return { ...prev, current: 1 };
+        }
+        return prev;
+      });
+      // Reset grid to first page
+      if (gridApiRef.current) {
+        gridApiRef.current.paginationGoToPage(0);
+      }
     }
   };
 
@@ -146,8 +182,12 @@ const CancelledMembersReport = () => {
       await reportService.exportPdf(filters, "cancelled-members");
       message.success("PDF export started");
     } catch (error) {
-      console.error("Error exporting PDF:", error);
-      message.error("Failed to export PDF");
+      const errorMsg = error.message || "Failed to export PDF";
+      message.error(errorMsg);
+      // Only log to console if it's not a 404 (expected when backend not implemented)
+      if (error.status !== 404) {
+        console.error("Error exporting PDF:", error.originalError || error);
+      }
     } finally {
       setLoading(false);
     }
@@ -159,22 +199,49 @@ const CancelledMembersReport = () => {
       await reportService.exportExcel(filters, "cancelled-members");
       message.success("Excel export started");
     } catch (error) {
-      console.error("Error exporting Excel:", error);
-      message.error("Failed to export Excel");
+      const errorMsg = error.message || "Failed to export Excel";
+      message.error(errorMsg);
+      // Only log to console if it's not a 404 (expected when backend not implemented)
+      if (error.status !== 404) {
+        console.error("Error exporting Excel:", error.originalError || error);
+      }
     } finally {
       setLoading(false);
     }
   };
 
   const onGridReady = (params) => {
-    params.api.sizeColumnsToFit();
+    gridApiRef.current = params.api;
+    // Size columns to fit the available width
+    setTimeout(() => {
+      params.api.sizeColumnsToFit();
+    }, 100);
   };
 
-  const onPaginationChanged = (params) => {
+  const onPaginationChanged = useCallback((params) => {
+    if (!gridApiRef.current) return;
+    
     const currentPage = params.api.paginationGetCurrentPage() + 1;
     const pageSize = params.api.paginationGetPageSize();
-    setPagination({ current: currentPage, pageSize });
-  };
+    
+    // Only update state if pagination actually changed
+    // Check both against last fetched pagination and current state to prevent loops
+    setPagination((prev) => {
+      const lastPagination = lastPaginationRef.current;
+      const hasChanged = 
+        prev.current !== currentPage || 
+        prev.pageSize !== pageSize;
+      const isDifferentFromLastFetch = 
+        lastPagination.current !== currentPage || 
+        lastPagination.pageSize !== pageSize;
+      
+      // Only update if pagination changed AND it's different from what we last fetched
+      if (hasChanged && isDifferentFromLastFetch) {
+        return { current: currentPage, pageSize };
+      }
+      return prev;
+    });
+  }, []);
 
   return (
     <div className="cancelled-members-report">
@@ -276,7 +343,11 @@ const CancelledMembersReport = () => {
             </div>
             <div
               className="ag-theme-alpine"
-              style={{ height: "600px", width: "100%" }}
+              style={{ 
+                height: "600px", 
+                width: "100%",
+                overflow: "hidden"
+              }}
             >
               <AgGridReact
                 columnDefs={columnDefs}
@@ -290,6 +361,7 @@ const CancelledMembersReport = () => {
                 animateRows={true}
                 rowSelection="multiple"
                 suppressRowClickSelection={true}
+                suppressHorizontalScroll={false}
                 defaultColDef={{
                   resizable: true,
                   sortable: true,

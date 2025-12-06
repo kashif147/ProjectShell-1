@@ -23,17 +23,26 @@ const lazyWithRetry = (componentImport) => {
       if (
         error?.name === "ChunkLoadError" ||
         error?.message?.includes("Loading chunk") ||
-        error?.message?.includes("Failed to fetch dynamically imported module") ||
+        error?.message?.includes(
+          "Failed to fetch dynamically imported module"
+        ) ||
         error?.message?.includes("ChunkLoadError")
       ) {
         // Schedule reload and return a placeholder component
         setTimeout(() => {
           window.location.reload();
         }, 1000);
-        
+
         return {
           default: () => (
-            <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+            <div
+              style={{
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                height: "100vh",
+              }}
+            >
               <Spin size="large" tip="Reloading application..." />
             </div>
           ),
@@ -47,33 +56,51 @@ const lazyWithRetry = (componentImport) => {
 // Lazy loaded components with retry
 const Dummy = lazyWithRetry(() => import("./component/common/Dummy"));
 const Configuratin = lazyWithRetry(() => import("./pages/Configuratin"));
-const ProfileDetails = lazyWithRetry(() => import("./pages/Profiles/ProfileDetails"));
-const ProfileSummary = lazyWithRetry(() => import("./pages/Profiles/ProfileSummary"));
+const ProfileDetails = lazyWithRetry(() =>
+  import("./pages/Profiles/ProfileDetails")
+);
+const ProfileSummary = lazyWithRetry(() =>
+  import("./pages/Profiles/ProfileSummary")
+);
 const CasesSummary = lazyWithRetry(() => import("./pages/Cases/CasesSummary"));
 const CasesDetails = lazyWithRetry(() => import("./pages/Cases/CasesDetails"));
 const ClaimSummary = lazyWithRetry(() => import("./pages/Claims/ClaimSummary"));
-const ClaimsDetails = lazyWithRetry(() => import("./pages/Claims/ClaimsDetails"));
+const ClaimsDetails = lazyWithRetry(() =>
+  import("./pages/Claims/ClaimsDetails")
+);
 const ClaimsById = lazyWithRetry(() => import("./pages/Claims/ClaimsById"));
 const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
 const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
-const TransferSummary = lazyWithRetry(() => import("./pages/Transfers/TransferSummary"));
+const TransferSummary = lazyWithRetry(() =>
+  import("./pages/Transfers/TransferSummary")
+);
 const CorrespondencesSummary = lazyWithRetry(() =>
   import("./pages/Correspondences/CorrespondencesSummary")
 );
-const AddNewProfile = lazyWithRetry(() => import("./pages/Profiles/AddNewProfile"));
+const AddNewProfile = lazyWithRetry(() =>
+  import("./pages/Profiles/AddNewProfile")
+);
 const AddClaims = lazyWithRetry(() => import("./pages/Claims/AddClaims"));
 const Login = lazyWithRetry(() => import("./pages/auth/Login"));
 const LandingPage = lazyWithRetry(() => import("./component/msft/LandingPage"));
-const Reports = lazyWithRetry(() => import("./pages/repots/Reports"));
-const TempletsSummary = lazyWithRetry(() => import("./pages/templete/TempletsSummary"));
-const TempleteConfig = lazyWithRetry(() => import("./pages/templete/TemplateConfiguration"));
+const Reports = lazyWithRetry(() => import("./pages/reports/Reports"));
+const TempletsSummary = lazyWithRetry(() =>
+  import("./pages/templete/TempletsSummary")
+);
+const TempleteConfig = lazyWithRetry(() =>
+  import("./pages/templete/TemplateConfiguration")
+);
 const CorspndncDetail = lazyWithRetry(() =>
   import("./pages/Correspondences/CorspndncDetail")
 );
 
 const Doucmnets = lazyWithRetry(() => import("./pages/Doucmnets"));
-const RosterDetails = lazyWithRetry(() => import("./pages/roster/RosterDetails"));
-const RusterSummary = lazyWithRetry(() => import("./pages/roster/RusterSummary"));
+const RosterDetails = lazyWithRetry(() =>
+  import("./pages/roster/RosterDetails")
+);
+const RusterSummary = lazyWithRetry(() =>
+  import("./pages/roster/RusterSummary")
+);
 const MembershipApplication = lazyWithRetry(() =>
   import("./pages/application/MembershipApplication")
 );
@@ -83,7 +110,9 @@ const ApplicationMgt = lazyWithRetry(() =>
 const ApproveMembership = lazyWithRetry(() =>
   import("./pages/application/ApproveMembership")
 );
-const ChangCateSumm = lazyWithRetry(() => import("./pages/Category/ChangCateSumm"));
+const ChangCateSumm = lazyWithRetry(() =>
+  import("./pages/Category/ChangCateSumm")
+);
 const CateById = lazyWithRetry(() => import("./pages/Category/CateById"));
 const RemindersSummary = lazyWithRetry(() =>
   import("./pages/reminders/RemindersSummary")
@@ -95,12 +124,16 @@ const CancellationDetail = lazyWithRetry(() =>
 const Batches = lazyWithRetry(() => import("./pages/finance/Batches"));
 const Import = lazyWithRetry(() => import("./pages/finance/Import"));
 const Cheque = lazyWithRetry(() => import("./pages/finance/Cheque"));
-const StandingOrders = lazyWithRetry(() => import("./pages/finance/StandingOrders"));
+const StandingOrders = lazyWithRetry(() =>
+  import("./pages/finance/StandingOrders")
+);
 const BatchMemberSummary = lazyWithRetry(() =>
   import("./pages/finance/BatchMemberSummary")
 );
 const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
-const Reconciliation = lazyWithRetry(() => import("./pages/finance/Reconciliation"));
+const Reconciliation = lazyWithRetry(() =>
+  import("./pages/finance/Reconciliation")
+);
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
@@ -126,17 +159,29 @@ const PermissionManagement = lazyWithRetry(() =>
   import("./pages/permission-management/PermissionManagement")
 );
 const CancelledMembersReport = lazyWithRetry(() =>
-  import("./pages/reports/CancelledMembersReport")
+  import("./features/reports/cancelled-members/CancelledMembersReport")
 );
-const ReportViewerDemo = lazyWithRetry(() => import("./pages/ReportViewerDemo"));
-const AuthorizationExample = lazyWithRetry(() => import("./pages/AuthorizationExample"));
+const ReportViewerDemo = lazyWithRetry(() =>
+  import("./features/reports/report-viewer/ReportViewerDemo")
+);
+const ReportsIndex = lazyWithRetry(() =>
+  import("./features/reports/ReportsIndex")
+);
+const DashboardPage = lazyWithRetry(() =>
+  import("./features/dashboards/membership/DashboardPage")
+);
+const AuthorizationExample = lazyWithRetry(() =>
+  import("./pages/AuthorizationExample")
+);
 const DynamicPermissionsExample = lazyWithRetry(() =>
   import("./pages/DynamicPermissionsExample")
 );
 const DynamicRoutePermissionsExample = lazyWithRetry(() =>
   import("./pages/DynamicRoutePermissionsExample")
 );
-const PolicyClientExample = lazyWithRetry(() => import("./pages/PolicyClientExample"));
+const PolicyClientExample = lazyWithRetry(() =>
+  import("./pages/PolicyClientExample")
+);
 const ProductTypesManagement = lazyWithRetry(() =>
   import("./pages/product-management/ProductTypesManagement")
 );
@@ -295,7 +340,6 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
-                    
 
                     <Route
                       path="ClaimSummary"
@@ -391,7 +435,15 @@ function Entry() {
                       path="Reports"
                       element={
                         <ProtectedRoute>
-                          <Reports />
+                          <ReportsIndex />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="ReportsDashboard"
+                      element={
+                        <ProtectedRoute>
+                          <DashboardPage />
                         </ProtectedRoute>
                       }
                     />

@@ -31,8 +31,12 @@ const ReportViewer = ({ reportType = "default", filters = {} }) => {
       await reportService.exportPdf(filters, reportType);
       message.success("PDF export started");
     } catch (error) {
-      console.error("Error exporting PDF:", error);
-      message.error("Failed to export PDF");
+      const errorMsg = error.message || "Failed to export PDF";
+      message.error(errorMsg);
+      // Only log to console if it's not a 404 (expected when backend not implemented)
+      if (error.status !== 404) {
+        console.error("Error exporting PDF:", error.originalError || error);
+      }
     } finally {
       setLoading(false);
     }
@@ -44,8 +48,12 @@ const ReportViewer = ({ reportType = "default", filters = {} }) => {
       await reportService.exportExcel(filters, reportType);
       message.success("Excel export started");
     } catch (error) {
-      console.error("Error exporting Excel:", error);
-      message.error("Failed to export Excel");
+      const errorMsg = error.message || "Failed to export Excel";
+      message.error(errorMsg);
+      // Only log to console if it's not a 404 (expected when backend not implemented)
+      if (error.status !== 404) {
+        console.error("Error exporting Excel:", error.originalError || error);
+      }
     } finally {
       setLoading(false);
     }

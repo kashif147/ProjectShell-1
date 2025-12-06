@@ -194,8 +194,18 @@ export const reportService = {
 
       return { success: true };
     } catch (error) {
-      console.error("Error exporting PDF:", error);
-      throw error;
+      const errorMessage = error.response?.status === 404
+        ? "PDF export endpoint not found. Please ensure the backend API is configured."
+        : error.response?.status === 401
+        ? "Unauthorized. Please check your authentication."
+        : error.response?.status >= 500
+        ? "Server error. Please try again later."
+        : error.message || "Failed to export PDF";
+      
+      const exportError = new Error(errorMessage);
+      exportError.status = error.response?.status;
+      exportError.originalError = error;
+      throw exportError;
     }
   },
 
@@ -235,8 +245,18 @@ export const reportService = {
 
       return { success: true };
     } catch (error) {
-      console.error("Error exporting Excel:", error);
-      throw error;
+      const errorMessage = error.response?.status === 404
+        ? "Excel export endpoint not found. Please ensure the backend API is configured."
+        : error.response?.status === 401
+        ? "Unauthorized. Please check your authentication."
+        : error.response?.status >= 500
+        ? "Server error. Please try again later."
+        : error.message || "Failed to export Excel";
+      
+      const exportError = new Error(errorMessage);
+      exportError.status = error.response?.status;
+      exportError.originalError = error;
+      throw exportError;
     }
   },
 };
