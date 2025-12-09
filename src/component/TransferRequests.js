@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Table, Input, Space } from "antd";
 import MyDrawer from "./common/MyDrawer";
 import MyInput from "./common/MyInput";
@@ -15,10 +15,18 @@ import dayjs from "dayjs";
 import SubTableComp from "./common/SubTableComp";
 import { useSelector, useDispatch } from "react-redux";
 import { createTransferRequest } from "../features/profiles/TransferRequest";
+// import {  } from "../features/profiles/TransferRequest";
+import { getTransferRequestById, clearSingleTransferRequest  } from "../features/profiles/TransferRequest";
 
 const { Search } = Input;
 
 function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
+    const {
+      singleData,      
+      singleLoading,   
+      singleError      
+    } = useSelector((state) => state.transferRequest);
+    console.log("Single Transfer Request Data:", singleData);
   const onSearch = (value, _e, info) => console.log(info?.source, value);
   const dispatch = useDispatch();
 
@@ -30,6 +38,21 @@ function TransferRequests({ open, onClose, isSearch, isChangeCat }) {
     transferDate: "",
     memo: "",
   });
+
+  // useEffect(() => {
+  //   // When singleData from Redux updates, populate the form
+  //   if (singleData) {
+  //     setFormData((prev) => ({
+  //       ...prev,
+  //       newWorkLocation: singleData.requestedWorkLocationName || "",
+  //       newBranch: singleData.requestedBranchName || "",
+  //       newRegion: singleData.requestedRegionName || "",
+  //       newDescription: singleData.reason || "", // Assuming 'reason' maps to 'newDescription'
+  //       transferDate: singleData.transferDate ? dayjs(singleData.transferDate, "DD/MM/YYYY") : "",
+  //       memo: singleData.notes || "", // Assuming 'notes' maps to 'memo'
+  //     }));
+  //   }
+  // }, [singleData]);
 
   const [errors, setErrors] = useState({});
   const { history, loading } = useSelector(
@@ -117,6 +140,7 @@ console.log(history,"lp")
       memo: "",
     });
     setErrors({});
+    dispatch(clearSingleTransferRequest());
   };
   const onSubmit = () => {
     const requiredFields = ["newWorkLocation", "transferDate"];
@@ -268,7 +292,7 @@ console.log(history,"lp")
                 label="Work Location"
                 name="newWorkLocation"
                 value={formData.newWorkLocation}
-                onChange={handleChange}
+                onChange={(name, value) => handleChange(name, value)}
                 required
                 options={workLocations.map((loc) => ({
                   value: loc,
@@ -295,6 +319,14 @@ console.log(history,"lp")
                   value: region,
                   label: region,
                 }))}
+              />
+              <MyInput
+                label="Transfer Reason"
+                name="newDescription"
+                type="textarea"
+                placeholder="Enter reason"
+                value={formData.newDescription}
+                onChange={(e) => handleChange("newDescription", e.target.value)}
               />
               <MyInput
                 label="Memo"

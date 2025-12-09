@@ -18,7 +18,6 @@ export const createTransferRequest = createAsyncThunk(
   }
 );
 
-
 export const getTransferRequest = createAsyncThunk(
   "transferRequest/getTransferRequest",
   async (_, { rejectWithValue }) => {
@@ -42,17 +41,51 @@ export const getTransferRequest = createAsyncThunk(
   }
 );
 
+// NEW: Get transfer request by ID from API
+export const getTransferRequestById = createAsyncThunk(
+  "transferRequest/getById",
+  async (transferRequestId, { rejectWithValue }) => {
+    debugger
+    try {
+      const token = localStorage.getItem("token");
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/transfer-request/${transferRequestId}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
+debugger
+      console.log("API RESPONSE by ID", response.data);
+      return response.data;
+    } catch (error) {
+      console.log("API ERROR by ID", error);
+      return rejectWithValue(error.response?.data || error.message);
+    }
+  }
+);
 
 const transferRequestSlice = createSlice({
   name: "transferRequest",
   initialState: {
-    data: null,
-    getLoading: false, // Renamed for clarity
-    getError: null,   // Renamed for clarity
+    data: null, // All transfer requests
+    getLoading: false,
+    getError: null,
     createLoading: false,
     createError: null,
+    
+    // NEW: State for single transfer request by ID
+    singleData: null,
+    singleLoading: false,
+    singleError: null,
   },
-  reducers: {},
+  reducers: {
+    // NEW: Clear single transfer request data
+    clearSingleTransferRequest: (state) => {
+      state.singleData = null;
+      state.singleError = null;
+    },
+  },
   extraReducers: (builder) => {
     builder
       .addCase(getTransferRequest.pending, (state) => {
@@ -73,12 +106,30 @@ const transferRequestSlice = createSlice({
       })
       .addCase(createTransferRequest.fulfilled, (state, action) => {
         state.createLoading = false;
+        // Optionally update the list if needed
       })
       .addCase(createTransferRequest.rejected, (state, action) => {
         state.createLoading = false;
         state.createError = action.payload;
+      })
+      
+      // NEW: Cases for getTransferRequestById
+      .addCase(getTransferRequestById.pending, (state) => {
+        state.singleLoading = true;
+        state.singleError = null;
+      })
+      .addCase(getTransferRequestById.fulfilled, (state, action) => {
+        state.singleLoading = false;
+        state.singleData = action.payload;
+      })
+      .addCase(getTransferRequestById.rejected, (state, action) => {
+        state.singleLoading = false;
+        state.singleError = action.payload;
       });
   },
 });
+
+// Export the new action
+export const { clearSingleTransferRequest } = transferRequestSlice.actions;
 
 export default transferRequestSlice.reducer;

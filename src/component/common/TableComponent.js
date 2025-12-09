@@ -495,29 +495,23 @@ const TableComponent = ({
                   </Link>
                 );
               case "Batch Name":
+                const simpleBatchPaths = [
+                  "/CornMarket",
+                  "/NewGraduate",
+                  "/CornMarketRewards",
+                ];
+                const isSimpleBatch = simpleBatchPaths.includes(location.pathname);
+                const targetPath = isSimpleBatch
+                  ? "/SimpleBatchMemberSummary"
+                  : "/BatchMemberSummary";
+
                 return (
                   <Link
-                    to="/BatchMemberSummary"
+                    to={targetPath}
                     state={{
                       search: screenName,
                       batchName: text,
                       batchId: record?.id || record?.key,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      const batchPaths = [
-                        "/Batches",
-                        "/Import",
-                        "/onlinePayment",
-                        "/Cheque",
-                        "/StandingOrders",
-                        "/Deductions",
-                      ];
-                      if (batchPaths.includes(location.pathname)) {
-                        const batch = getBatchById(record?.id);
-                        if (batch) setExcelData(batch);
-                      }
                     }}
                     style={{ color: 'inherit', textDecoration: 'none' }}
                   >

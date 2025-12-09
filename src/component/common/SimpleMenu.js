@@ -29,7 +29,9 @@ import CareerBreakDrawer from "../CareerBreakDrawer";
 import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import ContactDrawer from "./ContactDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import { getTransferRequestById } from "../../features/profiles/TransferRequest";
 
+import { clearSingleTransferRequest } from "../../features/profiles/TransferRequest";
 import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
 import { useDispatch } from "react-redux";
 function SimpleMenu({
@@ -85,6 +87,16 @@ function SimpleMenu({
     );
     setCheckboxes(filteredResults);
   };
+
+  useEffect(() => {
+    if (transferreq && record?._id) {
+      // When the drawer is set to open, dispatch all data fetching actions
+      dispatch(getTransferRequestHistoryById(record._id));
+      dispatch(getProfileDetailsById(record._id));
+      dispatch(getTransferRequestById(record._id));
+      getProfile(record, index);
+    }
+  }, [transferreq, record, index, dispatch, getProfile]);
 
   const updateSelectedTitlesA = (title, isChecked) => {
     setCheckboxes((prevProfile) =>
@@ -227,10 +239,8 @@ function SimpleMenu({
                   className="d-flex align-items-baseline"
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent menu from closing
-                    settransferreq(true);
-                    dispatch(getTransferRequestHistoryById(record?._id));
-                    dispatch(getProfileDetailsById(record?._id));
-                    getProfile(record, index);
+                    settransferreq(true); // Just set the state to open the drawer
+                   getTransferRequestById(record)
                   }}
                 >
                   <FaRegArrowAltCircleRight
@@ -360,7 +370,11 @@ function SimpleMenu({
       {/* Drawers */}
       <TransferRequests
         open={transferreq}
-        onClose={() => settransferreq(false)} // This was the issue, it was being passed a boolean
+        onClose={() => {
+          settransferreq(false);
+          // Clear the single transfer request data when closing the drawer
+          dispatch(clearSingleTransferRequest());
+        }}
         isSearch={false}
         formData={formData}
         handleChange={(field, value) =>

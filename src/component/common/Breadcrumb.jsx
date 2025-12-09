@@ -320,12 +320,12 @@ const Breadcrumb = () => {
     // New Graduate & Newly Joint
     "/NewGraduate": {
       module: "Subscriptions & Rewards",
-      page: "New Graduate",
+      page: "Cornmarket New Graduate",
       icon: "🎓",
     },
-    "/NewlyJoint": {
+    "/CornMarketRewards": {
       module: "Subscriptions & Rewards",
-      page: "Newly Joint",
+      page: "CornMarket Rewards",
       icon: "🤝",
     },
   };

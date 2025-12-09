@@ -1,7 +1,7 @@
 import React from "react";
 import TableComponent from "../../component/common/TableComponent";
 
-function NewlyJoint() {
+function CornMarketRewards() {
   const tableData = [
     {
       key: "1",
@@ -42,9 +42,9 @@ function NewlyJoint() {
   ];
   return (
     <div className="" style={{ width: "100%" }}>
-      <TableComponent data={tableData} screenName="NewlyJoint" />
+      <TableComponent data={tableData} screenName="CornMarketRewards" />
     </div>
   );
 }
 
-export default NewlyJoint;
+export default CornMarketRewards;

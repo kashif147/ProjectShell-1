@@ -54,6 +54,7 @@ import MultiFilterDropdown from "./MultiFilterDropdown";
 import SaveViewMenu from "./SaveViewMenu";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
+import SimpleBatch from "../../pages/membership/SimpleBatch";
 import Toolbar from "./Toolbar";
 
 function HeaderDetails() {
@@ -75,6 +76,7 @@ function HeaderDetails() {
   const [rosterDrawer, setrosterDrawer] = useState(false);
   const [isBatchOpen, setIsBatchOpen] = useState(false);
   const batchFormRef = useRef(null);
+  const [isSimpleBatchOpen, setIsSimpleBatchOpen] = useState(false);
   const [aprove, setaprove] = useState("001");
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
@@ -524,6 +526,8 @@ function HeaderDetails() {
             location?.pathname == "/ChangCateSumm" ||
             location?.pathname == "/RemindersSummary" ||
             location?.pathname == "/Cancallation" ||
+            location?.pathname == "/NewGraduate" ||
+            location?.pathname == "/CornMarketRewards" ||
             location?.pathname == "/CornMarket" ||
             location?.pathname == "/Batches" ||
             location?.pathname == "/Import" ||
@@ -584,12 +588,15 @@ function HeaderDetails() {
                                   setTransferDrawer(!TransferDrawer);
                                 else if (nav === "/RosterSummary")
                                   setrosterDrawer(!rosterDrawer);
-                                else if (nav === "/Summary")
-                                  navigate('/applicationMgt')
+                                else if (nav === "/Summary") navigate('/applicationMgt');
                                 else if (
-                                  nav === "/RemindersSummary" ||
-                                  nav === "/Cancallation" ||
-                                  nav === "/Batches" ||
+                                  nav === "/CornMarket" ||
+                                  nav === "/NewGraduate" ||
+                                  nav === "/CornMarketRewards"
+                                ) {
+                                  setIsSimpleBatchOpen(true);
+                                }
+                                else if (
                                   nav === "/Import" ||
                                   nav === "/onlinePayment" ||
                                   nav === "/Deductions" ||
@@ -1040,6 +1047,10 @@ function HeaderDetails() {
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(false)}
+      />
+      <SimpleBatch
+        open={isSimpleBatchOpen}
+        onClose={() => setIsSimpleBatchOpen(false)}
       />
     </div>
   );

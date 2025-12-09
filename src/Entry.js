@@ -99,6 +99,9 @@ const StandingOrders = lazyWithRetry(() => import("./pages/finance/StandingOrder
 const BatchMemberSummary = lazyWithRetry(() =>
   import("./pages/finance/BatchMemberSummary")
 );
+const SimpleBatchMemberSummary = lazyWithRetry(() =>
+  import("./pages/membership/SimpleBatchMemberSummary")
+);
 const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
 const Reconciliation = lazyWithRetry(() => import("./pages/finance/Reconciliation"));
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
@@ -569,6 +572,14 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
+                <Route
+                  path="SimpleBatchMemberSummary"
+                  element={
+                    <ProtectedRoute>
+                      <SimpleBatchMemberSummary />
+                    </ProtectedRoute>
+                  }
+                />
 
                     <Route
                       path="NotDesignedYet"
@@ -779,7 +790,7 @@ function Entry() {
                       }
                     />
                     <Route
-                      path="NewlyJoint"
+                      path="CornMarketRewards"
                       element={
                         <ProtectedRoute>
                           <NewlyJoint />

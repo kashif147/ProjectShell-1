@@ -32,7 +32,7 @@ const mockMembers = [
   },
 ];
 
-const MemberSearch = () => {
+const MemberSearch = ({fullWidth=false}) => {
   const { disableFtn } = useTableColumns();
   const [options, setOptions] = useState([]);
   const [searchValue, setSearchValue] = useState("");
@@ -126,7 +126,7 @@ const MemberSearch = () => {
   };
 
   return (
-    <div style={{ width: "20rem" }}>
+    <div style={{ width: fullWidth ? "100%" : "20rem" }}>
       <AutoComplete
         style={{ width: "100%" }}
         options={options}
