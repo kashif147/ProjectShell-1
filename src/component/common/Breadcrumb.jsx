@@ -328,6 +328,12 @@ const Breadcrumb = () => {
       page: "CornMarket Rewards",
       icon: "🤝",
     },
+    "/RecruitAFriend": {
+      module: "Subscriptions & Rewards",
+      page: "Recruit a Friend",
+      icon: "FaUserFriends",
+
+    },
   };
 
   // Get breadcrumb data for current route

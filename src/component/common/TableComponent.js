@@ -509,6 +509,7 @@ const TableComponent = ({
                 "/CornMarket",
                 "/NewGraduate",
                 "/CornMarketRewards",
+                "/RecruitAFriend",
               ];
               const isSimpleBatch = simpleBatchPaths.includes(location.pathname);
               const targetPath = isSimpleBatch

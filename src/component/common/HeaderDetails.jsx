@@ -528,6 +528,7 @@ function HeaderDetails() {
             location?.pathname == "/Cancallation" ||
             location?.pathname == "/NewGraduate" ||
             location?.pathname == "/CornMarketRewards" ||
+            location?.pathname == "/RecruitAFriend" ||
             location?.pathname == "/CornMarket" ||
             location?.pathname == "/Batches" ||
             location?.pathname == "/Import" ||
@@ -592,7 +593,8 @@ function HeaderDetails() {
                                 else if (
                                   nav === "/CornMarket" ||
                                   nav === "/NewGraduate" ||
-                                  nav === "/CornMarketRewards"
+                                  nav === "/CornMarketRewards" ||
+                                  nav === "/RecruitAFriend"
                                 ) {
                                   setIsSimpleBatchOpen(true);
                                 }

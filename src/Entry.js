@@ -151,6 +151,9 @@ const ProductManagementDemo = lazyWithRetry(() =>
 // );
 const NewGraduate = lazyWithRetry(() => import("./pages/membership/NewGraduate"));
 const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
+const RecruitAFriend = lazyWithRetry(() =>
+  import("./pages/membership/RecruitAFriend")
+);
 
 function Entry() {
   const location = useLocation();
@@ -794,6 +797,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <NewlyJoint />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="RecruitAFriend"
+                      element={
+                        <ProtectedRoute>
+                          <RecruitAFriend />
                         </ProtectedRoute>
                       }
                     />

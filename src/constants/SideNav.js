@@ -332,6 +332,15 @@ export const subscriptionItems = [
     ),
     label: <div className="sidebar-label">Recruit a Friend</div>,
   },
+  {
+    key: "Recruit a Friend",
+    icon: (
+      <div className="icon">
+        <FaUserFriends />
+      </div>
+    ),
+    label: <div className="sidebar-label">Recruit a Friend</div>,
+  },
 ];
 export const configurationItems = [
   {

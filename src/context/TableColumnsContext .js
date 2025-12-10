@@ -1683,6 +1683,48 @@ const staticColumns = {
       width: 100,
     },
   ],
+  RecruitAFriend: [
+    {
+      dataIndex: "batchName",
+      title: "Batch Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "batchDate",
+      title: "Batch Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "batchStatus",
+      title: "Batch Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+  ],
   Batches: [
     {
       dataIndex: "batchName",

@@ -136,6 +136,7 @@ baseMenuItems.forEach((item, index) => {
       "/PolicyClientExample": "Policy Client Example",
       "/NewGraduate": "CornMarket New Graduate",
       "/CornMarketRewards": "CornMarket Rewards",
+      "/RecruitAFriend": "Recruit a Friend",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -277,6 +278,9 @@ baseMenuItems.forEach((item, index) => {
         break;
       case "CornMarket Rewards":
         navigate("/CornMarketRewards", { state: { search: "CornMarket Rewards" } });
+        break;
+      case "Recruit a Friend":
+        navigate("/RecruitAFriend", { state: { search: "Recruit a Friend" } });
         break;
       default:
         navigate("/NotDesignedYet");
