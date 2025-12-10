@@ -391,7 +391,10 @@ function TransferRequests({ open, onClose }) {
 
         <div>
           <h4 className="mt-2 mb-3">Transfer History</h4>
-          <Table columns={columnHistory} dataSource={transferHistory} loading={!filteredData} pagination={false} />
+          <Table 
+          className='claims-table' 
+          bortdered
+          columns={columnHistory} dataSource={transferHistory} loading={!filteredData} pagination={false} />
           {/* <SubTableComp
             columns={columnHistory}
             dataSource={transferHistory}

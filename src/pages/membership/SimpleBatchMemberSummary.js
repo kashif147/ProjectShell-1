@@ -1,11 +1,10 @@
-import React from "react";
+import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
-import { Row, Col, Card, Typography } from "antd";
+import { Row, Col, Button, Space, Tabs } from "antd";
 import moment from "moment";
 import TableComponent from "../../component/common/TableComponent";
 import { tableData } from "../../Data"; // Assuming batch data comes from here
-
-const { Title, Text } = Typography;
+import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 
 const inputStyle = {
   width: "100%",
@@ -21,6 +20,7 @@ const inputStyle = {
 function SimpleBatchMemberSummary() {
   const location = useLocation();
   const { batchName, batchId } = location.state || {};
+  const [activeKey, setActiveKey] = useState("1");
 
   // Find the current batch data. In a real app, this would be an API call.
   const currentBatch = tableData.find(
@@ -37,6 +37,54 @@ function SimpleBatchMemberSummary() {
   };
 
   const displayBatchDate = getSafeDate(batchInfo.batchDate);
+
+  const items = [
+    {
+      key: "1",
+      label: "Batch Payments",
+      children: (
+        <div
+          className="common-table"
+          style={{
+            paddingLeft: "34px",
+            paddingRight: "34px",
+            width: "100%",
+            overflow: "hidden",
+          }}
+        >
+          <TableComponent data={members} screenName="BatchMemberSummary" />
+        </div>
+      ),
+    },
+    {
+      key: "2",
+      label: "Exceptions",
+      children: (
+        <div
+          className="common-table"
+          style={{
+            paddingLeft: "34px",
+            paddingRight: "34px",
+            width: "100%",
+            overflow: "hidden",
+          }}
+        >
+          <TableComponent data={[]} screenName="BatchMemberSummary" />
+        </div>
+      ),
+    },
+  ];
+
+  const onChange = (key) => {
+    setActiveKey(key);
+  };
+
+  const buttonStyle = {
+    backgroundColor: "#215e97",
+    color: "white",
+    borderRadius: "3px",
+    width: "100%",
+  };
 
   return (
     <div>
@@ -69,7 +117,25 @@ function SimpleBatchMemberSummary() {
         </Col>
       </Row>
 
-      <TableComponent data={members} screenName="BatchMemberSummary" />
+      {/* Buttons */}
+      <Row
+        gutter={[16, 16]}
+        style={{ paddingLeft: "35px", paddingRight: "35px", paddingBottom: "20px" }}
+      >
+        <Col span={4}>
+          <Space>
+            <Button style={buttonStyle}>
+              Include
+            </Button>
+            <CommonPopConfirm
+              title="Do you want to exclude member?"
+            >
+              <Button style={buttonStyle}>Exclude Members</Button>
+            </CommonPopConfirm>
+          </Space>
+        </Col>
+      </Row>
+      <Tabs activeKey={activeKey} items={items} onChange={onChange} className="batch-tabs" />
     </div>
   );
 }
