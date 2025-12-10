@@ -4,7 +4,6 @@
 import { configureStore } from "@reduxjs/toolkit";
 import authReducer from "../features/AuthSlice"; // Auth slice
 import regionReducer from "../features/RegionSlice"; // Region slice
-// import lookupsTypeReducer from '../features/RegionSlice';
 import lookupsTypeReducer from "../features/LookupTypeSlice";
 import lookupsReducer from "../features/LookupsSlice";
 import regionTypeReducer from "../features/RegionTypeSlice";
@@ -13,8 +12,6 @@ import childrenReducer from "../features/ChildrenSlice";
 import refreshReducer from "../features/RefreshSlice";
 import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice";
-// import countriesReducer from './countrySlice';
-// import countriesReducer from "../features/CountrySlice";
 import menuLblReducer from "../features/MenuLblSlice";
 import applicationReducer from "../features/ApplicationSlice";
 import applicationDetailsReducer from "../features/ApplicationDetailsSlice";
@@ -28,7 +25,6 @@ import productsReducer from "../features/ProductsSlice";
 import productTypesWithProductsReducer from "../features/ProducttypeWithProducts";
 import lookupsWorkLocationReducer from '../features/LookupsWorkLocationSlice';
 import categoryLookupReducer from '../features/CategoryLookupSlice';
-// import lookupHierarchyReducer from '../features/lookupHierarchySlice';
 import hierarchicalLookupsReducer from '../features/lookupHierarchySlice';
 import hierarchicalDataByLocationReducer from '../features/HierarchicalDataByLocationSlice';
 import countriesReducer from "../features/CountriesSlice"; // Countries slice
@@ -41,6 +37,7 @@ import getTemplateReducer from "../features/templete/GetTemplateSlice";
 import templeteDetailsReducer from "../features/templete/templeteDetailsSlice"; 
 import transferRequestReducer from '../features/profiles/TransferRequest';
 import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
+import filterTransferReducer from '../features/profiles/filterTransferSlice';
 
 const store = configureStore({
   reducer: {
@@ -52,6 +49,7 @@ const store = configureStore({
     regionTypes: regionTypeReducer,
     categoryLookup: categoryLookupReducer,
     partner: partnerReducer,
+    filterTransfer: filterTransferReducer,
     children: childrenReducer,
     hierarchicalLookups: hierarchicalLookupsReducer,
     refresh: refreshReducer,

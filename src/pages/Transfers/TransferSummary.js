@@ -1,8 +1,13 @@
 import React, { useEffect } from "react";
-
+import dayjs from "dayjs";
 import TableComponent from "../../component/common/TableComponent";
 import { getTransferRequest } from "../../features/profiles/TransferRequest";
 import { useDispatch, useSelector } from "react-redux"
+import utc from "dayjs/plugin/utc";
+import timezone from "dayjs/plugin/timezone";
+// Extend dayjs with plugins
+dayjs.extend(utc);
+dayjs.extend(timezone);
 function TransferSummary() {
   const { data, loading, error } = useSelector((state) => state.transferRequest);
   const dispatch = useDispatch();
@@ -10,12 +15,26 @@ function TransferSummary() {
     dispatch(getTransferRequest());
   }, [])
   console.log("Transfer Request Page", data?.data);
-  const transferData = data?.data || []
+  // const transferData = data?.data || []
+   const transferData = data?.data ? data.data.map(item => ({
+    ...item,
+    // Convert requestDate to local time and format as DD/MM/YYYY
+    requestDate: item.requestDate 
+      ? dayjs(item.requestDate).local().format("DD/MM/YYYY")
+      : "",
+    // If there are other date fields, format them too
+    ...(item.createdAt && { 
+      createdAt: dayjs(item.createdAt).local().format("DD/MM/YYYY HH:mm") 
+    }),
+    ...(item.updatedAt && { 
+      updatedAt: dayjs(item.updatedAt).local().format("DD/MM/YYYY HH:mm") 
+    }),
+  })) : [];
   const transferDataSource = []
 
   return (
     <div className="">
-      <TableComponent data={transferData} screenName="Transfer" redirect="/Details" />
+      <TableComponent data={transferData} isGrideLoading={loading} screenName="Transfer" redirect="/Details" />
     </div>
   );
 }

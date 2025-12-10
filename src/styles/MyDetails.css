@@ -149,7 +149,8 @@ input {
   background-color: var(--secoundry-bg-color);
   color: var(--secoundry-color);
   display: flex;
-  justify-content: space-around;
+  justify-content: space-between;
+  
   align-items: center;
 }
 

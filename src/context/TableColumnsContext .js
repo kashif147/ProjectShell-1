@@ -911,7 +911,7 @@ const staticColumns = {
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 200,
     },
     {
       dataIndex: "requestedWorkLocationName",
@@ -919,7 +919,7 @@ const staticColumns = {
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 170,
+      width: 200,
     },
     {
       dataIndex: "reason",
