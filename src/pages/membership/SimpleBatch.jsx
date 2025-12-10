@@ -41,7 +41,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     >
     <div className="drawer-main-cntainer"  style={{ padding: "16px" }}>
         <Row gutter={16}>
-          <Col span={24}>
+          {/* <Col span={24}>
             <CustomSelect
               label="Batch Type:"
               options={batchTypes}
@@ -49,7 +49,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
               onChange={(e) => handleChange("batchType", e.target.value)}
               required
             />
-          </Col>
+          </Col> */}
           <Col span={24}>
             <MyInput label="Batch Name:" value={formData.batchName} onChange={(e) => handleChange("batchName", e.target.value)} required />
           </Col>

@@ -8,8 +8,12 @@ export const getProfileDetailsById = createAsyncThunk(
   "profileDetails/getProfileDetailsById",
   async (id, { rejectWithValue }) => {
     try {
+      const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/profile/${id}`
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/profile/${id}`,
+        {
+          headers: { Authorization: `Bearer ${token}` },
+        }
       );
 
       // API format: { status: "success", data: {...} }

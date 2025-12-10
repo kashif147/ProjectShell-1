@@ -9,15 +9,19 @@ import {
   Modal,
   Flex,
   Tooltip,
+  Select,
+  Input
 } from "antd";
-import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { MailOutlined, EnvironmentOutlined, SearchOutlined } from "@ant-design/icons";
+
+import MemberSearch from "../profile/MemberSearch";
 import dayjs from "dayjs";
 import axios from "axios";
 import { dateUtils } from "../../utils/Utilities";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
@@ -29,18 +33,21 @@ import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
-import MemberSearch from "../profile/MemberSearch";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
+import { searchProfiles, clearResults } from '../../features/profiles/SearchProfile';
 import {
   InsuranceScreen,
-  RewardsScreen,
+  RewardsScreen
 } from "../profile/IncomeProtectionTooltip";
+import debounce from "lodash.debounce";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
+const { Search: AntdSearch } = Input;
+const { Option } = Select;
 function ApplicationMgtDrawer({
   open,
   onClose,
@@ -94,7 +101,27 @@ function ApplicationMgtDrawer({
     open: false,
     type: null, // 'approve' or 'reject'
   });
+  const [query, setQuery] = useState('');
+  const { profileSearchData } = useSelector(
+    (state) => state.searchProfile
+  );
+  const handleSearch = (value) => {
+    const trimmedQuery = value.trim();
 
+    if (!trimmedQuery) {
+      dispatch(clearResults());
+      return;
+    }
+
+    setQuery(trimmedQuery);
+    dispatch(searchProfiles(trimmedQuery));
+  };
+
+  // Handle clear
+  const handleClear = () => {
+    setQuery('');
+    dispatch(clearResults());
+  };
   const { state } = useLocation();
   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
@@ -125,6 +152,7 @@ function ApplicationMgtDrawer({
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries
   );
+
 
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
@@ -204,6 +232,7 @@ function ApplicationMgtDrawer({
         otherScheme: apiData?.subscriptionDetails?.otherScheme || false,
         recuritedBy: apiData?.subscriptionDetails?.recuritedBy || "",
         recuritedByMembershipNo:
+
           apiData?.subscriptionDetails?.recuritedByMembershipNo || "",
         primarySection: apiData?.subscriptionDetails?.primarySection || "",
         otherPrimarySection:
@@ -219,6 +248,8 @@ function ApplicationMgtDrawer({
         termsAndConditions:
           apiData?.subscriptionDetails?.termsAndConditions || false,
         membershipCategory: apiData?.subscriptionDetails?.membershipCategory,
+        confirmedRecruiterProfileId:
+          apiData?.subscriptionDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(
           apiData?.subscriptionDetails?.dateJoined || new Date()
         ),
@@ -3267,9 +3298,52 @@ function ApplicationMgtDrawer({
                   }
                 />
               </Col>
-              <Col xs={24} md={12}>
-              <label className="my-input-label">Validate Recruited By</label>
-                <MemberSearch fullWidth={true} />
+              <Col span={12}>
+                <label className="my-input-label">
+                  Validate Recruited By Membership No
+                </label>
+                <div style={{
+                  display: 'flex',
+                  marginBottom: '20px',
+                  height: '40px'
+                }}>
+                  <Input
+                  disabled={isDisable}
+                    placeholder="Search by name or membership number"
+                    allowClear
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onPressEnter={() => handleSearch(query)}
+                    style={{
+                      flex: 1,
+                      border: '1px solid #d9d9d9',
+                      borderRight: 'none',
+                      borderRadius: '6px 0 0 6px',
+                      height: '40px',
+                      paddingLeft:4,
+                      paddingRight:4,
+                    }}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    onClick={() => handleSearch(query)}
+                    loading={loading}
+                    style={{
+                      backgroundColor: '#215e97',
+                      borderColor: '#215e97',
+                      borderRadius: '0 4px 4px 0',
+                      height: '40px',
+                      width: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderLeft: 'none'
+                    }}
+                  >
+                    Search
+                  </Button>
+                </div>
               </Col>
               {/* Sections */}
               <Col xs={24} md={12}>

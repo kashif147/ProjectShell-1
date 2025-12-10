@@ -628,7 +628,7 @@ const TableComponent = ({
             ]
             : col.title === "Approval Status"
               ? [
-                { text: "Approved", value: "Approved" },
+                { text: "Approved", value: "APPROVED" },
                 { text: "Pending", value: "Pending" },
                 { text: "Rejected", value: "Rejected" },
               ]
