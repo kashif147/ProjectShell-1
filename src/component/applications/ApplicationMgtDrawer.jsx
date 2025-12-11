@@ -3300,7 +3300,7 @@ function ApplicationMgtDrawer({
               </Col>
               <Col span={12}>
                 <label className="my-input-label">
-                  Validate Recruited By Membership No
+                  Validate Recruited By Information
                 </label>
                 <div style={{
                   display: 'flex',

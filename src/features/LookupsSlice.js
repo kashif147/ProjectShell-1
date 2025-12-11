@@ -8,6 +8,21 @@ const getAuthHeaders = () => ({
   "Content-Type": "application/json",
 });
 
+// Sort utility function
+const sortArray = (array, key, order = 'asc') => {
+  if (!Array.isArray(array)) return [];
+  
+  return [...array].sort((a, b) => {
+    const aValue = a[key] || '';
+    const bValue = b[key] || '';
+    
+    const comparison = String(aValue).toLowerCase()
+      .localeCompare(String(bValue).toLowerCase());
+    
+    return order === 'desc' ? -comparison : comparison;
+  });
+};
+
 // Only GET operation
 export const getAllLookups = createAsyncThunk(
   "lookups/getAllLookups",
@@ -100,6 +115,8 @@ const lookupsSlice = createSlice({
         state.error = null;
         state.lastErrorTime = null;
         state.lookups = payload;
+        
+        // Reset all arrays
         state.titleOptions = [];
         state.genderOptions = [];
         state.workLocationOptions = [];
@@ -184,6 +201,19 @@ const lookupsSlice = createSlice({
         if (state.workLocationOptions.length > 0) {
           state.workLocationOptions.push(otherOption);
         }
+
+        // Sort all arrays in ascending order by label
+        state.titleOptions = sortArray(state.titleOptions, 'label', 'asc');
+        state.genderOptions = sortArray(state.genderOptions, 'label', 'asc');
+        state.workLocationOptions = sortArray(state.workLocationOptions, 'label', 'asc');
+        state.gradeOptions = sortArray(state.gradeOptions, 'label', 'asc');
+        state.sectionOptions = sortArray(state.sectionOptions, 'label', 'asc');
+        state.membershipCategoryOptions = sortArray(state.membershipCategoryOptions, 'label', 'asc');
+        state.paymentTypeOptions = sortArray(state.paymentTypeOptions, 'label', 'asc');
+        state.branchOptions = sortArray(state.branchOptions, 'label', 'asc');
+        state.regionOptions = sortArray(state.regionOptions, 'label', 'asc');
+        state.secondarySectionOptions = sortArray(state.secondarySectionOptions, 'label', 'asc');
+        state.countryOptions = sortArray(state.countryOptions, 'label', 'asc');
       })
       .addCase(getAllLookups.rejected, (state, action) => {
         state.loading = false;
