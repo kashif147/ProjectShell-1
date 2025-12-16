@@ -1,26 +1,44 @@
 import { Modal } from "antd";
 
 const MyConfirm = ({ title, message, onConfirm }) => {
-  Modal.confirm({
+  const modal = Modal.confirm({
     title: title || "Confirm",
     content: message || "Are you sure?",
     okText: "Yes",
     cancelText: "No",
-    onOk: onConfirm,
-    onCancel: () => Modal.destroyAll(),
+    
+    // Add loading state management
     okButtonProps: {
       className: "custom-confirm-ok-button",
+      // Remove loading: true here if it exists
     },
-    cancelButtonProps: {
-      style: { color: "#000" },
+    
+    onOk: async () => {
+      try {
+        if (typeof onConfirm === "function") {
+          await onConfirm();
+        }
+        // Modal will close automatically after onOk resolves
+        return Promise.resolve();
+      } catch (error) {
+        // If error is thrown, modal stays open (Ant Design behavior)
+        return Promise.reject(error);
+      }
     },
-    // 👇 this moves modal to bottom-center
+    
+    onCancel: () => {
+      Modal.destroyAll();
+    },
+    
+    // Your existing styles
     style: {
       top: "auto",
-      bottom: "40px", // distance from bottom
+      bottom: "40px",
       margin: "0 auto",
     },
-    className: "custom-bottom-modal", // optional if you want to add more CSS
+    className: "custom-bottom-modal",
   });
+  
+  return modal;
 };
 export default MyConfirm;

@@ -233,7 +233,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        "https://userserviceshell-aqf6f0b8fqgmagch.canadacentral-01.azurewebsites.net/auth/azure-crm",
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/azure-crm`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },

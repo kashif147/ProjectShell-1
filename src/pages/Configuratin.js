@@ -14,6 +14,7 @@ import {
   Divider,
   Checkbox,
   Button,
+  Modal
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import {
@@ -107,8 +108,7 @@ function Configuratin() {
     isCoum
   ) => {
     const token = localStorage.getItem("token");
-
-    // Determine the base URL based on isCoum flag
+    debugger
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
@@ -119,12 +119,13 @@ function Configuratin() {
         },
       });
 
-      // ✅ Handle all success codes (200–299)
       if (response.status >= 200 && response.status < 300) {
-        MyAlert("success", successNotification);
+        setTimeout(() => {
+          MyAlert("success", successNotification);
+        }, 100);
+        // MyAlert("success", successNotification);
         if (typeof callback === "function") {
           console.log("✅ Executing callback");
-          callback();
         }
         return response.data; // This returns data
       }
@@ -249,15 +250,14 @@ function Configuratin() {
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
       let finalEndPoint = endPoint;
-      if (data1?.id && !endPoint.includes(data1.id)) {
-        finalEndPoint = `${endPoint}/${data1.id}`;
-      }
-
-      const { id, ...finalData } = data1;
+      debugger
+      // const { id, ...finalData } = data1;
+      // const { id, ...finalData } = data1;
+      debugger
 
       const response = await axios.put(
         `${baseUrl}${finalEndPoint}`,
-        finalData,
+        data1,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -335,17 +335,15 @@ function Configuratin() {
     body = null,
     callback,
     showAlert = true,
-    isCoum = false
+    isCoum = false,
+    refreshData = true // New parameter
   ) => {
     const token = localStorage.getItem("token");
 
-    // ✅ Determine base URL based on isCoum flag
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
-
-    // ✅ Construct URL - only add /api/ for non-CUMM requests
     const finalUrl = isCoum
-      ? `${baseUrl}/${url1}` // No /api/ for CUMM service
-      : `${baseUrl}/api${url1.startsWith("/") ? url1 : `/${url1}`}`; // Add /api/ for regular service
+      ? `${baseUrl}/${url1}`
+      : `${baseUrl}/api${url1.startsWith("/") ? url1 : `/${url1}`}`;
 
     const config = {
       method: "delete",
@@ -359,35 +357,52 @@ function Configuratin() {
     if (body) config.data = JSON.stringify(body);
 
     try {
+      console.log('Making DELETE request...');
       const response = await axios.request(config);
+      console.log('DELETE successful');
 
-      // ✅ safely call callback only if it's a function
+      // ✅ If refreshData flag is true, dispatch getAllLookups
+      if (refreshData) {
+        Modal.destroyAll();
+        console.log('Refreshing data after delete...');
+        await dispatch(getAllLookups()); // Assuming dispatch is available
+      }
+
+      // ✅ Call callback if provided
       if (typeof callback === "function") {
-        await callback();
+        console.log('Executing callback...');
+        // await callback();
       }
 
-      // ✅ show alert only once
       if (showAlert) {
-        MyAlert("success", "You have successfully deleted.");
+        MyAlert("success", "Deleted successfully.");
       }
+
+      // ✅ Close any open modals after successful delete
+
 
       return response.data;
-    } catch (error) {
-      const errMsg =
-        error?.response?.data?.error?.message ||
-        error?.message ||
-        "Something went wrong";
 
-      MyAlert("error", "Please Try Again", errMsg);
+    } catch (error) {
+      console.error('DELETE error:', error);
+      const errMsg = error?.response?.data?.error?.message || error?.message || "Delete failed";
+      MyAlert("error", "Delete failed", errMsg);
+
+      // ✅ Also close modals on error
+      Modal.destroyAll();
+
       return null;
+    } finally {
+      // ✅ Ensure modal is always destroyed (double safety)
+      setTimeout(() => Modal.destroyAll(), 100);
     }
   };
 
   // Helper function to refresh data after mutations
   // Resets the state first (so condition allows fetch) then fetches fresh data
   const refreshLookups = () => {
-    dispatch(resetLookups());
-    dispatch(getAllLookups());
+    // dispatch(resetLookups());
+    // dispatch(getAllLookups());
   };
 
   const refreshContacts = () => {
@@ -575,6 +590,7 @@ function Configuratin() {
     regionOptions,
     secondarySectionOptions,
     countryOptions,
+    provincesOption
   } = useSelector((state) => state.lookups);
   console.log("lookups", lookups);
   const { countriesData } = useSelector((state) => state.countries);
@@ -1230,6 +1246,16 @@ function Configuratin() {
       isactive: true,
       isDeleted: false,
     },
+    counties: {
+      lookuptypeId: "68c85f21302e5600dc8477e4",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+    },
     Countries: {
       displayname: "",
       name: "",
@@ -1268,6 +1294,8 @@ function Configuratin() {
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
+    debugger;
+
     if (value === false) {
       setisUpdateRec((prev) => ({
         ...prev,
@@ -1276,6 +1304,7 @@ function Configuratin() {
       resetCounteries(drawer);
       return;
     }
+
     setisUpdateRec((prev) => ({
       ...prev,
       [drawer]: value,
@@ -1283,6 +1312,9 @@ function Configuratin() {
 
     const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce(
       (acc, key) => {
+        // ❌ exclude lookuptypeId
+        if (key === "lookuptypeId") return acc;
+
         if (data.hasOwnProperty(key)) {
           acc[key] = data[key];
         }
@@ -1290,6 +1322,7 @@ function Configuratin() {
       },
       {}
     );
+
     setdrawerIpnuts((prev) => ({
       ...prev,
       [drawer]: {
@@ -1297,7 +1330,9 @@ function Configuratin() {
         ...filteredData,
       },
     }));
+    debugger
   };
+
   const transformLookupTypes = (data) => {
     return data.map((item) => ({
       value: item._id,
@@ -1382,8 +1417,9 @@ function Configuratin() {
         },
       };
     });
+    debugger
   };
-
+  console.log(drawerIpnuts, "drawerinpt")
   const columnProvince = [
     {
       title: "Code",
@@ -1430,8 +1466,9 @@ function Configuratin() {
             size={16}
             style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn("Provinces", !isUpdateRec?.Provinces, record);
+              IsUpdateFtn("Provinces", true, record);
               addIdKeyToLookup(record?._id, "Provinces");
+              disableFtn(false)
             }}
           />
           <AiFillDelete
@@ -1444,7 +1481,6 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
                   );
                 },
               })
@@ -2233,21 +2269,47 @@ function Configuratin() {
       ),
     },
   ];
-  const groupByLookupType = function (data) {
-    return data.reduce((grouped, item) => {
-      const lookupType = item.lookuptypeId.lookuptype;
+  function useGroupByLookupType(lookups) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [groupedData, setGroupedData] = useState({});
 
-      if (!grouped[lookupType]) {
-        grouped[lookupType] = [];
+    useEffect(() => {
+      if (!lookups || lookups.length === 0) {
+        setGroupedData({});
+        setIsLoading(false);
+        return;
       }
 
-      grouped[lookupType].push(item);
-      return grouped;
-    }, {});
-  };
+      setIsLoading(true);
+
+      // Small timeout to prevent UI blocking and show loading state
+      const timer = setTimeout(() => {
+        const result = lookups.reduce((grouped, item) => {
+          const lookupType = item.lookuptypeId?.lookuptype;
+
+          if (!grouped[lookupType]) {
+            grouped[lookupType] = [];
+          }
+
+          grouped[lookupType].push(item);
+          return grouped;
+        }, {});
+
+        setGroupedData(result);
+        setIsLoading(false);
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }, [lookups]);
+
+    return { groupedLookups: groupedData, isLoading };
+  }
+
+  // Usage remains similar
+  const { groupedLookups, isLoading } = useGroupByLookupType(lookups);
 
   // Usage
-  const groupedLookups = groupByLookupType(lookups);
+  // const groupedLookups = groupByLookupType(lookups);
 
   const columnGender = [
     {
@@ -4444,7 +4506,7 @@ function Configuratin() {
       }));
       setBranchesWithRegionData(updatedBranches);
     }
-  }, [groupedLookups?.Branch, getRegionNameForBranch]);
+  }, []);
 
   // Filter branches based on search term
   const filteredBranches = useMemo(() => {
@@ -4472,35 +4534,35 @@ function Configuratin() {
   };
 
   // Updated table columns with Region filter
-const uniqueRegionNames = useMemo(() => {
-  if (!branchesWithRegionData.length) return [];
-  return Array.from(
-    new Set(branchesWithRegionData.map(item => item.regionName).filter(name => name))
-  );
-}, [branchesWithRegionData]);
+  const uniqueRegionNames = useMemo(() => {
+    if (!branchesWithRegionData.length) return [];
+    return Array.from(
+      new Set(branchesWithRegionData.map(item => item.regionName).filter(name => name))
+    );
+  }, [branchesWithRegionData]);
 
-// Create columns array with Region as second last
-const columnsWithRegion = useMemo(() => {
-  // Assuming the last column is Action (as per your screenshot)
-  const allColumnsExceptLast = columnDistricts.slice(0, -1);
-  const lastColumn = columnDistricts[columnDistricts.length - 1];
-  
-  // Create the Region column
-  const regionColumn = {
-    title: 'Region',
-    dataIndex: 'regionName',
-    key: 'regionName',
-    filters: uniqueRegionNames.map(name => ({
-      text: name,
-      value: name,
-    })),
-    onFilter: (value, record) => record.regionName === value,
-    sorter: (a, b) => (a.regionName || '').localeCompare(b.regionName || ''),
-  };
-  
-  // Return columns in correct order: [...other columns, Region, Action]
-  return [...allColumnsExceptLast, regionColumn, lastColumn];
-}, [columnDistricts, uniqueRegionNames]);
+  // Create columns array with Region as second last
+  const columnsWithRegion = useMemo(() => {
+    // Assuming the last column is Action (as per your screenshot)
+    const allColumnsExceptLast = columnDistricts.slice(0, -1);
+    const lastColumn = columnDistricts[columnDistricts.length - 1];
+
+    // Create the Region column
+    const regionColumn = {
+      title: 'Region',
+      dataIndex: 'regionName',
+      key: 'regionName',
+      filters: uniqueRegionNames.map(name => ({
+        text: name,
+        value: name,
+      })),
+      onFilter: (value, record) => record.regionName === value,
+      sorter: (a, b) => (a.regionName || '').localeCompare(b.regionName || ''),
+    };
+
+    // Return columns in correct order: [...other columns, Region, Action]
+    return [...allColumnsExceptLast, regionColumn, lastColumn];
+  }, [columnDistricts, uniqueRegionNames]);
 
 
   return (
@@ -5292,7 +5354,7 @@ const columnsWithRegion = useMemo(() => {
       <MyDrawer
         isPagination={true}
         total={data?.county?.length}
-        title="Counties"
+        title="counties"
         open={drawerOpen?.counties}
         onClose={() => openCloseDrawerFtn("counties")}
         isEdit={isUpdateRec?.counties}
@@ -5300,7 +5362,7 @@ const columnsWithRegion = useMemo(() => {
           if (!validateForm("counties")) return;
           insertDataFtn(
             `/api/lookup`,
-            drawerIpnuts?.Counteries,
+            drawerIpnuts?.counties,
             "Data inserted successfully:",
             "Data did not insert:",
             () => resetCounteries("counties", dispatch(getAllLookups()))
@@ -5379,8 +5441,9 @@ const columnsWithRegion = useMemo(() => {
               <CustomSelect
                 label="Province:"
                 placeholder="Select Province"
-                options={groupedlookupsForSelect?.Provinces}
-                value={"Province"}
+                options={provincesOption}
+                isIDs={true}
+                value={drawerIpnuts?.counties?.Parentlookupid}
                 disabled={isDisable}
                 onChange={(e) =>
                   drawrInptChng("counties", "Parentlookupid", e.target.value)
@@ -5429,15 +5492,21 @@ const columnsWithRegion = useMemo(() => {
         open={drawerOpen?.Provinces}
         isPagination={true}
         onClose={() => openCloseDrawerFtn("Provinces")}
-        add={() => {
+        add={async () => {
           if (!validateForm("Provinces")) return;
-          insertDataFtn(
-            `/api/lookup`,
-            drawerIpnuts?.Provinces,
-            "Data inserted successfully:",
-            "Data did not insert:",
-            () => resetCounteries("Provinces", dispatch(getAllLookups()))
-          );
+          try {
+            await insertDataFtn(
+              `/api/lookup`,
+              drawerIpnuts?.Provinces,
+              "Province added successfully!",
+              "Failed to add province",
+              null
+            );
+            resetCounteries("Provinces", () => dispatch(getAllLookups()));
+
+          } catch (error) {
+            console.error("Error adding province:", error);
+          }
         }}
         width="1100px"
         isEdit={isUpdateRec?.Provinces}
@@ -5544,6 +5613,7 @@ const columnsWithRegion = useMemo(() => {
           </div>
         </div>
       </MyDrawer>
+
       <MyDrawer
         title="Countries"
         open={drawerOpen?.Countries}
