@@ -55,6 +55,10 @@ import SaveViewMenu from "./SaveViewMenu";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
+import { useSelectedIds } from "../../context/SelectedIdsContext";
+import MyConfirm from "./MyConfirm";
+import MyAlert from "./MyAlert";
+import axios from "axios";
 import Toolbar from "./Toolbar";
 
 function HeaderDetails() {
@@ -83,10 +87,11 @@ function HeaderDetails() {
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [sortOption, setSortOption] = useState(null);
 
+
   const handleDateChange = (val) => {
     setValue(val); // val is a dayjs or null
   };
-
+const { selectedIds, setSelectedIds } = useSelectedIds();
   const handleSortChange = (value) => {
     setSortOption(value);
   };
@@ -153,7 +158,7 @@ function HeaderDetails() {
   const [contactDrawer, setcontactDrawer] = useState(false);
 
   const menuItems = [
-    { label: "Executive council approval", onClick: (e) => handleAction("Bulk Changes", e) },
+    { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds)},
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
     
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
@@ -207,6 +212,99 @@ function HeaderDetails() {
   useEffect(() => {
     dispatch(fetchRegions());
   }, [dispatch]);
+const handleBulkApproval = async (selectedApplications) => {
+  if (!selectedApplications || selectedApplications.length === 0) {
+    MyAlert('error', 'Selection Required', 'Please select at least one application to approve.');
+    return;
+  }
+
+  // Extract application IDs from selected applications
+  const applicationIds = selectedApplications.map(app => app.id || app.applicationId);
+  
+  const requestData = {
+    applicationIds: selectedApplications
+  };
+
+  try {
+    // Show confirmation dialog using MyConfirm
+    await new Promise((resolve, reject) => {
+      MyConfirm({
+        title: 'Confirm Bulk Approval',
+        message: `Are you sure you want to approve ${applicationIds.length} application(s)?`,
+        onConfirm: () => {
+          resolve();
+        },
+        // Add onCancel to handle reject case
+        onCancel: () => {
+          reject(new Error('User cancelled'));
+        }
+      });
+    });
+
+    // User confirmed, make the API call
+    const token = localStorage.getItem("token");
+    const response = await axios.post(
+      `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
+      requestData,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      }
+    );
+
+    if (response.status === 200 || response.status === 204) {
+      MyAlert(
+        'success', 
+        'Approval Successful', 
+        `Successfully approved ${applicationIds.length} application(s)!`
+      );
+      dispatch(getAllApplications())
+      // Refresh data or update UI as needed
+      // fetchApplications(); // Uncomment if you need to refresh data
+    } else {
+      MyAlert(
+        'warning', 
+        'Partial Success', 
+        `Approval completed but with status: ${response.status}`
+      );
+    }
+  } catch (error) {
+    console.error('Bulk approval error:', error);
+    
+    // Check if error is from user cancellation
+    if (error.message === 'User cancelled') {
+      // User cancelled, do nothing or show info message
+      MyAlert('info', 'Cancelled', 'Approval process was cancelled.');
+      return;
+    }
+    
+    if (error.response) {
+      // The request was made and the server responded with a status code
+      // that falls out of the range of 2xx
+      MyAlert(
+        'error', 
+        'Approval Failed', 
+        `Error ${error.response.status}: ${error.response.data?.message || 'Failed to approve applications'}`
+      );
+    } else if (error.request) {
+      // The request was made but no response was received
+      MyAlert(
+        'error', 
+        'Network Error', 
+        'No response from server. Please check your connection.'
+      );
+    } else {
+      // Something happened in setting up the request
+      MyAlert(
+        'error', 
+        'Error', 
+        `Failed to approve applications: ${error.message}`
+      );
+    }
+  }
+};
 
   const gender = {
     Male: false,

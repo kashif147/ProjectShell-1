@@ -12,6 +12,7 @@ import store from './store/Store';
 import { RemindersProvider } from './context/CampaignDetailsProvider';
 import { FilterProvider } from './context/FilterContext';
 import ErrorBoundary from './component/common/ErrorBoundary';
+import { SelectedIdsProvider } from './context/SelectedIdsContext';
 
 // Handle chunk loading errors globally
 window.addEventListener('error', (event) => {
@@ -49,6 +50,7 @@ root.render(
     <Provider store={store}>
       <Router>
         <ExcelProvider>
+          <SelectedIdsProvider >
           <FilterProvider>
           <RemindersProvider>
           <ViewProvider>
@@ -58,6 +60,7 @@ root.render(
           </ViewProvider>
           </RemindersProvider>
           </FilterProvider>
+          </SelectedIdsProvider>
         </ExcelProvider>
       </Router>
     </Provider>
