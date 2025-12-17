@@ -234,84 +234,37 @@ const TableComponent = ({
   };
 
   // **UPDATED: Fixed getRowSelectionConfig with proper height and alignment**
-  const getRowSelectionConfig = () => {
-    // If external rowSelection is provided
-    if (rowSelection !== null) {
-      // Handle different types of rowSelection
-      if (typeof rowSelection === 'object') {
-        // Clone and remove selections property to remove dropdown menu
-        const config = { ...rowSelection };
-        config.selections = undefined; // This removes the dropdown menu
+const getRowSelectionConfig = () => {
+  if (!enableRowSelection) return null;
 
-        // Ensure proper styling for alignment and height
-        if (!config.columnStyle) {
-          config.columnStyle = {};
-        }
-        config.columnStyle = {
-          ...config.columnStyle,
-          padding: '12px 8px',
-          verticalAlign: 'middle',
-        };
-
-        return config;
-      }
-      // If it's a function or other type, return as is
-      return rowSelection;
-    }
-
-    // If selection is disabled
-    if (!enableRowSelection) {
-      return null;
-    }
-
-    // Default configuration WITHOUT selections menu
-    const config = {
-      type: selectionType,
-      selectedRowKeys,
-      onChange: (selectedKeys, selectedRows) => {
-        if (onSelectionChange) {
-          onSelectionChange(selectedKeys, selectedRows);
-        }
-      },
-      columnWidth: 60,
-      fixed: true,
-      // Add proper styling for alignment and height
-      columnStyle: {
-        padding: '12px 8px',
-        verticalAlign: 'middle',
-        height: 'auto',
-        minHeight: '48px',
-      },
-      // Custom render for checkbox to fix alignment
-      renderCell: (checked, record, index, originNode) => {
-        return (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            minHeight: '48px',
-            padding: '12px 0',
-          }}>
-            {originNode}
-          </div>
-        );
-      },
-    };
-
-    // Ensure selections is undefined to prevent dropdown menu
-    config.selections = undefined;
-
-    // Merge any additional rowSelection props
-    if (props.rowSelectionProps && typeof props.rowSelectionProps === 'object') {
-      const { selections, ...safeProps } = props.rowSelectionProps;
-      Object.assign(config, safeProps);
-      // Re-enforce no selections menu
-      config.selections = undefined;
-    }
-
-    return config;
+  const config = {
+    type: selectionType,
+    selectedRowKeys,
+    onChange: (selectedKeys, selectedRows) => {
+      if (onSelectionChange) onSelectionChange(selectedKeys, selectedRows);
+    },
+    onSelect: (record, selected, selectedRows) => {
+      // Trigger row click logic only when checkbox is clicked
+      console.log("Row clicked:", record); // ✅ your row clicked log
+      setSelectedRowData([record]);
+      setSelectedRowIndex(dataSource.findIndex(r => r.key === record.key));
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log("Select all triggered:", selectedRows);
+      // Optional: handle select all logic
+    },
+    columnWidth: 60,
+    fixed: true,
+    // Optional: align checkbox properly
+    columnStyle: { padding: "12px 8px", verticalAlign: "middle", height: "auto", minHeight: "48px" },
   };
+
+  // Remove dropdown menu in header
+  config.selections = undefined;
+
+  return config;
+};
+
 
   // Build columns
   const draggableColumns = [

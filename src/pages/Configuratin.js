@@ -1556,8 +1556,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`, null, () =>
-                    dispatch(fetchCountries())
+                  await deleteFtn(
+                    `countries/${record?._id}`,
+                    null,
+                    () => dispatch(getAllLookups()) // Use getAllLookups to refresh
                   );
                 },
               });

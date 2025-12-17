@@ -101,31 +101,25 @@ function MembershipApplication() {
     // Map selectedRows to get application IDs
     const ids = selectedRows.map(row => row.applicationId || row._id);
     setSelectedApplicationIds(ids);
+    console.log(selectedApplicationIds, "selected keys");
   }, []);
-  const handleRowClick = useCallback((record, index) => {
-    console.log("Row clicked:", record, "Index:", index);
-    // Add your custom logic here
-  }, []);
+  // const handleRowClick = useCallback((record, index) => {
+  //   console.log("Row clicked12:", record?.applicationId,);
+  //   // Add your custom logic here
+  // }, []);
   return (
     <div className="" style={{ width: "100%" }}>
       <TableComponent
         data={formattedApplications}
         screenName="Applications"
         isGrideLoading={applicationsLoading}
-        // Selection props
         selectedRowKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
         selectionType="checkbox"
         enableRowSelection={true}
-        // Row click handler
-        onRowClick={handleRowClick}
-        // Optional customizations
-        disableDefaultRowClick={false}
-        rowSelectionProps={{
-          columnWidth: 60,
-          fixed: true,
-        }}
+        disableDefaultRowClick={true} // ✅ disables row click
       />
+
       <div style={{ display: "flex", gap: 12 }}>
       </div>
     </div>
