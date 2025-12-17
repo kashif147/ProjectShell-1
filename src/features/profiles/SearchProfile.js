@@ -7,13 +7,18 @@ export const searchProfiles = createAsyncThunk(
   async (query, { rejectWithValue }) => {
     try {
       const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
+      const token = localStorage.getItem("token");
       const que = String(query).trim();
       
       if (!que) {
         return rejectWithValue('Search query cannot be empty');
       }
       
-      const response = await axios.get(`${baseUrl}/profile/search?q=${que}`);
+      const response = await axios.get(`${baseUrl}/profile/search?q=${que}`,
+         {
+          headers: { Authorization: `Bearer ${token}` },
+        }
+      );
       return response.data.data;
     } catch (error) {
       return rejectWithValue(

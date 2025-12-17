@@ -9,7 +9,18 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
-import SimpleMenu from "./SimpleMenu";
+import SimpleMenu from "./SimpleMenu"; import {
+  filterTransferById,
+  fetchAndFilterTransferById,
+  filterTransferFromExistingData,
+  clearFilteredTransfer,
+  selectFilteredTransfer,
+  selectFilteredLoading,
+  selectFilteredError
+} from '../../features/profiles/filterTransferSlice';
+import TransferRequests from "../TransferRequests";
+
+
 import {
   DndContext,
   DragOverlay,
@@ -39,12 +50,12 @@ const DraggableHeaderCell = ({ id, style, children, ...props }) => {
     border: `2px solid green`,
     ...(isDragging
       ? {
-          position: "relative",
-          zIndex: 9999,
-          userSelect: "none",
-          backgroundColor: "red",
-          color: "white",
-        }
+        position: "relative",
+        zIndex: 9999,
+        userSelect: "none",
+        backgroundColor: "red",
+        color: "white",
+      }
       : {}),
   };
   return (
@@ -66,18 +77,13 @@ const TableComponent = ({
   screenName,
   redirect,
   isGrideLoading,
-  // PROPS FOR SELECTION CONTROL
   rowSelection = null,
-  // Optional: Individual selection props for convenience
   selectedRowKeys = [],
   onSelectionChange,
   selectionType = "checkbox",
   enableRowSelection = true,
-  // Row click handler - NOW PASSED FROM PROPS
   onRowClick: externalOnRowClick = null,
-  // Custom row click behavior
   disableDefaultRowClick = false,
-  // Other props
   ...props
 }) => {
   const navigate = useNavigate();
@@ -90,6 +96,9 @@ const TableComponent = ({
     setExcelData,
   } = useContext(ExcelContext);
   const [TriggerReminderDrawer, setTriggerReminderDrawer] = useState(false);
+  const [transferDrawerOpen, setTransferDrawerOpen] = useState(false);
+  const [selectedTransferRecord, setSelectedTransferRecord] = useState(null);
+  const mainData = useSelector((state) => state.transferRequest.data);
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -104,15 +113,16 @@ const TableComponent = ({
     disableFtn,
   } = useTableColumns();
   const [dataSource, setdataSource] = useState(data);
-  
+
   useEffect(() => {
     setdataSource(data);
   }, [data]);
-  
+
   const [iscancellationOpen, setIscancellationOpen] = useState(false);
   const [isCornMarOpen, setisCornMarOpen] = useState(false);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
-  
+  const [transferreq, settransferreq] = useState(false);
+
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -123,10 +133,10 @@ const TableComponent = ({
         onCell: () => ({ id: `${index}` }),
       }))
   );
-  
+
   const dispatch = useDispatch();
   const fileInputRef = useRef(null);
-  
+
   // **UPDATED: Row click handler that can be overridden by props**
   const handleRowClick = (record, rowIndex) => {
     // Call external handler first if provided
@@ -137,26 +147,26 @@ const TableComponent = ({
         return;
       }
     }
-    
+
     // Default behavior (only if not disabled)
     if (!disableDefaultRowClick) {
       setSelectedRowData([record]);
       setSelectedRowIndex(rowIndex);
     }
   };
-  
+
   // Alternative: Separate handlers for different scenarios
   const handleRowClickWithDefault = (record, rowIndex) => {
     // Always call external handler if provided
     if (externalOnRowClick) {
       externalOnRowClick(record, rowIndex);
     }
-    
+
     // Always do default behavior
     setSelectedRowData([record]);
     setSelectedRowIndex(rowIndex);
   };
-  
+
   // Handle file upload
   const handleUploadClick = () => {
     if (fileInputRef.current) {
@@ -164,14 +174,14 @@ const TableComponent = ({
       fileInputRef.current.click();
     }
   };
-  
+
   const handleFileUpload = (event, key) => {
     const file = event.target.files[0];
     if (file) {
       addAttributeToTableData(key);
     }
   };
-  
+
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
     columns?.[screenName]
       ?.filter((item) => item?.isGride)
@@ -182,7 +192,7 @@ const TableComponent = ({
         onCell: () => ({ id: `${index}` }),
       }))
   );
-  
+
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
   // Handle drag and drop
@@ -200,7 +210,7 @@ const TableComponent = ({
     }
     setDragIndex({ active: null, over: null });
   };
-  
+
   const onDragOver = ({ active, over }) => {
     const activeIndex = columnsDragbe.findIndex(
       (column) => column.key === active.id
@@ -214,7 +224,7 @@ const TableComponent = ({
       direction: overIndex > activeIndex ? "right" : "left",
     });
   };
-  
+
   const addAttributeToTableData = (key) => {
     setdataSource(
       dataSource?.map((item) =>
@@ -222,87 +232,40 @@ const TableComponent = ({
       )
     );
   };
-  
+
   // **UPDATED: Fixed getRowSelectionConfig with proper height and alignment**
-  const getRowSelectionConfig = () => {
-    // If external rowSelection is provided
-    if (rowSelection !== null) {
-      // Handle different types of rowSelection
-      if (typeof rowSelection === 'object') {
-        // Clone and remove selections property to remove dropdown menu
-        const config = { ...rowSelection };
-        config.selections = undefined; // This removes the dropdown menu
-        
-        // Ensure proper styling for alignment and height
-        if (!config.columnStyle) {
-          config.columnStyle = {};
-        }
-        config.columnStyle = {
-          ...config.columnStyle,
-          padding: '12px 8px',
-          verticalAlign: 'middle',
-        };
-        
-        return config;
-      }
-      // If it's a function or other type, return as is
-      return rowSelection;
-    }
-    
-    // If selection is disabled
-    if (!enableRowSelection) {
-      return null;
-    }
-    
-    // Default configuration WITHOUT selections menu
-    const config = {
-      type: selectionType,
-      selectedRowKeys,
-      onChange: (selectedKeys, selectedRows) => {
-        if (onSelectionChange) {
-          onSelectionChange(selectedKeys, selectedRows);
-        }
-      },
-      columnWidth: 60,
-      fixed: true,
-      // Add proper styling for alignment and height
-      columnStyle: {
-        padding: '12px 8px',
-        verticalAlign: 'middle',
-        height: 'auto',
-        minHeight: '48px',
-      },
-      // Custom render for checkbox to fix alignment
-      renderCell: (checked, record, index, originNode) => {
-        return (
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            height: '100%',
-            minHeight: '48px',
-            padding: '12px 0',
-          }}>
-            {originNode}
-          </div>
-        );
-      },
-    };
-    
-    // Ensure selections is undefined to prevent dropdown menu
-    config.selections = undefined;
-    
-    // Merge any additional rowSelection props
-    if (props.rowSelectionProps && typeof props.rowSelectionProps === 'object') {
-      const { selections, ...safeProps } = props.rowSelectionProps;
-      Object.assign(config, safeProps);
-      // Re-enforce no selections menu
-      config.selections = undefined;
-    }
-    
-    return config;
+const getRowSelectionConfig = () => {
+  if (!enableRowSelection) return null;
+
+  const config = {
+    type: selectionType,
+    selectedRowKeys,
+    onChange: (selectedKeys, selectedRows) => {
+      if (onSelectionChange) onSelectionChange(selectedKeys, selectedRows);
+    },
+    onSelect: (record, selected, selectedRows) => {
+      // Trigger row click logic only when checkbox is clicked
+      console.log("Row clicked:", record); // ✅ your row clicked log
+      setSelectedRowData([record]);
+      setSelectedRowIndex(dataSource.findIndex(r => r.key === record.key));
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log("Select all triggered:", selectedRows);
+      // Optional: handle select all logic
+    },
+    columnWidth: 60,
+    fixed: true,
+    // Optional: align checkbox properly
+    columnStyle: { padding: "12px 8px", verticalAlign: "middle", height: "auto", minHeight: "48px" },
   };
-  
+
+  // Remove dropdown menu in header
+  config.selections = undefined;
+
+  return config;
+};
+
+
   // Build columns
   const draggableColumns = [
     {
@@ -358,7 +321,7 @@ const TableComponent = ({
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
-            actions={() => {}}
+            actions={() => { }}
             attachedFtn={() => {
               handleUploadClick();
             }}
@@ -387,241 +350,254 @@ const TableComponent = ({
       render: col.render
         ? col.render
         : (text, record, index) => {
-            switch (col.title) {
-              case "Full Name":
-                return (
-                  <Link
-                    to="/Details"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      dispatch(getProfileDetailsById(record?._id));
-                    }}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
-              case "Claim No":
-                return (
-                  <Link
-                    to="/ClaimsById"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
-              case "Roster ID":
-                return (
-                  <Link
-                    to="/Roster"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
-              case "Application ID":
-                return (
-                  <span
-                    style={{ color: "blue", cursor: "pointer" }}
-                    onClick={(e) => {
-                      e.stopPropagation(); // Prevent row click
-                      const { applicationStatus, applicationId } = record || {};
-                      if (applicationStatus === "Draft") {
-                        dispatch(
-                          getApplicationById({ id: "draft", draftId: applicationId })
-                        );
-                        navigate("/applicationMgt", { state: { isEdit: true } });
-                      } else {
-                        dispatch(getApplicationById({ id: applicationId }));
-                        navigate("/applicationMgt", { state: { isEdit: true } });
-                      }
-                    }}
-                  >
-                    View
-                  </span>
-                );
-              case "Change To":
-                return (
-                  <Link
-                    to="/ChangeCatById"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
-              case "Batch Name":
-                return (
-                  <Link
-                    to="/BatchMemberSummary"
-                    state={{
-                      search: screenName,
-                      batchName: text,
-                      batchId: record?.id || record?.key,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      const batchPaths = [
-                        "/Batches",
-                        "/Import",
-                        "/onlinePayment",
-                        "/Cheque",
-                        "/StandingOrders",
-                        "/Deductions",
-                      ];
-                      if (batchPaths.includes(location.pathname)) {
-                        const batch = getBatchById(record?.id);
-                        if (batch) setExcelData(batch);
-                      }
-                    }}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    {text}
-                  </Link>
-                );
-              case "Correspondence ID":
-                return (
-                  <Link
-                    to="/CorspndncDetail"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: 'inherit', textDecoration: 'none' }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
-              default:
-                return (
-                  <span 
-                    style={{ textOverflow: "ellipsis" }}
-                    onClick={() => handleRowClick(record, index)}
-                  >
-                    {text}
-                  </span>
-                );
-            }
-          },
+          switch (col.title) {
+            case "Full Name":
+              return (
+                <Link
+                  to="/Details"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                  }}
+                  onClick={(e) => {
+                    // e.preventDefault();
+                    handleRowClick(record, index);
+                    dispatch(getProfileDetailsById(record?._id));
+                  }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+            case "Claim No":
+              return (
+                <Link
+                  to="/ClaimsById"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+            case "Roster ID":
+              return (
+                <Link
+                  to="/Roster"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+            case "Application ID":
+              return (
+                <span
+                  style={{ color: "blue", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent row click
+                    const { applicationStatus, applicationId } = record || {};
+                    if (applicationStatus === "Draft") {
+                      dispatch(
+                        getApplicationById({ id: "draft", draftId: applicationId })
+                      );
+                      navigate("/applicationMgt", { state: { isEdit: true } });
+                    } else {
+                      dispatch(getApplicationById({ id: applicationId }));
+                      navigate("/applicationMgt", { state: { isEdit: true } });
+                    }
+                  }}
+                >
+                  View
+                </span>
+              );
+            case "Change To":
+              return (
+                <Link
+                  to="/ChangeCatById"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+            case "Batch Name":
+              const simpleBatchPaths = [
+                "/CornMarket",
+                "/NewGraduate",
+                "/CornMarketRewards",
+                "/RecruitAFriend",
+              ];
+              const isSimpleBatch = simpleBatchPaths.includes(location.pathname);
+              const targetPath = isSimpleBatch
+                ? "/SimpleBatchMemberSummary"
+                : "/BatchMemberSummary";
+
+              return (
+                <Link
+                  to={targetPath}
+                  state={{
+                    search: screenName,
+                    batchName: text,
+                    batchId: record?.id || record?.key,
+                  }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  {text}
+                </Link>
+              );
+            case "Correspondence ID":
+              return (
+                <Link
+                  to="/CorspndncDetail"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: 'inherit', textDecoration: 'none' }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+            // ADD THIS CASE FOR /Transfers PATH
+            case "Reg No":
+              return (
+                <span
+                  style={{ color: "blue", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation(); // Prevent row click
+                    const transferId = record?._id;
+                    if (transferId) {
+                      debugger
+                      dispatch(fetchAndFilterTransferById(transferId));
+                      settransferreq(!transferreq);
+                    }
+                  }}
+                >
+                  {text || "View"}
+                </span>
+              );
+            default:
+              return (
+                <span
+                  style={{ textOverflow: "ellipsis" }}
+                  onClick={() => handleRowClick(record, index)}
+                >
+                  {text}
+                </span>
+              );
+          }
+        },
       sorter:
         col.title === "Full Name"
           ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 3,
-            }
+            compare: (a, b) =>
+              a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+            multiple: 3,
+          }
           : col.title === "Station"
-          ? {
+            ? {
               compare: (a, b) =>
                 a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
               multiple: 2,
             }
-          : col.title === "Duty"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : col.title === "Reg No"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : col.title === "Correspondence ID"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : undefined,
+            : col.title === "Duty"
+              ? {
+                compare: (a, b) =>
+                  a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
+              : col.title === "Reg No"
+                ? {
+                  compare: (a, b) =>
+                    a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                  multiple: 1,
+                }
+                : col.title === "Correspondence ID"
+                  ? {
+                    compare: (a, b) =>
+                      a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                    multiple: 1,
+                  }
+                  : undefined,
       sortDirections: ["ascend", "descend"],
       filters:
         col.title === "Station" || col.title === "Current Station"
           ? [
-              { text: "GALC", value: "GALC" },
-              { text: "DUBC", value: "DUBC" },
-              { text: "STOC", value: "STOC" },
-            ]
+            { text: "GALC", value: "GALC" },
+            { text: "DUBC", value: "DUBC" },
+            { text: "STOC", value: "STOC" },
+          ]
           : col.title === "Division"
-          ? [
+            ? [
               { text: "0026", value: "0026" },
               { text: "0031", value: "0031" },
               { text: "0045", value: "0045" },
             ]
-          : col.title === "Approval Status"
-          ? [
-              { text: "Approved", value: "Approved" },
-              { text: "Pending", value: "Pending" },
-              { text: "Rejected", value: "Rejected" },
-            ]
-          : col.title === "Current Station"
-          ? [
-              { text: "0026", value: "0026" },
-              { text: "0031", value: "0031" },
-              { text: "0045", value: "0045" },
-            ]
-          : col.title === "Method of Contact"
-          ? [
-              { text: "Call", value: "Call" },
-              { text: "Email", value: "Email" },
-              { text: "Letter", value: "Letter" },
-            ]
-          : undefined,
+            : col.title === "Approval Status"
+              ? [
+                { text: "Approved", value: "APPROVED" },
+                { text: "Pending", value: "Pending" },
+                { text: "Rejected", value: "Rejected" },
+              ]
+              : col.title === "Current Station"
+                ? [
+                  { text: "0026", value: "0026" },
+                  { text: "0031", value: "0031" },
+                  { text: "0045", value: "0045" },
+                ]
+                : col.title === "Method of Contact"
+                  ? [
+                    { text: "Call", value: "Call" },
+                    { text: "Email", value: "Email" },
+                    { text: "Letter", value: "Letter" },
+                  ]
+                  : undefined,
       onFilter: (value, record) => {
         if (col.title === "Station" || col.title === "Current Station")
           return record[col.dataIndex] === value;
@@ -634,7 +610,6 @@ const TableComponent = ({
       },
     })),
   ];
-
   // Pagination logic
   const pageSize = 8;
   const [currentPage, setCurrentPage] = useState(1);
@@ -698,7 +673,7 @@ const TableComponent = ({
           ...record,
           ...values,
         });
-      } catch (errInfo) {}
+      } catch (errInfo) { }
     };
 
     let childNode = children;
@@ -888,6 +863,16 @@ const TableComponent = ({
           {/* <ManualPaymentEntry /> */}
         </div>
       </MyDrawer>
+      <TransferRequests
+        open={transferreq}
+        onClose={() => {
+          settransferreq(false);
+          dispatch(clearFilteredTransfer());
+        }}
+        isSearch={false}
+
+        isChangeCat={true}
+      />
     </DndContext>
   );
 };

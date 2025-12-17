@@ -8,6 +8,7 @@ import { Spin } from "antd";
 import { useFilters } from "../../context/FilterContext";
 import dayjs from "dayjs";
 import utc from "dayjs/plugin/utc";
+import { useSelectedIds } from "../../context/SelectedIdsContext";
 
 function MembershipApplication() {
   const dispatch = useDispatch();
@@ -15,7 +16,7 @@ function MembershipApplication() {
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
-
+const { selectedIds, setSelectedIds } = useSelectedIds();
   const [formattedApplications, setFormattedApplications] = useState([]);
   const [selectedRows, setSelectedRows] = useState(null)
   console.log(selectedRows, "selected rows data");
@@ -100,11 +101,11 @@ function MembershipApplication() {
     setSelectedKeys(selectedKeys)
     // Map selectedRows to get application IDs
     const ids = selectedRows.map(row => row.applicationId || row._id);
-    setSelectedApplicationIds(ids);
+    setSelectedIds (ids);
   }, []);
+  console.log(selectedIds, "7878");
   const handleRowClick = useCallback((record, index) => {
-    console.log("Row clicked:", record, "Index:", index);
-    // Add your custom logic here
+    console.log("Row clicked12:", record?.applicationId,);
   }, []);
   return (
     <div className="" style={{ width: "100%" }}>
@@ -112,20 +113,13 @@ function MembershipApplication() {
         data={formattedApplications}
         screenName="Applications"
         isGrideLoading={applicationsLoading}
-        // Selection props
         selectedRowKeys={selectedKeys}
         onSelectionChange={handleSelectionChange}
         selectionType="checkbox"
         enableRowSelection={true}
-        // Row click handler
-        onRowClick={handleRowClick}
-        // Optional customizations
-        disableDefaultRowClick={false}
-        rowSelectionProps={{
-          columnWidth: 60,
-          fixed: true,
-        }}
+        disableDefaultRowClick={true} // ✅ disables row click
       />
+
       <div style={{ display: "flex", gap: 12 }}>
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { SiActigraph } from "react-icons/si";
 import { FaLeaf, FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
@@ -14,6 +14,7 @@ import {
   Divider,
   Checkbox,
   Button,
+  Modal
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import {
@@ -107,8 +108,7 @@ function Configuratin() {
     isCoum
   ) => {
     const token = localStorage.getItem("token");
-
-    // Determine the base URL based on isCoum flag
+    debugger
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
@@ -119,12 +119,13 @@ function Configuratin() {
         },
       });
 
-      // ✅ Handle all success codes (200–299)
       if (response.status >= 200 && response.status < 300) {
-        MyAlert("success", successNotification);
+        setTimeout(() => {
+          MyAlert("success", successNotification);
+        }, 100);
+        // MyAlert("success", successNotification);
         if (typeof callback === "function") {
           console.log("✅ Executing callback");
-          callback();
         }
         return response.data; // This returns data
       }
@@ -249,15 +250,14 @@ function Configuratin() {
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
       let finalEndPoint = endPoint;
-      if (data1?.id && !endPoint.includes(data1.id)) {
-        finalEndPoint = `${endPoint}/${data1.id}`;
-      }
-
-      const { id, ...finalData } = data1;
+      debugger
+      // const { id, ...finalData } = data1;
+      // const { id, ...finalData } = data1;
+      debugger
 
       const response = await axios.put(
         `${baseUrl}${finalEndPoint}`,
-        finalData,
+        data1,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -335,17 +335,15 @@ function Configuratin() {
     body = null,
     callback,
     showAlert = true,
-    isCoum = false
+    isCoum = false,
+    refreshData = true // New parameter
   ) => {
     const token = localStorage.getItem("token");
 
-    // ✅ Determine base URL based on isCoum flag
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
-
-    // ✅ Construct URL - only add /api/ for non-CUMM requests
     const finalUrl = isCoum
-      ? `${baseUrl}/${url1}` // No /api/ for CUMM service
-      : `${baseUrl}/api${url1.startsWith("/") ? url1 : `/${url1}`}`; // Add /api/ for regular service
+      ? `${baseUrl}/${url1}`
+      : `${baseUrl}/api${url1.startsWith("/") ? url1 : `/${url1}`}`;
 
     const config = {
       method: "delete",
@@ -359,35 +357,52 @@ function Configuratin() {
     if (body) config.data = JSON.stringify(body);
 
     try {
+      console.log('Making DELETE request...');
       const response = await axios.request(config);
+      console.log('DELETE successful');
 
-      // ✅ safely call callback only if it's a function
+      // ✅ If refreshData flag is true, dispatch getAllLookups
+      if (refreshData) {
+        Modal.destroyAll();
+        console.log('Refreshing data after delete...');
+        await dispatch(getAllLookups()); // Assuming dispatch is available
+      }
+
+      // ✅ Call callback if provided
       if (typeof callback === "function") {
-        await callback();
+        console.log('Executing callback...');
+        // await callback();
       }
 
-      // ✅ show alert only once
       if (showAlert) {
-        MyAlert("success", "You have successfully deleted.");
+        MyAlert("success", "Deleted successfully.");
       }
+
+      // ✅ Close any open modals after successful delete
+
 
       return response.data;
-    } catch (error) {
-      const errMsg =
-        error?.response?.data?.error?.message ||
-        error?.message ||
-        "Something went wrong";
 
-      MyAlert("error", "Please Try Again", errMsg);
+    } catch (error) {
+      console.error('DELETE error:', error);
+      const errMsg = error?.response?.data?.error?.message || error?.message || "Delete failed";
+      MyAlert("error", "Delete failed", errMsg);
+
+      // ✅ Also close modals on error
+      Modal.destroyAll();
+
       return null;
+    } finally {
+      // ✅ Ensure modal is always destroyed (double safety)
+      setTimeout(() => Modal.destroyAll(), 100);
     }
   };
 
   // Helper function to refresh data after mutations
   // Resets the state first (so condition allows fetch) then fetches fresh data
   const refreshLookups = () => {
-    dispatch(resetLookups());
-    dispatch(getAllLookups());
+    // dispatch(resetLookups());
+    // dispatch(getAllLookups());
   };
 
   const refreshContacts = () => {
@@ -563,6 +578,21 @@ function Configuratin() {
 
   const { regions, loading } = useSelector((state) => state.regions);
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+  const {
+    titleOptions,
+    genderOptions,
+    workLocationOptions,
+    gradeOptions,
+    sectionOptions,
+    membershipCategoryOptions,
+    paymentTypeOptions,
+    branchOptions,
+    regionOptions,
+    secondarySectionOptions,
+    countryOptions,
+    provincesOption
+  } = useSelector((state) => state.lookups);
+  console.log("lookups", lookups);
   const { countriesData } = useSelector((state) => state.countries);
 
   const { lookupsTypes, lookupsTypesloading } = useSelector(
@@ -669,7 +699,23 @@ function Configuratin() {
     Sections: false,
     Bookmarks: false,
   });
+  function transformData(originalData) {
+    return originalData.map(item => ({
+      id: item._id,
+      value: item._id,
+      label: item.lookupname
+    }));
+  }
+  // const transformedData = transformData(lookups);
+  const transformedData = transformData(lookups).sort((a, b) => {
+    // Compare labels alphabetically
+    const labelA = a.label.toLowerCase();
+    const labelB = b.label.toLowerCase();
 
+    if (labelA < labelB) return -1;  // a comes before b
+    if (labelA > labelB) return 1;   // a comes after b
+    return 0;                         // equal
+  });
   useMemo(() => {
     if (!data) return;
 
@@ -764,7 +810,33 @@ function Configuratin() {
 
     setdata((prevState) => ({ ...prevState, ...filteredData }));
   }, [lookups]);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
+  // const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
+  const handleSearchLookupTypes = (searchValue) => {
+    setSearchTerm(searchValue);
 
+    if (!searchValue.trim()) {
+      setFilteredLookupsTypes(lookupsTypes);
+      return;
+    }
+
+    const filtered = lookupsTypes.filter(item => {
+      const searchLower = searchValue.toLowerCase();
+
+      return (
+        (item.lookuptype?.toLowerCase().includes(searchLower)) ||
+        (item.code?.toLowerCase().includes(searchLower)) ||
+        (item.DisplayName?.toLowerCase().includes(searchLower))
+      );
+    });
+
+    setFilteredLookupsTypes(filtered);
+  };
+  // Initialize filtered data when lookupsTypes changes
+  useEffect(() => {
+    setFilteredLookupsTypes(lookupsTypes);
+  }, [lookupsTypes]);
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
       setdata((prevState) => ({
@@ -1174,6 +1246,16 @@ function Configuratin() {
       isactive: true,
       isDeleted: false,
     },
+    counties: {
+      lookuptypeId: "68c85f21302e5600dc8477e4",
+      DisplayName: "",
+      lookupname: "",
+      code: "",
+      Parentlookupid: null,
+      userid: "67f3f9d812b014a0a7a94081",
+      isactive: true,
+      isDeleted: false,
+    },
     Countries: {
       displayname: "",
       name: "",
@@ -1212,6 +1294,8 @@ function Configuratin() {
   };
 
   const IsUpdateFtn = (drawer, value, data) => {
+    debugger;
+
     if (value === false) {
       setisUpdateRec((prev) => ({
         ...prev,
@@ -1220,6 +1304,7 @@ function Configuratin() {
       resetCounteries(drawer);
       return;
     }
+
     setisUpdateRec((prev) => ({
       ...prev,
       [drawer]: value,
@@ -1227,6 +1312,9 @@ function Configuratin() {
 
     const filteredData = Object.keys(drawerInputsInitalValues[drawer]).reduce(
       (acc, key) => {
+        // ❌ exclude lookuptypeId
+        if (key === "lookuptypeId") return acc;
+
         if (data.hasOwnProperty(key)) {
           acc[key] = data[key];
         }
@@ -1234,6 +1322,7 @@ function Configuratin() {
       },
       {}
     );
+
     setdrawerIpnuts((prev) => ({
       ...prev,
       [drawer]: {
@@ -1241,7 +1330,9 @@ function Configuratin() {
         ...filteredData,
       },
     }));
+    debugger
   };
+
   const transformLookupTypes = (data) => {
     return data.map((item) => ({
       value: item._id,
@@ -1249,7 +1340,23 @@ function Configuratin() {
       label: item.lookuptype,
     }));
   };
-  const lookupsTypesSelect = transformLookupTypes(lookupsTypes);
+  // const lookupsTypesSelect = transformLookupTypes(lookupsTypes);
+  const sortArray = (array, key, order = 'asc') => {
+    if (!Array.isArray(array)) return [];
+
+    return [...array].sort((a, b) => {
+      const aValue = a[key] || '';
+      const bValue = b[key] || '';
+
+      const comparison = String(aValue).toLowerCase()
+        .localeCompare(String(bValue).toLowerCase());
+
+      return order === 'desc' ? -comparison : comparison;
+    });
+  };
+
+  // Apply sorting to the transformed lookups types
+  const lookupsTypesSelect = sortArray(transformLookupTypes(lookupsTypes), 'label', 'asc')
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
@@ -1310,110 +1417,9 @@ function Configuratin() {
         },
       };
     });
+    debugger
   };
-
-  const dataSource = [
-    {
-      key: "1",
-      name: "Mike",
-      age: 32,
-      address: "10 Downing Street",
-    },
-    {
-      key: "2",
-      name: "John",
-      age: 42,
-      address: "10 Downing Street",
-    },
-  ];
-  // const columnsSolicitors = [
-  //   {
-  //     title: "Surname",
-  //     dataIndex: "Surname",
-  //     key: "Surname",
-  //   },
-  //   {
-  //     title: "Forename",
-  //     dataIndex: "Forename",
-  //     key: "Forename",
-  //   },
-  //   {
-  //     title: "Phone",
-  //     dataIndex: "ContactPhone",
-  //     key: "ContactPhone",
-  //   },
-  //   {
-  //     title: "Email",
-  //     dataIndex: "ContactEmail",
-  //     key: "ContactEmail",
-  //   },
-  //   {
-  //     title: "Building/House",
-  //     dataIndex: ["ContactAddress", "BuildingOrHouse"],
-  //     key: "BuildingOrHouse",
-  //   },
-  //   {
-  //     title: "Street/Road",
-  //     dataIndex: ["ContactAddress", "StreetOrRoad"],
-  //     key: "StreetOrRoad",
-  //   },
-  //   {
-  //     title: "Area/Town",
-  //     dataIndex: ["ContactAddress", "AreaOrTown"],
-  //     key: "AreaOrTown",
-  //   },
-  //   {
-  //     title: "City/Postcode",
-  //     dataIndex: ["ContactAddress", "CityCountyOrPostCode"],
-  //     key: "CityCountyOrPostCode",
-  //   },
-  //   {
-  //     title: "Eircode",
-  //     dataIndex: ["ContactAddress", "Eircode"],
-  //     key: "Eircode",
-  //   },
-  //   {
-  //     title: (
-  //       <div
-  //         style={{
-  //           display: "flex",
-  //           alignItems: "center",
-  //           justifyContent: "center",
-  //         }}
-  //       >
-  //         <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
-  //         Action
-  //       </div>
-  //     ),
-  //     key: "action",
-  //     align: "center",
-  //     render: (_, record) => (
-  //       <Space size="middle">
-  //         <FaEdit
-  //           size={16}
-  //           style={{ marginRight: "10px" }}
-  //           onClick={() => {
-  //             IsUpdateFtn("Solicitors", !isUpdateRec?.Solicitors, record);
-  //             addIdKeyToLookup(record?._id, "Solicitors");
-  //           }}
-  //         />
-  //         <AiFillDelete
-  //           size={16}
-  //           onClick={() =>
-  //             MyConfirm({
-  //               title: "Confirm Deletion",
-  //               message: "Do You Want To Delete This Item?",
-  //               onConfirm: async () => {
-  //                 await deleteFtn(`${baseURL}/contact`, record?._id);
-  //                 dispatch(getContacts());
-  //               },
-  //             })
-  //           }
-  //         />
-  //       </Space>
-  //     ),
-  //   },
-  // ];
+  console.log(drawerIpnuts, "drawerinpt")
   const columnProvince = [
     {
       title: "Code",
@@ -1460,8 +1466,9 @@ function Configuratin() {
             size={16}
             style={{ marginRight: "10px" }}
             onClick={() => {
-              IsUpdateFtn("Provinces", !isUpdateRec?.Provinces, record);
+              IsUpdateFtn("Provinces", true, record);
               addIdKeyToLookup(record?._id, "Provinces");
+              disableFtn(false)
             }}
           />
           <AiFillDelete
@@ -1474,7 +1481,6 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
                   );
                 },
               })
@@ -1550,8 +1556,10 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(`countries/${record?._id}`, null, () =>
-                    dispatch(fetchCountries())
+                  await deleteFtn(
+                    `countries/${record?._id}`,
+                    null,
+                    () => dispatch(getAllLookups()) // Use getAllLookups to refresh
                   );
                 },
               });
@@ -1701,11 +1709,11 @@ function Configuratin() {
       dataIndex: "DisplayName",
       key: "DisplayName",
     },
-    {
-      title: "Region",
-      dataIndex: "Parentlookup",
-      key: "Parentlookup",
-    },
+    // {
+    //   title: "Region",
+    //   dataIndex: "Parentlookup",
+    //   key: "Parentlookup",
+    // },
     {
       title: "Active",
 
@@ -2263,21 +2271,47 @@ function Configuratin() {
       ),
     },
   ];
-  const groupByLookupType = function (data) {
-    return data.reduce((grouped, item) => {
-      const lookupType = item.lookuptypeId.lookuptype;
+  function useGroupByLookupType(lookups) {
+    const [isLoading, setIsLoading] = useState(false);
+    const [groupedData, setGroupedData] = useState({});
 
-      if (!grouped[lookupType]) {
-        grouped[lookupType] = [];
+    useEffect(() => {
+      if (!lookups || lookups.length === 0) {
+        setGroupedData({});
+        setIsLoading(false);
+        return;
       }
 
-      grouped[lookupType].push(item);
-      return grouped;
-    }, {});
-  };
+      setIsLoading(true);
+
+      // Small timeout to prevent UI blocking and show loading state
+      const timer = setTimeout(() => {
+        const result = lookups.reduce((grouped, item) => {
+          const lookupType = item.lookuptypeId?.lookuptype;
+
+          if (!grouped[lookupType]) {
+            grouped[lookupType] = [];
+          }
+
+          grouped[lookupType].push(item);
+          return grouped;
+        }, {});
+
+        setGroupedData(result);
+        setIsLoading(false);
+      }, 0);
+
+      return () => clearTimeout(timer);
+    }, [lookups]);
+
+    return { groupedLookups: groupedData, isLoading };
+  }
+
+  // Usage remains similar
+  const { groupedLookups, isLoading } = useGroupByLookupType(lookups);
 
   // Usage
-  const groupedLookups = groupByLookupType(lookups);
+  // const groupedLookups = groupByLookupType(lookups);
 
   const columnGender = [
     {
@@ -3544,307 +3578,7 @@ function Configuratin() {
       ),
     },
   ];
-  const ProfileColumns = [
-    {
-      title: "RegNo",
-      dataIndex: "RegNo",
-      key: "RegNo",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
 
-    {
-      title: "Name",
-      dataIndex: "Name",
-      key: "Name",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Rank",
-      dataIndex: "Rank",
-      key: "Rank",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Duty",
-      dataIndex: "Duty",
-      key: "Duty",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Work Location",
-      dataIndex: "Station",
-      key: "Station",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Branch",
-      dataIndex: "District",
-      key: "District",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Division",
-      dataIndex: "Division",
-      key: "Division",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Address",
-      dataIndex: "Address",
-      key: "Address",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Status",
-      dataIndex: "Status",
-      key: "Status",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Updated",
-      dataIndex: "Updated",
-      key: "Updated",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Alpha",
-      dataIndex: "Alpha",
-      key: "Alpha",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Beta",
-      dataIndex: "Beta",
-      key: "Beta",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-
-    {
-      title: "Giga",
-      dataIndex: "Giga",
-      key: "Giga",
-      verticalAlign: "center",
-      width: 60,
-      align: "center",
-      render: (text) => (
-        <div
-          style={{
-            display: "flex",
-            alignItems: "center",
-            height: "100%",
-            justifyContent: "center",
-            verticalAlign: "center",
-          }}
-        >
-          {text}
-        </div>
-      ),
-    },
-    {
-      title: "Action",
-      dataIndex: "DisplayName",
-      render: (_, record) => (
-        <Space
-          size="middle"
-          className="action-buttons"
-          style={{ justifyContent: "center", display: "flex" }}
-        >
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
-        </Space>
-      ),
-    },
-  ];
   const RegionTypeColumnss = [
     {
       title: "RegionType",
@@ -4092,34 +3826,7 @@ function Configuratin() {
       ),
     },
   ];
-  const columns = [
-    {
-      title: "Short Name",
-      dataIndex: "ShortName",
-      key: "ShortName",
-      width: 60,
-      align: "center",
-      render: (text) => <div>{text}</div>,
-    },
-    {
-      title: "Display Name",
-      dataIndex: "DisplayName",
-      key: "DisplayName",
-      align: "center",
-      render: (text) => <div>{text}</div>,
-    },
-    {
-      title: "Action",
-      key: "action",
-      align: "center",
-      render: (_, record) => (
-        <Space size="middle">
-          <FaEdit size={16} style={{ marginRight: "10px" }} />
-          <AiFillDelete size={16} />
-        </Space>
-      ),
-    },
-  ];
+
   const membership = [
     {
       key: "1",
@@ -4180,36 +3887,7 @@ function Configuratin() {
       Beta: "B764",
     },
   ];
-  const subscription = [
-    {
-      key: "1",
-      ShortName: "Probation",
-      DisplayName: "Single",
-      Alpha: "A163",
-      Beta: "B762",
-    },
-    {
-      key: "2",
-      ShortName: "Trainee",
-      DisplayName: "Trainee",
-      Alpha: "A165",
-      Beta: "B764",
-    },
-    {
-      key: "3",
-      ShortName: "Associate",
-      DisplayName: "Associate",
-      Alpha: "A165",
-      Beta: "B764",
-    },
-    {
-      key: "4",
-      ShortName: "Retired",
-      DisplayName: "Retired",
-      Alpha: "A165",
-      Beta: "B764",
-    },
-  ];
+
   const gender = [
     {
       key: "1",
@@ -4355,32 +4033,12 @@ function Configuratin() {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => {},
+    onChange: (selectedRowKeys, selectedRows) => { },
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
     }),
   };
-  // const validateForm = (drawerType) => {
-  //   let newErrors = { Lookup: {}, [drawerType]: {} };
-
-  //   if (!drawerIpnuts?.[drawerType]?.code) {
-  //     newErrors[drawerType].code = "Required";
-  //   }
-  //   if (!drawerIpnuts?.[drawerType]?.lookupname) {
-  //     newErrors[drawerType].lookupname = "Required";
-  //   }
-
-  //   // Mandatory ParentLookup for specific drawers
-  //   const requiresParentLookup = ["Divisions", "Districts", "Cities", "Counteries", "Station"];
-  //   if (requiresParentLookup.includes(drawerType) && (!drawerIpnuts?.[drawerType]?.Parentlookupid || drawerIpnuts?.[drawerType]?.Parentlookupid === null)) {
-  //     newErrors[drawerType].parentLookup = "Required";
-  //   }
-  //   // Set errors only if there are validation failures
-  //   setErrors(newErrors);
-  //   // Check if there are any errors in the object
-  //   return Object.keys(newErrors.Lookup).length === 0 && Object.keys(newErrors[drawerType]).length === 0;
-  // };
   const validateForm = (drawerType) => {
     let newErrors = { Lookup: {}, [drawerType]: {} };
 
@@ -4496,17 +4154,18 @@ function Configuratin() {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => {};
+  const addmembershipFtn = () => { };
 
-  const AddpartnershipFtn = () => {};
+  const AddpartnershipFtn = () => { };
 
-  const AddprofileModalFtn = () => {};
+  const AddprofileModalFtn = () => { };
 
-  const AddRegionTypeModalFtn = () => {};
+  const AddRegionTypeModalFtn = () => { };
 
-  const AddContactTypeModalFtn = () => {};
+  const AddContactTypeModalFtn = () => { };
 
-  const AddSubscriptionsFtn = () => {};
+  const AddSubscriptionsFtn = () => { };
+
   const columnClaimType = [
     {
       title: "Code",
@@ -4783,6 +4442,130 @@ function Configuratin() {
       ],
     },
   ];
+  const [searchTermLookup, setSearchTermLookup] = useState('');
+  const [filteredLookups, setFilteredLookups] = useState([]);
+
+  // Add this useEffect to initialize filtered Lookup data when lookups change
+  useEffect(() => {
+    setFilteredLookups(lookups);
+  }, [lookups]);
+
+  // Lookup-specific search handler function
+  const handleLookupSearch = (value) => {
+    setSearchTermLookup(value);
+
+    if (!value.trim()) {
+      setFilteredLookups(lookups);
+      return;
+    }
+
+    const searchValue = value.toLowerCase();
+    const filtered = lookups.filter(item => {
+      // Search in basic fields
+      const basicMatch =
+        (item.code && item.code.toLowerCase().includes(searchValue)) ||
+        (item.lookupname && item.lookupname.toLowerCase().includes(searchValue)) ||
+        (item.DisplayName && item.DisplayName.toLowerCase().includes(searchValue));
+
+      // Search in lookuptype (if it's an object with name property)
+      const typeMatch = item.lookuptype && (
+        (item.lookuptype.name && item.lookuptype.name.toLowerCase().includes(searchValue)) ||
+        (item.lookuptypeId && item.lookuptypeId.toString().toLowerCase().includes(searchValue))
+      );
+
+      // Search in parent lookup (if it's an object with lookupname property)
+      const parentMatch = item.Parentlookup && (
+        (item.Parentlookup.lookupname && item.Parentlookup.lookupname.toLowerCase().includes(searchValue)) ||
+        (item.Parentlookup.DisplayName && item.Parentlookup.DisplayName.toLowerCase().includes(searchValue)) ||
+        (item.Parentlookupid && item.Parentlookupid.toString().toLowerCase().includes(searchValue))
+      );
+
+      // Search in status (active/inactive)
+      const statusMatch = item.isactive !== undefined &&
+        ((item.isactive && "active".includes(searchValue)) ||
+          (!item.isactive && "inactive".includes(searchValue)));
+
+      return basicMatch || typeMatch || parentMatch || statusMatch;
+    });
+
+    setFilteredLookups(filtered);
+  };
+  const [searchTermBranch, setSearchTermBranch] = useState('');
+  const [branchesWithRegionData, setBranchesWithRegionData] = useState([]);
+
+  // Function to get region name for a branch
+  const getRegionNameForBranch = useCallback((parentLookupId) => {
+    const region = groupedLookups?.Region?.find(r => r._id === parentLookupId);
+    return region ? region.lookupname : 'No Region';
+  }, [groupedLookups?.Region]);
+
+  // Use useEffect to update branchesWithRegionData when groupedLookups changes
+  useEffect(() => {
+    if (groupedLookups?.Branch) {
+      const updatedBranches = groupedLookups.Branch.map(branch => ({
+        ...branch,
+        regionName: getRegionNameForBranch(branch.Parentlookupid)
+      }));
+      setBranchesWithRegionData(updatedBranches);
+    }
+  }, []);
+
+  // Filter branches based on search term
+  const filteredBranches = useMemo(() => {
+    if (!branchesWithRegionData.length) return [];
+
+    if (!searchTermBranch.trim()) return branchesWithRegionData;
+
+    const searchTerm = searchTermBranch.toLowerCase().trim();
+    return branchesWithRegionData.filter(branch =>
+      branch.lookupname?.toLowerCase().includes(searchTerm) ||
+      branch.code?.toLowerCase().includes(searchTerm) ||
+      branch.DisplayName?.toLowerCase().includes(searchTerm) ||
+      branch.regionName?.toLowerCase().includes(searchTerm)
+    );
+  }, [branchesWithRegionData, searchTermBranch]);
+
+  // Function to handle search input change
+  const handleBranchSearchChange = (e) => {
+    setSearchTermBranch(e.target.value);
+  };
+
+  // Function to clear search
+  const clearBranchSearch = () => {
+    setSearchTermBranch('');
+  };
+
+  // Updated table columns with Region filter
+  const uniqueRegionNames = useMemo(() => {
+    if (!branchesWithRegionData.length) return [];
+    return Array.from(
+      new Set(branchesWithRegionData.map(item => item.regionName).filter(name => name))
+    );
+  }, [branchesWithRegionData]);
+
+  // Create columns array with Region as second last
+  const columnsWithRegion = useMemo(() => {
+    // Assuming the last column is Action (as per your screenshot)
+    const allColumnsExceptLast = columnDistricts.slice(0, -1);
+    const lastColumn = columnDistricts[columnDistricts.length - 1];
+
+    // Create the Region column
+    const regionColumn = {
+      title: 'Region',
+      dataIndex: 'regionName',
+      key: 'regionName',
+      filters: uniqueRegionNames.map(name => ({
+        text: name,
+        value: name,
+      })),
+      onFilter: (value, record) => record.regionName === value,
+      sorter: (a, b) => (a.regionName || '').localeCompare(b.regionName || ''),
+    };
+
+    // Return columns in correct order: [...other columns, Region, Action]
+    return [...allColumnsExceptLast, regionColumn, lastColumn];
+  }, [columnDistricts, uniqueRegionNames]);
+
 
   return (
     <div
@@ -5573,7 +5356,7 @@ function Configuratin() {
       <MyDrawer
         isPagination={true}
         total={data?.county?.length}
-        title="Counties"
+        title="counties"
         open={drawerOpen?.counties}
         onClose={() => openCloseDrawerFtn("counties")}
         isEdit={isUpdateRec?.counties}
@@ -5581,7 +5364,7 @@ function Configuratin() {
           if (!validateForm("counties")) return;
           insertDataFtn(
             `/api/lookup`,
-            drawerIpnuts?.Counteries,
+            drawerIpnuts?.counties,
             "Data inserted successfully:",
             "Data did not insert:",
             () => resetCounteries("counties", dispatch(getAllLookups()))
@@ -5660,8 +5443,9 @@ function Configuratin() {
               <CustomSelect
                 label="Province:"
                 placeholder="Select Province"
-                options={groupedlookupsForSelect?.Provinces}
-                value={"Province"}
+                options={provincesOption}
+                isIDs={true}
+                value={drawerIpnuts?.counties?.Parentlookupid}
                 disabled={isDisable}
                 onChange={(e) =>
                   drawrInptChng("counties", "Parentlookupid", e.target.value)
@@ -5710,15 +5494,21 @@ function Configuratin() {
         open={drawerOpen?.Provinces}
         isPagination={true}
         onClose={() => openCloseDrawerFtn("Provinces")}
-        add={() => {
+        add={async () => {
           if (!validateForm("Provinces")) return;
-          insertDataFtn(
-            `/api/lookup`,
-            drawerIpnuts?.Provinces,
-            "Data inserted successfully:",
-            "Data did not insert:",
-            () => resetCounteries("Provinces", dispatch(getAllLookups()))
-          );
+          try {
+            await insertDataFtn(
+              `/api/lookup`,
+              drawerIpnuts?.Provinces,
+              "Province added successfully!",
+              "Failed to add province",
+              null
+            );
+            resetCounteries("Provinces", () => dispatch(getAllLookups()));
+
+          } catch (error) {
+            console.error("Error adding province:", error);
+          }
         }}
         width="1100px"
         isEdit={isUpdateRec?.Provinces}
@@ -5825,6 +5615,7 @@ function Configuratin() {
           </div>
         </div>
       </MyDrawer>
+
       <MyDrawer
         title="Countries"
         open={drawerOpen?.Countries}
@@ -6285,7 +6076,7 @@ function Configuratin() {
       <MyDrawer
         title="Branch"
         open={drawerOpen?.Districts}
-        isPagination={true}
+        // isPagination={true}
         onClose={() => openCloseDrawerFtn("Districts")}
         isEdit={isUpdateRec?.Districts}
         isContact={true}
@@ -6379,8 +6170,9 @@ function Configuratin() {
                   <CustomSelect
                     label="Region"
                     placeholder="Select Region"
-                    options={groupedlookupsForSelect["Region"]}
+                    options={regionOptions}
                     disabled={isDisable}
+                    isIDs={true}
                     required
                     hasError={!!errors?.Districts?.Parentlookupid}
                     value={drawerIpnuts?.Districts?.Parentlookupid}
@@ -6428,10 +6220,19 @@ function Configuratin() {
 
           <div className="mt-4 config-tbl-container">
             <h6 className="mb-3 text-primary">Existing Branches</h6>
+            <MyInput
+              placeholder="Search branches..."
+              style={{ width: 250 }}
+              prefix={<SearchOutlined />}
+              value={searchTermBranch}
+              onChange={handleBranchSearchChange}
+              onClear={clearBranchSearch}
+              allowClear
+            />
             <Table
-              columns={columnDistricts}
+              columns={columnsWithRegion}
               loading={lookupsloading}
-              dataSource={groupedLookups?.Branch}
+              dataSource={filteredBranches}
               className="drawer-tbl"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
@@ -7229,8 +7030,8 @@ function Configuratin() {
           );
           dispatch(getLookupTypes());
         }}
-        //   onChange={handlePageChange}
-        // total={lookupsTypes?.length}
+      //   onChange={handlePageChange}
+      // total={lookupsTypes?.length}
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
@@ -7298,14 +7099,21 @@ function Configuratin() {
 
           <div className="mt-4 config-tbl-container">
             <h6 className="mb-3 text-primary">Existing Lookup Types</h6>
+            <div className="mb-3">
+              <MyInput
+                label="Search Lookup Types"
+                name="searchLookupTypes"
+                placeholder="Search by type, code, or display name..."
+                onChange={(e) => handleSearchLookupTypes(e.target.value)}
+                isSimple={true}
+                allowClear
+                style={{ marginBottom: '16px' }}
+              />
+            </div>
             <Table
               pagination={true}
               columns={columnLookupType}
-              //    dataSource={lookupsTypes.slice(
-              //   (current - 1) * pageSize,
-              //   current * pageSize
-              // )}
-              dataSource={lookupsTypes}
+              dataSource={filteredLookupsTypes}
               className="drawer-tbl"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
@@ -7503,6 +7311,7 @@ function Configuratin() {
             <Col span={24}>
               <CustomSelect
                 label="Lookup Type"
+                disabled={isDisable}
                 name="lookuptype"
                 isIDs={true}
                 value={drawerIpnuts?.Lookup?.lookuptypeId || ""}
@@ -7568,20 +7377,29 @@ function Configuratin() {
               />
             </Col>
             <Col span={12}>
-              <MyInput
+              <CustomSelect
                 label="Parent Lookup"
-                name="ParentLookup"
-                // value={drawerIpnuts?.Lookup?.ParentLookup || ""}
-                onChange={(e) => {}}
-                // drawrInptChng("Lookup", "ParentLookup", e.target.value)
-
-                placeholder="Parent lookup"
+                name="Parentlookupid"
+                isIDs={true}
+                value={drawerIpnuts?.Lookup?.Parentlookupid || ""}
+                options={transformedData}
+                isSimple={true}
                 disabled={isDisable}
+                // required
+                onChange={(value) => {
+                  drawrInptChng(
+                    "Lookup",
+                    "Parentlookupid",
+                    String(value.target.value)
+                  );
+                  // drawrInptChng("Lookup", "lookuptypeId", String(value));
+                }}
+              // hasError={!!errors?.Lookup?.lookuptypeId}
               />
             </Col>
           </Row>
 
-          <Row gutter={24} className="mt-3">
+          <Row gutter={24} className="">
             <Col span={12}>
               <Checkbox
                 disabled={isDisable}
@@ -7589,7 +7407,7 @@ function Configuratin() {
                   drawrInptChng("Lookup", "isactive", e.target.checked)
                 }
                 checked={drawerIpnuts?.Lookup?.isactive}
-                style={{ marginTop: "26px" }}
+                style={{ marginTop: "0px" }}
               >
                 Active
               </Checkbox>
@@ -7597,14 +7415,22 @@ function Configuratin() {
           </Row>
 
           <div className="mt-4 config-tbl-container">
+            <Row gutter={24} className="">
+              <Col span={24}>
+                <MyInput
+                  placeholder="Search by Code, Name, Display Name or Type..."
+                  prefix={<SearchOutlined />}
+                  value={searchTermLookup}
+                  onChange={(e) => handleLookupSearch(e.target.value)}
+                  allowClear
+                  style={{ marginBottom: 16 }}
+                />
+              </Col>
+            </Row>
             <Table
               pagination={true}
               columns={columnLookup}
-              // dataSource={lookups.slice(
-              //   (current - 1) * pageSize,
-              //   current * pageSize
-              // )}
-              dataSource={lookups}
+              dataSource={filteredLookups}
               loading={lookupsloading}
               className="drawer-tbl"
               rowKey={(record, index) =>
@@ -10342,7 +10168,7 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-        // width="680"
+      // width="680"
       >
         <div className="drawer-main-cntainer p-4">
           {" "}

@@ -134,8 +134,9 @@ baseMenuItems.forEach((item, index) => {
       "/PermissionManagement": "Permission Management",
       "/CancelledMembersReport": "Cancelled Members Report",
       "/PolicyClientExample": "Policy Client Example",
-      "/NewGraduate": "New Graduate",
-      "/NewlyJoint": "Newly Joint",
+      "/NewGraduate": "CornMarket New Graduate",
+      "/CornMarketRewards": "CornMarket Rewards",
+      "/RecruitAFriend": "Recruit a Friend",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -272,11 +273,14 @@ baseMenuItems.forEach((item, index) => {
           state: { search: "Templetes" },
         });
         break;
-      case "New Graduate":
-        navigate("/NewGraduate", { state: { search: "New Graduate" } });
+      case "CornMarket New Graduate":
+        navigate("/NewGraduate", { state: { search: "CornMarket New Graduate" } });
         break;
-      case "Newly Joint":
-        navigate("/NewlyJoint", { state: { search: "Newly Joint" } });
+      case "CornMarket Rewards":
+        navigate("/CornMarketRewards", { state: { search: "CornMarket Rewards" } });
+        break;
+      case "Recruit a Friend":
+        navigate("/RecruitAFriend", { state: { search: "Recruit a Friend" } });
         break;
       default:
         navigate("/NotDesignedYet");

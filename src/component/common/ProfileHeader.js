@@ -15,34 +15,94 @@ import {
 import MyDatePicker from "./MyDatePicker";
 import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
+import { useSelector } from "react-redux";
 
-function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false, isDeceased = false }) {
+function ProfileHeader({ 
+  isEditMode = false, 
+  setIsEditMode, 
+  showButtons = false, 
+  isDeceased = false 
+}) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
     reason: "",
   });
 
-  // Sample data - replace with actual data from props or state
+  // Get data from Redux store
+  const { profileDetails, loading, error } = useSelector(
+    (state) => state.profileDetails
+  );
+  const { profileSearchData } = useSelector((state) => state.searchProfile);
+
+  // Choose source dynamically - profileDetails has priority, then search results
+  const source = profileDetails || profileSearchData?.results?.[0];
+
+  // Function to calculate age from date of birth
+  const calculateAge = (dateString) => {
+    if (!dateString) return "";
+    const today = new Date();
+    const birthDate = new Date(dateString);
+    let age = today.getFullYear() - birthDate.getFullYear();
+    const monthDiff = today.getMonth() - birthDate.getMonth();
+    
+    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
+      age--;
+    }
+    return `${age} Yrs`;
+  };
+
+  // Format date to DD/MM/YYYY
+  const formatDate = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+  };
+
+  // Format date to MM.DD.YYYY for DOB display
+  const formatDOB = (dateString) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return `${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}.${date.getFullYear()}`;
+  };
+
+  // Derive member data from source
   const memberData = {
-    name: "Jack Smith",
-    dob: "03.22.1990",
-    gender: "M",
-    age: "36A Yrs",
-    status: isDeceased ? "Deceased" : "Active Member",
-    memberId: "45217A",
-    joined: "01/01/2016",
-    expires: "01/01/2026",
-    balance: "€200",
-    lastPayment: "€74.7",
-    paymentDate: "1/02/2025",
-    paymentCode: "MB-2025-001",
-    address: "123 Main Street, New York",
-    email: "jack.smith@email.com",
-    phone: "(817) 234-3244",
-    grade: "General - All Grades",
-    category: "Undergraduate Student",
-    membershipStatus: "STOC Member",
+    // Personal Info
+    name: source ? `${source.personalInfo?.forename || ''} ${source.personalInfo?.surname || ''}`.trim() : "Jack Smith",
+    dob: source?.personalInfo?.dateOfBirth ? formatDOB(source.personalInfo.dateOfBirth) : "03.22.1990",
+    gender: source?.personalInfo?.gender ? source.personalInfo.gender.charAt(0).toUpperCase() : "M",
+    age: source?.personalInfo?.dateOfBirth ? calculateAge(source.personalInfo.dateOfBirth) : "36 Yrs",
+    
+    // Status
+    status: isDeceased ? "Deceased" : 
+            source?.membershipStatus || 
+            (source?.deactivatedAt ? "Inactive" : "Active Member"),
+    
+    // Membership Info
+    memberId: source?.membershipNumber || "45217A",
+    joined: source?.firstJoinedDate ? formatDate(source.firstJoinedDate) : "01/01/2016",
+    expires: source?.deactivatedAt ? formatDate(source.deactivatedAt) : "01/01/2026",
+    
+    // Contact Info
+    address: source?.contactInfo ? 
+             `${source.contactInfo.buildingOrHouse || ''} ${source.contactInfo.streetOrRoad || ''}, ${source.contactInfo.areaOrTown || ''}`.trim() : 
+             "123 Main Street, New York",
+    email: source?.contactInfo?.preferredEmail === "work" ? 
+           source.contactInfo.workEmail : 
+           source?.contactInfo?.personalEmail || "jack.smith@email.com",
+    phone: source?.contactInfo?.mobileNumber || "(817) 234-3244",
+    
+    // Professional Info
+    grade: source?.professionalDetails?.grade || "General - All Grades",
+    category: source?.membershipCategory || "Undergraduate Student",
+    membershipStatus: source?.membershipStatus || "STOC Member",
+    
+    // Financial Info (Note: These might need to come from a different API endpoint)
+    balance: "€200", // You'll need to get this from subscription API
+    lastPayment: "€74.7", // You'll need to get this from subscription API
+    paymentDate: source?.submissionDate ? formatDate(source.submissionDate) : "1/02/2025",
+    paymentCode: `MB-${new Date().getFullYear()}-${source?.membershipNumber || '001'}`,
   };
 
   const cancellationReasons = [
@@ -52,6 +112,7 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false,
     { key: "financial", label: "Financial Reasons" },
     { key: "dissatisfaction", label: "Dissatisfaction with Services" },
     { key: "other", label: "Other" },
+    { key: "deceased", label: "Deceased" },
   ];
 
   const handleCancelClick = () => {
@@ -81,6 +142,44 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false,
   const handleFormChange = (field, value) => {
     setCancelFormData({ ...cancelFormData, [field]: value });
   };
+
+  // Show loading state
+  if (loading && !source) {
+    return (
+      <div className="member-header-container">
+        <div className="member-header-single-card">
+          <div className="member-header-top">
+            <div className="member-profile-section">
+              <div className="member-avatar">
+                <FaUser className="avatar-icon" />
+              </div>
+              <h2 className="member-name">Loading...</h2>
+              <p className="member-details">Loading profile data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Show error state
+  if (error && !source) {
+    return (
+      <div className="member-header-container">
+        <div className="member-header-single-card">
+          <div className="member-header-top">
+            <div className="member-profile-section">
+              <div className="member-avatar">
+                <FaUser className="avatar-icon" />
+              </div>
+              <h2 className="member-name">Error</h2>
+              <p className="member-details">Failed to load profile data</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="member-header-container">
@@ -192,7 +291,7 @@ function ProfileHeader({ isEditMode = false, setIsEditMode, showButtons = false,
         </div>
 
         {/* Cancel Membership Button */}
-        {showButtons && (
+        {showButtons && !isDeceased && (
           <button className="member-cancel-btn" onClick={handleCancelClick}>
             Cancel Membership
           </button>

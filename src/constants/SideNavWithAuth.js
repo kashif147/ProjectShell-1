@@ -259,33 +259,34 @@ export const subscriptionItems = [
     ["crm:member:read", "crm:member:write"],
     ["MO", "AMO", "GS", "DGS", "SU"]
   ),
+  // createMenuItem(
+  //   "CornMarket",
+  //   <FaBuilding />,
+  //   "CornMarket",
+  //   ["crm:access"],
+  //   ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  // ),
+
   createMenuItem(
-    "CornMarket",
-    <FaBuilding />,
-    "CornMarket",
+    "CornMarket New Graduate",
+    <FaGraduationCap />,
+    "CornMarket New Graduate",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
+    "CornMarket Rewards",
+    <FaUserPlus />,
+    "CornMarket Rewards",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+    createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
     ["crm:member:create"],
     ["MO", "AMO", "GS", "DGS", "SU"]
-  ),
-  createMenuItem(
-    "New Graduate",
-    <FaGraduationCap />,
-    "New Graduate",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
-  ),
-  createMenuItem(
-    "Newly Joint",
-    <FaUserPlus />,
-    "Newly Joint",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
     "LandingPage",

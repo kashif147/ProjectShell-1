@@ -9,15 +9,19 @@ import {
   Modal,
   Flex,
   Tooltip,
+  Select,
+  Input
 } from "antd";
-import { MailOutlined, EnvironmentOutlined } from "@ant-design/icons";
+import { MailOutlined, EnvironmentOutlined, SearchOutlined } from "@ant-design/icons";
+
+import MemberSearch from "../profile/MemberSearch";
 import dayjs from "dayjs";
 import axios from "axios";
 import { dateUtils } from "../../utils/Utilities";
 import CustomSelect from "../common/CustomSelect";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
-import { useSelector, useDispatch } from "react-redux";
+import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 import { useLocation, useNavigate } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
@@ -29,18 +33,21 @@ import { generatePatch } from "../../utils/Utilities";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import { fetchCountries } from "../../features/CountriesSlice";
-import MemberSearch from "../profile/MemberSearch";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
+import { searchProfiles, clearResults } from '../../features/profiles/SearchProfile';
 import {
   InsuranceScreen,
-  RewardsScreen,
+  RewardsScreen
 } from "../profile/IncomeProtectionTooltip";
+import debounce from "lodash.debounce";
 
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
+const { Search: AntdSearch } = Input;
+const { Option } = Select;
 function ApplicationMgtDrawer({
   open,
   onClose,
@@ -94,7 +101,27 @@ function ApplicationMgtDrawer({
     open: false,
     type: null, // 'approve' or 'reject'
   });
+  const [query, setQuery] = useState('');
+  const { profileSearchData } = useSelector(
+    (state) => state.searchProfile
+  );
+  const handleSearch = (value) => {
+    const trimmedQuery = value.trim();
 
+    if (!trimmedQuery) {
+      dispatch(clearResults());
+      return;
+    }
+
+    setQuery(trimmedQuery);
+    dispatch(searchProfiles(trimmedQuery));
+  };
+
+  // Handle clear
+  const handleClear = () => {
+    setQuery('');
+    dispatch(clearResults());
+  };
   const { state } = useLocation();
   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
@@ -125,6 +152,7 @@ function ApplicationMgtDrawer({
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries
   );
+
 
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
@@ -204,6 +232,7 @@ function ApplicationMgtDrawer({
         otherScheme: apiData?.subscriptionDetails?.otherScheme || false,
         recuritedBy: apiData?.subscriptionDetails?.recuritedBy || "",
         recuritedByMembershipNo:
+
           apiData?.subscriptionDetails?.recuritedByMembershipNo || "",
         primarySection: apiData?.subscriptionDetails?.primarySection || "",
         otherPrimarySection:
@@ -219,6 +248,8 @@ function ApplicationMgtDrawer({
         termsAndConditions:
           apiData?.subscriptionDetails?.termsAndConditions || false,
         membershipCategory: apiData?.subscriptionDetails?.membershipCategory,
+        confirmedRecruiterProfileId:
+          apiData?.subscriptionDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(
           apiData?.subscriptionDetails?.dateJoined || new Date()
         ),
@@ -1900,9 +1931,8 @@ function ApplicationMgtDrawer({
                       <div className="d-flex justify-content-between align-items-center">
                         <label
                           style={{ color: "#215e97" }}
-                          className={`my-input-label ${
-                            errors?.preferredAddress ? "error-text1" : ""
-                          }`}
+                          className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""
+                            }`}
                         >
                           Preferred Address{" "}
                           <span className="text-danger">*</span>
@@ -1946,7 +1976,7 @@ function ApplicationMgtDrawer({
                       name="Enter Eircode (e.g., D01X4X0)"
                       placeholder="Enter Eircode (e.g., D01X4X0)"
                       disabled={isDisable}
-                      onChange={() => {}}
+                      onChange={() => { }}
                     />
                   </StandaloneSearchBox>
                 )}
@@ -2122,9 +2152,8 @@ function ApplicationMgtDrawer({
                   <div className="d-flex justify-content-between align-items-center">
                     <label
                       style={{ color: "#215e97" }}
-                      className={`my-input-label ${
-                        errors?.preferredEmail ? "error-text1" : ""
-                      }`}
+                      className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""
+                        }`}
                     >
                       Preferred Email{" "}
                       <span className="text-danger ms-1">*</span>
@@ -2229,7 +2258,7 @@ function ApplicationMgtDrawer({
                 />
               </Col>
               {InfData.subscriptionDetails?.membershipCategory ===
-              "68dae699c5b15073d66b892c" ? (
+                "68dae699c5b15073d66b892c" ? (
                 <Col xs={24} md={12}>
                   <Row gutter={[8, 8]}>
                     <Col xs={24} md={12}>
@@ -2240,7 +2269,7 @@ function ApplicationMgtDrawer({
                         disabled={
                           isDisable ||
                           InfData?.subscriptionDetails?.membershipCategory !==
-                            "68dae699c5b15073d66b892c"
+                          "68dae699c5b15073d66b892c"
                         }
                         required={
                           InfData?.subscriptionDetails?.membershipCategory ===
@@ -2264,7 +2293,7 @@ function ApplicationMgtDrawer({
                         disabled={
                           isDisable ||
                           InfData?.subscriptionDetails?.membershipCategory !==
-                            "68dae699c5b15073d66b892c"
+                          "68dae699c5b15073d66b892c"
                         }
                         required={
                           InfData?.subscriptionDetails?.membershipCategory ===
@@ -2409,9 +2438,8 @@ function ApplicationMgtDrawer({
                   value={InfData.professionalDetails.branch}
                   // isIDs={application ? false : true}
                   disabled={true}
-                  placeholder={`${
-                    workLocationLoading ? "Loading..." : "Select"
-                  }`}
+                  placeholder={`${workLocationLoading ? "Loading..." : "Select"
+                    }`}
                   onChange={(e) =>
                     handleInputChange(
                       "professionalDetails",
@@ -2432,9 +2460,8 @@ function ApplicationMgtDrawer({
                   // isIDs={application ? false : true}
                   label="Region"
                   name="Region"
-                  placeholder={`${
-                    workLocationLoading ? "Loading..." : "Select"
-                  }`}
+                  placeholder={`${workLocationLoading ? "Loading..." : "Select"
+                    }`}
                   value={InfData.professionalDetails?.region}
                   disabled={true}
                   onChange={(e) =>
@@ -2507,9 +2534,8 @@ function ApplicationMgtDrawer({
                       display: "block",
                       marginBottom: "8px",
                     }}
-                    className={`my-input-label ${
-                      errors?.nursingAdaptationProgramme ? "error-text1" : ""
-                    }`}
+                    className={`my-input-label ${errors?.nursingAdaptationProgramme ? "error-text1" : ""
+                      }`}
                   >
                     Are you currently undertaking a nursing adaptation
                     programme? <span className="text-danger">*</span>
@@ -2522,9 +2548,9 @@ function ApplicationMgtDrawer({
                         ?.nursingAdaptationProgramme === true
                         ? true
                         : InfData.professionalDetails
-                            ?.nursingAdaptationProgramme === false
-                        ? false
-                        : null
+                          ?.nursingAdaptationProgramme === false
+                          ? false
+                          : null
                     }
                     onChange={(e) =>
                       handleInputChange(
@@ -2557,7 +2583,7 @@ function ApplicationMgtDrawer({
                   value={InfData?.professionalDetails?.nmbiNumber}
                   disabled={
                     InfData?.professionalDetails?.nursingAdaptationProgramme !==
-                      true || isDisable
+                    true || isDisable
                   }
                   required={
                     InfData?.professionalDetails?.nursingAdaptationProgramme ===
@@ -2888,219 +2914,219 @@ function ApplicationMgtDrawer({
               {["graduate"].includes(
                 InfData?.subscriptionDetails?.membershipStatus
               ) && (
-                <>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
-                      <Checkbox
-                        checked={
-                          InfData?.subscriptionDetails
-                            ?.exclusiveDiscountsAndOffers
-                        }
-                        style={{ color: "#78350f" }}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "exclusiveDiscountsAndOffers",
-                            e.target.checked
-                          )
-                        }
-                        // className="my-input-wrapper"
-                        disabled={
-                          isDisable ||
-                          !["new", "graduate"].includes(
-                            InfData?.subscriptionDetails?.membershipStatus
-                          )
-                        }
+                  <>
+                    <Col xs={24} md={24}>
+                      <div
+                        className="pe-3 ps-3 pt-2 pb-2 h-100"
+                        style={{
+                          borderRadius: "4px",
+                          backgroundColor: "#fffbeb",
+                          border: "1px solid #fde68a",
+                        }}
                       >
-                        Would you like to hear about exclusive discounts and
-                        offers for INMO members?
-                      </Checkbox>
-                    </div>
-                  </Col>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
-                      <Checkbox
-                        checked={
-                          InfData?.subscriptionDetails?.incomeProtectionScheme
-                        }
-                        style={{ color: "#78350f" }}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "incomeProtectionScheme",
-                            e.target.checked
-                          )
-                        }
-                        // className="my-input-wrapper"
-                        disabled={
-                          isDisable ||
-                          !["new", "graduate"].includes(
-                            InfData?.subscriptionDetails?.membershipStatus
-                          )
-                        }
-                      >
-                        I consent to{" "}
-                        <Tooltip
-                          placement="top"
-                          styles={{
-                            body: {
-                              maxWidth: "600px",
-                              width: "600px",
-                              maxHeight: "650px", // Increased height for better content display
-                              overflow: "hidden",
-                              padding: "0",
-                            },
-                          }}
-                          title={
-                            <div
-                              style={{
-                                maxHeight: "650px", // Scrollable area height
-                                overflowY: "auto",
-                                marginTop: "5px",
-                                marginBottom: "5px",
-                                // padding: '0 5px'
-                              }}
-                            >
-                              <InsuranceScreen />
-                            </div>
+                        <Checkbox
+                          checked={
+                            InfData?.subscriptionDetails
+                              ?.exclusiveDiscountsAndOffers
+                          }
+                          style={{ color: "#78350f" }}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "subscriptionDetails",
+                              "exclusiveDiscountsAndOffers",
+                              e.target.checked
+                            )
+                          }
+                          // className="my-input-wrapper"
+                          disabled={
+                            isDisable ||
+                            !["new", "graduate"].includes(
+                              InfData?.subscriptionDetails?.membershipStatus
+                            )
                           }
                         >
-                          <a
-                            href="#"
-                            style={{
-                              color: "#78350f",
-                              textDecoration: "underline",
+                          Would you like to hear about exclusive discounts and
+                          offers for INMO members?
+                        </Checkbox>
+                      </div>
+                    </Col>
+                    <Col xs={24} md={24}>
+                      <div
+                        className="pe-3 ps-3 pt-2 pb-2 h-100"
+                        style={{
+                          borderRadius: "4px",
+                          backgroundColor: "#fffbeb",
+                          border: "1px solid #fde68a",
+                        }}
+                      >
+                        <Checkbox
+                          checked={
+                            InfData?.subscriptionDetails?.incomeProtectionScheme
+                          }
+                          style={{ color: "#78350f" }}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "subscriptionDetails",
+                              "incomeProtectionScheme",
+                              e.target.checked
+                            )
+                          }
+                          // className="my-input-wrapper"
+                          disabled={
+                            isDisable ||
+                            !["new", "graduate"].includes(
+                              InfData?.subscriptionDetails?.membershipStatus
+                            )
+                          }
+                        >
+                          I consent to{" "}
+                          <Tooltip
+                            placement="top"
+                            styles={{
+                              body: {
+                                maxWidth: "600px",
+                                width: "600px",
+                                maxHeight: "650px", // Increased height for better content display
+                                overflow: "hidden",
+                                padding: "0",
+                              },
                             }}
+                            title={
+                              <div
+                                style={{
+                                  maxHeight: "650px", // Scrollable area height
+                                  overflowY: "auto",
+                                  marginTop: "5px",
+                                  marginBottom: "5px",
+                                  // padding: '0 5px'
+                                }}
+                              >
+                                <InsuranceScreen />
+                              </div>
+                            }
                           >
-                            {" "}
-                            INMO Income Protection Scheme.
-                          </a>
-                        </Tooltip>
-                      </Checkbox>
-                      <p>
-                        By selecting ‘I consent’ below, you are agreeing to the
-                        INMO, sharing your Trade Union membership details with
-                        Cornmarket. Cornmarket as Scheme Administrator will
-                        process and retain details of your Trade Union
-                        membership for the purposes of assessing eligibility and
-                        admitting eligible members (automatically) to the Income
-                        Protection Scheme (with 9 Months’ Free Cover), and for
-                        the ongoing administration of the Scheme. Where you have
-                        also opted in to receiving marketing communications,
-                        Cornmarket will provide you with information on
-                        discounts and offers they have for INMO members. This
-                        consent can be withdrawn at any time by emailing
-                        Cornmarket at dataprotection@cornmarket.ie. Please note,
-                        if you do consent below, your data will be shared with
-                        Cornmarket, and you will be assessed for eligibility for
-                        automatic Income Protection Scheme membership. If you do
-                        not consent, your data will not be shared with
-                        Cornmarket for this purpose, you will not be assessed
-                        for automatic Scheme membership (including 9 Months’
-                        Free Cover) and you will have to contact Cornmarket
-                        separately should you wish to apply for Scheme
-                        membership. This offer will run on a pilot basis. Terms
-                        and conditions apply and are subject to change.
-                        Important: If you do not give your consent, your Trade
-                        union membership data will not be shared with Cornmarket
-                        for this purpose. This means you will not be assessed
-                        for Automatic Access to the Scheme.
-                      </p>
-                    </div>
-                  </Col>
-                </>
-              )}
+                            <a
+                              href="#"
+                              style={{
+                                color: "#78350f",
+                                textDecoration: "underline",
+                              }}
+                            >
+                              {" "}
+                              INMO Income Protection Scheme.
+                            </a>
+                          </Tooltip>
+                        </Checkbox>
+                        <p>
+                          By selecting ‘I consent’ below, you are agreeing to the
+                          INMO, sharing your Trade Union membership details with
+                          Cornmarket. Cornmarket as Scheme Administrator will
+                          process and retain details of your Trade Union
+                          membership for the purposes of assessing eligibility and
+                          admitting eligible members (automatically) to the Income
+                          Protection Scheme (with 9 Months’ Free Cover), and for
+                          the ongoing administration of the Scheme. Where you have
+                          also opted in to receiving marketing communications,
+                          Cornmarket will provide you with information on
+                          discounts and offers they have for INMO members. This
+                          consent can be withdrawn at any time by emailing
+                          Cornmarket at dataprotection@cornmarket.ie. Please note,
+                          if you do consent below, your data will be shared with
+                          Cornmarket, and you will be assessed for eligibility for
+                          automatic Income Protection Scheme membership. If you do
+                          not consent, your data will not be shared with
+                          Cornmarket for this purpose, you will not be assessed
+                          for automatic Scheme membership (including 9 Months’
+                          Free Cover) and you will have to contact Cornmarket
+                          separately should you wish to apply for Scheme
+                          membership. This offer will run on a pilot basis. Terms
+                          and conditions apply and are subject to change.
+                          Important: If you do not give your consent, your Trade
+                          union membership data will not be shared with Cornmarket
+                          for this purpose. This means you will not be assessed
+                          for Automatic Access to the Scheme.
+                        </p>
+                      </div>
+                    </Col>
+                  </>
+                )}
               {["new"].includes(
                 InfData?.subscriptionDetails?.membershipStatus
               ) && (
-                <>
-                  <Col xs={24} md={24}>
-                    <div
-                      className="pe-3 ps-3 pt-2 pb-2 h-100"
-                      style={{
-                        borderRadius: "4px",
-                        backgroundColor: "#fffbeb",
-                        border: "1px solid #fde68a",
-                      }}
-                    >
-                      <Checkbox
-                        checked={InfData?.subscriptionDetails?.inmoRewards}
-                        style={{ color: "#78350f" }}
-                        onChange={(e) =>
-                          handleInputChange(
-                            "subscriptionDetails",
-                            "inmoRewards",
-                            e.target.checked
-                          )
-                        }
-                        // className="my-input-wrapper"
-                        disabled={isDisable}
-                        // disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
+                  <>
+                    <Col xs={24} md={24}>
+                      <div
+                        className="pe-3 ps-3 pt-2 pb-2 h-100"
+                        style={{
+                          borderRadius: "4px",
+                          backgroundColor: "#fffbeb",
+                          border: "1px solid #fde68a",
+                        }}
                       >
-                        Tick here to join{" "}
-                        <Tooltip
-                          placement="top"
-                          styles={{
-                            body: {
-                              maxWidth: "600px",
-                              width: "600px",
-                              maxHeight: "650px", // Increased height for better content display
-                              overflow: "hidden",
-                              padding: "0",
-                            },
-                          }}
-                          title={
-                            <div
+                        <Checkbox
+                          checked={InfData?.subscriptionDetails?.inmoRewards}
+                          style={{ color: "#78350f" }}
+                          onChange={(e) =>
+                            handleInputChange(
+                              "subscriptionDetails",
+                              "inmoRewards",
+                              e.target.checked
+                            )
+                          }
+                          // className="my-input-wrapper"
+                          disabled={isDisable}
+                        // disabled={isDisable || !["new", "graduate"].includes(InfData?.subscriptionDetails?.membershipStatus)}
+                        >
+                          Tick here to join{" "}
+                          <Tooltip
+                            placement="top"
+                            styles={{
+                              body: {
+                                maxWidth: "600px",
+                                width: "600px",
+                                maxHeight: "650px", // Increased height for better content display
+                                overflow: "hidden",
+                                padding: "0",
+                              },
+                            }}
+                            title={
+                              <div
+                                style={{
+                                  maxHeight: "650px", // Scrollable area height
+                                  overflowY: "auto",
+                                  marginTop: "5px",
+                                  marginBottom: "5px",
+                                  // padding: '0 5px'
+                                }}
+                              >
+                                <RewardsScreen />
+                              </div>
+                            }
+                          >
+                            <a
+                              href="#"
                               style={{
-                                maxHeight: "650px", // Scrollable area height
-                                overflowY: "auto",
-                                marginTop: "5px",
-                                marginBottom: "5px",
-                                // padding: '0 5px'
+                                color: "#78350f",
+                                textDecoration: "underline",
                               }}
                             >
-                              <RewardsScreen />
-                            </div>
-                          }
-                        >
-                          <a
-                            href="#"
-                            style={{
-                              color: "#78350f",
-                              textDecoration: "underline",
-                            }}
-                          >
-                            Rewards
-                          </a>
-                        </Tooltip>{" "}
-                        for INMO members
-                      </Checkbox>
-                      <p>
-                        By ticking here, you confirm that you agree to the Terms
-                        & Conditions available on
-                        Cornmarket.ie/rewards-club-terms and the Data Protection
-                        Statement available on Cornmarket.ie/rewards-dps.
-                        Cornmarket will contact you about your Rewards Benefits.
-                        You can opt out at any time.
-                      </p>
-                    </div>
-                  </Col>
-                </>
-              )}
+                              Rewards
+                            </a>
+                          </Tooltip>{" "}
+                          for INMO members
+                        </Checkbox>
+                        <p>
+                          By ticking here, you confirm that you agree to the Terms
+                          & Conditions available on
+                          Cornmarket.ie/rewards-club-terms and the Data Protection
+                          Statement available on Cornmarket.ie/rewards-dps.
+                          Cornmarket will contact you about your Rewards Benefits.
+                          You can opt out at any time.
+                        </p>
+                      </div>
+                    </Col>
+                  </>
+                )}
               {/* Checkboxes in 50% width */}
               {/* <Col xs={24} md={12}>
                 <div className="pe-3 ps-3 pt-2 pb-2 h-100" style={{ borderRadius: '4px', backgroundColor: "#fffbeb", border: "1px solid #fde68a" }}>
@@ -3162,7 +3188,7 @@ function ApplicationMgtDrawer({
                       name="otherIrishTradeUnion"
                       value={
                         InfData.subscriptionDetails?.otherIrishTradeUnion !==
-                        null
+                          null
                           ? InfData.subscriptionDetails?.otherIrishTradeUnion
                           : null
                       }
@@ -3241,7 +3267,7 @@ function ApplicationMgtDrawer({
               </Col>
 
               {/* Recruited By */}
-              <Col xs={24} md={12}>
+              <Col xs={24} md={6}>
                 <MyInput
                   label="Recruited By"
                   name="recuritedBy"
@@ -3257,7 +3283,7 @@ function ApplicationMgtDrawer({
                 />
               </Col>
 
-              <Col xs={24} md={12}>
+              <Col xs={24} md={6}>
                 <MyInput
                   label="Recruited By (Membership No)"
                   name="recuritedByMembershipNo"
@@ -3272,7 +3298,53 @@ function ApplicationMgtDrawer({
                   }
                 />
               </Col>
-
+              <Col span={12}>
+                <label className="my-input-label">
+                  Validate Recruited By Information
+                </label>
+                <div style={{
+                  display: 'flex',
+                  marginBottom: '20px',
+                  height: '40px'
+                }}>
+                  <Input
+                  disabled={isDisable}
+                    placeholder="Search by name or membership number"
+                    allowClear
+                    value={query}
+                    onChange={(e) => setQuery(e.target.value)}
+                    onPressEnter={() => handleSearch(query)}
+                    style={{
+                      flex: 1,
+                      border: '1px solid #d9d9d9',
+                      borderRight: 'none',
+                      borderRadius: '6px 0 0 6px',
+                      height: '40px',
+                      paddingLeft:4,
+                      paddingRight:4,
+                    }}
+                  />
+                  <Button
+                    type="primary"
+                    icon={<SearchOutlined />}
+                    onClick={() => handleSearch(query)}
+                    loading={loading}
+                    style={{
+                      backgroundColor: '#215e97',
+                      borderColor: '#215e97',
+                      borderRadius: '0 4px 4px 0',
+                      height: '40px',
+                      width: '90px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      borderLeft: 'none'
+                    }}
+                  >
+                    Search
+                  </Button>
+                </div>
+              </Col>
               {/* Sections */}
               <Col xs={24} md={12}>
                 <CustomSelect
@@ -3392,7 +3464,7 @@ function ApplicationMgtDrawer({
                       )
                     }
                     disabled={isDisable}
-                    // className="my-input-wrapper"
+                  // className="my-input-wrapper"
                   >
                     Tick here to allow our partners to contact you about Value
                     added Services by Email and SMS

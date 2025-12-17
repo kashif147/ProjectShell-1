@@ -130,6 +130,9 @@ const StandingOrders = lazyWithRetry(() =>
 const BatchMemberSummary = lazyWithRetry(() =>
   import("./pages/finance/BatchMemberSummary")
 );
+const SimpleBatchMemberSummary = lazyWithRetry(() =>
+  import("./pages/membership/SimpleBatchMemberSummary")
+);
 const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
 const Reconciliation = lazyWithRetry(() =>
   import("./pages/finance/Reconciliation")
@@ -193,6 +196,9 @@ const ProductManagementDemo = lazyWithRetry(() =>
 // );
 const NewGraduate = lazyWithRetry(() => import("./pages/membership/NewGraduate"));
 const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
+const RecruitAFriend = lazyWithRetry(() =>
+  import("./pages/membership/RecruitAFriend")
+);
 
 function Entry() {
   const location = useLocation();
@@ -621,6 +627,14 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
+                <Route
+                  path="SimpleBatchMemberSummary"
+                  element={
+                    <ProtectedRoute>
+                      <SimpleBatchMemberSummary />
+                    </ProtectedRoute>
+                  }
+                />
 
                     <Route
                       path="NotDesignedYet"
@@ -831,10 +845,18 @@ function Entry() {
                       }
                     />
                     <Route
-                      path="NewlyJoint"
+                      path="CornMarketRewards"
                       element={
                         <ProtectedRoute>
                           <NewlyJoint />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="RecruitAFriend"
+                      element={
+                        <ProtectedRoute>
+                          <RecruitAFriend />
                         </ProtectedRoute>
                       }
                     />

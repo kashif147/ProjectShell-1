@@ -8,7 +8,22 @@ const getAuthHeaders = () => ({
   "Content-Type": "application/json",
 });
 
-// Only GET operation
+// Sort utility function
+const sortArray = (array, key, order = 'asc') => {
+  if (!Array.isArray(array)) return [];
+  
+  return [...array].sort((a, b) => {
+    const aValue = a[key] || '';
+    const bValue = b[key] || '';
+    
+    const comparison = String(aValue).toLowerCase()
+      .localeCompare(String(bValue).toLowerCase());
+    
+    return order === 'desc' ? -comparison : comparison;
+  });
+};
+
+// Only GET operation - CONDITION REMOVED
 export const getAllLookups = createAsyncThunk(
   "lookups/getAllLookups",
   async (_, { rejectWithValue }) => {
@@ -22,29 +37,8 @@ export const getAllLookups = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch lookups"
       );
     }
-  },
-  {
-    condition: (_, { getState }) => {
-      const { lookups } = getState();
-      // Don't dispatch if already loading
-      if (lookups.loading) {
-        return false; // Prevent duplicate request
-      }
-      // Don't retry if there's a recent error (within last 30 seconds) - prevents infinite loops on CORS errors
-      if (lookups.error && lookups.lastErrorTime) {
-        const timeSinceError = Date.now() - lookups.lastErrorTime;
-        if (timeSinceError < 30000) {
-          return false; // Prevent retry on recent error
-        }
-      }
-      // Allow fetch if data doesn't exist or is empty
-      if (!lookups.lookups || lookups.lookups.length === 0) {
-        return true; // Allow fetch
-      }
-      // Prevent if data already exists
-      return false;
-    },
   }
+  // Condition block removed completely
 );
 
 const lookupsSlice = createSlice({
@@ -62,10 +56,11 @@ const lookupsSlice = createSlice({
     regionOptions: [],
     secondarySectionOptions: [],
     countryOptions: [],
+    provincesOption:[],
 
     // Raw API response (optional - remove if not needed)
     lookups: [],
-    loading: false,
+    lookupsloading: false,
     error: null,
     lastErrorTime: null,
   },
@@ -86,20 +81,23 @@ const lookupsSlice = createSlice({
       state.regionOptions = [];
       state.secondarySectionOptions = [];
       state.countryOptions = [];
+      state.provincesOption = [];
       state.lookups = [];
     },
   },
   extraReducers: (builder) => {
     builder
       .addCase(getAllLookups.pending, (state) => {
-        state.loading = true;
+        state.lookupsloading = true;
         // Don't clear error on pending - keep it to prevent retries
       })
       .addCase(getAllLookups.fulfilled, (state, { payload }) => {
-        state.loading = false;
+        state.lookupsloading = false;
         state.error = null;
         state.lastErrorTime = null;
         state.lookups = payload;
+        
+        // Reset all arrays
         state.titleOptions = [];
         state.genderOptions = [];
         state.workLocationOptions = [];
@@ -111,6 +109,7 @@ const lookupsSlice = createSlice({
         state.regionOptions = [];
         state.secondarySectionOptions = [];
         state.countryOptions = [];
+        state.provincesOption = []
 
         if (Array.isArray(payload)) {
           payload.forEach((item) => {
@@ -153,6 +152,9 @@ const lookupsSlice = createSlice({
                 break;
               case "Country":
                 state.countryOptions.push(optionItem);
+                break
+              case "Provinces":
+                state.provincesOption.push(optionItem);
                 break;
               default:
                 break;
@@ -184,9 +186,23 @@ const lookupsSlice = createSlice({
         if (state.workLocationOptions.length > 0) {
           state.workLocationOptions.push(otherOption);
         }
+
+        // Sort all arrays in ascending order by label
+        state.titleOptions = sortArray(state.titleOptions, 'label', 'asc');
+        state.genderOptions = sortArray(state.genderOptions, 'label', 'asc');
+        state.workLocationOptions = sortArray(state.workLocationOptions, 'label', 'asc');
+        state.gradeOptions = sortArray(state.gradeOptions, 'label', 'asc');
+        state.sectionOptions = sortArray(state.sectionOptions, 'label', 'asc');
+        state.membershipCategoryOptions = sortArray(state.membershipCategoryOptions, 'label', 'asc');
+        state.paymentTypeOptions = sortArray(state.paymentTypeOptions, 'label', 'asc');
+        state.branchOptions = sortArray(state.branchOptions, 'label', 'asc');
+        state.regionOptions = sortArray(state.regionOptions, 'label', 'asc');
+        state.secondarySectionOptions = sortArray(state.secondarySectionOptions, 'label', 'asc');
+        state.countryOptions = sortArray(state.countryOptions, 'label', 'asc');
+        state.Provinces = sortArray(state.Provinces, 'label', 'asc');
       })
       .addCase(getAllLookups.rejected, (state, action) => {
-        state.loading = false;
+        state.lookupsloading = false;
         state.error = action.payload;
         state.lastErrorTime = Date.now();
       });

@@ -305,14 +305,23 @@ export const subscriptionItems = [
     ),
     label: <div className="sidebar-label">Change Category</div>,
   },
+  // {
+  //   key: "CornMarket",
+  //   icon: (
+  //     <div className="icon">
+  //       <FaBuilding />
+  //     </div>
+  //   ),
+  //   label: <div className="sidebar-label">CornMarket</div>,
+  // },
   {
-    key: "CornMarket",
+    key: "LandingPage",
     icon: (
       <div className="icon">
-        <FaBuilding />
+        <FaGlobe />
       </div>
     ),
-    label: <div className="sidebar-label">CornMarket</div>,
+    label: <div className="sidebar-label">LandingPage</div>,
   },
   {
     key: "Recruit a Friend",
@@ -324,13 +333,13 @@ export const subscriptionItems = [
     label: <div className="sidebar-label">Recruit a Friend</div>,
   },
   {
-    key: "LandingPage",
+    key: "Recruit a Friend",
     icon: (
       <div className="icon">
-        <FaGlobe />
+        <FaUserFriends />
       </div>
     ),
-    label: <div className="sidebar-label">LandingPage</div>,
+    label: <div className="sidebar-label">Recruit a Friend</div>,
   },
 ];
 export const configurationItems = [

@@ -12,6 +12,7 @@ import MyConfirm from "../../component/common/MyConfirm";
 import MyAlert from "../../component/common/MyAlert";
 import { loadtempletedetails } from "../../features/templete/templeteDetailsSlice";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 // Add these imports at the top of your file
 
 dayjs.extend(utc);
@@ -39,7 +40,7 @@ const TempletsSummary = () => {
                 return;
             }
 
-            const response = await fetch(`${process.env.REACT_APP_CUMM}/templates/${templateId}`, {
+            const response = await axios(`${process.env.REACT_APP_CUMM}/templates/${templateId}`, {
                 method: 'DELETE',
                 headers: {
                     'Authorization': `Bearer ${token}`,
