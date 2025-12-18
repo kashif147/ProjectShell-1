@@ -61,6 +61,11 @@ const Breadcrumb = () => {
       page: "Profile Summary",
       icon: "👤",
     },
+    "/Members": {
+      module: "Subscriptions & Rewards",
+      page: "Members Subscriptions",
+      icon: "👤",
+    },
     "/Details": {
       module: "Subscriptions & Rewards",
       page: "Profile Details",

@@ -64,6 +64,22 @@ export const FilterProvider = ({ children }) => {
         "Reminder Date",
         "Cancellation Flag",
       ],
+      Members: [
+        "Subscription Status",   // Active / Cancelled / Expired
+        "Membership Category",   // membershipCategory
+        "Payment Type",          // Payroll Deduction, Direct Debit, etc.
+        "Payment Frequency",     // Monthly, Annually
+        "Subscription Year",     // 2025, 2026
+        "Start Date",            // subscription startDate
+        "End Date",              // subscription endDate
+        "Rollover Date",         // rolloverDate
+        "Membership Movement",   // NewJoin / Renewal / Other
+        "Payroll No",            // payrollNo
+        "Consent",               // consent flag
+        "Created At",            // subscription creation date
+        "Updated At",            // last update
+        "Cancellation/Reinstated" // cancellation.reinstated
+      ],
     }),
     []
   );
@@ -95,6 +111,16 @@ export const FilterProvider = ({ children }) => {
         selectedValues: ["Active"] // ✅ Default for Membership screen
       }
     },
+    Memebers:{
+      "Subscription Status": {
+        operator: "==",
+        selectedValues: [] // No default values for Profile
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: [] // No default values for Profile
+      }
+    }
   };
 
   // 🔹 Dropdown options per filter
@@ -128,15 +154,17 @@ export const FilterProvider = ({ children }) => {
     const pathMap = {
       '/applications': 'Applications',
       '/Summary': 'Profile',
-      '/membership': 'Membership'
+      '/membership': 'Membership',
+      "/Members": "Members"
+
     };
     return pathMap[activeScreenName] || 'Applications';
   };
   const activeScreen = getScreenFromPath(activeScreenName)
-  useEffect(()=>{
-  setActivePage(activeScreen)
-  },[activeScreen])
-  
+  useEffect(() => {
+    setActivePage(activeScreen)
+  }, [activeScreen])
+
   // 🔹 Reset filters when changing page - UPDATED
   useEffect(() => {
     setVisibleFilters(defaultVisibleFilters[activePage] || []);

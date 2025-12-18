@@ -48,7 +48,8 @@ const Toolbar = () => {
     const pathMap = {
       '/applications': 'Applications',
       '/profile': 'Profile', 
-      '/membership': 'Membership'
+      '/membership': 'Membership',
+        "/Members": "Members"
     };
     return pathMap[activeScreenName] || 'Applications';
   };

@@ -616,6 +616,7 @@ const handleBulkApproval = async (selectedApplications) => {
             location?.pathname == "/members" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
+            location?.pathname == "/Members" ||
             location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||

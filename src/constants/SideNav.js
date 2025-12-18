@@ -407,6 +407,15 @@ export const configurationItems = [
     label: <div className="sidebar-label">Templetes</div>,
   },
   {
+    key: "Members",
+    icon: (
+      <div className="icon">
+        <FaFileCode />
+      </div>
+    ),
+    label: <div className="sidebar-label">Members</div>,
+  },
+  {
     key: "System Configuration",
     icon: (
       <div className="icon">

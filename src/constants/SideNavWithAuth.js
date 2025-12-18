@@ -231,6 +231,13 @@ export const subscriptionItems = [
     ["crm:member:read", "crm:member:list"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
+    createMenuItem(
+    "Members",
+    <FaFileCode />,
+    "Members",
+    ["user:read", "role:read"],
+    ["SU", "GS", "DGS"]
+  ),
   createMenuItem(
     "Reminders",
     <FaRegClock />,
@@ -347,6 +354,7 @@ export const configurationItems = [
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),
+
   createMenuItem(
     "System Configuration",
     <FaWrench />,

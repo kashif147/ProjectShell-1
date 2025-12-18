@@ -1,23 +1,49 @@
-import React from 'react'
-import { getAllSubscription } from '../../features/subscription/subscriptionSlice'
+import { useEffect, useMemo } from "react";
 import { useDispatch, useSelector } from "react-redux";
-import { useEffect } from "react";
+import TableComponent from "../../component/common/TableComponent";
+import { getAllSubscription } from "../../features/subscription/subscriptionSlice";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
 
-function Memebers() {
+dayjs.extend(utc);
+
+const formatLocalDate = (value) =>
+    value ? dayjs.utc(value).local().format("DD/MM/YYYY") : "-";
+
+function Members() {
     const dispatch = useDispatch();
 
     const {
         subscriptionsData,
         subscriptionLoading,
-        subscriptionErrors,
     } = useSelector((state) => state.subscription);
+
     useEffect(() => {
         dispatch(getAllSubscription());
     }, [dispatch]);
-    console.log(subscriptionsData,"subs");
+
+    const data = useMemo(() => {
+        if (!subscriptionsData?.data) return [];
+
+        return subscriptionsData.data.map((item) => ({
+            ...item,
+            startDate: formatLocalDate(item.startDate),
+            endDate: formatLocalDate(item.endDate),
+            rolloverDate: formatLocalDate(item.rolloverDate),
+            createdAt: formatLocalDate(item.createdAt),
+            updatedAt: formatLocalDate(item.updatedAt),
+        }));
+    }, [subscriptionsData]);
+
     return (
-        <div>Memebers</div>
-    )
+        <div style={{ width: "100%" }}>
+            <TableComponent
+                isGrideLoading={subscriptionLoading}
+                data={data}
+                screenName="Members"
+            />
+        </div>
+    );
 }
 
-export default Memebers
+export default Members;

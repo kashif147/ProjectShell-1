@@ -273,6 +273,16 @@ baseMenuItems.forEach((item, index) => {
           state: { search: "Templetes" },
         });
         break;
+      case "Members":
+        navigate("/Members", {
+          state: { search: "Members" },
+        });
+        break;
+      case "Templetes":
+        navigate("/templeteSummary", {
+          state: { search: "Templetes" },
+        });
+        break;
       case "CornMarket New Graduate":
         navigate("/NewGraduate", { state: { search: "CornMarket New Graduate" } });
         break;
