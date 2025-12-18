@@ -96,6 +96,7 @@ const Batches = lazyWithRetry(() => import("./pages/finance/Batches"));
 const Import = lazyWithRetry(() => import("./pages/finance/Import"));
 const Cheque = lazyWithRetry(() => import("./pages/finance/Cheque"));
 const StandingOrders = lazyWithRetry(() => import("./pages/finance/StandingOrders"));
+const Subscriptions = lazyWithRetry(() => import("./pages/subscription/Memebers"));
 const BatchMemberSummary = lazyWithRetry(() =>
   import("./pages/finance/BatchMemberSummary")
 );
@@ -555,6 +556,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <Reconciliation />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="Members"
+                      element={
+                        <ProtectedRoute>
+                          <Subscriptions />
                         </ProtectedRoute>
                       }
                     />

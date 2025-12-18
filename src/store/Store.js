@@ -38,9 +38,11 @@ import templeteDetailsReducer from "../features/templete/templeteDetailsSlice";
 import transferRequestReducer from '../features/profiles/TransferRequest';
 import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
 import filterTransferReducer from '../features/profiles/filterTransferSlice';
+import subscriptionReducer from "../features/subscription/subscriptionSlice";
 
 const store = configureStore({
   reducer: {
+     subscription: subscriptionReducer,
     auth: authReducer, // Authentication state
     regions: regionReducer, // Regions state
     lookups: lookupsReducer,
