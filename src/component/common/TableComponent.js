@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import SimpleMenu from "./SimpleMenu"; import {
   filterTransferById,
   fetchAndFilterTransferById,
@@ -234,120 +235,120 @@ const TableComponent = ({
   };
 
   // **UPDATED: Fixed getRowSelectionConfig with proper height and alignment**
-const getRowSelectionConfig = () => {
-  if (!enableRowSelection) return null;
+  const getRowSelectionConfig = () => {
+    if (!enableRowSelection) return null;
 
-  const config = {
-    type: selectionType,
-    selectedRowKeys,
-    onChange: (selectedKeys, selectedRows) => {
-      if (onSelectionChange) onSelectionChange(selectedKeys, selectedRows);
-    },
-    onSelect: (record, selected, selectedRows) => {
-      // Trigger row click logic only when checkbox is clicked
-      console.log("Row clicked:", record); // ✅ your row clicked log
-      setSelectedRowData([record]);
-      setSelectedRowIndex(dataSource.findIndex(r => r.key === record.key));
-    },
-    onSelectAll: (selected, selectedRows, changeRows) => {
-      console.log("Select all triggered:", selectedRows);
-      // Optional: handle select all logic
-    },
-    columnWidth: 60,
-    fixed: true,
-    // Optional: align checkbox properly
-    columnStyle: { padding: "12px 8px", verticalAlign: "middle", height: "auto", minHeight: "48px" },
+    const config = {
+      type: selectionType,
+      selectedRowKeys,
+      onChange: (selectedKeys, selectedRows) => {
+        if (onSelectionChange) onSelectionChange(selectedKeys, selectedRows);
+      },
+      onSelect: (record, selected, selectedRows) => {
+        // Trigger row click logic only when checkbox is clicked
+        console.log("Row clicked:", record); // ✅ your row clicked log
+        setSelectedRowData([record]);
+        setSelectedRowIndex(dataSource.findIndex(r => r.key === record.key));
+      },
+      onSelectAll: (selected, selectedRows, changeRows) => {
+        console.log("Select all triggered:", selectedRows);
+        // Optional: handle select all logic
+      },
+      columnWidth: 60,
+      fixed: true,
+      // Optional: align checkbox properly
+      columnStyle: { padding: "12px 8px", verticalAlign: "middle", height: "auto", minHeight: "48px" },
+    };
+
+    // Remove dropdown menu in header
+    config.selections = undefined;
+
+    return config;
   };
-
-  // Remove dropdown menu in header
-  config.selections = undefined;
-
-  return config;
-};
 
 
   // Build columns
- const draggableColumns = [
-  {
-    title: (
-      <Gridmenu
-        title={
-          <BsSliders
-            style={{ fontSize: "20px", color: "white", fontWeight: 600 }}
-          />
-        }
-        columnsForFilter={columnsForFilter}
-        setColumnsForFilter={setColumnsForFilter}
-        screenName={screenName}
-        data={columnsDragbe}
-        setColumnsDragbe={setColumnsDragbe}
-      />
-    ),
-    key: "gridmenu",
-    width: 75,
-    fixed: "left",
-    render: (record, index) => (
-      <Space size="small">
-        <CgAttachment
-          style={{
-            fontSize: "15px",
-            fontWeight: 500,
-            color: record?.isAttachment ? "green" : "inherit",
-          }}
-        />
-        <input
-          type="file"
-          ref={fileInputRef}
-          onChange={(e) => handleFileUpload(e, record?.key)}
-          style={{ display: "none" }}
-        />
-        {/* Three dots menu */}
-        <SimpleMenu
+  const draggableColumns = [
+    {
+      title: (
+        <Gridmenu
           title={
-            <BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />
+            <BsSliders
+              style={{ fontSize: "20px", color: "white", fontWeight: 600 }}
+            />
           }
-          data={{
-            Delete: "false",
-            Attached: "false",
-            View: "false",
-            "Print Label": "false",
-            "Transfer Requests": false,
-            "Career Break": false,
-            "Generate NFC tag": false,
-            "Change Category": false,
-          }}
-          isCheckBox={false}
-          isSearched={false}
-          isTransparent={true}
-          actions={() => {}}
-          attachedFtn={() => {
-            handleUploadClick();
-          }}
-          record={record}
-          index={index}
+          columnsForFilter={columnsForFilter}
+          setColumnsForFilter={setColumnsForFilter}
+          screenName={screenName}
+          data={columnsDragbe}
+          setColumnsDragbe={setColumnsDragbe}
         />
-        {location?.pathname === "/BatchMemberSummary" && (
-          <MdKeyboard
-            style={{ fontSize: "15px", color: "#595959" }}
-            onClick={() => {
-              setmanualPayment(!isBatchmemberOpen);
-              handleRowClick(record, index);
+      ),
+      key: "gridmenu",
+      width: 75,
+      fixed: "left",
+      render: (record, index) => (
+        <Space size="small">
+          <CgAttachment
+            style={{
+              fontSize: "15px",
+              fontWeight: 500,
+              color: record?.isAttachment ? "green" : "inherit",
             }}
           />
-        )}
-      </Space>
-    ),
-  },
-  ...columnsDragbe.map((col) => ({
-    ...col,
-    title: (
-      <DraggableHeaderCell id={col.key} key={col.key}>
-        {col.title}
-      </DraggableHeaderCell>
-    ),
-    render: col.render
-      ? col.render
-      : (text, record, index) => {
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={(e) => handleFileUpload(e, record?.key)}
+            style={{ display: "none" }}
+          />
+          {/* Three dots menu */}
+          <SimpleMenu
+            title={
+              <BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />
+            }
+            data={{
+              Delete: "false",
+              Attached: "false",
+              View: "false",
+              "Print Label": "false",
+              "Transfer Requests": false,
+              "Career Break": false,
+              "Generate NFC tag": false,
+              "Change Category": false,
+            }}
+            isCheckBox={false}
+            isSearched={false}
+            isTransparent={true}
+            actions={() => { }}
+            attachedFtn={() => {
+              handleUploadClick();
+            }}
+            record={record}
+            index={index}
+          />
+          {location?.pathname === "/BatchMemberSummary" && (
+            <MdKeyboard
+              style={{ fontSize: "15px", color: "#595959" }}
+              onClick={() => {
+                setmanualPayment(!isBatchmemberOpen);
+                handleRowClick(record, index);
+              }}
+            />
+          )}
+        </Space>
+      ),
+    },
+    ...columnsDragbe.map((col) => ({
+      ...col,
+      title: (
+        <DraggableHeaderCell id={col.key} key={col.key}>
+          {col.title}
+        </DraggableHeaderCell>
+      ),
+      render: col.render
+        ? col.render
+        : (text, record, index) => {
           switch (col.title) {
             case "Full Name":
               return (
@@ -361,6 +362,12 @@ const getRowSelectionConfig = () => {
                   onClick={() => {
                     handleRowClick(record, index);
                     dispatch(getProfileDetailsById(record?._id));
+                    dispatch(
+                      getSubscriptionByProfileId({
+                        profileId: record?._id,
+                        isCurrent: true,
+                      })
+                    );
                   }}
                   style={{ color: "inherit", textDecoration: "none" }}
                 >
@@ -379,7 +386,14 @@ const getRowSelectionConfig = () => {
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    dispatch(getProfileDetailsById(record?._id));
+                      dispatch(
+                      getSubscriptionByProfileId({
+                        profileId: record?.profileId,
+                        isCurrent: true,
+                      }))
+                    dispatch(getProfileDetailsById(record?.profileId))
+                    // dispatch(getProfileDetailsById(record?._id))
+                    
                   }}
                   style={{ color: "inherit", textDecoration: "none", cursor: "pointer" }}
                 >
@@ -555,76 +569,76 @@ const getRowSelectionConfig = () => {
               );
           }
         },
-    sorter:
-      col.title === "Full Name"
-        ? {
+      sorter:
+        col.title === "Full Name"
+          ? {
             compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
             multiple: 3,
           }
-        : col.title === "Station"
-        ? {
-            compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-            multiple: 2,
-          }
-        : col.title === "Duty"
-        ? {
-            compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-            multiple: 1,
-          }
-        : col.title === "Reg No"
-        ? {
-            compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-            multiple: 1,
-          }
-        : col.title === "Correspondence ID"
-        ? {
-            compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-            multiple: 1,
-          }
-        : undefined,
-    sortDirections: ["ascend", "descend"],
-    filters:
-      col.title === "Station" || col.title === "Current Station"
-        ? [
+          : col.title === "Station"
+            ? {
+              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              multiple: 2,
+            }
+            : col.title === "Duty"
+              ? {
+                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
+              : col.title === "Reg No"
+                ? {
+                  compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                  multiple: 1,
+                }
+                : col.title === "Correspondence ID"
+                  ? {
+                    compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                    multiple: 1,
+                  }
+                  : undefined,
+      sortDirections: ["ascend", "descend"],
+      filters:
+        col.title === "Station" || col.title === "Current Station"
+          ? [
             { text: "GALC", value: "GALC" },
             { text: "DUBC", value: "DUBC" },
             { text: "STOC", value: "STOC" },
           ]
-        : col.title === "Division"
-        ? [
-            { text: "0026", value: "0026" },
-            { text: "0031", value: "0031" },
-            { text: "0045", value: "0045" },
-          ]
-        : col.title === "Approval Status"
-        ? [
-            { text: "Approved", value: "APPROVED" },
-            { text: "Pending", value: "Pending" },
-            { text: "Rejected", value: "Rejected" },
-          ]
-        : col.title === "Current Station"
-        ? [
-            { text: "0026", value: "0026" },
-            { text: "0031", value: "0031" },
-            { text: "0045", value: "0045" },
-          ]
-        : col.title === "Method of Contact"
-        ? [
-            { text: "Call", value: "Call" },
-            { text: "Email", value: "Email" },
-            { text: "Letter", value: "Letter" },
-          ]
-        : undefined,
-    onFilter: (value, record) => {
-      if (col.title === "Station" || col.title === "Current Station")
-        return record[col.dataIndex] === value;
-      if (col.title === "Division") return record[col.dataIndex] === value;
-      if (col.title === "Approval Status") return record[col.dataIndex] === value;
-      if (col.title === "Method of Contact") return record[col.dataIndex] === value;
-      return true;
-    },
-  })),
-];
+          : col.title === "Division"
+            ? [
+              { text: "0026", value: "0026" },
+              { text: "0031", value: "0031" },
+              { text: "0045", value: "0045" },
+            ]
+            : col.title === "Approval Status"
+              ? [
+                { text: "Approved", value: "APPROVED" },
+                { text: "Pending", value: "Pending" },
+                { text: "Rejected", value: "Rejected" },
+              ]
+              : col.title === "Current Station"
+                ? [
+                  { text: "0026", value: "0026" },
+                  { text: "0031", value: "0031" },
+                  { text: "0045", value: "0045" },
+                ]
+                : col.title === "Method of Contact"
+                  ? [
+                    { text: "Call", value: "Call" },
+                    { text: "Email", value: "Email" },
+                    { text: "Letter", value: "Letter" },
+                  ]
+                  : undefined,
+      onFilter: (value, record) => {
+        if (col.title === "Station" || col.title === "Current Station")
+          return record[col.dataIndex] === value;
+        if (col.title === "Division") return record[col.dataIndex] === value;
+        if (col.title === "Approval Status") return record[col.dataIndex] === value;
+        if (col.title === "Method of Contact") return record[col.dataIndex] === value;
+        return true;
+      },
+    })),
+  ];
 
   // Pagination logic
   const pageSize = 8;

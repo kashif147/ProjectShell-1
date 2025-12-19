@@ -198,7 +198,7 @@ const Breadcrumb = () => {
     // Membership Pages
     "/members": {
       module: "Subscriptions & Rewards",
-      page: "Members",
+      page: "Members Subscriptions",
       icon: "👥",
     },
     "/MembershipDashboard": {

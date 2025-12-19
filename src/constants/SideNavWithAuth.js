@@ -187,9 +187,9 @@ export const profileItems = [
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
-    "Members",
+    "Members Subscriptions",
     <FaUsers />,
-    "Members",
+    "Members Subscriptions",
     ["crm:member:read", "crm:member:list"],
     ["MEMBER", "MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
@@ -232,9 +232,9 @@ export const subscriptionItems = [
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
     createMenuItem(
-    "Members",
+    "Members Subscriptions",
     <FaFileCode />,
-    "Members",
+    "Members Subscriptions",
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),

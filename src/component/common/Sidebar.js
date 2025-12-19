@@ -273,9 +273,9 @@ baseMenuItems.forEach((item, index) => {
           state: { search: "Templetes" },
         });
         break;
-      case "Members":
+      case "Members Subscriptions":
         navigate("/Members", {
-          state: { search: "Members" },
+          state: { search: "Members Subscriptions" },
         });
         break;
       case "Templetes":

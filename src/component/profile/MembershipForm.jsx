@@ -7,6 +7,8 @@ import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSelector, useDispatch } from "react-redux";
+import { getCategoryLookup } from "../../features/CategoryLookupSlice";
+
 import {
   getProfileDetailsById,
   clearProfileDetails,
@@ -14,10 +16,6 @@ import {
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
-import {
-  searchProfiles,
-  clearResults,
-} from "../../features/profiles/SearchProfile";
 
 const MembershipForm = ({
   isEditMode = false,
@@ -27,8 +25,20 @@ const MembershipForm = ({
   const { profileDetails, loading, error } = useSelector(
     (state) => state.profileDetails
   );
-  // const { profileSearchData } = useSelector((state) => state.profile);
-  const { profileSearchData } = useSelector((state) => state.searchProfile);
+  const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
+    (state) => state.countries
+  );
+
+  const { categoryData, currentCategoryId } = useSelector(
+    (state) => state.categoryLookup
+  );
+
+  // Subscription API data
+  const {
+    ProfileSubData,
+    ProfileSubLoading,
+    ProfileSubError,
+  } = useSelector((state) => state.profileSubscription);
 
   const dispatch = useDispatch();
   const {
@@ -44,7 +54,7 @@ const MembershipForm = ({
     secondarySectionOptions,
     countryOptions,
   } = useSelector((state) => state.lookups);
-  console.log(profileSearchData, "trt");
+
   dayjs.extend(utc);
   dayjs.extend(timezone);
 
@@ -54,27 +64,22 @@ const MembershipForm = ({
     };
   }, []);
 
-  useEffect(() => {
-    return () => {
-      dispatch(clearResults());
-    };
-  }, [dispatch]);
   const convertUTCToLocalDate = (utcDateString) => {
     if (!utcDateString) return null;
-
-    // Convert UTC to local timezone and format as dd/mm/yyyy
     return dayjs.utc(utcDateString).local();
   };
+  useEffect(() => {
+    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"))
+  }, [])
 
   useEffect(() => {
     // Choose source dynamically
-    const source = profileDetails || profileSearchData.results?.[0];
+    const source = profileDetails;
 
     if (!source) return;
 
-    setFormData((prev) => ({
-      ...prev,
-
+    // Initialize form data from profile API
+    const initialFormData = {
       // Personal Info
       title: source.personalInfo?.title || "",
       surname: source.personalInfo?.surname || "",
@@ -150,8 +155,46 @@ const MembershipForm = ({
       recruitedBy: source.recruitmentDetails?.recuritedBy || "",
       recruitedByMembershipNo:
         source.recruitmentDetails?.recuritedByMembershipNo || "",
-    }));
-  }, [profileDetails, profileSearchData]);
+    };
+
+    // Override with subscription data if available
+    if (ProfileSubData && ProfileSubData.data && ProfileSubData.data.length > 0) {
+      const subscription = ProfileSubData.data[0];
+
+      setFormData(prev => ({
+        ...prev,
+        ...initialFormData,
+        // Subscription Details
+        subscriptionStatus: subscription.subscriptionStatus || "",
+        membershipCategory: subscription.membershipCategory || prev.membershipCategory || "",
+        paymentType: subscription.paymentType || prev.paymentType || "",
+        payrollNumber: subscription.payrollNo || prev.payrollNumber || "",
+
+        // Subscription Dates
+        startDate: convertUTCToLocalDate(subscription.startDate) || prev.startDate,
+        endDate: convertUTCToLocalDate(subscription.endDate),
+        renewalDate: convertUTCToLocalDate(subscription.rolloverDate) || prev.renewalDate,
+
+        // Payment Information
+        paymentFrequency: subscription.paymentFrequency || "",
+
+        // Membership Movement
+        membershipMovement: subscription.membershipMovement || "",
+
+        // Subscription Status Flags
+        isCurrent: subscription.isCurrent || false,
+        reinstated: subscription.cancellation?.reinstated || false,
+        yearendProcessed: subscription.yearend?.processed || false,
+        subscriptionYear: subscription.subscriptionYear || null,
+      }));
+    } else {
+      // If no subscription data, just set profile data
+      setFormData(prev => ({
+        ...prev,
+        ...initialFormData
+      }));
+    }
+  }, [profileDetails, ProfileSubData]);
 
   // Internal form state
   const [formData, setFormData] = useState({
@@ -228,6 +271,16 @@ const MembershipForm = ({
     otherSecondarySection: "",
     Reason: "",
     exclusiveDiscountsAndOffers: false,
+
+    // Subscription specific fields
+    subscriptionStatus: "",
+    paymentFrequency: "",
+    membershipMovement: "",
+    isCurrent: false,
+    reinstated: false,
+    yearendProcessed: false,
+    endDate: null,
+    subscriptionYear: null,
   });
 
   const lookupData = {
@@ -338,9 +391,6 @@ const MembershipForm = ({
         (field === "consentPost" ? value : updatedData.consentPost) ||
         (field === "consentApp" ? value : updatedData.consentApp);
 
-      // If all are checked, set consentCorrespondence to true
-      // If none are checked, set consentCorrespondence to false
-      // If some are checked (indeterminate), keep consentCorrespondence as false but we'll handle indeterminate state in render
       if (allChecked) {
         updatedData.consentCorrespondence = true;
       } else if (!anyChecked) {
@@ -560,7 +610,7 @@ const MembershipForm = ({
               <CustomSelect
                 label="Country of Primary Qualification"
                 placeholder="Select a country"
-                options={lookupData.countries}
+                options={countriesOptions}
                 value={formData.countryPrimaryQualification}
                 onChange={(e) =>
                   handleChange("countryPrimaryQualification", e.target.value)
@@ -658,7 +708,7 @@ const MembershipForm = ({
               <CustomSelect
                 label="Country"
                 placeholder="Select country"
-                options={lookupData.countries}
+                options={countriesOptions}
                 value={formData.country}
                 onChange={(e) => handleChange("country", e.target.value)}
                 disabled={isFormReadOnly}
@@ -689,6 +739,7 @@ const MembershipForm = ({
               </h3>
               <MyInput
                 label="Mobile Number"
+                type="mobile"
                 value={formData.mobileNumber}
                 onChange={(e) => handleChange("mobileNumber", e.target.value)}
                 disabled={isFormReadOnly}
@@ -770,8 +821,9 @@ const MembershipForm = ({
                   INMO Consent
                 </h4>
                 <Checkbox
-                  checked={formData.consentCorrespondence}
+                  checked={formData.consent}
                   indeterminate={isIndeterminate()}
+                  // value={formData}
                   onChange={(e) =>
                     handleChange("consentCorrespondence", e.target.checked)
                   }
@@ -902,7 +954,6 @@ const MembershipForm = ({
               <CustomSelect
                 label="Work Location"
                 placeholder="Select Location..."
-                // options={lookupData.workLocations}
                 isObjectValue={true}
                 options={workLocationOptions}
                 value={formData.workLocation}
@@ -1193,9 +1244,10 @@ const MembershipForm = ({
               </h3>
 
               <CustomSelect
-                label="Membership category"
+                label="Membership Category"
                 placeholder="Select Category..."
-                options={lookupData.membershipCategory}
+                options={categoryData}
+                isIDs={true}
                 value={formData.membershipCategory}
                 onChange={(e) =>
                   handleChange("membershipCategory", e.target.value)
@@ -1204,10 +1256,17 @@ const MembershipForm = ({
                 required={true}
               />
               <MyDatePicker
-                label="Start Date"
+                label="Subscription Start Date"
                 placeholder="Select start date"
-                value={formData.joiningDate}
-                onChange={(date) => handleChange("joiningDate", date)}
+                value={formData.startDate}
+                onChange={(date) => handleChange("startDate", date)}
+                disabled={true}
+              />
+              <MyDatePicker
+                label="Subscription End Date"
+                placeholder="Select end date"
+                value={formData.endDate}
+                onChange={(date) => handleChange("endDate", date)}
                 disabled={true}
               />
               <MyDatePicker
@@ -1218,16 +1277,51 @@ const MembershipForm = ({
                 disabled={true}
               />
               <CustomSelect
-                label="Membership Status"
+                label="Subscription Status"
                 placeholder="Select Status..."
-                options={lookupData.membershipStatus}
-                value={formData.membershipStatus}
+                options={[
+                  { value: "Active", label: "Active" },
+                  { value: "Inactive", label: "Inactive" },
+                  { value: "Cancelled", label: "Cancelled" },
+                  { value: "Pending", label: "Pending" },
+                  { value: "Expired", label: "Expired" },
+                ]}
+                value={formData.subscriptionStatus}
                 onChange={(e) =>
-                  handleChange("membershipStatus", e.target.value)
+                  handleChange("subscriptionStatus", e.target.value)
                 }
-                disabled={isFormReadOnly}
-                required={true}
+                disabled={true}
               />
+              <MyInput
+                label="Subscription Year"
+                value={formData.subscriptionYear}
+                onChange={(e) => handleChange("subscriptionYear", e.target.value)}
+                disabled={true}
+              />
+              <CustomSelect
+                label="Membership Movement"
+                placeholder="Select Movement..."
+                options={[
+                  { value: "NewJoin", label: "NewJoin" },
+                  { value: "Renewal", label: "Renewal" },
+                  { value: "Reinstatement", label: "Reinstatement" },
+                  { value: "Transfer", label: "Transfer" },
+                  { value: "Conversion", label: "Conversion" },
+                ]}
+                value={formData.membershipMovement}
+                onChange={(e) =>
+                  handleChange("membershipMovement", e.target.value)
+                }
+                disabled={true}
+              />
+              <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+                <Checkbox
+                  checked={formData.isCurrent}
+                  disabled={true}
+                >
+                  Current Subscription
+                </Checkbox>
+              </div>
               <MyDatePicker
                 label="Cancellation / Resignation Date"
                 placeholder="Select cancellation date"
@@ -1287,6 +1381,19 @@ const MembershipForm = ({
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
                 disabled={isFormReadOnly}
               />
+              <CustomSelect
+                label="Payment Frequency"
+                placeholder="Select Frequency"
+                options={[
+                  { value: "Monthly", label: "Monthly" },
+                  { value: "Annually", label: "Annually" },
+                  { value: "Quarterly", label: "Quarterly" },
+                  { value: "Semi-Annually", label: "Semi-Annually" },
+                ]}
+                value={formData.paymentFrequency}
+                onChange={(e) => handleChange("paymentFrequency", e.target.value)}
+                disabled={isFormReadOnly}
+              />
             </Card>
 
             {/* Reminders Card */}
@@ -1332,6 +1439,7 @@ const MembershipForm = ({
                 disabled={true}
               />
             </Card>
+
             {/* Retirement Details Card */}
             <Card
               style={{
@@ -1395,9 +1503,9 @@ const MembershipForm = ({
                   Are you a member of another Trade Union?
                 </label>
                 <Radio.Group
-                  value={formData.otherIrishTradeUnion}
+                  value={formData.memberOfOtherUnion}
                   onChange={(e) =>
-                    handleChange("otherIrishTradeUnion", e.target.value)
+                    handleChange("memberOfOtherUnion", e.target.value)
                   }
                   disabled={isFormReadOnly}
                 >

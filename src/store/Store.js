@@ -34,15 +34,17 @@ import profileReducer from "../features/profiles/ProfileSlice";
 import profileDetailsReducer from "../features/profiles/ProfileDetailsSlice";
 import searchProfileReducer from '../features/profiles/SearchProfile';
 import getTemplateReducer from "../features/templete/GetTemplateSlice";
-import templeteDetailsReducer from "../features/templete/templeteDetailsSlice"; 
+import templeteDetailsReducer from "../features/templete/templeteDetailsSlice";
 import transferRequestReducer from '../features/profiles/TransferRequest';
 import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
 import filterTransferReducer from '../features/profiles/filterTransferSlice';
 import subscriptionReducer from "../features/subscription/subscriptionSlice";
+import profileSubscriptionReducer from "../features/subscription/profileSubscriptionSlice";
 
 const store = configureStore({
   reducer: {
-     subscription: subscriptionReducer,
+    subscription: subscriptionReducer,
+    profileSubscription: profileSubscriptionReducer,
     auth: authReducer, // Authentication state
     regions: regionReducer, // Regions state
     lookups: lookupsReducer,
@@ -79,7 +81,7 @@ const store = configureStore({
     getTemplate: getTemplateReducer,
     templeteDetails: templeteDetailsReducer,
     transferRequestHistory: transferRequestHistoryReducer,
-    
+
   },
 });
 
