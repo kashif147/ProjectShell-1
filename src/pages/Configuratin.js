@@ -4704,6 +4704,7 @@ function Configuratin() {
           pagination={false}
           dataSource={membership}
           className="drawer-tbl"
+              size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -4801,6 +4802,7 @@ function Configuratin() {
           pagination={false}
           dataSource={partnership}
           className="drawer-tbl"
+              size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -4870,6 +4872,7 @@ function Configuratin() {
           pagination={false}
           dataSource={gender} // Replace with appropriate data
           className="drawer-tbl"
+              size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -4929,6 +4932,7 @@ function Configuratin() {
           pagination={false}
           dataSource={partnership}
           className="drawer-tbl"
+              size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -5119,6 +5123,7 @@ function Configuratin() {
           pagination={false}
           dataSource={tableData}
           className="drawer-tbl"
+              size="small"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -5211,6 +5216,7 @@ function Configuratin() {
           pagination={false}
           dataSource={RegionTy}
           className="drawer-tbl"
+              size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -5307,6 +5313,7 @@ function Configuratin() {
           pagination={false}
           dataSource={ContactTy}
           className="drawer-tbl"
+              size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -5474,6 +5481,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={groupedLookups?.County}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -5600,6 +5608,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={groupedLookups?.Provinces}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -5740,6 +5749,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={countriesData}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -5910,6 +5920,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={data?.Cities}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6058,6 +6069,7 @@ function Configuratin() {
               dataSource={groupedLookups["Post Code"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6234,6 +6246,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={filteredBranches}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6378,6 +6391,7 @@ function Configuratin() {
                 dataSource={groupedLookups?.Region}
                 loading={lookupsloading}
                 className="drawer-tbl"
+              size="small"
                 rowKey={(record, index) =>
                   record._id || record.id || record.key || index
                 }
@@ -6509,6 +6523,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Region}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6684,6 +6699,7 @@ function Configuratin() {
               columns={columnStations}
               dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
+              size="small"
               loading={lookupsloading}
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
@@ -6860,6 +6876,7 @@ function Configuratin() {
               columns={columnStations}
               dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
+              size="small"
               loading={lookupsloading}
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
@@ -6987,6 +7004,7 @@ function Configuratin() {
               dataSource={contactTypes}
               loading={contactTypesloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7115,6 +7133,7 @@ function Configuratin() {
               columns={columnLookupType}
               dataSource={filteredLookupsTypes}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7261,6 +7280,7 @@ function Configuratin() {
               columns={columnRegionType}
               dataSource={regionTypes}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7433,6 +7453,7 @@ function Configuratin() {
               dataSource={filteredLookups}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7580,6 +7601,7 @@ function Configuratin() {
               dataSource={filteredBookmarks}
               loading={bookmarksLoading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7711,6 +7733,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Gender}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7862,6 +7885,7 @@ function Configuratin() {
               dataSource={groupedLookups["City"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7991,6 +8015,8 @@ function Configuratin() {
               dataSource={groupedLookups?.Title}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8117,6 +8143,7 @@ function Configuratin() {
               dataSource={groupedLookups["Roster Type"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8242,6 +8269,7 @@ function Configuratin() {
               dataSource={groupedLookups["Marital Status"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8375,6 +8403,7 @@ function Configuratin() {
               dataSource={data?.ProjectTypes}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8504,6 +8533,7 @@ function Configuratin() {
               dataSource={data?.Trainings}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8637,6 +8667,7 @@ function Configuratin() {
               dataSource={data?.DocumentType}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8765,6 +8796,7 @@ function Configuratin() {
               dataSource={data?.ClaimType}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8890,6 +8922,7 @@ function Configuratin() {
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9016,6 +9049,7 @@ function Configuratin() {
               dataSource={data?.Reasons}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9096,6 +9130,7 @@ function Configuratin() {
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) => record._id || record.id || record.key || index}
               rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
               rowSelection={{ type: selectionType, ...rowSelection }}
@@ -9214,6 +9249,7 @@ function Configuratin() {
               dataSource={groupedLookups["Duties"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9337,6 +9373,7 @@ function Configuratin() {
               dataSource={groupedLookups["Ranks"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9469,6 +9506,7 @@ function Configuratin() {
               dataSource={groupedLookups["Boards"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9601,6 +9639,7 @@ function Configuratin() {
               dataSource={groupedLookups["Council"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9755,6 +9794,7 @@ function Configuratin() {
               dataSource={data?.CorrespondenceType}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9896,6 +9936,7 @@ function Configuratin() {
               dataSource={groupedLookups["Spoken Languages"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -10124,6 +10165,7 @@ function Configuratin() {
                 dataSource={data?.Solicitors}
                 loading={contactsLoading}
                 className="drawer-tbl"
+              size="small"
                 rowKey={(record, index) =>
                   record._id || record.id || record.key || index
                 }
@@ -10287,6 +10329,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Committees || []}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record) => record._id || record.id || record.RegionCode}
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -10409,6 +10452,7 @@ function Configuratin() {
               dataSource={data?.Sections}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }

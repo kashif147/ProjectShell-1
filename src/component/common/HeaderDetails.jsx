@@ -655,7 +655,7 @@ function HeaderDetails() {
         ? "reminder"
         : null;
   return (
-    <div className="" style={{ width: "93vw" }}>
+    <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
       {
         location?.pathname !== "/applicationMgt" &&
@@ -1222,6 +1222,7 @@ function HeaderDetails() {
             pagination={false}
             columns={column}
             className="drawer-tbl"
+            size="small"
             // rowClassName={(record, index) =>
             //     index % 2 !== 0 ? "odd-row" : "even-row"
             // }

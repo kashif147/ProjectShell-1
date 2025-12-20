@@ -87,12 +87,25 @@
   color: var(--primary-color);
   font-weight: 600;
   border-bottom: 2px solid var(--primary-color);
-  padding: 16px 12px;
+  padding: 0 10px;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+}
+
+.drawer-tbl .ant-table-thead .ant-table-selection-column {
+  background-color: var(--secoundry-bg-color) !important;
+  color: var(--primary-color) !important;
 }
 
 .drawer-tbl .ant-table-tbody > tr > td {
-  padding: 12px;
+  padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .drawer-tbl .even-row {
@@ -616,23 +629,18 @@
 }
 
 /* Scrollbar Styling */
-.drawer-tbl::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Hide scrollbars for drawer tables - keep scroll functionality */
+.drawer-tbl,
+.drawer-tbl .ant-table-body,
+.drawer-tbl .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.drawer-tbl::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.drawer-tbl::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: 4px;
-}
-
-.drawer-tbl::-webkit-scrollbar-thumb:hover {
-  background: #1e4a7a;
+.drawer-tbl::-webkit-scrollbar,
+.drawer-tbl .ant-table-body::-webkit-scrollbar,
+.drawer-tbl .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 /* Animation */

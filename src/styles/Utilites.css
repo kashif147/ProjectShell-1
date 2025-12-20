@@ -92,13 +92,11 @@
 }
 
 /* Center the checkbox vertically and horizontally */
-/* Simple checkbox column styling */
+/* Simple checkbox column styling - aligned with other header cells */
 .ant-table-selection-column {
-  padding: 0 !important;
-  padding-left: 4px !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 0 10px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
 }
 
 .ant-table-selection-column .ant-table-cell-content {
@@ -106,6 +104,7 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  height: 100%;
 }
 
 .ant-table-selection-column .ant-checkbox-wrapper {
@@ -113,25 +112,243 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  height: 100%;
 }
 
 .ant-table-selection-column .ant-checkbox {
   margin: 0;
 }
 
+/* Ensure checkbox column aligns properly in common-table */
+.common-table .ant-table-selection-column {
+  padding: 0 10px !important;
+  vertical-align: middle !important;
+  min-height: 36px !important;
+  height: 36px !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column {
+  background-color: var(--mainBlue) !important;
+  color: white !important;
+  z-index: 16 !important;
+}
+
+/* Ensure checkbox column aligns properly in drawer-tbl tables */
+.drawer-tbl .ant-table-selection-column {
+  vertical-align: middle !important;
+  height: auto !important;
+}
+
+.drawer-tbl .ant-table-thead .ant-table-selection-column {
+  padding: 0 10px !important;
+  min-height: 36px !important;
+  height: 36px !important;
+}
+
+.drawer-tbl .ant-table-selection-column {
+  min-height: 36px !important;
+  height: 36px !important;
+}
+
+/* Configuration drawer-tbl specific padding */
+.configuration-main .drawer-tbl .ant-table-selection-column {
+  padding: 0 10px !important;
+}
+
+/* PermissionManagement drawer-tbl specific padding */
+.permission-management .drawer-tbl .ant-table-selection-column {
+  padding: 0 10px !important;
+}
+
 /* Clean CSS for Ant Design fixed columns */
+/* Fixed columns need higher z-index to stay above scrolling headers */
+/* Regular headers have z-index: 10 (from App.css), so fixed headers need > 10 */
 .common-table .ant-table-cell-fix-left {
   position: sticky !important;
-  z-index: 1 !important;
 }
 
 .common-table .ant-table-thead .ant-table-cell-fix-left {
-  z-index: 2 !important;
+  z-index: 15 !important;
   background-color: var(--mainBlue) !important;
 }
 
 .common-table .ant-table-tbody .ant-table-cell-fix-left {
   background-color: white !important;
+  z-index: 10 !important;
+}
+
+/* Remove spacing between thead and tbody */
+.common-table .ant-table-thead {
+  margin-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+.common-table .ant-table-tbody {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.common-table .ant-table-thead + .ant-table-tbody {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove border spacing that might create visual gap */
+.common-table .ant-table {
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+
+.common-table .ant-table-thead > tr:last-child > th {
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+}
+
+.common-table .ant-table-tbody > tr:first-child > td {
+  border-top: none !important;
+}
+
+/* Remove any margin/padding that creates gap between header and body */
+.common-table .ant-table-container {
+  border-spacing: 0 !important;
+}
+
+.common-table .ant-table-container > .ant-table-body {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.common-table .ant-table-container > .ant-table-header + .ant-table-body {
+  margin-top: -1px !important;
+}
+
+/* Hide scrollbars for common-table - keep scroll functionality */
+.common-table .ant-table-body,
+.common-table .ant-table-container,
+.common-table .ant-table-content {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.common-table .ant-table-body::-webkit-scrollbar,
+.common-table .ant-table-container::-webkit-scrollbar,
+.common-table .ant-table-content::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
+/* Remove gap by using negative margin on tbody if first row is empty */
+.common-table .ant-table-tbody {
+  /* This will be adjusted if empty row exists */
+}
+
+/* Consistent row height for common-table */
+.common-table .ant-table-tbody > tr > td {
+  height: 36px !important;
+  line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+}
+
+.common-table .ant-table-thead > tr > th {
+  height: 36px !important;
+  line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+}
+
+/* Remove empty placeholder rows only */
+.common-table .ant-table-placeholder {
+  display: none !important;
+}
+
+/* Hide Ant Design's measurement row safely - keeps it in DOM for width calculations */
+.common-table .ant-table-measure-row {
+  height: 0 !important;
+  visibility: collapse !important;
+}
+
+.common-table .ant-table-measure-row td {
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
+}
+
+/* Force small size styling on drawer-tbl tables via CSS */
+/* Ant Design small tables use 8px padding, so we override to match */
+.drawer-tbl.ant-table,
+.drawer-tbl {
+  font-size: 14px;
+}
+
+.drawer-tbl .ant-table-thead > tr > th,
+.drawer-tbl .ant-table-tbody > tr > td {
+  padding: 8px 10px !important;
+}
+
+.drawer-tbl .ant-table-thead > tr > th > .ant-table-filter-column-title {
+  padding: 0;
+}
+
+/* Consistent row height for drawer-tbl tables */
+.drawer-tbl .ant-table-tbody > tr > td {
+  height: 36px !important;
+  line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+  font-family: var(--fontFamily) !important;
+  font-size: 13px !important;
+  font-weight: 400;
+}
+
+.drawer-tbl .ant-table-thead > tr > th {
+  height: 36px !important;
+  line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+  font-family: var(--fontFamily) !important;
+  font-size: 13px !important;
+  font-weight: 400;
+}
+
+/* Remove empty placeholder rows only */
+.drawer-tbl .ant-table-placeholder {
+  display: none !important;
+}
+
+/* Hide Ant Design's measurement row for drawer tables - keeps it in DOM for width calculations */
+.drawer-tbl .ant-table-measure-row {
+  height: 0 !important;
+  visibility: collapse !important;
+}
+
+.drawer-tbl .ant-table-measure-row td {
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
+}
+
+/* Hide scrollbars for drawer-tbl - keep scroll functionality */
+.drawer-tbl,
+.drawer-tbl .ant-table-body,
+.drawer-tbl .ant-table-container,
+.drawer-tbl .ant-table-content {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.drawer-tbl::-webkit-scrollbar,
+.drawer-tbl .ant-table-body::-webkit-scrollbar,
+.drawer-tbl .ant-table-container::-webkit-scrollbar,
+.drawer-tbl .ant-table-content::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 .status-item.active {
