@@ -127,12 +127,20 @@
   color: white;
   font-weight: 600;
   border: none;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
   padding: 0 10px;
 }
 
 .configuration-main .drawer-tbl .ant-table-tbody > tr > td {
   padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .configuration-main .drawer-tbl .even-row {

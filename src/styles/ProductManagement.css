@@ -578,11 +578,19 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .main-table-scroll-container .ant-table-tbody > tr > td {
   border-bottom: 1px solid var(--border-color-light);
   white-space: nowrap;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .main-table-scroll-container .ant-table-tbody > tr:hover > td {
@@ -618,11 +626,19 @@
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .table-scroll-container .ant-table-tbody > tr > td {
   border-bottom: 1px solid var(--border-color-light);
   white-space: nowrap;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .table-scroll-container .ant-table-tbody > tr:hover > td {

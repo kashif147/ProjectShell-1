@@ -743,6 +743,17 @@ const getRowSelectionConfig = () => {
     };
   });
 
+  // Ant Design best practice: Remove width from last non-fixed column to make it flexible
+  const processedColumns = [...editableColumns];
+  // Find last non-fixed column index (iterate backwards)
+  for (let i = processedColumns.length - 1; i >= 0; i--) {
+    if (!processedColumns[i].fixed) {
+      const { width, ...rest } = processedColumns[i];
+      processedColumns[i] = rest;
+      break;
+    }
+  }
+
   return (
     <DndContext
       modifiers={[restrictToHorizontalAxis]}
@@ -767,14 +778,14 @@ const getRowSelectionConfig = () => {
             rowClassName={() => ""}
             loading={isGrideLoading}
             components={components}
-            columns={editableColumns}
+            columns={processedColumns}
             dataSource={currentPageData}
             // **FIXED: Using the updated getRowSelectionConfig**
             rowSelection={getRowSelectionConfig()}
             pagination={false}
             style={{ tableLayout: "fixed" }}
             bordered
-            scroll={{ x: 1500, y: 800 }}
+            scroll={{ x: "max-content", y: 800 }}
             size="small"
             // **UPDATED: Row click handler uses the prop-controlled function**
             onRow={(record, index) => ({

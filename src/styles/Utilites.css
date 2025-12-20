@@ -233,11 +233,19 @@
 .common-table .ant-table-tbody > tr > td {
   height: 36px !important;
   line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .common-table .ant-table-thead > tr > th {
   height: 36px !important;
   line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 /* Remove empty placeholder rows only */
@@ -261,11 +269,19 @@
 .drawer-tbl .ant-table-tbody > tr > td {
   height: 36px !important;
   line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .drawer-tbl .ant-table-thead > tr > th {
   height: 36px !important;
   line-height: 36px !important;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 /* Remove empty placeholder rows only */

@@ -250,6 +250,10 @@
   font-weight: 600;
   text-align: center;
   border: 1px solid var(--primary-blue);
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
   padding: 0 10px;
   font-size: var(--font-size-sm);
   height: 36px !important;
@@ -263,6 +267,10 @@
 .report-table .ant-table-tbody > tr > td {
   padding: 0 10px;
   border-bottom: 1px solid var(--border-color-light);
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
   vertical-align: middle;
   height: 36px !important;
   line-height: 36px !important;
