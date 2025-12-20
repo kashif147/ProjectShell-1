@@ -187,3 +187,40 @@
   padding-left: 8px !important;
   padding-right: 8px !important;
 }
+
+
+
+
+.bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary {
+  background-color: #45669d !important;
+  border-color: #45669d !important;
+  color: white !important;
+}
+
+.bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary:hover {
+  background-color: #3a5785 !important;
+  border-color: #3a5785 !important;
+}
+
+.bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary:disabled {
+  background-color: #f5f5f5 !important;
+  border-color: #d9d9d9 !important;
+  color: rgba(0, 0, 0, 0.25) !important;
+}
+
+
+
+/* Add to your CSS file */
+.disabled-row {
+  background-color: #f5f5f5;
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.disabled-row .ant-checkbox-wrapper-disabled {
+  cursor: not-allowed;
+}
+
+.disabled-row:hover {
+  background-color: #f5f5f5 !important;
+}

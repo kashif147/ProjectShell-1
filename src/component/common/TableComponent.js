@@ -235,36 +235,68 @@ const TableComponent = ({
   };
 
   // **UPDATED: Fixed getRowSelectionConfig with proper height and alignment**
-  const getRowSelectionConfig = () => {
-    if (!enableRowSelection) return null;
+const getRowSelectionConfig = () => {
+  if (!enableRowSelection) return null;
 
-    const config = {
-      type: selectionType,
+  // If custom rowSelection config is provided, enhance it
+  if (rowSelection) {
+    return {
+      ...rowSelection,
       selectedRowKeys,
-      onChange: (selectedKeys, selectedRows) => {
-        if (onSelectionChange) onSelectionChange(selectedKeys, selectedRows);
-      },
-      onSelect: (record, selected, selectedRows) => {
-        // Trigger row click logic only when checkbox is clicked
-        console.log("Row clicked:", record); // ✅ your row clicked log
+      onChange: onSelectionChange,
+      getCheckboxProps: (record) => {
+        // Get original props if any
+        const originalProps = rowSelection.getCheckboxProps ? 
+          rowSelection.getCheckboxProps(record) : {};
+        
+        // Check if row should be disabled
+        const shouldDisable = props.disableRowFn ? 
+          props.disableRowFn(record) : 
+          (disableFtn ? disableFtn(record) : false);
+        
+        return {
+          ...originalProps,
+          disabled: shouldDisable
+        };
+      }
+    };
+  }
+
+  // Default config with disabled functionality
+  const config = {
+    type: selectionType,
+    selectedRowKeys,
+    onChange: onSelectionChange,
+    onSelect: (record, selected, selectedRows) => {
+      // Check if row is disabled
+      const isDisabled = props.disableRowFn ? 
+        props.disableRowFn(record) : 
+        (disableFtn ? disableFtn(record) : false);
+      
+      if (!isDisabled) {
+        console.log("Row clicked:", record);
         setSelectedRowData([record]);
         setSelectedRowIndex(dataSource.findIndex(r => r.key === record.key));
-      },
-      onSelectAll: (selected, selectedRows, changeRows) => {
-        console.log("Select all triggered:", selectedRows);
-        // Optional: handle select all logic
-      },
-      columnWidth: 60,
-      fixed: true,
-      // Optional: align checkbox properly
-      columnStyle: { padding: "12px 8px", verticalAlign: "middle", height: "auto", minHeight: "48px" },
-    };
-
-    // Remove dropdown menu in header
-    config.selections = undefined;
-
-    return config;
+      }
+    },
+    onSelectAll: (selected, selectedRows, changeRows) => {
+      console.log("Select all triggered:", selectedRows);
+    },
+    columnWidth: 60,
+    fixed: true,
+    getCheckboxProps: (record) => {
+      const isDisabled = props.disableRowFn ? 
+        props.disableRowFn(record) : 
+        (disableFtn ? disableFtn(record) : false);
+      
+      return {
+        disabled: isDisabled
+      };
+    }
   };
+
+  return config;
+};
 
 
   // Build columns

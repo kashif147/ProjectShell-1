@@ -100,8 +100,8 @@ function ProfileHeader({
   // Derive member data from source
   const memberData = {
     // Personal Info
-    name: source ? `${source.personalInfo?.forename || ''} ${source.personalInfo?.surname || ''}`.trim() : "Jack Smith",
-    dob: source?.personalInfo?.dateOfBirth ? formatDOB(source.personalInfo.dateOfBirth) : "03.22.1990",
+    name: source ? `${source.personalInfo?.forename || ''} ${source.personalInfo?.surname || ''}`.trim() : "",
+    dob: source?.personalInfo?.dateOfBirth ? formatDOB(source.personalInfo.dateOfBirth) : "",
     gender: source?.personalInfo?.gender ? source.personalInfo.gender.charAt(0).toUpperCase() : "M",
     age: source?.personalInfo?.dateOfBirth ? calculateAge(source.personalInfo.dateOfBirth) : "36 Yrs",
     

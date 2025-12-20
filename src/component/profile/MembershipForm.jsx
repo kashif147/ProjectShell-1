@@ -1262,13 +1262,13 @@ const MembershipForm = ({
                 onChange={(date) => handleChange("startDate", date)}
                 disabled={true}
               />
-              <MyDatePicker
+              {/* <MyDatePicker
                 label="Subscription End Date"
                 placeholder="Select end date"
                 value={formData.endDate}
                 onChange={(date) => handleChange("endDate", date)}
                 disabled={true}
-              />
+              /> */}
               <MyDatePicker
                 label="Renewal Date"
                 placeholder="Select renewal date"
@@ -1276,7 +1276,7 @@ const MembershipForm = ({
                 onChange={(date) => handleChange("renewalDate", date)}
                 disabled={true}
               />
-              <CustomSelect
+              {/* <CustomSelect
                 label="Subscription Status"
                 placeholder="Select Status..."
                 options={[
@@ -1291,14 +1291,14 @@ const MembershipForm = ({
                   handleChange("subscriptionStatus", e.target.value)
                 }
                 disabled={true}
-              />
-              <MyInput
+              /> */}
+              {/* <MyInput
                 label="Subscription Year"
                 value={formData.subscriptionYear}
                 onChange={(e) => handleChange("subscriptionYear", e.target.value)}
                 disabled={true}
-              />
-              <CustomSelect
+              /> */}
+              {/* <CustomSelect
                 label="Membership Movement"
                 placeholder="Select Movement..."
                 options={[
@@ -1313,15 +1313,15 @@ const MembershipForm = ({
                   handleChange("membershipMovement", e.target.value)
                 }
                 disabled={true}
-              />
-              <div style={{ marginTop: "16px", marginBottom: "16px" }}>
+              /> */}
+              {/* <div style={{ marginTop: "16px", marginBottom: "16px" }}>
                 <Checkbox
                   checked={formData.isCurrent}
                   disabled={true}
                 >
                   Current Subscription
                 </Checkbox>
-              </div>
+              </div> */}
               <MyDatePicker
                 label="Cancellation / Resignation Date"
                 placeholder="Select cancellation date"
@@ -1381,7 +1381,7 @@ const MembershipForm = ({
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
                 disabled={isFormReadOnly}
               />
-              <CustomSelect
+              {/* <CustomSelect
                 label="Payment Frequency"
                 placeholder="Select Frequency"
                 options={[
@@ -1393,7 +1393,7 @@ const MembershipForm = ({
                 value={formData.paymentFrequency}
                 onChange={(e) => handleChange("paymentFrequency", e.target.value)}
                 disabled={isFormReadOnly}
-              />
+              /> */}
             </Card>
 
             {/* Reminders Card */}
