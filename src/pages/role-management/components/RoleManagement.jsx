@@ -512,6 +512,7 @@ const RoleManagement = ({ onClose }) => {
             size: "default",
           }}
           className="drawer-tbl"
+          size="small"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }

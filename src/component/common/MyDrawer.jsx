@@ -1563,6 +1563,7 @@ function MyDrawer({
             pagination={false}
             columns={Clm}
             className="drawer-tbl"
+            size="small"
             rowClassName={(record, index) =>
               index % 2 !== 0 ? "odd-row" : "even-row"
             }

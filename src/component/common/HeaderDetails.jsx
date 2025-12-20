@@ -1087,6 +1087,7 @@ const handleBulkApproval = async (selectedApplications) => {
             pagination={false}
             columns={column}
             className="drawer-tbl"
+            size="small"
             // rowClassName={(record, index) =>
             //     index % 2 !== 0 ? "odd-row" : "even-row"
             // }

@@ -821,7 +821,7 @@ const TableComponent = ({
             style={{ tableLayout: "fixed" }}
             bordered
             scroll={{ x: "max-content", y: 800 }}
-            size="small"
+            size="middle"
             // **UPDATED: Row click handler uses the prop-controlled function**
             onRow={(record, index) => ({
               onClick: () => handleRowClick(record, index),

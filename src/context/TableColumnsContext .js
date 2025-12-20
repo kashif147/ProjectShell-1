@@ -6,6 +6,7 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { Tag } from "antd";
 import { tableData } from "../Data";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
@@ -473,6 +474,17 @@ const staticColumns = {
       isVisible: true,
       width: 120,
       editable: false,
+      render: (status) => {
+        if (!status) return "-";
+        const statusLower = status.toLowerCase();
+        let color = "blue"; // default color
+        if (statusLower === "approved") {
+          color = "green";
+        } else if (statusLower === "rejected") {
+          color = "volcano";
+        }
+        return <Tag color={color}>{status}</Tag>;
+      },
     },
     {
       dataIndex: "createdAt",
