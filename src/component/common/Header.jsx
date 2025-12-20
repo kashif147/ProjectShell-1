@@ -1,7 +1,14 @@
 import { React, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MyDrowpDown from "./MyDrowpDown";
-import { SettingOutlined } from "@ant-design/icons";
+import { 
+  SettingOutlined,
+  BellOutlined,
+  QuestionCircleOutlined,
+  PhoneOutlined,
+  UserOutlined,
+  LogoutOutlined
+} from "@ant-design/icons";
 import {
   FaRegCircleUser,
   FaListCheck,
@@ -21,24 +28,14 @@ import {
   FaListUl,
   FaUserCircle,
 } from "react-icons/fa";
-import { IoNotificationsOutline } from "react-icons/io5"; // outlined version
-import { HiOutlineQuestionMarkCircle } from "react-icons/hi2"; // outlined version
-import { IoMdSettings } from "react-icons/io"; // already regular
-import { PiPhoneCallLight } from "react-icons/pi";
 import { TbReportAnalytics } from "react-icons/tb";
 import { LuCalendarClock } from "react-icons/lu";
 import { IoSettingsOutline } from "react-icons/io5";
 import { TbGridDots } from "react-icons/tb";
 import { MdOutlineWork } from "react-icons/md";
-// import {  } from "react-icons/fa";
-import { HiMiniQuestionMarkCircle } from "react-icons/hi2";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { IoNotifications } from "react-icons/io5";
 import { Link, useLocation } from "react-router-dom";
 import { Button, Input } from "antd";
-import { PiPhoneCallBold } from "react-icons/pi";
-import { BiLogOutCircle } from "react-icons/bi";
-import { FaArrowRightFromBracket } from "react-icons/fa6";
 import logo from "../../assets/images/gra_logo.png";
 import { Dropdown } from "antd";
 import { PiDotsNineLight } from "react-icons/pi";
@@ -422,7 +419,7 @@ function Header() {
           style={{ width: "33%", justifyContent: "end" }}
           className="input-container d-flex align-items-center justify-content-end"
         >
-          <PiPhoneCallLight
+          <PhoneOutlined
             className="top-icon"
             onClick={() =>
               navigate("/CorrespondencesSummary", {
@@ -430,13 +427,13 @@ function Header() {
               })
             }
           />
-          <IoNotificationsOutline className="top-icon" />
-          <HiOutlineQuestionMarkCircle className="top-icon" />
-          <IoMdSettings className="top-icon" />
-          <FaRegUserCircle className="top-icon" />
-          <FaArrowRightFromBracket
-            style={{ marginRight: "30px", fontSize: "25px" }} // also works
-            color="#ff4d4f"
+          <BellOutlined className="top-icon" />
+          <QuestionCircleOutlined className="top-icon" />
+          <SettingOutlined className="top-icon" />
+          <UserOutlined className="top-icon" />
+          <LogoutOutlined
+            className="top-icon"
+            style={{ marginRight: "30px", color: "#ff4d4f" }}
             onClick={() => {
               // localStorage.removeItem("token");
               // navigate("/");

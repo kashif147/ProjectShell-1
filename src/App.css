@@ -1648,8 +1648,17 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 .top-icon {
-  font-size: 25px !important;
-  margin-right: 1rem;
+  font-size: 20px !important;
+  margin-right: 1.25rem;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  stroke-width: 1.5;
+}
+
+.top-icon:hover {
+  color: rgba(255, 255, 255, 0.8);
+  transform: scale(1.1);
   color: white !important;
 }
 
