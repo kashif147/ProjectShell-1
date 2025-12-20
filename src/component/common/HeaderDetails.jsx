@@ -521,7 +521,7 @@ const handleBulkApproval = async (selectedApplications) => {
         ? "reminder"
         : null;
   return (
-    <div className="" style={{ width: "93vw" }}>
+    <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
       {
         location?.pathname !== "/applicationMgt" &&

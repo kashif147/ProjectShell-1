@@ -433,7 +433,7 @@ function Header() {
           <UserOutlined className="top-icon" />
           <LogoutOutlined
             className="top-icon"
-            style={{ marginRight: "30px", color: "#ff4d4f" }}
+            style={{ marginRight: "30px" }}
             onClick={() => {
               // localStorage.removeItem("token");
               // navigate("/");

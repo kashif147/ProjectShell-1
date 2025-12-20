@@ -370,6 +370,37 @@ body {
   padding-left: 30px;
   padding-right: 30px;
   width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.details-header > div {
+  min-width: 0;
+  width: 100%;
+}
+
+.search-main {
+  min-width: 0;
+  width: 100%;
+}
+
+.search-main .title {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.search-main .title .title-main {
+  flex-shrink: 1;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.search-main .title > .d-flex {
+  flex-shrink: 0;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .ant-table {
@@ -426,6 +457,15 @@ body {
 
 .search-fliters {
   padding-bottom: 7px;
+  min-width: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.search-fliters > .d-flex {
+  min-width: 0;
+  flex-wrap: wrap;
+  gap: 8px;
 }
 
 .search-fliters input {
@@ -1650,16 +1690,20 @@ table tbody tr:nth-child(odd):hover td {
 .top-icon {
   font-size: 20px !important;
   margin-right: 1.25rem;
-  color: white;
+  color: white !important;
   cursor: pointer;
   transition: all 0.2s ease;
   stroke-width: 1.5;
 }
 
 .top-icon:hover {
-  color: rgba(255, 255, 255, 0.8);
+  color: rgba(255, 255, 255, 0.85) !important;
   transform: scale(1.1);
-  color: white !important;
+}
+
+/* Logout icon with subtle hover effect to indicate action */
+.top-icon:last-of-type:hover {
+  color: rgba(255, 220, 220, 0.95) !important;
 }
 
 .input-border-active {
