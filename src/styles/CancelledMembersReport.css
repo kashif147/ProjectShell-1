@@ -240,6 +240,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Hide scrollbars for report-table - keep scroll functionality */
+.report-table,
+.report-table .ant-table-body,
+.report-table .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.report-table::-webkit-scrollbar,
+.report-table .ant-table-body::-webkit-scrollbar,
+.report-table .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
 .report-table .ant-table-thead > tr > th {
   background: linear-gradient(
     135deg,

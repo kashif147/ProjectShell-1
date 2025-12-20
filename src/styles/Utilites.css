@@ -224,6 +224,20 @@
   margin-top: -1px !important;
 }
 
+/* Hide scrollbars for common-table - keep scroll functionality */
+.common-table .ant-table-body,
+.common-table .ant-table-container,
+.common-table .ant-table-content {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.common-table .ant-table-body::-webkit-scrollbar,
+.common-table .ant-table-container::-webkit-scrollbar,
+.common-table .ant-table-content::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
 /* Remove gap by using negative margin on tbody if first row is empty */
 .common-table .ant-table-tbody {
   /* This will be adjusted if empty row exists */
@@ -299,6 +313,22 @@
   padding: 0 !important;
   border: 0 !important;
   height: 0 !important;
+}
+
+/* Hide scrollbars for drawer-tbl - keep scroll functionality */
+.drawer-tbl,
+.drawer-tbl .ant-table-body,
+.drawer-tbl .ant-table-container,
+.drawer-tbl .ant-table-content {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.drawer-tbl::-webkit-scrollbar,
+.drawer-tbl .ant-table-body::-webkit-scrollbar,
+.drawer-tbl .ant-table-container::-webkit-scrollbar,
+.drawer-tbl .ant-table-content::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 .status-item.active {

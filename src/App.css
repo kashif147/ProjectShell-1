@@ -790,6 +790,12 @@ body {
 
 .ant-table-wrapper {
   overflow-x: auto;
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.ant-table-wrapper::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 .ant-table {
@@ -1536,6 +1542,26 @@ table tbody tr:nth-child(odd):hover td {
 
 .claims-table {
   margin-top: 20px;
+}
+
+/* Hide scrollbars for claims-table and heading-tbl - keep scroll functionality */
+.claims-table,
+.claims-table .ant-table-body,
+.claims-table .ant-table-container,
+.heading-tbl,
+.heading-tbl .ant-table-body,
+.heading-tbl .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.claims-table::-webkit-scrollbar,
+.claims-table .ant-table-body::-webkit-scrollbar,
+.claims-table .ant-table-container::-webkit-scrollbar,
+.heading-tbl::-webkit-scrollbar,
+.heading-tbl .ant-table-body::-webkit-scrollbar,
+.heading-tbl .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 .form-section {

@@ -624,23 +624,18 @@
 }
 
 /* Scrollbar Styling */
-.drawer-tbl::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Hide scrollbars for drawer tables - keep scroll functionality */
+.drawer-tbl,
+.drawer-tbl .ant-table-body,
+.drawer-tbl .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.drawer-tbl::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.drawer-tbl::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: 4px;
-}
-
-.drawer-tbl::-webkit-scrollbar-thumb:hover {
-  background: #1e4a7a;
+.drawer-tbl::-webkit-scrollbar,
+.drawer-tbl .ant-table-body::-webkit-scrollbar,
+.drawer-tbl .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 /* Animation */

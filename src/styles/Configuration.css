@@ -169,24 +169,18 @@
   color: white !important;
 }
 
-/* Scrollbar Styling */
-.configuration-main .drawer-tbl::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Hide scrollbars for configuration drawer tables - keep scroll functionality */
+.configuration-main .drawer-tbl,
+.configuration-main .drawer-tbl .ant-table-body,
+.configuration-main .drawer-tbl .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.configuration-main .drawer-tbl::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.configuration-main .drawer-tbl::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: 4px;
-}
-
-.configuration-main .drawer-tbl::-webkit-scrollbar-thumb:hover {
-  background: #1e4a7a;
+.configuration-main .drawer-tbl::-webkit-scrollbar,
+.configuration-main .drawer-tbl .ant-table-body::-webkit-scrollbar,
+.configuration-main .drawer-tbl .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 /* Pagination Styles */
