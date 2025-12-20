@@ -40,6 +40,7 @@ import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
 import filterTransferReducer from '../features/profiles/filterTransferSlice';
 import subscriptionReducer from "../features/subscription/subscriptionSlice";
 import profileSubscriptionReducer from "../features/subscription/profileSubscriptionSlice";
+import batchMemberReducer  from '../features/profiles/batchMemberSlice';
 
 const store = configureStore({
   reducer: {
@@ -68,6 +69,7 @@ const store = configureStore({
     profileDetails: profileDetailsReducer,
     users: userReducer,
     roles: roleReducer,
+    batchMember: batchMemberReducer ,
     permissions: permissionReducer,
     roleById: roleByIdReducer,
     transferRequest: transferRequestReducer,

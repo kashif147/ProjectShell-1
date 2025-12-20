@@ -1730,7 +1730,7 @@ const staticColumns = {
   ],
   NewGraduate: [
     {
-      dataIndex: "batchName",
+      dataIndex: "name",
       title: "Batch Name",
       ellipsis: true,
       isGride: true,
@@ -1738,12 +1738,12 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: "batchDate",
+      dataIndex: "date",
       title: "Batch Date",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 160,
     },
     {
       dataIndex: "batchStatus",
@@ -1764,6 +1764,14 @@ const staticColumns = {
     {
       dataIndex: "createdBy",
       title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "updated At",
       ellipsis: true,
       isGride: true,
       isVisible: true,
