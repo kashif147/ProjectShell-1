@@ -94,7 +94,7 @@
 /* Center the checkbox vertically and horizontally */
 /* Simple checkbox column styling - aligned with other header cells */
 .ant-table-selection-column {
-  padding: 4px 12px !important;
+  padding: 0 10px !important;
   vertical-align: middle !important;
   text-align: center !important;
 }
@@ -121,9 +121,10 @@
 
 /* Ensure checkbox column aligns properly in common-table */
 .common-table .ant-table-selection-column {
-  padding: 4px 12px !important;
+  padding: 0 10px !important;
   vertical-align: middle !important;
-  height: auto !important;
+  min-height: 36px !important;
+  height: 36px !important;
 }
 
 .common-table .ant-table-thead .ant-table-selection-column {
@@ -139,19 +140,26 @@
 }
 
 .drawer-tbl .ant-table-thead .ant-table-selection-column {
-  padding: 16px 12px !important;
+  padding: 0 10px !important;
   background-color: inherit !important;
   color: inherit !important;
+  min-height: 36px !important;
+  height: 36px !important;
+}
+
+.drawer-tbl .ant-table-selection-column {
+  min-height: 36px !important;
+  height: 36px !important;
 }
 
 /* Configuration drawer-tbl specific padding */
 .configuration-main .drawer-tbl .ant-table-selection-column {
-  padding: 16px 12px !important;
+  padding: 0 10px !important;
 }
 
 /* PermissionManagement drawer-tbl specific padding */
 .permission-management .drawer-tbl .ant-table-selection-column {
-  padding: 16px !important;
+  padding: 0 10px !important;
 }
 
 /* Clean CSS for Ant Design fixed columns */
@@ -169,6 +177,112 @@
 .common-table .ant-table-tbody .ant-table-cell-fix-left {
   background-color: white !important;
   z-index: 10 !important;
+}
+
+/* Remove spacing between thead and tbody */
+.common-table .ant-table-thead {
+  margin-bottom: 0 !important;
+  border-bottom: none !important;
+}
+
+.common-table .ant-table-tbody {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.common-table .ant-table-thead + .ant-table-tbody {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* Remove border spacing that might create visual gap */
+.common-table .ant-table {
+  border-spacing: 0 !important;
+  border-collapse: collapse !important;
+}
+
+.common-table .ant-table-thead > tr:last-child > th {
+  border-bottom-width: 1px !important;
+  border-bottom-style: solid !important;
+}
+
+.common-table .ant-table-tbody > tr:first-child > td {
+  border-top: none !important;
+}
+
+/* Remove any margin/padding that creates gap between header and body */
+.common-table .ant-table-container {
+  border-spacing: 0 !important;
+}
+
+.common-table .ant-table-container > .ant-table-body {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+.common-table .ant-table-container > .ant-table-header + .ant-table-body {
+  margin-top: -1px !important;
+}
+
+/* Remove gap by using negative margin on tbody if first row is empty */
+.common-table .ant-table-tbody {
+  /* This will be adjusted if empty row exists */
+}
+
+/* Consistent row height for common-table */
+.common-table .ant-table-tbody > tr > td {
+  height: 36px !important;
+  line-height: 36px !important;
+}
+
+.common-table .ant-table-thead > tr > th {
+  height: 36px !important;
+  line-height: 36px !important;
+}
+
+/* Remove empty placeholder rows only */
+.common-table .ant-table-placeholder {
+  display: none !important;
+}
+
+/* Hide Ant Design's measurement row safely - keeps it in DOM for width calculations */
+.common-table .ant-table-measure-row {
+  height: 0 !important;
+  visibility: collapse !important;
+}
+
+.common-table .ant-table-measure-row td {
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
+}
+
+/* Consistent row height for drawer-tbl tables */
+.drawer-tbl .ant-table-tbody > tr > td {
+  height: 36px !important;
+  line-height: 36px !important;
+}
+
+.drawer-tbl .ant-table-thead > tr > th {
+  height: 36px !important;
+  line-height: 36px !important;
+}
+
+/* Remove empty placeholder rows only */
+.drawer-tbl .ant-table-placeholder {
+  display: none !important;
+}
+
+/* Hide Ant Design's measurement row for drawer tables - keeps it in DOM for width calculations */
+.drawer-tbl .ant-table-measure-row {
+  height: 0 !important;
+  visibility: collapse !important;
+}
+
+.drawer-tbl .ant-table-measure-row td {
+  padding: 0 !important;
+  border: 0 !important;
+  height: 0 !important;
 }
 
 .status-item.active {

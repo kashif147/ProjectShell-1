@@ -256,7 +256,7 @@ const getRowSelectionConfig = () => {
     columnWidth: 60,
     fixed: true,
     // Optional: align checkbox properly
-    columnStyle: { padding: "12px 8px", verticalAlign: "middle", height: "auto", minHeight: "48px" },
+    columnStyle: { padding: "0 10px", verticalAlign: "middle" },
   };
 
   // Remove dropdown menu in header

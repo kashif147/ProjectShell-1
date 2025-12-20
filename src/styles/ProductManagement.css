@@ -642,7 +642,7 @@
 
   .table-scroll-container .ant-table-thead > tr > th,
   .table-scroll-container .ant-table-tbody > tr > td {
-    padding: 8px 12px;
+    padding: 0 10px;
   }
 }
 

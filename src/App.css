@@ -390,6 +390,28 @@ body {
   overflow: auto;
 }
 
+/* Remove gap between header and body */
+.common-table .ant-table-header {
+  margin-bottom: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+.common-table .ant-table-body {
+  margin-top: 0 !important;
+  padding-top: 0 !important;
+}
+
+/* If there's an empty first row, pull the body up */
+.common-table .ant-table-body table {
+  margin-top: 0 !important;
+}
+
+.common-table .ant-table-body .ant-table-tbody > tr:first-child:empty {
+  display: none !important;
+  height: 0 !important;
+  line-height: 0 !important;
+}
+
 .title {
 }
 
@@ -1279,17 +1301,21 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 .common-table table tr th {
   background-color: var(--mainBlue) !important;
   color: white;
-  padding: 4px 12px;
+  padding: 0 10px;
   font-weight: 600;
   position: sticky !important;
   z-index: 10;
   top: 0;
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 .common-table table tr td {
-  padding: 4px 12px;
+  padding: 0 10px;
   font-weight: 400;
   color: var(--mainBlue) !important;
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 /* Global even/odd row styling for all tables */
@@ -1477,7 +1503,14 @@ table tbody tr:nth-child(odd):hover td {
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 480;
-  padding: 12px 12px !important;
+  padding: 0 10px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+}
+
+.claims-table .ant-table-tbody > tr > td {
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 .heading-tbl .ant-table-thead > tr > th {
@@ -1485,7 +1518,14 @@ table tbody tr:nth-child(odd):hover td {
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 400;
-  padding: 8px 8px !important;
+  padding: 0 10px !important;
+  height: 36px !important;
+  line-height: 36px !important;
+}
+
+.heading-tbl .ant-table-tbody > tr > td {
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 .ant-drawer {

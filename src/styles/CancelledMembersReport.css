@@ -250,8 +250,10 @@
   font-weight: 600;
   text-align: center;
   border: 1px solid var(--primary-blue);
-  padding: var(--spacing-md) var(--spacing-sm);
+  padding: 0 10px;
   font-size: var(--font-size-sm);
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 .report-table .ant-table-thead > tr > th * {
@@ -259,9 +261,11 @@
 }
 
 .report-table .ant-table-tbody > tr > td {
-  padding: var(--spacing-sm);
+  padding: 0 10px;
   border-bottom: 1px solid var(--border-color-light);
   vertical-align: middle;
+  height: 36px !important;
+  line-height: 36px !important;
 }
 
 .report-table .ant-table-tbody > tr:hover > td {

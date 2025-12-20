@@ -138,11 +138,11 @@
   color: white;
   font-weight: 600;
   border: none;
-  padding: 16px;
+  padding: 0 10px;
 }
 
 .drawer-tbl .ant-table-tbody > tr > td {
-  padding: 16px;
+  padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;
 }
 
@@ -299,7 +299,7 @@
 
   .drawer-tbl .ant-table-thead > tr > th,
   .drawer-tbl .ant-table-tbody > tr > td {
-    padding: 12px 8px;
+    padding: 0 10px;
   }
 
   .permission-form-drawer {

@@ -87,11 +87,11 @@
   color: var(--primary-color);
   font-weight: 600;
   border-bottom: 2px solid var(--primary-color);
-  padding: 16px 12px;
+  padding: 0 10px;
 }
 
 .drawer-tbl .ant-table-tbody > tr > td {
-  padding: 12px;
+  padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;
 }
 
