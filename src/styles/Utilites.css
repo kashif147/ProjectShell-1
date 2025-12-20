@@ -92,13 +92,11 @@
 }
 
 /* Center the checkbox vertically and horizontally */
-/* Simple checkbox column styling */
+/* Simple checkbox column styling - aligned with other header cells */
 .ant-table-selection-column {
-  padding: 0 !important;
-  padding-left: 4px !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  padding: 4px 12px !important;
+  vertical-align: middle !important;
+  text-align: center !important;
 }
 
 .ant-table-selection-column .ant-table-cell-content {
@@ -106,6 +104,7 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  height: 100%;
 }
 
 .ant-table-selection-column .ant-checkbox-wrapper {
@@ -113,25 +112,63 @@
   justify-content: center;
   align-items: center;
   width: 100%;
+  height: 100%;
 }
 
 .ant-table-selection-column .ant-checkbox {
   margin: 0;
 }
 
+/* Ensure checkbox column aligns properly in common-table */
+.common-table .ant-table-selection-column {
+  padding: 4px 12px !important;
+  vertical-align: middle !important;
+  height: auto !important;
+}
+
+.common-table .ant-table-thead .ant-table-selection-column {
+  background-color: var(--mainBlue) !important;
+  color: white !important;
+  z-index: 16 !important;
+}
+
+/* Ensure checkbox column aligns properly in drawer-tbl tables */
+.drawer-tbl .ant-table-selection-column {
+  vertical-align: middle !important;
+  height: auto !important;
+}
+
+.drawer-tbl .ant-table-thead .ant-table-selection-column {
+  padding: 16px 12px !important;
+  background-color: inherit !important;
+  color: inherit !important;
+}
+
+/* Configuration drawer-tbl specific padding */
+.configuration-main .drawer-tbl .ant-table-selection-column {
+  padding: 16px 12px !important;
+}
+
+/* PermissionManagement drawer-tbl specific padding */
+.permission-management .drawer-tbl .ant-table-selection-column {
+  padding: 16px !important;
+}
+
 /* Clean CSS for Ant Design fixed columns */
+/* Fixed columns need higher z-index to stay above scrolling headers */
+/* Regular headers have z-index: 10 (from App.css), so fixed headers need > 10 */
 .common-table .ant-table-cell-fix-left {
   position: sticky !important;
-  z-index: 1 !important;
 }
 
 .common-table .ant-table-thead .ant-table-cell-fix-left {
-  z-index: 2 !important;
+  z-index: 15 !important;
   background-color: var(--mainBlue) !important;
 }
 
 .common-table .ant-table-tbody .ant-table-cell-fix-left {
   background-color: white !important;
+  z-index: 10 !important;
 }
 
 .status-item.active {
