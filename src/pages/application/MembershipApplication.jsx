@@ -16,7 +16,7 @@ function MembershipApplication() {
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
-const { selectedIds, setSelectedIds } = useSelectedIds();
+  const { selectedIds, setSelectedIds } = useSelectedIds();
   const [formattedApplications, setFormattedApplications] = useState([]);
   const [selectedRows, setSelectedRows] = useState(null)
   console.log(selectedRows, "selected rows data");
@@ -82,7 +82,6 @@ const { selectedIds, setSelectedIds } = useSelectedIds();
     dispatch(getAllApplications(filtersState));
   }, []);
 
-  // Format applications when they are loaded
   useEffect(() => {
     if (applications && applications.length > 0) {
       const formatted = applications.map(app => formatApplicationDates(app));
@@ -92,7 +91,28 @@ const { selectedIds, setSelectedIds } = useSelectedIds();
     }
   }, [applications]);
 
-  console.log(formattedApplications, "formatted applications");
+  const shouldDisableRow = useCallback((record) => {
+    // Get the status from the record
+    const status = record?.applicationStatus ||
+      record?.status ||
+      record?.approvalDetails?.applicationStatus;
+
+    console.log("Checking row status:", status, "for record:", record);
+
+    // Only enable for "Rejected" or "Submitted"
+    // Disable for: "In-Progress", "Approved", "Draft"
+    const enabledStatuses = ["rejected", "submitted"];
+    const disabledStatuses = ["in-Progress", "approved", "Draft"];
+
+    // Check if status exists and is in disabled statuses
+    if (!status) return false; // If no status, don't disable
+
+    // Return true to DISABLE if status is NOT in enabled statuses
+    // OR if status IS in disabled statuses
+    return !enabledStatuses.includes(status) ||
+      disabledStatuses.includes(status);
+  }, []);
+
   const [selectedKeys, setSelectedKeys] = useState([]);
   const [selectedApplicationIds, setSelectedApplicationIds] = useState([]);
   console.log(selectedApplicationIds, "selected keys");
@@ -101,14 +121,26 @@ const { selectedIds, setSelectedIds } = useSelectedIds();
     setSelectedKeys(selectedKeys)
     // Map selectedRows to get application IDs
     const ids = selectedRows.map(row => row.applicationId || row._id);
-    setSelectedIds (ids);
+    setSelectedIds(ids);
   }, []);
-  console.log(selectedIds, "7878");
+
   const handleRowClick = useCallback((record, index) => {
     console.log("Row clicked12:", record?.applicationId,);
   }, []);
   return (
     <div className="" style={{ width: "100%" }}>
+      {/* <TableComponent
+        data={formattedApplications}
+        screenName="Applications"
+        isGrideLoading={applicationsLoading}
+        selectedRowKeys={selectedKeys}
+        onSelectionChange={handleSelectionChange}
+        selectionType="checkbox"
+        enableRowSelection={true}
+        disableDefaultRowClick={true}
+        disableRowFn={shouldDisableRow} // Pass the disable function
+      /> */}
+
       <TableComponent
         data={formattedApplications}
         screenName="Applications"
@@ -117,7 +149,8 @@ const { selectedIds, setSelectedIds } = useSelectedIds();
         onSelectionChange={handleSelectionChange}
         selectionType="checkbox"
         enableRowSelection={true}
-        disableDefaultRowClick={true} // ✅ disables row click
+        disableDefaultRowClick={true}
+        disableRowFn={shouldDisableRow} // Pass the disable function
       />
 
       <div style={{ display: "flex", gap: 12 }}>

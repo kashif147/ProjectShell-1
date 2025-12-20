@@ -9,6 +9,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import SimpleMenu from "./SimpleMenu"; import {
   filterTransferById,
   fetchAndFilterTransferById,
@@ -339,9 +340,7 @@ const TableComponent = ({
           {/* Three dots menu */}
           <SimpleMenu
             title={
-              <BsThreeDotsVertical
-                style={{ fontSize: "15px", fontWeight: 500 }}
-              />
+              <BsThreeDotsVertical style={{ fontSize: "15px", fontWeight: 500 }} />
             }
             data={{
               Delete: "false",
@@ -395,16 +394,48 @@ const TableComponent = ({
                     name: record?.fullName,
                     code: record?.regNo,
                   }}
-                  onClick={(e) => {
-                    // e.preventDefault();
+                  onClick={() => {
                     handleRowClick(record, index);
                     dispatch(getProfileDetailsById(record?._id));
+                    dispatch(
+                      getSubscriptionByProfileId({
+                        profileId: record?._id,
+                        isCurrent: true,
+                      })
+                    );
                   }}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
+                  style={{ color: "inherit", textDecoration: "none" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
               );
+
+            case "Subscription Status": // <-- NEW CASE
+              return (
+                <Link
+                  to="/Details"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                  }}
+                  onClick={() => {
+                    handleRowClick(record, index);
+                      dispatch(
+                      getSubscriptionByProfileId({
+                        profileId: record?.profileId,
+                        isCurrent: true,
+                      }))
+                    dispatch(getProfileDetailsById(record?.profileId))
+                    // dispatch(getProfileDetailsById(record?._id))
+                    
+                  }}
+                  style={{ color: "inherit", textDecoration: "none", cursor: "pointer" }}
+                >
+                  <span>{text}</span>
+                </Link>
+              );
+
             case "Claim No":
               return (
                 <Link
@@ -422,11 +453,12 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
+                  style={{ color: "inherit", textDecoration: "none" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
               );
+
             case "Roster ID":
               return (
                 <Link
@@ -444,17 +476,18 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
+                  style={{ color: "inherit", textDecoration: "none" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
               );
+
             case "Application ID":
               return (
                 <span
                   style={{ color: "blue", cursor: "pointer" }}
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent row click
+                    e.stopPropagation();
                     const { applicationStatus, applicationId } = record || {};
                     if (applicationStatus === "Draft") {
                       dispatch(
@@ -470,6 +503,7 @@ const TableComponent = ({
                   View
                 </span>
               );
+
             case "Change To":
               return (
                 <Link
@@ -487,11 +521,12 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
+                  style={{ color: "inherit", textDecoration: "none" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
               );
+
             case "Batch Name":
               const simpleBatchPaths = [
                 "/CornMarket",
@@ -512,11 +547,12 @@ const TableComponent = ({
                     batchName: text,
                     batchId: record?.id || record?.key,
                   }}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
+                  style={{ color: "inherit", textDecoration: "none" }}
                 >
                   {text}
                 </Link>
               );
+
             case "Correspondence ID":
               return (
                 <Link
@@ -534,21 +570,20 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: 'inherit', textDecoration: 'none' }}
+                  style={{ color: "inherit", textDecoration: "none" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
               );
-            // ADD THIS CASE FOR /Transfers PATH
+
             case "Reg No":
               return (
                 <span
                   style={{ color: "blue", cursor: "pointer" }}
                   onClick={(e) => {
-                    e.stopPropagation(); // Prevent row click
+                    e.stopPropagation();
                     const transferId = record?._id;
                     if (transferId) {
-                      debugger
                       dispatch(fetchAndFilterTransferById(transferId));
                       settransferreq(!transferreq);
                     }
@@ -557,6 +592,7 @@ const TableComponent = ({
                   {text || "View"}
                 </span>
               );
+
             default:
               return (
                 <span
@@ -571,32 +607,27 @@ const TableComponent = ({
       sorter:
         col.title === "Full Name"
           ? {
-            compare: (a, b) =>
-              a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+            compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
             multiple: 3,
           }
           : col.title === "Station"
             ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+              compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
               multiple: 2,
             }
             : col.title === "Duty"
               ? {
-                compare: (a, b) =>
-                  a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                 multiple: 1,
               }
               : col.title === "Reg No"
                 ? {
-                  compare: (a, b) =>
-                    a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                  compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                   multiple: 1,
                 }
                 : col.title === "Correspondence ID"
                   ? {
-                    compare: (a, b) =>
-                      a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                    compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                     multiple: 1,
                   }
                   : undefined,
@@ -637,14 +668,13 @@ const TableComponent = ({
         if (col.title === "Station" || col.title === "Current Station")
           return record[col.dataIndex] === value;
         if (col.title === "Division") return record[col.dataIndex] === value;
-        if (col.title === "Approval Status")
-          return record[col.dataIndex] === value;
-        if (col.title === "Method of Contact")
-          return record[col.dataIndex] === value;
+        if (col.title === "Approval Status") return record[col.dataIndex] === value;
+        if (col.title === "Method of Contact") return record[col.dataIndex] === value;
         return true;
       },
     })),
   ];
+
   // Pagination logic
   const pageSize = 8;
   const [currentPage, setCurrentPage] = useState(1);

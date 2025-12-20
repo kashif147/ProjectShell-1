@@ -56,14 +56,17 @@ import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
+import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
 import MyAlert from "./MyAlert";
 import axios from "axios";
 import Toolbar from "./Toolbar";
+import { useFilters } from "../../context/FilterContext";
 
 function HeaderDetails() {
   const { Search } = Input;
   const { TextArea } = Input;
+  const { filtersState } = useFilters();
   const { toPDF, targetRef } = usePDF({ filename: "page.pdf" });
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
@@ -91,7 +94,7 @@ function HeaderDetails() {
   const handleDateChange = (val) => {
     setValue(val); // val is a dayjs or null
   };
-const { selectedIds, setSelectedIds } = useSelectedIds();
+  const { selectedIds, setSelectedIds } = useSelectedIds();
   const handleSortChange = (value) => {
     setSortOption(value);
   };
@@ -158,9 +161,9 @@ const { selectedIds, setSelectedIds } = useSelectedIds();
   const [contactDrawer, setcontactDrawer] = useState(false);
 
   const menuItems = [
-    { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds)},
+    { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds) },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
-    
+
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
       label: "Generate Bulk NFC Tag",
@@ -212,99 +215,230 @@ const { selectedIds, setSelectedIds } = useSelectedIds();
   useEffect(() => {
     dispatch(fetchRegions());
   }, [dispatch]);
-const handleBulkApproval = async (selectedApplications) => {
-  if (!selectedApplications || selectedApplications.length === 0) {
-    MyAlert('error', 'Selection Required', 'Please select at least one application to approve.');
-    return;
-  }
-
-  // Extract application IDs from selected applications
-  const applicationIds = selectedApplications.map(app => app.id || app.applicationId);
-  
-  const requestData = {
-    applicationIds: selectedApplications
-  };
-
-  try {
-    // Show confirmation dialog using MyConfirm
-    await new Promise((resolve, reject) => {
-      MyConfirm({
-        title: 'Confirm Bulk Approval',
-        message: `Are you sure you want to approve ${applicationIds.length} application(s)?`,
-        onConfirm: () => {
-          resolve();
-        },
-        // Add onCancel to handle reject case
-        onCancel: () => {
-          reject(new Error('User cancelled'));
-        }
-      });
-    });
-
-    // User confirmed, make the API call
-    const token = localStorage.getItem("token");
-    const response = await axios.post(
-      `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
-      requestData,
-      {
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${token}`
-        }
-      }
-    );
-
-    if (response.status === 200 || response.status === 204) {
-      MyAlert(
-        'success', 
-        'Approval Successful', 
-        `Successfully approved ${applicationIds.length} application(s)!`
-      );
-      dispatch(getAllApplications())
-      // Refresh data or update UI as needed
-      // fetchApplications(); // Uncomment if you need to refresh data
-    } else {
-      MyAlert(
-        'warning', 
-        'Partial Success', 
-        `Approval completed but with status: ${response.status}`
-      );
-    }
-  } catch (error) {
-    console.error('Bulk approval error:', error);
-    
-    // Check if error is from user cancellation
-    if (error.message === 'User cancelled') {
-      // User cancelled, do nothing or show info message
-      MyAlert('info', 'Cancelled', 'Approval process was cancelled.');
+  const [tempSelectedDate, setTempSelectedDate] = useState(null);
+  const handleBulkApproval = async (selectedApplications) => {
+    if (!selectedApplications || selectedApplications.length === 0) {
+      MyAlert('error', 'Selection Required', 'Please select at least one application to approve.');
       return;
     }
-    
-    if (error.response) {
-      // The request was made and the server responded with a status code
-      // that falls out of the range of 2xx
-      MyAlert(
-        'error', 
-        'Approval Failed', 
-        `Error ${error.response.status}: ${error.response.data?.message || 'Failed to approve applications'}`
-      );
-    } else if (error.request) {
-      // The request was made but no response was received
-      MyAlert(
-        'error', 
-        'Network Error', 
-        'No response from server. Please check your connection.'
-      );
-    } else {
-      // Something happened in setting up the request
-      MyAlert(
-        'error', 
-        'Error', 
-        `Failed to approve applications: ${error.message}`
-      );
-    }
-  }
-};
+
+    // State to manage date and processing
+    let selectedDate = null;
+    let isProcessing = false;
+    let modalRef = null;
+
+    // Create the modal
+    modalRef = Modal.confirm({
+      title: 'Select Processing Date',
+      icon: null,
+      width: 500,
+      className: 'bulk-approval-modal',
+      content: (
+        <div style={{ padding: '10px 0 20px 0' }}>
+          <MyDatePicker1
+            label="Processing Date"
+            name="processingDate"
+            value={tempSelectedDate}
+            onChange={(date) => {
+              setTempSelectedDate(date);
+              selectedDate = date; // Also store in the closure variable
+              if (modalRef) {
+                modalRef.update({
+                  okButtonProps: {
+                    disabled: !date,
+                    style: date ? {
+                      backgroundColor: '#45669d',
+                      borderColor: '#45669d'
+                    } : {}
+                  }
+                });
+              }
+            }}
+            required={true}
+            placeholder="Select processing date"
+            format="DD/MM/YYYY"
+          />
+          {isProcessing && (
+            <div style={{
+              textAlign: 'center',
+              padding: '30px 0 10px 0',
+              borderTop: '1px solid #f0f0f0',
+              marginTop: '20px'
+            }}>
+              <LoadingOutlined style={{ fontSize: 32, color: '#45669d', marginBottom: 15 }} />
+              <div style={{ fontSize: 16, fontWeight: 500, color: '#45669d' }}>
+                Processing {selectedApplications.length} application(s)...
+              </div>
+              <div style={{ marginTop: 8, color: '#666', fontSize: 14 }}>
+                This may take a moment for large batches
+              </div>
+            </div>
+          )}
+        </div>
+      ),
+      okText: 'Approve',
+      cancelText: 'Cancel',
+      okButtonProps: {
+        disabled: true,
+        style: {
+          backgroundColor: '#45669d',
+          borderColor: '#45669d',
+          color: 'white',
+        }
+      },
+      cancelButtonProps: {
+        style: {
+          borderColor: '#d9d9d9',
+          color: 'rgba(0, 0, 0, 0.88)'
+        }
+      },
+      onOk: async () => {
+        if (!selectedDate) {
+          MyAlert('error', 'Date Required', 'Please select a processing date.');
+          return Promise.reject();
+        }
+
+        // Set processing state
+        isProcessing = true;
+        if (modalRef) {
+          modalRef.update({
+            okButtonProps: {
+              disabled: true,
+              loading: true,
+              style: {
+                backgroundColor: '#45669d',
+                borderColor: '#45669d',
+                opacity: 0.7
+              }
+            },
+            cancelButtonProps: {
+              disabled: true,
+              style: {
+                opacity: 0.5,
+                pointerEvents: 'none'
+              }
+            }
+          });
+        }
+
+        try {
+          const applicationIds = selectedApplications.map(app => app.id || app.applicationId);
+          const formattedDate = dayjs(selectedDate).format('YYYY-MM-DD');
+
+          const requestData = {
+            applicationIds: selectedApplications,
+            processingDate: formattedDate
+          };
+
+          // Show processing notification
+          const processingKey = 'bulk-approval-processing';
+          message.loading({
+            content: `Approving ${selectedApplications.length} application(s)...`,
+            duration: 0,
+            key: processingKey,
+            style: {
+              marginTop: '50vh',
+            }
+          });
+
+          const token = localStorage.getItem("token");
+          const response = await axios.post(
+            `${process.env.REACT_APP_PROFILE_SERVICE_URL}/applications/bulk-approval`,
+            requestData,
+            {
+              headers: {
+                'Content-Type': 'application/json',
+                'Authorization': `Bearer ${token}`
+              },
+              timeout: 300000,
+            }
+          );
+
+          // Clear processing notification
+          message.destroy(processingKey);
+
+          if (response.status === 200 || response.status === 204) {
+            MyAlert(
+              'success',
+              'Approval Successful',
+              `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format('DD/MM/YYYY')}!`
+            );
+            dispatch(getAllApplications());
+            Modal.destroyAll();
+            return Promise.resolve();
+          } else {
+            MyAlert(
+              'warning',
+              'Partial Success',
+              `Approval completed but with status: ${response.status}`
+            );
+            Modal.destroyAll();
+            return Promise.resolve();
+          }
+        } catch (error) {
+          console.error('Bulk approval error:', error);
+
+          // Clear any processing notifications
+          message.destroy('bulk-approval-processing');
+
+          // Reset modal state on error
+          isProcessing = false;
+          if (modalRef) {
+            modalRef.update({
+              okButtonProps: {
+                disabled: !selectedDate,
+                loading: false,
+                style: selectedDate ? {
+                  backgroundColor: '#45669d',
+                  borderColor: '#45669d'
+                } : {}
+              },
+              cancelButtonProps: {
+                disabled: false,
+                style: {
+                  borderColor: '#d9d9d9',
+                  color: 'rgba(0, 0, 0, 0.88)'
+                }
+              }
+            });
+          }
+
+          if (error.code === 'ECONNABORTED') {
+            MyAlert(
+              'error',
+              'Request Timeout',
+              `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
+              `The process may still be running in the background. Please check back later.`
+            );
+          } else if (error.response) {
+            MyAlert(
+              'error',
+              'Approval Failed',
+              `Error ${error.response.status}: ${error.response.data?.message || 'Failed to approve applications'}`
+            );
+          } else if (error.request) {
+            MyAlert(
+              'error',
+              'Network Error',
+              'No response from server. Please check your connection.'
+            );
+          } else {
+            MyAlert(
+              'error',
+              'Error',
+              `Failed to approve applications: ${error.message}`
+            );
+          }
+          return Promise.reject();
+        }
+      },
+      onCancel: () => {
+        if (!isProcessing) {
+          MyAlert('info', 'Cancelled', 'Approval process was cancelled.');
+        }
+      },
+    });
+  };
 
   const gender = {
     Male: false,
@@ -616,6 +750,7 @@ const handleBulkApproval = async (selectedApplications) => {
             location?.pathname == "/members" ||
             location?.pathname == "/" ||
             location?.pathname == "/Summary" ||
+            location?.pathname == "/Members" ||
             location?.pathname == "/CasesSummary" ||
             location?.pathname == "/Transfers" ||
             location?.pathname == "/CorrespondencesSummary" ||
@@ -999,7 +1134,7 @@ const handleBulkApproval = async (selectedApplications) => {
         onClose={() => setisGardaDrwer(!isGardaDrwer)}
       /> */}
       {/* <AddNewGarda  /> */}
-     
+
       <MyDrawer
         title="Add New Events"
         open={rosterDrawer}

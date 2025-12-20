@@ -187,9 +187,9 @@ export const profileItems = [
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
-    "Members",
+    "Members Subscriptions",
     <FaUsers />,
-    "Members",
+    "Members Subscriptions",
     ["crm:member:read", "crm:member:list"],
     ["MEMBER", "MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
@@ -230,6 +230,13 @@ export const subscriptionItems = [
     "Profiles",
     ["crm:member:read", "crm:member:list"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+    createMenuItem(
+    "Members Subscriptions",
+    <FaFileCode />,
+    "Members Subscriptions",
+    ["user:read", "role:read"],
+    ["SU", "GS", "DGS"]
   ),
   createMenuItem(
     "Reminders",
@@ -347,6 +354,7 @@ export const configurationItems = [
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),
+
   createMenuItem(
     "System Configuration",
     <FaWrench />,

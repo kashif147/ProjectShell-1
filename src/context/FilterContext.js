@@ -1,6 +1,11 @@
 import { createContext, useContext, useState, useMemo, useEffect } from "react";
 import { useLocation } from "react-router-dom";
+
 const FilterContext = createContext();
+
+// 🔹 Common filters that should appear on all screens (will appear AFTER screen-specific filters)
+const COMMON_FILTERS = ["Grade","Work Location",  "Region", "Branch"];
+
 export const FilterProvider = ({ children }) => {
   // 🔹 All possible filters per screen
   const viewFilters = useMemo(
@@ -64,38 +69,162 @@ export const FilterProvider = ({ children }) => {
         "Reminder Date",
         "Cancellation Flag",
       ],
+      Members: [
+        "Subscription Status",
+        "Membership Category",
+        "Payment Type",
+        "Payment Frequency",
+        "Subscription Year",
+        "Start Date",
+        "End Date",
+        "Rollover Date",
+        "Membership Movement",
+        "Payroll No",
+        "Consent",
+        "Created At",
+        "Updated At",
+        "Cancellation/Reinstated",
+        "Work Location",
+        "Grade",
+        "Branch",
+        "Region",
+      ],
     }),
     []
   );
 
-  // 🔹 Default visible filters for each screen
-  const defaultVisibleFilters = {
+  // 🔹 Screen-specific default filters (appear FIRST)
+  const screenSpecificDefaultFilters = {
     Applications: ["Application Status", "Membership Category"],
-    Profile: ["Email"],
-    Membership: ["Membership Status"],
+    Profile: ["Email", "Membership Category"],
+    Membership: ["Membership Status", "Membership Category"],
+    Members: ["Subscription Status", "Membership Category"],
   };
 
+  // 🔹 Helper to get default visible filters for a screen
+  const getDefaultVisibleFilters = (screen) => {
+    const screenSpecific = screenSpecificDefaultFilters[screen] || [];
+    const availableCommonFilters = COMMON_FILTERS.filter(filter => 
+      viewFilters[screen]?.includes(filter)
+    );
+    return [...screenSpecific, ...availableCommonFilters];
+  };
+
+  // 🔹 Default visible filters for each screen
+  const defaultVisibleFilters = useMemo(() => ({
+    Applications: getDefaultVisibleFilters("Applications"),
+    Profile: getDefaultVisibleFilters("Profile"),
+    Membership: getDefaultVisibleFilters("Membership"),
+    Members: getDefaultVisibleFilters("Members"),
+  }), []);
+
   // 🔹 Default filter VALUES for each screen
-  const defaultFilterValues = {
+  const defaultFilterValues = useMemo(() => ({
     Applications: {
       "Application Status": {
         operator: "==",
-        selectedValues: ["Draft", "Submitted"] // ✅ Default for Applications screen
+        selectedValues: ["Draft", "Submitted"]
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
       }
     },
     Profile: {
       "Email": {
         operator: "==",
-        selectedValues: [] // No default values for Profile
+        selectedValues: []
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
       }
     },
     Membership: {
       "Membership Status": {
         operator: "==",
-        selectedValues: ["Active"] // ✅ Default for Membership screen
+        selectedValues: ["Active"]
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
       }
     },
-  };
+    Members: {
+      "Subscription Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
+        operator: "==",
+        selectedValues: []
+      }
+    }
+  }), []);
 
   // 🔹 Dropdown options per filter
   const filterOptions = useMemo(
@@ -103,10 +232,18 @@ export const FilterProvider = ({ children }) => {
       "Application Status": ["In-Progress", "Approved", "Rejected", "Submitted", "Draft"],
       "Membership Category": ["Student", "Full", "Associate", "Retired"],
       "Membership Status": ["Active", "Inactive", "Pending", "Cancelled"],
+      "Subscription Status": ["Active", "Cancelled", "Expired", "Pending"],
       "Payment Type": ["Payroll Deduction", "Credit Card", "Bank Transfer"],
       "Gender": ["Male", "Female", "Other"],
-      "Region": ["North", "South", "East", "West"],
-      "Branch": ["Dublin", "Cork", "Galway", "Limerick"],
+      "Region": ["North", "South", "East", "West", "Central"],
+      "Branch": ["Dublin", "Cork", "Galway", "Limerick", "Waterford", "Belfast"],
+      "Grade": ["Staff Nurse", "Clinical Nurse Manager 1", "Clinical Nurse Manager 2", 
+                "Clinical Nurse Manager 3", "Advanced Nurse Practitioner", 
+                "Director of Nursing", "Student Nurse", "Midwife"],
+      "Work Location": ["Hospital", "Community", "Private Practice", "Academic", 
+                        "Administrative", "Other"],
+      "Email": [], // Will be text input
+      "Membership No": [], // Will be text input
     }),
     []
   );
@@ -114,34 +251,46 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Active page
   const [activePage, setActivePage] = useState("Applications");
 
-
   // 🔹 Visible filters and saved states
   const [visibleFilters, setVisibleFilters] = useState(
     defaultVisibleFilters["Applications"]
   );
   const location = useLocation();
-  const activeScreenName = location?.pathname
+  const activeScreenName = location?.pathname;
   const [filtersState, setFiltersState] = useState(
     defaultFilterValues["Applications"] || {}
   );
+
   const getScreenFromPath = () => {
     const pathMap = {
       '/applications': 'Applications',
       '/Summary': 'Profile',
-      '/membership': 'Membership'
+      '/membership': 'Membership',
+      "/Members": "Members"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
-  const activeScreen = getScreenFromPath(activeScreenName)
-  useEffect(()=>{
-  setActivePage(activeScreen)
-  },[activeScreen])
-  
-  // 🔹 Reset filters when changing page - UPDATED
+
+  const activeScreen = getScreenFromPath(activeScreenName);
+
   useEffect(() => {
-    setVisibleFilters(defaultVisibleFilters[activePage] || []);
-    setFiltersState(defaultFilterValues[activePage] || {});
-  }, [activePage]);
+    setActivePage(activeScreen);
+  }, [activeScreen]);
+
+  // 🔹 Reset filters when changing page
+  useEffect(() => {
+    console.log("Switching to page:", activeScreen);
+    console.log("Default visible filters for", activeScreen, ":", getDefaultVisibleFilters(activeScreen));
+    
+    const newVisibleFilters = getDefaultVisibleFilters(activeScreen);
+    const newFilterValues = defaultFilterValues[activeScreen] || {};
+    
+    console.log("Setting visible filters:", newVisibleFilters);
+    console.log("Setting filter values:", newFilterValues);
+    
+    setVisibleFilters(newVisibleFilters);
+    setFiltersState(newFilterValues);
+  }, [activeScreen]);
 
   // 🔹 Helper functions
   const toggleFilter = (filter, checked) => {
@@ -151,8 +300,15 @@ export const FilterProvider = ({ children }) => {
   };
 
   const resetFilters = () => {
-    setVisibleFilters(defaultVisibleFilters[activePage] || []);
-    setFiltersState(defaultFilterValues[activePage] || {});
+    console.log("Resetting filters for:", activePage);
+    const resetVisibleFilters = getDefaultVisibleFilters(activePage);
+    const resetFilterValues = defaultFilterValues[activePage] || {};
+    
+    console.log("Reset visible filters:", resetVisibleFilters);
+    console.log("Reset filter values:", resetFilterValues);
+    
+    setVisibleFilters(resetVisibleFilters);
+    setFiltersState(resetFilterValues);
   };
 
   const updateFilterValues = (filter, values) => {
@@ -180,19 +336,38 @@ export const FilterProvider = ({ children }) => {
     [activePage, viewFilters]
   );
 
+  // 🔹 Function to get filters in correct order (screen-specific first, then common)
+  const getOrderedVisibleFilters = () => {
+    const screenSpecific = screenSpecificDefaultFilters[activePage] || [];
+    const visibleCommonFilters = COMMON_FILTERS.filter(filter => 
+      visibleFilters.includes(filter)
+    );
+    const otherFilters = visibleFilters.filter(filter => 
+      !screenSpecific.includes(filter) && !COMMON_FILTERS.includes(filter)
+    );
+    
+    return [...screenSpecific, ...visibleCommonFilters, ...otherFilters];
+  };
+
+  const orderedVisibleFilters = getOrderedVisibleFilters();
+
   return (
     <FilterContext.Provider
       value={{
         activePage,
         setActivePage,
         currentPageFilters,
-        visibleFilters,
+        visibleFilters: orderedVisibleFilters, // Return ordered filters
+        rawVisibleFilters: visibleFilters, // Original unordered for internal use
         toggleFilter,
         resetFilters,
         filterOptions,
         filtersState,
         updateFilterValues,
         updateFilterOperator,
+        COMMON_FILTERS,
+        getDefaultVisibleFilters,
+        screenSpecificDefaultFilters,
       }}
     >
       {children}

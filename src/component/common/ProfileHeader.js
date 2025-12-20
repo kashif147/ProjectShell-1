@@ -33,10 +33,16 @@ function ProfileHeader({
   const { profileDetails, loading, error } = useSelector(
     (state) => state.profileDetails
   );
-  const { profileSearchData } = useSelector((state) => state.searchProfile);
+  
+  // Subscription API data
+  const {
+    ProfileSubData,
+    ProfileSubLoading,
+    ProfileSubError,
+  } = useSelector((state) => state.profileSubscription);
 
-  // Choose source dynamically - profileDetails has priority, then search results
-  const source = profileDetails || profileSearchData?.results?.[0];
+  // Choose source dynamically - profileDetails has priority
+  const source = profileDetails;
 
   // Function to calculate age from date of birth
   const calculateAge = (dateString) => {
@@ -66,23 +72,50 @@ function ProfileHeader({
     return `${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getDate().toString().padStart(2, '0')}.${date.getFullYear()}`;
   };
 
+  // Get subscription data
+  const getSubscriptionData = () => {
+    if (ProfileSubData && ProfileSubData.data && ProfileSubData.data.length > 0) {
+      const subscription = ProfileSubData.data[0];
+      
+      return {
+        subscriptionStatus: subscription.subscriptionStatus || "",
+        paymentType: subscription.paymentType || "",
+        payrollNo: subscription.payrollNo || "",
+        paymentFrequency: subscription.paymentFrequency || "",
+        subscriptionYear: subscription.subscriptionYear || "",
+        isCurrent: subscription.isCurrent || false,
+        startDate: subscription.startDate ? formatDate(subscription.startDate) : "",
+        endDate: subscription.endDate ? formatDate(subscription.endDate) : "",
+        renewalDate: subscription.rolloverDate ? formatDate(subscription.rolloverDate) : "",
+        membershipMovement: subscription.membershipMovement || "",
+        reinstated: subscription.cancellation?.reinstated || false,
+        yearendProcessed: subscription.yearend?.processed || false,
+      };
+    }
+    return null;
+  };
+
+  const subscriptionData = getSubscriptionData();
+
   // Derive member data from source
   const memberData = {
     // Personal Info
-    name: source ? `${source.personalInfo?.forename || ''} ${source.personalInfo?.surname || ''}`.trim() : "Jack Smith",
-    dob: source?.personalInfo?.dateOfBirth ? formatDOB(source.personalInfo.dateOfBirth) : "03.22.1990",
+    name: source ? `${source.personalInfo?.forename || ''} ${source.personalInfo?.surname || ''}`.trim() : "",
+    dob: source?.personalInfo?.dateOfBirth ? formatDOB(source.personalInfo.dateOfBirth) : "",
     gender: source?.personalInfo?.gender ? source.personalInfo.gender.charAt(0).toUpperCase() : "M",
     age: source?.personalInfo?.dateOfBirth ? calculateAge(source.personalInfo.dateOfBirth) : "36 Yrs",
     
-    // Status
+    // Status - Use subscription status if available, otherwise fall back to profile data
     status: isDeceased ? "Deceased" : 
+            (subscriptionData?.subscriptionStatus || 
             source?.membershipStatus || 
-            (source?.deactivatedAt ? "Inactive" : "Active Member"),
+            (source?.deactivatedAt ? "Inactive" : "Active Member")),
     
-    // Membership Info
+    // Membership Info - Use subscription end date if available, otherwise fall back
     memberId: source?.membershipNumber || "45217A",
     joined: source?.firstJoinedDate ? formatDate(source.firstJoinedDate) : "01/01/2016",
-    expires: source?.deactivatedAt ? formatDate(source.deactivatedAt) : "01/01/2026",
+    expires: subscriptionData?.endDate || 
+            (source?.deactivatedAt ? formatDate(source.deactivatedAt) : "01/01/2026"),
     
     // Contact Info
     address: source?.contactInfo ? 
@@ -96,13 +129,18 @@ function ProfileHeader({
     // Professional Info
     grade: source?.professionalDetails?.grade || "General - All Grades",
     category: source?.membershipCategory || "Undergraduate Student",
-    membershipStatus: source?.membershipStatus || "STOC Member",
     
-    // Financial Info (Note: These might need to come from a different API endpoint)
-    balance: "€200", // You'll need to get this from subscription API
-    lastPayment: "€74.7", // You'll need to get this from subscription API
-    paymentDate: source?.submissionDate ? formatDate(source.submissionDate) : "1/02/2025",
-    paymentCode: `MB-${new Date().getFullYear()}-${source?.membershipNumber || '001'}`,
+    // Subscription Info
+    paymentType: subscriptionData?.paymentType || "Salary Deduction",
+    subscriptionYear: subscriptionData?.subscriptionYear || "",
+    
+    // Financial Info - These would likely come from a different API endpoint
+    balance: "€200",
+    lastPayment: "€74.7",
+    // Use subscription start date for payment date if available
+    paymentDate: subscriptionData?.startDate || (source?.submissionDate ? formatDate(source.submissionDate) : "1/02/2025"),
+    // Include subscription year in payment code if available
+    paymentCode: `MB-${subscriptionData?.subscriptionYear || new Date().getFullYear()}-${source?.membershipNumber || '001'}`,
   };
 
   const cancellationReasons = [
@@ -206,6 +244,8 @@ function ProfileHeader({
             </p>
             <span className={`member-status-badge ${isDeceased ? "member-status-deceased" : ""}`}>
               {memberData.status}
+              {subscriptionData?.isCurrent && " (Current)"}
+              {subscriptionData?.reinstated && " (Reinstated)"}
             </span>
           </div>
 
@@ -275,6 +315,21 @@ function ProfileHeader({
               <span className="financial-label">Payment Code:</span>
               <span className="financial-value">{memberData.paymentCode}</span>
             </div>
+            {/* Show subscription info if available */}
+            {subscriptionData && (
+              <>
+                <div className="financial-row">
+                  <span className="financial-label">Payment Type:</span>
+                  <span className="financial-value">{memberData.paymentType}</span>
+                </div>
+                {memberData.subscriptionYear && (
+                  <div className="financial-row">
+                    <span className="financial-label">Sub Year:</span>
+                    <span className="financial-value">{memberData.subscriptionYear}</span>
+                  </div>
+                )}
+              </>
+            )}
           </div>
         </div>
 
@@ -288,10 +343,20 @@ function ProfileHeader({
             <span className="grade-label-blue">Category:</span>
             <span className="grade-value-blue">{memberData.category}</span>
           </div>
+          {/* Show subscription status if available */}
+          {/* {subscriptionData?.subscriptionStatus && (
+            <div className="grade-row-blue">
+              <FaShieldAlt className="grade-icon-blue" style={{ color: '#fff', marginRight: '8px', fontSize: '14px' }} />
+              <span className="grade-label-blue">Sub Status:</span>
+              <span className={`grade-value-blue ${subscriptionData.subscriptionStatus.toLowerCase() === 'active' ? 'status-active' : ''}`}>
+                {subscriptionData.subscriptionStatus}
+              </span>
+            </div>
+          )} */}
         </div>
 
         {/* Cancel Membership Button */}
-        {showButtons && !isDeceased && (
+        {showButtons && !isDeceased && !subscriptionData?.reinstated && (
           <button className="member-cancel-btn" onClick={handleCancelClick}>
             Cancel Membership
           </button>
