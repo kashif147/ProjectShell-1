@@ -134,6 +134,11 @@
   padding: 0 10px;
 }
 
+.configuration-main .drawer-tbl .ant-table-thead .ant-table-selection-column {
+  background-color: var(--primary-color) !important;
+  color: white !important;
+}
+
 .configuration-main .drawer-tbl .ant-table-tbody > tr > td {
   padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;

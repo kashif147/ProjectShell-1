@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useRef, useContext } from "react";
+import React, { useEffect, useState, useRef, useContext, useMemo, useCallback } from "react";
 import { Table, Pagination, Space, Form, Input, Checkbox } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -78,7 +78,7 @@ const TableComponent = ({
   redirect,
   isGrideLoading,
   rowSelection = null,
-  selectedRowKeys = [],
+  selectedRowKeys,
   onSelectionChange,
   selectionType = "checkbox",
   enableRowSelection = true,
@@ -113,10 +113,29 @@ const TableComponent = ({
     disableFtn,
   } = useTableColumns();
   const [dataSource, setdataSource] = useState(data);
+  // Internal state for row selection when not provided via props
+  const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
+
+  // Determine if selection is externally controlled
+  // Only consider it external if BOTH selectedRowKeys and onSelectionChange are explicitly provided
+  const isExternallyControlled = selectedRowKeys !== undefined && onSelectionChange !== undefined;
 
   useEffect(() => {
     setdataSource(data);
-  }, [data]);
+    // When data changes, filter out selected keys that no longer exist
+    if (!isExternallyControlled && internalSelectedRowKeys.length > 0) {
+      const validKeys = internalSelectedRowKeys.filter(key => 
+        data && data.some(item => {
+          const itemKey = item.key || item.id || item._id;
+          return itemKey === key || String(itemKey) === String(key);
+        })
+      );
+      if (validKeys.length !== internalSelectedRowKeys.length) {
+        setInternalSelectedRowKeys(validKeys);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [data, isExternallyControlled]);
 
   const [iscancellationOpen, setIscancellationOpen] = useState(false);
   const [isCornMarOpen, setisCornMarOpen] = useState(false);
@@ -233,37 +252,53 @@ const TableComponent = ({
     );
   };
 
-  // **UPDATED: Fixed getRowSelectionConfig with proper height and alignment**
-const getRowSelectionConfig = () => {
-  if (!enableRowSelection) return null;
+  // Memoized onChange handler to prevent unnecessary re-renders
+  const handleSelectionChange = useCallback((selectedKeys, selectedRows) => {
+    if (isExternallyControlled) {
+      // External control - call provided handler
+      onSelectionChange(selectedKeys, selectedRows);
+    } else {
+      // Internal control - update internal state
+      setInternalSelectedRowKeys(selectedKeys);
+    }
+  }, [isExternallyControlled, onSelectionChange]);
 
-  const config = {
-    type: selectionType,
-    selectedRowKeys,
-    onChange: (selectedKeys, selectedRows) => {
-      if (onSelectionChange) onSelectionChange(selectedKeys, selectedRows);
-    },
-    onSelect: (record, selected, selectedRows) => {
-      // Trigger row click logic only when checkbox is clicked
-      console.log("Row clicked:", record); // ✅ your row clicked log
-      setSelectedRowData([record]);
-      setSelectedRowIndex(dataSource.findIndex(r => r.key === record.key));
-    },
-    onSelectAll: (selected, selectedRows, changeRows) => {
-      console.log("Select all triggered:", selectedRows);
-      // Optional: handle select all logic
-    },
-    columnWidth: 60,
-    fixed: true,
-    // Optional: align checkbox properly
-    columnStyle: { padding: "0 10px", verticalAlign: "middle" },
-  };
+  // **UPDATED: Fixed rowSelectionConfig with proper height and alignment**
+  const rowSelectionConfig = useMemo(() => {
+    if (!enableRowSelection) return null;
 
-  // Remove dropdown menu in header
-  config.selections = undefined;
+    // Use internal state if external props are not provided
+    const currentSelectedKeys = isExternallyControlled ? (selectedRowKeys || []) : internalSelectedRowKeys;
 
-  return config;
-};
+    const config = {
+      type: selectionType,
+      selectedRowKeys: currentSelectedKeys,
+      onChange: handleSelectionChange,
+      onSelect: (record, selected, selectedRows) => {
+        // Trigger row click logic only when checkbox is clicked
+        console.log("Row clicked:", record); // ✅ your row clicked log
+        setSelectedRowData([record]);
+        setSelectedRowIndex(dataSource.findIndex(r => {
+          const rKey = r.key || r.id || r._id;
+          const recordKey = record.key || record.id || record._id;
+          return rKey === recordKey || String(rKey) === String(recordKey);
+        }));
+      },
+      onSelectAll: (selected, selectedRows, changeRows) => {
+        console.log("Select all triggered:", selectedRows);
+        // Optional: handle select all logic
+      },
+      columnWidth: 60,
+      fixed: true,
+      // Optional: align checkbox properly
+      columnStyle: { padding: "0 10px", verticalAlign: "middle" },
+    };
+
+    // Remove dropdown menu in header
+    config.selections = undefined;
+
+    return config;
+  }, [enableRowSelection, isExternallyControlled, selectedRowKeys, internalSelectedRowKeys, selectionType, handleSelectionChange, dataSource]);
 
 
   // Build columns
@@ -781,7 +816,7 @@ const getRowSelectionConfig = () => {
             columns={processedColumns}
             dataSource={currentPageData}
             // **FIXED: Using the updated getRowSelectionConfig**
-            rowSelection={getRowSelectionConfig()}
+            rowSelection={rowSelectionConfig}
             pagination={false}
             style={{ tableLayout: "fixed" }}
             bordered

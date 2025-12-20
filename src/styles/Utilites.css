@@ -141,8 +141,6 @@
 
 .drawer-tbl .ant-table-thead .ant-table-selection-column {
   padding: 0 10px !important;
-  background-color: inherit !important;
-  color: inherit !important;
   min-height: 36px !important;
   height: 36px !important;
 }
@@ -287,6 +285,9 @@
   border-right: none !important;
   border-inline-start: none !important;
   border-inline-end: none !important;
+  font-family: var(--fontFamily) !important;
+  font-size: 13px !important;
+  font-weight: 400;
 }
 
 .drawer-tbl .ant-table-thead > tr > th {
@@ -296,6 +297,9 @@
   border-right: none !important;
   border-inline-start: none !important;
   border-inline-end: none !important;
+  font-family: var(--fontFamily) !important;
+  font-size: 13px !important;
+  font-weight: 400;
 }
 
 /* Remove empty placeholder rows only */
