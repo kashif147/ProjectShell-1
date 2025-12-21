@@ -43,6 +43,7 @@ import {
   FaTags,
   FaBox,
   FaFileCode,
+  FaIdCard,
   FaWrench,
   FaBriefcase,
   FaFlag,
@@ -91,7 +92,7 @@ export const correspondenceItems = [
 ];
 
 export const financeItems = [
-   createMenuItem(
+  createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
@@ -175,7 +176,6 @@ export const financeItems = [
   //   ["USER_READ", "USER_WRITE"],
   //   ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   // ),
- 
 ];
 
 export const profileItems = [
@@ -187,9 +187,9 @@ export const profileItems = [
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
-    "Members Subscriptions",
+    "Membership",
     <FaUsers />,
-    "Members Subscriptions",
+    "Membership",
     ["crm:member:read", "crm:member:list"],
     ["MEMBER", "MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
@@ -231,10 +231,10 @@ export const subscriptionItems = [
     ["crm:member:read", "crm:member:list"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
-    createMenuItem(
-    "Members Subscriptions",
-    <FaFileCode />,
-    "Members Subscriptions",
+  createMenuItem(
+    "Membership",
+    <FaIdCard />,
+    "Membership",
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),
@@ -288,7 +288,7 @@ export const subscriptionItems = [
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
-    createMenuItem(
+  createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
