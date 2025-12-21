@@ -1279,7 +1279,7 @@ function MyDeatails() {
             <div className="detail-sub-con">
               <div className="lbl-inpt">
                 <div className="title-cont">
-                  <p className="">Reg No :</p>
+                  <p className="">Membership No :</p>
                 </div>
                 <div className="input-cont">
                   <p className="star">*</p>

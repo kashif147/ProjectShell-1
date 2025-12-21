@@ -251,7 +251,7 @@ const staticColumns = {
   ChangCateSumm: [
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -848,7 +848,7 @@ const staticColumns = {
   Cases: [
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -971,7 +971,7 @@ const staticColumns = {
   Claims: [
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1038,7 +1038,7 @@ const staticColumns = {
   Transfer: [
     {
       dataIndex: ["profileId","membershipNumber"],
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1124,7 +1124,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1222,7 +1222,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1320,7 +1320,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1418,7 +1418,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1516,7 +1516,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,

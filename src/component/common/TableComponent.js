@@ -576,7 +576,7 @@ const TableComponent = ({
                 </Link>
               );
 
-            case "Reg No":
+            case "Membership No":
               return (
                 <span
                   style={{ color: "blue", cursor: "pointer" }}
@@ -620,7 +620,7 @@ const TableComponent = ({
                 compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                 multiple: 1,
               }
-              : col.title === "Reg No"
+              : col.title === "Membership No"
                 ? {
                   compare: (a, b) => a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
                   multiple: 1,
