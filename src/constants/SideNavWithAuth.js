@@ -308,48 +308,6 @@ export const subscriptionItems = [
 
 export const configurationItems = [
   createMenuItem(
-    "Organistaion Groups",
-    <FaLayerGroup />,
-    "Organistaion Groups",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Work Location Branches",
-    <FaMapMarkerAlt />,
-    "Work Location Branches",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Region Committees",
-    <FaFlag />,
-    "Region Committees",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Sections",
-    <FaBriefcase />,
-    "Sections",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Rate Categories Youth Fourms",
-    <FaGraduationCap />,
-    "Rate Categories Youth Fourms",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Subscription Products",
-    <FaBox />,
-    "Subscription Products",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
     "Templetes",
     <FaFileCode />,
     "Templetes",
@@ -364,12 +322,13 @@ export const configurationItems = [
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),
+
   createMenuItem(
-    "Tenant Management",
-    <FaServer />,
-    "Tenant Management",
-    ["user:read", "user:write"],
-    ["SU", "GS", "DGS"]
+    "Permission Management",
+    <FaKey />,
+    "Permission Management",
+    ["role:read", "role:write"],
+    ["SU", "GS"]
   ),
   createMenuItem(
     "Role Management",
@@ -386,19 +345,20 @@ export const configurationItems = [
     ["SU", "GS", "DGS"]
   ),
   createMenuItem(
-    "Permission Management",
-    <FaKey />,
-    "Permission Management",
-    ["role:read", "role:write"],
-    ["SU", "GS"]
-  ),
-  createMenuItem(
     "Product Management",
     <FaBox />,
     "Product Management",
     ["user:read", "user:write"],
     ["SU", "GS", "DGS"]
   ),
+  createMenuItem(
+    "Tenant Management",
+    <FaServer />,
+    "Tenant Management",
+    ["user:read", "user:write"],
+    ["SU", "GS", "DGS"]
+  ),
+
   createMenuItem(
     "Policy Client Example",
     <FaShieldAlt />,
