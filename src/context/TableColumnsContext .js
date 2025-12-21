@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime } from "../utils/Utilities";
+import { convertToLocalTime, formatDateOnly } from "../utils/Utilities";
 
 const TableColumnsContext = createContext();
 
@@ -64,6 +64,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatDateOnly(value),
     },
 
     {
@@ -356,6 +357,7 @@ const staticColumns = {
       ellipsis: true,
       isGride: false,
       isVisible: true,
+      render: (value) => formatDateOnly(value),
       width: 150,
     },
     {
@@ -551,6 +553,7 @@ const staticColumns = {
       isVisible: true,
       width: 140,
       editable: true,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: [

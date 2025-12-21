@@ -239,6 +239,22 @@ export function convertToLocalTime(utcDateString) {
   return moment.utc(utcDateString).local().format("DD/MM/YYYY HH:mm");
 }
 
+// Format date to DD/MM/YYYY (for Date of Birth and other date fields)
+export function formatDateOnly(dateString) {
+  if (!dateString) return "";
+  // Handle moment objects
+  if (moment.isMoment && moment.isMoment(dateString)) {
+    return dateString.isValid() ? dateString.format("DD/MM/YYYY") : "";
+  }
+  // Handle dayjs objects
+  if (typeof dayjs !== "undefined" && dayjs.isDayjs && dayjs.isDayjs(dateString)) {
+    return dateString.isValid() ? dateString.format("DD/MM/YYYY") : "";
+  }
+  // Handle date strings (ISO, timestamp, etc.) - most common case
+  const date = moment(dateString);
+  return date.isValid() ? date.format("DD/MM/YYYY") : "";
+}
+
 function base64URLEncode(buffer) {
   return btoa(String.fromCharCode.apply(null, new Uint8Array(buffer)))
     .replace(/\+/g, "-")

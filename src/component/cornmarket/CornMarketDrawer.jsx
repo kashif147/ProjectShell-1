@@ -8,6 +8,7 @@ import MyMenu from '../common/MyMenu';
 import CustomSelect from '../common/CustomSelect';
 import { set } from 'react-hook-form';
 import { useTableColumns } from '../../context/TableColumnsContext ';
+import { formatDateOnly } from '../../utils/Utilities';
 const { TabPane } = Tabs;
 
 function CornMarketDrawer({ isOpen, onClose }) {
@@ -37,7 +38,9 @@ const { ProfileDetails } = useTableColumns();
     { title: 'Full Name', dataIndex: 'fullname', key: 'fullname', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },
     { title: 'Forename', dataIndex: 'forename', key: 'forename', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },
     { title: 'Surname', dataIndex: 'surname', key: 'surname', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },
-    { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },
+    { title: 'Date of Birth', dataIndex: 'dateOfBirth', key: 'dateOfBirth', render: (text) => (
+      <div style={{ whiteSpace: 'nowrap' }}>{formatDateOnly(text)}</div>
+    )},
     { title: 'Mobile', dataIndex: 'mobile', key: 'mobile', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },
     { title: 'Home/Work Tel', dataIndex: 'HomeOrWorkTel', key: 'HomeOrWorkTel', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },
     { title: 'Email', dataIndex: 'email', key: 'email', render: text => <div style={{ whiteSpace: 'nowrap' }}>{text}</div> },

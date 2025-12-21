@@ -28,6 +28,7 @@ import {
   selectFilteredError,
 } from "../../features/profiles/filterTransferSlice";
 import TransferRequests from "../TransferRequests";
+import { formatDateOnly } from "../../utils/Utilities";
 
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
@@ -626,6 +627,17 @@ const TableComponent = ({
                     }}
                   >
                     {text || "View"}
+                  </span>
+                );
+
+              case "Date of Birth":
+              case "Date Of Birth":
+                return (
+                  <span
+                    style={{ textOverflow: "ellipsis" }}
+                    onClick={() => handleRowClick(record, index)}
+                  >
+                    {formatDateOnly(text)}
                   </span>
                 );
 
