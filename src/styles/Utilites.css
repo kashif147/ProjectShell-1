@@ -173,8 +173,8 @@
 }
 
 .common-table .ant-table-tbody .ant-table-cell-fix-left {
-  background-color: white !important;
   z-index: 10 !important;
+  /* Background color will be set by even/odd row rules below */
 }
 
 /* Remove spacing between thead and tbody */
