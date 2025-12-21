@@ -279,14 +279,14 @@ export const subscriptionItems = [
   createMenuItem(
     "CornMarket New Graduate",
     <FaGraduationCap />,
-    "CornMarket New Graduate",
+    "New Graduate",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
     "CornMarket Rewards",
     <FaUserPlus />,
-    "CornMarket Rewards",
+    "INMO Rewards",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
