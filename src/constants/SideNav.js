@@ -212,13 +212,13 @@ export const profileItems = [
     label: <div className="sidebar-label">Non Members</div>,
   },
   {
-    key: "Members Subscriptions",
+    key: "Membership",
     icon: (
       <div className="icon">
         <FaUsers />
       </div>
     ),
-    label: <div className="sidebar-label">Members Subscriptions</div>,
+    label: <div className="sidebar-label">Membership</div>,
   },
   {
     key: "Leavers",
@@ -407,13 +407,13 @@ export const configurationItems = [
     label: <div className="sidebar-label">Templetes</div>,
   },
   {
-    key: "Members Subscriptions",
+    key: "Membership",
     icon: (
       <div className="icon">
         <FaFileCode />
       </div>
     ),
-    label: <div className="sidebar-label">Members Subscriptions</div>,
+    label: <div className="sidebar-label">Membership</div>,
   },
   {
     key: "System Configuration",

@@ -63,7 +63,7 @@ const Breadcrumb = () => {
     },
     "/Members": {
       module: "Subscriptions & Rewards",
-      page: "Members Subscriptions",
+      page: "Membership",
       icon: "👤",
     },
     "/Details": {
@@ -198,7 +198,7 @@ const Breadcrumb = () => {
     // Membership Pages
     "/members": {
       module: "Subscriptions & Rewards",
-      page: "Members Subscriptions",
+      page: "Membership",
       icon: "👥",
     },
     "/MembershipDashboard": {
