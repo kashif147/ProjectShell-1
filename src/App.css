@@ -824,7 +824,7 @@ body {
   border-inline-end: none !important;
   border-left: none !important;
   border-right: none !important;
-  padding: 8px 12px !important;
+  padding: 0 10px !important;
   color: var(--mainBlue) !important;
 }
 
@@ -1354,16 +1354,16 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   position: sticky !important;
   z-index: 10;
   top: 0;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .common-table table tr td {
   padding: 0 10px;
   font-weight: 400;
   color: var(--mainBlue) !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 /* Global even/odd row styling for all tables */
@@ -1649,13 +1649,13 @@ table tbody tr:nth-child(odd):hover td {
   font-family: var(--fontFamily) !important;
   font-weight: 480;
   padding: 0 10px !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .claims-table .ant-table-tbody > tr > td {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .heading-tbl .ant-table-thead > tr > th {
@@ -1664,13 +1664,13 @@ table tbody tr:nth-child(odd):hover td {
   font-family: var(--fontFamily) !important;
   font-weight: 400;
   padding: 0 10px !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .heading-tbl .ant-table-tbody > tr > td {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .ant-drawer {
