@@ -1,13 +1,14 @@
 import { React, useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import MyDrowpDown from "./MyDrowpDown";
-import { 
+import {
   SettingOutlined,
   BellOutlined,
   QuestionCircleOutlined,
   PhoneOutlined,
   UserOutlined,
-  LogoutOutlined
+  LogoutOutlined,
+  SearchOutlined,
 } from "@ant-design/icons";
 import {
   FaRegCircleUser,
@@ -260,7 +261,6 @@ export const AppLauncher = () => {
   );
 };
 
-const { Search } = Input;
 function Header() {
   const dispatch = useDispatch();
   const [token, settoken] = useState(null);
@@ -383,12 +383,13 @@ function Header() {
           </nav>
         </div>
         <div style={{ width: "33%" }}>
-          <Search
-            placeholder="Reg No"
+          <Input
+            placeholder="Search by Membership Number, Name, Email or Mobile number"
             value={regNo}
             onChange={(e) => setregNo(e.target.value)}
-            onSearch={async (value) => {
+            onPressEnter={async (e) => {
               try {
+                const value = e.target.value;
                 if (!value.trim()) return;
 
                 // Wait for API success:
@@ -410,8 +411,46 @@ function Header() {
                 // message.error("Profile not found");
               }
             }}
+            suffix={
+              <SearchOutlined
+                onClick={async () => {
+                  try {
+                    if (!regNo.trim()) return;
+
+                    // Wait for API success:
+                    const result = await dispatch(
+                      searchProfiles(regNo)
+                    ).unwrap();
+
+                    navigate("/Details", {
+                      state: {
+                        name: result?.fullName,
+                        code: result?.regNo,
+                        search: "Profile",
+                      },
+                    });
+                  } catch (error) {
+                    console.error("Profile search failed:", error);
+                    // Optionally show error message
+                    // message.error("Profile not found");
+                  }
+                }}
+                style={{
+                  cursor: "pointer",
+                  paddingRight: "12px",
+                  color: "#8c8c8c",
+                  transition: "color 0.2s ease",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.color = "#1890ff";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.color = "#8c8c8c";
+                }}
+              />
+            }
             className="top-search"
-            style={{ width: "100%" }}
+            style={{ width: "100%", paddingLeft: "12px", borderRadius: "4px" }}
           />
         </div>
 
