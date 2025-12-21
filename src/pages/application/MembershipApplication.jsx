@@ -32,16 +32,21 @@ function MembershipApplication() {
       return dayjs.utc(dateString).format("DD/MM/YYYY HH:mm"); // stays in UTC
     };
 
+    const formatDateOnly = (dateString) => {
+      if (!dateString) return null;
+      return dayjs.utc(dateString).format("DD/MM/YYYY"); // DD/MM/YYYY only for dates without time
+    };
+
     return {
       ...applicationData,
       // Format dates in personalDetails
       personalDetails: applicationData.personalDetails ? {
         ...applicationData.personalDetails,
-        personalInfo: applicationData.personalDetails.personalInfo ? {
-          ...applicationData.personalDetails.personalInfo,
-          dateOfBirth: formatDate(applicationData.personalDetails.personalInfo.dateOfBirth),
-          deceasedDate: formatDate(applicationData.personalDetails.personalInfo.deceasedDate)
-        } : null,
+          personalInfo: applicationData.personalDetails.personalInfo ? {
+            ...applicationData.personalDetails.personalInfo,
+            dateOfBirth: formatDateOnly(applicationData.personalDetails.personalInfo.dateOfBirth),
+            deceasedDate: formatDateOnly(applicationData.personalDetails.personalInfo.deceasedDate)
+          } : null,
         contactInfo: applicationData.personalDetails.contactInfo,
         approvalDetails: applicationData.personalDetails.approvalDetails ? {
           ...applicationData.personalDetails.approvalDetails,

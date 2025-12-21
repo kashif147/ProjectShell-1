@@ -66,7 +66,7 @@ const Toolbar = () => {
         <div style={{ flex: "0 0 250px" }}>
           <Input
             className="my-input-field"
-            placeholder="Reg No or Surname"
+            placeholder="Membership No or Surname"
             style={{
               height: "30px",
               borderRadius:'4px',

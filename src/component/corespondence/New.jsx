@@ -131,7 +131,7 @@ function New() {
             key: "subjectMatter",
         },
         {
-            title: "Reg No",
+            title: "Membership No",
             dataIndex: "regNo",
             key: "regNo",
         },
@@ -284,7 +284,7 @@ function New() {
                         </div>
                         <div className="drawer-inpts-container">
                             <div className="drawer-lbl-container">
-                                <p>Reg No :</p>
+                                <p>Membership No :</p>
                             </div>
                             <div className="inpt-con">
                                 <p className="star-white">*</p>

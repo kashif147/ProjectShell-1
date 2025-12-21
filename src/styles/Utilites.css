@@ -123,8 +123,8 @@
 .common-table .ant-table-selection-column {
   padding: 0 10px !important;
   vertical-align: middle !important;
-  min-height: 36px !important;
-  height: 36px !important;
+  min-height: 40px !important;
+  height: 40px !important;
 }
 
 .common-table .ant-table-thead .ant-table-selection-column {
@@ -141,13 +141,13 @@
 
 .drawer-tbl .ant-table-thead .ant-table-selection-column {
   padding: 0 10px !important;
-  min-height: 36px !important;
-  height: 36px !important;
+  min-height: 40px !important;
+  height: 40px !important;
 }
 
 .drawer-tbl .ant-table-selection-column {
-  min-height: 36px !important;
-  height: 36px !important;
+  min-height: 40px !important;
+  height: 40px !important;
 }
 
 /* Configuration drawer-tbl specific padding */
@@ -173,8 +173,8 @@
 }
 
 .common-table .ant-table-tbody .ant-table-cell-fix-left {
-  background-color: white !important;
   z-index: 10 !important;
+  /* Background color will be set by even/odd row rules below */
 }
 
 /* Remove spacing between thead and tbody */
@@ -243,8 +243,8 @@
 
 /* Consistent row height for common-table */
 .common-table .ant-table-tbody > tr > td {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
   border-left: none !important;
   border-right: none !important;
   border-inline-start: none !important;
@@ -252,8 +252,8 @@
 }
 
 .common-table .ant-table-thead > tr > th {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
   border-left: none !important;
   border-right: none !important;
   border-inline-start: none !important;
@@ -286,7 +286,7 @@
 
 .drawer-tbl .ant-table-thead > tr > th,
 .drawer-tbl .ant-table-tbody > tr > td {
-  padding: 8px 10px !important;
+  padding: 0 10px !important;
 }
 
 .drawer-tbl .ant-table-thead > tr > th > .ant-table-filter-column-title {
@@ -295,8 +295,8 @@
 
 /* Consistent row height for drawer-tbl tables */
 .drawer-tbl .ant-table-tbody > tr > td {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
   border-left: none !important;
   border-right: none !important;
   border-inline-start: none !important;
@@ -307,8 +307,8 @@
 }
 
 .drawer-tbl .ant-table-thead > tr > th {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
   border-left: none !important;
   border-right: none !important;
   border-inline-start: none !important;

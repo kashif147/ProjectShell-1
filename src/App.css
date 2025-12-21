@@ -824,7 +824,7 @@ body {
   border-inline-end: none !important;
   border-left: none !important;
   border-right: none !important;
-  padding: 8px 12px !important;
+  padding: 0 10px !important;
   color: var(--mainBlue) !important;
 }
 
@@ -1354,16 +1354,16 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   position: sticky !important;
   z-index: 10;
   top: 0;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .common-table table tr td {
   padding: 0 10px;
   font-weight: 400;
   color: var(--mainBlue) !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 /* Global even/odd row styling for all tables */
@@ -1373,6 +1373,17 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 }
 
 .ant-table-tbody > tr:nth-child(odd) > td {
+  background-color: #ffffff !important;
+}
+
+/* Apply even/odd row styling to fixed columns */
+.ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column {
+  background-color: var(--table-row) !important;
+}
+
+.ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column {
   background-color: #ffffff !important;
 }
 
@@ -1395,6 +1406,37 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   background-color: #ffffff !important;
 }
 
+/* Apply even/odd row styling to fixed columns and checkbox columns in specific containers */
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column,
+.report-table .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column,
+.claims-table .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column {
+  background-color: var(--table-row) !important;
+}
+
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column,
+.report-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column,
+.claims-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column {
+  background-color: #ffffff !important;
+}
+
 /* Native HTML tables */
 .common-table table tbody tr:nth-child(even) td,
 table tbody tr:nth-child(even) td {
@@ -1406,12 +1448,31 @@ table tbody tr:nth-child(odd) td {
   background-color: #ffffff !important;
 }
 
+/* Apply even/odd row styling to fixed columns and checkbox columns in common-table */
+.common-table .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column {
+  background-color: var(--table-row) !important;
+}
+
+.common-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column {
+  background-color: #ffffff !important;
+}
+
 /* Maintain hover effects on even rows - base */
 .ant-table-tbody > tr:nth-child(even):hover > td {
   background-color: var(--btn-hover) !important;
 }
 
 .ant-table-tbody > tr:nth-child(odd):hover > td {
+  background-color: var(--btn-hover) !important;
+}
+
+/* Apply hover effects to fixed columns and checkbox columns */
+.ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column {
   background-color: var(--btn-hover) !important;
 }
 
@@ -1438,6 +1499,34 @@ table tbody tr:nth-child(odd) td {
   background-color: var(--btn-hover) !important;
 }
 
+/* Apply hover effects to fixed columns and checkbox columns in specific containers */
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.report-table .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.claims-table .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column,
+.report-table .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column,
+.claims-table .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column {
+  background-color: var(--btn-hover) !important;
+}
+
 .common-table table tbody tr:nth-child(even):hover td,
 table tbody tr:nth-child(even):hover td {
   background-color: var(--btn-hover) !important;
@@ -1445,6 +1534,14 @@ table tbody tr:nth-child(even):hover td {
 
 .common-table table tbody tr:nth-child(odd):hover td,
 table tbody tr:nth-child(odd):hover td {
+  background-color: var(--btn-hover) !important;
+}
+
+/* Apply hover effects to fixed columns and checkbox columns in common-table */
+.common-table .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
+.common-table .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column {
   background-color: var(--btn-hover) !important;
 }
 
@@ -1552,13 +1649,13 @@ table tbody tr:nth-child(odd):hover td {
   font-family: var(--fontFamily) !important;
   font-weight: 480;
   padding: 0 10px !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .claims-table .ant-table-tbody > tr > td {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .heading-tbl .ant-table-thead > tr > th {
@@ -1567,13 +1664,13 @@ table tbody tr:nth-child(odd):hover td {
   font-family: var(--fontFamily) !important;
   font-weight: 400;
   padding: 0 10px !important;
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .heading-tbl .ant-table-tbody > tr > td {
-  height: 36px !important;
-  line-height: 36px !important;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .ant-drawer {

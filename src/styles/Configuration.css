@@ -156,7 +156,23 @@
   background-color: white;
 }
 
+/* Apply even/odd row styling to fixed columns and checkbox columns */
+.configuration-main .drawer-tbl .ant-table-tbody > tr.even-row > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr.even-row > td.ant-table-selection-column {
+  background-color: #fafafa !important;
+}
+
+.configuration-main .drawer-tbl .ant-table-tbody > tr.odd-row > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr.odd-row > td.ant-table-selection-column {
+  background-color: white !important;
+}
+
 .configuration-main .drawer-tbl .ant-table-tbody > tr:hover > td {
+  background-color: rgba(33, 94, 151, 0.05);
+}
+
+.configuration-main .drawer-tbl .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:hover > td.ant-table-selection-column {
   background-color: rgba(33, 94, 151, 0.05);
 }
 

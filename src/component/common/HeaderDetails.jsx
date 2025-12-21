@@ -488,7 +488,7 @@ function HeaderDetails() {
   ];
 
   const addMore = [
-    { titleColumn: "Reg No", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Membership No", ellipsis: true, isGride: true, width: "100px" },
     { titleColumn: "Forename", ellipsis: true, isGride: true, width: "120px" },
     { titleColumn: "Surname", ellipsis: true, isGride: true, width: "420px" },
     { titleColumn: "Full Name", ellipsis: true, isGride: true, width: "420px" },
@@ -537,12 +537,12 @@ function HeaderDetails() {
       isGride: true,
       width: "100px",
     },
-    {
-      titleColumn: "GRA Member",
-      ellipsis: true,
-      isGride: true,
-      width: "100px",
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   ellipsis: true,
+    //   isGride: true,
+    //   width: "100px",
+    // },
     {
       titleColumn: "Date Joined",
       ellipsis: true,
