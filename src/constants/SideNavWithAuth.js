@@ -2,8 +2,10 @@
 import {
   FaEnvelope,
   FaHistory,
-  FaCashRegister,
   FaCreditCard,
+  FaFileInvoiceDollar,
+  FaMoneyCheckAlt,
+  FaHandHoldingUsd,
   FaRegClock,
   FaShieldAlt,
   FaBan,
@@ -18,12 +20,9 @@ import {
   FaSms,
   FaStickyNote,
   FaExchangeAlt,
-  FaUserCheck,
   FaUserSlash,
-  FaBuilding,
   FaMapMarkerAlt,
   FaUsers,
-  FaDatabase,
   FaFileImport,
   FaClipboardList,
   FaExclamationTriangle,
@@ -33,7 +32,6 @@ import {
   FaUserShield,
   FaChartLine,
   FaChartPie,
-  FaFileInvoiceDollar,
   FaReceipt,
   FaGlobe,
   FaServer,
@@ -49,6 +47,9 @@ import {
   FaFlag,
   FaGraduationCap,
   FaFolderOpen,
+  FaCoins,
+  FaWallet,
+  FaCommentDollar,
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
@@ -93,6 +94,63 @@ export const correspondenceItems = [
 
 export const financeItems = [
   createMenuItem(
+    "Online Payments",
+    <FaCreditCard />,
+    "Online Payments",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Cheque",
+    <FaMoneyCheckAlt />,
+    "Cheque",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Deductions",
+    <FaCoins />,
+    "Deductions",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Standing Orders",
+    <FaHandHoldingUsd />,
+    "Standing Orders",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Authorisations",
+    <FaUserShield />,
+    "Authorisations",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Direct Debit",
+    <FaWallet />,
+    "Direct Debit",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+
+  createMenuItem(
+    "Refunds",
+    <FaReceipt />,
+    "Refunds",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Write-offs",
+    <FaCommentDollar />,
+    "Write-offs",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
@@ -101,71 +159,15 @@ export const financeItems = [
   ),
   createMenuItem(
     "Batches",
-    <FaClipboardList />,
+    <FaFileInvoiceDollar />,
     "Batches",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Cheque",
-    <FaClipboardList />,
-    "Cheque",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Standing Orders",
-    <FaCreditCard />,
-    "Standing Orders",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Deductions",
-    <FaCreditCard />,
-    "Deductions",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Online Payments",
-    <FaCreditCard />,
-    "Online Payments",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Refunds",
-    <FaCreditCard />,
-    "Refunds",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Direct Debit",
-    <FaCreditCard />,
-    "Direct Debit",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
     "Reconciliations",
     <FaExchangeAlt />,
     "Reconciliations",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Write-offs",
-    <FaExchangeAlt />,
-    "Write-offs",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Authorisations",
-    <FaUserShield />,
-    "Authorisations",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
