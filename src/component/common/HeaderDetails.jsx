@@ -537,12 +537,12 @@ function HeaderDetails() {
       isGride: true,
       width: "100px",
     },
-    {
-      titleColumn: "GRA Member",
-      ellipsis: true,
-      isGride: true,
-      width: "100px",
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   ellipsis: true,
+    //   isGride: true,
+    //   width: "100px",
+    // },
     {
       titleColumn: "Date Joined",
       ellipsis: true,
