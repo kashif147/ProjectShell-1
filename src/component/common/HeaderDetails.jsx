@@ -488,7 +488,7 @@ function HeaderDetails() {
   ];
 
   const addMore = [
-    { titleColumn: "Reg No", ellipsis: true, isGride: true, width: "100px" },
+    { titleColumn: "Membership No", ellipsis: true, isGride: true, width: "100px" },
     { titleColumn: "Forename", ellipsis: true, isGride: true, width: "120px" },
     { titleColumn: "Surname", ellipsis: true, isGride: true, width: "420px" },
     { titleColumn: "Full Name", ellipsis: true, isGride: true, width: "420px" },
@@ -537,12 +537,12 @@ function HeaderDetails() {
       isGride: true,
       width: "100px",
     },
-    {
-      titleColumn: "GRA Member",
-      ellipsis: true,
-      isGride: true,
-      width: "100px",
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   ellipsis: true,
+    //   isGride: true,
+    //   width: "100px",
+    // },
     {
       titleColumn: "Date Joined",
       ellipsis: true,
@@ -655,7 +655,7 @@ function HeaderDetails() {
         ? "reminder"
         : null;
   return (
-    <div className="" style={{ width: "93vw" }}>
+    <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
       {
         location?.pathname !== "/applicationMgt" &&
@@ -1222,6 +1222,7 @@ function HeaderDetails() {
             pagination={false}
             columns={column}
             className="drawer-tbl"
+            size="small"
             // rowClassName={(record, index) =>
             //     index % 2 !== 0 ? "odd-row" : "even-row"
             // }

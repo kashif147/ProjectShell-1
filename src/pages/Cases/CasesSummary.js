@@ -244,7 +244,7 @@ function CasesSummary() {
         width: 100,
       },
       {
-        title: "Reg No",
+        title: "Membership No",
         dataIndex: "RegNo",
         key: "RegNo",
         width: 100,

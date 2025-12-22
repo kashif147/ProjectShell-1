@@ -87,12 +87,25 @@
   color: var(--primary-color);
   font-weight: 600;
   border-bottom: 2px solid var(--primary-color);
-  padding: 16px 12px;
+  padding: 0 10px;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+}
+
+.drawer-tbl .ant-table-thead .ant-table-selection-column {
+  background-color: var(--secoundry-bg-color) !important;
+  color: var(--primary-color) !important;
 }
 
 .drawer-tbl .ant-table-tbody > tr > td {
-  padding: 12px;
+  padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .drawer-tbl .even-row {
@@ -103,7 +116,23 @@
   background-color: white;
 }
 
+/* Apply even/odd row styling to fixed columns and checkbox columns */
+.drawer-tbl .ant-table-tbody > tr.even-row > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr.even-row > td.ant-table-selection-column {
+  background-color: #fafafa !important;
+}
+
+.drawer-tbl .ant-table-tbody > tr.odd-row > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr.odd-row > td.ant-table-selection-column {
+  background-color: white !important;
+}
+
 .drawer-tbl .ant-table-tbody > tr:hover > td {
+  background-color: rgba(33, 94, 151, 0.05);
+}
+
+.drawer-tbl .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody > tr:hover > td.ant-table-selection-column {
   background-color: rgba(33, 94, 151, 0.05);
 }
 
@@ -616,23 +645,18 @@
 }
 
 /* Scrollbar Styling */
-.drawer-tbl::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Hide scrollbars for drawer tables - keep scroll functionality */
+.drawer-tbl,
+.drawer-tbl .ant-table-body,
+.drawer-tbl .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.drawer-tbl::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.drawer-tbl::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: 4px;
-}
-
-.drawer-tbl::-webkit-scrollbar-thumb:hover {
-  background: #1e4a7a;
+.drawer-tbl::-webkit-scrollbar,
+.drawer-tbl .ant-table-body::-webkit-scrollbar,
+.drawer-tbl .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 /* Animation */

@@ -545,24 +545,18 @@
   background: var(--background-primary);
 }
 
-.main-table-scroll-container::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Hide scrollbars for main-table-scroll-container - keep scroll functionality */
+.main-table-scroll-container,
+.main-table-scroll-container .ant-table-body,
+.main-table-scroll-container .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.main-table-scroll-container::-webkit-scrollbar-track {
-  background: var(--background-tertiary);
-  border-radius: 4px;
-}
-
-.main-table-scroll-container::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.main-table-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-blue-light);
+.main-table-scroll-container::-webkit-scrollbar,
+.main-table-scroll-container .ant-table-body::-webkit-scrollbar,
+.main-table-scroll-container .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 .main-table-scroll-container .ant-table {
@@ -578,34 +572,37 @@
   position: sticky;
   top: 0;
   z-index: 10;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .main-table-scroll-container .ant-table-tbody > tr > td {
   border-bottom: 1px solid var(--border-color-light);
   white-space: nowrap;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .main-table-scroll-container .ant-table-tbody > tr:hover > td {
   background: var(--hover-background);
 }
 
-.table-scroll-container::-webkit-scrollbar {
-  height: 8px;
+/* Hide scrollbars for table-scroll-container - keep scroll functionality */
+.table-scroll-container,
+.table-scroll-container .ant-table-body,
+.table-scroll-container .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.table-scroll-container::-webkit-scrollbar-track {
-  background: var(--background-tertiary);
-  border-radius: 4px;
-}
-
-.table-scroll-container::-webkit-scrollbar-thumb {
-  background: var(--border-color);
-  border-radius: 4px;
-  transition: background 0.3s ease;
-}
-
-.table-scroll-container::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-blue-light);
+.table-scroll-container::-webkit-scrollbar,
+.table-scroll-container .ant-table-body::-webkit-scrollbar,
+.table-scroll-container .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 .table-scroll-container .ant-table {
@@ -618,11 +615,19 @@
   font-weight: 600;
   color: var(--text-primary);
   white-space: nowrap;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .table-scroll-container .ant-table-tbody > tr > td {
   border-bottom: 1px solid var(--border-color-light);
   white-space: nowrap;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .table-scroll-container .ant-table-tbody > tr:hover > td {
@@ -642,7 +647,7 @@
 
   .table-scroll-container .ant-table-thead > tr > th,
   .table-scroll-container .ant-table-tbody > tr > td {
-    padding: 8px 12px;
+    padding: 0 10px;
   }
 }
 

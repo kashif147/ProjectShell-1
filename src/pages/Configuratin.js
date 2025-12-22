@@ -14,7 +14,7 @@ import {
   Divider,
   Checkbox,
   Button,
-  Modal
+  Modal,
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import {
@@ -108,7 +108,7 @@ function Configuratin() {
     isCoum
   ) => {
     const token = localStorage.getItem("token");
-    debugger
+    debugger;
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
@@ -250,21 +250,17 @@ function Configuratin() {
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
       let finalEndPoint = endPoint;
-      debugger
+      debugger;
       // const { id, ...finalData } = data1;
       // const { id, ...finalData } = data1;
-      debugger
+      debugger;
 
-      const response = await axios.put(
-        `${baseUrl}${finalEndPoint}`,
-        data1,
-        {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        }
-      );
+      const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      });
 
       console.log("Update Response:", response);
 
@@ -357,20 +353,20 @@ function Configuratin() {
     if (body) config.data = JSON.stringify(body);
 
     try {
-      console.log('Making DELETE request...');
+      console.log("Making DELETE request...");
       const response = await axios.request(config);
-      console.log('DELETE successful');
+      console.log("DELETE successful");
 
       // ✅ If refreshData flag is true, dispatch getAllLookups
       if (refreshData) {
         Modal.destroyAll();
-        console.log('Refreshing data after delete...');
+        console.log("Refreshing data after delete...");
         await dispatch(getAllLookups()); // Assuming dispatch is available
       }
 
       // ✅ Call callback if provided
       if (typeof callback === "function") {
-        console.log('Executing callback...');
+        console.log("Executing callback...");
         // await callback();
       }
 
@@ -380,12 +376,13 @@ function Configuratin() {
 
       // ✅ Close any open modals after successful delete
 
-
       return response.data;
-
     } catch (error) {
-      console.error('DELETE error:', error);
-      const errMsg = error?.response?.data?.error?.message || error?.message || "Delete failed";
+      console.error("DELETE error:", error);
+      const errMsg =
+        error?.response?.data?.error?.message ||
+        error?.message ||
+        "Delete failed";
       MyAlert("error", "Delete failed", errMsg);
 
       // ✅ Also close modals on error
@@ -590,7 +587,7 @@ function Configuratin() {
     regionOptions,
     secondarySectionOptions,
     countryOptions,
-    provincesOption
+    provincesOption,
   } = useSelector((state) => state.lookups);
   console.log("lookups", lookups);
   const { countriesData } = useSelector((state) => state.countries);
@@ -695,15 +692,14 @@ function Configuratin() {
     Schemes: false,
     Reasons: false,
     RosterType: false,
-    Solicitors: false,
     Sections: false,
     Bookmarks: false,
   });
   function transformData(originalData) {
-    return originalData.map(item => ({
+    return originalData.map((item) => ({
       id: item._id,
       value: item._id,
-      label: item.lookupname
+      label: item.lookupname,
     }));
   }
   // const transformedData = transformData(lookups);
@@ -712,9 +708,9 @@ function Configuratin() {
     const labelA = a.label.toLowerCase();
     const labelB = b.label.toLowerCase();
 
-    if (labelA < labelB) return -1;  // a comes before b
-    if (labelA > labelB) return 1;   // a comes after b
-    return 0;                         // equal
+    if (labelA < labelB) return -1; // a comes before b
+    if (labelA > labelB) return 1; // a comes after b
+    return 0; // equal
   });
   useMemo(() => {
     if (!data) return;
@@ -810,7 +806,7 @@ function Configuratin() {
 
     setdata((prevState) => ({ ...prevState, ...filteredData }));
   }, [lookups]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState("");
   const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
   // const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
   const handleSearchLookupTypes = (searchValue) => {
@@ -821,13 +817,13 @@ function Configuratin() {
       return;
     }
 
-    const filtered = lookupsTypes.filter(item => {
+    const filtered = lookupsTypes.filter((item) => {
       const searchLower = searchValue.toLowerCase();
 
       return (
-        (item.lookuptype?.toLowerCase().includes(searchLower)) ||
-        (item.code?.toLowerCase().includes(searchLower)) ||
-        (item.DisplayName?.toLowerCase().includes(searchLower))
+        item.lookuptype?.toLowerCase().includes(searchLower) ||
+        item.code?.toLowerCase().includes(searchLower) ||
+        item.DisplayName?.toLowerCase().includes(searchLower)
       );
     });
 
@@ -991,16 +987,6 @@ function Configuratin() {
     // },
 
     //worklocation
-    Station: {
-      lookuptypeId: "68d0369c662428d1c504b3aa",
-      DisplayName: "",
-      lookupname: "",
-      code: "",
-      Parentlookupid: null,
-      userid: "67f3f9d812b014a0a7a94081",
-      isactive: true,
-      isDeleted: false,
-    },
     Station: {
       lookuptypeId: "68d0369c662428d1c504b3aa",
       DisplayName: "",
@@ -1330,7 +1316,7 @@ function Configuratin() {
         ...filteredData,
       },
     }));
-    debugger
+    debugger;
   };
 
   const transformLookupTypes = (data) => {
@@ -1341,22 +1327,27 @@ function Configuratin() {
     }));
   };
   // const lookupsTypesSelect = transformLookupTypes(lookupsTypes);
-  const sortArray = (array, key, order = 'asc') => {
+  const sortArray = (array, key, order = "asc") => {
     if (!Array.isArray(array)) return [];
 
     return [...array].sort((a, b) => {
-      const aValue = a[key] || '';
-      const bValue = b[key] || '';
+      const aValue = a[key] || "";
+      const bValue = b[key] || "";
 
-      const comparison = String(aValue).toLowerCase()
+      const comparison = String(aValue)
+        .toLowerCase()
         .localeCompare(String(bValue).toLowerCase());
 
-      return order === 'desc' ? -comparison : comparison;
+      return order === "desc" ? -comparison : comparison;
     });
   };
 
   // Apply sorting to the transformed lookups types
-  const lookupsTypesSelect = sortArray(transformLookupTypes(lookupsTypes), 'label', 'asc')
+  const lookupsTypesSelect = sortArray(
+    transformLookupTypes(lookupsTypes),
+    "label",
+    "asc"
+  );
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
       ...prevState,
@@ -1417,9 +1408,9 @@ function Configuratin() {
         },
       };
     });
-    debugger
+    debugger;
   };
-  console.log(drawerIpnuts, "drawerinpt")
+  console.log(drawerIpnuts, "drawerinpt");
   const columnProvince = [
     {
       title: "Code",
@@ -1468,7 +1459,7 @@ function Configuratin() {
             onClick={() => {
               IsUpdateFtn("Provinces", true, record);
               addIdKeyToLookup(record?._id, "Provinces");
-              disableFtn(false)
+              disableFtn(false);
             }}
           />
           <AiFillDelete
@@ -1478,10 +1469,7 @@ function Configuratin() {
                 title: "Confirm Deletion",
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
-                  await deleteFtn(
-                    `lookup/`,
-                    { id: record?._id },
-                  );
+                  await deleteFtn(`lookup/`, { id: record?._id });
                 },
               })
             }
@@ -4033,7 +4021,7 @@ function Configuratin() {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => { },
+    onChange: (selectedRowKeys, selectedRows) => {},
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -4154,17 +4142,17 @@ function Configuratin() {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => { };
+  const addmembershipFtn = () => {};
 
-  const AddpartnershipFtn = () => { };
+  const AddpartnershipFtn = () => {};
 
-  const AddprofileModalFtn = () => { };
+  const AddprofileModalFtn = () => {};
 
-  const AddRegionTypeModalFtn = () => { };
+  const AddRegionTypeModalFtn = () => {};
 
-  const AddContactTypeModalFtn = () => { };
+  const AddContactTypeModalFtn = () => {};
 
-  const AddSubscriptionsFtn = () => { };
+  const AddSubscriptionsFtn = () => {};
 
   const columnClaimType = [
     {
@@ -4257,7 +4245,7 @@ function Configuratin() {
         {
           key: "counties",
           icon: <CountyOutlined size={24} color="#22c55e" />,
-          label: "counties",
+          label: "Counties",
         }, // green-500
         {
           key: "Divisions",
@@ -4286,11 +4274,6 @@ function Configuratin() {
         }, // emerald-500
         {
           key: "PostCode",
-          icon: <Mail size={24} color="#0ea5e9" />,
-          label: "Post Codes",
-        }, // sky-500
-        {
-          key: "",
           icon: <Mail size={24} color="#0ea5e9" />,
           label: "Post Codes",
         }, // sky-500
@@ -4442,7 +4425,7 @@ function Configuratin() {
       ],
     },
   ];
-  const [searchTermLookup, setSearchTermLookup] = useState('');
+  const [searchTermLookup, setSearchTermLookup] = useState("");
   const [filteredLookups, setFilteredLookups] = useState([]);
 
   // Add this useEffect to initialize filtered Lookup data when lookups change
@@ -4460,28 +4443,40 @@ function Configuratin() {
     }
 
     const searchValue = value.toLowerCase();
-    const filtered = lookups.filter(item => {
+    const filtered = lookups.filter((item) => {
       // Search in basic fields
       const basicMatch =
         (item.code && item.code.toLowerCase().includes(searchValue)) ||
-        (item.lookupname && item.lookupname.toLowerCase().includes(searchValue)) ||
-        (item.DisplayName && item.DisplayName.toLowerCase().includes(searchValue));
+        (item.lookupname &&
+          item.lookupname.toLowerCase().includes(searchValue)) ||
+        (item.DisplayName &&
+          item.DisplayName.toLowerCase().includes(searchValue));
 
       // Search in lookuptype (if it's an object with name property)
-      const typeMatch = item.lookuptype && (
-        (item.lookuptype.name && item.lookuptype.name.toLowerCase().includes(searchValue)) ||
-        (item.lookuptypeId && item.lookuptypeId.toString().toLowerCase().includes(searchValue))
-      );
+      const typeMatch =
+        item.lookuptype &&
+        ((item.lookuptype.name &&
+          item.lookuptype.name.toLowerCase().includes(searchValue)) ||
+          (item.lookuptypeId &&
+            item.lookuptypeId.toString().toLowerCase().includes(searchValue)));
 
       // Search in parent lookup (if it's an object with lookupname property)
-      const parentMatch = item.Parentlookup && (
-        (item.Parentlookup.lookupname && item.Parentlookup.lookupname.toLowerCase().includes(searchValue)) ||
-        (item.Parentlookup.DisplayName && item.Parentlookup.DisplayName.toLowerCase().includes(searchValue)) ||
-        (item.Parentlookupid && item.Parentlookupid.toString().toLowerCase().includes(searchValue))
-      );
+      const parentMatch =
+        item.Parentlookup &&
+        ((item.Parentlookup.lookupname &&
+          item.Parentlookup.lookupname.toLowerCase().includes(searchValue)) ||
+          (item.Parentlookup.DisplayName &&
+            item.Parentlookup.DisplayName.toLowerCase().includes(
+              searchValue
+            )) ||
+          (item.Parentlookupid &&
+            item.Parentlookupid.toString()
+              .toLowerCase()
+              .includes(searchValue)));
 
       // Search in status (active/inactive)
-      const statusMatch = item.isactive !== undefined &&
+      const statusMatch =
+        item.isactive !== undefined &&
         ((item.isactive && "active".includes(searchValue)) ||
           (!item.isactive && "inactive".includes(searchValue)));
 
@@ -4490,21 +4485,26 @@ function Configuratin() {
 
     setFilteredLookups(filtered);
   };
-  const [searchTermBranch, setSearchTermBranch] = useState('');
+  const [searchTermBranch, setSearchTermBranch] = useState("");
   const [branchesWithRegionData, setBranchesWithRegionData] = useState([]);
 
   // Function to get region name for a branch
-  const getRegionNameForBranch = useCallback((parentLookupId) => {
-    const region = groupedLookups?.Region?.find(r => r._id === parentLookupId);
-    return region ? region.lookupname : 'No Region';
-  }, [groupedLookups?.Region]);
+  const getRegionNameForBranch = useCallback(
+    (parentLookupId) => {
+      const region = groupedLookups?.Region?.find(
+        (r) => r._id === parentLookupId
+      );
+      return region ? region.lookupname : "No Region";
+    },
+    [groupedLookups?.Region]
+  );
 
   // Use useEffect to update branchesWithRegionData when groupedLookups changes
   useEffect(() => {
     if (groupedLookups?.Branch) {
-      const updatedBranches = groupedLookups.Branch.map(branch => ({
+      const updatedBranches = groupedLookups.Branch.map((branch) => ({
         ...branch,
-        regionName: getRegionNameForBranch(branch.Parentlookupid)
+        regionName: getRegionNameForBranch(branch.Parentlookupid),
       }));
       setBranchesWithRegionData(updatedBranches);
     }
@@ -4517,11 +4517,12 @@ function Configuratin() {
     if (!searchTermBranch.trim()) return branchesWithRegionData;
 
     const searchTerm = searchTermBranch.toLowerCase().trim();
-    return branchesWithRegionData.filter(branch =>
-      branch.lookupname?.toLowerCase().includes(searchTerm) ||
-      branch.code?.toLowerCase().includes(searchTerm) ||
-      branch.DisplayName?.toLowerCase().includes(searchTerm) ||
-      branch.regionName?.toLowerCase().includes(searchTerm)
+    return branchesWithRegionData.filter(
+      (branch) =>
+        branch.lookupname?.toLowerCase().includes(searchTerm) ||
+        branch.code?.toLowerCase().includes(searchTerm) ||
+        branch.DisplayName?.toLowerCase().includes(searchTerm) ||
+        branch.regionName?.toLowerCase().includes(searchTerm)
     );
   }, [branchesWithRegionData, searchTermBranch]);
 
@@ -4532,14 +4533,18 @@ function Configuratin() {
 
   // Function to clear search
   const clearBranchSearch = () => {
-    setSearchTermBranch('');
+    setSearchTermBranch("");
   };
 
   // Updated table columns with Region filter
   const uniqueRegionNames = useMemo(() => {
     if (!branchesWithRegionData.length) return [];
     return Array.from(
-      new Set(branchesWithRegionData.map(item => item.regionName).filter(name => name))
+      new Set(
+        branchesWithRegionData
+          .map((item) => item.regionName)
+          .filter((name) => name)
+      )
     );
   }, [branchesWithRegionData]);
 
@@ -4551,21 +4556,20 @@ function Configuratin() {
 
     // Create the Region column
     const regionColumn = {
-      title: 'Region',
-      dataIndex: 'regionName',
-      key: 'regionName',
-      filters: uniqueRegionNames.map(name => ({
+      title: "Region",
+      dataIndex: "regionName",
+      key: "regionName",
+      filters: uniqueRegionNames.map((name) => ({
         text: name,
         value: name,
       })),
       onFilter: (value, record) => record.regionName === value,
-      sorter: (a, b) => (a.regionName || '').localeCompare(b.regionName || ''),
+      sorter: (a, b) => (a.regionName || "").localeCompare(b.regionName || ""),
     };
 
     // Return columns in correct order: [...other columns, Region, Action]
     return [...allColumnsExceptLast, regionColumn, lastColumn];
   }, [columnDistricts, uniqueRegionNames]);
-
 
   return (
     <div
@@ -4611,48 +4615,41 @@ function Configuratin() {
             msOverflowStyle: "none",
           }}
         >
-          {sections.map((section, idx) => {
-            const filteredItems = section.items.filter((item) =>
-              item.label.toLowerCase().includes(searchQuery.toLowerCase())
-            );
+          {(() => {
+            // Flatten all items from all sections into a single array
+            const allItems = sections.flatMap((section) => section.items);
+            const filteredItems = allItems
+              .filter((item) =>
+                item.label.toLowerCase().includes(searchQuery.toLowerCase())
+              )
+              .sort((a, b) => a.label.localeCompare(b.label));
 
-            return (
-              <div
-                key={`${section.title}-${idx}`}
-                style={{ marginBottom: "5rem" }}
-              >
-                <h5 className="fw-semibold mb-4 text-primary">
-                  {section.title}
-                </h5>
-
-                {filteredItems.length > 0 ? (
-                  <div className="row gx-3 gy-3 mb-4 pb-4">
-                    {filteredItems.map((item) => (
-                      <div
-                        key={item.key}
-                        className="col-6 col-sm-4 col-md-3 col-lg-1-5 d-flex"
-                      >
-                        <div
-                          onClick={() => openCloseDrawerFtn(item.key)}
-                          className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
-                          style={{ cursor: "pointer" }}
-                        >
-                          <div className="mb-2">{item.icon}</div>
-                          <p className="mb-0 small fw-medium text-dark">
-                            {item.label}
-                          </p>
-                        </div>
-                      </div>
-                    ))}
+            return filteredItems.length > 0 ? (
+              <div className="row gx-3 gy-3 mb-4 pb-4">
+                {filteredItems.map((item) => (
+                  <div
+                    key={item.key}
+                    className="col-6 col-sm-4 col-md-3 col-lg-1-5 d-flex"
+                  >
+                    <div
+                      onClick={() => openCloseDrawerFtn(item.key)}
+                      className="d-flex flex-column align-items-center justify-content-center border rounded bg-white p-4 w-100 text-center hover-shadow"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <div className="mb-2">{item.icon}</div>
+                      <p className="mb-0 small fw-medium text-dark">
+                        {item.label}
+                      </p>
+                    </div>
                   </div>
-                ) : (
-                  <p className="text-muted small mb-0 text-center">
-                    No matches for “{searchQuery}”.
-                  </p>
-                )}
+                ))}
               </div>
+            ) : (
+              <p className="text-muted small mb-0 text-center">
+                No matches for "{searchQuery}".
+              </p>
             );
-          })}
+          })()}
         </div>
       </div>
       <MyDrawer
@@ -4704,6 +4701,7 @@ function Configuratin() {
           pagination={false}
           dataSource={membership}
           className="drawer-tbl"
+          size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -4801,6 +4799,7 @@ function Configuratin() {
           pagination={false}
           dataSource={partnership}
           className="drawer-tbl"
+          size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -4870,6 +4869,7 @@ function Configuratin() {
           pagination={false}
           dataSource={gender} // Replace with appropriate data
           className="drawer-tbl"
+          size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -4929,6 +4929,7 @@ function Configuratin() {
           pagination={false}
           dataSource={partnership}
           className="drawer-tbl"
+          size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -5119,6 +5120,7 @@ function Configuratin() {
           pagination={false}
           dataSource={tableData}
           className="drawer-tbl"
+              size="small"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
@@ -5211,6 +5213,7 @@ function Configuratin() {
           pagination={false}
           dataSource={RegionTy}
           className="drawer-tbl"
+          size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -5307,6 +5310,7 @@ function Configuratin() {
           pagination={false}
           dataSource={ContactTy}
           className="drawer-tbl"
+          size="small"
           rowKey={(record, index) =>
             record._id || record.id || record.key || index
           }
@@ -5474,6 +5478,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={groupedLookups?.County}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -5505,7 +5510,6 @@ function Configuratin() {
               null
             );
             resetCounteries("Provinces", () => dispatch(getAllLookups()));
-
           } catch (error) {
             console.error("Error adding province:", error);
           }
@@ -5600,6 +5604,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={groupedLookups?.Provinces}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -5740,6 +5745,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={countriesData}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -5910,6 +5916,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={data?.Cities}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6058,6 +6065,7 @@ function Configuratin() {
               dataSource={groupedLookups["Post Code"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6234,6 +6242,7 @@ function Configuratin() {
               loading={lookupsloading}
               dataSource={filteredBranches}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6378,6 +6387,7 @@ function Configuratin() {
                 dataSource={groupedLookups?.Region}
                 loading={lookupsloading}
                 className="drawer-tbl"
+                size="small"
                 rowKey={(record, index) =>
                   record._id || record.id || record.key || index
                 }
@@ -6509,6 +6519,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Region}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6684,6 +6695,7 @@ function Configuratin() {
               columns={columnStations}
               dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
+              size="small"
               loading={lookupsloading}
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
@@ -6860,6 +6872,7 @@ function Configuratin() {
               columns={columnStations}
               dataSource={groupedLookups?.workLocation}
               className="drawer-tbl"
+              size="small"
               loading={lookupsloading}
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
@@ -6987,6 +7000,7 @@ function Configuratin() {
               dataSource={contactTypes}
               loading={contactTypesloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7030,8 +7044,8 @@ function Configuratin() {
           );
           dispatch(getLookupTypes());
         }}
-      //   onChange={handlePageChange}
-      // total={lookupsTypes?.length}
+        //   onChange={handlePageChange}
+        // total={lookupsTypes?.length}
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
@@ -7107,7 +7121,7 @@ function Configuratin() {
                 onChange={(e) => handleSearchLookupTypes(e.target.value)}
                 isSimple={true}
                 allowClear
-                style={{ marginBottom: '16px' }}
+                style={{ marginBottom: "16px" }}
               />
             </div>
             <Table
@@ -7115,6 +7129,7 @@ function Configuratin() {
               columns={columnLookupType}
               dataSource={filteredLookupsTypes}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7261,6 +7276,7 @@ function Configuratin() {
               columns={columnRegionType}
               dataSource={regionTypes}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7394,7 +7410,7 @@ function Configuratin() {
                   );
                   // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
-              // hasError={!!errors?.Lookup?.lookuptypeId}
+                // hasError={!!errors?.Lookup?.lookuptypeId}
               />
             </Col>
           </Row>
@@ -7433,6 +7449,7 @@ function Configuratin() {
               dataSource={filteredLookups}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7580,6 +7597,7 @@ function Configuratin() {
               dataSource={filteredBookmarks}
               loading={bookmarksLoading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7711,6 +7729,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Gender}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7862,6 +7881,7 @@ function Configuratin() {
               dataSource={groupedLookups["City"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -7991,6 +8011,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Title}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8117,6 +8138,7 @@ function Configuratin() {
               dataSource={groupedLookups["Roster Type"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8242,6 +8264,7 @@ function Configuratin() {
               dataSource={groupedLookups["Marital Status"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8375,6 +8398,7 @@ function Configuratin() {
               dataSource={data?.ProjectTypes}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8504,6 +8528,7 @@ function Configuratin() {
               dataSource={data?.Trainings}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8637,6 +8662,7 @@ function Configuratin() {
               dataSource={data?.DocumentType}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8765,6 +8791,7 @@ function Configuratin() {
               dataSource={data?.ClaimType}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -8890,6 +8917,7 @@ function Configuratin() {
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9016,6 +9044,7 @@ function Configuratin() {
               dataSource={data?.Reasons}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9096,6 +9125,7 @@ function Configuratin() {
               dataSource={data?.Schemes}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) => record._id || record.id || record.key || index}
               rowClassName={(record, index) => index % 2 !== 0 ? "odd-row" : "even-row"}
               rowSelection={{ type: selectionType, ...rowSelection }}
@@ -9214,6 +9244,7 @@ function Configuratin() {
               dataSource={groupedLookups["Duties"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9337,6 +9368,7 @@ function Configuratin() {
               dataSource={groupedLookups["Ranks"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9469,6 +9501,7 @@ function Configuratin() {
               dataSource={groupedLookups["Boards"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9601,6 +9634,7 @@ function Configuratin() {
               dataSource={groupedLookups["Council"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9755,6 +9789,7 @@ function Configuratin() {
               dataSource={data?.CorrespondenceType}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -9896,6 +9931,7 @@ function Configuratin() {
               dataSource={groupedLookups["Spoken Languages"]}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -10124,6 +10160,7 @@ function Configuratin() {
                 dataSource={data?.Solicitors}
                 loading={contactsLoading}
                 className="drawer-tbl"
+                size="small"
                 rowKey={(record, index) =>
                   record._id || record.id || record.key || index
                 }
@@ -10168,7 +10205,7 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-      // width="680"
+        // width="680"
       >
         <div className="drawer-main-cntainer p-4">
           {" "}
@@ -10287,6 +10324,7 @@ function Configuratin() {
               dataSource={groupedLookups?.Committees || []}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record) => record._id || record.id || record.RegionCode}
               rowClassName={(record, index) =>
                 index % 2 !== 0 ? "odd-row" : "even-row"
@@ -10409,6 +10447,7 @@ function Configuratin() {
               dataSource={data?.Sections}
               loading={lookupsloading}
               className="drawer-tbl"
+              size="small"
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }

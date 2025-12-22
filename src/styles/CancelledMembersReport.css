@@ -240,6 +240,20 @@
   box-shadow: var(--shadow-sm);
 }
 
+/* Hide scrollbars for report-table - keep scroll functionality */
+.report-table,
+.report-table .ant-table-body,
+.report-table .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
+}
+
+.report-table::-webkit-scrollbar,
+.report-table .ant-table-body::-webkit-scrollbar,
+.report-table .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
+}
+
 .report-table .ant-table-thead > tr > th {
   background: linear-gradient(
     135deg,
@@ -250,8 +264,14 @@
   font-weight: 600;
   text-align: center;
   border: 1px solid var(--primary-blue);
-  padding: var(--spacing-md) var(--spacing-sm);
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+  padding: 0 10px;
   font-size: var(--font-size-sm);
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .report-table .ant-table-thead > tr > th * {
@@ -259,9 +279,15 @@
 }
 
 .report-table .ant-table-tbody > tr > td {
-  padding: var(--spacing-sm);
+  padding: 0 10px;
   border-bottom: 1px solid var(--border-color-light);
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
   vertical-align: middle;
+  height: 40px !important;
+  line-height: 40px !important;
 }
 
 .report-table .ant-table-tbody > tr:hover > td {

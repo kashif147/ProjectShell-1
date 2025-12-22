@@ -2,8 +2,10 @@
 import {
   FaEnvelope,
   FaHistory,
-  FaCashRegister,
   FaCreditCard,
+  FaFileInvoiceDollar,
+  FaMoneyCheckAlt,
+  FaHandHoldingUsd,
   FaRegClock,
   FaShieldAlt,
   FaBan,
@@ -18,12 +20,9 @@ import {
   FaSms,
   FaStickyNote,
   FaExchangeAlt,
-  FaUserCheck,
   FaUserSlash,
-  FaBuilding,
   FaMapMarkerAlt,
   FaUsers,
-  FaDatabase,
   FaFileImport,
   FaClipboardList,
   FaExclamationTriangle,
@@ -33,7 +32,6 @@ import {
   FaUserShield,
   FaChartLine,
   FaChartPie,
-  FaFileInvoiceDollar,
   FaReceipt,
   FaGlobe,
   FaServer,
@@ -43,11 +41,15 @@ import {
   FaTags,
   FaBox,
   FaFileCode,
+  FaIdCard,
   FaWrench,
   FaBriefcase,
   FaFlag,
   FaGraduationCap,
   FaFolderOpen,
+  FaCoins,
+  FaWallet,
+  FaCommentDollar,
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
@@ -91,41 +93,6 @@ export const correspondenceItems = [
 ];
 
 export const financeItems = [
-   createMenuItem(
-    "Imports",
-    <FaFileImport />,
-    "Imports",
-    ["USER_WRITE", "USER_MANAGE_ROLES"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Batches",
-    <FaClipboardList />,
-    "Batches",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Cheque",
-    <FaClipboardList />,
-    "Cheque",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Standing Orders",
-    <FaCreditCard />,
-    "Standing Orders",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Deductions",
-    <FaCreditCard />,
-    "Deductions",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
   createMenuItem(
     "Online Payments",
     <FaCreditCard />,
@@ -134,30 +101,23 @@ export const financeItems = [
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Refunds",
-    <FaCreditCard />,
-    "Refunds",
+    "Cheque",
+    <FaMoneyCheckAlt />,
+    "Cheque",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Direct Debit",
-    <FaCreditCard />,
-    "Direct Debit",
+    "Deductions",
+    <FaCoins />,
+    "Deductions",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Reconciliations",
-    <FaExchangeAlt />,
-    "Reconciliations",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
-  ),
-  createMenuItem(
-    "Write-offs",
-    <FaExchangeAlt />,
-    "Write-offs",
+    "Standing Orders",
+    <FaHandHoldingUsd />,
+    "Standing Orders",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
@@ -168,6 +128,49 @@ export const financeItems = [
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
+  createMenuItem(
+    "Direct Debit",
+    <FaWallet />,
+    "Direct Debit",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+
+  createMenuItem(
+    "Refunds",
+    <FaReceipt />,
+    "Refunds",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Write-offs",
+    <FaCommentDollar />,
+    "Write-offs",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Imports",
+    <FaFileImport />,
+    "Imports",
+    ["USER_WRITE", "USER_MANAGE_ROLES"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Batches",
+    <FaFileInvoiceDollar />,
+    "Batches",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
+  createMenuItem(
+    "Reconciliations",
+    <FaExchangeAlt />,
+    "Reconciliations",
+    ["USER_READ", "USER_WRITE"],
+    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+  ),
   // createMenuItem(
   //   "DD Batches",
   //   <FaCashRegister />,
@@ -175,7 +178,6 @@ export const financeItems = [
   //   ["USER_READ", "USER_WRITE"],
   //   ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   // ),
- 
 ];
 
 export const profileItems = [
@@ -187,9 +189,9 @@ export const profileItems = [
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
-    "Members Subscriptions",
+    "Membership",
     <FaUsers />,
-    "Members Subscriptions",
+    "Membership",
     ["crm:member:read", "crm:member:list"],
     ["MEMBER", "MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
@@ -231,10 +233,10 @@ export const subscriptionItems = [
     ["crm:member:read", "crm:member:list"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
-    createMenuItem(
-    "Members Subscriptions",
-    <FaFileCode />,
-    "Members Subscriptions",
+  createMenuItem(
+    "Membership",
+    <FaIdCard />,
+    "Membership",
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),
@@ -277,18 +279,18 @@ export const subscriptionItems = [
   createMenuItem(
     "CornMarket New Graduate",
     <FaGraduationCap />,
-    "CornMarket New Graduate",
+    "New Graduate",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
     "CornMarket Rewards",
     <FaUserPlus />,
-    "CornMarket Rewards",
+    "INMO Rewards",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
-    createMenuItem(
+  createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
@@ -306,48 +308,6 @@ export const subscriptionItems = [
 
 export const configurationItems = [
   createMenuItem(
-    "Organistaion Groups",
-    <FaLayerGroup />,
-    "Organistaion Groups",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Work Location Branches",
-    <FaMapMarkerAlt />,
-    "Work Location Branches",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Region Committees",
-    <FaFlag />,
-    "Region Committees",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Sections",
-    <FaBriefcase />,
-    "Sections",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Rate Categories Youth Fourms",
-    <FaGraduationCap />,
-    "Rate Categories Youth Fourms",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
-    "Subscription Products",
-    <FaBox />,
-    "Subscription Products",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
-  ),
-  createMenuItem(
     "Templetes",
     <FaFileCode />,
     "Templetes",
@@ -362,12 +322,13 @@ export const configurationItems = [
     ["user:read", "role:read"],
     ["SU", "GS", "DGS"]
   ),
+
   createMenuItem(
-    "Tenant Management",
-    <FaServer />,
-    "Tenant Management",
-    ["user:read", "user:write"],
-    ["SU", "GS", "DGS"]
+    "Permission Management",
+    <FaKey />,
+    "Permission Management",
+    ["role:read", "role:write"],
+    ["SU", "GS"]
   ),
   createMenuItem(
     "Role Management",
@@ -384,19 +345,20 @@ export const configurationItems = [
     ["SU", "GS", "DGS"]
   ),
   createMenuItem(
-    "Permission Management",
-    <FaKey />,
-    "Permission Management",
-    ["role:read", "role:write"],
-    ["SU", "GS"]
-  ),
-  createMenuItem(
     "Product Management",
     <FaBox />,
     "Product Management",
     ["user:read", "user:write"],
     ["SU", "GS", "DGS"]
   ),
+  createMenuItem(
+    "Tenant Management",
+    <FaServer />,
+    "Tenant Management",
+    ["user:read", "user:write"],
+    ["SU", "GS", "DGS"]
+  ),
+
   createMenuItem(
     "Policy Client Example",
     <FaShieldAlt />,

@@ -6,13 +6,14 @@ import React, {
   useMemo,
   useCallback,
 } from "react";
+import { Tag } from "antd";
 import { tableData } from "../Data";
 import { useLocation } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime } from "../utils/Utilities";
+import { convertToLocalTime, formatDateOnly } from "../utils/Utilities";
 
 const TableColumnsContext = createContext();
 
@@ -63,6 +64,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatDateOnly(value),
     },
 
     {
@@ -250,7 +252,7 @@ const staticColumns = {
   ChangCateSumm: [
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -355,6 +357,7 @@ const staticColumns = {
       ellipsis: true,
       isGride: false,
       isVisible: true,
+      render: (value) => formatDateOnly(value),
       width: 150,
     },
     {
@@ -405,14 +408,14 @@ const staticColumns = {
       isVisible: true,
       width: 150,
     },
-    {
-      dataIndex: "graMember",
-      title: "GRA Member",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 150,
-    },
+    // {
+    //   dataIndex: "graMember",
+    //   title: "GRA Member",
+    //   ellipsis: true,
+    //   isGride: true,
+    //   isVisible: true,
+    //   width: 150,
+    // },
     {
       dataIndex: "dateJoined",
       title: "Date Joined",
@@ -473,6 +476,17 @@ const staticColumns = {
       isVisible: true,
       width: 120,
       editable: false,
+      render: (status) => {
+        if (!status) return "-";
+        const statusLower = status.toLowerCase();
+        let color = "blue"; // default color
+        if (statusLower === "approved") {
+          color = "green";
+        } else if (statusLower === "rejected") {
+          color = "volcano";
+        }
+        return <Tag color={color}>{status}</Tag>;
+      },
     },
     {
       dataIndex: "createdAt",
@@ -539,6 +553,7 @@ const staticColumns = {
       isVisible: true,
       width: 140,
       editable: true,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: [
@@ -688,155 +703,153 @@ const staticColumns = {
     },
   ],
   Members: [
-  // 🔹 Top-Level Info
-  // {
-  // //   dataIndex: "applicationId",
-  // //   title: "Application ID",
-  // //   ellipsis: true,
-  // //   isGride: true,
-  // //   isVisible: true,
-  // //   width: 220,
-  // //   editable: false,
-  // // },
-  {
-    dataIndex: "subscriptionYear",
-    title: "Year",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 100,
-    editable: false,
-  },
-  {
-    dataIndex: "subscriptionStatus",
-    title: "Subscription Status",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 120,
-    editable: false,
-  },
-
-
-  // 🔹 Dates
-  {
-    dataIndex: "startDate",
-    title: "Start Date",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 160,
-    editable: false,
-    // render: (value) => value ? convertToLocalTime(value) : "-"
-  },
-  
-  {
-    dataIndex: "endDate",
-    title: "End Date",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 160,
-    editable: false,
-  },
+    // 🔹 Top-Level Info
+    // {
+    // //   dataIndex: "applicationId",
+    // //   title: "Application ID",
+    // //   ellipsis: true,
+    // //   isGride: true,
+    // //   isVisible: true,
+    // //   width: 220,
+    // //   editable: false,
+    // // },
     {
-    dataIndex: "isCurrent",
-    title: "Current",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 100,
-    editable: false,
-    render: (value) => (value ? "Yes" : "No"),
-  },
-  {
-    dataIndex: "rolloverDate",
-    title: "Rollover Date",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 160,
-    editable: false,
-  },
+      dataIndex: "subscriptionYear",
+      title: "Year",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      editable: false,
+    },
+    {
+      dataIndex: "subscriptionStatus",
+      title: "Subscription Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      editable: false,
+    },
 
-  // 🔹 Membership Info
-  {
-    dataIndex: "membershipMovement",
-    title: "Membership Movement",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 180,
-    editable: false,
-  },
-  {
-    dataIndex: "paymentType",
-    title: "Payment Type",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 180,
-    editable: false,
-  },
-  {
-    dataIndex: "paymentFrequency",
-    title: "Payment Frequency",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 160,
-    editable: false,
-  },
+    // 🔹 Dates
+    {
+      dataIndex: "startDate",
+      title: "Start Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+      // render: (value) => value ? convertToLocalTime(value) : "-"
+    },
 
-  // 🔹 Cancellation
-  {
-    dataIndex: ["cancellation", "reinstated"],
-    title: "Reinstated",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 130,
-    editable: false,
-    render: (value) => (value ? "Yes" : "No"),
-  },
+    {
+      dataIndex: "endDate",
+      title: "End Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
+    {
+      dataIndex: "isCurrent",
+      title: "Current",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      editable: false,
+      render: (value) => (value ? "Yes" : "No"),
+    },
+    {
+      dataIndex: "rolloverDate",
+      title: "Rollover Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
 
-  // 🔹 Year End Processing
-  {
-    dataIndex: ["yearend", "processed"],
-    title: "Year End Processed",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 180,
-    editable: false,
-    render: (value) => (value ? "Yes" : "No"),
-  },
+    // 🔹 Membership Info
+    {
+      dataIndex: "membershipMovement",
+      title: "Membership Movement",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+      editable: false,
+    },
+    {
+      dataIndex: "paymentType",
+      title: "Payment Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+      editable: false,
+    },
+    {
+      dataIndex: "paymentFrequency",
+      title: "Payment Frequency",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
 
-  // 🔹 Audit
-  {
-    dataIndex: "createdAt",
-    title: "Created At",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 160,
-    editable: false,
-  },
-  {
-    dataIndex: "updatedAt",
-    title: "Updated At",
-    ellipsis: true,
-    isGride: true,
-    isVisible: true,
-    width: 160,
-    editable: false,
-  },
-]
-,
+    // 🔹 Cancellation
+    {
+      dataIndex: ["cancellation", "reinstated"],
+      title: "Reinstated",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 130,
+      editable: false,
+      render: (value) => (value ? "Yes" : "No"),
+    },
+
+    // 🔹 Year End Processing
+    {
+      dataIndex: ["yearend", "processed"],
+      title: "Year End Processed",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+      editable: false,
+      render: (value) => (value ? "Yes" : "No"),
+    },
+
+    // 🔹 Audit
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
+  ],
   Cases: [
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -959,7 +972,7 @@ const staticColumns = {
   Claims: [
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1025,8 +1038,8 @@ const staticColumns = {
   ],
   Transfer: [
     {
-      dataIndex: ["profileId","membershipNumber"],
-      title: "Reg No",
+      dataIndex: ["profileId", "membershipNumber"],
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1034,7 +1047,7 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: ["profileId","personalInfo","forename"],
+      dataIndex: ["profileId", "personalInfo", "forename"],
       title: "Forename",
       ellipsis: true,
       isGride: true,
@@ -1043,7 +1056,7 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: ["profileId","personalInfo","surname"],
+      dataIndex: ["profileId", "personalInfo", "surname"],
       title: "Surname",
       ellipsis: true,
       isGride: true,
@@ -1099,7 +1112,6 @@ const staticColumns = {
       isVisible: true,
       width: 200,
     },
-
   ],
   Correspondence: [
     {
@@ -1112,7 +1124,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1210,7 +1222,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1308,7 +1320,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1406,7 +1418,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1504,7 +1516,7 @@ const staticColumns = {
     },
     {
       dataIndex: "regNo",
-      title: "Reg No",
+      title: "Membership No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -1787,7 +1799,6 @@ const staticColumns = {
     },
   ],
   CornMarketRewards: [
-
     {
       dataIndex: "batchName",
       title: "Batch Name",
@@ -2469,12 +2480,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -2610,12 +2621,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -2751,12 +2762,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -2892,12 +2903,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -3033,12 +3044,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -3174,12 +3185,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -3315,12 +3326,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -3456,12 +3467,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -3593,12 +3604,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,
@@ -3735,12 +3746,12 @@ const staticSearchFilters = {
       isCheck: false,
       lookups: { Male: false, Female: false, Other: false },
     },
-    {
-      titleColumn: "GRA Member",
-      isSearch: false,
-      isCheck: false,
-      lookups: { Male: false, Female: false, Other: false },
-    },
+    // {
+    //   titleColumn: "GRA Member",
+    //   isSearch: false,
+    //   isCheck: false,
+    //   lookups: { Male: false, Female: false, Other: false },
+    // },
     {
       titleColumn: "Date Joined",
       isSearch: false,

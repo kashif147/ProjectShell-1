@@ -474,7 +474,7 @@ function CorspndncDetail() {
             </h4>
             <h4>Message For :</h4>
             <h4>Source Division :</h4>
-            <h4>Reg No :</h4>
+            <h4>Membership No :</h4>
             <h4>Name :</h4>
             <h4>Callback No :</h4>
             <h4>Callback No :</h4>
@@ -687,7 +687,7 @@ function CorspndncDetail() {
             </h4>
             <h4>Message For :</h4>
             <h4>Source Division :</h4>
-            <h4>Reg No :</h4>
+            <h4>Membership No :</h4>
             <h4>Name :</h4>
             <h4>Callback No :</h4>
             <h4>Callback No :</h4>
@@ -764,7 +764,7 @@ function CorspndncDetail() {
       key: "subjectMatter",
     },
     {
-      title: "Reg No",
+      title: "Membership No",
       dataIndex: "regNo",
       key: "regNo",
     },
@@ -947,7 +947,7 @@ function CorspndncDetail() {
             </div>
             <div className="drawer-inpts-container">
               <div className="drawer-lbl-container">
-                <p>Reg No :</p>
+                <p>Membership No :</p>
               </div>
               <div className="inpt-con">
                 <p className="star-white">*</p>

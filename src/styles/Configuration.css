@@ -127,12 +127,25 @@
   color: white;
   font-weight: 600;
   border: none;
-  padding: 16px 12px;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
+  padding: 0 10px;
+}
+
+.configuration-main .drawer-tbl .ant-table-thead .ant-table-selection-column {
+  background-color: var(--primary-color) !important;
+  color: white !important;
 }
 
 .configuration-main .drawer-tbl .ant-table-tbody > tr > td {
-  padding: 12px;
+  padding: 0 10px;
   border-bottom: 1px solid #f0f0f0;
+  border-left: none !important;
+  border-right: none !important;
+  border-inline-start: none !important;
+  border-inline-end: none !important;
 }
 
 .configuration-main .drawer-tbl .even-row {
@@ -143,7 +156,23 @@
   background-color: white;
 }
 
+/* Apply even/odd row styling to fixed columns and checkbox columns */
+.configuration-main .drawer-tbl .ant-table-tbody > tr.even-row > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr.even-row > td.ant-table-selection-column {
+  background-color: #fafafa !important;
+}
+
+.configuration-main .drawer-tbl .ant-table-tbody > tr.odd-row > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr.odd-row > td.ant-table-selection-column {
+  background-color: white !important;
+}
+
 .configuration-main .drawer-tbl .ant-table-tbody > tr:hover > td {
+  background-color: rgba(33, 94, 151, 0.05);
+}
+
+.configuration-main .drawer-tbl .ant-table-tbody > tr:hover > td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody > tr:hover > td.ant-table-selection-column {
   background-color: rgba(33, 94, 151, 0.05);
 }
 
@@ -161,24 +190,18 @@
   color: white !important;
 }
 
-/* Scrollbar Styling */
-.configuration-main .drawer-tbl::-webkit-scrollbar {
-  width: 8px;
-  height: 8px;
+/* Hide scrollbars for configuration drawer tables - keep scroll functionality */
+.configuration-main .drawer-tbl,
+.configuration-main .drawer-tbl .ant-table-body,
+.configuration-main .drawer-tbl .ant-table-container {
+  scrollbar-width: none !important; /* Firefox */
+  -ms-overflow-style: none !important; /* IE and Edge */
 }
 
-.configuration-main .drawer-tbl::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 4px;
-}
-
-.configuration-main .drawer-tbl::-webkit-scrollbar-thumb {
-  background: var(--primary-color);
-  border-radius: 4px;
-}
-
-.configuration-main .drawer-tbl::-webkit-scrollbar-thumb:hover {
-  background: #1e4a7a;
+.configuration-main .drawer-tbl::-webkit-scrollbar,
+.configuration-main .drawer-tbl .ant-table-body::-webkit-scrollbar,
+.configuration-main .drawer-tbl .ant-table-container::-webkit-scrollbar {
+  display: none !important; /* Chrome, Safari, Opera */
 }
 
 /* Pagination Styles */
