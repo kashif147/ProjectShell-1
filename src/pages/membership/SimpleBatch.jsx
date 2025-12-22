@@ -20,7 +20,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   // Determine batch type based on URL path
   useEffect(() => {
     const path = location.pathname;
-    
+
     if (path.includes("/NewGraduate")) {
       setBatchType("new");
     } else if (path.includes("/CornMarketRewards")) {
@@ -34,7 +34,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
-    // Clear error for the field when user starts typing
     if (errors[field]) {
       setErrors((prev) => ({ ...prev, [field]: "" }));
     }
@@ -42,18 +41,18 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
   const validateForm = () => {
     const newErrors = {};
-    
-    // Trigger custom validation for MyInput components
+
+
     const nameInput = document.querySelector('[name="batchName"]');
     if (nameInput) {
       // Dispatch blur event to trigger MyInput's internal validation
       nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
-      
+
       // Also check for any validation error classes
-      const hasError = nameInput.closest('.has-error') || 
-                      nameInput.classList.contains('error') ||
-                      nameInput.parentElement.classList.contains('ant-form-item-has-error');
-      
+      const hasError = nameInput.closest('.has-error') ||
+        nameInput.classList.contains('error') ||
+        nameInput.parentElement.classList.contains('ant-form-item-has-error');
+
       if (hasError) {
         newErrors.name = "Batch name validation failed";
       }
@@ -63,7 +62,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     if (!formData.name.trim()) {
       newErrors.name = "Batch name is required";
     }
-    
+
     // Check if date is valid
     if (!formData.date || !formData.date.isValid()) {
       newErrors.date = "Valid start date is required";
@@ -90,7 +89,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
   const handleSubmit = async () => {
     console.log("Submit button clicked");
-    
+
     // Validate form
     if (!validateForm()) {
       MyAlert("error", "Validation Error", "Please fix the form errors before submitting");
@@ -113,9 +112,9 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     console.log("Submitting batch:", apiData);
 
     // Get bearer token from localStorage
-    const token = localStorage.getItem("accessToken") || 
-                  localStorage.getItem("token") ||
-                  localStorage.getItem("authToken");
+    const token = localStorage.getItem("accessToken") ||
+      localStorage.getItem("token") ||
+      localStorage.getItem("authToken");
 
     if (!token) {
       MyAlert("error", "Authentication Failed", "Authentication token not found. Please login again.");
@@ -159,10 +158,10 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       }
     } catch (error) {
       console.error("Error creating batch:", error);
-      
+
       let errorMessage = "Failed to create batch";
       let errorDescription = "An unexpected error occurred";
-      
+
       if (error.response) {
         if (error.response.status === 401) {
           errorMessage = "Authentication failed";
@@ -193,7 +192,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         errorMessage = "Unknown error";
         errorDescription = error.message || "Please check console for details";
       }
-      
+
       MyAlert("error", errorMessage, errorDescription);
     } finally {
       setLoading(false);
@@ -206,7 +205,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
   // Function to get display name for batch type
   const getBatchTypeDisplay = () => {
-    switch(batchType) {
+    switch (batchType) {
       case "new":
         return "New Graduate";
       case "corn market":
@@ -227,15 +226,15 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       width={800}
       extra={
         <Space>
-          <Button 
-            className="butn secoundry-btn" 
+          <Button
+            className="butn secoundry-btn"
             onClick={onClose}
             style={{ color: "#215E97", borderColor: "#215E97" }}
           >
             Close
           </Button>
-          <Button 
-            className="butn primary-btn" 
+          <Button
+            className="butn primary-btn"
             onClick={handleSubmit}
             loading={loading}
             type="primary"
@@ -245,13 +244,13 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         </Space>
       }
     >
-      <div className="drawer-main-container" style={{ 
+      <div className="drawer-main-container" style={{
         padding: "16px",
         backgroundColor: "#f6f9fc",
         height: "100%"
       }}>
-        <div style={{ 
-          marginBottom: "24px", 
+        <div style={{
+          marginBottom: "24px",
           padding: "16px",
           backgroundColor: "white",
           borderRadius: "8px",
@@ -269,7 +268,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
                 <span style={{ marginLeft: "8px" }}>{getBatchTypeDisplay()}</span>
               </div>
             </Col> */}
-            
+
             <Col span={24}>
               <MyInput
                 label="Batch Name:"
@@ -282,7 +281,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
                 placeholder={`Enter ${getBatchTypeDisplay()} batch name`}
               />
             </Col>
-            
+
             <Col span={24}>
               <MyDatePicker1
                 label="Creation Date:"
@@ -295,7 +294,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
             </Col>
           </Row>
         </div>
-        
+
         {/* Additional info or instructions if needed */}
         {/* <div style={{ 
           marginTop: "16px",
