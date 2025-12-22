@@ -1,9 +1,15 @@
 import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux';
 import { Row, Col, Button, Space, Tabs, Table } from "antd";
+import { FileExcelOutlined } from "@ant-design/icons";
+import * as XLSX from "xlsx";
+// import { saveAs } from "file-saver";
 import moment from "moment";
 import { tableData } from "../../Data"; // Assuming batch data comes from here
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
+import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
+import { useEffect } from "react";
 
 const inputStyle = {
   width: "100%",
@@ -23,62 +29,109 @@ const buttonStyle = {
   minWidth: "150px",
 };
 
-// Table columns configuration
+
 const columns = [
   {
-    title: "First name",
-    dataIndex: "First name",
+    title: "Full Name",
+    dataIndex: "fullName",
+    key: "fullName",
     ellipsis: true,
-    width: 150,
-    render: (_, record) =>
-      `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
+    width: 180,
   },
   {
-    dataIndex: "Last name",
-    title: "Last name",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Membership No",
     title: "Membership No",
+    dataIndex: "membershipNo",
+    key: "membershipNo",
+    ellipsis: true,
+    width: 140,
+  },
+  {
+    title: "Address",
+    key: "address",
+    ellipsis: true,
+    width: 300,
+    render: (_, record) => (
+      <>
+        {[
+          record.addressLine1,
+          record.addressLine2,
+          record.addressLine3,
+          record.addressCity,
+          record.addressCounty,
+          record.addressPostcode,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+      </>
+    ),
+  },
+  {
+    title: "Email",
+    dataIndex: "email",
+    key: "email",
+    ellipsis: true,
+    width: 200,
+  },
+  {
+    title: "Mobile",
+    dataIndex: "mobileNumber",
+    key: "mobileNumber",
     ellipsis: true,
     width: 150,
-  },
-  {
-    dataIndex: "Value for Periods Selected",
-    title: "Value for Periods Selected",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Arrears",
-    title: "Arrears",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Comments",
-    title: "Comments",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Advance",
-    title: "Advance",
-    ellipsis: true,
-    width: 100,
-  },
-  {
-    dataIndex: "Total Amount",
-    title: "Total Amount",
-    ellipsis: true,
-    width: 100,
   },
 ];
 
+
 function SimpleBatchMemberSummary() {
   const location = useLocation();
+  const dispatch = useDispatch();
+  const exportToExcel = () => {
+    if (!members.length) return;
+
+    const excelData = members.map((m) => ({
+      "Full Name": m.fullName,
+      "Membership No": m.membershipNo,
+      "Address": [
+        m.addressLine1,
+        m.addressLine2,
+        m.addressLine3,
+        m.addressCity,
+        m.addressCounty,
+        m.addressPostcode,
+      ].filter(Boolean).join(", "),
+      "Email": m.email,
+      "Mobile": m.mobileNumber,
+    }));
+
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Batch Members");
+
+    // Create a binary array
+    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+
+    // Create a Blob
+    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+
+    // Create a temporary <a> element
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `Batch_Members_${batchInfo.batchName || "Data"}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+
+    // Clean up
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
+
+  const {
+    loadingBatches,
+    batchesData,
+    batchesError
+  } = useSelector((state) => state.batchMember);
+
   const { batchName, batchId } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
 
@@ -142,7 +195,7 @@ function SimpleBatchMemberSummary() {
         >
           <Table
             columns={columns}
-              className="mt-2"
+            className="mt-2"
             dataSource={[]}
             rowKey={(record) => record.id || record["Membership No"]}
             pagination={{
@@ -161,7 +214,16 @@ function SimpleBatchMemberSummary() {
       ),
     },
   ];
+  useEffect(() => {
+    dispatch(fetchBatchesByType({
+      type: 'new',
+      page: 1,
+      limit: 500
+    }))
+  }, [batchesData])
+  useEffect(() => {
 
+  }, [batchesData])
   const onChange = (key) => {
     setActiveKey(key);
   };
@@ -176,7 +238,7 @@ function SimpleBatchMemberSummary() {
       {/* Trigger Button Row - Placed ABOVE the header fields */}
       <Row
         style={{
-     padding: "5px 35px 0px 35px",
+          padding: "5px 35px 0px 35px",
           display: "flex",
           justifyContent: "flex-end",
           alignItems: "center",
@@ -252,20 +314,41 @@ function SimpleBatchMemberSummary() {
           paddingRight: "35px",
           paddingBottom: "20px",
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <Col span={24}>
+        {/* Left Side Buttons */}
+        <Col>
           <Space size="middle">
-            <Button style={buttonStyle}>
-              Include
-            </Button>
+            <Button style={buttonStyle}>Include</Button>
             <CommonPopConfirm title="Do you want to exclude member?">
               <Button style={buttonStyle}>Exclude Members</Button>
             </CommonPopConfirm>
           </Space>
         </Col>
+
+        {/* Right Side Export Button */}
+        <Col>
+          <Button
+            type="primary"
+            icon={<FileExcelOutlined />}
+            onClick={exportToExcel}
+            style={{
+              backgroundColor: "#3b7ddd", // slightly different shade from other buttons
+              borderColor: "#3b7ddd",
+              color: "white",
+              borderRadius: "6px",
+              minWidth: "120px",
+              fontWeight: "500",
+            }}
+          >
+            Export XLS
+          </Button>
+        </Col>
       </Row>
+
+
 
       {/* Tabs */}
       <div style={{ padding: "0 35px" }}>

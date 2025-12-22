@@ -10,18 +10,21 @@ function NewGraduate() {
     loadingBatches,
     batchesData,
     batchesError
-  } = useSelector((state) => state.batchMember); 
+  } = useSelector((state) => state.batchMember);
 
-  console.log(batchesData?.data?.batches, "batchesData")
-  
+  console.log(batchesData?.data?.batches?.results, "batchesData")
+
   useEffect(() => {
     dispatch(fetchBatchesByType({
-      type: 'new',  
+      type: 'new',
       page: 1,
       limit: 500
     }));
   }, [dispatch]);
-
+  useEffect(() => {
+    let data = batchesData?.data?.batches?.results
+    
+  }, [batchesData])
   // Format the batches data for the table
   const formatTableData = () => {
     if (!batchesData?.data?.batches || !Array.isArray(batchesData.data.batches)) {
@@ -82,10 +85,10 @@ function NewGraduate() {
 
   return (
     <div className="" style={{ width: "100%" }}>
-      <TableComponent 
-        data={tableData} 
-        isGrideLoading={loadingBatches} 
-        screenName="NewGraduate" 
+      <TableComponent
+        data={tableData}
+        isGrideLoading={loadingBatches}
+        screenName="NewGraduate"
       />
     </div>
   );

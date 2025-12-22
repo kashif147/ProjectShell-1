@@ -1397,6 +1397,7 @@ function Configuratin() {
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
+    disableFtn(false)
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
 

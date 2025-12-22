@@ -24,7 +24,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     if (path.includes("/NewGraduate")) {
       setBatchType("new");
     } else if (path.includes("/CornMarketRewards")) {
-      setBatchType("corn market");
+      setBatchType("graduate");
     } else if (path.includes("/RecruitAFriend")) {
       setBatchType("recurit a frind");
     } else {

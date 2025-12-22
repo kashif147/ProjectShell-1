@@ -123,12 +123,12 @@ function ProfileHeader({
              "123 Main Street, New York",
     email: source?.contactInfo?.preferredEmail === "work" ? 
            source.contactInfo.workEmail : 
-           source?.contactInfo?.personalEmail || "jack.smith@email.com",
-    phone: source?.contactInfo?.mobileNumber || "(817) 234-3244",
+           source?.contactInfo?.personalEmail || "",
+    phone: source?.contactInfo?.mobileNumber || "",
     
     // Professional Info
-    grade: source?.professionalDetails?.grade || "General - All Grades",
-    category: source?.membershipCategory || "Undergraduate Student",
+    grade: source?.professionalDetails?.grade || " ",
+    category: source?.membershipCategory || " ",
     
     // Subscription Info
     paymentType: subscriptionData?.paymentType || "Salary Deduction",
