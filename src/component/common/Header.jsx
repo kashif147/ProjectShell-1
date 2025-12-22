@@ -49,16 +49,35 @@ import axios from "axios";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate(); // Add useNavigate
   const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
   const [searchTerm, setSearchTerm] = useState("");
   let userdata = localStorage.getItem("userdata");
   userdata = JSON.parse(userdata);
   const permission = userdata?.permissions;
-  console.log(permission, "userdata");
 
-  const handleUpdate = (key, value) => {
+  const handleUpdate = (key, value, appName) => {
+    // Map app names to routes
+    const routeMap = {
+      "Membership": "/MembershipDashboard",
+      "Finance": "/onlinePayment",
+      "Correspondence": "/Email",
+      "Configuration": "/Configuratin",
+      // Add other mappings as needed
+      "Events": "/Events", // or whatever your events route is
+      "Reports": "/Reports",
+      "Settings": "/Settings", // if you have a settings route
+    };
+
+    // Dispatch menu label update
     dispatch(updateMenuLbl({ key, value }));
+
+    // Navigate to the corresponding route
+    if (routeMap[appName]) {
+      navigate(routeMap[appName]);
+    }
+
     closeDropdown();
   };
 
@@ -67,6 +86,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       name: "Membership",
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
+      route: "/MembershipDashboard", // Add route property
     },
     {
       name: "Finance",
@@ -74,6 +94,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#4CAF50",
       permissions: ["USER_READ", "USER_WRITE"],
       roles: ["AM", "DAM", "GS", "DGS", "ASU", "SU"],
+      route: "/onlinePayment",
     },
     {
       name: "Correspondence",
@@ -81,6 +102,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#FF7043",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Email",
     },
     {
       name: "Events",
@@ -88,6 +110,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#EF5350",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Events", // Add your events route
     },
     {
       name: "Courses",
@@ -95,6 +118,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#7E57C2",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Courses", // Add your courses route
     },
     {
       name: "Professional Development",
@@ -102,6 +126,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#3F51B5",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/ProfessionalDevelopment", // Add your route
     },
     {
       name: "Settings",
@@ -109,6 +134,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#3F51B5",
       permissions: ["portal:settings:read"],
       roles: ["MEMBER", "MO", "AMO", "GS", "DGS", "SU"],
+      route: "/Settings", // Add your settings route
     },
     {
       name: "Configuration",
@@ -116,6 +142,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#5E35B1",
       permissions: ["user:read", "role:read"],
       roles: ["SU", "GS", "DGS"],
+      route: "/Configuration",
     },
     {
       name: "Reports",
@@ -123,6 +150,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#A63D2F",
       permissions: ["crm:reports:read"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Reports",
     },
   ];
 
@@ -165,15 +193,15 @@ const AppLauncherMenu = ({ closeDropdown }) => {
         {filteredItems.map((app) => {
           // Map app names to correct menu label keys that exist in sidebar itemsMap
           const menuLabelMap = {
-            Membership: "Subscriptions & Rewards", // Maps to subscriptionItems
-            Finance: "Finance", // Maps to financeItems
-            Correspondence: "Correspondence", // Maps to correspondenceItems
-            Events: "Events", // Maps to eventsItems
+            Membership: "Subscriptions & Rewards",
+            Finance: "Finance",
+            Correspondence: "Correspondence",
+            Events: "Events",
             Courses: "Events", // Map Courses to Events for now
             "Professional Development": "Events", // Map Professional Development to Events for now
-            Settings: "Configuration", // Map Settings to Configuration
-            Configuration: "Configuration", // Maps to configurationItems
-            Reports: "Reports", // Maps to reportItems
+            Settings: "",
+            Configuration: "Configuration",
+            Reports: "Reports",
           };
 
           const menuKey = menuLabelMap[app.name] || app.name;
@@ -184,7 +212,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             <div
               key={app.name}
               className={`app-item ${isActive ? "active-item" : ""}`}
-              onClick={() => handleUpdate(menuKey, true)}
+              onClick={() => handleUpdate(menuKey, true, app.name)}
             >
               <div
                 className="icon-circle"
@@ -200,7 +228,6 @@ const AppLauncherMenu = ({ closeDropdown }) => {
     </div>
   );
 };
-
 export const AppLauncher = () => {
   const [open, setOpen] = useState(false);
   const dropdownRef = useRef(null);

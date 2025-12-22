@@ -7041,7 +7041,7 @@ function Configuratin() {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("LookupType", () => dispatch(getLookupTypes()))
+              resetCounteries("Lookup Type", () => dispatch(getLookupTypes()))
           );
           dispatch(getLookupTypes());
         }}
