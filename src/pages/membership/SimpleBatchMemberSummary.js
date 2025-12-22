@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
 import { Row, Col, Button, Space, Tabs, Table } from "antd";
-import { FileExcelOutlined } from "@ant-design/icons";
+import { FileExcelOutlined, DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
 // import { saveAs } from "file-saver";
 import moment from "moment";
@@ -329,22 +329,50 @@ function SimpleBatchMemberSummary() {
         </Col>
 
         {/* Right Side Export Button */}
+        {/* Right Side - File download link style */}
         <Col>
-          <Button
-            type="primary"
-            icon={<FileExcelOutlined />}
-            onClick={exportToExcel}
+          <a
+            onClick={(e) => {
+              e.preventDefault();
+              // handleFileClick();
+            }}
             style={{
-              backgroundColor: "#3b7ddd", // slightly different shade from other buttons
-              borderColor: "#3b7ddd",
-              color: "white",
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              color: "#0969da",
+              textDecoration: "none",
+              padding: "10px 16px",
+              border: "1px solid #d0d7de",
               borderRadius: "6px",
-              minWidth: "120px",
+              backgroundColor: "white",
+              fontSize: "14px",
               fontWeight: "500",
+              transition: "all 0.2s ease",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f6f8fa";
+              e.currentTarget.style.borderColor = "#0969da";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "white";
+              e.currentTarget.style.borderColor = "#d0d7de";
             }}
           >
-            Export XLS
-          </Button>
+            <FileExcelOutlined />
+            <span>batch_data.xlsx</span>
+            <DownloadOutlined style={{ fontSize: "12px" }} />
+          </a>
+
+          <div style={{
+            fontSize: "11px",
+            color: "#6e7781",
+            marginTop: "4px",
+            textAlign: "center"
+          }}>
+            Click to download
+          </div>
         </Col>
       </Row>
 
