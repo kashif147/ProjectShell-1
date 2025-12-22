@@ -73,50 +73,49 @@ const UserManagement = ({ onClose }) => {
   }, [dispatch]);
 
   // Filter users based on search query and filters
- const filteredUsers = users.filter((user) => {
-  const matchesSearch =
-    (user.userFullName ?? "")
-      .toLowerCase()
-      .includes((searchQuery ?? "").toLowerCase()) ||
-    (user.userEmail ?? "")
-      .toLowerCase()
-      .includes((searchQuery ?? "").toLowerCase()) ||
-    (user.userMemberNumber ?? "")
-      .toLowerCase()
-      .includes((searchQuery ?? "").toLowerCase());
+  const filteredUsers = users.filter((user) => {
+    const matchesSearch =
+      (user.userFullName ?? "")
+        .toLowerCase()
+        .includes((searchQuery ?? "").toLowerCase()) ||
+      (user.userEmail ?? "")
+        .toLowerCase()
+        .includes((searchQuery ?? "").toLowerCase()) ||
+      (user.userMemberNumber ?? "")
+        .toLowerCase()
+        .includes((searchQuery ?? "").toLowerCase());
 
-  const matchesTenant =
-    selectedTenant === "all" || user.tenantId === selectedTenant;
+    const matchesTenant =
+      selectedTenant === "all" || user.tenantId === selectedTenant;
 
-  const matchesUserType =
-    selectedUserType === "all" || user.userType === selectedUserType;
+    const matchesUserType =
+      selectedUserType === "all" || user.userType === selectedUserType;
 
-  const matchesStatus =
-    selectedStatus === "all" ||
-    (selectedStatus === "active" && user.isActive) ||
-    (selectedStatus === "inactive" && !user.isActive);
+    const matchesStatus =
+      selectedStatus === "all" ||
+      (selectedStatus === "active" && user.isActive) ||
+      (selectedStatus === "inactive" && !user.isActive);
 
-  const matchesRole =
-    selectedRole === "all" ||
-    user.roles?.some((role) => role._id === selectedRole);
+    const matchesRole =
+      selectedRole === "all" ||
+      user.roles?.some((role) => role._id === selectedRole);
 
-  return (
-    matchesSearch &&
-    matchesTenant &&
-    matchesUserType &&
-    matchesStatus &&
-    matchesRole
-  );
-});
+    return (
+      matchesSearch &&
+      matchesTenant &&
+      matchesUserType &&
+      matchesStatus &&
+      matchesRole
+    );
+  });
 
 
   const handleStatusToggle = (user) => {
     const newStatus = !user.isActive;
     MyConfirm({
       title: `Confirm ${newStatus ? "Activation" : "Deactivation"}`,
-      message: `Are you sure you want to ${
-        newStatus ? "activate" : "deactivate"
-      } ${user.userFullName}?`,
+      message: `Are you sure you want to ${newStatus ? "activate" : "deactivate"
+        } ${user.userFullName}?`,
       onConfirm: async () => {
         await dispatch(
           updateUserStatus({ userId: user._id, isActive: newStatus })
@@ -145,11 +144,11 @@ const UserManagement = ({ onClose }) => {
     setSelectedUser(null);
   };
 
-const handleSearchChange = (e) => {
-  const value = e?.target?.value ?? "";
-  setLocalSearchQuery(value);
-  dispatch(setSearchQuery(value));
-};
+  const handleSearchChange = (e) => {
+    const value = e?.target?.value ?? "";
+    setLocalSearchQuery(value);
+    dispatch(setSearchQuery(value));
+  };
 
   const handleTenantChange = (value) => {
     dispatch(setSelectedTenant(value));
@@ -168,9 +167,8 @@ const handleSearchChange = (e) => {
   };
 
   const getUserInitials = (user) => {
-    return `${user.userFirstName?.[0] || ""}${
-      user.userLastName?.[0] || ""
-    }`.toUpperCase();
+    return `${user.userFirstName?.[0] || ""}${user.userLastName?.[0] || ""
+      }`.toUpperCase();
   };
 
   const getUserTypeColor = (userType) => {
@@ -215,7 +213,7 @@ const handleSearchChange = (e) => {
         </div>
       ),
     },
-    { 
+    {
       title: "Type",
       dataIndex: "userType",
       key: "userType",
@@ -379,7 +377,7 @@ const handleSearchChange = (e) => {
       {/* Filters */}
       <Card className="mb-4 filter-card">
         <Row gutter={[16, 16]}>
-          <Col xs={24} sm={12} md={6}>
+          <Col xs={24} sm={12} md={5}>
             <div className="filter-item">
               <label className="filter-label">Search</label>
               <Input
@@ -387,15 +385,12 @@ const handleSearchChange = (e) => {
                 prefix={<SearchOutlined />}
                 value={localSearchQuery}
                 onChange={handleSearchChange}
-                style={{
-                  height: "40px",
-                  borderRadius: "4px",
-                  border: "1px solid #d9d9d9",
-                }}
+                style={{ height: "40px", borderRadius: "4px", border: "1px solid #d9d9d9" }}
               />
             </div>
           </Col>
-          <Col xs={24} sm={12} md={6}>
+
+          <Col xs={24} sm={12} md={5}>
             <div className="filter-item">
               <label className="filter-label">Tenant</label>
               <Select
@@ -403,6 +398,8 @@ const handleSearchChange = (e) => {
                 onChange={handleTenantChange}
                 className="w-100"
                 placeholder="Select tenant"
+                style={{ height: "40px" }}
+                dropdownStyle={{ minHeight: "40px" }}
               >
                 <Option value="all">All Tenants</Option>
                 {tenants.map((tenant) => (
@@ -413,7 +410,8 @@ const handleSearchChange = (e) => {
               </Select>
             </div>
           </Col>
-          <Col xs={24} sm={12} md={6}>
+
+          <Col xs={24} sm={12} md={4}>
             <div className="filter-item">
               <label className="filter-label">User Type</label>
               <Select
@@ -421,6 +419,8 @@ const handleSearchChange = (e) => {
                 onChange={handleUserTypeChange}
                 className="w-100"
                 placeholder="Select user type"
+                style={{ height: "40px" }}
+                dropdownStyle={{ minHeight: "40px" }}
               >
                 {USER_TYPES.map((type) => (
                   <Option key={type.value} value={type.label}>
@@ -430,7 +430,8 @@ const handleSearchChange = (e) => {
               </Select>
             </div>
           </Col>
-          <Col xs={24} sm={12} md={6}>
+
+          <Col xs={24} sm={12} md={5}>
             <div className="filter-item">
               <label className="filter-label">Status</label>
               <Select
@@ -438,6 +439,8 @@ const handleSearchChange = (e) => {
                 onChange={handleStatusChange}
                 className="w-100"
                 placeholder="Select status"
+                style={{ height: "40px" }}
+                dropdownStyle={{ minHeight: "40px" }}
               >
                 {USER_STATUSES.map((status) => (
                   <Option key={status.value} value={status.value}>
@@ -447,9 +450,8 @@ const handleSearchChange = (e) => {
               </Select>
             </div>
           </Col>
-        </Row>
-        <Row gutter={[16, 16]} className="mt-3">
-          <Col xs={24} sm={12} md={6}>
+
+          <Col xs={24} sm={12} md={5}>
             <div className="filter-item">
               <label className="filter-label">Role</label>
               <Select
@@ -457,6 +459,8 @@ const handleSearchChange = (e) => {
                 onChange={handleRoleChange}
                 className="w-100"
                 placeholder="Select role"
+                style={{ height: "40px" }}
+                dropdownStyle={{ minHeight: "40px" }}
               >
                 <Option value="all">All Roles</Option>
                 {allRoles.map((role) => (
@@ -493,7 +497,7 @@ const handleSearchChange = (e) => {
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
-          scroll={{ x: 1000, y: 600 }}
+          scroll={{ x: 1000, y: '45vh' }}
         />
       </div>
 

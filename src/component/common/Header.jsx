@@ -180,6 +180,34 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   const filteredItems = accessibleApps.filter((app) =>
     app.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+  const [debouncedRegNo, setDebouncedRegNo] = useState("");
+  useEffect(() => {
+  const autoSearch = async () => {
+    try {
+      // optional: minimum 3 characters
+      if (debouncedRegNo.length < 3) return;
+
+      const result = await dispatch(
+        searchProfiles(debouncedRegNo)
+      ).unwrap();
+
+      navigate("/Details", {
+        state: {
+          name: result?.fullName,
+          code: result?.regNo,
+          search: "Profile",
+        },
+      });
+    } catch (error) {
+      console.error("Debounced profile search failed:", error);
+    }
+  };
+
+  if (debouncedRegNo) {
+    autoSearch();
+  }
+}, [debouncedRegNo, dispatch, navigate]);
+
 
   return (
     <div className="lancher-div">

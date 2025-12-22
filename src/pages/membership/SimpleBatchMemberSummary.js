@@ -236,7 +236,7 @@ function SimpleBatchMemberSummary() {
   return (
     <div>
       {/* Trigger Button Row - Placed ABOVE the header fields */}
-      <Row
+      {/* <Row
         style={{
           padding: "5px 35px 0px 35px",
           display: "flex",
@@ -261,7 +261,7 @@ function SimpleBatchMemberSummary() {
             Trigger
           </Button>
         </Col>
-      </Row>
+      </Row> */}
 
       {/* Header Info - BELOW the trigger button */}
       <Row
