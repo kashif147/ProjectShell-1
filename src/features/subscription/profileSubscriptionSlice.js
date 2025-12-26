@@ -10,7 +10,7 @@ export const getSubscriptionByProfileId = createAsyncThunk(
       const token = localStorage.getItem("token");
 
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/v1/subscriptions`,
+        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions`,
         {
           params: {
             profileId,
