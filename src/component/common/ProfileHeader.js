@@ -12,16 +12,17 @@ import {
   FaEdit,
   FaUser,
 } from "react-icons/fa";
+import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
 import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
 import { useSelector } from "react-redux";
 
-function ProfileHeader({ 
-  isEditMode = false, 
-  setIsEditMode, 
-  showButtons = false, 
-  isDeceased = false 
+function ProfileHeader({
+  isEditMode = false,
+  setIsEditMode,
+  showButtons = false,
+  isDeceased = false
 }) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelFormData, setCancelFormData] = useState({
@@ -33,50 +34,54 @@ function ProfileHeader({
   const { profileDetails, loading, error } = useSelector(
     (state) => state.profileDetails
   );
-  
+
   // Subscription API data
   const {
     ProfileSubData,
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-
+  
+  const {
+    profileSearchData,
+    loading: searchLoading,
+    error: searchError
+  } = useSelector((state) => state.searchProfile);
+  
+  // FIXED: Safely access results with proper null checking
+  const searchAoiRes = profileSearchData?.results?.[0] || null;
+  
   // Choose source dynamically - profileDetails has priority
-  const source = profileDetails;
+  const source = profileDetails || searchAoiRes;
 
-  // Function to calculate age from date of birth
+  // Function to calculate age from date of birth using dayjs
   const calculateAge = (dateString) => {
     if (!dateString) return "";
-    const today = new Date();
-    const birthDate = new Date(dateString);
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
+    const birthDate = dayjs(dateString);
+    if (!birthDate.isValid()) return "";
     
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
+    const today = dayjs();
+    const age = today.diff(birthDate, 'year');
     return `${age} Yrs`;
   };
 
-  // Format date to DD/MM/YYYY
-  const formatDate = (dateString) => {
+  // Format date to DD/MM/YYYY using dayjs
+  const formatDate = (dateString, format = "DD/MM/YYYY") => {
     if (!dateString) return "";
-    const date = new Date(dateString);
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    const date = dayjs(dateString);
+    return date.isValid() ? date.format(format) : "";
   };
 
   // Format date to DD/MM/YYYY for DOB display
   const formatDOB = (dateString) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return `${date.getDate().toString().padStart(2, '0')}/${(date.getMonth() + 1).toString().padStart(2, '0')}/${date.getFullYear()}`;
+    return formatDate(dateString, "DD/MM/YYYY");
   };
 
   // Get subscription data
   const getSubscriptionData = () => {
-    if (ProfileSubData && ProfileSubData.data && ProfileSubData.data.length > 0) {
+    if (ProfileSubData?.data?.length > 0) {
       const subscription = ProfileSubData.data[0];
-      
+
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
@@ -97,50 +102,64 @@ function ProfileHeader({
 
   const subscriptionData = getSubscriptionData();
 
+  // Helper function to safely get nested properties
+  const getSafe = (obj, path, defaultValue = "") => {
+    const keys = path.split('.');
+    let result = obj;
+    
+    for (const key of keys) {
+      if (result === null || result === undefined) return defaultValue;
+      result = result[key];
+    }
+    
+    return result !== undefined ? result : defaultValue;
+  };
+
   // Derive member data from source
   const memberData = {
     // Personal Info
-    name: source ? `${source.personalInfo?.forename || ''} ${source.personalInfo?.surname || ''}`.trim() : "",
-    dob: source?.personalInfo?.dateOfBirth ? formatDOB(source.personalInfo.dateOfBirth) : "",
-    gender: source?.personalInfo?.gender ? source.personalInfo.gender.charAt(0).toUpperCase() : "M",
-    age: source?.personalInfo?.dateOfBirth ? calculateAge(source.personalInfo.dateOfBirth) : "36 Yrs",
-    
+    name: source ? `${getSafe(source, 'personalInfo.forename', '')} ${getSafe(source, 'personalInfo.surname', '')}`.trim() : "",
+    dob: formatDOB(getSafe(source, 'personalInfo.dateOfBirth')),
+    gender: getSafe(source, 'personalInfo.gender', 'M').charAt(0).toUpperCase(),
+    age: calculateAge(getSafe(source, 'personalInfo.dateOfBirth')) || "36 Yrs",
+
     // Status - Use subscription status if available, otherwise fall back to profile data
-    status: isDeceased ? "Deceased" : 
-            (subscriptionData?.subscriptionStatus || 
-            source?.membershipStatus || 
-            (source?.deactivatedAt ? "Inactive" : "Active Member")),
-    
+    status: isDeceased ? "Deceased" :
+      (subscriptionData?.subscriptionStatus ||
+        getSafe(source, 'membershipStatus') ||
+        (getSafe(source, 'deactivatedAt') ? "Inactive" : "Active Member")),
+
     // Membership Info - Use subscription end date if available, otherwise fall back
-    memberId: source?.membershipNumber || "45217A",
-    joined: source?.firstJoinedDate ? formatDate(source.firstJoinedDate) : "01/01/2016",
-    expires: subscriptionData?.endDate || 
-            (source?.deactivatedAt ? formatDate(source.deactivatedAt) : "01/01/2026"),
-    
+    memberId: getSafe(source, 'membershipNumber', '45217A'),
+    joined: formatDate(getSafe(source, 'firstJoinedDate')) || "01/01/2016",
+    expires: subscriptionData?.endDate ||
+      formatDate(getSafe(source, 'deactivatedAt')) || "01/01/2026",
+
     // Contact Info
-    address: source?.contactInfo ? 
-             `${source.contactInfo.buildingOrHouse || ''} ${source.contactInfo.streetOrRoad || ''}, ${source.contactInfo.areaOrTown || ''}`.trim() : 
-             "123 Main Street, New York",
-    email: source?.contactInfo?.preferredEmail === "work" ? 
-           source.contactInfo.workEmail : 
-           source?.contactInfo?.personalEmail || "",
-    phone: source?.contactInfo?.mobileNumber || "",
-    
+    address: source?.contactInfo ?
+      `${getSafe(source, 'contactInfo.buildingOrHouse', '')} ${getSafe(source, 'contactInfo.streetOrRoad', '')}, ${getSafe(source, 'contactInfo.areaOrTown', '')}`.trim() ||
+      "123 Main Street, New York" : "123 Main Street, New York",
+    email: getSafe(source, 'contactInfo.preferredEmail') === "work" ?
+      getSafe(source, 'contactInfo.workEmail') :
+      getSafe(source, 'contactInfo.personalEmail', ''),
+    phone: getSafe(source, 'contactInfo.mobileNumber', ''),
+
     // Professional Info
-    grade: source?.professionalDetails?.grade || " ",
-    category: source?.membershipCategory || " ",
-    
+    grade: getSafe(source, 'professionalDetails.grade', ' '),
+    category: getSafe(source, 'membershipCategory', ' '),
+
     // Subscription Info
     paymentType: subscriptionData?.paymentType || "Salary Deduction",
     subscriptionYear: subscriptionData?.subscriptionYear || "",
-    
+
     // Financial Info - These would likely come from a different API endpoint
     balance: "€200",
     lastPayment: "€74.7",
     // Use subscription start date for payment date if available
-    paymentDate: subscriptionData?.startDate || (source?.submissionDate ? formatDate(source.submissionDate) : "1/02/2025"),
+    paymentDate: subscriptionData?.startDate || 
+      formatDate(getSafe(source, 'submissionDate')) || "1/02/2025",
     // Include subscription year in payment code if available
-    paymentCode: `MB-${subscriptionData?.subscriptionYear || new Date().getFullYear()}-${source?.membershipNumber || '001'}`,
+    paymentCode: `MB-${subscriptionData?.subscriptionYear || dayjs().year()}-${getSafe(source, 'membershipNumber', '001')}`,
   };
 
   const cancellationReasons = [
@@ -343,16 +362,6 @@ function ProfileHeader({
             <span className="grade-label-blue">Category:</span>
             <span className="grade-value-blue">{memberData.category}</span>
           </div>
-          {/* Show subscription status if available */}
-          {/* {subscriptionData?.subscriptionStatus && (
-            <div className="grade-row-blue">
-              <FaShieldAlt className="grade-icon-blue" style={{ color: '#fff', marginRight: '8px', fontSize: '14px' }} />
-              <span className="grade-label-blue">Sub Status:</span>
-              <span className={`grade-value-blue ${subscriptionData.subscriptionStatus.toLowerCase() === 'active' ? 'status-active' : ''}`}>
-                {subscriptionData.subscriptionStatus}
-              </span>
-            </div>
-          )} */}
         </div>
 
         {/* Cancel Membership Button */}

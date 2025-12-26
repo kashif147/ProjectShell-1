@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { DatePicker } from 'antd';
 import '../../styles/MySelect.css';
 import dayjs from 'dayjs';
@@ -12,37 +12,103 @@ const MyDatePicker1 = ({
   hasError = false,
   errorMessage = 'Required',
   disabled = false,
-  placeholder = 'Select date',
+  placeholder = 'DD/MM/YYYY',
   isMarginBtm = true,
   format = "DD/MM/YYYY"
 }) => {
   const [isFocused, setIsFocused] = useState(false);
+  const [displayValue, setDisplayValue] = useState('');
 
-  const handleDateChange = (date) => {
-    onChange(date);
-  };
-
-  // Parse the value properly considering it might be in string format
-  const parseValue = (val) => {
-    if (!val) return null;
-    if (dayjs.isDayjs(val)) {
-      return val;
+  // Initialize display value
+  useEffect(() => {
+    if (value && dayjs.isDayjs(value)) {
+      setDisplayValue(value.format(format));
+    } else if (!value) {
+      setDisplayValue('');
     }
-    // If it's a string, parse it with the specified format
-    if (typeof val === 'string') {
-      return dayjs(val, format);
+  }, [value, format]);
+
+  // Auto-format function
+  const autoFormatDate = (inputStr) => {
+    // Remove all non-digits
+    const digits = inputStr.replace(/\D/g, '');
+    
+    if (digits.length === 0) return '';
+    
+    let result = '';
+    
+    // Add slashes at appropriate positions
+    for (let i = 0; i < digits.length && i < 8; i++) { // Max 8 digits (YYYY)
+      if (i === 2 || i === 4) {
+        result += '/';
+      }
+      result += digits[i];
     }
     
-    return null;
+    return result;
+  };
+
+  const handleInput = (e) => {
+    if (disabled) return;
+    
+    const rawValue = e.target.value;
+    const formatted = autoFormatDate(rawValue);
+    
+    // Update display
+    setDisplayValue(formatted);
+    
+    // Parse if complete
+    if (formatted.length === 10) {
+      const parsed = dayjs(formatted, format, true);
+      if (parsed.isValid()) {
+        onChange(parsed);
+      } else {
+        onChange(null);
+      }
+    } else {
+      onChange(null);
+    }
+  };
+
+  const handleDatePickerChange = (date) => {
+    onChange(date);
+    if (date) {
+      setDisplayValue(date.format(format));
+    } else {
+      setDisplayValue('');
+    }
+  };
+
+  const handleFocus = () => {
+    setIsFocused(true);
+  };
+
+  const handleBlur = () => {
+    setIsFocused(false);
+    // Clear incomplete dates
+    if (displayValue && displayValue.length < 10) {
+      setDisplayValue('');
+      onChange(null);
+    }
   };
 
   // DatePicker styles based on state
   const getDatePickerStyles = () => {
     const baseStyle = {
       width: '100%',
-      height: '40px', // 👈 ADD HEIGHT HERE
+      height: '40px', // 👈 HEIGHT INCLUDED
       position: 'relative',
       zIndex: 0,
+      borderRadius: '6px',
+      border: '1px solid #d9d9d9',
+      padding: '4px 11px',
+      fontSize: '14px',
+      fontFamily: 'inherit',
+      backgroundColor: disabled ? '#f5f5f5' : '#ffffff',
+      color: disabled ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.88)',
+      cursor: disabled ? 'not-allowed' : 'text',
+      outline: 'none',
+      transition: 'all 0.3s',
     };
 
     if (hasError && !disabled) {
@@ -78,7 +144,7 @@ const MyDatePicker1 = ({
   return (
     <div style={{ marginBottom: isMarginBtm ? '16px' : '0' }}>
       <label 
-       className='my-input-label'
+        className='my-input-label'
         htmlFor={name} 
         style={getLabelStyles()}
       >
@@ -90,23 +156,31 @@ const MyDatePicker1 = ({
       </label>
 
       <div style={containerStyles}>
-        <DatePicker
+        <input
+          type="text"
           name={name}
-          value={parseValue(value)}
-          onChange={handleDateChange}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          value={displayValue}
+          onChange={handleInput}
+          onFocus={handleFocus}
+          onBlur={handleBlur}
           disabled={disabled}
           placeholder={placeholder}
-          format={format}
-          inputReadOnly={false}
-          style={getDatePickerStyles()} // 👈 This applies the styles with height
-          // Additional Ant Design props for better error handling
-          status={hasError ? 'error' : ''}
+          style={getDatePickerStyles()}
+          maxLength={10}
+          onKeyDown={(e) => {
+            // Only allow numbers and control keys
+            if (!/[\d]|Backspace|Delete|Tab|Escape|Enter|Arrow/.test(e.key)) {
+              e.preventDefault();
+            }
+          }}
         />
-        {/* {hasError && !disabled && (
-          <AiOutlineExclamationCircle style={errorIconStyles} />
-        )} */}
+        {/* Hidden DatePicker for calendar functionality */}
+        <DatePicker
+          style={{ display: 'none' }}
+          value={value && dayjs.isDayjs(value) ? value : null}
+          onChange={handleDatePickerChange}
+          format={format}
+        />
       </div>
     </div>
   );

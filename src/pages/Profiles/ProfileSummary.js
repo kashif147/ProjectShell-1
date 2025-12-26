@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import TableComponent from "../../component/common/TableComponent";
 import { useSelector, useDispatch } from "react-redux";
-import { getAllProfiles } from "../../features/profiles/ProfileSlice";
+import { getAllProfiles,searchProfiles } from "../../features/profiles/ProfileSlice";
 import { use } from "react";
 
 function ProfileSummary() {
