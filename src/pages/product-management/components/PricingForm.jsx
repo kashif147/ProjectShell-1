@@ -72,12 +72,12 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
       }
 
       // Construct the endpoint URL
-      const endpoint = `${process.env.REACT_APP_POLICY_SERVICE_URL || ''}/api/pricing/${pricingId}`;
+      const endpoint = `${process.env.REACT_APP_POLICY_SERVICE_URL || ''}/pricing/${pricingId}`;
 
       // Make the update call
       const response = await updateFtn(
         process.env.REACT_APP_POLICY_SERVICE_URL,
-        `/api/pricing/${pricingId}`,
+        `/pricing/${pricingId}`,
         requestData,
         () => {
           onClose();

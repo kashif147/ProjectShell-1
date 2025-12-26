@@ -76,7 +76,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
 
       updateFtn(
         baseURL,
-        `/api/roles/${role._id}`,
+        `/roles/${role._id}`,
         { ...changedFields },
 
         () => {
@@ -91,7 +91,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
       try {
         await insertDataFtn(
           baseURL,
-          "/api/roles",
+          "/roles",
           { ...data, userType: "CRM" },
           "Role created successfully",
           "Failed to create role",

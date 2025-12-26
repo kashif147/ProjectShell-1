@@ -16,7 +16,7 @@ export const getContacts = createAsyncThunk(
         return rejectWithValue("API base URL is not configured");
       }
 
-      const response = await axios.get(`${apiBaseUrl}/api/contacts`, {
+      const response = await axios.get(`${apiBaseUrl}/contacts`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

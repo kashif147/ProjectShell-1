@@ -126,7 +126,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     try {
       // Make API call
       const response = await axios.post(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/batches`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/batches`,
         apiData,
         {
           headers: {

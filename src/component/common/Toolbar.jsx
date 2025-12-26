@@ -10,18 +10,18 @@ import { getAllApplications } from "../../features/ApplicationSlice";
 
 const Toolbar = () => {
   const dispatch = useDispatch();
-  const { 
-    visibleFilters, 
-    filterOptions, 
-    filtersState, 
-    updateFilterValues, 
+  const {
+    visibleFilters,
+    filterOptions,
+    filtersState,
+    updateFilterValues,
     updateFilterOperator,
-    resetFilters 
+    resetFilters,
   } = useFilters();
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
-    
+
     // ✅ Update filter state in context
     updateFilterValues(label, selectedValues);
     updateFilterOperator(label, operator);
@@ -43,17 +43,17 @@ const Toolbar = () => {
 
   const location = useLocation();
   const activeScreenName = location?.pathname;
-  
+
   const getScreenFromPath = () => {
     const pathMap = {
-      '/applications': 'Applications',
-      '/profile': 'Profile', 
-      '/membership': 'Membership',
-        "/Members": "Members"
+      "/applications": "Applications",
+      "/profile": "Profile",
+      "/membership": "Membership",
+      "/Members": "Members",
     };
-    return pathMap[activeScreenName] || 'Applications';
+    return pathMap[activeScreenName] || "Applications";
   };
-  
+
   const activeScreen = getScreenFromPath();
 
   return (
@@ -69,7 +69,7 @@ const Toolbar = () => {
             placeholder="Membership No or Surname"
             style={{
               height: "30px",
-              borderRadius:'4px',
+              borderRadius: "4px",
               color: "gray",
             }}
           />
@@ -92,11 +92,11 @@ const Toolbar = () => {
         <Button
           onClick={handleReset}
           style={{
-            backgroundColor: '#091e420a', 
-            borderRadius: '4px',
-            border: 'none', 
-            height: '32px',
-            fontWeight: '500'
+            backgroundColor: "#091e420a",
+            borderRadius: "4px",
+            border: "none",
+            height: "32px",
+            fontWeight: "500",
           }}
         >
           Reset
@@ -105,11 +105,11 @@ const Toolbar = () => {
         <Button
           onClick={handleSearch}
           style={{
-            backgroundColor: '#091e420a', 
-            borderRadius: '4px',
-            border: 'none', 
-            height: '32px',
-            fontWeight: '500'
+            backgroundColor: "#091e420a",
+            borderRadius: "4px",
+            border: "none",
+            height: "32px",
+            fontWeight: "500",
           }}
         >
           Search

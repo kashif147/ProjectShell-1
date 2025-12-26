@@ -28,7 +28,7 @@ export const getAllLookups = createAsyncThunk(
   "lookups/getAllLookups",
   async (_, { rejectWithValue }) => {
     try {
-      const { data } = await axios.get(`${API_URL}/api/lookup`, {
+      const { data } = await axios.get(`${API_URL}/lookup`, {
         headers: getAuthHeaders(),
       });
       return data;

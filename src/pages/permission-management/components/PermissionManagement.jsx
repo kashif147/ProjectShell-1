@@ -134,7 +134,7 @@ const PermissionManagement = ({ onClose }) => {
       message:
         "Are you sure you want to delete this permission? This action cannot be undone.",
       onConfirm: async () => {
-        await deleteFtn(process.env.REACT_APP_POLICY_SERVICE_URL, "/api/permissions", permissionId, () => {
+        await deleteFtn(process.env.REACT_APP_POLICY_SERVICE_URL, "/permissions", permissionId, () => {
           dispatch(getAllPermissions());
         });
       },

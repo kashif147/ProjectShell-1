@@ -2,7 +2,7 @@
 import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import axios from 'axios';
 
-const api = `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products/by-type`;
+const api = `${process.env.REACT_APP_POLICY_SERVICE_URL}/products/by-type`;
 
 export const getCategoryLookup = createAsyncThunk(
   'categoryLookup/getCategoryLookup',

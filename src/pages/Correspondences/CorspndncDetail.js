@@ -222,7 +222,7 @@ function CorspndncDetail() {
             style={{
               width: "31px",
               height: "20px",
-              backgroundColor: "#E6F7FF",
+              backgroundColor: "#091e420a",
               borderRadius: "100px",
               margin: "0px",
             }}
@@ -434,7 +434,7 @@ function CorspndncDetail() {
             style={{
               width: "31px",
               height: "20px",
-              backgroundColor: "#E6F7FF",
+              backgroundColor: "#091e420a",
               borderRadius: "100px",
               margin: "0px",
             }}
@@ -511,7 +511,7 @@ function CorspndncDetail() {
             style={{
               width: "31px",
               height: "20px",
-              backgroundColor: "#E6F7FF",
+              backgroundColor: "#091e420a",
               borderRadius: "100px",
               margin: "0px",
             }}
@@ -647,7 +647,7 @@ function CorspndncDetail() {
             style={{
               width: "31px",
               height: "20px",
-              backgroundColor: "#E6F7FF",
+              backgroundColor: "#091e420a",
               borderRadius: "100px",
               margin: "0px",
             }}

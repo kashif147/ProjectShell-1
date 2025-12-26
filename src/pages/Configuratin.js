@@ -5368,7 +5368,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("counties")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.counties,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5377,7 +5377,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("counties")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.counties, () =>
+          await updateFtn("/lookup", drawerIpnuts?.counties, () =>
             resetCounteries("counties", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5504,7 +5504,7 @@ function Configuratin() {
           if (!validateForm("Provinces")) return;
           try {
             await insertDataFtn(
-              `/api/lookup`,
+              `/lookup`,
               drawerIpnuts?.Provinces,
               "Province added successfully!",
               "Failed to add province",
@@ -5519,7 +5519,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Provinces}
         update={async () => {
           if (!validateForm("Provinces")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Provinces, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Provinces, () =>
             resetCounteries("Provinces", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5631,7 +5631,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Countries")) return;
           insertDataFtn(
-            `/api/countries`,
+            `/countries`,
             drawerIpnuts?.Countries,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5643,7 +5643,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Countries")) return;
           await updateCountiesFtn(
-            `/api/countries`,
+            `/countries`,
             drawerIpnuts?.Countries,
             () => resetCounteries("Countries", () => dispatch(getAllLookups()))
           );
@@ -5771,7 +5771,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Cities,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5784,7 +5784,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Cities, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
             resetCounteries("Cities", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -5945,7 +5945,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("PostCode")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.PostCode,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -5955,7 +5955,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("PostCode")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.PostCode, () =>
+          await updateFtn("/lookup", drawerIpnuts?.PostCode, () =>
             resetCounteries("PostCode", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6091,7 +6091,7 @@ function Configuratin() {
         isContact={true}
         update={async () => {
           if (!validateForm("Districts")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Districts, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Districts, () =>
             resetCounteries("Districts", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6100,7 +6100,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Districts")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Districts,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -6269,7 +6269,7 @@ function Configuratin() {
           add={() => {
             if (!validateForm("Divisions")) return;
             insertDataFtn(
-              `/api/lookup`,
+              `/lookup`,
               drawerIpnuts?.Divisions,
               "Data inserted successfully:",
               "Data did not insert:",
@@ -6281,7 +6281,7 @@ function Configuratin() {
           }}
           update={async () => {
             if (!validateForm("Divisions")) return;
-            await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () => {
+            await updateFtn("/lookup", drawerIpnuts?.Divisions, () => {
               resetCounteries("Divisions");
               refreshLookups();
             });
@@ -6416,7 +6416,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Divisions")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Divisions,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -6428,7 +6428,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Divisions")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Divisions, () => {
+          await updateFtn("/lookup", drawerIpnuts?.Divisions, () => {
             resetCounteries("Divisions");
             refreshLookups();
           });
@@ -6545,7 +6545,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Station")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Station,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -6558,7 +6558,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Station, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
             resetCounteries("Station", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6722,7 +6722,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Station")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Station,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -6735,7 +6735,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Station, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
             resetCounteries("Station", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -6898,7 +6898,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("ContactType")) return;
           insertDataFtn(
-            `/api/contact-types`,
+            `/contact-types`,
             drawerIpnuts?.ContactType,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -6912,7 +6912,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("ContactType")) return;
           await updateFtn(
-            `/api/contact-types/${drawerIpnuts?.ContactType?.id}`,
+            `/contact-types/${drawerIpnuts?.ContactType?.id}`,
             drawerIpnuts?.ContactType,
             () =>
               resetCounteries("ContactType", () => dispatch(getContactTypes()))
@@ -7036,7 +7036,7 @@ function Configuratin() {
         }}
         add={async () => {
           await insertDataFtn(
-            `/api/lookuptype`,
+            `/lookuptype`,
             { ...drawerIpnuts?.LookupType, userid: "67f3f9d812b014a0a7a94081" },
             "Data inserted successfully",
             "Data did not insert",
@@ -7306,7 +7306,7 @@ function Configuratin() {
         }}
         add={async () => {
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Lookup,
             "Data inserted successfully",
             "Data did not insert",
@@ -7316,7 +7316,7 @@ function Configuratin() {
         }}
         isEdit={isUpdateRec?.Lookup}
         update={async () => {
-          await updateFtn("/api/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
             resetCounteries("Lookup", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7625,7 +7625,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Gender")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Gender,
             "Data inserted successfully",
             "Data did not insert",
@@ -7636,7 +7636,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Gender}
         update={async () => {
           if (!validateForm("Gender")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Gender, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Gender, () =>
             resetCounteries("Gender", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7759,7 +7759,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Cities,
             "Data inserted successfully:",
             "Data did not insert:",
@@ -7769,7 +7769,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Cities, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
             resetCounteries("Cities", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -7910,7 +7910,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("Title")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Title,
             "Data inserted successfully",
             "Data did not insert",
@@ -7921,7 +7921,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Title}
         update={async () => {
           if (!validateForm("Title")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Title, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Title, () =>
             resetCounteries("Title", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8039,7 +8039,7 @@ function Configuratin() {
         add={() => {
           if (!validateForm("RosterType")) return;
           insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.RosterType,
             "Data inserted successfully",
             "Data did not insert",
@@ -8050,7 +8050,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.RosterType}
         update={async () => {
           if (!validateForm("RosterType")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.RosterType, () =>
+          await updateFtn("/lookup", drawerIpnuts?.RosterType, () =>
             resetCounteries("RosterType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8167,7 +8167,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("MaritalStatus")) return;
           await insertDataFtn(
-            `${baseURL}/api/lookup`,
+            `${baseURL}/lookup`,
             drawerIpnuts?.MaritalStatus,
             "Data inserted successfully",
             "Data did not insert",
@@ -8179,7 +8179,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("MaritalStatus")) return;
           await updateFtn(
-            `${baseURL}/api/lookup`,
+            `${baseURL}/lookup`,
             drawerIpnuts?.MaritalStatus,
             () =>
               resetCounteries("MaritalStatus", () => dispatch(getAllLookups()))
@@ -8293,7 +8293,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("ProjectTypes")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.ProjectTypes,
             "Data inserted successfully",
             "Data did not insert",
@@ -8305,7 +8305,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.ProjectTypes}
         update={async () => {
           if (!validateForm("ProjectTypes")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.ProjectTypes, () =>
+          await updateFtn("/lookup", drawerIpnuts?.ProjectTypes, () =>
             resetCounteries("ProjectTypes", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8427,7 +8427,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Trainings")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Trainings,
             "Data inserted successfully",
             "Data did not insert",
@@ -8440,7 +8440,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Trainings}
         update={async () => {
           if (!validateForm("Trainings")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Trainings, () => {
+          await updateFtn("/lookup", drawerIpnuts?.Trainings, () => {
             resetCounteries("Trainings");
             refreshLookups();
           });
@@ -8557,7 +8557,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("DocumentType")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.DocumentType,
             "Data inserted successfully",
             "Data did not insert",
@@ -8569,7 +8569,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.DocumentType}
         update={async () => {
           if (!validateForm("DocumentType")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.DocumentType, () =>
+          await updateFtn("/lookup", drawerIpnuts?.DocumentType, () =>
             resetCounteries("DocumentType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8692,7 +8692,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("ClaimType")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.ClaimType,
             "Data inserted successfully",
             "Data did not insert"
@@ -8702,7 +8702,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.ClaimType}
         update={async () => {
           if (!validateForm("ClaimType")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.ClaimType, () =>
+          await updateFtn("/lookup", drawerIpnuts?.ClaimType, () =>
             resetCounteries("ClaimType", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8818,7 +8818,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Schemes")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Schemes,
             "Data inserted successfully",
             "Data did not insert",
@@ -8828,7 +8828,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Schemes}
         update={async () => {
           if (!validateForm("Schemes")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Schemes, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Schemes, () =>
             resetCounteries("Schemes", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -8944,7 +8944,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Reasons")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Reasons,
             "Data inserted successfully",
             "Data did not insert",
@@ -8955,7 +8955,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Reasons}
         update={async () => {
           if (!validateForm("Reasons")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Reasons, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Reasons, () =>
             resetCounteries("Reasons", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9146,7 +9146,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Duties")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Duties,
             "Data inserted successfully",
             "Data did not insert",
@@ -9157,7 +9157,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Duties}
         update={async () => {
           if (!validateForm("Duties")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Duties, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Duties, () =>
             resetCounteries("Duties", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9273,7 +9273,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Ranks")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Ranks,
             "Data inserted successfully",
             "Data did not insert",
@@ -9284,7 +9284,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Ranks}
         update={async () => {
           if (!validateForm("Ranks")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Ranks, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Ranks, () =>
             resetCounteries("Ranks", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9398,7 +9398,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Boards")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Boards,
             "Data inserted successfully",
             "Data did not insert",
@@ -9408,7 +9408,7 @@ function Configuratin() {
         }}
         update={async () => {
           if (!validateForm("Boards")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Boards, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Boards, () =>
             resetCounteries("Boards", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9530,7 +9530,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("Councils")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.Councils,
             "Data inserted successfully",
             "Data did not insert",
@@ -9541,7 +9541,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.Councils}
         update={async () => {
           if (!validateForm("Councils")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.Councils, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Councils, () =>
             resetCounteries("Councils", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9663,7 +9663,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("CorrespondenceType")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.CorrespondenceType,
             "Data inserted successfully",
             "Data did not insert",
@@ -9677,7 +9677,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.CorrespondenceType}
         update={async () => {
           if (!validateForm("CorrespondenceType")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.CorrespondenceType, () =>
+          await updateFtn("/lookup", drawerIpnuts?.CorrespondenceType, () =>
             resetCounteries("CorrespondenceType", () =>
               dispatch(getAllLookups())
             )
@@ -9818,7 +9818,7 @@ function Configuratin() {
         add={async () => {
           if (!validateForm("SpokenLanguages")) return;
           await insertDataFtn(
-            `/api/lookup`,
+            `/lookup`,
             drawerIpnuts?.SpokenLanguages,
             "Data inserted successfully",
             "Data did not insert",
@@ -9832,7 +9832,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.SpokenLanguages}
         update={async () => {
           if (!validateForm("SpokenLanguages")) return;
-          await updateFtn("/api/lookup", drawerIpnuts?.SpokenLanguages, () =>
+          await updateFtn("/lookup", drawerIpnuts?.SpokenLanguages, () =>
             resetCounteries("SpokenLanguages", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());
@@ -9957,7 +9957,7 @@ function Configuratin() {
         add={() => {
           if (!validateSolicitors("Solicitors")) return;
           insertDataFtn(
-            `/api/contacts`,
+            `/contacts`,
             drawerIpnuts?.Solicitors,
             "Data inserted successfully",
             "Data did not insert",
@@ -9971,7 +9971,7 @@ function Configuratin() {
           const simplified = simplifyContact(drawerIpnuts?.Solicitors);
           if (!validateSolicitors("Solicitors")) return;
           await updateFtn(
-            `/api/contacts/${drawerIpnuts?.Solicitors?.id}`,
+            `/contacts/${drawerIpnuts?.Solicitors?.id}`,
             simplified,
             () => resetCounteries("Solicitors", () => dispatch(getContacts()))
           );
@@ -10190,7 +10190,7 @@ function Configuratin() {
         isAddMemeber={true}
         add={async () => {
           await insertDataFtn(
-            `${baseURL}/api/lookup`,
+            `${baseURL}/lookup`,
             { region: drawerIpnuts?.Committees },
             "Data inserted successfully",
             "Data did not insert",
@@ -10200,7 +10200,7 @@ function Configuratin() {
         }}
         isEdit={isUpdateRec?.Committees}
         update={async () => {
-          await updateFtn("/api/lookup", drawerIpnuts?.Lookup, () =>
+          await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
             resetCounteries("Committees", () => dispatch(getAllLookups()))
           );
           dispatch(getAllLookups());

@@ -9,7 +9,7 @@ export const getAllProductTypes = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/product-types`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types`,
         {
           headers: { Authorization: `Bearer ${token}` },
         }
@@ -30,7 +30,7 @@ export const getProductTypeById = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/product-types/${id}`, {
+      const response = await axios.get(`${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },
@@ -49,7 +49,7 @@ export const createProductType = createAsyncThunk(
   async (productTypeData, { rejectWithValue }) => {
     try {
       const response = await insertDataFtn(
-        "/api/product-types",
+        "/product-types",
         productTypeData
       );
       return response.data;
@@ -65,7 +65,7 @@ export const updateProductType = createAsyncThunk(
   "productTypes/update",
   async ({ id, data }, { rejectWithValue }) => {
     try {
-      const response = await updateFtn(`/api/product-types/${id}`, data);
+      const response = await updateFtn(`/product-types/${id}`, data);
       return response.data;
     } catch (error) {
       return rejectWithValue(
@@ -79,7 +79,7 @@ export const deleteProductType = createAsyncThunk(
   "productTypes/delete",
   async (id, { rejectWithValue }) => {
     try {
-      await deleteFtn(`/api/product-types/${id}`);
+      await deleteFtn(`/product-types/${id}`);
       return id;
     } catch (error) {
       return rejectWithValue(
@@ -94,7 +94,7 @@ export const createPricing = createAsyncThunk(
   async (pricingData, { rejectWithValue }) => {
     try {
       const response = await insertDataFtn(
-        "/api/product-types/pricing",
+        "/product-types/pricing",
         pricingData
       );
       return response.data;
@@ -111,7 +111,7 @@ export const updatePricing = createAsyncThunk(
   async ({ id, data }, { rejectWithValue }) => {
     try {
       const response = await updateFtn(
-        `/api/product-types/pricing/${id}`,
+        `/product-types/pricing/${id}`,
         data
       );
       return response.data;
@@ -129,7 +129,7 @@ export const getPricingHistory = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `/api/product-types/${productTypeId}/pricing`,
+        `/product-types/${productTypeId}/pricing`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

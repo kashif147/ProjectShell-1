@@ -11,6 +11,7 @@ import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { generatePKCE } from "../../utils/Utilities";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { getRedirectUri } from "../../component/msft/msalConfig";
+import MyAlert from "../../component/common/MyAlert";
 import {
   UserOutlined,
   LockOutlined,
@@ -233,7 +234,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/azure-crm`,
+        `${process.env.REACT_APP_BASE_URL_DEV}/auth/azure-crm`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -246,11 +247,31 @@ const Login = () => {
       );
 
       if (!response.ok) {
+        let errorMessage = `${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage =
+            errorData.message || errorData.error || JSON.stringify(errorData);
+          console.error(
+            "Backend authentication failed - Error details:",
+            errorData
+          );
+        } catch (e) {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+          console.error(
+            "Backend authentication failed - Response text:",
+            errorText
+          );
+        }
         console.error(
           "Backend authentication failed:",
           response.status,
-          response.statusText
+          response.statusText,
+          "Details:",
+          errorMessage
         );
+        MyAlert("error", "Authentication failed", errorMessage);
         isProcessingAuthRef.current = false;
         setAuthLoading(false);
         return;

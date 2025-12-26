@@ -1,7 +1,7 @@
-import React from 'react';
-import { Dropdown, Menu } from 'antd';
-import { EllipsisOutlined } from '@ant-design/icons';
-import styled from 'styled-components';
+import React from "react";
+import { Dropdown, Menu } from "antd";
+import { EllipsisOutlined } from "@ant-design/icons";
+import styled from "styled-components";
 
 const MenuContainer = styled.div`
   display: inline-block;
@@ -47,7 +47,7 @@ const CustomMenu = styled(Menu)`
   }
 `;
 
-const MyMenu = ({ items,disabled }) => {
+const MyMenu = ({ items, disabled }) => {
   const menu = (
     <CustomMenu>
       {items?.map((item) => (
@@ -60,7 +60,7 @@ const MyMenu = ({ items,disabled }) => {
 
   return (
     <MenuContainer>
-      <Dropdown overlay={menu} trigger={['click']} disabled={disabled} >
+      <Dropdown overlay={menu} trigger={["click"]} disabled={disabled}>
         <DropdownIcon />
       </Dropdown>
     </MenuContainer>

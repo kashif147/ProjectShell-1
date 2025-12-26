@@ -112,7 +112,7 @@ const RoleManagement = ({ onClose }) => {
         "Are you sure you want to delete this role? This action cannot be undone.",
       onConfirm: () => {
         if (!roleId) return;
-        deleteFtn(`${baseURL}/api/roles/${roleId}`, () => {
+        deleteFtn(`${baseURL}/roles/${roleId}`, () => {
           dispatch(getAllRoles());
         });
       },

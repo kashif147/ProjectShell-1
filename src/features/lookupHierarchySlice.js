@@ -13,7 +13,7 @@ export const fetchLookupHierarchy = createAsyncThunk(
   'lookupHierarchy/fetchByRegionType',
   async ({ regionTypeId }, { rejectWithValue }) => {
     try {
-      const resp = await api.get(`/api/lookup/by-type/${regionTypeId}/hierarchy`);
+      const resp = await api.get(`/lookup/by-type/${regionTypeId}/hierarchy`);
       return { regionTypeId, data: resp.data };
     } catch (err) {
       // Normalize error

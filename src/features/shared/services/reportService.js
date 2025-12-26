@@ -18,7 +18,7 @@ export const reportService = {
   getKpiOverview: async () => {
     try {
       const response = await axios.get(
-        `${REPORTING_BASE_URL}/api/reports/kpi-overview`,
+        `${REPORTING_BASE_URL}/reports/kpi-overview`,
         {
           headers: getAuthHeaders(),
         }
@@ -42,7 +42,7 @@ export const reportService = {
   getRevenueMonthly: async (startDate, endDate) => {
     try {
       const response = await axios.get(
-        `${REPORTING_BASE_URL}/api/reports/revenue/monthly`,
+        `${REPORTING_BASE_URL}/reports/revenue/monthly`,
         {
           headers: getAuthHeaders(),
           params: {
@@ -83,7 +83,7 @@ export const reportService = {
   getRevenueDaily: async (startDate, endDate) => {
     try {
       const response = await axios.get(
-        `${REPORTING_BASE_URL}/api/reports/revenue/daily`,
+        `${REPORTING_BASE_URL}/reports/revenue/daily`,
         {
           headers: getAuthHeaders(),
           params: {
@@ -117,7 +117,7 @@ export const reportService = {
   getPayments: async (filters = {}, skip = 0, take = 20) => {
     try {
       const response = await axios.get(
-        `${REPORTING_BASE_URL}/api/reports/payments`,
+        `${REPORTING_BASE_URL}/reports/payments`,
         {
           headers: getAuthHeaders(),
           params: {
@@ -167,7 +167,7 @@ export const reportService = {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${REPORTING_BASE_URL}/api/reports/export/pdf`,
+        `${REPORTING_BASE_URL}/reports/export/pdf`,
         {
           filters,
           reportType,
@@ -216,7 +216,7 @@ export const reportService = {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.post(
-        `${REPORTING_BASE_URL}/api/reports/export/excel`,
+        `${REPORTING_BASE_URL}/reports/export/excel`,
         {
           filters,
           reportType,

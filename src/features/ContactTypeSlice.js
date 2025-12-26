@@ -9,7 +9,7 @@ export const getContactTypes = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await axios.get(`${baseURL}/api/contact-types`, {
+      const response = await axios.get(`${baseURL}/contact-types`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

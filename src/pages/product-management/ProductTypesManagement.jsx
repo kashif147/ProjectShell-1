@@ -113,7 +113,7 @@ const ProductTypesManagement = () => {
       okType: "danger",
       cancelText: "Cancel",
       onOk: () => {
-        deleteFtn(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/product-types/${productTypeId}`,
+        deleteFtn(`${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types/${productTypeId}`,
           () => {
             dispatch(getProductTypesWithProducts());
           })
@@ -142,13 +142,13 @@ const ProductTypesManagement = () => {
       // delete pricing first
       if (productTypeId?.currentPricing?.id) {
         await deleteRequest(
-          `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/pricing/${productTypeId.currentPricing.id}`
+          `${process.env.REACT_APP_POLICY_SERVICE_URL}/pricing/${productTypeId.currentPricing.id}`
         );
       }
 
       // then delete product
       await deleteRequest(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products/${productTypeId?._id}`
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/products/${productTypeId?._id}`
       );
 
       // refresh after both are done
@@ -289,7 +289,7 @@ const ProductTypesManagement = () => {
       const token = localStorage.getItem("token");
       // 1️⃣ Create Product
       const productRes = await axios.post(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/products`,
         {
           name: data?.name,
           code: data?.code,
@@ -306,7 +306,7 @@ const ProductTypesManagement = () => {
 
       // 2️⃣ Create Pricing
       await axios.post(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/pricing`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/pricing`,
         {
           effectiveFrom: data?.effectiveFrom,
           effectiveTo: data?.effectiveTo,
@@ -559,7 +559,7 @@ if (productType?.name === "Membership") {
             onClose={() => setIsProductTypeDrawerOpen(false)}
             onSubmit={(data) => {
               if (editingProductType) {
-                updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/api/product-types/${editingProductType?._id}`,
+                updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/product-types/${editingProductType?._id}`,
                   data,
                   () => {
                     dispatch(getProductTypesWithProducts());
@@ -568,7 +568,7 @@ if (productType?.name === "Membership") {
               } else {
                 // dispatch(createProductType(data));
 
-                insertDataFtn(process.env.REACT_APP_POLICY_SERVICE_URL, '/api/product-types',
+                insertDataFtn(process.env.REACT_APP_POLICY_SERVICE_URL, '/product-types',
                   data,
                   "Product Type Created Successfully",
                   "Product Type Creation Failed",
@@ -630,7 +630,7 @@ if (productType?.name === "Membership") {
                     description: data?.description,
                     status: data?.status
                   }
-                  updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/api/products/${editingProduct?._id}`, updatedData, () => {
+                  updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/products/${editingProduct?._id}`, updatedData, () => {
                     dispatch(getProductTypesWithProducts())
                   })
 

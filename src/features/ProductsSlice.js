@@ -12,7 +12,7 @@ export const getAllProducts = createAsyncThunk(
     try {
       const token = localStorage.getItem("token"); // or getState().auth.token
       const res = await axios.get(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/products`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/products`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -37,7 +37,7 @@ export const getProductsByType = createAsyncThunk(
   async (productTypeId, { rejectWithValue }) => {
     try {
       const res = await axios.get(
-        `${baseURL}/api/products/by-type/${productTypeId}`
+        `${baseURL}/products/by-type/${productTypeId}`
       );
       return res.data;
     } catch (err) {

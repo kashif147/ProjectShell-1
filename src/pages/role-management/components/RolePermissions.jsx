@@ -135,7 +135,7 @@ const RolePermissions = ({ role, onClose }) => {
         for (const permissionId of added) {
           await insertDataFtn(
             process.env.REACT_APP_POLICY_SERVICE_URL,
-            "/api/users/assign-role",
+            "/users/assign-role",
             { userId: userdata?.id, roleId: role._id },
             () => {}
           );
@@ -146,7 +146,7 @@ const RolePermissions = ({ role, onClose }) => {
       if (removed.length > 0) {
         for (const permissionId of removed) {
           await insertDataFtn(
-            "/api/users/remove-role",
+            "/users/remove-role",
             { userId: permissionId, roleId: role._id },
             () => {}
           );

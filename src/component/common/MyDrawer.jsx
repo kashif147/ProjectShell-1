@@ -619,7 +619,7 @@ function MyDrawer({
                 message: "Do you want to delete this solicitor?",
                 onConfirm: async () => {
                   await deleteFtn(
-                    `${baseURL}/api/contacts/${record?._id}`,
+                    `${baseURL}/contacts/${record?._id}`,
                     null,
                     () => resetCounteries("Solicitors", dispatch(getContacts()))
                   );
@@ -645,7 +645,7 @@ function MyDrawer({
     if (!validateSolicitors("Solicitors")) return;
     insertDataFtn(
       process.env.REACT_APP_API_URL,
-      `/api/contacts`,
+      `/contacts`,
       drawerIpnuts?.Solicitors,
       "Data inserted successfully:",
       "Data did not insert:",
@@ -661,7 +661,7 @@ function MyDrawer({
     const simplified = simplifyContact(drawerIpnuts?.Solicitors);
     if (!validateSolicitors("Solicitors")) return;
     await updateFtn(
-      `/api/contacts/${drawerIpnuts?.Solicitors?.id}`,
+      `/contacts/${drawerIpnuts?.Solicitors?.id}`,
       simplified,
       () => {
         resetCounteries("Solicitors", () => {

@@ -15,7 +15,7 @@ export const getLookupTypes = createAsyncThunk(
         return rejectWithValue("API base URL is not configured");
       }
 
-      const response = await axios.get(`${apiBaseUrl}/api/lookuptype`, {
+      const response = await axios.get(`${apiBaseUrl}/lookuptype`, {
         headers: {
           Authorization: `Bearer ${token}`, // Include token in headers
           "Content-Type": "application/json",

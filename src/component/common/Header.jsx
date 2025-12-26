@@ -383,7 +383,7 @@ function Header() {
 
       axios
         .post(
-          `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/logout`,
+          `${process.env.REACT_APP_BASE_URL_DEV}/auth/logout`,
           {},
           {
             headers: {

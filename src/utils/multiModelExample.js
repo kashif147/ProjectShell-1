@@ -18,7 +18,7 @@ export const getAIResponseWithMultipleModels = async (userMessage, context) => {
       'gpt-4',
       async () => {
         // Replace with your actual API call
-        const response = await fetch('/api/ai/gpt4', {
+        const response = await fetch('/ai/gpt4', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: userMessage, context }),
@@ -30,7 +30,7 @@ export const getAIResponseWithMultipleModels = async (userMessage, context) => {
     createModelConfig(
       'claude',
       async () => {
-        const response = await fetch('/api/ai/claude', {
+        const response = await fetch('/ai/claude', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: userMessage, context }),
@@ -42,7 +42,7 @@ export const getAIResponseWithMultipleModels = async (userMessage, context) => {
     createModelConfig(
       'local-model',
       async () => {
-        const response = await fetch('/api/ai/local', {
+        const response = await fetch('/ai/local', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ message: userMessage, context }),
