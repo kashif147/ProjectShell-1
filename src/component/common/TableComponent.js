@@ -46,6 +46,7 @@ import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import UnifiedPagination, { getUnifiedPaginationConfig, getDefaultPageSize } from "./UnifiedPagination";
 
 const EditableContext = React.createContext(null);
 
@@ -730,16 +731,24 @@ const TableComponent = ({
     })),
   ];
 
-  // Pagination logic
-  const pageSize = 8;
+  // Pagination logic with UnifiedPagination
+  const defaultPageSize = useMemo(() => getDefaultPageSize(dataSource.length), [dataSource.length]);
   const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(defaultPageSize);
   const [currentPageData, setCurrentPageData] = useState([]);
 
   useEffect(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
     setCurrentPageData(dataSource.slice(startIndex, endIndex));
-  }, [currentPage, dataSource]);
+  }, [currentPage, pageSize, dataSource]);
+
+  // Reset to page 1 when dataSource changes significantly
+  useEffect(() => {
+    setCurrentPage(1);
+    const newDefaultPageSize = getDefaultPageSize(dataSource.length);
+    setPageSize(newDefaultPageSize);
+  }, [dataSource.length]);
 
   const getBatchById = (batchId) => {
     if (!Array.isArray(tableData)) return null;
@@ -902,6 +911,7 @@ const TableComponent = ({
             paddingRight: "34px",
             width: "100%",
             overflow: "hidden",
+            paddingBottom: "80px", // Add padding to ensure pagination is visible
           }}
         >
           <Table
@@ -910,61 +920,73 @@ const TableComponent = ({
             loading={isGrideLoading}
             components={components}
             columns={processedColumns}
-            dataSource={currentPageData}
+            dataSource={currentPageData || []}
             // **FIXED: Using the updated getRowSelectionConfig**
             rowSelection={rowSelectionConfig}
             pagination={false}
             style={{ tableLayout: "auto" }}
             bordered
-            scroll={{ x: "max-content", y: 800 }}
+            scroll={{ x: "max-content", y: 590 }}
             size="middle"
+            locale={{
+              emptyText: "No Data"
+            }}
             // **UPDATED: Row click handler uses the prop-controlled function**
             onRow={(record, index) => ({
               onClick: () => handleRowClick(record, index),
             })}
           />
           <div
-            className="d-flex justify-content-between align-items-center tbl-footer"
-            style={{ marginTop: "10px" }}
+            className="d-flex justify-content-center align-items-center tbl-footer"
+            style={{ 
+              marginTop: "10px", 
+              padding: "8px 0",
+              backgroundColor: "#fafafa",
+              borderTop: "none",
+              position: "relative",
+              zIndex: 10
+            }}
           >
-            <div
-              className="d-flex justify-content-center align-items-center"
-              style={{ flex: 1 }}
-            >
-              <span
-                style={{
-                  marginRight: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                }}
-              >
-                {`${(currentPage - 1) * pageSize + 1}-${Math.min(
-                  currentPage * pageSize,
-                  dataSource.length
-                )}`}
-              </span>
-              <span
-                style={{
-                  marginRight: "4px",
-                  fontSize: "12px",
-                  fontWeight: "500",
-                }}
-              >
-                of {dataSource.length}
-              </span>
-              <LuRefreshCw
-                style={{ cursor: "pointer", marginLeft: "10px" }}
-                onClick={() => window.location.reload()}
-              />
-            </div>
-            <div className="d-flex justify-content-end">
-              <Pagination
-                current={currentPage}
-                pageSize={pageSize}
-                total={dataSource.length}
-                onChange={(page) => setCurrentPage(page)}
-              />
-            </div>
+            <UnifiedPagination
+              total={dataSource.length}
+              current={currentPage}
+              pageSize={pageSize}
+              onChange={(page, size) => {
+                setCurrentPage(page);
+                if (size !== pageSize) {
+                  setPageSize(size);
+                }
+              }}
+              onShowSizeChange={(current, size) => {
+                setCurrentPage(1);
+                setPageSize(size);
+              }}
+              itemName="items"
+              style={{ margin: 0, padding: 0 }}
+              showTotalFormatter={(total, range) => {
+                const start = isNaN(range[0]) ? 0 : range[0];
+                const end = isNaN(range[1]) ? 0 : range[1];
+                const totalCount = isNaN(total) ? 0 : total;
+                return (
+                  <span style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+                    {`${start}-${end} of ${totalCount} items`}
+                    <LuRefreshCw
+                      style={{ 
+                        cursor: "pointer", 
+                        fontSize: "14px", 
+                        color: "#215e97",
+                        transition: "color 0.3s ease",
+                        marginLeft: "4px"
+                      }}
+                      onClick={() => window.location.reload()}
+                      title="Refresh"
+                      onMouseEnter={(e) => e.currentTarget.style.color = "#1890ff"}
+                      onMouseLeave={(e) => e.currentTarget.style.color = "#215e97"}
+                    />
+                  </span>
+                );
+              }}
+            />
           </div>
         </div>
       </SortableContext>

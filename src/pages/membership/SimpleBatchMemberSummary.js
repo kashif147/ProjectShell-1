@@ -10,6 +10,7 @@ import { tableData } from "../../Data"; // Assuming batch data comes from here
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useEffect } from "react";
+import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
 
 const inputStyle = {
   width: "100%",
@@ -168,13 +169,10 @@ function SimpleBatchMemberSummary() {
             dataSource={members}
             className="mt-2"
             rowKey={(record) => record.id || record["Membership No"]}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
-            }}
+            pagination={getUnifiedPaginationConfig({
+              total: members.length,
+              itemName: "items",
+            })}
             scroll={{ x: 'max-content' }}
             bordered
             size="middle"
@@ -198,13 +196,10 @@ function SimpleBatchMemberSummary() {
             className="mt-2"
             dataSource={[]}
             rowKey={(record) => record.id || record["Membership No"]}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
-            }}
+            pagination={getUnifiedPaginationConfig({
+              total: members.length,
+              itemName: "items",
+            })}
             scroll={{ x: 'max-content' }}
             bordered
             size="middle"

@@ -45,6 +45,7 @@ import {
 import MyConfirm from "../../../component/common/MyConfirm";
 import UserRoleAssignment from "../../../component/user/UserRoleAssignment";
 import UserDetails from "./UserDetails";
+import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
 import "../../../styles/UserManagement.css";
 
 const { Option } = Select;
@@ -478,26 +479,22 @@ const UserManagement = ({ onClose }) => {
       <div className="bg-white rounded shadow-sm">
         <Table
           columns={columns}
-          dataSource={filteredUsers}
+          dataSource={filteredUsers || []}
           loading={usersLoading}
           rowKey="_id"
-          pagination={{
-            pageSize: 100,
-            showSizeChanger: true,
-            showQuickJumper: false,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} users`,
-            pageSizeOptions: ["50", "100", "200", "500"],
-            defaultPageSize: 100,
-            position: ["bottomCenter"],
-            size: "default",
-          }}
+          pagination={getUnifiedPaginationConfig({
+            total: filteredUsers.length,
+            itemName: "users",
+          })}
           className="drawer-tbl"
           size="small"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
           scroll={{ x: 1000, y: '45vh' }}
+          locale={{
+            emptyText: "No Data"
+          }}
         />
       </div>
 

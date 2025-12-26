@@ -23,6 +23,7 @@ import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
 import { useDispatch, useSelector } from "react-redux";
+import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
 import {
   getAllPermissions,
   deletePermission,
@@ -134,9 +135,14 @@ const PermissionManagement = ({ onClose }) => {
       message:
         "Are you sure you want to delete this permission? This action cannot be undone.",
       onConfirm: async () => {
-        await deleteFtn(process.env.REACT_APP_POLICY_SERVICE_URL, "/permissions", permissionId, () => {
-          dispatch(getAllPermissions());
-        });
+        await deleteFtn(
+          process.env.REACT_APP_POLICY_SERVICE_URL,
+          "/permissions",
+          permissionId,
+          () => {
+            dispatch(getAllPermissions());
+          }
+        );
       },
     });
   };
@@ -449,26 +455,22 @@ const PermissionManagement = ({ onClose }) => {
       <div className="bg-white rounded shadow-sm">
         <Table
           columns={columns}
-          dataSource={filteredPermissions}
+          dataSource={filteredPermissions || []}
           loading={permissionsLoading}
           rowKey="id"
-          pagination={{
-            pageSize: 100,
-            showSizeChanger: true,
-            showQuickJumper: false,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} permissions`,
-            pageSizeOptions: ["50", "100", "200", "500"],
-            defaultPageSize: 100,
-            position: ["bottomCenter"],
-            size: "default",
-          }}
+          pagination={getUnifiedPaginationConfig({
+            total: filteredPermissions.length,
+            itemName: "permissions",
+          })}
           className="drawer-tbl"
           size="small"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
           scroll={{ x: 1000, y: 600 }}
+          locale={{
+            emptyText: "No Data",
+          }}
         />
       </div>
 

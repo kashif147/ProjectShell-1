@@ -260,9 +260,9 @@
   border-inline-end: none !important;
 }
 
-/* Remove empty placeholder rows only */
+/* Show empty placeholder for no data state */
 .common-table .ant-table-placeholder {
-  display: none !important;
+  display: table-row !important;
 }
 
 /* Hide Ant Design's measurement row safely - keeps it in DOM for width calculations */

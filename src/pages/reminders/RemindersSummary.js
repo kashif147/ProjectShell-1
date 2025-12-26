@@ -1,17 +1,17 @@
 import React, { useState } from 'react';
-import { Pagination } from 'antd';
 import { useNavigate } from 'react-router-dom';
 import { useReminders } from '../../context/CampaignDetailsProvider';
 import { useTableColumns } from '../../context/TableColumnsContext ';
 import { campaigns } from '../../Data';
 import ReminderListItem from '../../component/reminders/ReminderListItem';
+import UnifiedPagination from '../../component/common/UnifiedPagination';
 
 function RemindersSummary() {
   const navigate = useNavigate();
   const { getRemindersById } = useReminders();
   const { disableFtn } = useTableColumns();
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize] = useState(10);
+  const [pageSize, setPageSize] = useState(500);
 
   const handleView = (item) => {
     navigate('/RemindersDetails');
@@ -33,6 +33,13 @@ function RemindersSummary() {
     (currentPage - 1) * pageSize,
     currentPage * pageSize
   );
+
+  const handlePageChange = (page, size) => {
+    setCurrentPage(page);
+    if (size !== pageSize) {
+      setPageSize(size);
+    }
+  };
 
   return (
     <div style={{ 
@@ -61,28 +68,27 @@ function RemindersSummary() {
         ))}
       </div>
 
-      {/* Pagination - Fixed at Bottom */}
+      {/* Pagination - Fixed at Bottom, Centered */}
       <div style={{ 
         display: 'flex', 
-        justifyContent: 'space-between', 
+        justifyContent: 'center', 
         alignItems: 'center',
         paddingTop: '16px',
         borderTop: '1px solid #e8e8e8',
         flexShrink: 0
       }}>
-        <div style={{ color: '#8c8c8c', fontSize: '14px' }}>
-          Pagination
-        </div>
-        <Pagination
+        <UnifiedPagination
           current={currentPage}
           pageSize={pageSize}
           total={filteredData.length}
-          onChange={(page) => setCurrentPage(page)}
-          showSizeChanger={false}
+          onChange={handlePageChange}
+          onShowSizeChange={(current, size) => {
+            setCurrentPage(1);
+            setPageSize(size);
+          }}
+          itemName="reminders"
+          showSizeChanger={true}
         />
-        <div style={{ color: '#8c8c8c', fontSize: '14px' }}>
-          Pagination
-        </div>
       </div>
     </div>
   );

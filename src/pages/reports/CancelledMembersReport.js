@@ -611,8 +611,12 @@ function CancelledMembersReport() {
               pageSize: 100,
               showSizeChanger: true,
               showQuickJumper: false,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
+              showTotal: (total, range) => {
+                const start = isNaN(range[0]) ? 0 : range[0];
+                const end = isNaN(range[1]) ? 0 : range[1];
+                const totalCount = isNaN(total) ? 0 : total;
+                return `${start}-${end} of ${totalCount} items`;
+              },
               pageSizeOptions: ["50", "100", "200", "500"],
               defaultPageSize: 100,
             }}

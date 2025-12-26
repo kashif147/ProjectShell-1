@@ -20,6 +20,7 @@ import { insertDataFtn, deleteFtn, baseURL } from "../../../utils/Utilities";
 import MyConfirm from "../../../component/common/MyConfirm";
 // import TenantForm from "./TenantForm";
 import TenantForm from "../../../component/tenant/TenantForm";
+import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
 import "../../../styles/TenantManagement.css";
 
 const TenantManagement = ({ onClose }) => {
@@ -257,26 +258,22 @@ const TenantManagement = ({ onClose }) => {
       <div className="bg-white rounded shadow-sm">
         <Table
           columns={columns}
-          dataSource={filteredTenants}
+          dataSource={filteredTenants || []}
           loading={tenantsLoading}
           rowKey="_id"
-          pagination={{
-            pageSize: 100,
-            showSizeChanger: true,
-            showQuickJumper: false,
-            showTotal: (total, range) =>
-              `${range[0]}-${range[1]} of ${total} tenants`,
-            pageSizeOptions: ["50", "100", "200", "500"],
-            defaultPageSize: 100,
-            position: ["bottomCenter"],
-            size: "default",
-          }}
+          pagination={getUnifiedPaginationConfig({
+            total: filteredTenants.length,
+            itemName: "tenants",
+          })}
           className="drawer-tbl"
           size="small"
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
           scroll={{ x: 1400, y: 600 }}
+          locale={{
+            emptyText: "No Data"
+          }}
         />
       </div>
 

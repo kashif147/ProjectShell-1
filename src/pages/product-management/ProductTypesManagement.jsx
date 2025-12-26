@@ -41,21 +41,23 @@ import { getAllProducts } from "../../features/ProductsSlice";
 import { getProductTypesWithProducts } from "../../features/ProducttypeWithProducts";
 import "../../styles/ProductManagement.css";
 import "../../styles/Configuration.css";
-import { deleteFtn, insertDataFtn, updateFtn,convertSandToEuro } from "../../utils/Utilities";
+import {
+  deleteFtn,
+  insertDataFtn,
+  updateFtn,
+  convertSandToEuro,
+} from "../../utils/Utilities";
 import PricingDrawer from "./components/PricingForm";
+import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
 
 const ProductTypesManagement = () => {
   const dispatch = useDispatch();
-  const { productTypes } = useSelector(
-    (state) => state.productTypes
-  );
-  const { allProducts, } = useSelector(
-    (state) => state.products
-  );
+  const { productTypes } = useSelector((state) => state.productTypes);
+  const { allProducts } = useSelector((state) => state.products);
   const { data, loading, error } = useSelector(
     (state) => state.productTypesWithProducts
   );
-  console.log(data, "product")
+  console.log(data, "product");
   const [isProductTypeDrawerOpen, setIsProductTypeDrawerOpen] = useState(false);
   const [isProductDrawerOpen, setIsProductDrawerOpen] = useState(false);
   const [isPricingDrawerOpen, setIsPricingDrawerOpen] = useState(false);
@@ -113,10 +115,12 @@ const ProductTypesManagement = () => {
       okType: "danger",
       cancelText: "Cancel",
       onOk: () => {
-        deleteFtn(`${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types/${productTypeId}`,
+        deleteFtn(
+          `${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types/${productTypeId}`,
           () => {
             dispatch(getProductTypesWithProducts());
-          })
+          }
+        );
         // dispatch(deleteProductType(productTypeId));
         // message.success({
         //   content: "Product type deleted successfully",
@@ -155,7 +159,11 @@ const ProductTypesManagement = () => {
       dispatch(getProductTypesWithProducts());
 
       // ✅ show success
-      MyAlert("success", "Deleted", "Product and pricing deleted successfully!");
+      MyAlert(
+        "success",
+        "Deleted",
+        "Product and pricing deleted successfully!"
+      );
     } catch (err) {
       MyAlert("error", "Error", "Failed to delete product or pricing.");
     }
@@ -178,7 +186,7 @@ const ProductTypesManagement = () => {
         //     textAlign: "center",
         //   },
         // });
-        handleDeleteBoth(productTypeId, dispatch)
+        handleDeleteBoth(productTypeId, dispatch),
     });
   };
 
@@ -203,7 +211,7 @@ const ProductTypesManagement = () => {
           <Tag color={rec?.isActive ? "green" : "red"}>
             {rec?.isActive ? "Active" : "Inactive"}
           </Tag>
-        )
+        );
       },
     },
     {
@@ -314,7 +322,7 @@ const ProductTypesManagement = () => {
           currency: data?.currency,
           productId: prodid,
           memberPrice: data?.memberPrice,
-          nonMemberPrice: data?.nonMemberPrice
+          nonMemberPrice: data?.nonMemberPrice,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -323,7 +331,7 @@ const ProductTypesManagement = () => {
 
       // ✅ Single success notification
       MyAlert("success", "Product and Pricing created successfully ✅");
-      dispatch(getProductTypesWithProducts())
+      dispatch(getProductTypesWithProducts());
       return true;
     } catch (error) {
       console.error("❌ Error creating product/pricing:", error);
@@ -367,51 +375,54 @@ const ProductTypesManagement = () => {
     ];
 
     // Add price columns based on product type
-if (productType?.name === "Membership") {
-  baseColumns.push({
-    title: "Price",
-    dataIndex: "price",
-    key: "price",
-    render: (_, record) => {
-      const currency = record?.currentPricing?.currency;
-      let price = record?.currentPricing?.price;
-      price = convertSandToEuro(price)
-      const currencyStr = String(currency || "").toUpperCase();
-      const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
-      return price != null ? `${symbol}${price}.00` : "-";
-    },
-  });
-} else {
-  baseColumns.push(
-    {
-      title: "Member Price",
-      dataIndex: "memberPrice",
-      key: "memberPrice",
-      render: (_, record) => {
-        const currency = record?.currentPricing?.currency;
-        let price = record?.currentPricing?.memberPrice;
-        price = convertSandToEuro(price)
-        const currencyStr = String(currency || "").toUpperCase();
-        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
-        return price != null ? `${symbol}${price}.00` : "-";
-      },
-    },
-    {
-      title: "Non-Member Price",
-      dataIndex: "nonMemberPrice",
-      key: "nonMemberPrice",
-      render: (_, record) => {
-        const currency = record?.currentPricing?.currency;
-        let price = record?.currentPricing?.nonMemberPrice;
-            price = convertSandToEuro(price)
-        const currencyStr = String(currency || "").toUpperCase();
-        const symbol = currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
+    if (productType?.name === "Membership") {
+      baseColumns.push({
+        title: "Price",
+        dataIndex: "price",
+        key: "price",
+        render: (_, record) => {
+          const currency = record?.currentPricing?.currency;
+          let price = record?.currentPricing?.price;
+          price = convertSandToEuro(price);
+          const currencyStr = String(currency || "").toUpperCase();
+          const symbol =
+            currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
+          return price != null ? `${symbol}${price}.00` : "-";
+        },
+      });
+    } else {
+      baseColumns.push(
+        {
+          title: "Member Price",
+          dataIndex: "memberPrice",
+          key: "memberPrice",
+          render: (_, record) => {
+            const currency = record?.currentPricing?.currency;
+            let price = record?.currentPricing?.memberPrice;
+            price = convertSandToEuro(price);
+            const currencyStr = String(currency || "").toUpperCase();
+            const symbol =
+              currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
+            return price != null ? `${symbol}${price}.00` : "-";
+          },
+        },
+        {
+          title: "Non-Member Price",
+          dataIndex: "nonMemberPrice",
+          key: "nonMemberPrice",
+          render: (_, record) => {
+            const currency = record?.currentPricing?.currency;
+            let price = record?.currentPricing?.nonMemberPrice;
+            price = convertSandToEuro(price);
+            const currencyStr = String(currency || "").toUpperCase();
+            const symbol =
+              currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
 
-        return price != null ? `${symbol}${price}.00` : "-";
-      },
+            return price != null ? `${symbol}${price}.00` : "-";
+          },
+        }
+      );
     }
-  );
-}
     // Add remaining columns
     baseColumns.push({
       title: "Actions",
@@ -465,8 +476,14 @@ if (productType?.name === "Membership") {
           dataSource={data || []}
           rowKey="_id"
           loading={loading}
-          pagination={{ pageSize: 10 }}
-          scroll={{ y: 400 }} // ✅ horizontal scroll
+          pagination={getUnifiedPaginationConfig({
+            total: data?.length || 0,
+            itemName: "product types",
+          })}
+          scroll={{ x: "max-content", y: 590 }}
+          locale={{
+            emptyText: "No Data",
+          }}
           expandable={{
             expandedRowRender: (record) => (
               <div className="expanded-content-container">
@@ -478,14 +495,14 @@ if (productType?.name === "Membership") {
                     render:
                       col.title === "Actions"
                         ? (text, productRecord) =>
-                          col.render(text, productRecord, null, record)
+                            col.render(text, productRecord, null, record)
                         : col.render,
                   }))}
                   dataSource={record?.products || []}
                   rowKey="id"
                   pagination={false}
                   size="small"
-                  scroll={{ x: "max-content" }}   // ✅ scroll for inner table too
+                  scroll={{ x: "max-content" }} // ✅ scroll for inner table too
                 />
                 <div style={{ marginTop: 16 }}>
                   <Button
@@ -501,7 +518,6 @@ if (productType?.name === "Membership") {
             rowExpandable: () => true,
           }}
         />
-
 
         {/* <Table columns={productTypeColumns}
          dataSource={productTypes || []} */}
@@ -559,22 +575,27 @@ if (productType?.name === "Membership") {
             onClose={() => setIsProductTypeDrawerOpen(false)}
             onSubmit={(data) => {
               if (editingProductType) {
-                updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/product-types/${editingProductType?._id}`,
+                updateFtn(
+                  process.env.REACT_APP_POLICY_SERVICE_URL,
+                  `/product-types/${editingProductType?._id}`,
                   data,
                   () => {
                     dispatch(getProductTypesWithProducts());
-
-                  })
+                  }
+                );
               } else {
                 // dispatch(createProductType(data));
 
-                insertDataFtn(process.env.REACT_APP_POLICY_SERVICE_URL, '/product-types',
+                insertDataFtn(
+                  process.env.REACT_APP_POLICY_SERVICE_URL,
+                  "/product-types",
                   data,
                   "Product Type Created Successfully",
                   "Product Type Creation Failed",
                   () => {
                     dispatch(getProductTypesWithProducts());
-                  })
+                  }
+                );
               }
               // setIsProductTypeDrawerOpen(false);
             }}
@@ -587,10 +608,9 @@ if (productType?.name === "Membership") {
         title={editingProduct ? "Edit Product" : "Add New Product"}
         open={isProductDrawerOpen}
         onClose={() => {
-          setIsProductDrawerOpen(false)
-          setEditingProduct(null)
-        }
-        }
+          setIsProductDrawerOpen(false);
+          setEditingProduct(null);
+        }}
         width={800}
         extra={
           <Space>
@@ -621,28 +641,37 @@ if (productType?.name === "Membership") {
             product={editingProduct}
             productType={selectedProductType}
             onClose={() => setIsProductDrawerOpen(false)}
-            onSubmit={
-              async (data) => {
-                if (editingProduct) {
-                  const updatedData = {
-                    name: data?.name,
-                    code: data?.code,
-                    description: data?.description,
-                    status: data?.status
+            onSubmit={async (data) => {
+              if (editingProduct) {
+                const updatedData = {
+                  name: data?.name,
+                  code: data?.code,
+                  description: data?.description,
+                  status: data?.status,
+                };
+                updateFtn(
+                  process.env.REACT_APP_POLICY_SERVICE_URL,
+                  `/products/${editingProduct?._id}`,
+                  updatedData,
+                  () => {
+                    dispatch(getProductTypesWithProducts());
                   }
-                  updateFtn(process.env.REACT_APP_POLICY_SERVICE_URL, `/products/${editingProduct?._id}`, updatedData, () => {
-                    dispatch(getProductTypesWithProducts())
-                  })
-
-                } else { await createProductWithPricing(data, selectedProductType); }
-                // setIsProductDrawerOpen(false);
-              }}
+                );
+              } else {
+                await createProductWithPricing(data, selectedProductType);
+              }
+              // setIsProductDrawerOpen(false);
+            }}
           />
         </div>
       </MyDrawer>
 
       {/* Pricing Form Drawer */}
-      <PricingDrawer open={isPricingDrawerOpen} onClose={() => setIsPricingDrawerOpen(false)} product={editingPricing} />
+      <PricingDrawer
+        open={isPricingDrawerOpen}
+        onClose={() => setIsPricingDrawerOpen(false)}
+        product={editingPricing}
+      />
       {/* <MyDrawer
         title={editingPricing ? "Edit Pricing" : "Add New Pricing"}
         open={isPricingDrawerOpen}
