@@ -358,7 +358,7 @@ function Header() {
       <div className="d-flex justify-content-between align-items-center ">
         <div
           className="d-flex flex-row align-items-center"
-          style={{ paddingLeft: "2.5%", width: "33%" }}
+          style={{ paddingLeft: "1%", width: "33%" }}
         >
           <AppLauncher />
           <nav className="navbar navbar-expand-lg navbar-light">
