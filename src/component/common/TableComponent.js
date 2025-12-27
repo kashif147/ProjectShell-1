@@ -47,6 +47,7 @@ import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 import UnifiedPagination, { getUnifiedPaginationConfig, getDefaultPageSize } from "./UnifiedPagination";
+import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
 
 const EditableContext = React.createContext(null);
 
@@ -57,12 +58,12 @@ const DraggableHeaderCell = ({ id, style, children, ...props }) => {
     border: `2px solid green`,
     ...(isDragging
       ? {
-          position: "relative",
-          zIndex: 9999,
-          userSelect: "none",
-          backgroundColor: "red",
-          color: "white",
-        }
+        position: "relative",
+        zIndex: 9999,
+        userSelect: "none",
+        backgroundColor: "red",
+        color: "white",
+      }
       : {}),
   };
   return (
@@ -380,7 +381,7 @@ const TableComponent = ({
             isCheckBox={false}
             isSearched={false}
             isTransparent={true}
-            actions={() => {}}
+            actions={() => { }}
             attachedFtn={() => {
               handleUploadClick();
             }}
@@ -409,315 +410,324 @@ const TableComponent = ({
       render: col.render
         ? col.render
         : (text, record, index) => {
-            switch (col.title) {
-              case "Full Name":
-                return (
-                  <Link
-                    to="/Details"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                    }}
-                    onClick={() => {
-                      handleRowClick(record, index);
-                      dispatch(getProfileDetailsById(record?._id));
+          switch (col.title) {
+            case "Full Name":
+              return (
+                <Link
+                  to="/Details"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                  }}
+                  onClick={() => {
+                    handleRowClick(record, index);
+                    dispatch(getProfileDetailsById(record?._id));
+                    dispatch(
+                      getSubscriptionByProfileId({
+                        profileId: record?._id,
+                        isCurrent: true,
+                      })
+                    );
+                  }}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+
+            case "Subscription Status": // <-- NEW CASE
+              return (
+                <Link
+                  to="/Details"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                  }}
+                  onClick={() => {
+                    handleRowClick(record, index);
+                    dispatch(
+                      getSubscriptionByProfileId({
+                        profileId: record?.profileId,
+                        isCurrent: true,
+                      })
+                    );
+                    dispatch(getProfileDetailsById(record?.profileId));
+                    // dispatch(getProfileDetailsById(record?._id))
+                  }}
+                  style={{
+                    color: "inherit",
+                    textDecoration: "none",
+                    cursor: "pointer",
+                  }}
+                >
+                  <span>{text}</span>
+                </Link>
+              );
+
+            case "Claim No":
+              return (
+                <Link
+                  to="/ClaimsById"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+
+            case "Roster ID":
+              return (
+                <Link
+                  to="/Roster"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
+
+            case "Application ID":
+              return (
+                <span
+                  style={{ color: "blue", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const { applicationStatus, applicationId } = record || {};
+                    if (applicationStatus === "Draft") {
                       dispatch(
-                        getSubscriptionByProfileId({
-                          profileId: record?._id,
-                          isCurrent: true,
+                        getApplicationById({
+                          id: "draft",
+                          draftId: applicationId,
                         })
                       );
-                    }}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
+                      navigate("/applicationMgt", {
+                        state: { isEdit: true },
+                      });
+                    } else {
+                      dispatch(getApplicationById({ id: applicationId }));
+                      navigate("/applicationMgt", {
+                        state: { isEdit: true },
+                      });
+                    }
+                  }}
+                >
+                  View
+                </span>
+              );
 
-              case "Subscription Status": // <-- NEW CASE
-                return (
-                  <Link
-                    to="/Details"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                    }}
-                    onClick={() => {
-                      handleRowClick(record, index);
-                      dispatch(
-                        getSubscriptionByProfileId({
-                          profileId: record?.profileId,
-                          isCurrent: true,
-                        })
-                      );
-                      dispatch(getProfileDetailsById(record?.profileId));
-                      // dispatch(getProfileDetailsById(record?._id))
-                    }}
-                    style={{
-                      color: "inherit",
-                      textDecoration: "none",
-                      cursor: "pointer",
-                    }}
-                  >
-                    <span>{text}</span>
-                  </Link>
-                );
+            case "Change To":
+              return (
+                <Link
+                  to="/ChangeCatById"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
 
-              case "Claim No":
-                return (
-                  <Link
-                    to="/ClaimsById"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
+            case "Batch Name":
+              const simpleBatchPaths = [
+                "/CornMarket",
+                "/NewGraduate",
+                "/CornMarketRewards",
+                "/RecruitAFriend",
+              ];
+              const isSimpleBatch = simpleBatchPaths.includes(
+                location.pathname
+              );
+              const targetPath = isSimpleBatch
+                ? "/SimpleBatchMemberSummary"
+                : "/BatchMemberSummary";
 
-              case "Roster ID":
-                return (
-                  <Link
-                    to="/Roster"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
+              return (
+                <Link
+                  to={targetPath}
+                  state={{
+                    search: screenName,
+                    batchName: text,
+                    batchId: record?.id || record?.key,
+                  }}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                  onClick={() =>
+                  {
+                    console.log(record?._original?._id, "recordid");
+                    debugger
+                    dispatch(getCornMarketBatchById(record?._original?._id))
+                  }
 
-              case "Application ID":
-                return (
-                  <span
-                    style={{ color: "blue", cursor: "pointer" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const { applicationStatus, applicationId } = record || {};
-                      if (applicationStatus === "Draft") {
-                        dispatch(
-                          getApplicationById({
-                            id: "draft",
-                            draftId: applicationId,
-                          })
-                        );
-                        navigate("/applicationMgt", {
-                          state: { isEdit: true },
-                        });
-                      } else {
-                        dispatch(getApplicationById({ id: applicationId }));
-                        navigate("/applicationMgt", {
-                          state: { isEdit: true },
-                        });
-                      }
-                    }}
-                  >
-                    View
-                  </span>
-                );
+                  }
+                >
 
-              case "Change To":
-                return (
-                  <Link
-                    to="/ChangeCatById"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
+                  {text}
+                </Link>
+              );
 
-              case "Batch Name":
-                const simpleBatchPaths = [
-                  "/CornMarket",
-                  "/NewGraduate",
-                  "/CornMarketRewards",
-                  "/RecruitAFriend",
-                ];
-                const isSimpleBatch = simpleBatchPaths.includes(
-                  location.pathname
-                );
-                const targetPath = isSimpleBatch
-                  ? "/SimpleBatchMemberSummary"
-                  : "/BatchMemberSummary";
+            case "Correspondence ID":
+              return (
+                <Link
+                  to="/CorspndncDetail"
+                  state={{
+                    search: screenName,
+                    name: record?.fullName,
+                    code: record?.regNo,
+                    Forename: record?.forename,
+                    Fullname: record?.surname,
+                    DateOfBirth: record?.dateOfBirth,
+                  }}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    handleRowClick(record, index);
+                    getProfile([record], index);
+                  }}
+                  style={{ color: "inherit", textDecoration: "none" }}
+                >
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                </Link>
+              );
 
-                return (
-                  <Link
-                    to={targetPath}
-                    state={{
-                      search: screenName,
-                      batchName: text,
-                      batchId: record?.id || record?.key,
-                    }}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    {text}
-                  </Link>
-                );
+            case "Membership No":
+              return (
+                <span
+                  style={{ color: "blue", cursor: "pointer" }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    const transferId = record?._id;
+                    if (transferId) {
+                      dispatch(fetchAndFilterTransferById(transferId));
+                      settransferreq(!transferreq);
+                    }
+                  }}
+                >
+                  {text || "View"}
+                </span>
+              );
 
-              case "Correspondence ID":
-                return (
-                  <Link
-                    to="/CorspndncDetail"
-                    state={{
-                      search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      Forename: record?.forename,
-                      Fullname: record?.surname,
-                      DateOfBirth: record?.dateOfBirth,
-                    }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      handleRowClick(record, index);
-                      getProfile([record], index);
-                    }}
-                    style={{ color: "inherit", textDecoration: "none" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
-                );
+            case "Date of Birth":
+            case "Date Of Birth":
+              return (
+                <span
+                  style={{ textOverflow: "ellipsis" }}
+                  onClick={() => handleRowClick(record, index)}
+                >
+                  {formatDateOnly(text)}
+                </span>
+              );
 
-              case "Membership No":
-                return (
-                  <span
-                    style={{ color: "blue", cursor: "pointer" }}
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      const transferId = record?._id;
-                      if (transferId) {
-                        dispatch(fetchAndFilterTransferById(transferId));
-                        settransferreq(!transferreq);
-                      }
-                    }}
-                  >
-                    {text || "View"}
-                  </span>
-                );
-
-              case "Date of Birth":
-              case "Date Of Birth":
-                return (
-                  <span
-                    style={{ textOverflow: "ellipsis" }}
-                    onClick={() => handleRowClick(record, index)}
-                  >
-                    {formatDateOnly(text)}
-                  </span>
-                );
-
-              default:
-                return (
-                  <span
-                    style={{ textOverflow: "ellipsis" }}
-                    onClick={() => handleRowClick(record, index)}
-                  >
-                    {text}
-                  </span>
-                );
-            }
-          },
+            default:
+              return (
+                <span
+                  style={{ textOverflow: "ellipsis" }}
+                  onClick={() => handleRowClick(record, index)}
+                >
+                  {text}
+                </span>
+              );
+          }
+        },
       sorter:
         col.title === "Full Name"
           ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 3,
-            }
+            compare: (a, b) =>
+              a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+            multiple: 3,
+          }
           : col.title === "Station"
-          ? {
+            ? {
               compare: (a, b) =>
                 a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
               multiple: 2,
             }
-          : col.title === "Duty"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : col.title === "Membership No"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : col.title === "Correspondence ID"
-          ? {
-              compare: (a, b) =>
-                a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
-              multiple: 1,
-            }
-          : undefined,
+            : col.title === "Duty"
+              ? {
+                compare: (a, b) =>
+                  a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                multiple: 1,
+              }
+              : col.title === "Membership No"
+                ? {
+                  compare: (a, b) =>
+                    a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                  multiple: 1,
+                }
+                : col.title === "Correspondence ID"
+                  ? {
+                    compare: (a, b) =>
+                      a[col.dataIndex]?.localeCompare(b[col.dataIndex]),
+                    multiple: 1,
+                  }
+                  : undefined,
       sortDirections: ["ascend", "descend"],
       filters:
         col.title === "Station" || col.title === "Current Station"
           ? [
-              { text: "GALC", value: "GALC" },
-              { text: "DUBC", value: "DUBC" },
-              { text: "STOC", value: "STOC" },
-            ]
+            { text: "GALC", value: "GALC" },
+            { text: "DUBC", value: "DUBC" },
+            { text: "STOC", value: "STOC" },
+          ]
           : col.title === "Division"
-          ? [
+            ? [
               { text: "0026", value: "0026" },
               { text: "0031", value: "0031" },
               { text: "0045", value: "0045" },
             ]
-          : col.title === "Approval Status"
-          ? [
-              { text: "Approved", value: "APPROVED" },
-              { text: "Pending", value: "Pending" },
-              { text: "Rejected", value: "Rejected" },
-            ]
-          : col.title === "Current Station"
-          ? [
-              { text: "0026", value: "0026" },
-              { text: "0031", value: "0031" },
-              { text: "0045", value: "0045" },
-            ]
-          : col.title === "Method of Contact"
-          ? [
-              { text: "Call", value: "Call" },
-              { text: "Email", value: "Email" },
-              { text: "Letter", value: "Letter" },
-            ]
-          : undefined,
+            : col.title === "Approval Status"
+              ? [
+                { text: "Approved", value: "APPROVED" },
+                { text: "Pending", value: "Pending" },
+                { text: "Rejected", value: "Rejected" },
+              ]
+              : col.title === "Current Station"
+                ? [
+                  { text: "0026", value: "0026" },
+                  { text: "0031", value: "0031" },
+                  { text: "0045", value: "0045" },
+                ]
+                : col.title === "Method of Contact"
+                  ? [
+                    { text: "Call", value: "Call" },
+                    { text: "Email", value: "Email" },
+                    { text: "Letter", value: "Letter" },
+                  ]
+                  : undefined,
       onFilter: (value, record) => {
         if (col.title === "Station" || col.title === "Current Station")
           return record[col.dataIndex] === value;
@@ -802,7 +812,7 @@ const TableComponent = ({
           ...record,
           ...values,
         });
-      } catch (errInfo) {}
+      } catch (errInfo) { }
     };
 
     let childNode = children;
@@ -938,8 +948,8 @@ const TableComponent = ({
           />
           <div
             className="d-flex justify-content-center align-items-center tbl-footer"
-            style={{ 
-              marginTop: "10px", 
+            style={{
+              marginTop: "10px",
               padding: "8px 0",
               backgroundColor: "#fafafa",
               borderTop: "none",
@@ -971,9 +981,9 @@ const TableComponent = ({
                   <span style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
                     {`${start}-${end} of ${totalCount} items`}
                     <LuRefreshCw
-                      style={{ 
-                        cursor: "pointer", 
-                        fontSize: "14px", 
+                      style={{
+                        cursor: "pointer",
+                        fontSize: "14px",
                         color: "#215e97",
                         transition: "color 0.3s ease",
                         marginLeft: "4px"

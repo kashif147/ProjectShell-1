@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Drawer, Button, Row, Col, Space } from "antd";
 import MyInput from "../../component/common/MyInput";
 import MyDatePicker1 from "../../component/common/MyDatePicker1";
 import axios from "axios";
 import { useLocation } from "react-router-dom";
-import MyAlert from "../../component/common/MyAlert"; // Import your MyAlert component
+import MyAlert from "../../component/common/MyAlert";
 
 const SimpleBatch = ({ open, onClose, onSubmit }) => {
   const location = useLocation();
@@ -16,21 +16,49 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
   const [batchType, setBatchType] = useState("");
+  const batchTypeRef = useRef("");
+  const lastPathRef = useRef("");
 
-  // Determine batch type based on URL path
+  // Determine batch type based on URL path - with better logic
   useEffect(() => {
     const path = location.pathname;
-
-    if (path.includes("/NewGraduate")) {
-      setBatchType("new");
-    } else if (path.includes("/CornMarketRewards")) {
-      setBatchType("graduate");
-    } else if (path.includes("/RecruitAFriend")) {
-      setBatchType("recurit a frind");
-    } else {
-      setBatchType("");
+    
+    // Skip if path hasn't changed
+    if (path === lastPathRef.current) {
+      return;
     }
+    
+    lastPathRef.current = path;
+    console.log("🔄 useEffect triggered with path:", path);
+
+    let determinedType = "";
+    
+    // More specific matching
+    if (path.toLowerCase().includes("newgraduate")) {
+      determinedType = "new-graduate";
+    } else if (path.toLowerCase().includes("cornmarketrewards")) {
+      determinedType = "inmo-rewards";
+    } else if (path.toLowerCase().includes("recruitafriend")) {
+      determinedType = "recruit-friend";
+    } else {
+      determinedType = "";
+      console.warn("⚠️ Could not determine batch type from path:", path);
+    }
+    
+    console.log("🎯 Determined batch type:", determinedType);
+    
+    // Update both state and ref
+    setBatchType(determinedType);
+    batchTypeRef.current = determinedType;
+    
+    // Force a re-render to ensure UI updates
+    setFormData(prev => ({...prev}));
   }, [location.pathname]);
+
+  // Debug log when batchType changes
+  useEffect(() => {
+    console.log("📊 batchType state updated to:", batchType);
+  }, [batchType]);
 
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -42,35 +70,22 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   const validateForm = () => {
     const newErrors = {};
 
-
-    const nameInput = document.querySelector('[name="batchName"]');
-    if (nameInput) {
-      // Dispatch blur event to trigger MyInput's internal validation
-      nameInput.dispatchEvent(new Event('blur', { bubbles: true }));
-
-      // Also check for any validation error classes
-      const hasError = nameInput.closest('.has-error') ||
-        nameInput.classList.contains('error') ||
-        nameInput.parentElement.classList.contains('ant-form-item-has-error');
-
-      if (hasError) {
-        newErrors.name = "Batch name validation failed";
-      }
-    }
-
-    // Basic validation
+    // Name validation
     if (!formData.name.trim()) {
       newErrors.name = "Batch name is required";
     }
 
-    // Check if date is valid
+    // Date validation
     if (!formData.date || !formData.date.isValid()) {
       newErrors.date = "Valid start date is required";
     }
 
-    // Check if batch type is determined
-    if (!batchType) {
-      console.error("Batch type could not be determined from URL");
+    // Batch type validation - using ref for latest value
+    const currentType = batchTypeRef.current;
+    console.log("🔍 Validating form - current batch type:", currentType);
+    
+    if (!currentType) {
+      console.error("❌ Batch type could not be determined from URL");
       newErrors.batchType = "Could not determine batch type";
       MyAlert("error", "Configuration Error", "Could not determine batch type from URL");
       return false;
@@ -88,30 +103,71 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   };
 
   const handleSubmit = async () => {
-    console.log("Submit button clicked");
-
-    // Validate form
+    console.log("=".repeat(50));
+    console.log("🚀 SUBMIT STARTED");
+    console.log("=".repeat(50));
+    
+    console.log("📍 Current pathname:", location.pathname);
+    console.log("📋 batchType from state:", batchType);
+    console.log("📋 batchType from ref:", batchTypeRef.current);
+    
+    // DIRECT HARDCODED CHECK - This will show exactly what value we're working with
+    let hardcodedType = "";
+    if (location.pathname.toLowerCase().includes("newgraduate")) {
+      hardcodedType = "new-graduate";
+    } else if (location.pathname.toLowerCase().includes("cornmarketrewards")) {
+      hardcodedType = "inmo-rewards";
+    } else if (location.pathname.toLowerCase().includes("recruitafriend")) {
+      hardcodedType = "recruit-friend";
+    }
+    
+    console.log("🎯 Hardcoded type from path analysis:", hardcodedType);
+    
     if (!validateForm()) {
       MyAlert("error", "Validation Error", "Please fix the form errors before submitting");
       return;
     }
 
-    // Prepare data for API
     const formattedDate = formatDateForAPI(formData.date);
     if (!formattedDate) {
       MyAlert("error", "Invalid Date", "Please select a valid start date");
       return;
     }
 
+    // FORCE THE CORRECT VALUE - Let's override with direct path analysis
+    let apiType = hardcodedType; // Use the hardcoded analysis
+    
+    // If hardcodedType is empty, use ref as fallback
+    if (!apiType) {
+      apiType = batchTypeRef.current;
+    }
+    
+    // If still empty, use state as last resort
+    if (!apiType) {
+      apiType = batchType;
+    }
+    
+    console.log("🎯 Final apiType to be sent:", apiType);
+
     const apiData = {
       name: formData.name.trim(),
-      type: batchType,
+      type: apiType, // Use the determined type
       date: formattedDate,
     };
 
-    console.log("Submitting batch:", apiData);
+    console.log("📤 FINAL Payload to be sent:", JSON.stringify(apiData, null, 2));
+    console.log("Expected for /CornMarketRewards: type should be 'inmo-rewards'");
+    console.log("=".repeat(50));
 
-    // Get bearer token from localStorage
+    // TEST: Let's also log what would happen with different logic
+    console.log("🧪 Testing alternative determinations:");
+    console.log("1. State-based:", batchType);
+    console.log("2. Ref-based:", batchTypeRef.current);
+    console.log("3. Direct path analysis:", hardcodedType);
+    console.log("4. Using includes '/NewGraduate':", location.pathname.includes("/NewGraduate"));
+    console.log("5. Using includes '/CornMarketRewards':", location.pathname.includes("/CornMarketRewards"));
+    console.log("6. Using includes '/RecruitAFriend':", location.pathname.includes("/RecruitAFriend"));
+
     const token = localStorage.getItem("accessToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken");
@@ -124,9 +180,10 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     setLoading(true);
 
     try {
-      // Make API call
+      console.log("🌐 Making API request...");
+      
       const response = await axios.post(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/batches`,
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batches`,
         apiData,
         {
           headers: {
@@ -137,32 +194,33 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         }
       );
 
-      // Call parent onSubmit callback if provided
+      console.log("✅ API Response:", response.data);
+
       if (onSubmit && typeof onSubmit === 'function') {
         onSubmit(response.data);
       }
 
-      // Show success message using MyAlert
       MyAlert("success", "Success", "Batch created successfully!");
 
-      // Reset form
       setFormData({
         name: "",
         date: null,
       });
       setErrors({});
 
-      // Close drawer
       if (onClose && typeof onClose === 'function') {
         onClose();
       }
     } catch (error) {
-      console.error("Error creating batch:", error);
+      console.error("❌ Error creating batch:", error);
 
       let errorMessage = "Failed to create batch";
       let errorDescription = "An unexpected error occurred";
 
       if (error.response) {
+        console.error("📊 Error response data:", error.response.data);
+        console.error("📊 Error response status:", error.response.status);
+        
         if (error.response.status === 401) {
           errorMessage = "Authentication failed";
           errorDescription = "Your session has expired. Please login again.";
@@ -206,11 +264,11 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   // Function to get display name for batch type
   const getBatchTypeDisplay = () => {
     switch (batchType) {
-      case "new":
+      case "new-graduate":
         return "New Graduate";
-      case "corn market":
-        return "Corn Market Rewards";
-      case "recurit a frind":
+      case "inmo-rewards":
+        return "Inmo Rewards";
+      case "recruit-friend":
         return "Recruit A Friend";
       default:
         return "Batch";
@@ -257,18 +315,27 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
           border: "1px solid #e8e8e8"
         }}>
           <Row gutter={[16, 16]}>
-            {/* <Col span={24}>
+            <Col span={24}>
               <div style={{ 
+                marginBottom: "16px",
                 padding: "12px",
-                backgroundColor: "#f0f7ff",
+                backgroundColor: "#fff0f0",
                 borderRadius: "4px",
-                borderLeft: "4px solid #215E97"
+                borderLeft: "4px solid #ff4d4f"
               }}>
-                <strong style={{ color: "#215E97" }}>Batch Type:</strong> 
-                <span style={{ marginLeft: "8px" }}>{getBatchTypeDisplay()}</span>
+                <strong style={{ color: "#ff4d4f" }}>DEBUG PANEL - Current State:</strong>
+                <div><strong>Path:</strong> {location.pathname}</div>
+                <div><strong>Batch Type (UI):</strong> {batchType}</div>
+                <div><strong>Batch Type (Ref):</strong> {batchTypeRef.current}</div>
+                <div><strong>Display Title:</strong> {getBatchTypeDisplay()}</div>
+                <div><strong>Expected API Type:</strong> {
+                  location.pathname.toLowerCase().includes("cornmarketrewards") ? "inmo-rewards" :
+                  location.pathname.toLowerCase().includes("newgraduate") ? "new-graduate" :
+                  location.pathname.toLowerCase().includes("recruitafriend") ? "recruit-friend" : "unknown"
+                }</div>
               </div>
-            </Col> */}
-
+            </Col>
+            
             <Col span={24}>
               <MyInput
                 label="Batch Name:"
@@ -294,19 +361,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
             </Col>
           </Row>
         </div>
-
-        {/* Additional info or instructions if needed */}
-        {/* <div style={{ 
-          marginTop: "16px",
-          padding: "12px",
-          backgroundColor: "#fff9e6",
-          borderRadius: "4px",
-          border: "1px solid #ffd591",
-          fontSize: "14px",
-          color: "#d46b08"
-        }}>
-          <strong>Note:</strong> Batch name should be unique. Start date determines when the batch becomes active.
-        </div> */}
       </div>
     </Drawer>
   );

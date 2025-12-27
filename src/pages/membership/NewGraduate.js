@@ -16,7 +16,7 @@ function NewGraduate() {
 
   useEffect(() => {
     dispatch(fetchBatchesByType({
-      type: 'new',
+      type: 'new-graduate',
       page: 1,
       limit: 500
     }));

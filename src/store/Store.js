@@ -41,10 +41,12 @@ import filterTransferReducer from '../features/profiles/filterTransferSlice';
 import subscriptionReducer from "../features/subscription/subscriptionSlice";
 import profileSubscriptionReducer from "../features/subscription/profileSubscriptionSlice";
 import batchMemberReducer  from '../features/profiles/batchMemberSlice';
+import  getCornMarketBatchByIdReducer   from "../features/profiles/CornMarketBatchByIdSlice";
 
 const store = configureStore({
   reducer: {
     subscription: subscriptionReducer,
+    cornMarketBatchById: getCornMarketBatchByIdReducer,
     profileSubscription: profileSubscriptionReducer,
     auth: authReducer, // Authentication state
     regions: regionReducer, // Regions state

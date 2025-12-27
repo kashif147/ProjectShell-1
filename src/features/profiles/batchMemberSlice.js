@@ -4,7 +4,7 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 // Async thunk for fetching batches by type
 export const fetchBatchesByType = createAsyncThunk(
   'batchMember/fetchBatchesByType',
-  async ({ type = 'new', page = 1, limit = 500 }, { rejectWithValue }) => {
+  async ({ type = 'new-graduate', page = 1, limit = 500 }, { rejectWithValue }) => {
     try {
       console.log('Fetching batches with params:', { type, page, limit });
       

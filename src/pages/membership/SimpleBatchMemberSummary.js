@@ -11,6 +11,7 @@ import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useEffect } from "react";
 import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
+import dayjs from "dayjs";
 
 const inputStyle = {
   width: "100%",
@@ -86,46 +87,46 @@ const columns = [
 function SimpleBatchMemberSummary() {
   const location = useLocation();
   const dispatch = useDispatch();
-  const exportToExcel = () => {
-    if (!members.length) return;
+  // const exportToExcel = () => {
+  //   if (!members.length) return;
 
-    const excelData = members.map((m) => ({
-      "Full Name": m.fullName,
-      "Membership No": m.membershipNo,
-      "Address": [
-        m.addressLine1,
-        m.addressLine2,
-        m.addressLine3,
-        m.addressCity,
-        m.addressCounty,
-        m.addressPostcode,
-      ].filter(Boolean).join(", "),
-      "Email": m.email,
-      "Mobile": m.mobileNumber,
-    }));
+  //   const excelData = members.map((m) => ({
+  //     "Full Name": m.fullName,
+  //     "Membership No": m.membershipNo,
+  //     "Address": [
+  //       m.addressLine1,
+  //       m.addressLine2,
+  //       m.addressLine3,
+  //       m.addressCity,
+  //       m.addressCounty,
+  //       m.addressPostcode,
+  //     ].filter(Boolean).join(", "),
+  //     "Email": m.email,
+  //     "Mobile": m.mobileNumber,
+  //   }));
 
-    const worksheet = XLSX.utils.json_to_sheet(excelData);
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Batch Members");
+  //   const worksheet = XLSX.utils.json_to_sheet(excelData);
+  //   const workbook = XLSX.utils.book_new();
+  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Batch Members");
 
-    // Create a binary array
-    const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
+  //   // Create a binary array
+  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
 
-    // Create a Blob
-    const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
+  //   // Create a Blob
+  //   const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
 
-    // Create a temporary <a> element
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `Batch_Members_${batchInfo.batchName || "Data"}.xlsx`;
-    document.body.appendChild(a);
-    a.click();
+  //   // Create a temporary <a> element
+  //   const url = URL.createObjectURL(blob);
+  //   const a = document.createElement("a");
+  //   a.href = url;
+  //   a.download = `Batch_Members_${batchInfo.batchName || "Data"}.xlsx`;
+  //   document.body.appendChild(a);
+  //   a.click();
 
-    // Clean up
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-  };
+  //   // Clean up
+  //   document.body.removeChild(a);
+  //   URL.revokeObjectURL(url);
+  // };
 
   const {
     loadingBatches,
@@ -133,16 +134,17 @@ function SimpleBatchMemberSummary() {
     batchesError
   } = useSelector((state) => state.batchMember);
 
+  const { data, loading, error } = useSelector(
+    (state) => state.cornMarketBatchById
+  );
   const { batchName, batchId } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
-
+  console.log(data, "cornMarketBatchById data");
   // Find the current batch data
-  const currentBatch = tableData.find(
-    (b) => b.id === batchId || b.batchName === batchName
-  );
 
-  const batchInfo = currentBatch || {};
-  const members = Array.isArray(batchInfo.members) ? batchInfo.members : [];
+
+
+
 
   const getSafeDate = (dateValue) => {
     if (!dateValue) return null;
@@ -150,7 +152,7 @@ function SimpleBatchMemberSummary() {
     return moment(dateValue);
   };
 
-  const displayBatchDate = getSafeDate(batchInfo.batchDate);
+  // const displayBatchDate = getSafeDate(batchInfo.batchDate);
 
   const items = [
     {
@@ -166,11 +168,11 @@ function SimpleBatchMemberSummary() {
         >
           <Table
             columns={columns}
-            dataSource={members}
+            dataSource={data?.profiles}
             className="mt-2"
-            rowKey={(record) => record.id || record["Membership No"]}
+            // rowKey={(record) => record.id || record["Membership No"]}
             pagination={getUnifiedPaginationConfig({
-              total: members.length,
+              // total: members.length,
               itemName: "items",
             })}
             scroll={{ x: 'max-content' }}
@@ -194,10 +196,10 @@ function SimpleBatchMemberSummary() {
           <Table
             columns={columns}
             className="mt-2"
-            dataSource={[]}
+            dataSource={data?.profiles}
             rowKey={(record) => record.id || record["Membership No"]}
             pagination={getUnifiedPaginationConfig({
-              total: members.length,
+              // total: members.length,
               itemName: "items",
             })}
             scroll={{ x: 'max-content' }}
@@ -209,16 +211,16 @@ function SimpleBatchMemberSummary() {
       ),
     },
   ];
-  useEffect(() => {
-    dispatch(fetchBatchesByType({
-      type: 'new',
-      page: 1,
-      limit: 500
-    }))
-  }, [batchesData])
-  useEffect(() => {
+  // useEffect(() => {
+  //   dispatch(fetchBatchesByType({
+  //     type: 'new',
+  //     page: 1,
+  //     limit: 500
+  //   }))
+  // }, [batchesData])
+  // useEffect(() => {
 
-  }, [batchesData])
+  // }, [batchesData])
   const onChange = (key) => {
     setActiveKey(key);
   };
@@ -269,7 +271,7 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Name</label>
           <input
-            value={batchInfo.batchName || ""}
+            value={data?.name || ""}
             disabled
             style={inputStyle}
           />
@@ -277,9 +279,10 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Date</label>
           <input
-            value={
-              displayBatchDate ? displayBatchDate.format("DD/MM/YYYY") : ""
-            }
+            // value={
+              // data?.date ? data?.date.format("DD/MM/YYYY") : ""
+            // }
+            value={dayjs(data?.date).format("DD/MM/YYYY") || ""}
             disabled
             style={inputStyle}
           />
@@ -287,7 +290,7 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Status</label>
           <input
-            value={batchInfo.batchStatus || ""}
+            // value={batchInfo.batchStatus || ""}
             disabled
             style={inputStyle}
           />
@@ -295,7 +298,7 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Created By</label>
           <input
-            value={batchInfo.createdBy || ""}
+            value={data?.createdBy || ""}
             disabled
             style={inputStyle}
           />

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { DatePicker } from 'antd';
 import '../../styles/MySelect.css';
 import dayjs from 'dayjs';
@@ -17,47 +17,44 @@ const MyDatePicker1 = ({
   format = "DD/MM/YYYY"
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const [displayValue, setDisplayValue] = useState('');
+  const [inputValue, setInputValue] = useState('');
+  const [showCalendar, setShowCalendar] = useState(false);
+  const datePickerRef = useRef(null);
+  const containerRef = useRef(null);
+  const inputRef = useRef(null);
 
-  // Initialize display value
+  // Initialize input value from prop
   useEffect(() => {
-    if (value && dayjs.isDayjs(value)) {
-      setDisplayValue(value.format(format));
-    } else if (!value) {
-      setDisplayValue('');
+    if (value && dayjs.isDayjs(value) && value.isValid()) {
+      setInputValue(value.format(format));
+    } else {
+      setInputValue('');
     }
   }, [value, format]);
 
-  // Auto-format function
+  // Auto-format function for manual typing
   const autoFormatDate = (inputStr) => {
-    // Remove all non-digits
     const digits = inputStr.replace(/\D/g, '');
-    
     if (digits.length === 0) return '';
     
     let result = '';
-    
-    // Add slashes at appropriate positions
-    for (let i = 0; i < digits.length && i < 8; i++) { // Max 8 digits (YYYY)
+    for (let i = 0; i < digits.length && i < 8; i++) {
       if (i === 2 || i === 4) {
         result += '/';
       }
       result += digits[i];
     }
-    
     return result;
   };
 
-  const handleInput = (e) => {
+  // Handle manual input changes
+  const handleInputChange = (e) => {
     if (disabled) return;
     
     const rawValue = e.target.value;
     const formatted = autoFormatDate(rawValue);
+    setInputValue(formatted);
     
-    // Update display
-    setDisplayValue(formatted);
-    
-    // Parse if complete
     if (formatted.length === 10) {
       const parsed = dayjs(formatted, format, true);
       if (parsed.isValid()) {
@@ -70,33 +67,84 @@ const MyDatePicker1 = ({
     }
   };
 
+  // Handle date selection from calendar
   const handleDatePickerChange = (date) => {
     onChange(date);
     if (date) {
-      setDisplayValue(date.format(format));
+      setInputValue(date.format(format));
     } else {
-      setDisplayValue('');
+      setInputValue('');
     }
+    setShowCalendar(false);
   };
 
-  const handleFocus = () => {
+  // Handle input focus
+  const handleInputFocus = () => {
     setIsFocused(true);
   };
 
-  const handleBlur = () => {
-    setIsFocused(false);
-    // Clear incomplete dates
-    if (displayValue && displayValue.length < 10) {
-      setDisplayValue('');
-      onChange(null);
+  // Handle input blur
+  const handleInputBlur = (e) => {
+    setTimeout(() => {
+      if (containerRef.current && !containerRef.current.contains(document.activeElement)) {
+        setIsFocused(false);
+        setShowCalendar(false);
+        if (inputValue && inputValue.length < 10) {
+          setInputValue('');
+          onChange(null);
+        }
+      }
+    }, 100);
+  };
+
+  // Handle calendar icon click
+  const handleCalendarClick = () => {
+    if (disabled) return;
+    if (!showCalendar) {
+      setShowCalendar(true);
+      // Force the calendar to open immediately
+      setTimeout(() => {
+        datePickerRef.current?.picker?.focus();
+        datePickerRef.current?.picker?.setOpen(true);
+      }, 0);
     }
   };
 
-  // DatePicker styles based on state
-  const getDatePickerStyles = () => {
+  // Handle key events
+  const handleKeyDown = (e) => {
+    if (!/[\d]|Backspace|Delete|Tab|Escape|Enter|Arrow/.test(e.key)) {
+      e.preventDefault();
+    }
+    
+    if (e.key === 'ArrowDown' || (e.altKey && e.key === 'ArrowDown')) {
+      e.preventDefault();
+      handleCalendarClick();
+    }
+    
+    if (e.key === 'Escape') {
+      setShowCalendar(false);
+    }
+  };
+
+  // Custom popup container to position calendar properly
+  const getPopupContainer = () => {
+    return containerRef.current || document.body;
+  };
+
+  // Custom calendar placement to reduce gap
+  const calendarPopupStyle = {
+    position: 'absolute',
+    top: '100%', // Position directly below the input
+    left: 0,
+    marginTop: '4px', // Small gap instead of default large gap
+    zIndex: 1050,
+  };
+
+  // DatePicker input styles
+  const getInputStyles = () => {
     const baseStyle = {
       width: '100%',
-      height: '40px', // 👈 HEIGHT INCLUDED
+      height: '40px',
       position: 'relative',
       zIndex: 0,
       borderRadius: '6px',
@@ -109,6 +157,7 @@ const MyDatePicker1 = ({
       cursor: disabled ? 'not-allowed' : 'text',
       outline: 'none',
       transition: 'all 0.3s',
+      paddingRight: '35px', // Space for calendar icon
     };
 
     if (hasError && !disabled) {
@@ -136,13 +185,30 @@ const MyDatePicker1 = ({
     width: '100%',
   };
 
+  // Calendar icon styles
+  const calendarIconStyles = {
+    position: 'absolute',
+    right: '11px',
+    top: '50%',
+    transform: 'translateY(-50%)',
+    cursor: disabled ? 'not-allowed' : 'pointer',
+    color: disabled ? 'rgba(0, 0, 0, 0.25)' : 'rgba(0, 0, 0, 0.45)',
+    zIndex: 1,
+    pointerEvents: disabled ? 'none' : 'auto',
+    fontSize: '16px',
+    userSelect: 'none',
+  };
+
   // Label styles
   const getLabelStyles = () => ({
     color: hasError ? '#ff4d4f' : 'inherit',
   });
 
   return (
-    <div style={{ marginBottom: isMarginBtm ? '16px' : '0' }}>
+    <div 
+      style={{ marginBottom: isMarginBtm ? '16px' : '0' }}
+      ref={containerRef}
+    >
       <label 
         className='my-input-label'
         htmlFor={name} 
@@ -156,30 +222,67 @@ const MyDatePicker1 = ({
       </label>
 
       <div style={containerStyles}>
+        {/* Manual Input Field */}
         <input
+          ref={inputRef}
           type="text"
           name={name}
-          value={displayValue}
-          onChange={handleInput}
-          onFocus={handleFocus}
-          onBlur={handleBlur}
+          id={name}
+          value={inputValue}
+          onChange={handleInputChange}
+          onFocus={handleInputFocus}
+          onBlur={handleInputBlur}
+          onKeyDown={handleKeyDown}
           disabled={disabled}
           placeholder={placeholder}
-          style={getDatePickerStyles()}
+          style={getInputStyles()}
           maxLength={10}
-          onKeyDown={(e) => {
-            // Only allow numbers and control keys
-            if (!/[\d]|Backspace|Delete|Tab|Escape|Enter|Arrow/.test(e.key)) {
-              e.preventDefault();
-            }
-          }}
+          autoComplete="off"
         />
-        {/* Hidden DatePicker for calendar functionality */}
+        
+        {/* Calendar Icon */}
+        <span 
+          style={calendarIconStyles}
+          onClick={handleCalendarClick}
+          onMouseDown={(e) => e.preventDefault()}
+          role="button"
+          tabIndex={-1}
+          aria-label="Open calendar"
+        >
+          📅
+        </span>
+
+        {/* DatePicker for calendar functionality - Positioned properly */}
         <DatePicker
-          style={{ display: 'none' }}
+          ref={datePickerRef}
+          style={{ 
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            opacity: 0,
+            pointerEvents: 'none',
+            width: '1px',
+            height: '1px',
+          }}
           value={value && dayjs.isDayjs(value) ? value : null}
           onChange={handleDatePickerChange}
           format={format}
+          allowClear={false}
+          open={showCalendar}
+          onOpenChange={(open) => {
+            setShowCalendar(open);
+            if (!open) {
+              inputRef.current?.focus();
+            }
+          }}
+          getPopupContainer={getPopupContainer}
+          inputReadOnly={true}
+          // Custom dropdown alignment
+          dropdownAlign={{
+            points: ['tl', 'bl'], // top-left of popup to bottom-left of target
+            offset: [0, 4], // No horizontal offset, 4px vertical gap
+            overflow: { adjustX: true, adjustY: true }
+          }}
         />
       </div>
     </div>
