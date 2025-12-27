@@ -4,7 +4,6 @@ import { useSelector, useDispatch } from 'react-redux';
 import { Row, Col, Button, Space, Tabs, Table } from "antd";
 import { FileExcelOutlined, DownloadOutlined } from "@ant-design/icons";
 import * as XLSX from "xlsx";
-// import { saveAs } from "file-saver";
 import moment from "moment";
 import { tableData } from "../../Data"; // Assuming batch data comes from here
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
@@ -30,7 +29,6 @@ const buttonStyle = {
   borderRadius: "3px",
   minWidth: "150px",
 };
-
 
 const columns = [
   {
@@ -83,76 +81,79 @@ const columns = [
   },
 ];
 
-
 function SimpleBatchMemberSummary() {
   const location = useLocation();
   const dispatch = useDispatch();
-  // const exportToExcel = () => {
-  //   if (!members.length) return;
-
-  //   const excelData = members.map((m) => ({
-  //     "Full Name": m.fullName,
-  //     "Membership No": m.membershipNo,
-  //     "Address": [
-  //       m.addressLine1,
-  //       m.addressLine2,
-  //       m.addressLine3,
-  //       m.addressCity,
-  //       m.addressCounty,
-  //       m.addressPostcode,
-  //     ].filter(Boolean).join(", "),
-  //     "Email": m.email,
-  //     "Mobile": m.mobileNumber,
-  //   }));
-
-  //   const worksheet = XLSX.utils.json_to_sheet(excelData);
-  //   const workbook = XLSX.utils.book_new();
-  //   XLSX.utils.book_append_sheet(workbook, worksheet, "Batch Members");
-
-  //   // Create a binary array
-  //   const excelBuffer = XLSX.write(workbook, { bookType: "xlsx", type: "array" });
-
-  //   // Create a Blob
-  //   const blob = new Blob([excelBuffer], { type: "application/octet-stream" });
-
-  //   // Create a temporary <a> element
-  //   const url = URL.createObjectURL(blob);
-  //   const a = document.createElement("a");
-  //   a.href = url;
-  //   a.download = `Batch_Members_${batchInfo.batchName || "Data"}.xlsx`;
-  //   document.body.appendChild(a);
-  //   a.click();
-
-  //   // Clean up
-  //   document.body.removeChild(a);
-  //   URL.revokeObjectURL(url);
-  // };
-
-  const {
-    loadingBatches,
-    batchesData,
-    batchesError
-  } = useSelector((state) => state.batchMember);
-
+  
   const { data, loading, error } = useSelector(
     (state) => state.cornMarketBatchById
   );
   const { batchName, batchId } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
-  console.log(data, "cornMarketBatchById data");
-  // Find the current batch data
 
+  // Function to export to Excel with batch name as filename
+  const exportToExcel = () => {
+    // Check if we have data and profiles
+    if (!data?.profiles || data.profiles.length === 0) {
+      console.warn("No data to export");
+      return;
+    }
 
+    // Prepare the data for Excel
+    const excelData = data.profiles.map((member) => ({
+      "Full Name": member.fullName || "",
+      "Membership No": member.membershipNo || "",
+      "Address": [
+        member.addressLine1,
+        member.addressLine2,
+        member.addressLine3,
+        member.addressCity,
+        member.addressCounty,
+        member.addressPostcode,
+      ]
+        .filter(Boolean)
+        .join(", "),
+      "Email": member.email || "",
+      "Mobile": member.mobileNumber || "",
+    }));
 
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Batch Members");
 
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    // Create blob and download
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    
+    // Use batch name for filename, sanitize it
+    const batchNameForFile = data?.name 
+      ? data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() 
+      : "batch_members";
+    
+    a.download = `${batchNameForFile}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const getSafeDate = (dateValue) => {
     if (!dateValue) return null;
     if (moment.isMoment(dateValue)) return dateValue;
     return moment(dateValue);
   };
-
-  // const displayBatchDate = getSafeDate(batchInfo.batchDate);
 
   const items = [
     {
@@ -170,9 +171,7 @@ function SimpleBatchMemberSummary() {
             columns={columns}
             dataSource={data?.profiles}
             className="mt-2"
-            // rowKey={(record) => record.id || record["Membership No"]}
             pagination={getUnifiedPaginationConfig({
-              // total: members.length,
               itemName: "items",
             })}
             scroll={{ x: 'max-content' }}
@@ -199,7 +198,6 @@ function SimpleBatchMemberSummary() {
             dataSource={data?.profiles}
             rowKey={(record) => record.id || record["Membership No"]}
             pagination={getUnifiedPaginationConfig({
-              // total: members.length,
               itemName: "items",
             })}
             scroll={{ x: 'max-content' }}
@@ -211,56 +209,18 @@ function SimpleBatchMemberSummary() {
       ),
     },
   ];
-  // useEffect(() => {
-  //   dispatch(fetchBatchesByType({
-  //     type: 'new',
-  //     page: 1,
-  //     limit: 500
-  //   }))
-  // }, [batchesData])
-  // useEffect(() => {
 
-  // }, [batchesData])
   const onChange = (key) => {
     setActiveKey(key);
   };
 
   const handleTrigger = () => {
-    // Add your trigger button logic here
     console.log("Trigger button clicked");
   };
 
   return (
     <div>
-      {/* Trigger Button Row - Placed ABOVE the header fields */}
-      {/* <Row
-        style={{
-          padding: "5px 35px 0px 35px",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <Col span={24} style={{ textAlign: "right" }}>
-          <Button
-            onClick={handleTrigger}
-            style={{
-              backgroundColor: "#215e97",
-              color: "white",
-              borderRadius: "6px",
-              padding: "6px 20px",
-              height: "auto",
-              fontWeight: "500",
-              border: "1px solid #215e97",
-              minWidth: "120px",
-            }}
-          >
-            Trigger
-          </Button>
-        </Col>
-      </Row> */}
-
-      {/* Header Info - BELOW the trigger button */}
+      {/* Header Info */}
       <Row
         gutter={[16, 16]}
         style={{
@@ -279,9 +239,6 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Date</label>
           <input
-            // value={
-              // data?.date ? data?.date.format("DD/MM/YYYY") : ""
-            // }
             value={dayjs(data?.date).format("DD/MM/YYYY") || ""}
             disabled
             style={inputStyle}
@@ -290,7 +247,6 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Status</label>
           <input
-            // value={batchInfo.batchStatus || ""}
             disabled
             style={inputStyle}
           />
@@ -327,13 +283,9 @@ function SimpleBatchMemberSummary() {
         </Col>
 
         {/* Right Side Export Button */}
-        {/* Right Side - File download link style */}
         <Col>
           <a
-            onClick={(e) => {
-              e.preventDefault();
-              // handleFileClick();
-            }}
+            onClick={exportToExcel}
             style={{
               display: "inline-flex",
               alignItems: "center",
@@ -359,22 +311,16 @@ function SimpleBatchMemberSummary() {
             }}
           >
             <FileExcelOutlined />
-            <span>batch_data.xlsx</span>
+            <span>
+              {data?.name 
+                ? `${data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`
+                : "batch_data.xlsx"
+              }
+            </span>
             <DownloadOutlined style={{ fontSize: "12px" }} />
           </a>
-
-          <div style={{
-            fontSize: "11px",
-            color: "#6e7781",
-            marginTop: "4px",
-            textAlign: "center"
-          }}>
-            Click to download
-          </div>
         </Col>
       </Row>
-
-
 
       {/* Tabs */}
       <div style={{ padding: "0 35px" }}>
