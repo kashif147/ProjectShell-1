@@ -29,7 +29,7 @@ const MemberSearch = ({
   headerStyle = false,
   showAddButton = false,
   style = {},
-
+  disable = false,
   // Selection behavior props
   onSelectBehavior = "navigate", // "navigate", "callback", "both", or "none"
   onSelectCallback = null, // Callback function when onSelectBehavior is "callback" or "both"
@@ -66,19 +66,19 @@ const MemberSearch = ({
       const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
       const token = localStorage.getItem("token");
       const que = String(query).trim();
-      
+
       if (!que) {
         throw new Error('Search query cannot be empty');
       }
-      
+
       const response = await axios.get(`${baseUrl}/profile/search?q=${que}`, {
         headers: { Authorization: `Bearer ${token}` },
       });
       return response.data.data;
     } catch (error) {
       throw new Error(
-        error.response?.data?.message || 
-        error.message || 
+        error.response?.data?.message ||
+        error.message ||
         'Network error'
       );
     }
@@ -234,7 +234,6 @@ const MemberSearch = ({
   // Simplified search handler - only trigger on manual typing
   const handleSearch = (value) => {
     console.log('Search triggered with:', value);
-
     // Only trigger search if value length >= 2 and it's a new search
     if (value.length >= 2) {
       setIsManualSearch(true);
@@ -257,7 +256,7 @@ const MemberSearch = ({
     console.log('Selected value:', value);
     console.log('Selected option:', option);
     console.log('onSelectBehavior:', onSelectBehavior);
-
+    debugger
     // Check if this is a "no match" option with Add Member button
     if (value === "__no_match__") {
       return;
@@ -284,20 +283,20 @@ const MemberSearch = ({
             // First clear the search input immediately
             setSearchValue("");
             setOptions([]);
-            
+
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
               // Dispatch searchProfiles to update Redux state
               await dispatch(searchProfiles(searchTerm)).unwrap();
-              
+
               // Dispatch subscription lookup
               await dispatch(
                 getSubscriptionByProfileId({
-                  profileId: memberData?.profileId,
+                  profileId: memberData?._id,
                   isCurrent: true,
                 })
               ).unwrap();
-              
+
               // Navigate to the specified route
               navigate(navigateTo, {
                 state: {
@@ -315,7 +314,7 @@ const MemberSearch = ({
               console.error("Redux dispatch error:", error);
               message.error(`Failed to load member data: ${error.message}`);
             }
-            
+
             clearSearch();
             break;
 
@@ -324,12 +323,12 @@ const MemberSearch = ({
               // Clear search input immediately before callback
               setSearchValue("");
               setOptions([]);
-              
+
               // Call the provided callback function and wait for it to complete
               if (onSelectCallback && typeof onSelectCallback === 'function') {
                 await onSelectCallback(memberData, parsedValue);
               }
-              
+
               // Also dispatch Redux actions for callback mode if needed
               if (memberData?.profileId) {
                 await dispatch(
@@ -339,7 +338,7 @@ const MemberSearch = ({
                   })
                 ).unwrap();
               }
-              
+
               message.success(`Member ${memberData.membershipNumber} selected`);
             } finally {
               // Clear search regardless of callback success/failure
@@ -351,20 +350,20 @@ const MemberSearch = ({
             // Clear search input immediately
             setSearchValue("");
             setOptions([]);
-            
+
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
               // Dispatch searchProfiles to update Redux state
               await dispatch(searchProfiles(searchTerm)).unwrap();
-              
+
               // Dispatch subscription lookup
               await dispatch(
                 getSubscriptionByProfileId({
-                  profileId: memberData?.profileId,
+                  profileId: memberData?._id,
                   isCurrent: true,
                 })
               ).unwrap();
-              
+
               // Both navigate and call callback
               navigate(navigateTo, {
                 state: {
@@ -396,17 +395,17 @@ const MemberSearch = ({
           case "none":
             // Just show success message and clear search
             message.success(`Member ${memberData.membershipNumber} selected`);
-            
+
             // Still dispatch Redux actions even for "none" behavior
             if (memberData?.profileId) {
               await dispatch(
                 getSubscriptionByProfileId({
-                  profileId: memberData?.profileId,
+                  profileId: memberData?._id,
                   isCurrent: true,
                 })
               ).unwrap();
             }
-            
+
             clearSearch();
             break;
 
@@ -414,20 +413,20 @@ const MemberSearch = ({
             // Default to navigate behavior
             setSearchValue("");
             setOptions([]);
-            
+
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
               // Dispatch searchProfiles to update Redux state
               await dispatch(searchProfiles(searchTerm)).unwrap();
-              
+
               // Dispatch subscription lookup
               await dispatch(
                 getSubscriptionByProfileId({
-                  profileId: memberData?.profileId,
+                  profileId: memberData?._id,
                   isCurrent: true,
                 })
               ).unwrap();
-              
+
               navigate(navigateTo, {
                 state: {
                   name: memberData.fullName ||
@@ -443,7 +442,7 @@ const MemberSearch = ({
               console.error("Redux dispatch error:", error);
               message.error(`Failed to load member data: ${error.message}`);
             }
-            
+
             clearSearch();
             break;
         }
@@ -458,7 +457,7 @@ const MemberSearch = ({
       console.error("Error handling selection:", error);
       message.error(`Error: ${error.message || 'Unknown error'}. Please try again or contact support.`);
       setApiError(error.message || 'Failed to handle selection');
-      
+
       setSearchValue("");
       setOptions([]);
       setCurrentSearchTerm("");
@@ -540,6 +539,7 @@ const MemberSearch = ({
         getPopupContainer={trigger => trigger.parentNode}
       >
         <Input
+          disabled={disable}
           ref={inputRef}
           size={headerStyle ? "middle" : "large"}
           prefix={

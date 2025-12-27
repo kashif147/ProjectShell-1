@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Modal, Button } from "antd";
 import {
   FaMapMarkerAlt,
@@ -41,7 +41,7 @@ function ProfileHeader({
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-  
+  console.log(ProfileSubData,"ProfileSubData")
   const {
     profileSearchData,
     loading: searchLoading,
@@ -53,7 +53,7 @@ function ProfileHeader({
   
   // Choose source dynamically - profileDetails has priority
   const source = profileDetails || searchAoiRes;
-
+debugger
   // Function to calculate age from date of birth using dayjs
   const calculateAge = (dateString) => {
     if (!dateString) return "";
@@ -77,11 +77,11 @@ function ProfileHeader({
     return formatDate(dateString, "DD/MM/YYYY");
   };
 
-  // Get subscription data
-  const getSubscriptionData = () => {
+  // FIXED: Simplified subscription data extraction - now reactive
+  const subscriptionData = useMemo(() => {
     if (ProfileSubData?.data?.length > 0) {
       const subscription = ProfileSubData.data[0];
-
+debugger
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
@@ -95,15 +95,16 @@ function ProfileHeader({
         membershipMovement: subscription.membershipMovement || "",
         reinstated: subscription.cancellation?.reinstated || false,
         yearendProcessed: subscription.yearend?.processed || false,
+        // Keep the original function signature
+        ...subscription
       };
     }
     return null;
-  };
-
-  const subscriptionData = getSubscriptionData();
+  }, [ProfileSubData]); // This will update when ProfileSubData changes
 
   // Helper function to safely get nested properties
   const getSafe = (obj, path, defaultValue = "") => {
+    
     const keys = path.split('.');
     let result = obj;
     
@@ -115,52 +116,96 @@ function ProfileHeader({
     return result !== undefined ? result : defaultValue;
   };
 
-  // Derive member data from source
-  const memberData = {
+  // FIXED: Derive member data from source - now properly reactive
+  const memberData = useMemo(() => {
     // Personal Info
-    name: source ? `${getSafe(source, 'personalInfo.forename', '')} ${getSafe(source, 'personalInfo.surname', '')}`.trim() : "",
-    dob: formatDOB(getSafe(source, 'personalInfo.dateOfBirth')),
-    gender: getSafe(source, 'personalInfo.gender', 'M').charAt(0).toUpperCase(),
-    age: calculateAge(getSafe(source, 'personalInfo.dateOfBirth')) || "36 Yrs",
+    const name = source ? `${getSafe(source, 'personalInfo.forename', '')} ${getSafe(source, 'personalInfo.surname', '')}`.trim() : "";
+    const dob = formatDOB(getSafe(source, 'personalInfo.dateOfBirth'));
+    const gender = getSafe(source, 'personalInfo.gender', 'M').charAt(0).toUpperCase();
+    const age = calculateAge(getSafe(source, 'personalInfo.dateOfBirth')) || "36 Yrs";
 
     // Status - Use subscription status if available, otherwise fall back to profile data
-    status: isDeceased ? "Deceased" :
-      (subscriptionData?.subscriptionStatus ||
-        getSafe(source, 'membershipStatus') ||
-        (getSafe(source, 'deactivatedAt') ? "Inactive" : "Active Member")),
+    let status = "";
+    if (isDeceased) {
+      status = "Deceased";
+    } else if (subscriptionData?.subscriptionStatus) {
+      status = subscriptionData.subscriptionStatus;
+    } else {
+      status = getSafe(source, 'membershipStatus') ||
+        (getSafe(source, 'deactivatedAt') ? "Inactive" : "Active Member");
+    }
 
     // Membership Info - Use subscription end date if available, otherwise fall back
-    memberId: getSafe(source, 'membershipNumber', '45217A'),
-    joined: formatDate(getSafe(source, 'firstJoinedDate')) || "01/01/2016",
-    expires: subscriptionData?.endDate ||
-      formatDate(getSafe(source, 'deactivatedAt')) || "01/01/2026",
+    const memberId = getSafe(source, 'membershipNumber', '');
+    const joined = formatDate(getSafe(source, 'firstJoinedDate')) || "";
+    const expires = subscriptionData?.endDate ||
+      formatDate(getSafe(source, 'deactivatedAt')) || "";
 
     // Contact Info
-    address: source?.contactInfo ?
+    const address = source?.contactInfo ?
       `${getSafe(source, 'contactInfo.buildingOrHouse', '')} ${getSafe(source, 'contactInfo.streetOrRoad', '')}, ${getSafe(source, 'contactInfo.areaOrTown', '')}`.trim() ||
-      "123 Main Street, New York" : "123 Main Street, New York",
-    email: getSafe(source, 'contactInfo.preferredEmail') === "work" ?
+      "123 Main Street, New York" : "123 Main Street, New York";
+    
+    const email = getSafe(source, 'contactInfo.preferredEmail') === "work" ?
       getSafe(source, 'contactInfo.workEmail') :
-      getSafe(source, 'contactInfo.personalEmail', ''),
-    phone: getSafe(source, 'contactInfo.mobileNumber', ''),
+      getSafe(source, 'contactInfo.personalEmail', '');
+    
+    const phone = getSafe(source, 'contactInfo.mobileNumber', '');
 
     // Professional Info
-    grade: getSafe(source, 'professionalDetails.grade', ' '),
-    category: getSafe(source, 'membershipCategory', ' '),
+    const grade = getSafe(source, 'professionalDetails.grade', ' ');
+    const category = getSafe(source, 'membershipCategory', ' ');
 
     // Subscription Info
-    paymentType: subscriptionData?.paymentType || "Salary Deduction",
-    subscriptionYear: subscriptionData?.subscriptionYear || "",
+    const paymentType = subscriptionData?.paymentType || "Salary Deduction";
+    const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
     // Financial Info - These would likely come from a different API endpoint
-    balance: "€200",
-    lastPayment: "€74.7",
+    const balance = "€200";
+    const lastPayment = "€74.7";
+    
     // Use subscription start date for payment date if available
-    paymentDate: subscriptionData?.startDate || 
-      formatDate(getSafe(source, 'submissionDate')) || "1/02/2025",
+    const paymentDate = subscriptionData?.startDate || 
+      formatDate(getSafe(source, 'submissionDate')) || "1/02/2025";
+    
     // Include subscription year in payment code if available
-    paymentCode: `MB-${subscriptionData?.subscriptionYear || dayjs().year()}-${getSafe(source, 'membershipNumber', '001')}`,
-  };
+    const paymentCode = `MB-${subscriptionData?.subscriptionYear || dayjs().year()}-${getSafe(source, 'membershipNumber', '001')}`;
+
+    return {
+      // Personal Info
+      name,
+      dob,
+      gender,
+      age,
+
+      // Status
+      status,
+
+      // Membership Info
+      memberId,
+      joined,
+      expires,
+
+      // Contact Info
+      address,
+      email,
+      phone,
+
+      // Professional Info
+      grade,
+      category,
+
+      // Subscription Info
+      paymentType,
+      subscriptionYear,
+
+      // Financial Info
+      balance,
+      lastPayment,
+      paymentDate,
+      paymentCode,
+    };
+  }, [source, subscriptionData, isDeceased]); // Now recalculates when source OR subscriptionData changes
 
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },

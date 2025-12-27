@@ -607,6 +607,7 @@ function ApplicationMgtDrawer({
       otherScheme: null,
       recuritedBy: "",
       recuritedByMembershipNo: "",
+      confirmedRecruiterProfileId: "",
       primarySection: "",
       otherPrimarySection: "",
       secondarySection: "",
@@ -1595,6 +1596,18 @@ function ApplicationMgtDrawer({
 
       // message.success(`Form populated with member: ${memberData.membershipNumber}`);
     }
+  };
+  const handleRecruteBy = (memberData) => {
+    console.log("Recruited by member:", memberData?._id);
+
+    // Update the confirmedRecruiterProfileId in subscriptionDetails
+    setInfData(prevData => ({
+      ...prevData,
+      subscriptionDetails: {
+        ...prevData.subscriptionDetails,
+        confirmedRecruiterProfileId: memberData?._id || ""
+      }
+    }));
   };
 
   const [searchResults, setSearchResults] = useState([]);
@@ -3207,7 +3220,7 @@ function ApplicationMgtDrawer({
                   }
                 />
               </Col>
-              <Col span={12}>
+              {/* <Col span={12}>
                 <label className="my-input-label">
                   Validate Recruited By Information
                 </label>
@@ -3253,6 +3266,20 @@ function ApplicationMgtDrawer({
                     Search
                   </Button>
                 </div>
+              </Col> */}
+              <Col span={12}>
+                <label className="my-input-label">
+                  Validate Recruited By Information
+                </label>
+                <MemberSearch
+                  // fullWidth={true}/
+                  disable={isDisable}
+                  onSelectBehavior="callback"
+                  onSelectCallback={handleRecruteBy}
+                  // onAddMember={handleAddMember}
+                  addMemberLabel="Add New Member"
+                  style={{ width: "100%" }}
+                />
               </Col>
               {/* Sections */}
               <Col xs={24} md={12}>
