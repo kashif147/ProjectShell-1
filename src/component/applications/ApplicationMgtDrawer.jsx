@@ -90,9 +90,9 @@ function ApplicationMgtDrawer({
     (state) => state.searchProfile
   );
   console.log("profileSearchData", profileSearchData);
-    useEffect(() => {
+  useEffect(() => {
     // Setup code runs on mount
-    
+
     return () => {
       // Cleanup code runs on unmount
       dispatch(clearResults());
@@ -113,14 +113,14 @@ function ApplicationMgtDrawer({
   // Handle clear
   const handleClear = () => {
     console.log("Clearing search and form");
-    
+
     // Clear search state
     setQuery('');
     dispatch(clearResults());
-    
+
     // Clear selected member
     setSelectedMember(null);
-    
+
     // Clear form only if not in edit mode
     if (!isEdit) {
       setInfData(inputValue);
@@ -129,7 +129,7 @@ function ApplicationMgtDrawer({
       message.info("Search cleared");
     }
   };
-     const [selectedMember, setSelectedMember] = useState(null);
+  const [selectedMember, setSelectedMember] = useState(null);
   const { state } = useLocation();
   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
@@ -141,7 +141,7 @@ function ApplicationMgtDrawer({
     reason: "",
     note: "",
   });
-  
+
   // Add this function near the top of your component, after the other mapping functions
   const mapSearchResultToFormData = (searchResult) => {
     if (!searchResult) return null;
@@ -226,39 +226,39 @@ function ApplicationMgtDrawer({
     // Auto-populate form when search results come back
     if (selectedMember && profileSearchData?.results && profileSearchData.results.length > 0) {
       console.log("Auto-populating form with search result:", profileSearchData.results[0]);
-      
+
       // Take the first result from search
       const firstResult = profileSearchData.results[0];
-      
+
       // Map the API response to form data
       const formData = mapSearchResultToFormData(firstResult);
-      
+
       if (formData) {
         // Update the form data
         setInfData(formData);
-        
+
         // Set the selected member
         setSelectedMember(firstResult);
-        
+
         // Also update originalData if needed
         if (isEdit) {
           setOriginalData(formData);
         }
-        
+
         // Clear any existing errors
         setErrors({});
-        
+
         // Handle location change if workLocation exists
         if (formData.professionalDetails?.workLocation) {
           handleLocationChange(formData.professionalDetails.workLocation);
         }
-        
+
         // Show success message
         // message.success(`Form auto-populated with member: ${firstResult.membershipNumber}`);
       }
     }
   }, [profileSearchData, selectedMember, isEdit]);
-  
+
   useEffect(() => {
     if (application && applications?.length) {
       const newIndex =
@@ -269,7 +269,7 @@ function ApplicationMgtDrawer({
       setIndex(newIndex);
     }
   }, [open, application, applications]);
-  
+
   const showLoader = applicationsLoading || loading;
   const { lookupsForSelect, isDisable, disableFtn } = useTableColumns();
 
@@ -277,7 +277,7 @@ function ApplicationMgtDrawer({
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries
   );
-console.log(countriesOptions, "countriesOptions");
+  console.log(countriesOptions, "countriesOptions");
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
@@ -381,28 +381,28 @@ console.log(countriesOptions, "countriesOptions");
       },
     };
   };
-  
+
   const { categoryData, error, currentCategoryId } = useSelector(
     (state) => state.categoryLookup
   );
   console.log(categoryData, "categoryData");
-  
+
   useEffect(() => {
     dispatch(fetchCountries());
   }, [dispatch]);
-  
+
   useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, [dispatch]);
-  
+
   useEffect(() => {
     if (isEdit) {
       disableFtn(false);
-    }else{
+    } else {
       disableFtn(true);
     }
   }, []);
-  
+
   useEffect(() => {
     if (application && isEdit) {
       const mappedData = mapApiToState(application);
@@ -436,7 +436,7 @@ console.log(countriesOptions, "countriesOptions");
   }, [hierarchyData, workLocationLoading]);
 
   const { lookups, groupedLookups } = useSelector(state => state.lookups);
-  
+
   const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
       <Col span={24}>
@@ -622,9 +622,9 @@ console.log(countriesOptions, "countriesOptions");
       otherIrishTradeUnionName: "",
     },
   };
-  
+
   const [InfData, setInfData] = useState(inputValue);
- 
+
 
   const handleLocationChange = (selectedLookupId) => {
     const storedLookups = localStorage.getItem("hierarchicalLookups");
@@ -646,7 +646,7 @@ console.log(countriesOptions, "countriesOptions");
       }));
     }
   };
-  
+
   const validateForm = () => {
     const requiredFields = [
       "title",
@@ -787,7 +787,7 @@ console.log(countriesOptions, "countriesOptions");
     setErrors({});
     return true;
   };
-  
+
   const generateCreatePatch = (data) => {
     const patch = [];
     if (data.personalInfo) {
@@ -1010,7 +1010,7 @@ console.log(countriesOptions, "countriesOptions");
   const hasSubscriptionDetailsChanged = (current, original) => {
     const currentSub = current.subscriptionDetails || {};
     const originalSub = original.subscriptionDetails || {};
-    
+
     const allSubscriptionFields = [
       "paymentType",
       "payrollNo",
@@ -1072,7 +1072,7 @@ console.log(countriesOptions, "countriesOptions");
 
       const apiOriginalData = dateUtils.prepareForAPI(originalData);
       const savePromises = [];
-      
+
       if (applicationId && hasPersonalDetailsChanged(apiData, apiOriginalData)) {
         const personalPayload = cleanPayload({
           personalInfo: apiData.personalInfo,
@@ -1154,7 +1154,7 @@ console.log(countriesOptions, "countriesOptions");
   const { hierarchicalData, hierarchicalDataLoading, hierarchicalDataError } =
     useSelector((state) => state.hierarchicalDataByLocation);
   console.log(hierarchicalData, "hierarchicalData");
-  
+
   const handleInputChange = (section, field, value) => {
     if (section === "subscriptionDetails" && field === "membershipStatus") {
       setInfData((prev) => {
@@ -1297,7 +1297,7 @@ console.log(countriesOptions, "countriesOptions");
   const [selected, setSelected] = useState(select);
   const [isProcessing, setIsProcessing] = useState(false);
   const [currentApplication, setCurrentApplication] = useState(null);
-  
+
   useEffect(() => {
     if (application && isEdit) {
       const status = application.applicationStatus?.toLowerCase();
@@ -1370,7 +1370,7 @@ console.log(countriesOptions, "countriesOptions");
       }));
     }
   };
-  
+
   const handleApplicationAction = async (action) => {
     if (isEdit && !originalData) return;
     const isValid = validateForm();
@@ -1537,7 +1537,7 @@ console.log(countriesOptions, "countriesOptions");
 
   function navigateApplication(direction) {
     if (index === -1 || !applications?.length) return;
-    
+
     let newIndex = index;
 
     if (direction === "prev" && index > 1) {
@@ -1578,7 +1578,7 @@ console.log(countriesOptions, "countriesOptions");
       }
     }
   }
-  
+
   const handleMemberSelect = (memberData) => {
     console.log("Selected member:", memberData);
     setSelectedMember(memberData);
@@ -1596,19 +1596,19 @@ console.log(countriesOptions, "countriesOptions");
       // message.success(`Form populated with member: ${memberData.membershipNumber}`);
     }
   };
-  
+
   const [searchResults, setSearchResults] = useState([]);
-  
+
   const handleSearchResult = (results) => {
     console.log("Search results:", results);
     setSearchResults(results);
   };
-  
+
   const handleAddMember = (searchTerm) => {
     disableFtn(false);
     setInfData(inputValue);
     setSelectedMember(null);
-    
+
     const nameParts = searchTerm.split(' ');
     if (nameParts.length >= 2) {
       setInfData(prev => ({
@@ -1620,7 +1620,7 @@ console.log(countriesOptions, "countriesOptions");
         }
       }));
     }
-    
+
     message.success("Ready to add new member");
   };
 
@@ -1638,12 +1638,12 @@ console.log(countriesOptions, "countriesOptions");
             {!isEdit && (
               <>
                 <MemberSearch
-                  fullWidth={true}
+                  // fullWidth={true}/
                   onSelectBehavior="callback"
                   onSelectCallback={handleMemberSelect}
                   onAddMember={handleAddMember}
                   addMemberLabel="Add New Member"
-                  style={{ width: "300px" }}
+                  style={{ width: "400px" }}
                 />
                 <Checkbox
                   name="Bulk"
@@ -1734,7 +1734,7 @@ console.log(countriesOptions, "countriesOptions");
             )}
           </div>
         </div>
-        
+
         <div
           className="hide-scroll-webkit"
           style={{
@@ -3207,7 +3207,7 @@ console.log(countriesOptions, "countriesOptions");
                   }
                 />
               </Col>
-  <Col span={12}>
+              <Col span={12}>
                 <label className="my-input-label">
                   Validate Recruited By Information
                 </label>
@@ -3217,7 +3217,7 @@ console.log(countriesOptions, "countriesOptions");
                   height: '40px'
                 }}>
                   <Input
-                  disabled={isDisable}
+                    disabled={isDisable}
                     placeholder="Search by name or membership number"
                     allowClear
                     value={query}
@@ -3229,8 +3229,8 @@ console.log(countriesOptions, "countriesOptions");
                       borderRight: 'none',
                       borderRadius: '6px 0 0 6px',
                       height: '40px',
-                      paddingLeft:4,
-                      paddingRight:4,
+                      paddingLeft: 4,
+                      paddingRight: 4,
                     }}
                   />
                   <Button
@@ -3435,7 +3435,7 @@ console.log(countriesOptions, "countriesOptions");
           </div>
         )}
       </div>
-      
+
       <Modal
         centered
         title="Reject Application"
