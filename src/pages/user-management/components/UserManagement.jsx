@@ -227,18 +227,20 @@ const UserManagement = ({ onClose }) => {
     },
     {
       title: "Tenant",
-      dataIndex: "tenantId",
-      key: "tenantId",
+      dataIndex: "tenantName",
+      key: "tenantName",
       width: 120,
-      render: (tenantId) => {
-        const tenant = getTenantsList().find((t) => t.id === tenantId);
-        return (
-          <Tag color="blue" className="tenant-tag">
-            {tenant ? tenant.name : tenantId}
-          </Tag>
-        );
-      },
-    },
+      // render: (tenantId) => {
+      //   const tenant = getTenantsList().find((t) => t.id === tenantId);
+      //   debugger
+      //   return (
+      //     <Tag color="blue" className="tenant-tag">
+      //       {tenant ? tenant.tenantName : tenantId}
+      //     </Tag>
+      //   );
+      // },
+    // },
+},
     {
       title: "Roles",
       dataIndex: "roles",

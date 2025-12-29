@@ -315,7 +315,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
           border: "1px solid #e8e8e8"
         }}>
           <Row gutter={[16, 16]}>
-            <Col span={24}>
+            {/* <Col span={24}>
               <div style={{ 
                 marginBottom: "16px",
                 padding: "12px",
@@ -334,7 +334,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
                   location.pathname.toLowerCase().includes("recruitafriend") ? "recruit-friend" : "unknown"
                 }</div>
               </div>
-            </Col>
+            </Col> */}
             
             <Col span={24}>
               <MyInput
