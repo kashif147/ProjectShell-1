@@ -1228,18 +1228,26 @@ function ApplicationMgtDrawer({
 
   const inputRef = useRef(null);
   const libraries = ["places", "maps"];
+
   const handlePlacesChanged = () => {
     const places = inputRef.current.getPlaces();
+
     if (places && places.length > 0) {
       const place = places[0];
       const placeId = place.place_id;
+
+      // Update search value with the formatted address
+      if (place.formatted_address) {
+        // setSearchValue(place.formatted_address);
+      }
+
       const service = new window.google.maps.places.PlacesService(
-        document.createElement("div")
+        document.createElement('div'),
       );
 
       const request = {
         placeId: placeId,
-        fields: ["address_components", "name", "formatted_address"],
+        fields: ['address_components', 'name', 'formatted_address'],
       };
 
       service.getDetails(request, (details, status) => {
@@ -1248,23 +1256,65 @@ function ApplicationMgtDrawer({
           details
         ) {
           const components = details.address_components;
+          console.log('components=========>', components);
 
-          const getComponent = (type) =>
-            components.find((c) => c.types.includes(type))?.long_name || "";
+          const getComponent = type =>
+            components.find(c => c.types.includes(type))?.long_name || '';
 
-          const streetNumber = getComponent("street_number");
-          const route = getComponent("route");
-          const sublocality = getComponent("sublocality") || "";
+          const getComponentShortName = type =>
+            components.find(c => c.types.includes(type))?.short_name || '';
+
+          const streetNumber = getComponent('street_number');
+          const route = getComponent('route');
+          const neighborhood = getComponent('neighborhood') || '';
+          const sublocality = getComponent('sublocality') || '';
           const town =
-            getComponent("locality") || getComponent("postal_town") || "";
-          const county = getComponent("administrative_area_level_1") || "";
-          const postalCode = getComponent("postal_code");
-          const country = getComponent("country");
+            getComponent('locality') || getComponent('postal_town') || '';
+          const county = getComponent('administrative_area_level_1') || '';
+          const postalCode = getComponent('postal_code');
+          const countryLongName = getComponent('country');
+          const countryShortName = getComponentShortName('country');
+
           const buildingOrHouse = `${streetNumber} ${route}`.trim();
-          const streetOrRoad = sublocality;
+          const streetOrRoad = neighborhood || sublocality; // Use neighborhood first, fallback to sublocality
           const areaOrTown = town;
           const countyCityOrPostCode = `${county}`.trim();
           const eircode = `${postalCode}`.trim();
+
+          // Find the country displayname from countryLookups based on the country name or code
+          let countryDisplayName = InfData.contactInfo?.country; 
+          // Default to Ireland if not found
+          if (countryLongName || countryShortName) {
+            console.log(
+              'Country from API - Long Name:',
+              countryLongName,
+              'Short Name:',
+              countryShortName,
+            );
+            const matchedCountry = countriesOptions?.find(
+              c =>
+                c?.code === countryLongName ||
+                c?.code === countryShortName ||
+                c?.name === countryLongName ||
+                c?.displayname === countryLongName,
+            );
+            if (matchedCountry) {
+              countryDisplayName = matchedCountry.displayname;
+              console.log('Matched country:', matchedCountry);
+            } else {
+              console.log('No matching country found in lookup');
+            }
+          }
+
+          // onFormDataChange({
+          //   ...formData,
+          //   addressLine1,
+          //   addressLine2,
+          //   addressLine3,
+          //   addressLine4,
+          //   eircode,
+          //   country: countryDisplayName,
+          // });
 
           setInfData((prev) => ({
             ...prev,
@@ -1275,13 +1325,19 @@ function ApplicationMgtDrawer({
               areaOrTown,
               countyCityOrPostCode,
               eircode,
-              country,
+              // country,
             },
           }));
+
         }
       });
     }
   };
+
+
+
+
+
 
   const [errors, setErrors] = useState({});
   const { isLoaded } = useJsApiLoader({

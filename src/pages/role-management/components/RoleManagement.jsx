@@ -510,7 +510,7 @@ const RoleManagement = ({ onClose }) => {
           rowClassName={(record, index) =>
             index % 2 !== 0 ? "odd-row" : "even-row"
           }
-          scroll={{ x: 1000, y: 600 }}
+          scroll={{ x: 1000, y: "48vh" }}
           locale={{
             emptyText: "No Data",
           }}

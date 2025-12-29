@@ -81,7 +81,19 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
     try {
       const values = await form.validateFields();
       setLoading(true);
-      await onSubmit(values);
+      const cleanedValues = {
+        ...values,
+        name: values.name?.trim(),
+        code: values.code?.trim().toUpperCase(),
+        description: values.description?.trim(),
+        resource: values.resource?.trim(),
+        action: values.action?.toLowerCase(), // 确保 action 是小写
+        category: values.category?.toUpperCase(), // 确保 category 是大写
+        level: Number(values.level) || 0,
+        isActive: Boolean(values.isActive)
+      };
+
+      await onSubmit(cleanedValues);
       message.success(
         permission
           ? "Permission updated successfully"
@@ -92,6 +104,7 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       if (error.errorFields) {
         message.error("Please fill in all required fields");
       } else {
+        console.error("Submit error:", error);
         message.error("Failed to save permission");
       }
     } finally {

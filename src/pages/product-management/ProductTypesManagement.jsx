@@ -266,6 +266,7 @@ const ProductTypesManagement = () => {
         <Space>
           <Tooltip title="Add Product">
             <Button
+              style={{ backgroundColor: "#215e97", color: "white" }}
               type="primary"
               size="small"
               icon={<PlusOutlined />}
@@ -465,13 +466,13 @@ const ProductTypesManagement = () => {
           type="primary"
           icon={<PlusOutlined />}
           onClick={handleCreateProductType}
+          style={{ backgroundColor: "#215e97", color: "white" }}
         >
           Add Product Type
         </Button>
       </div>
       <div className="main-table-scroll-container">
         <Table
-          className=""
           columns={productTypeColumns}
           dataSource={data || []}
           rowKey="_id"
@@ -484,6 +485,28 @@ const ProductTypesManagement = () => {
           locale={{
             emptyText: "No Data",
           }}
+
+          // Add this components prop to customize the header
+          components={{
+            header: {
+              cell: (props) => {
+                const { children, ...restProps } = props;
+                return (
+                  <th
+                    {...restProps}
+                    style={{
+                      backgroundColor: '#215e97',
+                      ...restProps.style
+                    }}
+                  >
+                    <div style={{ color: '#fff',}}>
+                      {children}
+                    </div>
+                  </th>
+                );
+              },
+            },
+          }}
           expandable={{
             expandedRowRender: (record) => (
               <div className="expanded-content-container">
@@ -495,14 +518,29 @@ const ProductTypesManagement = () => {
                     render:
                       col.title === "Actions"
                         ? (text, productRecord) =>
-                            col.render(text, productRecord, null, record)
+                          col.render(text, productRecord, null, record)
                         : col.render,
                   }))}
                   dataSource={record?.products || []}
                   rowKey="id"
                   pagination={false}
                   size="small"
-                  scroll={{ x: "max-content" }} // ✅ scroll for inner table too
+                  scroll={{ x: "max-content" }}
+                  // Also apply to the inner table if needed
+                  components={{
+                    header: {
+                      cell: (props) => (
+                        <th
+                          {...props}
+                          style={{
+                            backgroundColor: '#215e97',
+                            color: 'white',
+                            ...props.style
+                          }}
+                        />
+                      ),
+                    },
+                  }}
                 />
                 <div style={{ marginTop: 16 }}>
                   <Button
@@ -518,10 +556,6 @@ const ProductTypesManagement = () => {
             rowExpandable: () => true,
           }}
         />
-
-        {/* <Table columns={productTypeColumns}
-         dataSource={productTypes || []} */}
-        {/* /> */}
       </div>
     </Card>
   );
