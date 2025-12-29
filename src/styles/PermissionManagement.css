@@ -242,6 +242,10 @@
   padding: 12px;
 }
 
+.permission-form {
+  padding: 12px;
+}
+
 .permission-form .ant-form-item-label > label {
   color: var(--primary-color);
   font-weight: 500;
