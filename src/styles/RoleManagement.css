@@ -178,7 +178,11 @@
 }
 
 .drawer-main-cntainer {
-  padding: 24px;
+  padding: 12px;
+}
+
+.role-form-drawer .drawer-main-cntainer .my-input-wrapper {
+  margin-bottom: 12px;
 }
 
 .role-form .ant-form-item-label > label {
