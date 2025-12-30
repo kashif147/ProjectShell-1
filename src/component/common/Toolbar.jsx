@@ -1,4 +1,3 @@
-// In your Toolbar component
 import React from "react";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
@@ -14,29 +13,46 @@ const Toolbar = () => {
     visibleFilters,
     filterOptions,
     filtersState,
-    updateFilterValues,
-    updateFilterOperator,
+    updateFilter, // Use the new combined update function
     resetFilters,
   } = useFilters();
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
-
-    // ✅ Update filter state in context
-    updateFilterValues(label, selectedValues);
-    updateFilterOperator(label, operator);
+    console.log("🔄 Applying filter:", {
+      filter: label,
+      values: selectedValues,
+      operator: operator,
+      count: selectedValues.length
+    });
+    
+    // ✅ Use the new combined update function
+    updateFilter(label, operator, selectedValues);
   };
 
   const handleSearch = () => {
-    // ✅ Pass the entire filtersState from context to the slice
-    console.log("🔍 Dispatching with filters:", filtersState);
-    dispatch(getAllApplications(filtersState)); // ✅ Pass filters as parameter
+    // ✅ Clean filtersState before dispatching
+    const cleanedFilters = {};
+    Object.keys(filtersState).forEach(key => {
+      if (filtersState[key]?.selectedValues?.length > 0) {
+        cleanedFilters[key] = filtersState[key];
+      }
+    });
+    
+    console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
+    
+    if (Object.keys(cleanedFilters).length > 0) {
+      dispatch(getAllApplications(cleanedFilters));
+    } else {
+      console.log("⚠️ No filters selected, fetching all applications");
+      dispatch(getAllApplications({}));
+    }
   };
 
   const handleReset = () => {
+    console.log("🔄 Resetting all filters");
     // ✅ Reset filters in context
     resetFilters();
-    console.log("🔄 Filters reset");
     // Fetch all applications (pass empty object)
     dispatch(getAllApplications({}));
   };
@@ -47,7 +63,7 @@ const Toolbar = () => {
   const getScreenFromPath = () => {
     const pathMap = {
       "/applications": "Applications",
-      "/profile": "Profile",
+      "/Summary": "Profile",
       "/membership": "Membership",
       "/Members": "Members",
     };
@@ -55,6 +71,12 @@ const Toolbar = () => {
   };
 
   const activeScreen = getScreenFromPath();
+
+  // Debug: Log current filter states
+  React.useEffect(() => {
+    console.log("📊 Current filtersState:", filtersState);
+    console.log("👁️ Visible filters:", visibleFilters);
+  }, [filtersState, visibleFilters]);
 
   return (
     <div
@@ -76,16 +98,35 @@ const Toolbar = () => {
         </div>
 
         {/* Dynamic filters */}
-        {visibleFilters.map((label) => (
-          <MultiFilterDropdown
-            key={label}
-            label={label}
-            options={filterOptions[label] || []}
-            selectedValues={filtersState[label]?.selectedValues || []}
-            operator={filtersState[label]?.operator || "=="}
-            onApply={handleFilterApply}
-          />
-        ))}
+        {visibleFilters.map((label) => {
+          const filterState = filtersState[label];
+          const selectedValues = filterState?.selectedValues || [];
+          const operator = filterState?.operator || "==";
+          const options = filterOptions[label] || [];
+          
+          // Only show filter if it has options or is a text filter
+          if (options.length === 0 && !["Email", "Membership No"].includes(label)) {
+            return null;
+          }
+
+          console.log(`📋 Rendering filter "${label}":`, {
+            selectedValues,
+            operator,
+            optionCount: options.length,
+            badgeCount: selectedValues.length
+          });
+          
+          return (
+            <MultiFilterDropdown
+              key={label}
+              label={label}
+              options={options}
+              selectedValues={selectedValues}
+              operator={operator}
+              onApply={handleFilterApply}
+            />
+          );
+        })}
 
         <SimpleMenu title="More" />
 
@@ -97,6 +138,7 @@ const Toolbar = () => {
             border: "none",
             height: "32px",
             fontWeight: "500",
+            color: "#42526e",
           }}
         >
           Reset
@@ -105,16 +147,34 @@ const Toolbar = () => {
         <Button
           onClick={handleSearch}
           style={{
-            backgroundColor: "#091e420a",
+            backgroundColor: "#0c66e4",
             borderRadius: "4px",
             border: "none",
             height: "32px",
             fontWeight: "500",
+            color: "white",
           }}
         >
           Search
         </Button>
       </div>
+
+      {/* Debug panel - remove in production */}
+      {/* {process.env.NODE_ENV === 'development' && (
+        <div style={{
+          fontSize: '11px',
+          color: '#666',
+          marginTop: '5px',
+          padding: '5px',
+          backgroundColor: '#f5f5f5',
+          borderRadius: '3px'
+        }}>
+          <strong>Debug:</strong> Active screen: {activeScreen} | 
+          Active filters: {Object.keys(filtersState).filter(key => 
+            filtersState[key]?.selectedValues?.length > 0
+          ).length}
+        </div>
+      )} */}
     </div>
   );
 };

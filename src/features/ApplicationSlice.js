@@ -53,9 +53,11 @@ export const getAllApplications = createAsyncThunk(
 
       // ✅ Extract Application Status from filters
       const applicationStatusFilter = filters['Application Status'];
-      const statusValues = applicationStatusFilter?.selectedValues || [];
-      const operator = applicationStatusFilter?.operator || '==';
-
+      const statusValues = applicationStatusFilter?.selectedValues;
+      const operator = applicationStatusFilter?.operator;
+      if (!applicationStatusFilter) {
+        return
+      }
       console.log('📊 Processing Application Status:', {
         statusValues,
         operator,
@@ -88,13 +90,13 @@ export const getAllApplications = createAsyncThunk(
         // If operator is "not equal" (!=)
         if (operator === '!=') {
           console.log('🔍 Using NOT EQUAL operator');
-          
+
           // Define all possible status values
           const allStatusValues = ['in-progress', 'approved', 'rejected', 'submitted'];
-          
+
           // For "!=" operator, we want statuses that are NOT in the selected values
           const excludedStatuses = filteredStatus;
-          const includedStatuses = allStatusValues.filter(status => 
+          const includedStatuses = allStatusValues.filter(status =>
             !excludedStatuses.includes(status)
           );
 
@@ -118,7 +120,7 @@ export const getAllApplications = createAsyncThunk(
           if (includedStatuses.length > 0) {
             const queryParams = includedStatuses.map((s) => `type=${s}`).join('&');
             const url = `${api}?${queryParams}`;
-            
+
             console.log('🔗 Final API URL for != operator:', url);
             const response = await axios.get(url, {
               headers: {
@@ -127,7 +129,7 @@ export const getAllApplications = createAsyncThunk(
               },
             });
             apiApplications = response.data?.data?.applications || [];
-            
+
             // For != operator with draft included, we want to EXCLUDE drafts from the result
             if (includesDraft) {
               console.log('🚫 Excluding drafts from results due to != operator');
@@ -140,7 +142,7 @@ export const getAllApplications = createAsyncThunk(
             console.log('📭 All API statuses excluded - returning only drafts if applicable');
             return includesDraft ? [] : normalizedDrafts;
           }
-        } 
+        }
         // Original logic for "equal" operator (==)
         else {
           console.log('🔍 Using EQUAL operator');
@@ -154,7 +156,7 @@ export const getAllApplications = createAsyncThunk(
           if (filteredStatus.length > 0) {
             const queryParams = filteredStatus.map((s) => `type=${s}`).join('&');
             const url = `${api}?${queryParams}`;
-            
+
             console.log('🔗 Final API URL for == operator:', url);
             const response = await axios.get(url, {
               headers: {
@@ -163,7 +165,7 @@ export const getAllApplications = createAsyncThunk(
               },
             });
             apiApplications = response.data?.data?.applications || [];
-            
+
             return includesDraft
               ? [...apiApplications, ...normalizedDrafts]
               : apiApplications;

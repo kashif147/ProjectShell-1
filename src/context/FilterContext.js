@@ -4,7 +4,7 @@ import { useLocation } from "react-router-dom";
 const FilterContext = createContext();
 
 // 🔹 Common filters that should appear on all screens (will appear AFTER screen-specific filters)
-const COMMON_FILTERS = ["Grade","Work Location",  "Region", "Branch"];
+const COMMON_FILTERS = ["Grade", "Work Location", "Region", "Branch"];
 
 export const FilterProvider = ({ children }) => {
   // 🔹 All possible filters per screen
@@ -250,16 +250,37 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Active page
   const [activePage, setActivePage] = useState("Applications");
+  
+  // 🔹 Store filter states for each screen
+  const [screenFilterStates, setScreenFilterStates] = useState({
+    Applications: {
+      visibleFilters: defaultVisibleFilters["Applications"],
+      filtersState: defaultFilterValues["Applications"] || {}
+    },
+    Profile: {
+      visibleFilters: defaultVisibleFilters["Profile"],
+      filtersState: defaultFilterValues["Profile"] || {}
+    },
+    Membership: {
+      visibleFilters: defaultVisibleFilters["Membership"],
+      filtersState: defaultFilterValues["Membership"] || {}
+    },
+    Members: {
+      visibleFilters: defaultVisibleFilters["Members"],
+      filtersState: defaultFilterValues["Members"] || {}
+    }
+  });
 
-  // 🔹 Visible filters and saved states
+  // 🔹 Current screen's states
   const [visibleFilters, setVisibleFilters] = useState(
-    defaultVisibleFilters["Applications"]
+    screenFilterStates["Applications"].visibleFilters
   );
+  const [filtersState, setFiltersState] = useState(
+    screenFilterStates["Applications"].filtersState
+  );
+
   const location = useLocation();
   const activeScreenName = location?.pathname;
-  const [filtersState, setFiltersState] = useState(
-    defaultFilterValues["Applications"] || {}
-  );
 
   const getScreenFromPath = () => {
     const pathMap = {
@@ -273,30 +294,48 @@ export const FilterProvider = ({ children }) => {
 
   const activeScreen = getScreenFromPath(activeScreenName);
 
+  // 🔹 When screen changes, save current state and load new screen's state
   useEffect(() => {
+    if (activeScreen === activePage) return;
+
+    console.log("Switching from:", activePage, "to:", activeScreen);
+
+    // Save current screen's state
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        visibleFilters: [...visibleFilters],
+        filtersState: { ...filtersState }
+      }
+    }));
+
+    // Switch to new screen
     setActivePage(activeScreen);
+
+    // Load new screen's saved state
+    const savedState = screenFilterStates[activeScreen];
+    if (savedState) {
+      setVisibleFilters(savedState.visibleFilters);
+      setFiltersState(savedState.filtersState);
+    }
   }, [activeScreen]);
 
-  // 🔹 Reset filters when changing page
-  useEffect(() => {
-    console.log("Switching to page:", activeScreen);
-    console.log("Default visible filters for", activeScreen, ":", getDefaultVisibleFilters(activeScreen));
-    
-    const newVisibleFilters = getDefaultVisibleFilters(activeScreen);
-    const newFilterValues = defaultFilterValues[activeScreen] || {};
-    
-    console.log("Setting visible filters:", newVisibleFilters);
-    console.log("Setting filter values:", newFilterValues);
+  // 🔹 Helper functions - update both current state and saved state
+  const toggleFilter = (filter, checked) => {
+    const newVisibleFilters = checked 
+      ? [...visibleFilters, filter] 
+      : visibleFilters.filter((f) => f !== filter);
     
     setVisibleFilters(newVisibleFilters);
-    setFiltersState(newFilterValues);
-  }, [activeScreen]);
-
-  // 🔹 Helper functions
-  const toggleFilter = (filter, checked) => {
-    setVisibleFilters((prev) =>
-      checked ? [...prev, filter] : prev.filter((f) => f !== filter)
-    );
+    
+    // Update saved state
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        visibleFilters: newVisibleFilters
+      }
+    }));
   };
 
   const resetFilters = () => {
@@ -304,30 +343,90 @@ export const FilterProvider = ({ children }) => {
     const resetVisibleFilters = getDefaultVisibleFilters(activePage);
     const resetFilterValues = defaultFilterValues[activePage] || {};
     
-    console.log("Reset visible filters:", resetVisibleFilters);
-    console.log("Reset filter values:", resetFilterValues);
-    
     setVisibleFilters(resetVisibleFilters);
     setFiltersState(resetFilterValues);
+    
+    // Update saved state to defaults
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        visibleFilters: resetVisibleFilters,
+        filtersState: resetFilterValues
+      }
+    }));
   };
 
   const updateFilterValues = (filter, values) => {
-    setFiltersState((prev) => ({
-      ...prev,
+    console.log(`📝 Updating filter "${filter}" with values:`, values);
+    
+    const newFilterState = {
+      ...filtersState,
       [filter]: {
-        ...(prev[filter] || { operator: "==" }),
+        ...(filtersState[filter] || { operator: "==" }),
         selectedValues: values,
       },
+    };
+    
+    console.log(`✅ New filter state for "${filter}":`, newFilterState[filter]);
+    setFiltersState(newFilterState);
+    
+    // Update saved state
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        filtersState: newFilterState
+      }
     }));
   };
 
   const updateFilterOperator = (filter, operator) => {
-    setFiltersState((prev) => ({
-      ...prev,
+    console.log(`📝 Updating filter "${filter}" operator to:`, operator);
+    
+    const newFilterState = {
+      ...filtersState,
       [filter]: {
-        ...(prev[filter] || { selectedValues: [] }),
+        ...(filtersState[filter] || { selectedValues: [] }),
         operator,
       },
+    };
+    
+    setFiltersState(newFilterState);
+    
+    // Update saved state
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        filtersState: newFilterState
+      }
+    }));
+  };
+
+  // 🔹 Combined update function that updates both values and operator at once
+  const updateFilter = (filter, operator, selectedValues) => {
+    console.log(`🎯 Combined update for "${filter}":`, {
+      operator,
+      selectedValues
+    });
+    
+    const newFilterState = {
+      ...filtersState,
+      [filter]: {
+        operator,
+        selectedValues,
+      },
+    };
+    
+    setFiltersState(newFilterState);
+    
+    // Update saved state
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        filtersState: newFilterState
+      }
     }));
   };
 
@@ -365,6 +464,7 @@ export const FilterProvider = ({ children }) => {
         filtersState,
         updateFilterValues,
         updateFilterOperator,
+        updateFilter, // Add this new function
         COMMON_FILTERS,
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,
