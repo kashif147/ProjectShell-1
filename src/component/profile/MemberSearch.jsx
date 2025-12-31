@@ -5,7 +5,7 @@ import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
-import { searchProfiles } from "../../features/profiles/SearchProfile"; // Import Redux action for selection
+import { searchProfiles } from "../../features/profiles/SearchProfile";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -38,13 +38,24 @@ const MemberSearch = ({
   // Add member functionality
   onAddMember = null, // Callback function when "Add Member" button is clicked
   addMemberLabel = "Add Member", // Label for the add member button
-  crosFtn,
+  
   // Search props
   searchType = "profiles", // "profiles", "subscriptions", or "both"
   searchContext = null, // Context for subscription search
+  
+  // NEW: Controlled input props
+  value: externalValue = undefined, // External control value
+  onChange: externalOnChange = null, // External onChange handler
+  onClear: externalOnClear = null, // Optional external clear callback
 }) => {
+  // Internal state for backward compatibility
+  const [internalValue, setInternalValue] = useState("");
+  
+  // Determine if component is controlled or uncontrolled
+  const isControlled = externalValue !== undefined;
+  const searchValue = isControlled ? externalValue : internalValue;
+  
   const [options, setOptions] = useState([]);
-  const [searchValue, setSearchValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
   const [currentSearchTerm, setCurrentSearchTerm] = useState("");
@@ -59,6 +70,21 @@ const MemberSearch = ({
 
   // Use debounce for search input
   const debouncedSearchValue = useDebounce(searchValue, 300);
+
+  // Update value internally when external value changes
+  useEffect(() => {
+    if (isControlled) {
+      // When external value is cleared, clear internal states too
+      if (externalValue === "") {
+        setOptions([]);
+        setApiError(null);
+        setCurrentSearchTerm("");
+        setSelectedOption(null);
+        setShowNoMatchOption(false);
+        setIsSearchTriggered(false);
+      }
+    }
+  }, [externalValue, isControlled]);
 
   // Direct API call function for searching profiles (for search only)
   const searchProfilesDirect = async (query) => {
@@ -239,29 +265,20 @@ const MemberSearch = ({
       setIsManualSearch(true);
     }
 
-    setSearchValue(value);
-    setSelectedOption(null);
-
-    if (!value) {
-      setOptions([]);
-      setApiError(null);
-      setCurrentSearchTerm("");
-      setShowNoMatchOption(false);
-      setIsSearchTriggered(false);
-      setIsManualSearch(false);
-    }
+    // Update value through handleInputChange which handles both controlled and uncontrolled
+    handleInputChange(value);
   };
 
   const handleSelect = async (value, option) => {
     console.log('Selected value:', value);
     console.log('Selected option:', option);
     console.log('onSelectBehavior:', onSelectBehavior);
-    debugger
+    
     // Check if this is a "no match" option with Add Member button
     if (value === "__no_match__") {
       return;
     }
-
+    
     try {
       // Parse the stringified value to get member data
       const parsedValue = JSON.parse(value);
@@ -281,9 +298,8 @@ const MemberSearch = ({
         switch (onSelectBehavior) {
           case "navigate":
             // First clear the search input immediately
-            setSearchValue("");
-            setOptions([]);
-
+            handleClear();
+            
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
               // Dispatch searchProfiles to update Redux state
@@ -314,14 +330,18 @@ const MemberSearch = ({
               console.error("Redux dispatch error:", error);
               message.error(`Failed to load member data: ${error.message}`);
             }
-
-            clearSearch();
             break;
 
           case "callback":
             try {
-              // Clear search input immediately before callback
-              setSearchValue("");
+              // DON'T clear search value - keep it visible in the input!
+              // The search value should show the selected member's name or membership number
+              const displayValue = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
+              
+              // Update the value to show selected member
+              handleInputChange(displayValue);
+              
+              // Clear options dropdown
               setOptions([]);
 
               // Call the provided callback function and wait for it to complete
@@ -330,26 +350,29 @@ const MemberSearch = ({
               }
 
               // Also dispatch Redux actions for callback mode if needed
-              if (memberData?.profileId) {
+              if (memberData?._id) {
                 await dispatch(
                   getSubscriptionByProfileId({
-                    profileId: memberData?.profileId,
+                    profileId: memberData?._id,
                     isCurrent: true,
                   })
                 ).unwrap();
               }
 
               message.success(`Member ${memberData.membershipNumber} selected`);
+            } catch (error) {
+              console.error("Callback error:", error);
+              message.error(`Failed in callback: ${error.message}`);
             } finally {
-              // Clear search regardless of callback success/failure
-              clearSearch();
+              setCurrentSearchTerm("");
+              setShowNoMatchOption(false);
+              setIsSearchTriggered(false);
             }
             break;
 
           case "both":
-            // Clear search input immediately
-            setSearchValue("");
-            setOptions([]);
+            // Clear search input
+            handleClear();
 
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
@@ -376,13 +399,9 @@ const MemberSearch = ({
                 }
               });
 
-              try {
-                // Call the provided callback function
-                if (onSelectCallback && typeof onSelectCallback === 'function') {
-                  await onSelectCallback(memberData, parsedValue);
-                }
-              } finally {
-                clearSearch();
+              // Call the provided callback function
+              if (onSelectCallback && typeof onSelectCallback === 'function') {
+                await onSelectCallback(memberData, parsedValue);
               }
 
               message.success(`Member ${memberData.membershipNumber} loaded successfully`);
@@ -393,11 +412,15 @@ const MemberSearch = ({
             break;
 
           case "none":
-            // Just show success message and clear search
+            // Just show success message and keep search value visible
+            const displayValueNone = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
+            handleInputChange(displayValueNone); // Keep value visible
+            setOptions([]); // Clear dropdown
+            
             message.success(`Member ${memberData.membershipNumber} selected`);
 
             // Still dispatch Redux actions even for "none" behavior
-            if (memberData?.profileId) {
+            if (memberData?._id) {
               await dispatch(
                 getSubscriptionByProfileId({
                   profileId: memberData?._id,
@@ -406,13 +429,14 @@ const MemberSearch = ({
               ).unwrap();
             }
 
-            clearSearch();
+            setCurrentSearchTerm("");
+            setShowNoMatchOption(false);
+            setIsSearchTriggered(false);
             break;
 
           default:
             // Default to navigate behavior
-            setSearchValue("");
-            setOptions([]);
+            handleClear();
 
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
@@ -442,8 +466,6 @@ const MemberSearch = ({
               console.error("Redux dispatch error:", error);
               message.error(`Failed to load member data: ${error.message}`);
             }
-
-            clearSearch();
             break;
         }
 
@@ -457,12 +479,8 @@ const MemberSearch = ({
       console.error("Error handling selection:", error);
       message.error(`Error: ${error.message || 'Unknown error'}. Please try again or contact support.`);
       setApiError(error.message || 'Failed to handle selection');
-
-      setSearchValue("");
-      setOptions([]);
-      setCurrentSearchTerm("");
-      setShowNoMatchOption(false);
-      setIsSearchTriggered(false);
+      
+      handleClear();
     } finally {
       setLoading(false);
     }
@@ -471,7 +489,14 @@ const MemberSearch = ({
   // Handle input change (for typing)
   const handleInputChange = (value) => {
     console.log('Input changed to:', value);
-    setSearchValue(value);
+    
+    // Update value based on control mode
+    if (isControlled && externalOnChange) {
+      externalOnChange(value); // Call external onChange
+    } else {
+      setInternalValue(value); // Use internal state
+    }
+    
     setSelectedOption(null);
 
     if (value === "") {
@@ -480,8 +505,15 @@ const MemberSearch = ({
     }
   };
 
-  const clearSearch = () => {
-    setSearchValue("");
+  const handleClear = () => {
+    // Clear value based on control mode
+    if (isControlled && externalOnChange) {
+      externalOnChange(""); // Clear external value
+    } else {
+      setInternalValue(""); // Clear internal value
+    }
+    
+    // Clear all other states
     setOptions([]);
     setApiError(null);
     setCurrentSearchTerm("");
@@ -489,6 +521,16 @@ const MemberSearch = ({
     setShowNoMatchOption(false);
     setIsSearchTriggered(false);
     setIsManualSearch(false);
+    
+    // Call external clear callback if provided
+    if (externalOnClear) {
+      externalOnClear();
+    }
+  };
+
+  // Clear search function (for internal use)
+  const clearSearch = () => {
+    handleClear();
   };
 
   // Handle keyboard events
@@ -501,6 +543,11 @@ const MemberSearch = ({
         const firstOption = options[0];
         handleSelect(firstOption.value, firstOption);
       }
+    }
+    
+    // Clear on Escape
+    if (e.key === 'Escape' && searchValue) {
+      handleClear();
     }
   };
 
@@ -539,7 +586,7 @@ const MemberSearch = ({
         getPopupContainer={trigger => trigger.parentNode}
       >
         <Input
-          disabled={disable}
+          disabled={disable || loading}
           ref={inputRef}
           size={headerStyle ? "middle" : "large"}
           prefix={
@@ -574,7 +621,7 @@ const MemberSearch = ({
                 size="small"
                 onClick={(e) => {
                   e.stopPropagation();
-                  clearSearch();
+                  handleClear();
                 }}
                 style={{
                   width: "16px",
@@ -593,7 +640,6 @@ const MemberSearch = ({
               </Button>
             )
           }
-          disabled={loading}
           onKeyDown={handleKeyDown}
           onClick={handleInputClick}
           allowClear={false}
@@ -652,7 +698,7 @@ const MemberSearch = ({
               icon={<UserAddOutlined />}
               onClick={() => {
                 onAddMember(searchValue);
-                clearSearch();
+                handleClear();
               }}
               style={{
                 backgroundColor: "#52c41a",

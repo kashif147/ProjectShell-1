@@ -20,7 +20,7 @@ export const insertDataFtn = async (
     const response = await axios.post(`${apiURL}${url}`, data, {
       headers: {
         "Content-Type": "application/json",
-        maxBodyLength: Infinity,
+        // maxBodyLength: Infinity,
         Authorization: `Bearer ${token}`,
       },
     });
