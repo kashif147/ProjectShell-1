@@ -667,6 +667,8 @@ function ApplicationMgtDrawer({
       "termsAndConditions",
       "preferredAddress",
       "countryPrimaryQualification",
+      "otherIrishTradeUnion",
+      "otherScheme",
     ];
 
     const fieldMap = {
@@ -675,6 +677,8 @@ function ApplicationMgtDrawer({
       surname: ["personalInfo", "surname"],
       dateOfBirth: ["personalInfo", "dateOfBirth"],
       gender: ["personalInfo", "gender"],
+      otherIrishTradeUnion: ["subscriptionDetails", "otherIrishTradeUnion"],
+      otherScheme: ["subscriptionDetails", "otherScheme"],
       countryPrimaryQualification: [
         "personalInfo",
         "countryPrimaryQualification",
@@ -738,6 +742,11 @@ function ApplicationMgtDrawer({
     if (InfData.subscriptionDetails.primarySection === "Other") {
       if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
         newErrors.otherPrimarySection = "Other primary section is required";
+      }
+    }
+    if (InfData.subscriptionDetails?.otherIrishTradeUnion === true) {
+      if (!InfData.subscriptionDetails?.otherIrishTradeUnionName?.trim()) {
+        newErrors.otherIrishTradeUnionName = "Union name is required when 'Yes' is selected";
       }
     }
 
@@ -1282,7 +1291,7 @@ function ApplicationMgtDrawer({
           const eircode = `${postalCode}`.trim();
 
           // Find the country displayname from countryLookups based on the country name or code
-          let countryDisplayName = InfData.contactInfo?.country; 
+          let countryDisplayName = InfData.contactInfo?.country;
           // Default to Ireland if not found
           if (countryLongName || countryShortName) {
             console.log(
@@ -3136,85 +3145,87 @@ function ApplicationMgtDrawer({
                   </>
                 )}
 
-              {/* Trade Union Questions - Same Height */}
               <Col xs={24} md={12}>
                 <div
-                  className="d-flex p-3  "
+                  className="d-flex flex-column p-3"
                   style={{
                     backgroundColor: "#1173d41a",
-                    border: "1px solid #97c5efff",
+                    border: errors?.otherIrishTradeUnion ? "1px solid #ff4d4f" : "1px solid #97c5efff",
                     borderRadius: "4px",
+                    height: "100%",
                   }}
                 >
-                  <div
-                    className=" bg-lb me-2"
+                  <label
+                    className="my-input-label mb-2"
                     style={{
+                      color: errors?.otherIrishTradeUnion ? "#ff4d4f" : "#215e97",
                       display: "flex",
-                      flexDirection: "column",
-                      justifyContent: "center",
+                      alignItems: "center",
+                      gap: "4px"
                     }}
                   >
-                    <label
-                      className="my-input-label mb-2 "
-                      style={{ color: "#215e97" }}
-                    >
-                      If you are a member of another Trade Union. If yes, which
-                      Union?
-                    </label>
-                    <Radio.Group
-                      style={{ color: "#215e97", borderColor: "#" }}
-                      name="otherIrishTradeUnion"
-                      value={
-                        InfData.subscriptionDetails?.otherIrishTradeUnion !==
-                          null
-                          ? InfData.subscriptionDetails?.otherIrishTradeUnion
-                          : null
-                      }
-                      onChange={(e) =>
-                        handleInputChange(
-                          "subscriptionDetails",
-                          "otherIrishTradeUnion",
-                          e.target?.value
-                        )
-                      }
-                      disabled={isDisable}
-                    >
-                      <Radio style={{ color: "#215e97" }} value={true}>
-                        Yes
-                      </Radio>
-                      <Radio style={{ color: "#215e97" }} value={false}>
-                        No
-                      </Radio>
-                    </Radio.Group>
-                    <div className="d-flex">
-
-                    </div>
-                  </div>
-                  {
-                    InfData.subscriptionDetails?.otherIrishTradeUnion &&
-                    <MyInput value={InfData.subscriptionDetails?.otherIrishTradeUnionName} onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)} />
-                  }
+                    If you are a member of another Trade Union. If yes, which Union?
+                    <span className="text-danger">*</span>
+                   
+                  </label>
+                  <Radio.Group
+                    style={{ color: "#215e97" }}
+                    name="otherIrishTradeUnion"
+                    value={
+                      InfData.subscriptionDetails?.otherIrishTradeUnion !== null
+                        ? InfData.subscriptionDetails?.otherIrishTradeUnion
+                        : null
+                    }
+                    onChange={(e) =>
+                      handleInputChange(
+                        "subscriptionDetails",
+                        "otherIrishTradeUnion",
+                        e.target?.value
+                      )
+                    }
+                    disabled={isDisable}
+                  >
+                    <Radio style={{ color: "#215e97" }} value={true}>
+                      Yes
+                    </Radio>
+                    <Radio style={{ color: "#215e97" }} value={false}>
+                      No
+                    </Radio>
+                  </Radio.Group>
+                  {InfData.subscriptionDetails?.otherIrishTradeUnion === true && (
+                    <MyInput
+                      value={InfData.subscriptionDetails?.otherIrishTradeUnionName}
+                      onChange={(e) => handleInputChange("subscriptionDetails", "otherIrishTradeUnionName", e.target?.value)}
+                      placeholder="Enter Union name"
+                      className="mt-2"
+                      hasError={!!errors?.otherIrishTradeUnionName}
+                    />
+                  )}
+                 
                 </div>
               </Col>
 
               <Col xs={24} md={12}>
                 <div
-                  className="p-3 bg-lb pb-0 "
+                  className="p-3 bg-lb"
                   style={{
                     backgroundColor: "#1173d41a",
-                    border: "1px solid #97c5efff",
+                    border: errors?.otherScheme ? "1px solid #ff4d4f" : "1px solid #97c5efff",
                     borderRadius: "4px",
-                    display: "flex",
-                    flexDirection: "column",
-                    justifyContent: "center",
+                    height: "100%",
                   }}
                 >
                   <label
                     className="my-input-label mb-2"
-                    style={{ color: "#215e97" }}
+                    style={{
+                      color: errors?.otherScheme ? "#ff4d4f" : "#215e97",
+                      display: "flex",
+                      alignItems: "center",
+                      gap: "4px"
+                    }}
                   >
-                    Are you or were you a member of another Irish trade Union
-                    salary or Income Protection Scheme?
+                    Are you or were you a member of another Irish trade Union salary or Income Protection Scheme?
+                    <span className="text-danger">*</span>
                   </label>
                   <Radio.Group
                     name="otherScheme"
@@ -3230,7 +3241,6 @@ function ApplicationMgtDrawer({
                         e.target?.value
                       )
                     }
-                    className="my-input-wrapper"
                     style={{ color: "#215e97" }}
                     disabled={isDisable}
                   >

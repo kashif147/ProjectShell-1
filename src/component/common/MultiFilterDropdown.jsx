@@ -1,5 +1,5 @@
 import { useState, useRef } from "react";
-import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button } from "antd";
+import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button, Alert } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 
 const { Option } = Select;
@@ -19,22 +19,31 @@ const MultiFilterDropdown = ({
   const [open, setOpen] = useState(false);
   const hoverTimer = useRef(null);
 
+  // Check if this is a warning/empty state
+  const isEmptyWarning = options[0] && options[0].startsWith("⚠️");
+  const warningMessage = isEmptyWarning ? options[0] : "";
+  
+  // Check if it's loading
+  const isLoading = options.length === 1 && options[0] === "Loading...";
+  
+  // Check if there are no REAL options (just empty string or loading)
+  // We have options if: array length > 1 OR (length = 1 and not empty string/loading/warning)
+  const hasRealOptions = options.length > 1 || 
+    (options.length === 1 && options[0] !== "" && options[0] !== "Loading..." && !options[0].startsWith("⚠️"));
+
   const handleCheckboxChange = (value) => {
     const newSelectedValues = selectedValues.includes(value)
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
     console.log(newSelectedValues,"new")
-    // ✅ Call onApply immediately with new selection
     onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
   };
 
   const handleReset = () => {
-    // ✅ Apply empty selection immediately
     onApply?.({ label, operator: "==", selectedValues: [] });
   };
 
   const handleApply = () => {
-    // ✅ Show all selected filters in console when Apply is clicked
     console.log("🎯 APPLY BUTTON CLICKED - Selected Filters:", {
       filterLabel: label,
       operator: propOperator,
@@ -44,18 +53,15 @@ const MultiFilterDropdown = ({
       isAllSelected: selectedValues.length === options.length
     });
 
-    // ✅ Additional check for "all selected" scenario
     if (selectedValues.length === options.length) {
       console.log("✅ ALL FILTERS ARE SELECTED for:", label);
       console.log("📋 Selected values:", selectedValues);
     }
 
-    // Close dropdown
     setOpen(false);
   };
 
   const handleOperatorChange = (value) => {
-    // ✅ Call onApply immediately with operator change
     onApply?.({ label, operator: value, selectedValues });
   };
 
@@ -73,70 +79,172 @@ const MultiFilterDropdown = ({
 
   const badgeCount = selectedValues.length;
 
-  const menu = (
-    <div
-      className="filter-dropdown-menu"
-      onMouseEnter={handleMouseEnter}
-      onMouseLeave={handleMouseLeave}
-    >
-      <Select
-        value={propOperator}
-        onChange={handleOperatorChange}
-        size="small"
-        style={{ width: "100%", marginBottom: 8 }}
-      >
-        {operators.map((op) => (
-          <Option key={op.symbol} value={op.symbol}>
-            {op.label}
-          </Option>
-        ))}
-      </Select>
-
-      <Divider style={{ margin: "8px 0" }} />
-
-      <div className="checkbox-list">
-        {options.map((option) => (
-          <Checkbox
-            key={option}
-            checked={selectedValues.includes(option)} // ✅ Use prop directly
-            onChange={() => handleCheckboxChange(option)}
-          >
-            {option}
-          </Checkbox>
-        ))}
-      </div>
-
-      <div className="d-flex justify-content-end gap-2 mt-3 mb-1">
-        <Button size="small" onClick={handleReset}>
-          Reset
-        </Button>
-        <Button
-          type="primary"
-          size="small"
-          onClick={handleApply}
+  // Warning/Empty Menu Content
+  const getMenuContent = () => {
+    if (isEmptyWarning) {
+      return (
+        <div
+          className="filter-dropdown-menu"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          style={{ minWidth: "250px", padding: "12px" }}
         >
-          Apply
-        </Button>
-      </div>
-    </div>
-  );
+          <Alert
+            message={label === "Region" || label === "Branch" ? "Action Required" : "No Data Available"}
+            description={
+              <div style={{ marginTop: "8px" }}>
+                <div style={{ marginBottom: "8px" }}>
+                  {warningMessage.replace("⚠️ ", "")}
+                </div>
+                <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
+                  {label === "Region" || label === "Branch" 
+                    ? "Please select a Work Location first to see available options." 
+                    : "No data available for the selected criteria."}
+                </div>
+              </div>
+            }
+            type="info"
+            showIcon
+            style={{ border: "1px solid #91d5ff", backgroundColor: "#e6f7ff" }}
+          />
+        </div>
+      );
+    }
+    
+    if (isLoading) {
+      return (
+        <div
+          className="filter-dropdown-menu"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          style={{ minWidth: "250px", padding: "12px" }}
+        >
+          <Alert
+            message="Loading..."
+            description="Please wait while we fetch the data."
+            type="info"
+            showIcon
+            style={{ border: "1px solid #91d5ff", backgroundColor: "#e6f7ff" }}
+          />
+        </div>
+      );
+    }
+    
+    // Check for empty options (no data from API)
+    // This happens when options = [""] and it's Region or Branch filter
+    const isRegionOrBranch = label === "Region" || label === "Branch";
+    const isEmptyApiResponse = isRegionOrBranch && options.length === 1 && options[0] === "";
+    
+    if (isEmptyApiResponse) {
+      return (
+        <div
+          className="filter-dropdown-menu"
+          onMouseEnter={handleMouseEnter}
+          onMouseLeave={handleMouseLeave}
+          style={{ minWidth: "250px", padding: "12px" }}
+        >
+          <Alert
+            message="No Data Found"
+            description={
+              <div style={{ marginTop: "8px" }}>
+                <div style={{ marginBottom: "8px" }}>
+                  {label === "Branch" 
+                    ? "No branches available for the selected Work Location and Region."
+                    : "No regions available for the selected Work Location."}
+                </div>
+                <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
+                  Try selecting a different Work Location or Region.
+                </div>
+              </div>
+            }
+            type="warning"
+            showIcon
+            style={{ border: "1px solid #ffe58f", backgroundColor: "#fffbe6" }}
+          />
+        </div>
+      );
+    }
 
-  const renderButtonContent = () => (
-    <div className={`filter-button1 ${badgeCount > 0 ? "active" : ""}`}>
-      <Space size={4}>
-        <span className="filter-label">{label}</span>
-        {badgeCount > 0 && (
-          <Badge count={badgeCount} className="red-badge" />
-        )}
-        <DownOutlined className="dropdown-icon" />
-      </Space>
-    </div>
-  );
+    // Normal Filter Menu Content - show checkboxes when we have real options
+    return (
+      <div
+        className="filter-dropdown-menu"
+        onMouseEnter={handleMouseEnter}
+        onMouseLeave={handleMouseLeave}
+      >
+        <Select
+          value={propOperator}
+          onChange={handleOperatorChange}
+          size="small"
+          style={{ width: "100%", marginBottom: 8 }}
+        >
+          {operators.map((op) => (
+            <Option key={op.symbol} value={op.symbol}>
+              {op.label}
+            </Option>
+          ))}
+        </Select>
+
+        <Divider style={{ margin: "8px 0" }} />
+
+        <div className="checkbox-list">
+          {options.map((option) => (
+            <Checkbox
+              key={option}
+              checked={selectedValues.includes(option)}
+              onChange={() => handleCheckboxChange(option)}
+              disabled={option === ""} // Disable empty option
+            >
+              {option === "" ? <span style={{ color: "#bfbfbf" }}>-- Select --</span> : option}
+            </Checkbox>
+          ))}
+        </div>
+
+        <div className="d-flex justify-content-end gap-2 mt-3 mb-1">
+          <Button size="small" onClick={handleReset}>
+            Reset
+          </Button>
+          <Button
+            type="primary"
+            size="small"
+            onClick={handleApply}
+          >
+            Apply
+          </Button>
+        </div>
+      </div>
+    );
+  };
+
+  const renderButtonContent = () => {
+    // For empty/warning/loading states, show normal button but with disabled styling
+    const isDisabledState = isEmptyWarning || isLoading || 
+      ((label === "Region" || label === "Branch") && options.length === 1 && options[0] === "");
+    
+    return (
+      <div 
+        className={`filter-button1 ${badgeCount > 0 ? "active" : ""} ${isDisabledState ? "disabled-state" : ""}`}
+        style={isDisabledState ? { 
+          opacity: 0.7,
+          backgroundColor: badgeCount > 0 ? "rgba(9, 30, 66, 0.08)" : "rgba(9, 30, 66, 0.04)",
+          cursor: "pointer"
+        } : {}}
+      >
+        <Space size={4}>
+          <span className="filter-label">{label}</span>
+          {badgeCount > 0 && (
+            <Badge count={badgeCount} className="red-badge" />
+          )}
+          <DownOutlined className="dropdown-icon" />
+        </Space>
+      </div>
+    );
+  };
 
   return (
     <div onMouseEnter={handleMouseEnter} onMouseLeave={handleMouseLeave}>
       <Dropdown
-        overlay={menu}
+        overlay={getMenuContent()}
         open={open}
         placement="bottomLeft"
         trigger={["hover"]}
@@ -170,9 +278,18 @@ style.innerHTML = `
     background-color: rgba(9, 30, 66, 0.08);
   }
 
+  .filter-button1.disabled-state {
+    opacity: 0.7;
+    cursor: pointer !important;
+  }
+
   .filter-label {
     font-weight: 500;
     color: #000000e0;
+  }
+
+  .filter-button1.disabled-state .filter-label {
+    color: #595959;
   }
 
   .red-badge .ant-badge-count {
@@ -184,6 +301,10 @@ style.innerHTML = `
   .dropdown-icon {
     font-size: 10px;
     color: #215E97;
+  }
+
+  .filter-button1.disabled-state .dropdown-icon {
+    color: #8c8c8c;
   }
 
   .filter-dropdown-menu {
@@ -200,6 +321,11 @@ style.innerHTML = `
     display: flex;
     flex-direction: column;
     gap: 6px;
+  }
+
+  .ant-alert {
+    border-radius: 4px;
+    margin: 0;
   }
 `;
 document.head.appendChild(style);

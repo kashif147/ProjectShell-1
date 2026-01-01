@@ -13,7 +13,7 @@ const Toolbar = () => {
     visibleFilters,
     filterOptions,
     filtersState,
-    updateFilter, // Use the new combined update function
+    updateFilter,
     resetFilters,
   } = useFilters();
 
@@ -26,12 +26,10 @@ const Toolbar = () => {
       count: selectedValues.length
     });
     
-    // ✅ Use the new combined update function
     updateFilter(label, operator, selectedValues);
   };
 
   const handleSearch = () => {
-    // ✅ Clean filtersState before dispatching
     const cleanedFilters = {};
     Object.keys(filtersState).forEach(key => {
       if (filtersState[key]?.selectedValues?.length > 0) {
@@ -51,9 +49,7 @@ const Toolbar = () => {
 
   const handleReset = () => {
     console.log("🔄 Resetting all filters");
-    // ✅ Reset filters in context
     resetFilters();
-    // Fetch all applications (pass empty object)
     dispatch(getAllApplications({}));
   };
 
@@ -71,12 +67,6 @@ const Toolbar = () => {
   };
 
   const activeScreen = getScreenFromPath();
-
-  // Debug: Log current filter states
-  React.useEffect(() => {
-    console.log("📊 Current filtersState:", filtersState);
-    console.log("👁️ Visible filters:", visibleFilters);
-  }, [filtersState, visibleFilters]);
 
   return (
     <div
@@ -109,13 +99,6 @@ const Toolbar = () => {
             return null;
           }
 
-          console.log(`📋 Rendering filter "${label}":`, {
-            selectedValues,
-            operator,
-            optionCount: options.length,
-            badgeCount: selectedValues.length
-          });
-          
           return (
             <MultiFilterDropdown
               key={label}
@@ -143,11 +126,10 @@ const Toolbar = () => {
         >
           Reset
         </Button>
-
         <Button
           onClick={handleSearch}
           style={{
-            backgroundColor: "#0c66e4",
+            backgroundColor: "#45669d",
             borderRadius: "4px",
             border: "none",
             height: "32px",
@@ -158,23 +140,6 @@ const Toolbar = () => {
           Search
         </Button>
       </div>
-
-      {/* Debug panel - remove in production */}
-      {/* {process.env.NODE_ENV === 'development' && (
-        <div style={{
-          fontSize: '11px',
-          color: '#666',
-          marginTop: '5px',
-          padding: '5px',
-          backgroundColor: '#f5f5f5',
-          borderRadius: '3px'
-        }}>
-          <strong>Debug:</strong> Active screen: {activeScreen} | 
-          Active filters: {Object.keys(filtersState).filter(key => 
-            filtersState[key]?.selectedValues?.length > 0
-          ).length}
-        </div>
-      )} */}
     </div>
   );
 };
