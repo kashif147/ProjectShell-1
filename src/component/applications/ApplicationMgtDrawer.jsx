@@ -14,6 +14,7 @@ import {
   message
 } from "antd";
 import { MailOutlined, EnvironmentOutlined, SearchOutlined } from "@ant-design/icons";
+import { Link } from "react-router-dom";
 
 import MemberSearch from "../profile/MemberSearch";
 import dayjs from "dayjs";
@@ -2982,9 +2983,7 @@ function ApplicationMgtDrawer({
                         }}
                       >
                         <Checkbox
-                          checked={
-                            InfData?.subscriptionDetails?.incomeProtectionScheme
-                          }
+                          checked={InfData?.subscriptionDetails?.incomeProtectionScheme}
                           style={{ color: "#78350f" }}
                           onChange={(e) =>
                             handleInputChange(
@@ -3001,41 +3000,18 @@ function ApplicationMgtDrawer({
                           }
                         >
                           I consent to{" "}
-                          <Tooltip
-                            placement="top"
-                            styles={{
-                              body: {
-                                maxWidth: "600px",
-                                width: "600px",
-                                maxHeight: "650px",
-                                overflow: "hidden",
-                                padding: "0",
-                              },
+                          <a
+                            href={`http://localhost:3000/rewards/insurance`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            style={{
+                              color: "#78350f",
+                              textDecoration: "underline",
                             }}
-                            title={
-                              <div
-                                style={{
-                                  maxHeight: "650px",
-                                  overflowY: "auto",
-                                  marginTop: "5px",
-                                  marginBottom: "5px",
-                                }}
-                              >
-                                <InsuranceScreen />
-                              </div>
-                            }
+                            onClick={(e) => e.stopPropagation()}
                           >
-                            <a
-                              href="#"
-                              style={{
-                                color: "#78350f",
-                                textDecoration: "underline",
-                              }}
-                            >
-                              {" "}
-                              INMO Income Protection Scheme.
-                            </a>
-                          </Tooltip>
+                            INMO Income Protection Scheme
+                          </a>
                         </Checkbox>
                         <p>
                           By selecting ‘I consent’ below, you are agreeing to the
@@ -3107,25 +3083,28 @@ function ApplicationMgtDrawer({
                                 padding: "0",
                               },
                             }}
-                            title={
-                              <div
-                                style={{
-                                  maxHeight: "650px",
-                                  overflowY: "auto",
-                                  marginTop: "5px",
-                                  marginBottom: "5px",
-                                }}
-                              >
-                                <RewardsScreen />
-                              </div>
-                            }
+                          // title={
+                          //   <div
+                          //     style={{
+                          //       maxHeight: "650px",
+                          //       overflowY: "auto",
+                          //       marginTop: "5px",
+                          //       marginBottom: "5px",
+                          //     }}
+                          //   >
+                          //     <RewardsScreen />
+                          //   </div>
+                          // }
                           >
                             <a
-                              href="#"
+                              href={`http://localhost:3000/rewards/rewards`}
+                              target="_blank"
+                              rel="noopener noreferrer"
                               style={{
                                 color: "#78350f",
                                 textDecoration: "underline",
                               }}
+                              onClick={(e) => e.stopPropagation()}
                             >
                               Rewards
                             </a>
@@ -3166,7 +3145,7 @@ function ApplicationMgtDrawer({
                   >
                     If you are a member of another Trade Union. If yes, which Union?
                     <span className="text-danger">*</span>
-                   
+
                   </label>
                   <Radio.Group
                     style={{ color: "#215e97" }}
@@ -3201,7 +3180,7 @@ function ApplicationMgtDrawer({
                       hasError={!!errors?.otherIrishTradeUnionName}
                     />
                   )}
-                 
+
                 </div>
               </Col>
 

@@ -11,7 +11,6 @@ import { AuthorizationProvider } from "./context/AuthorizationContext";
 import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
-// import RemindersDetails from "./pages/reminders/RemindersDetails";
 
 // Wrapper for lazy loading with retry logic
 const lazyWithRetry = (componentImport) => {
@@ -62,6 +61,7 @@ const ProfileDetails = lazyWithRetry(() =>
 const ProfileSummary = lazyWithRetry(() =>
   import("./pages/Profiles/ProfileSummary")
 );
+
 const CasesSummary = lazyWithRetry(() => import("./pages/Cases/CasesSummary"));
 const CasesDetails = lazyWithRetry(() => import("./pages/Cases/CasesDetails"));
 const ClaimSummary = lazyWithRetry(() => import("./pages/Claims/ClaimSummary"));
@@ -93,7 +93,7 @@ const TempleteConfig = lazyWithRetry(() =>
 const CorspndncDetail = lazyWithRetry(() =>
   import("./pages/Correspondences/CorspndncDetail")
 );
-
+const IncomeProtectionTooltip = lazyWithRetry(() => import("./component/profile/IncomeProtectionTooltip"));
 const Doucmnets = lazyWithRetry(() => import("./pages/Doucmnets"));
 const RosterDetails = lazyWithRetry(() =>
   import("./pages/roster/RosterDetails")
@@ -190,9 +190,6 @@ const ProductTypesManagement = lazyWithRetry(() =>
 const ProductManagementDemo = lazyWithRetry(() =>
   import("./pages/product-management/ProductManagementDemo")
 );
-// const ProductManagementDemo = lazyWithRetry(() =>
-//   import("./pages/product-management/ProductManagementDemo")
-// );
 const NewGraduate = lazyWithRetry(() => import("./pages/membership/NewGraduate"));
 const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
 const RecruitAFriend = lazyWithRetry(() =>
@@ -202,13 +199,21 @@ const RecruitAFriend = lazyWithRetry(() =>
 function Entry() {
   const location = useLocation();
 
-  const showSidebar = location.pathname !== "/";
+  // Define routes where sidebar should NOT be shown
+  const noSidebarRoutes = [
+  "/", // login page
+  "/rewards/insurance",
+  "/rewards/rewards"
+];
+
+  const showSidebar = !noSidebarRoutes.includes(location.pathname);
   const showHeaderDetails = showSidebar;
 
   // Debug logging
   console.log("Entry Debug - Current pathname:", location.pathname);
   console.log("Entry Debug - showSidebar:", showSidebar);
   console.log("Entry Debug - showHeaderDetails:", showHeaderDetails);
+
   const showResizableCompRoutes = [
     "/ClaimsDetails",
     "/CasesDetails",
@@ -248,9 +253,6 @@ function Entry() {
           >
             {/* Header Details */}
             {showHeaderDetails && <HeaderDetails />}
-
-            {/* Profile Header */}
-            {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
 
             {/* Content area + resizable section */}
             <div style={{ flex: 1, display: "flex" }}>
@@ -334,6 +336,25 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
+
+                    {/* InmoRewards routes - these will have no sidebar */}
+                    <Route
+                      path="rewards/insurance"
+                      element={
+                        <ProtectedRoute>
+                          <IncomeProtectionTooltip />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="rewards/rewards"
+                      element={
+                        <ProtectedRoute>
+                          <IncomeProtectionTooltip />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     <Route
                       path="templeteSummary"
                       element={
@@ -634,14 +655,14 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
-                <Route
-                  path="SimpleBatchMemberSummary"
-                  element={
-                    <ProtectedRoute>
-                      <SimpleBatchMemberSummary />
-                    </ProtectedRoute>
-                  }
-                />
+                    <Route
+                      path="SimpleBatchMemberSummary"
+                      element={
+                        <ProtectedRoute>
+                          <SimpleBatchMemberSummary />
+                        </ProtectedRoute>
+                      }
+                    />
 
                     <Route
                       path="NotDesignedYet"
@@ -879,9 +900,8 @@ function Entry() {
           </div>
         </div>
 
-        {/* Footer */}
-        {location?.pathname === "/" ? null : <MyFooter />}
-        {/* <MyFooter /> */}
+        {/* Footer - also hide for noSidebarRoutes */}
+        {showSidebar && <MyFooter />}
       </div>
     </AuthorizationProvider>
   );
