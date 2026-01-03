@@ -80,7 +80,16 @@ function ApplicationMgtDrawer({
   } = useSelector((state) => state.lookupsWorkLocation);
   console.log(hierarchyData, "lk");
   const { filtersState } = useFilters();
-
+  const EmailConflictScreen = () => {
+    return (
+      <div className="p-3 w-60" style={{ width: '60%', backgroundColor: "#fef9c6", borderLeft: '5px solid #edb301' }}>
+        <div className="font-monospace">
+          <div className="text-danger fw-bold" style={{ color: '#772400' }}>A, Action Required: Email Conflict</div>
+          <div style={{ color: '#9E5600' }}>Email already in use. Membership Category: Fellow, Name: Sarah Jenkins, Email: s.jenkins@example.com</div>
+        </div>
+      </div>
+    );
+  };
   // };
   const [actionModal, setActionModal] = useState({
     open: false,
@@ -1813,7 +1822,10 @@ function ApplicationMgtDrawer({
             )}
           </div>
         </div>
-
+        {
+          InfData?.contactInfo?.personalEmail === "s.jenkins@example.com" &&
+          <EmailConflictScreen />
+        }
         <div
           className="hide-scroll-webkit"
           style={{
@@ -1830,6 +1842,7 @@ function ApplicationMgtDrawer({
             transition: "0.3s ease",
           }}
         >
+
           {/* Personal Information Section */}
           <div className="mb-3">
             <SectionHeader

@@ -499,7 +499,7 @@ const ProductTypesManagement = () => {
                       ...restProps.style
                     }}
                   >
-                    <div style={{ color: '#fff',}}>
+                    <div style={{ color: '#fff', }}>
                       {children}
                     </div>
                   </th>
@@ -586,7 +586,7 @@ const ProductTypesManagement = () => {
               type="primary"
               onClick={() => {
                 // This will be handled by the form's submit
-                const form = document.querySelector(".product-form");
+                const form = document.getElementById("product-type-form");
                 if (form) {
                   const submitEvent = new Event("submit", {
                     bubbles: true,
@@ -598,7 +598,7 @@ const ProductTypesManagement = () => {
             >
               {editingProductType
                 ? "Update Product Type"
-                : "Create Product Type1"}
+                : "Create Product Type"}
             </Button>
           </Space>
         }
@@ -655,7 +655,7 @@ const ProductTypesManagement = () => {
               type="primary"
               onClick={() => {
                 // This will be handled by the form's submit
-                const form = document.querySelector(".product-form");
+                const form = document.getElementById("product-form");
                 if (form) {
                   const submitEvent = new Event("submit", {
                     bubbles: true,
@@ -665,7 +665,7 @@ const ProductTypesManagement = () => {
                 }
               }}
             >
-              {editingProduct ? "Update Product123" : "Create Product"}
+              {editingProduct ? "Update Product" : "Create Product"}
             </Button>
           </Space>
         }

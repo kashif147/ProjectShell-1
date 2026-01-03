@@ -31,7 +31,7 @@ export const InsuranceScreen = () => {
           <h1 className="h2 font-weight-bold mb-3">
             INMO Income Protection Scheme – Automatic Access and 9 Months' Free Cover!
           </h1>
-          <div style={{ ...blue900Style, opacity: 0.3 }} className="p-3 rounded small">
+          <div style={{ ...blue900Style, }} className="p-3 rounded small">
             <p>The INMO has negotiated automatic membership of the INMO Income Protection Scheme, for new INMO graduate members who:</p>
             <div className="ml-4">
               <p>1. Join the INMO via this Graduate application form, <span className="font-weight-bold">and</span></p>
