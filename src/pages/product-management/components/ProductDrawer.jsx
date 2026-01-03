@@ -89,6 +89,15 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
     }
   };
 
+  const getCurrencySymbol = () => {
+    switch (formData.currency) {
+      case "USD": return "$";
+      case "EUR": return "€";
+      case "GBP": return "£";
+      default: return "";
+    }
+  };
+
   const validate = (e) => {
     e.preventDefault();
     let newErrors = {};
@@ -105,12 +114,6 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
       newErrors.description = "Description is required";
 
     if (isProduct && !hidePricing) {
-      // if (!formData.memberPrice >= 0)
-      //   newErrors.memberPrice = "Price must be greater than 0";
-
-      // if (!formData.nonMemberPrice <= 0)
-      //   newErrors.nonMemberPrice = "Non-mem ber price must be greater than 0";
-
       if (!formData.effectiveFrom)
         newErrors.effectiveFrom = "Effective from date is required";
     }
@@ -244,13 +247,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
           {productType?.name === "Membership" ? (
             <div className="mb-3">
               <label className="form-label fw-semibold">
-                Price (
-                {formData.currency === "EUR"
-                  ? "€"
-                  : formData.currency === "USD"
-                    ? "$"
-                    : "£"}
-                )
+                Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
               </label>
               <MyInput
                 name="memberPrice"
@@ -270,13 +267,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
             <>
               <div className="mb-3">
                 <label className="form-label fw-semibold">
-                  Member Price (
-                  {formData.currency === "EUR"
-                    ? "€"
-                    : formData.currency === "USD"
-                      ? "$"
-                      : "£"}
-                  )
+                  Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
                 </label>
                 <MyInput
                   name="memberPrice"
@@ -295,13 +286,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
 
               <div className="mb-3">
                 <label className="form-label fw-semibold">
-                  Non-Member Price (
-                  {formData.currency === "EUR"
-                    ? "€"
-                    : formData.currency === "USD"
-                      ? "$"
-                      : "£"}
-                  )
+                  Non-Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
                 </label>
                 <MyInput
                   name="nonMemberPrice"
@@ -351,7 +336,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
         <div className="switch-container">
           <Switch
             checked={formData.status === "Active"} // convert string → boolean
-            style={{backgroundColor:'#215e97'}}
+            style={{ backgroundColor: '#215e97' }}
             onChange={(checked) =>
               handleInputChange("status", checked ? "Active" : "Inactive")
 

@@ -46,6 +46,15 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
+  const getCurrencySymbol = () => {
+    switch (formData.currency) {
+      case "USD": return "$";
+      case "EUR": return "€";
+      case "PKR": return "Rs";
+      default: return "";
+    }
+  };
+
   const handleSave = async () => {
     try {
       setLoading(true);
@@ -173,7 +182,9 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         {
           productType?.name === "Membership" ?
             <div className="mb-3">
-              <label className="form-label fw-semibold">Price</label>
+              <label className="form-label fw-semibold">
+                Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
+              </label>
               <MyInput
                 type="number"
                 value={formData.price}
@@ -184,7 +195,9 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
             :
             <>
               <div className="mb-3">
-                <label className="form-label fw-semibold">Member Price</label>
+                <label className="form-label fw-semibold">
+                  Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
+                </label>
                 <MyInput
                   type="number"
                   value={formData.memberPrice}
@@ -193,7 +206,9 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label fw-semibold">Non-Member Price</label>
+                <label className="form-label fw-semibold">
+                  Non-Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
+                </label>
                 <MyInput
                   type="number"
                   value={formData.nonMemberPrice}
@@ -226,7 +241,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
           <Switch
             checked={formData.status === "Active"}
             // className="butn"
-            style={{backgroundColor:'#215e97'}}
+            style={{ backgroundColor: '#215e97' }}
             onChange={(checked) => handleChange("status", checked ? "Active" : "Inactive")}
             checkedChildren="Active"
             unCheckedChildren="Inactive"
