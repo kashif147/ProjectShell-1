@@ -181,7 +181,7 @@ const ProductTypesManagement = () => {
 
   const productTypeColumns = [
     {
-      title: "Product Type123",
+      title: "Product Type",
       dataIndex: "name",
       key: "name",
       render: (text, record) => (
@@ -190,6 +190,8 @@ const ProductTypesManagement = () => {
           <div className="text-muted small">{record.description}</div>
         </div>
       ),
+      sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
+      defaultSortOrder: "ascend",
     },
     {
       title: "Status",
@@ -329,6 +331,51 @@ const ProductTypesManagement = () => {
       MyAlert(
         "error",
         error?.response?.data?.message || "Failed to create product or pricing"
+      );
+      return false;
+    }
+  };
+
+  const updateProductWithPricing = async (data, product) => {
+    try {
+      const token = localStorage.getItem("token");
+
+      // 1. Update Product
+      await axios.put(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/products/${product._id}`,
+        {
+          name: data?.name,
+          code: data?.code,
+          description: data?.description,
+          status: data?.status,
+        },
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+
+      // 2. Update Pricing (if exists)
+      if (product.currentPricing?._id) {
+        await axios.put(
+          `${process.env.REACT_APP_POLICY_SERVICE_URL}/pricing/${product.currentPricing._id}`,
+          {
+            currency: data?.currency,
+            memberPrice: data?.memberPrice,
+            nonMemberPrice: data?.nonMemberPrice,
+            effectiveFrom: data?.effectiveFrom,
+            effectiveTo: data?.effectiveTo,
+            status: data?.status,
+          },
+          { headers: { Authorization: `Bearer ${token}` } }
+        );
+      }
+
+      MyAlert("success", "Product and Pricing updated successfully ✅");
+      dispatch(getProductTypesWithProducts());
+      return true;
+    } catch (error) {
+      console.error("❌ Error updating product/pricing:", error);
+      MyAlert(
+        "error",
+        error?.response?.data?.message || "Failed to update product or pricing"
       );
       return false;
     }
@@ -570,11 +617,12 @@ const ProductTypesManagement = () => {
         width={800}
         extra={
           <Space>
-            <Button onClick={() => setIsProductTypeDrawerOpen(false)}>
+            {/* <Button onClick={() => setIsProductTypeDrawerOpen(false)}>
               Cancel
-            </Button>
+            </Button> */}
             <Button
               type="primary"
+              className="butn primary-btn"
               onClick={() => {
                 // This will be handled by the form's submit
                 const form = document.getElementById("product-type-form");
@@ -666,26 +714,12 @@ const ProductTypesManagement = () => {
           <ProductForm
             product={editingProduct}
             productType={selectedProductType}
-            hidePricing={!!editingProduct}
             onClose={() => setIsProductDrawerOpen(false)}
             onSubmit={async (data) => {
               setProductActionLoading(true);
               try {
                 if (editingProduct) {
-                  const updatedData = {
-                    name: data?.name,
-                    code: data?.code,
-                    description: data?.description,
-                    status: data?.status,
-                  };
-                  await updateFtn(
-                    process.env.REACT_APP_POLICY_SERVICE_URL,
-                    `/products/${editingProduct?._id}`,
-                    updatedData,
-                    () => {
-                      dispatch(getProductTypesWithProducts());
-                    }
-                  );
+                  await updateProductWithPricing(data, editingProduct);
                 } else {
                   await createProductWithPricing(data, selectedProductType);
                 }

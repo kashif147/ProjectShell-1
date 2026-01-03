@@ -4,6 +4,7 @@ import { SaveOutlined, CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
+import { convertSandToEuro } from "../../../utils/Utilities";
 
 const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) => {
   const initialFormState = {
@@ -45,7 +46,15 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
         code: product.code || "",
         description: product.description || "",
         status: product.status,
-        // Meta fields
+        memberPrice: product.currentPricing?.memberPrice
+          ? convertSandToEuro(product.currentPricing.memberPrice)
+          : product.currentPricing?.price
+            ? convertSandToEuro(product.currentPricing.price)
+            : "",
+        nonMemberPrice: product.currentPricing?.nonMemberPrice ? convertSandToEuro(product.currentPricing.nonMemberPrice) : "",
+        currency: product.currentPricing?.currency || "",
+        effectiveFrom: product.currentPricing?.effectiveFrom || null,
+        effectiveTo: product.currentPricing?.effectiveTo || null,
       });
     } else if (isProduct) {
       // Set default values for new product
@@ -136,7 +145,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
       }
 
       // 🔹 For membership products, use same price for both
-      if (isProduct && productType?.category === "MEMBERSHIP") {
+      if (isProduct && productType?.name === "Membership") {
         submissionData.nonMemberPrice = submissionData.memberPrice;
       }
 
@@ -232,14 +241,14 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
           </div>
 
           {/* Price Field - Single price for membership, dual prices for others */}
-          {productType?.category === "MEMBERSHIP" ? (
+          {productType?.name === "Membership" ? (
             <div className="mb-3">
               <label className="form-label fw-semibold">
                 Price (
                 {formData.currency === "EUR"
                   ? "€"
                   : formData.currency === "USD"
-                    ? "€"
+                    ? "$"
                     : "£"}
                 )
               </label>
@@ -265,7 +274,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "€"
+                      ? "$"
                       : "£"}
                   )
                 </label>
@@ -290,7 +299,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
                   {formData.currency === "EUR"
                     ? "€"
                     : formData.currency === "USD"
-                      ? "€"
+                      ? "$"
                       : "£"}
                   )
                 </label>
@@ -342,8 +351,10 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
         <div className="switch-container">
           <Switch
             checked={formData.status === "Active"} // convert string → boolean
+            style={{backgroundColor:'#215e97'}}
             onChange={(checked) =>
               handleInputChange("status", checked ? "Active" : "Inactive")
+
             }
             checkedChildren="Active"
             unCheckedChildren="Inactive"

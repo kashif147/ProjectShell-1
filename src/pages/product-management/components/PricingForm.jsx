@@ -31,7 +31,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       const pricing = product.currentPricing;
 
       setFormData({
-        currency: pricing.currency || "",
+        currency: (pricing.currency || "").toUpperCase(),
         memberPrice: pricing.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.memberPrice)) : "",
         nonMemberPrice: pricing.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.nonMemberPrice)) : "",
         effectiveFrom: pricing.effectiveFrom || null,
@@ -161,7 +161,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
           <label className="form-label fw-semibold">Currency</label>
           <CustomSelect
             value={formData.currency}
-            onChange={(val) => handleChange("currency", val)}
+            onChange={(e) => handleChange("currency", e.target.value)}
             options={[
               { label: "USD", value: "USD" },
               { label: "EUR", value: "EUR" },
@@ -232,13 +232,13 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         </div>
 
         {/* Pricing History */}
-        <Divider orientation="left">Pricing History</Divider>
-        <Table
+        {/* <Divider orientation="left">Pricing History</Divider> */}
+        {/* <Table
           columns={historyColumns}
           dataSource={historyData}
           size="small"
           pagination={false}
-        />
+        /> */}
 
       </div>
     </Drawer>
