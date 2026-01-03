@@ -77,20 +77,27 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         process.env.REACT_APP_POLICY_SERVICE_URL,
         `/pricing/${pricingId}`,
         requestData,
-        () => {
-          onClose();
-          // Reset form data
-          setFormData({
-            currency: "",
-            memberPrice: "",
-            nonMemberPrice: "",
-            effectiveFrom: null,
-            effectiveTo: null,
-            status: "Active",
-            price: "",
-          })
+        async () => {
+          try {
+            // Reset form data first
+            setFormData({
+              currency: "",
+              memberPrice: "",
+              nonMemberPrice: "",
+              effectiveFrom: null,
+              effectiveTo: null,
+              status: "Active",
+              price: "",
+            });
 
-          //  "Updated successfully"
+            // Refresh product data
+            if (onSubmit) await onSubmit();
+
+            // Close last
+            onClose();
+          } catch (err) {
+            console.error("Error in update callback:", err);
+          }
         },
         "Updated Successfully"
       );
@@ -142,7 +149,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       extra={
         <Space>
           {/* <Button onClick={onClose}>Cancel</Button> */}
-          <Button type="primary" onClick={handleSave}>
+          <Button type="primary" onClick={handleSave} loading={loading}>
             update
           </Button>
         </Space>

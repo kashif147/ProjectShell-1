@@ -676,6 +676,7 @@ const ProductTypesManagement = () => {
           <ProductForm
             product={editingProduct}
             productType={selectedProductType}
+            hidePricing={!!editingProduct}
             onClose={() => setIsProductDrawerOpen(false)}
             onSubmit={async (data) => {
               if (editingProduct) {
@@ -708,6 +709,7 @@ const ProductTypesManagement = () => {
         onClose={() => setIsPricingDrawerOpen(false)}
         product={editingPricing}
         productType={selectedProductType}
+        onSubmit={() => dispatch(getProductTypesWithProducts())}
       />
       {/* <MyDrawer
         title={editingPricing ? "Edit Pricing" : "Add New Pricing"}

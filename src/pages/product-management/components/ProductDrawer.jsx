@@ -5,7 +5,7 @@ import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
 
-const ProductForm = ({ product, productType, onClose, onSubmit }) => {
+const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) => {
   const initialFormState = {
     name: "",
     code: "",
@@ -95,7 +95,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     if (!formData.description?.trim())
       newErrors.description = "Description is required";
 
-    if (isProduct) {
+    if (isProduct && !hidePricing) {
       // if (!formData.memberPrice >= 0)
       //   newErrors.memberPrice = "Price must be greater than 0";
 
@@ -213,7 +213,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       </div>
 
       {/* Product-specific fields */}
-      {isProduct && (
+      {isProduct && !hidePricing && (
         <>
           <Divider orientation="left">Pricing Information</Divider>
 
