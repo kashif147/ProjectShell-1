@@ -8,7 +8,7 @@ import MyDatePicker from "../../../component/common/MyDatePicker";
 import { convertEuroToSand, insertDataFtn, updateFtn } from "../../../utils/Utilities";
 import { convertSandToEuro } from "../../../utils/Utilities";
 import MyAlert from "../../../component/common/MyAlert";
-const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
+const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
 
   const [formData, setFormData] = useState({
     currency: "",
@@ -28,21 +28,17 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
         return isNaN(num) ? "" : num.toFixed(2);
       };
 
+      const pricing = product.currentPricing;
+
       setFormData({
-        currency: product.currentPricing.currency || "",
-        memberPrice: "€" + (product.currentPricing.memberPrice !== null && product.currentPricing.memberPrice !== undefined && product.currentPricing.memberPrice !== "")
-          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.memberPrice)))
-          : "",
-        nonMemberPrice: "€" + (product.currentPricing.nonMemberPrice !== null && product.currentPricing.nonMemberPrice !== undefined && product.currentPricing.nonMemberPrice !== "")
-          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.nonMemberPrice)))
-          : "",
-        effectiveFrom: product.currentPricing.effectiveFrom || null,
-        effectiveTo: product.currentPricing.effectiveTo || null,
-        status: product.currentPricing.status || "Active",
+        currency: pricing.currency || "",
+        memberPrice: pricing.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.memberPrice)) : "",
+        nonMemberPrice: pricing.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.nonMemberPrice)) : "",
+        effectiveFrom: pricing.effectiveFrom || null,
+        effectiveTo: pricing.effectiveTo || null,
+        status: pricing.status || "Active",
         productId: product._id,
-        price: "€" + (product.currentPricing.price !== null && product.currentPricing.price !== undefined && product.currentPricing.price !== "")
-          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.price)))
-          : "",
+        price: pricing.price ? formatToTwoDecimals(convertSandToEuro(pricing.price)) : "",
       });
     }
   }, [product]);
@@ -58,6 +54,8 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
       const requestData = {
         currency: formData.currency,
         price: convertEuroToSand(formData.price),
+        memberPrice: convertEuroToSand(formData.memberPrice),
+        nonMemberPrice: convertEuroToSand(formData.nonMemberPrice),
         effectiveFrom: formData.effectiveFrom,
         effectiveTo: formData.effectiveTo,
         status: formData.status,
@@ -166,7 +164,17 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
           />
         </div>
         {
-          product?.name === "Membership" ?
+          productType?.name === "Membership" ?
+            <div className="mb-3">
+              <label className="form-label fw-semibold">Price</label>
+              <MyInput
+                type="number"
+                value={formData.price}
+                onChange={(e) => handleChange("price", e.target.value)}
+                placeholder="Enter price"
+              />
+            </div>
+            :
             <>
               <div className="mb-3">
                 <label className="form-label fw-semibold">Member Price</label>
@@ -187,16 +195,6 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
                 />
               </div>
             </>
-            :
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Price</label>
-              <MyInput
-                type="number"
-                value={formData.price}
-                onChange={(e) => handleChange("price", e.target.value)}
-                placeholder="Enter non-member price"
-              />
-            </div>
         }
 
 

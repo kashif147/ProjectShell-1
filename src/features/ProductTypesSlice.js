@@ -125,11 +125,11 @@ export const updatePricing = createAsyncThunk(
 
 export const getPricingHistory = createAsyncThunk(
   "productTypes/getPricingHistory",
-  async (productTypeId, { rejectWithValue }) => {
+  async (productId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `/product-types/${productTypeId}/pricing`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/products/${productId}/pricing`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -409,7 +409,7 @@ const initialState = {
   //     ],
   //   },
   // ],
-  productTypes:[],
+  productTypes: [],
   currentProductType: null,
   pricingHistory: [],
   loading: false,
@@ -509,7 +509,7 @@ const productTypesSlice = createSlice({
         if (index !== -1) {
           state.productTypes[index] = action.payload;
         }
-        if (state.currentProductType?.id === action.payload.id) {   
+        if (state.currentProductType?.id === action.payload.id) {
           state.currentProductType = action.payload;
         }
       })

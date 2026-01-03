@@ -525,7 +525,9 @@ const ProductTypesManagement = () => {
                   rowKey="id"
                   pagination={false}
                   size="small"
-                  scroll={{ x: "max-content" }}
+                  scroll={
+                    record?.products?.length > 0 ? { x: "max-content" } : undefined
+                  }
                   // Also apply to the inner table if needed
                   components={{
                     header: {
@@ -705,6 +707,7 @@ const ProductTypesManagement = () => {
         open={isPricingDrawerOpen}
         onClose={() => setIsPricingDrawerOpen(false)}
         product={editingPricing}
+        productType={selectedProductType}
       />
       {/* <MyDrawer
         title={editingPricing ? "Edit Pricing" : "Add New Pricing"}
