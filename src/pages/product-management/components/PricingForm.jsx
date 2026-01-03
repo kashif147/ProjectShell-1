@@ -53,12 +53,12 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       // Prepare data according to API body structure
       const requestData = {
         currency: formData.currency,
-        price: convertEuroToSand(formData.price),
-        memberPrice: convertEuroToSand(formData.memberPrice),
-        nonMemberPrice: convertEuroToSand(formData.nonMemberPrice),
         effectiveFrom: formData.effectiveFrom,
         effectiveTo: formData.effectiveTo,
         status: formData.status,
+        price: productType?.name === "Membership" ? convertEuroToSand(formData.price) : undefined,
+        memberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.memberPrice),
+        nonMemberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.nonMemberPrice),
       };
 
       // Get the pricing ID from product's currentPricing
@@ -149,7 +149,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       extra={
         <Space>
           {/* <Button onClick={onClose}>Cancel</Button> */}
-          <Button type="primary" onClick={handleSave} loading={loading}>
+          <Button type="primary" className="butn primary-btn" onClick={handleSave} loading={loading}>
             update
           </Button>
         </Space>
@@ -225,6 +225,8 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
           <label className="form-label fw-semibold">Status</label>
           <Switch
             checked={formData.status === "Active"}
+            // className="butn"
+            style={{backgroundColor:'#215e97'}}
             onChange={(checked) => handleChange("status", checked ? "Active" : "Inactive")}
             checkedChildren="Active"
             unCheckedChildren="Inactive"

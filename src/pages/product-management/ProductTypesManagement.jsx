@@ -313,8 +313,10 @@ const ProductTypesManagement = () => {
           status: data?.status,
           currency: data?.currency,
           productId: prodid,
-          memberPrice: data?.memberPrice,
-          nonMemberPrice: data?.nonMemberPrice,
+          productId: prodid,
+          memberPrice: selectedProductType?.name === "Membership" ? undefined : data?.memberPrice,
+          nonMemberPrice: selectedProductType?.name === "Membership" ? undefined : data?.nonMemberPrice,
+          price: selectedProductType?.name === "Membership" ? data?.memberPrice : undefined,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -358,11 +360,10 @@ const ProductTypesManagement = () => {
           `${process.env.REACT_APP_POLICY_SERVICE_URL}/pricing/${product.currentPricing._id}`,
           {
             currency: data?.currency,
-            memberPrice: data?.memberPrice,
-            nonMemberPrice: data?.nonMemberPrice,
-            effectiveFrom: data?.effectiveFrom,
-            effectiveTo: data?.effectiveTo,
             status: data?.status,
+            price: selectedProductType?.name === "Membership" ? data?.memberPrice : undefined,
+            memberPrice: selectedProductType?.name === "Membership" ? undefined : data?.memberPrice,
+            nonMemberPrice: selectedProductType?.name === "Membership" ? undefined : data?.nonMemberPrice,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -692,6 +693,7 @@ const ProductTypesManagement = () => {
             </Button> */}
             <Button
               type="primary"
+              className="butn primary-btn"
               loading={productActionLoading}
               onClick={() => {
                 // This will be handled by the form's submit
