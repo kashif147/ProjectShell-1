@@ -66,6 +66,7 @@ const ProductTypesManagement = () => {
   const [editingPricing, setEditingPricing] = useState(null);
   const [selectedProductType, setSelectedProductType] = useState(null);
   const [pricingFormMethods, setPricingFormMethods] = useState(null);
+  const [productActionLoading, setProductActionLoading] = useState(false);
 
   useEffect(() => {
     dispatch(getProductTypesWithProducts());
@@ -643,6 +644,7 @@ const ProductTypesManagement = () => {
             </Button> */}
             <Button
               type="primary"
+              loading={productActionLoading}
               onClick={() => {
                 // This will be handled by the form's submit
                 const form = document.getElementById("product-form");
@@ -667,23 +669,28 @@ const ProductTypesManagement = () => {
             hidePricing={!!editingProduct}
             onClose={() => setIsProductDrawerOpen(false)}
             onSubmit={async (data) => {
-              if (editingProduct) {
-                const updatedData = {
-                  name: data?.name,
-                  code: data?.code,
-                  description: data?.description,
-                  status: data?.status,
-                };
-                updateFtn(
-                  process.env.REACT_APP_POLICY_SERVICE_URL,
-                  `/products/${editingProduct?._id}`,
-                  updatedData,
-                  () => {
-                    dispatch(getProductTypesWithProducts());
-                  }
-                );
-              } else {
-                await createProductWithPricing(data, selectedProductType);
+              setProductActionLoading(true);
+              try {
+                if (editingProduct) {
+                  const updatedData = {
+                    name: data?.name,
+                    code: data?.code,
+                    description: data?.description,
+                    status: data?.status,
+                  };
+                  await updateFtn(
+                    process.env.REACT_APP_POLICY_SERVICE_URL,
+                    `/products/${editingProduct?._id}`,
+                    updatedData,
+                    () => {
+                      dispatch(getProductTypesWithProducts());
+                    }
+                  );
+                } else {
+                  await createProductWithPricing(data, selectedProductType);
+                }
+              } finally {
+                setProductActionLoading(false);
               }
               // setIsProductDrawerOpen(false);
             }}
