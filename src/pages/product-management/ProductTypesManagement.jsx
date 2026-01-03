@@ -115,20 +115,15 @@ const ProductTypesManagement = () => {
       okType: "danger",
       cancelText: "Cancel",
       onOk: () => {
-        deleteFtn(
-          `${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types/${productTypeId}`,
-          () => {
-            dispatch(getProductTypesWithProducts());
-          }
-        );
-        // dispatch(deleteProductType(productTypeId));
-        // message.success({
-        //   content: "Product type deleted successfully",
-        //   style: {
-        //     marginTop: "20vh",
-        //     textAlign: "center",
-        //   },
-        // });
+        return new Promise((resolve, reject) => {
+          deleteFtn(
+            `${process.env.REACT_APP_POLICY_SERVICE_URL}/product-types/${productTypeId}`,
+            async () => {
+              await dispatch(getProductTypesWithProducts());
+              resolve();
+            }
+          ).catch(reject);
+        });
       },
     });
   };
@@ -177,16 +172,9 @@ const ProductTypesManagement = () => {
       okText: "Delete",
       okType: "danger",
       cancelText: "Cancel",
-      onOk: () =>
-        // dispatch(deleteProductType(productTypeId));
-        // message.success({
-        //   content: "Product type deleted successfully",
-        //   style: {
-        //     marginTop: "20vh",
-        //     textAlign: "center",
-        //   },
-        // });
-        handleDeleteBoth(productTypeId, dispatch),
+      onOk: async () => {
+        await handleDeleteBoth(productTypeId, dispatch);
+      },
     });
   };
 
