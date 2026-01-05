@@ -62,6 +62,7 @@ import MyAlert from "./MyAlert";
 import axios from "axios";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
+import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -89,6 +90,7 @@ function HeaderDetails() {
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [sortOption, setSortOption] = useState(null);
+  const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
 
 
   const handleDateChange = (val) => {
@@ -774,13 +776,14 @@ function HeaderDetails() {
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
             location?.pathname == "/Popout" ||
+            location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/templeteSummary") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : ` ${location?.state?.search}`}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -842,6 +845,8 @@ function HeaderDetails() {
                                   setIsBatchOpen(!isBatchOpen);
                                 } else if (nav === "/ChangCateSumm") {
                                   setisDrawerOpen(!isDrawerOpen);
+                                } else if (nav === "/DirectDebitAuthorization") {
+                                  setDdDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -1288,6 +1293,22 @@ function HeaderDetails() {
         open={isSimpleBatchOpen}
         onClose={() => setIsSimpleBatchOpen(false)}
       />
+
+      <MyDrawer
+        title="Direct Debit Authorization"
+        open={ddDrawerOpen}
+        onClose={() => setDdDrawerOpen(false)}
+        width={900}
+        isPagination={false}
+      >
+        <DirectDebitForm
+          onCancel={() => setDdDrawerOpen(false)}
+          onSubmit={(data) => {
+            console.log("Saving Direct Debit:", data);
+            setDdDrawerOpen(false);
+          }}
+        />
+      </MyDrawer>
     </div>
   );
 }

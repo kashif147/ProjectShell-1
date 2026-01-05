@@ -249,6 +249,59 @@ const staticColumns = {
       width: 180,
     },
   ],
+  DirectDebitAuthorization: [
+    {
+      dataIndex: "id",
+      title: "ID",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+    {
+      dataIndex: "accountName",
+      title: "Account Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: "bankName",
+      title: "Bank Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "iban",
+      title: "IBAN",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 250,
+    },
+    {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (status) => (
+        <Tag color={status === "Active" ? "green" : "orange"}>{status}</Tag>
+      ),
+    },
+    {
+      dataIndex: "dateAuthorized",
+      title: "Date Authorized",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+  ],
   ChangCateSumm: [
     {
       dataIndex: "regNo",
@@ -4452,12 +4505,12 @@ export const TableColumnsProvider = ({ children }) => {
         Profile: prevState.Profile.map((item) =>
           item.titleColumn === titleColumn
             ? {
-                ...item,
-                lookups: lookupsForSelect[lookupKey].reduce((acc, entry) => {
-                  acc[entry.label] = false;
-                  return acc;
-                }, {}),
-              }
+              ...item,
+              lookups: lookupsForSelect[lookupKey].reduce((acc, entry) => {
+                acc[entry.label] = false;
+                return acc;
+              }, {}),
+            }
             : item
         ),
       }));
@@ -4478,12 +4531,12 @@ export const TableColumnsProvider = ({ children }) => {
       Profile: prevState.Profile.map((item) =>
         item.titleColumn === "Division"
           ? {
-              ...item,
-              lookups: selectLokups.Divisions.reduce((acc, division) => {
-                acc[division.label] = false;
-                return acc;
-              }, {}),
-            }
+            ...item,
+            lookups: selectLokups.Divisions.reduce((acc, division) => {
+              acc[division.label] = false;
+              return acc;
+            }, {}),
+          }
           : item
       ),
     }));
@@ -4493,10 +4546,10 @@ export const TableColumnsProvider = ({ children }) => {
   const contextValue = useMemo(
     () => ({
       columns,
-      updateColumns: () => {},
+      updateColumns: () => { },
       state: { selectedOption: "!=", checkboxes: {} },
-      setState: () => {},
-      updateState: () => {},
+      setState: () => { },
+      updateState: () => { },
       gridData,
       handleCheckboxFilterChange,
       addColumnToSection,

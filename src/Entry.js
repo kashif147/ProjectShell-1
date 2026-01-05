@@ -136,6 +136,9 @@ const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
 const Reconciliation = lazyWithRetry(() =>
   import("./pages/finance/Reconciliation")
 );
+const DirectDebitAuthorization = lazyWithRetry(() =>
+  import("./pages/finance/DirectDebitAuthorization")
+);
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
@@ -201,10 +204,10 @@ function Entry() {
 
   // Define routes where sidebar should NOT be shown
   const noSidebarRoutes = [
-  "/", // login page
-  "/rewards/insurance",
-  "/rewards/rewards"
-];
+    "/", // login page
+    "/rewards/insurance",
+    "/rewards/rewards"
+  ];
 
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
   const showHeaderDetails = showSidebar;
@@ -627,6 +630,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <Reconciliation />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="DirectDebitAuthorization"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitAuthorization />
                         </ProtectedRoute>
                       }
                     />

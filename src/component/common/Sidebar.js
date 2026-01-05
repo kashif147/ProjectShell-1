@@ -56,16 +56,16 @@ const Sidebar = () => {
   const menuItems = useMemo(() => {
     // Get the base menu items for the active module
     const baseMenuItems = itemsMap[activeKey] || [];
-  
+
 
     // Debug each menu item's requirements
-baseMenuItems.forEach((item, index) => {
-  const hasPermission =
-    item.permissions?.some((p) => permissions.includes(p)) || true;
-  const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
+    baseMenuItems.forEach((item, index) => {
+      const hasPermission =
+        item.permissions?.some((p) => permissions.includes(p)) || true;
+      const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
 
-  // You can use hasPermission and hasRole for further logic if needed
-});
+      // You can use hasPermission and hasRole for further logic if needed
+    });
 
 
     const filtered = filterMenuItemsByAuth(baseMenuItems, permissions, roles);
@@ -84,7 +84,7 @@ baseMenuItems.forEach((item, index) => {
             <Tooltip
               title={item.label.props.children}
               placement="right"
-              // overlayClassName="sidebar-tooltip"
+            // overlayClassName="sidebar-tooltip"
             >
               <div className="icon-only-item">{item.icon}</div>
             </Tooltip>
@@ -137,6 +137,7 @@ baseMenuItems.forEach((item, index) => {
       "/NewGraduate": "CornMarket New Graduate",
       "/CornMarketRewards": "CornMarket Rewards",
       "/RecruitAFriend": "Recruit a Friend",
+      "/DirectDebitAuthorization": "Authorisations",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -213,6 +214,9 @@ baseMenuItems.forEach((item, index) => {
         break;
       case "Reconciliations":
         navigate("/Reconciliation", { state: { search: "Reconciliation" } });
+        break;
+      case "Authorisations":
+        navigate("/DirectDebitAuthorization", { state: { search: "Direct Debit Authorization" } });
         break;
       case "Online Payments":
         navigate("/onlinePayment", { state: { search: "onlinePayment" } });
@@ -322,8 +326,8 @@ baseMenuItems.forEach((item, index) => {
   const sideBarWidth = showProfileHeaderRoutes.includes(location.pathname)
     ? "19vw"
     : isPinned
-    ? "80px"
-    : "200px";
+      ? "80px"
+      : "200px";
 
   return (
     <div
@@ -358,9 +362,8 @@ baseMenuItems.forEach((item, index) => {
           scrollbarWidth: "none",
         }}
         items={transformedMenuItems}
-        className={`sidebar-menu hide-scroll-webkit ${
-          isPinned ? "collapsed" : "expanded"
-        }`}
+        className={`sidebar-menu hide-scroll-webkit ${isPinned ? "collapsed" : "expanded"
+          }`}
         onClick={handleClick}
       />
     </div>
