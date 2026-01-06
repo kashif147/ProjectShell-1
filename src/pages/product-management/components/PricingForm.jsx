@@ -253,7 +253,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         {/* <Table
           columns={historyColumns}
           dataSource={historyData}
-          size="small"
+          size="small"   
           pagination={false}
         /> */}
 

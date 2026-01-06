@@ -198,6 +198,9 @@ const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
 const RecruitAFriend = lazyWithRetry(() =>
   import("./pages/membership/RecruitAFriend")
 );
+const DirectDebitSummary = lazyWithRetry(() =>
+  import("./pages/finance/DirectDebitSummary")
+);
 
 function Entry() {
   const location = useLocation();
@@ -725,6 +728,15 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <Popout />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="DirectDebit"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitSummary />
                         </ProtectedRoute>
                       }
                     />

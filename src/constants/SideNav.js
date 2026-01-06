@@ -147,6 +147,15 @@ export const financeItems = [
     label: <div className="sidebar-label">DD Authorisation</div>,
   },
   {
+    key: "Direct Debit",
+    icon: (
+      <div className="icon">
+        <FaCreditCard />
+      </div>
+    ),
+    label: <div className="sidebar-label">Direct Debit</div>,
+  },
+  {
     key: "DD Batches",
     icon: (
       <div className="icon">

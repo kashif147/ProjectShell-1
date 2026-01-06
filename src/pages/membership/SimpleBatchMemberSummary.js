@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
 import { useSelector, useDispatch } from 'react-redux';
 import { Row, Col, Button, Space, Tabs, Table } from "antd";
@@ -84,12 +84,59 @@ const columns = [
 function SimpleBatchMemberSummary() {
   const location = useLocation();
   const dispatch = useDispatch();
-  
-  const { data, loading, error } = useSelector(
+
+  const { data: apiData, loading, error } = useSelector(
     (state) => state.cornMarketBatchById
   );
-  const { batchName, batchId } = location.state || {};
+  const { batchName, batchId, search } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
+
+  // Use API data if available, otherwise use mock data for Direct Debit
+  const data = useMemo(() => {
+    if (apiData) return apiData;
+
+    if (search === "DirectDebitSummary") {
+      return {
+        id: batchId || "DD-001",
+        name: batchName || "Monthly DD Batch - January 2024",
+        date: "2024-01-05",
+        createdBy: "John Doe",
+        profiles: [
+          {
+            id: "M001",
+            fullName: "Alice Thompson",
+            membershipNo: "45217A",
+            addressLine1: "123 Main St",
+            addressCity: "Dublin",
+            addressCounty: "Dublin",
+            email: "alice@example.com",
+            mobileNumber: "0871234567"
+          },
+          {
+            id: "M002",
+            fullName: "Bob Murphy",
+            membershipNo: "93824B",
+            addressLine1: "45 Park Lane",
+            addressCity: "Cork",
+            addressCounty: "Cork",
+            email: "bob@example.com",
+            mobileNumber: "0867654321"
+          },
+          {
+            id: "M003",
+            fullName: "Charlie Kelly",
+            membershipNo: "12345C",
+            addressLine1: "78 High St",
+            addressCity: "Galway",
+            addressCounty: "Galway",
+            email: "charlie@example.com",
+            mobileNumber: "0851122334"
+          }
+        ]
+      };
+    }
+    return null;
+  }, [apiData, search, batchId, batchName]);
 
   // Function to export to Excel with batch name as filename
   const exportToExcel = () => {
@@ -136,12 +183,12 @@ function SimpleBatchMemberSummary() {
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    
+
     // Use batch name for filename, sanitize it
-    const batchNameForFile = data?.name 
-      ? data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase() 
+    const batchNameForFile = data?.name
+      ? data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()
       : "batch_members";
-    
+
     a.download = `${batchNameForFile}.xlsx`;
     document.body.appendChild(a);
     a.click();
@@ -312,7 +359,7 @@ function SimpleBatchMemberSummary() {
           >
             <FileExcelOutlined />
             <span>
-              {data?.name 
+              {data?.name
                 ? `${data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`
                 : "batch_data.xlsx"
               }

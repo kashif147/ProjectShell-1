@@ -777,13 +777,14 @@ function HeaderDetails() {
             location?.pathname == "/Notes" ||
             location?.pathname == "/Popout" ||
             location?.pathname == "/DirectDebitAuthorization" ||
+            location?.pathname == "/DirectDebit" ||
             location?.pathname == "/templeteSummary") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : "")}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -830,7 +831,8 @@ function HeaderDetails() {
                                   nav === "/CornMarket" ||
                                   nav === "/NewGraduate" ||
                                   nav === "/CornMarketRewards" ||
-                                  nav === "/RecruitAFriend"
+                                  nav === "/RecruitAFriend" ||
+                                  nav === "/DirectDebit"
                                 ) {
                                   setIsSimpleBatchOpen(true);
                                 }

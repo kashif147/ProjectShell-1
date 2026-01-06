@@ -130,7 +130,7 @@ export const financeItems = [
   ),
   createMenuItem(
     "Direct Debit",
-    <FaWallet />,
+    <FaCreditCard />,
     "Direct Debit",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]

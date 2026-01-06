@@ -22,17 +22,17 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   // Determine batch type based on URL path - with better logic
   useEffect(() => {
     const path = location.pathname;
-    
+
     // Skip if path hasn't changed
     if (path === lastPathRef.current) {
       return;
     }
-    
+
     lastPathRef.current = path;
     console.log("🔄 useEffect triggered with path:", path);
 
     let determinedType = "";
-    
+
     // More specific matching
     if (path.toLowerCase().includes("newgraduate")) {
       determinedType = "new-graduate";
@@ -40,19 +40,21 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       determinedType = "inmo-rewards";
     } else if (path.toLowerCase().includes("recruitafriend")) {
       determinedType = "recruit-friend";
+    } else if (path.toLowerCase().includes("directdebit")) {
+      determinedType = "direct-debit";
     } else {
       determinedType = "";
       console.warn("⚠️ Could not determine batch type from path:", path);
     }
-    
+
     console.log("🎯 Determined batch type:", determinedType);
-    
+
     // Update both state and ref
     setBatchType(determinedType);
     batchTypeRef.current = determinedType;
-    
+
     // Force a re-render to ensure UI updates
-    setFormData(prev => ({...prev}));
+    setFormData(prev => ({ ...prev }));
   }, [location.pathname]);
 
   // Debug log when batchType changes
@@ -83,7 +85,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     // Batch type validation - using ref for latest value
     const currentType = batchTypeRef.current;
     console.log("🔍 Validating form - current batch type:", currentType);
-    
+
     if (!currentType) {
       console.error("❌ Batch type could not be determined from URL");
       newErrors.batchType = "Could not determine batch type";
@@ -106,11 +108,11 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     console.log("=".repeat(50));
     console.log("🚀 SUBMIT STARTED");
     console.log("=".repeat(50));
-    
+
     console.log("📍 Current pathname:", location.pathname);
     console.log("📋 batchType from state:", batchType);
     console.log("📋 batchType from ref:", batchTypeRef.current);
-    
+
     // DIRECT HARDCODED CHECK - This will show exactly what value we're working with
     let hardcodedType = "";
     if (location.pathname.toLowerCase().includes("newgraduate")) {
@@ -119,10 +121,12 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       hardcodedType = "inmo-rewards";
     } else if (location.pathname.toLowerCase().includes("recruitafriend")) {
       hardcodedType = "recruit-friend";
+    } else if (location.pathname.toLowerCase().includes("directdebit")) {
+      hardcodedType = "direct-debit";
     }
-    
+
     console.log("🎯 Hardcoded type from path analysis:", hardcodedType);
-    
+
     if (!validateForm()) {
       MyAlert("error", "Validation Error", "Please fix the form errors before submitting");
       return;
@@ -136,17 +140,17 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
     // FORCE THE CORRECT VALUE - Let's override with direct path analysis
     let apiType = hardcodedType; // Use the hardcoded analysis
-    
+
     // If hardcodedType is empty, use ref as fallback
     if (!apiType) {
       apiType = batchTypeRef.current;
     }
-    
+
     // If still empty, use state as last resort
     if (!apiType) {
       apiType = batchType;
     }
-    
+
     console.log("🎯 Final apiType to be sent:", apiType);
 
     const apiData = {
@@ -181,7 +185,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
     try {
       console.log("🌐 Making API request...");
-      
+
       const response = await axios.post(
         `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batches`,
         apiData,
@@ -220,7 +224,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       if (error.response) {
         console.error("📊 Error response data:", error.response.data);
         console.error("📊 Error response status:", error.response.status);
-        
+
         if (error.response.status === 401) {
           errorMessage = "Authentication failed";
           errorDescription = "Your session has expired. Please login again.";
@@ -270,6 +274,8 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         return "Inmo Rewards";
       case "recruit-friend":
         return "Recruit A Friend";
+      case "direct-debit":
+        return "Direct Debit";
       default:
         return "Batch";
     }
@@ -335,7 +341,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
                 }</div>
               </div>
             </Col> */}
-            
+
             <Col span={24}>
               <MyInput
                 label="Batch Name:"

@@ -141,9 +141,14 @@ const Breadcrumb = () => {
       page: "Batches",
       icon: "💳",
     },
-    "/Batches": {
+    "/DirectDebit": {
       module: "Finance",
-      page: "/Reconciliation",
+      page: "Direct Debit",
+      icon: "💳",
+    },
+    "/DirectDebitAuthorization": {
+      module: "Finance",
+      page: "Direct Debit Authorization",
       icon: "💳",
     },
     "/Import": {
@@ -177,6 +182,12 @@ const Breadcrumb = () => {
       icon: "📥",
     },
     "/BatchMemberSummary": {
+      module: "Finance",
+      page: "Batch Member Summary",
+      icon: "💳",
+      recordIdField: "batchName",
+    },
+    "/SimpleBatchMemberSummary": {
       module: "Finance",
       page: "Batch Member Summary",
       icon: "💳",
@@ -472,8 +483,8 @@ const Breadcrumb = () => {
   // Add app launcher item (only if different from module)
   const appLauncherName = breadcrumbData.appLauncher
     ? Object.keys(appLauncherItems).find(
-        (key) => appLauncherItems[key] === breadcrumbData.appLauncher
-      )
+      (key) => appLauncherItems[key] === breadcrumbData.appLauncher
+    )
     : "App Launcher";
 
   if (appLauncherName !== breadcrumbData.module) {

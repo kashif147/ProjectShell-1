@@ -570,6 +570,7 @@ const TableComponent = ({
                 "/NewGraduate",
                 "/CornMarketRewards",
                 "/RecruitAFriend",
+                "/DirectDebit",
               ];
               const isSimpleBatch = simpleBatchPaths.includes(
                 location.pathname
@@ -587,8 +588,7 @@ const TableComponent = ({
                     batchId: record?.id || record?.key,
                   }}
                   style={{ color: "inherit", textDecoration: "none" }}
-                  onClick={() =>
-                  {
+                  onClick={() => {
                     console.log(record?._original?._id, "recordid");
                     debugger
                     dispatch(getCornMarketBatchById(record?._original?._id))
