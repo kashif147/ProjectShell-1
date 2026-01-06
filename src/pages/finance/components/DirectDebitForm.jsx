@@ -7,20 +7,48 @@ import {
     MdCreditCard,
     MdOutlineInfo,
     MdVerifiedUser,
+    MdSearch,
+    MdPerson,
 } from "react-icons/md";
+import MemberSearch from "../../../component/profile/MemberSearch";
 
 const DirectDebitForm = ({ initialData, onSubmit }) => {
+    const [selectedMember, setSelectedMember] = useState(null);
     const [formData, setFormData] = useState(initialData || {
         bankName: "",
         branchAddress: "123 Financial District, London, EC1A 1BB, United Kingdom",
         authorized: false,
         accountName: "",
+        accountNumber: "",
         bic: "",
         iban: "",
-        personalAddress: "42 Wallaby Way, Sydney",
-        phone: "+44 7700 900077",
-        email: "member@example.com",
+        personalAddress: "",
+        phone: "",
+        email: "",
     });
+
+    const handleMemberSelect = (memberData) => {
+        setSelectedMember(memberData);
+        // Pre-fill form data from selected member
+        setFormData(prev => ({
+            ...prev,
+            accountName: `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''}`.trim().toUpperCase(),
+            email: memberData.contactInfo?.personalEmail || "",
+            phone: memberData.contactInfo?.mobileNumber || "",
+            personalAddress: memberData.contactInfo?.fullAddress || "",
+        }));
+    };
+
+    const handleClearMember = () => {
+        setSelectedMember(null);
+        setFormData(prev => ({
+            ...prev,
+            accountName: "",
+            email: "",
+            phone: "",
+            personalAddress: "",
+        }));
+    };
 
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
@@ -141,7 +169,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
             border: "1px solid #dcfce7",
             borderRadius: "16px",
             padding: "20px",
-            marginTop: "16px",
+            marginTop: "0px",
             display: "flex",
             gap: "16px",
         },
@@ -231,6 +259,60 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
 
     return (
         <div style={styles.formContainer}>
+            {/* Member Selection Section */}
+            <div style={styles.section}>
+                <div style={styles.headerRow}>
+                    {/* <div style={styles.headerTitleContainer}>
+
+                        <h2 style={styles.headerTitle}>Member Lookup</h2>
+                    </div> */}
+                </div>
+                <div style={styles.card}>
+                    <label style={styles.label}>Search and select a member to initiate mandate</label>
+                    <MemberSearch
+                        fullWidth={true}
+                        onSelectBehavior="callback"
+                        onSelectCallback={handleMemberSelect}
+                        onClear={handleClearMember}
+                    />
+                    {/* {selectedMember && (
+                        <div style={{
+                            marginTop: "16px",
+                            padding: "16px",
+                            backgroundColor: "#f0f9ff",
+                            borderRadius: "12px",
+                            border: "1px solid #bae6fd",
+                            display: "flex",
+                            alignItems: "center",
+                            gap: "12px"
+                        }}>
+                            <div style={{
+                                width: "40px",
+                                height: "40px",
+                                borderRadius: "50%",
+                                backgroundColor: "#3b82f6",
+                                color: "white",
+                                display: "flex",
+                                alignItems: "center",
+                                justifyCenter: "center",
+                                display: "flex",
+                                justifyContent: "center"
+                            }}>
+                                <MdPerson size={24} style={{ marginTop: "8px" }} />
+                            </div>
+                            <div>
+                                <div style={{ fontSize: "14px", fontWeight: "700", color: "#0369a1" }}>
+                                    {selectedMember.personalInfo?.forename} {selectedMember.personalInfo?.surname}
+                                </div>
+                                <div style={{ fontSize: "12px", color: "#0ea5e9" }}>
+                                    Membership No: {selectedMember.membershipNumber}
+                                </div>
+                            </div>
+                        </div>
+                    )} */}
+                </div>
+            </div>
+
             {/* Section: Your Account */}
             <div style={styles.section}>
                 <div style={styles.headerRow}>
@@ -247,7 +329,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                     <div style={styles.fieldGrid}>
                         <div style={styles.full}>
                             <label style={styles.label}>
-                                <span>Settlement Bank</span>
+                                <span>Bank</span>
                                 <span style={{ color: "#ef4444" }}>* Required</span>
                             </label>
                             <select
@@ -261,12 +343,12 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                 <option value="barclays">Barclays Bank UK</option>
                                 <option value="lloyds">Lloyds Banking Group</option>
                             </select>
-                            <div style={styles.infoNote}>
+                            {/* <div style={styles.infoNote}>
                                 <MdOutlineInfo size={18} style={{ color: "#3b82f6", flexShrink: 0 }} />
                                 <p style={styles.infoNoteText}>
                                     Your branch address will be automatically resolved from the central banking directory upon selection.
                                 </p>
-                            </div>
+                            </div> */}
                         </div>
 
                         <div style={styles.full}>
@@ -292,9 +374,9 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                     required
                                 />
                                 <div>
-                                    <span style={styles.authHeading}>Direct Debit Mandate Confirmation</span>
+                                    <span style={styles.authHeading}>Authorization Declaration</span>
                                     <p style={styles.authDesc}>
-                                        I confirm that I have the right to authorize this mandate and have verified the accuracy of the account details provided above.
+                                        By signing up to this form, I have authorised a recurring debit to my bank account.
                                     </p>
                                 </div>
                             </div>
@@ -308,6 +390,17 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                 onChange={handleChange}
                                 required
                                 placeholder="e.g. ALEX MORGAN"
+                            />
+                        </div>
+
+                        <div>
+                            <MyInput
+                                label="Account Number"
+                                name="accountNumber"
+                                value={formData.accountNumber}
+                                onChange={handleChange}
+                                required
+                                placeholder="e.g. 12345678"
                             />
                         </div>
 
