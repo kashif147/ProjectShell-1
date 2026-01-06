@@ -138,13 +138,13 @@ export const financeItems = [
     label: <div className="sidebar-label">DD</div>,
   },
   {
-    key: "Authorisations",
+    key: "DD Authorisations",
     icon: (
       <div className="icon">
         <FaUserCheck />
       </div>
     ),
-    label: <div className="sidebar-label">Authorisations</div>,
+    label: <div className="sidebar-label">DD Authorisation</div>,
   },
   {
     key: "DD Batches",

@@ -137,7 +137,7 @@ const Sidebar = () => {
       "/NewGraduate": "CornMarket New Graduate",
       "/CornMarketRewards": "CornMarket Rewards",
       "/RecruitAFriend": "Recruit a Friend",
-      "/DirectDebitAuthorization": "Authorisations",
+      "/DirectDebitAuthorization": "DD Authorisations",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -215,7 +215,7 @@ const Sidebar = () => {
       case "Reconciliations":
         navigate("/Reconciliation", { state: { search: "Reconciliation" } });
         break;
-      case "Authorisations":
+      case "DD Authorisations":
         navigate("/DirectDebitAuthorization", { state: { search: "Direct Debit Authorization" } });
         break;
       case "Online Payments":

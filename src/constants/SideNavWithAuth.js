@@ -122,9 +122,9 @@ export const financeItems = [
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
   createMenuItem(
-    "Authorisations",
+    "DD Authorisations",
     <FaUserShield />,
-    "Authorisations",
+    "DD Authorisation",
     ["USER_READ", "USER_WRITE"],
     ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
   ),
