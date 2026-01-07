@@ -166,6 +166,21 @@ const PermissionManagement = lazyWithRetry(() =>
 const CancelledMembersReport = lazyWithRetry(() =>
   import("./features/reports/cancelled-members/CancelledMembersReport")
 );
+const SuspendedMembersReport = lazyWithRetry(() =>
+  import("./pages/reports/SuspendedMembersReport")
+);
+const ResignedMembersReport = lazyWithRetry(() =>
+  import("./pages/reports/ResignedMembersReport")
+);
+const NewMembersReport = lazyWithRetry(() =>
+  import("./pages/reports/NewMembersReport")
+);
+const LeaversReport = lazyWithRetry(() =>
+  import("./pages/reports/LeaversReport")
+);
+const JoinersReport = lazyWithRetry(() =>
+  import("./pages/reports/JoinersReport")
+);
 const ReportViewerDemo = lazyWithRetry(() =>
   import("./features/reports/report-viewer/ReportViewerDemo")
 );
@@ -795,6 +810,54 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <TenantManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="CancelledMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <CancelledMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="SuspendedMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <SuspendedMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="ResignedMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <ResignedMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="NewMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <NewMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="LeaversReport"
+                      element={
+                        <ProtectedRoute>
+                          <LeaversReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="JoinersReport"
+                      element={
+                        <ProtectedRoute>
+                          <JoinersReport />
                         </ProtectedRoute>
                       }
                     />

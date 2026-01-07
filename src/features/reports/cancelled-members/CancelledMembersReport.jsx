@@ -105,6 +105,8 @@ const CancelledMembersReport = () => {
       maxWidth: 200,
       sortable: true,
       filter: true,
+      valueFormatter: (params) =>
+        params.value ? dayjs(params.value).format("DD/MM/YYYY") : "",
     },
     {
       headerName: "Transaction ID",
@@ -220,21 +222,21 @@ const CancelledMembersReport = () => {
 
   const onPaginationChanged = useCallback((params) => {
     if (!gridApiRef.current) return;
-    
+
     const currentPage = params.api.paginationGetCurrentPage() + 1;
     const pageSize = params.api.paginationGetPageSize();
-    
+
     // Only update state if pagination actually changed
     // Check both against last fetched pagination and current state to prevent loops
     setPagination((prev) => {
       const lastPagination = lastPaginationRef.current;
-      const hasChanged = 
-        prev.current !== currentPage || 
+      const hasChanged =
+        prev.current !== currentPage ||
         prev.pageSize !== pageSize;
-      const isDifferentFromLastFetch = 
-        lastPagination.current !== currentPage || 
+      const isDifferentFromLastFetch =
+        lastPagination.current !== currentPage ||
         lastPagination.pageSize !== pageSize;
-      
+
       // Only update if pagination changed AND it's different from what we last fetched
       if (hasChanged && isDifferentFromLastFetch) {
         return { current: currentPage, pageSize };
@@ -260,6 +262,7 @@ const CancelledMembersReport = () => {
                     dayjs(),
                   ]}
                   onChange={handleDateRangeChange}
+                  format="DD/MM/YYYY"
                 />
               </div>
             </Col>
@@ -343,8 +346,8 @@ const CancelledMembersReport = () => {
             </div>
             <div
               className="ag-theme-alpine"
-              style={{ 
-                height: "600px", 
+              style={{
+                height: "600px",
                 width: "100%",
                 overflow: "hidden"
               }}

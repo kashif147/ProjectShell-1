@@ -139,6 +139,11 @@ const Sidebar = () => {
       "/RecruitAFriend": "Recruit a Friend",
       "/DirectDebitAuthorization": "DD Authorisations",
       "/DirectDebit": "Direct Debit",
+      "/SuspendedMembersReport": "Suspended Members Report",
+      "/ResignedMembersReport": "Resigned Members Report",
+      "/NewMembersReport": "New Members Report",
+      "/LeaversReport": "Leavers Report",
+      "/JoinersReport": "Joiners Report",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -270,6 +275,31 @@ const Sidebar = () => {
       case "Cancelled Members Report":
         navigate("/CancelledMembersReport", {
           state: { search: "Cancelled Members Report" },
+        });
+        break;
+      case "Suspended Members Report":
+        navigate("/SuspendedMembersReport", {
+          state: { search: "Suspended Members Report" },
+        });
+        break;
+      case "Resigned Members Report":
+        navigate("/ResignedMembersReport", {
+          state: { search: "Resigned Members Report" },
+        });
+        break;
+      case "New Members Report":
+        navigate("/NewMembersReport", {
+          state: { search: "New Members Report" },
+        });
+        break;
+      case "Leavers Report":
+        navigate("/LeaversReport", {
+          state: { search: "Leavers Report" },
+        });
+        break;
+      case "Joiners Report":
+        navigate("/JoinersReport", {
+          state: { search: "Joiners Report" },
         });
         break;
       case "Policy Client Example":
