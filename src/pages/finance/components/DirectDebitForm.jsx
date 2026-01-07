@@ -58,15 +58,13 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
         }));
     };
 
-    // The submit logic will be triggered by the parent drawer's "Add" button 
-    // if we expose a submit method, or by the parent handling the data.
-    // For now, we keep the form state managed here.
-
     const styles = {
         formContainer: {
-            padding: "10px 15px",
-            fontFamily: "'Plus Jakarta Sans', 'Inter', system-ui, sans-serif",
+            padding: "32px",
+            fontFamily: "'Inter', system-ui, sans-serif",
             color: "#1f2937",
+            maxWidth: "1024px",
+            // margin: "0 auto",
         },
         section: {
             marginBottom: "32px",
@@ -74,199 +72,142 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
         headerRow: {
             display: "flex",
             alignItems: "center",
-            justifyContent: "space-between",
-            marginBottom: "20px",
-        },
-        headerTitleContainer: {
-            display: "flex",
-            alignItems: "center",
             gap: "12px",
+            marginBottom: "24px",
+            paddingBottom: "16px",
+            borderBottom: "1px solid #e5e7eb",
         },
         headerIcon: (color, bg) => ({
-            width: "44px",
-            height: "44px",
-            borderRadius: "12px",
+            width: "40px",
+            height: "40px",
+            borderRadius: "50%",
             display: "flex",
             alignItems: "center",
             justifyContent: "center",
             backgroundColor: bg,
             color: color,
-            boxShadow: `0 4px 12px ${bg}`,
         }),
         headerTitle: {
-            fontSize: "18px",
-            fontWeight: "700",
+            fontSize: "20px",
+            fontWeight: "600",
             margin: 0,
             color: "#111827",
-            letterSpacing: "-0.02em",
-        },
-        badge: {
-            fontSize: "11px",
-            fontWeight: "700",
-            padding: "4px 10px",
-            borderRadius: "20px",
-            backgroundColor: "#f3f4f6",
-            color: "#4b5563",
-            textTransform: "uppercase",
         },
         card: {
             backgroundColor: "#ffffff",
-            padding: "24px",
-            borderRadius: "20px",
-            border: "1px solid #f1f5f9",
-            boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.04), 0 8px 10px -6px rgba(0, 0, 0, 0.04)",
+            padding: "32px",
+            borderRadius: "8px",
+            border: "1px solid #e5e7eb",
+            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)", // shadow-sm
         },
         fieldGrid: {
             display: "grid",
             gridTemplateColumns: "1fr 1fr",
-            gap: "20px",
+            gap: "24px",
         },
         full: {
             gridColumn: "span 2",
         },
         label: {
             display: "block",
-            fontSize: "13px",
-            fontWeight: "600",
-            color: "#64748b",
-            marginBottom: "6px",
-            display: "flex",
-            justifyContent: "space-between",
+            fontSize: "14px",
+            fontWeight: "500",
+            color: "#374151",
+            marginBottom: "4px",
         },
         select: {
             width: "100%",
-            padding: "12px 14px",
-            borderRadius: "10px",
-            border: "1.5px solid #e2e8f0",
+            padding: "0.625rem 0.75rem",
+            borderRadius: "0.5rem",
+            border: "1px solid #d1d5db",
             fontSize: "14px",
-            color: "#1e293b",
+            color: "#111827",
             backgroundColor: "#fff",
-            transition: "all 0.3s ease",
             outline: "none",
-            appearance: "none",
-            backgroundImage: `url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' stroke-width='2' d='M19 9l-7 7-7-7'%3E%3C/path%3E%3C/svg%3E")`,
-            backgroundRepeat: "no-repeat",
-            backgroundPosition: "right 14px center",
-            backgroundSize: "16px",
+            height: "42px",
+            boxShadow: "0 1px 2px 0 rgba(0, 0, 0, 0.05)",
         },
-        infoNote: {
+        // Auhtorization Box Style (Blue Box)
+        authBox: {
+            backgroundColor: "#eff6ff", // bg-blue-50
+            border: "1px solid #dbeafe", // border-blue-100
+            borderRadius: "0.5rem",
+            padding: "16px",
             display: "flex",
-            gap: "10px",
-            padding: "12px 16px",
-            backgroundColor: "#f8fafc",
-            borderRadius: "12px",
-            marginTop: "12px",
-            border: "1px dashed #cbd5e1",
-        },
-        infoNoteText: {
-            fontSize: "12px",
-            color: "#475569",
-            margin: 0,
-            lineHeight: "1.5",
-        },
-        authSection: {
-            backgroundColor: "#f0fdf4",
-            border: "1px solid #dcfce7",
-            borderRadius: "16px",
-            padding: "20px",
-            marginTop: "0px",
-            display: "flex",
-            gap: "16px",
+            alignItems: "flex-start",
+            gap: "12px",
         },
         checkbox: {
-            width: "20px",
-            height: "20px",
-            borderRadius: "6px",
-            border: "2px solid #22c55e",
+            width: "16px",
+            height: "16px",
+            borderRadius: "4px",
+            border: "1px solid #d1d5db",
             cursor: "pointer",
-            accentColor: "#22c55e",
-            marginTop: "2px",
+            marginTop: "3px",
+            accentColor: "#3b82f6", // primary
+        },
+        authContent: {
+            display: "flex",
+            flexDirection: "column",
         },
         authHeading: {
             fontSize: "14px",
-            fontWeight: "700",
-            color: "#166534",
-            marginBottom: "4px",
-            display: "block",
+            fontWeight: "500",
+            color: "#111827", // gray-900
+            marginBottom: "2px",
         },
         authDesc: {
-            fontSize: "12px",
-            color: "#15803d",
-            opacity: 0.9,
+            fontSize: "14px",
+            color: "#6b7280", // gray-500
             margin: 0,
         },
-        summaryGrid: {
-            display: "grid",
-            gridTemplateColumns: "1fr 1fr",
-            gap: "16px",
-        },
-        summaryField: {
-            display: "flex",
-            flexDirection: "column",
-            gap: "4px",
-        },
-        summaryLabel: {
-            fontSize: "11px",
-            fontWeight: "700",
-            color: "#94a3b8",
-            textTransform: "uppercase",
-            letterSpacing: "0.025em",
-        },
-        summaryBox: {
-            padding: "12px 16px",
-            backgroundColor: "#f8fafc",
-            borderRadius: "12px",
-            border: "1px solid #f1f5f9",
+        // Read-only/Summary Box
+        readOnlyBox: {
+            width: "100%",
+            borderRadius: "0.5rem",
+            border: "1px solid transparent",
+            backgroundColor: "#f3f4f6", // bg-gray-100
+            color: "#111827",
+            padding: "0.5rem 0.75rem",
             fontSize: "14px",
-            fontWeight: "600",
-            color: "#334155",
         },
-        paymentCard: {
-            marginTop: "24px",
-            padding: "24px",
-            borderRadius: "20px",
-            background: "linear-gradient(135deg, #0f172a 0%, #1e293b 100%)",
-            color: "#f8fafc",
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)",
+        readOnlyMono: {
+            fontFamily: "monospace",
+            letterSpacing: "0.05em",
         },
-        amountDisplay: {
-            fontSize: "36px",
-            fontWeight: "800",
-            color: "#fff",
-            letterSpacing: "-0.03em",
-        },
-        subLabel: {
-            fontSize: "12px",
-            color: "#94a3b8",
-            fontWeight: "500",
-        },
-        lockIcon: {
+        // Total Amount Display
+        totalAmountContainer: {
+            marginTop: "8px",
             display: "flex",
             alignItems: "center",
             gap: "8px",
-            fontSize: "12px",
+        },
+        totalAmountText: {
+            fontSize: "30px", // text-3xl
             fontWeight: "700",
-            color: "#22c55e",
-            textTransform: "uppercase",
-            backgroundColor: "rgba(34, 197, 94, 0.1)",
-            padding: "6px 12px",
-            borderRadius: "20px",
+            color: "#111827",
+            letterSpacing: "-0.025em",
+        },
+        totalBadge: {
+            backgroundColor: "#dcfce7", // bg-green-100
+            color: "#166534", // text-green-800
+            fontSize: "12px",
+            fontWeight: "500",
+            padding: "2px 10px",
+            borderRadius: "9999px",
+        },
+        divider: {
+            height: "1px",
+            backgroundColor: "#e5e7eb",
+            margin: "24px 0",
+            gridColumn: "span 2",
         }
     };
 
     return (
         <div style={styles.formContainer}>
-            {/* Member Selection Section */}
+            {/* Member Selection Section - Kept as requested */}
             <div style={styles.section}>
-                <div style={styles.headerRow}>
-                    {/* <div style={styles.headerTitleContainer}>
-
-                        <h2 style={styles.headerTitle}>Member Lookup</h2>
-                    </div> */}
-                </div>
                 <div style={styles.card}>
                     <label style={styles.label}>Search and select a member</label>
                     <MemberSearch
@@ -275,110 +216,78 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                         onSelectCallback={handleMemberSelect}
                         onClear={handleClearMember}
                     />
-                    {/* {selectedMember && (
-                        <div style={{
-                            marginTop: "16px",
-                            padding: "16px",
-                            backgroundColor: "#f0f9ff",
-                            borderRadius: "12px",
-                            border: "1px solid #bae6fd",
-                            display: "flex",
-                            alignItems: "center",
-                            gap: "12px"
-                        }}>
-                            <div style={{
-                                width: "40px",
-                                height: "40px",
-                                borderRadius: "50%",
-                                backgroundColor: "#3b82f6",
-                                color: "white",
-                                display: "flex",
-                                alignItems: "center",
-                                justifyCenter: "center",
-                                display: "flex",
-                                justifyContent: "center"
-                            }}>
-                                <MdPerson size={24} style={{ marginTop: "8px" }} />
-                            </div>
-                            <div>
-                                <div style={{ fontSize: "14px", fontWeight: "700", color: "#0369a1" }}>
-                                    {selectedMember.personalInfo?.forename} {selectedMember.personalInfo?.surname}
-                                </div>
-                                <div style={{ fontSize: "12px", color: "#0ea5e9" }}>
-                                    Membership No: {selectedMember.membershipNumber}
-                                </div>
-                            </div>
-                        </div>
-                    )} */}
                 </div>
             </div>
 
             {/* Section: Your Account */}
             <div style={styles.section}>
-                <div style={styles.headerRow}>
-                    <div style={styles.headerTitleContainer}>
-                        <div style={styles.headerIcon("#3b82f6", "rgba(59, 130, 246, 0.1)")}>
-                            <MdAccountBalance size={24} />
-                        </div>
-                        <h2 style={styles.headerTitle}>Account Verification</h2>
-                    </div>
-                    {/* <span style={styles.badge}>Step 01/02</span> */}
-                </div>
-
                 <div style={styles.card}>
+                    <div style={styles.headerRow}>
+                        <div style={styles.headerIcon("#2563eb", "#dbeafe")}>
+                            <MdAccountBalance size={22} />
+                        </div>
+                        <h2 style={styles.headerTitle}>Your Account Details</h2>
+                    </div>
+
                     <div style={styles.fieldGrid}>
                         <div style={styles.full}>
                             <label style={styles.label}>
-                                <span>Bank</span>
-                                <span style={{ color: "#ef4444" }}>* Required</span>
+                                Bank Name <span style={{ color: "#ef4444" }}>*</span>
                             </label>
-                            <select
-                                name="bankName"
-                                value={formData.bankName}
-                                onChange={handleChange}
-                                style={styles.select}
-                            >
-                                <option value="">Search banks in system...</option>
-                                <option value="hsbc">HSBC Bank PLC</option>
-                                <option value="barclays">Barclays Bank UK</option>
-                                <option value="lloyds">Lloyds Banking Group</option>
-                            </select>
-                            {/* <div style={styles.infoNote}>
-                                <MdOutlineInfo size={18} style={{ color: "#3b82f6", flexShrink: 0 }} />
-                                <p style={styles.infoNoteText}>
-                                    Your branch address will be automatically resolved from the central banking directory upon selection.
-                                </p>
-                            </div> */}
+                            <div style={{ position: "relative" }}>
+                                <select
+                                    name="bankName"
+                                    value={formData.bankName}
+                                    onChange={handleChange}
+                                    style={styles.select}
+                                >
+                                    <option value="">Select your bank (System Lookup)</option>
+                                    <option value="hsbc">HSBC Holdings</option>
+                                    <option value="barclays">Barclays</option>
+                                    <option value="lloyds">Lloyds Banking Group</option>
+                                    <option value="natwest">NatWest Group</option>
+                                </select>
+                            </div>
+                            <p style={{ marginTop: "4px", fontSize: "12px", color: "#6b7280" }}>
+                                Branch address will be populated automatically based on selection.
+                            </p>
                         </div>
 
                         <div style={styles.full}>
-                            <MyInput
-                                label="Registered Branch Address"
-                                name="branchAddress"
-                                type="textarea"
+                            <label style={styles.label}>
+                                Branch Address <span style={{ color: "#ef4444" }}>*</span>
+                            </label>
+                            <textarea
                                 value={formData.branchAddress}
-                                onChange={handleChange}
-                                disabled
+                                readOnly
                                 rows={2}
+                                style={{
+                                    ...styles.select,
+                                    height: "auto",
+                                    backgroundColor: "#f9fafb", // bg-gray-50
+                                    resize: "none",
+                                    color: "#6b7280",
+                                }}
                             />
                         </div>
 
-                        <div style={styles.full}>
-                            <div style={styles.authSection}>
-                                <input
-                                    type="checkbox"
-                                    name="authorized"
-                                    checked={formData.authorized}
-                                    onChange={handleChange}
-                                    style={styles.checkbox}
-                                    required
-                                />
-                                <div>
-                                    <span style={styles.authHeading}>Authorization Declaration</span>
-                                    <p style={styles.authDesc}>
-                                        By signing up to this form, I have authorised a recurring debit to my bank account.
-                                    </p>
-                                </div>
+                        {/* Authorization Box */}
+                        <div style={{ ...styles.full, ...styles.authBox }}>
+                            <input
+                                type="checkbox"
+                                name="authorized"
+                                checked={formData.authorized}
+                                onChange={handleChange}
+                                style={styles.checkbox}
+                                required
+                            />
+                            <div style={styles.authContent}>
+                                <label style={styles.authHeading}>
+                                    Authorization Declaration <span style={{ color: "#ef4444" }}>*</span>
+                                </label>
+                                <p style={styles.authDesc}>
+                                    By signing up to this form, I have authorised a recurring debit to my bank account.
+                                </p>
                             </div>
                         </div>
 
@@ -389,7 +298,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                 value={formData.accountName}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. ALEX MORGAN"
+                                placeholder="e.g. John Doe"
                             />
                         </div>
 
@@ -406,43 +315,31 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
 
                         <div>
                             <MyInput
-                                label="IBAN (International Bank Account Number)"
-                                name="iban"
-                                value={formData.iban}
+                                label="BIC (Swift Code)"
+                                name="bic"
+                                value={formData.bic}
                                 onChange={handleChange}
-                                required
-                                placeholder="GB29 1234 5678..."
-                                extra={<MdCreditCard size={20} color="#94a3b8" />}
+                                placeholder="ABCDGB22"
+                                style={{ textTransform: "uppercase" }}
                             />
                         </div>
 
                         <div>
                             <MyInput
-                                label="BIC (Swift Code)"
-                                name="bic"
-                                value={formData.bic}
+                                label="IBAN"
+                                name="iban"
+                                value={formData.iban}
                                 onChange={handleChange}
-                                placeholder="BKCHGB2L"
+                                required
+                                placeholder="GB29 ABCD 1234 5678 9012 34"
+                                extra={<MdCreditCard size={18} color="#9ca3af" />}
+                                style={{ letterSpacing: "0.05em", textTransform: "uppercase" }}
                             />
                         </div>
-                    </div>
-                </div>
-            </div>
 
-            {/* Section: Payer Details */}
-            <div style={styles.section}>
-                {/* <div style={styles.headerRow}> */}
-                {/* <div style={styles.headerTitleContainer}> */}
-                {/* <div style={styles.headerIcon("#10b981", "rgba(16, 185, 129, 0.1)")}>
-                            <MdPerson size={24} />
-                        </div> */}
-                {/* <h2 style={styles.headerTitle}>Payer Details</h2> */}
-                {/* </div> */}
-                {/* <span style={styles.badge}>Step 02/02</span> */}
-                {/* </div> */}
+                        <div style={styles.divider}></div>
 
-                <div style={styles.card}>
-                    <div style={styles.fieldGrid}>
+                        {/* Personal Details */}
                         <div style={styles.full}>
                             <MyInput
                                 label="Personal Address"
@@ -450,9 +347,9 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                 value={formData.personalAddress}
                                 onChange={handleChange}
                                 required
-                                placeholder="e.g. 42 Wallaby Way, Sydney"
+                                placeholder="Street, City, Postal Code"
                             />
-                            <p style={{ ...styles.infoNoteText, marginTop: "4px", fontSize: "11px", color: "#64748b" }}>
+                            <p style={{ marginTop: "4px", fontSize: "12px", color: "#6b7280" }}>
                                 Pre-populated from member file.
                             </p>
                         </div>
@@ -467,7 +364,6 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                 placeholder="+44 7700 900077"
                             />
                         </div>
-
                         <div>
                             <MyInput
                                 label="Personal Email"
@@ -485,56 +381,57 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
 
             {/* Section: Beneficiary */}
             <div style={styles.section}>
-                <div style={styles.headerRow}>
-                    <div style={styles.headerTitleContainer}>
-                        <div style={styles.headerIcon("#8b5cf6", "rgba(139, 92, 246, 0.1)")}>
-                            <MdStore size={24} />
+                <div style={{ ...styles.card, position: "relative", overflow: "hidden" }}>
+                    {/* Decorative circle in top right (optional, matching HTML idea) */}
+                    <div style={{
+                        position: "absolute",
+                        top: "-16px",
+                        right: "-16px",
+                        width: "96px",
+                        height: "96px",
+                        backgroundColor: "#f9fafb",
+                        borderRadius: "50%",
+                        zIndex: 0
+                    }}></div>
+
+                    <div style={{ ...styles.headerRow, position: "relative", zIndex: 1 }}>
+                        <div style={styles.headerIcon("#9333ea", "rgba(147, 51, 234, 0.1)")}>
+                            <MdStore size={22} />
                         </div>
                         <h2 style={styles.headerTitle}>Beneficiary (Receiver) Details</h2>
                     </div>
-                    {/* <span style={styles.badge}>Step 02/02</span> */}
-                </div>
 
-                <div style={styles.card}>
-                    <div style={styles.summaryGrid}>
-                        <div style={styles.summaryField}>
-                            <span style={styles.summaryLabel}>Account Name</span>
-                            <div style={styles.summaryBox}>Global Services Collective Limited</div>
+                    <div style={{ ...styles.fieldGrid, position: "relative", zIndex: 1 }}>
+                        <div>
+                            <label style={styles.label}>Account Name <span style={{ color: "#ef4444" }}>*</span></label>
+                            <div style={styles.readOnlyBox}>Global Services Ltd.</div>
                         </div>
-                        <div style={styles.summaryField}>
-                            <span style={styles.summaryLabel}>IBAN</span>
-                            <div style={styles.summaryBox}>GB12 CPBK 9876 5432 1098 76</div>
+                        <div>
+                            <label style={styles.label}>IBAN <span style={{ color: "#ef4444" }}>*</span></label>
+                            <div style={{ ...styles.readOnlyBox, ...styles.readOnlyMono }}>GB12 CPBK 9876 5432 1098 76</div>
                         </div>
                         <div style={styles.full}>
-                            <div style={styles.summaryField}>
-                                <span style={styles.summaryLabel}>Receiver Message (Reference)</span>
-                                <div style={{ ...styles.summaryBox, fontPadding: '12px', background: '#f1f5f9' }}>
-                                    MEM-PAY-AUTH-2023-SECURE
-                                </div>
-                            </div>
+                            <label style={styles.label}>Receiver Message (Reference)</label>
+                            <div style={styles.readOnlyBox}>REF: MEM-2023-8849-X</div>
                         </div>
-                    </div>
 
-                    <div style={styles.paymentCard}>
-                        <div>
-                            <div style={styles.subLabel}>Total Amount</div>
-                            <div style={styles.amountDisplay}>€45.00</div>
-                        </div>
-                        <div style={styles.lockIcon}>
-                            {/* <MdVerifiedUser size={16} /> */}
-                            Monthly Recurring
+                        {/* Total Amount Section matching HTML */}
+                        <div style={{ ...styles.full, marginTop: "8px" }}>
+                            <label style={styles.label}>Total Amount</label>
+                            <div style={styles.totalAmountContainer}>
+                                <span style={styles.totalAmountText}>€45.00</span>
+                                <span style={styles.totalBadge}>Monthly Recurring</span>
+                            </div>
                         </div>
                     </div>
                 </div>
             </div>
 
-            {/* Footer text (optional enhancements) */}
             <p style={{
                 textAlign: "center",
                 fontSize: "12px",
-                color: "#94a3b8",
-                marginTop: "20px",
-                fontWeight: "500"
+                color: "#6b7280",
+                marginTop: "24px"
             }}>
                 Your data is securely processed in accordance with SEPA regulations.
             </p>

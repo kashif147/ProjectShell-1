@@ -1300,7 +1300,7 @@ function HeaderDetails() {
         title="Direct Debit Authorization"
         open={ddDrawerOpen}
         onClose={() => setDdDrawerOpen(false)}
-        width={900}
+        width={1000}
         isPagination={false}
       >
         <DirectDebitForm
