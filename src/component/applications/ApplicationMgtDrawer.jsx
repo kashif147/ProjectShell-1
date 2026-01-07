@@ -679,6 +679,8 @@ function ApplicationMgtDrawer({
       "countryPrimaryQualification",
       "otherIrishTradeUnion",
       "otherScheme",
+      "nurseType",
+      "membershipStatus",
     ];
 
     const fieldMap = {
@@ -714,6 +716,8 @@ function ApplicationMgtDrawer({
       payrollNo: ["subscriptionDetails", "payrollNo"],
       otherPrimarySection: ["subscriptionDetails", "otherPrimarySection"],
       otherSecondarySection: ["subscriptionDetails", "otherSecondarySection"],
+      nurseType: ["professionalDetails", "nurseType"],
+      membershipStatus: ["subscriptionDetails", "membershipStatus"],
     };
 
     const newErrors = {};
@@ -722,11 +726,13 @@ function ApplicationMgtDrawer({
       const [section, key] = fieldMap[field] || [];
       const value = section ? InfData[section]?.[key] : null;
 
+      const booleanAllowed = ["otherIrishTradeUnion", "otherScheme"];
+
       if (
         value === undefined ||
         value === null ||
         (typeof value === "string" && value.trim() === "") ||
-        (typeof value === "boolean" && value === false)
+        (typeof value === "boolean" && value === false && !booleanAllowed.includes(field))
       ) {
         newErrors[field] = "This field is required";
       }
@@ -2670,14 +2676,14 @@ function ApplicationMgtDrawer({
                   style={{
                     backgroundColor: "#f0fdf4",
                     borderRadius: "4px",
-                    border: "1px solid #a4e3ba",
+                    border: errors?.nurseType ? "1px solid #ff4d4f" : "1px solid #a4e3ba",
                   }}
                 >
                   <label
                     className="my-input-label mb-1"
-                    style={{ color: "#14532d" }}
+                    style={{ color: errors?.nurseType ? "#ff4d4f" : "#14532d" }}
                   >
-                    Please tick one of the following
+                    Please tick one of the following <span className="text-danger">*</span>
                   </label>
 
                   <Radio.Group
@@ -2690,14 +2696,7 @@ function ApplicationMgtDrawer({
                         e.target.value
                       )
                     }
-                    required={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme === true
-                    }
-                    disabled={
-                      InfData?.professionalDetails
-                        ?.nursingAdaptationProgramme !== true
-                    }
+                    disabled={isDisable}
                     style={{
                       color: "#14532d",
                       width: "100%",
@@ -2864,14 +2863,14 @@ function ApplicationMgtDrawer({
                   style={{
                     backgroundColor: "#f0fdf4",
                     borderRadius: "4px",
-                    border: "1px solid #a4e3ba",
+                    border: errors?.membershipStatus ? "1px solid #ff4d4f" : "1px solid #a4e3ba",
                   }}
                 >
                   <label
                     className="my-input-label mb-1"
-                    style={{ color: "#14532d" }}
+                    style={{ color: errors?.membershipStatus ? "#ff4d4f" : "#14532d" }}
                   >
-                    Please select the most appropriate option below
+                    Please select the most appropriate option below <span className="text-danger">*</span>
                   </label>
 
                   <Radio.Group
