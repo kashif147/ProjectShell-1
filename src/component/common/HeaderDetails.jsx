@@ -784,7 +784,7 @@ function HeaderDetails() {
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : "")}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : "")}
                   </h2>
 
                   <div className="d-flex">

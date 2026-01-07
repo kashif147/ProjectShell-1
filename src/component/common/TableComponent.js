@@ -570,14 +570,16 @@ const TableComponent = ({
                 "/NewGraduate",
                 "/CornMarketRewards",
                 "/RecruitAFriend",
-                "/DirectDebit",
               ];
-              const isSimpleBatch = simpleBatchPaths.includes(
-                location.pathname
-              );
-              const targetPath = isSimpleBatch
-                ? "/SimpleBatchMemberSummary"
-                : "/BatchMemberSummary";
+              const isDirectDebit = location.pathname === "/DirectDebit";
+              const isSimpleBatch = simpleBatchPaths.includes(location.pathname);
+
+              let targetPath = "/BatchMemberSummary";
+              if (isDirectDebit) {
+                targetPath = "/DirectDebitBatchDetails";
+              } else if (isSimpleBatch) {
+                targetPath = "/SimpleBatchMemberSummary";
+              }
 
               return (
                 <Link
@@ -586,6 +588,7 @@ const TableComponent = ({
                     search: screenName,
                     batchName: text,
                     batchId: record?.id || record?.key,
+                    batchStatus: record?.batchStatus || record?.status,
                   }}
                   style={{ color: "inherit", textDecoration: "none" }}
                   onClick={() => {

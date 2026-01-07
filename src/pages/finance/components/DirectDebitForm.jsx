@@ -268,7 +268,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                     </div> */}
                 </div>
                 <div style={styles.card}>
-                    <label style={styles.label}>Search and select a member to initiate mandate</label>
+                    <label style={styles.label}>Search and select a member</label>
                     <MemberSearch
                         fullWidth={true}
                         onSelectBehavior="callback"
@@ -322,7 +322,7 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                         </div>
                         <h2 style={styles.headerTitle}>Account Verification</h2>
                     </div>
-                    <span style={styles.badge}>Step 01/02</span>
+                    {/* <span style={styles.badge}>Step 01/02</span> */}
                 </div>
 
                 <div style={styles.card}>
@@ -406,16 +406,6 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
 
                         <div>
                             <MyInput
-                                label="BIC (Swift Code)"
-                                name="bic"
-                                value={formData.bic}
-                                onChange={handleChange}
-                                placeholder="BKCHGB2L"
-                            />
-                        </div>
-
-                        <div style={styles.full}>
-                            <MyInput
                                 label="IBAN (International Bank Account Number)"
                                 name="iban"
                                 value={formData.iban}
@@ -423,6 +413,70 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                                 required
                                 placeholder="GB29 1234 5678..."
                                 extra={<MdCreditCard size={20} color="#94a3b8" />}
+                            />
+                        </div>
+
+                        <div>
+                            <MyInput
+                                label="BIC (Swift Code)"
+                                name="bic"
+                                value={formData.bic}
+                                onChange={handleChange}
+                                placeholder="BKCHGB2L"
+                            />
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            {/* Section: Payer Details */}
+            <div style={styles.section}>
+                {/* <div style={styles.headerRow}> */}
+                {/* <div style={styles.headerTitleContainer}> */}
+                {/* <div style={styles.headerIcon("#10b981", "rgba(16, 185, 129, 0.1)")}>
+                            <MdPerson size={24} />
+                        </div> */}
+                {/* <h2 style={styles.headerTitle}>Payer Details</h2> */}
+                {/* </div> */}
+                {/* <span style={styles.badge}>Step 02/02</span> */}
+                {/* </div> */}
+
+                <div style={styles.card}>
+                    <div style={styles.fieldGrid}>
+                        <div style={styles.full}>
+                            <MyInput
+                                label="Personal Address"
+                                name="personalAddress"
+                                value={formData.personalAddress}
+                                onChange={handleChange}
+                                required
+                                placeholder="e.g. 42 Wallaby Way, Sydney"
+                            />
+                            <p style={{ ...styles.infoNoteText, marginTop: "4px", fontSize: "11px", color: "#64748b" }}>
+                                Pre-populated from member file.
+                            </p>
+                        </div>
+
+                        <div>
+                            <MyInput
+                                label="Personal Telephone"
+                                name="phone"
+                                value={formData.phone}
+                                onChange={handleChange}
+                                required
+                                placeholder="+44 7700 900077"
+                            />
+                        </div>
+
+                        <div>
+                            <MyInput
+                                label="Personal Email"
+                                name="email"
+                                type="email"
+                                value={formData.email}
+                                onChange={handleChange}
+                                required
+                                placeholder="member@example.com"
                             />
                         </div>
                     </div>
@@ -436,24 +490,24 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                         <div style={styles.headerIcon("#8b5cf6", "rgba(139, 92, 246, 0.1)")}>
                             <MdStore size={24} />
                         </div>
-                        <h2 style={styles.headerTitle}>Beneficiary Details</h2>
+                        <h2 style={styles.headerTitle}>Beneficiary (Receiver) Details</h2>
                     </div>
-                    <span style={styles.badge}>Step 02/02</span>
+                    {/* <span style={styles.badge}>Step 02/02</span> */}
                 </div>
 
                 <div style={styles.card}>
                     <div style={styles.summaryGrid}>
                         <div style={styles.summaryField}>
-                            <span style={styles.summaryLabel}>Entity Name</span>
+                            <span style={styles.summaryLabel}>Account Name</span>
                             <div style={styles.summaryBox}>Global Services Collective Limited</div>
                         </div>
                         <div style={styles.summaryField}>
-                            <span style={styles.summaryLabel}>Creditor Identifier</span>
-                            <div style={styles.summaryBox}>IE00ZZZ998877</div>
+                            <span style={styles.summaryLabel}>IBAN</span>
+                            <div style={styles.summaryBox}>GB12 CPBK 9876 5432 1098 76</div>
                         </div>
                         <div style={styles.full}>
                             <div style={styles.summaryField}>
-                                <span style={styles.summaryLabel}>SEPA Reference</span>
+                                <span style={styles.summaryLabel}>Receiver Message (Reference)</span>
                                 <div style={{ ...styles.summaryBox, fontPadding: '12px', background: '#f1f5f9' }}>
                                     MEM-PAY-AUTH-2023-SECURE
                                 </div>
@@ -463,12 +517,12 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
 
                     <div style={styles.paymentCard}>
                         <div>
-                            <div style={styles.subLabel}>Recurring Monthly Charge</div>
+                            <div style={styles.subLabel}>Total Amount</div>
                             <div style={styles.amountDisplay}>€45.00</div>
                         </div>
                         <div style={styles.lockIcon}>
-                            <MdVerifiedUser size={16} />
-                            Secure SEPA
+                            {/* <MdVerifiedUser size={16} /> */}
+                            Monthly Recurring
                         </div>
                     </div>
                 </div>
@@ -482,10 +536,9 @@ const DirectDebitForm = ({ initialData, onSubmit }) => {
                 marginTop: "20px",
                 fontWeight: "500"
             }}>
-                All authorizations are processed through an encrypted layer.
-                Your mandate is stored according to SEPA compliance standards.
+                Your data is securely processed in accordance with SEPA regulations.
             </p>
-        </div>
+        </div >
     );
 };
 

@@ -201,6 +201,9 @@ const RecruitAFriend = lazyWithRetry(() =>
 const DirectDebitSummary = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitSummary")
 );
+const DirectDebitBatchDetails = lazyWithRetry(() =>
+  import("./pages/finance/DirectDebitBatchDetails")
+);
 
 function Entry() {
   const location = useLocation();
@@ -674,6 +677,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <SimpleBatchMemberSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="DirectDebitBatchDetails"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitBatchDetails />
                         </ProtectedRoute>
                       }
                     />

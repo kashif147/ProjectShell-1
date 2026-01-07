@@ -193,6 +193,12 @@ const Breadcrumb = () => {
       icon: "💳",
       recordIdField: "batchName",
     },
+    "/DirectDebitBatchDetails": {
+      module: "Finance",
+      page: "Direct Debit Batch Details",
+      icon: "💳",
+      recordIdField: "batchName",
+    },
 
     // Reports Pages
     "/CancelledMembersReport": {
@@ -525,11 +531,33 @@ const Breadcrumb = () => {
 
   // Add record level if we have a record ID
   if (recordId) {
+    const isBatchPage = location.pathname.includes("BatchMemberSummary") || location.pathname.includes("DirectDebitBatchDetails");
+    const batchId = location.state?.batchId;
+    const batchStatus = location.state?.batchStatus;
+
     breadcrumbItems.push({
       title: (
-        <span style={{ display: "flex", alignItems: "center" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ marginRight: 4 }}>📄</span>
-          {recordId}
+          <span style={{ fontWeight: 600 }}>{recordId}</span>
+          {isBatchPage && batchId && (
+            <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId})</span>
+          )}
+          {isBatchPage && batchStatus && (
+            <span style={{
+              fontSize: "10px",
+              padding: "2px 8px",
+              borderRadius: "10px",
+              backgroundColor: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#f0fdf4" : "#eff6ff",
+              color: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#166534" : "#1e40af",
+              border: "1px solid",
+              borderColor: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#bbf7d0" : "#bfdbfe",
+              textTransform: "uppercase",
+              fontWeight: "700"
+            }}>
+              {batchStatus}
+            </span>
+          )}
         </span>
       ),
       onClick: () => {
