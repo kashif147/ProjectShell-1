@@ -29,10 +29,10 @@ export const FilterProvider = ({ children }) => {
   const { categoryData } = useSelector((state) => state.categoryLookup);
 
   // 🔹 Get hierarchical data from lookupsWorkLocation slice
-  const { 
+  const {
     hierarchyData,
     workLocationLoading,
-    workLocationError 
+    workLocationError
   } = useSelector((state) => state.lookupsWorkLocation);
 
   // 🔹 Store hierarchical data by work location ID
@@ -78,10 +78,10 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Extract region and branch from hierarchyData
   const extractRegionAndBranchFromHierarchy = useCallback((hierarchyData) => {
     console.log("Extracting from hierarchy data:", hierarchyData);
-    
+
     let regions = [];
     let branches = [];
-    
+
     // Method 1: Check if hierarchyData has hierarchy array
     if (hierarchyData?.hierarchy && Array.isArray(hierarchyData.hierarchy)) {
       hierarchyData.hierarchy.forEach((item) => {
@@ -95,27 +95,27 @@ export const FilterProvider = ({ children }) => {
         }
       });
     }
-    
+
     // Method 2: Check for direct region/branch objects
     if (hierarchyData?.region) {
       const regionName = hierarchyData.region.DisplayName || hierarchyData.region.lookupname;
       if (regionName && !regions.includes(regionName)) regions.push(regionName);
     }
-    
+
     if (hierarchyData?.branch) {
       const branchName = hierarchyData.branch.DisplayName || hierarchyData.branch.lookupname;
       if (branchName && !branches.includes(branchName)) branches.push(branchName);
     }
-    
+
     // Method 3: Check if hierarchyData itself has region/branch properties
     if (hierarchyData?.region && typeof hierarchyData.region === "string") {
       if (!regions.includes(hierarchyData.region)) regions.push(hierarchyData.region);
     }
-    
+
     if (hierarchyData?.branch && typeof hierarchyData.branch === "string") {
       if (!branches.includes(hierarchyData.branch)) branches.push(hierarchyData.branch);
     }
-    
+
     console.log("Extracted regions:", regions, "branches:", branches);
     return { regions, branches };
   }, []);
@@ -127,7 +127,7 @@ export const FilterProvider = ({ children }) => {
       setSelectedWorkLocationId(null);
       setRegionOptionsForLocation([]);
       setBranchOptionsForLocation([]);
-      
+
       // Also clear region and branch filters
       updateFilter("Region", "==", [], currentFilters);
       updateFilter("Branch", "==", [], currentFilters);
@@ -140,36 +140,36 @@ export const FilterProvider = ({ children }) => {
     try {
       // Fetch hierarchical data from API
       const data = await dispatch(getWorkLocationHierarchy(workLocationId)).unwrap();
-      
+
       // Store the hierarchical data
       setHierarchicalData(prev => ({
         ...prev,
         [workLocationId]: data
       }));
-      
+
       // Extract region and branch options
       const { regions, branches } = extractRegionAndBranchFromHierarchy(data);
-      
+
       // Update available options
       setRegionOptionsForLocation(regions);
       setBranchOptionsForLocation(branches);
-      
+
       console.log("Successfully loaded hierarchical data:", {
         workLocationId,
         regions,
         branches,
         data
       });
-      
+
       // Clear region and branch filters when work location changes
       updateFilter("Region", "==", [], currentFilters);
       updateFilter("Branch", "==", [], currentFilters);
-      
+
     } catch (error) {
       console.error("Error loading work location hierarchy:", error);
       setRegionOptionsForLocation([]);
       setBranchOptionsForLocation([]);
-      
+
       // Clear filters on error
       updateFilter("Region", "==", [], currentFilters);
       updateFilter("Branch", "==", [], currentFilters);
@@ -305,7 +305,7 @@ export const FilterProvider = ({ children }) => {
     Applications: {
       "Application Status": {
         operator: "==",
-        selectedValues: ["Draft", "Submitted"]
+        selectedValues: ["Approved", "Submitted"]
       },
       "Membership Category": {
         operator: "==",
@@ -410,7 +410,7 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 When screen changes, save current state and load new screen's state
   useEffect(() => {
-    if (activeScreen === activePage) return;
+    if (activeScreen === activePage && Object.keys(filtersState).length > 0) return;
 
     console.log("Switching from:", activePage, "to:", activeScreen);
 
@@ -441,11 +441,11 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Effect to handle Work Location filter changes
   useEffect(() => {
     const currentWorkLocation = filtersState["Work Location"]?.selectedValues?.[0];
-    
+
     if (currentWorkLocation) {
       // Get the lookup ID for the selected work location
       const workLocationId = getLookupIdFromLabel("Work Location", currentWorkLocation);
-      
+
       if (workLocationId && workLocationId !== selectedWorkLocationId) {
         // Load hierarchical data for the selected work location
         loadWorkLocationHierarchy(workLocationId, currentWorkLocation, filtersState);
@@ -461,7 +461,7 @@ export const FilterProvider = ({ children }) => {
     if (!lookupArray || !Array.isArray(lookupArray)) {
       return [""];
     }
-    
+
     const options = lookupArray.map(item => item.label);
     return ["", ...options];
   };
@@ -511,11 +511,11 @@ export const FilterProvider = ({ children }) => {
     if (!categoryData || !Array.isArray(categoryData)) {
       return [""];
     }
-    
+
     const options = categoryData.map(item => {
       return item.label || item.name || item.lookupname || "";
     }).filter(label => label);
-    
+
     return ["", ...options];
   };
 
@@ -560,19 +560,19 @@ export const FilterProvider = ({ children }) => {
       "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted", "Draft"],
       "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
       "Subscription Status": ["", "Active", "Cancelled", "Expired", "Pending"],
-      
+
       // 🔹 CATEGORY FILTER
       "Membership Category": getCategoryOptions(),
-      
+
       // 🔹 WORK LOCATION - from Redux lookups
       "Work Location": getLookupOptions(workLocationOptions || []),
-      
+
       // 🔹 REGION - hierarchical loading
       "Region": getHierarchicalRegionOptions(),
-      
+
       // 🔹 BRANCH - hierarchical loading
       "Branch": getHierarchicalBranchOptions(),
-      
+
       // 🔹 OTHER REDUX LOOKUP FILTERS
       "Payment Type": getLookupOptions(paymentTypeOptions || []),
       "Grade": getLookupOptions(gradeOptions || []),
@@ -658,7 +658,7 @@ export const FilterProvider = ({ children }) => {
 
     setVisibleFilters(resetVisibleFilters);
     setFiltersState(resetFilterValues);
-    
+
     // Clear hierarchical data
     setSelectedWorkLocationId(null);
     setRegionOptionsForLocation([]);
@@ -677,7 +677,7 @@ export const FilterProvider = ({ children }) => {
   // 🔹 Combined update function
   const updateFilter = (filter, operator, selectedValues, customFiltersState = null) => {
     const currentState = customFiltersState || filtersState;
-    
+
     console.log(`🎯 Updating filter "${filter}":`, {
       operator,
       selectedValues,
