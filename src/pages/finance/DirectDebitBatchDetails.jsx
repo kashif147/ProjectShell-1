@@ -166,12 +166,15 @@ const DirectDebitBatchDetails = () => {
             key: "1",
             label: "Batch Members",
             children: (
-                <div style={{ padding: "20px" }}>
+                <div className="common-table" style={{ width: "100%", overflow: "hidden" }}>
                     <Table
                         dataSource={members}
                         columns={columns}
                         pagination={{ pageSize: 10 }}
-                        className="custom-ant-table"
+                        className="mt-2"
+                        bordered
+                        size="middle"
+                        scroll={{ x: 'max-content' }}
                     />
                 </div>
             )
@@ -180,11 +183,15 @@ const DirectDebitBatchDetails = () => {
             key: "2",
             label: "Exceptions & Failures",
             children: (
-                <div style={{ padding: "20px" }}>
+                <div className="common-table" style={{ width: "100%", overflow: "hidden" }}>
                     <Table
                         dataSource={members.filter(m => m.status === "Failed")}
                         columns={columns}
                         pagination={false}
+                        bordered
+                        size="middle"
+                        scroll={{ x: 'max-content' }}
+                        className="mt-2"
                         locale={{ emptyText: "No exceptions found in this batch." }}
                     />
                 </div>
@@ -194,8 +201,8 @@ const DirectDebitBatchDetails = () => {
 
     const styles = {
         container: {
-            padding: "24px",
-            background: "#f8fafc",
+            padding: "24px 0px",
+            background: "#fff",
             minHeight: "100%",
             fontFamily: "'Inter', sans-serif"
         },
@@ -241,20 +248,28 @@ const DirectDebitBatchDetails = () => {
             color: "#1e293b"
         },
         actionSection: {
-            background: "#fff",
-            padding: "16px 24px",
-            borderRadius: "12px",
-            border: "1px solid #e2e8f0",
             display: "flex",
             gap: "16px",
             alignItems: "center"
         }
     };
 
+    const buttonStyle = {
+        backgroundColor: "#215e97",
+        color: "white",
+        borderRadius: "8px",
+        minWidth: "150px",
+        height: "40px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+        gap: "8px"
+    };
+
     return (
         <div style={styles.container}>
             {/* Summary Stats Card */}
-            <div style={styles.summaryCard}>
+            <div style={{ ...styles.summaryCard, margin: "0 35px 24px 35px" }}>
                 <Row>
                     <Col span={6}>
                         <div style={styles.statBox}>
@@ -290,15 +305,15 @@ const DirectDebitBatchDetails = () => {
             </div>
 
             {/* Actions Bar */}
-            <div style={{ marginBottom: "24px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+            <div style={{ padding: "0 35px 24px 35px", display: "flex", justifyContent: "space-between", alignItems: "center" }}>
                 <div style={styles.actionSection}>
                     <Button
                         type="primary"
                         icon={<MdCloudDownload size={20} />}
                         onClick={handleDownloadExcel}
-                        style={{ background: "#2563eb", height: "40px", borderRadius: "8px" }}
+                        style={buttonStyle}
                     >
-                        Generate Bank File
+                        Trigger {batchInfo.name}
                     </Button>
 
                     <Divider type="vertical" style={{ height: "30px" }} />
@@ -310,7 +325,7 @@ const DirectDebitBatchDetails = () => {
                     >
                         <Button
                             icon={<MdCloudUpload size={20} />}
-                            style={{ height: "40px", borderRadius: "8px", border: "1.5px solid #cbd5e1" }}
+                            style={buttonStyle}
                         >
                             Upload Bank Return
                         </Button>
@@ -335,15 +350,15 @@ const DirectDebitBatchDetails = () => {
             </div>
 
             {/* Tabs & Table */}
-            <Card style={{ borderRadius: "16px", border: "none", boxShadow: "0 4px 20px rgba(0,0,0,0.05)" }}>
+            <div style={{ padding: "0 35px" }}>
                 <Tabs
                     activeKey={activeKey}
                     onChange={setActiveKey}
                     items={tabItems}
-                    className="custom-tabs"
-                    style={{ padding: "0 10px" }}
+                    className="batch-tabs"
+                    style={{ width: "100%" }}
                 />
-            </Card>
+            </div>
         </div>
     );
 };
