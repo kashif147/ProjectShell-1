@@ -2,8 +2,7 @@ import { getMessagingInstance } from "../config/firebase";
 import { getToken, onMessage } from "firebase/messaging";
 import axios from "axios";
 
-const vapidKey =
-  process.env.REACT_APP_FIREBASE_VAPID_KEY;
+const vapidKey = process.env.REACT_APP_FIREBASE_VAPID_KEY;
 
 let cachedMessaging = null;
 
