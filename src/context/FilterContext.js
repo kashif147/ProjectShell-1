@@ -305,7 +305,7 @@ export const FilterProvider = ({ children }) => {
     Applications: {
       "Application Status": {
         operator: "==",
-        selectedValues: ["Approved", "Submitted"]
+        selectedValues: ["Draft", "Submitted"]
       },
       "Membership Category": {
         operator: "==",
