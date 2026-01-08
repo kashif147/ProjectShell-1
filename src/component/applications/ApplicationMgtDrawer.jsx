@@ -130,6 +130,8 @@ function ApplicationMgtDrawer({
 
     // Clear selected member
     setSelectedMember(null);
+    setAddressSearchValue("");
+    setRecruiterSearchValue("");
 
     // Clear form only if not in edit mode
     if (!isEdit) {
@@ -140,6 +142,8 @@ function ApplicationMgtDrawer({
     }
   };
   const [selectedMember, setSelectedMember] = useState(null);
+  const [addressSearchValue, setAddressSearchValue] = useState("");
+  const [recruiterSearchValue, setRecruiterSearchValue] = useState("");
   const { state } = useLocation();
   const isEdit = state?.isEdit || false;
   const { applications, applicationsLoading } = useSelector(
@@ -1007,13 +1011,18 @@ function ApplicationMgtDrawer({
           Reject: false,
         }));
         setSelectedMember(null);
+        setAddressSearchValue("");
+        setRecruiterSearchValue("");
         navigate("/Applications");
       } else {
         setInfData(inputValue);
         setSelectedMember(null);
+        setAddressSearchValue("");
+        setRecruiterSearchValue("");
         setSelected((prev) => ({
           ...prev,
           Reject: false,
+          Bulk: false,
         }));
         MyAlert(
           "success",
@@ -1263,7 +1272,7 @@ function ApplicationMgtDrawer({
 
       // Update search value with the formatted address
       if (place.formatted_address) {
-        // setSearchValue(place.formatted_address);
+        setAddressSearchValue(place.formatted_address);
       }
 
       const service = new window.google.maps.places.PlacesService(
@@ -1681,14 +1690,21 @@ function ApplicationMgtDrawer({
   const handleRecruteBy = (memberData) => {
     console.log("Recruited by member:", memberData?._id);
 
-    // Update the confirmedRecruiterProfileId in subscriptionDetails
-    setInfData(prevData => ({
-      ...prevData,
-      subscriptionDetails: {
-        ...prevData.subscriptionDetails,
-        confirmedRecruiterProfileId: memberData?._id || ""
-      }
-    }));
+    if (memberData) {
+      // Update the confirmedRecruiterProfileId in subscriptionDetails
+      setInfData((prevData) => ({
+        ...prevData,
+        subscriptionDetails: {
+          ...prevData.subscriptionDetails,
+          confirmedRecruiterProfileId: memberData?._id || "",
+        },
+      }));
+
+      setRecruiterSearchValue(
+        `${memberData.personalInfo?.forename || ""} ${memberData.personalInfo?.surname || ""
+        } (${memberData.membershipNumber || ""})`
+      );
+    }
   };
 
   const [searchResults, setSearchResults] = useState([]);
@@ -2058,10 +2074,11 @@ function ApplicationMgtDrawer({
                   >
                     <MyInput
                       label="Search by address or Eircode"
-                      name="Enter Eircode (e.g., D01X4X0)"
+                      name="addressSearch"
                       placeholder="Enter Eircode (e.g., D01X4X0)"
                       disabled={isDisable}
-                      onChange={() => { }}
+                      value={addressSearchValue}
+                      onChange={(e) => setAddressSearchValue(e.target.value)}
                     />
                   </StandaloneSearchBox>
                 )}
@@ -3334,6 +3351,8 @@ function ApplicationMgtDrawer({
                   onSelectBehavior="callback"
                   onSelectCallback={handleRecruteBy}
                   // onAddMember={handleAddMember}
+                  value={recruiterSearchValue}
+                  onChange={setRecruiterSearchValue}
                   addMemberLabel="Add New Member"
                   style={{ width: "100%" }}
                 />

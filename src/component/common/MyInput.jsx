@@ -74,49 +74,53 @@ const MyInput = ({
   };
 
   const showError = hasError || internalError;
-useEffect(() => {
-  if (type === "mobile" && value) {
-    let code = "+353"; // default
-    let number = "";
+  useEffect(() => {
+    if (type === "mobile") {
+      if (!value) {
+        setMobileNumber("");
+        return;
+      }
+      let code = "+353"; // default
+      let number = "";
 
-    // Handle different formats
-    if (value.includes(" ")) {
-      // Format: "+353 38 927 5210"
-      const parts = value.trim().split(" ");
-      code = parts[0] || "+353";
-      number = parts.slice(1).join(" ");
-    } else {
-      // Format: "+3534444444"
-      // Extract country code (assuming +353 is the code)
-      if (value.startsWith("+353") && value.length > 4) {
-        code = "+353";
-        const rawNumber = value.substring(4); // Remove +353
-        // Format the remaining digits
-        number = rawNumber.replace(/(\d{2})(\d{3})(\d{0,4})/, "$1 $2 $3").trim();
+      // Handle different formats
+      if (value.includes(" ")) {
+        // Format: "+353 38 927 5210"
+        const parts = value.trim().split(" ");
+        code = parts[0] || "+353";
+        number = parts.slice(1).join(" ");
       } else {
-        // Fallback: try to extract any country code
-        const match = value.match(/^(\+\d+)(\d+)$/);
-        if (match) {
-          code = match[1];
-          const rawNumber = match[2];
-          // Format based on length
-          if (rawNumber.length === 7) {
-            number = rawNumber.replace(/(\d{2})(\d{3})(\d{2})/, "$1 $2 $3");
-          } else {
-            number = rawNumber.replace(/(\d{2})(\d{3})(\d{4})/, "$1 $2 $3");
-          }
-        } else {
-          // If no clear format, use as is
+        // Format: "+3534444444"
+        // Extract country code (assuming +353 is the code)
+        if (value.startsWith("+353") && value.length > 4) {
           code = "+353";
-          number = value.replace("+353", "");
+          const rawNumber = value.substring(4); // Remove +353
+          // Format the remaining digits
+          number = rawNumber.replace(/(\d{2})(\d{3})(\d{0,4})/, "$1 $2 $3").trim();
+        } else {
+          // Fallback: try to extract any country code
+          const match = value.match(/^(\+\d+)(\d+)$/);
+          if (match) {
+            code = match[1];
+            const rawNumber = match[2];
+            // Format based on length
+            if (rawNumber.length === 7) {
+              number = rawNumber.replace(/(\d{2})(\d{3})(\d{2})/, "$1 $2 $3");
+            } else {
+              number = rawNumber.replace(/(\d{2})(\d{3})(\d{4})/, "$1 $2 $3");
+            }
+          } else {
+            // If no clear format, use as is
+            code = "+353";
+            number = value.replace("+353", "");
+          }
         }
       }
-    }
 
-    setCountryCode(code);
-    setMobileNumber(number);
-  }
-}, [type, value]);
+      setCountryCode(code);
+      setMobileNumber(number);
+    }
+  }, [type, value]);
   return (
     <div className="my-input-wrapper">
       <div className="d-flex justify-content-between">
@@ -136,9 +140,8 @@ useEffect(() => {
       </div>
 
       <div
-        className={`my-input-container ${showError ? "error" : ""} ${
-          isFocused ? "focused" : ""
-        }`}
+        className={`my-input-container ${showError ? "error" : ""} ${isFocused ? "focused" : ""
+          }`}
       >
         {type === "textarea" ? (
           <textarea {...commonProps} rows={rows} />
