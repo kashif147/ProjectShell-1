@@ -216,6 +216,7 @@ const RecruitAFriend = lazyWithRetry(() =>
 const DirectDebitSummary = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitSummary")
 );
+const RefundsSummary = lazyWithRetry(() => import("./pages/finance/RefundsSummary"));
 const DirectDebitBatchDetails = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitBatchDetails")
 );
@@ -684,6 +685,31 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <BatchMemberSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="DirectDebit"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="Refunds"
+                      element={
+                        <ProtectedRoute>
+                          <RefundsSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="Batch/:id"
+                      element={
+                        <ProtectedRoute>
+                          <SimpleBatchMemberSummary />
                         </ProtectedRoute>
                       }
                     />

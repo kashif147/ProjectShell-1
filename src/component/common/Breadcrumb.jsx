@@ -146,6 +146,11 @@ const Breadcrumb = () => {
       page: "Direct Debit",
       icon: "💳",
     },
+    "/Refunds": {
+      module: "Finance",
+      page: "Refunds",
+      icon: "💰",
+    },
     "/DirectDebitAuthorization": {
       module: "Finance",
       page: "Direct Debit Authorization",

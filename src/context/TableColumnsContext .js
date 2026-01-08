@@ -19,6 +19,73 @@ const TableColumnsContext = createContext();
 
 // Static column configurations
 const staticColumns = {
+  Refunds: [
+    {
+      dataIndex: "refund",
+      title: "Refund",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "refundDate",
+      title: "Refund Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "ref",
+      title: "Ref",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "type",
+      title: "Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "updatedBy",
+      title: "Updated By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+  ],
   Profile: [
     // ======================= PROFILE BASICS =======================
     {

@@ -15,7 +15,7 @@ export const getCornMarketBatchById = createAsyncThunk(
                     headers: { Authorization: `Bearer ${token}` },
                 }
             );
-
+            console.log("responsexyz", response);
             return response?.data?.data;
         } catch (error) {
             return rejectWithValue(

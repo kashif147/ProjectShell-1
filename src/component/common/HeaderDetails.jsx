@@ -63,6 +63,8 @@ import axios from "axios";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
+// import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
+import RefundDrawer from "../../component/finanace/RefundDrawer"
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 
 function HeaderDetails() {
@@ -92,6 +94,8 @@ function HeaderDetails() {
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [sortOption, setSortOption] = useState(null);
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
+  const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
+  const refundFormRef = useRef(null);
 
 
   const handleDateChange = (val) => {
@@ -779,13 +783,14 @@ function HeaderDetails() {
             location?.pathname == "/Popout" ||
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
-            location?.pathname == "/templeteSummary") && (
+            location?.pathname == "/templeteSummary" ||
+            location?.pathname == "/Refunds") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : "")}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -850,6 +855,8 @@ function HeaderDetails() {
                                   setisDrawerOpen(!isDrawerOpen);
                                 } else if (nav === "/DirectDebitAuthorization") {
                                   setDdDrawerOpen(true);
+                                } else if (nav === "/Refunds") {
+                                  setRefundDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -1332,6 +1339,30 @@ function HeaderDetails() {
           }}
         />
       </MyDrawer>
+      <RefundDrawer
+        open={refundDrawerOpen}
+        onClose={() => setRefundDrawerOpen(false)}
+      />
+      {/* <MyDrawer
+        title="Refund Entry Drawer"
+
+        width={500}
+        isPagination={false}
+        add={() => {
+          if (refundFormRef.current && typeof refundFormRef.current.submit === 'function') {
+            refundFormRef.current.submit();
+          }
+        }}
+      >
+        <RefundEntryForm
+          ref={refundFormRef}
+          onCancel={() => setRefundDrawerOpen(false)}
+          onSubmit={(data) => {
+            console.log("Creating Refund:", data);
+            setRefundDrawerOpen(false);
+          }}
+        />
+      </MyDrawer> */}
     </div>
   );
 }

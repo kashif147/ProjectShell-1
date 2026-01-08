@@ -97,7 +97,7 @@ function SimpleBatchMemberSummary() {
 
     if (search === "DirectDebitSummary") {
       return {
-        id: batchId || "DD-001",
+        id: batchId,
         name: batchName || "Monthly DD Batch - January 2024",
         date: "2024-01-05",
         createdBy: "John Doe",

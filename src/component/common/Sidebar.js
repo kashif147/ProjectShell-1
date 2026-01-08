@@ -221,6 +221,9 @@ const Sidebar = () => {
       case "Reconciliations":
         navigate("/Reconciliation", { state: { search: "Reconciliation" } });
         break;
+      case "Refunds":
+        navigate("/Refunds", { state: { search: "Refunds" } });
+        break;
       case "DD Authorisations":
         navigate("/DirectDebitAuthorization", { state: { search: "Direct Debit Authorization" } });
         break;
