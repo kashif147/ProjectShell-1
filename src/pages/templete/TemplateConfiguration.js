@@ -18,7 +18,7 @@ import {
 } from "antd";
 import ReactQuill from "react-quill";
 import { useNavigate } from "react-router-dom";
-import "react-quill/dist/quill.snow.css";
+import "quill/dist/quill.snow.css";
 import {
   CloseOutlined,
   EyeOutlined,
@@ -50,9 +50,6 @@ const myAlert = (type, alertMessage, description) => {
 
 // Constants
 const MAX_FILE_SIZE = 50 * 1024 * 1024; // 50MB
-const ALLOWED_FILE_TYPES = [
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
 
 // Helper function to replace placeholders with data
 const replacePlaceholdersWithData = (htmlContent) => {
@@ -331,6 +328,7 @@ const extractContentFromDocxBase64 = async (base64Content) => {
 
             // Clean the text - remove control characters but keep structure
             textContent = textContent
+              // eslint-disable-next-line no-control-regex
               .replace(/[\x00-\x08\x0B-\x0C\x0E-\x1F\x7F-\x9F]/g, "")
               .replace(/\r\n/g, "\n")
               .replace(/\r/g, "\n");
@@ -459,12 +457,6 @@ const htmlToPlainText = (html) => {
   tempDiv.innerHTML = html;
 
   return tempDiv.textContent || tempDiv.innerText || "";
-};
-
-// Function to format content for display in preview modal
-const formatContentForDisplay = (htmlContent) => {
-  if (!htmlContent) return "";
-  return htmlContent;
 };
 
 // UPDATE TEMPLATE API FUNCTION
@@ -677,7 +669,7 @@ const TemplateConfiguration = () => {
     (state) => state.bookmarks
   );
 
-  const { templeteData, templetedetailsloading, error } = useSelector(
+  const { templeteData, templetedetailsloading } = useSelector(
     (state) => state.templeteDetails
   );
 
@@ -685,7 +677,6 @@ const TemplateConfiguration = () => {
   const [isPreviewModalVisible, setIsPreviewModalVisible] = useState(false);
   const [saving, setSaving] = useState(false);
   const [generatedFile, setGeneratedFile] = useState(null);
-  const [debugInfo, setDebugInfo] = useState(null);
   const [isLoadingContent, setIsLoadingContent] = useState(false);
   const [originalContent, setOriginalContent] = useState("");
   const [originalFormData, setOriginalFormData] = useState(null);
@@ -694,7 +685,7 @@ const TemplateConfiguration = () => {
   const previousContentRef = useRef("");
   const [isEditMode, setIsEditMode] = useState(false);
   const [searchTerm, setSearchTerm] = useState("");
-  const [editorHeight, setEditorHeight] = useState("400px");
+  const [editorHeight] = useState("400px");
 
   const dispatch = useDispatch();
   const navigate = useNavigate();
@@ -811,29 +802,10 @@ const TemplateConfiguration = () => {
             .filter(Boolean);
 
           setSelectedVariables(new Set(variableIds));
-
-          // Store template data for update
-          setDebugInfo({
-            templateId: template._id,
-            templateName: template.name,
-            hasFileContent: true,
-            fileContentLength: data.fileContent.length,
-            extractedHtmlLength: content.length,
-            variablesFound: variables.length,
-            bookmarksCount: bookmarks?.length || 0,
-            originalContentLength: content.length,
-          });
         } else {
           console.warn("⚠️ No fileContent found in API response");
           setValue("emailContent", "<p></p>");
           setOriginalContent("<p></p>");
-
-          setDebugInfo({
-            templateId: template._id,
-            templateName: template.name,
-            hasFileContent: false,
-            message: "No DOCX content found in API response",
-          });
         }
       } catch (error) {
         console.error("❌ Error loading template content:", error);
@@ -846,13 +818,6 @@ const TemplateConfiguration = () => {
           message: "Content Load Error",
           description: "Failed to extract content from DOCX file",
           duration: 5,
-        });
-
-        setDebugInfo({
-          templateId: template._id,
-          templateName: template.name,
-          error: error.message,
-          hasFileContent: !!data.fileContent,
         });
       } finally {
         setIsLoadingContent(false);

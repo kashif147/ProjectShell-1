@@ -29,8 +29,9 @@
     "docxtemplater": "^3.52.0",
     "dotenv": "^16.4.5",
     "express": "^4.21.1",
+    "firebase": "^12.7.0",
     "html-docx-js": "^0.3.1",
-    "jspdf-autotable": "^3.8.3",
+    "jspdf-autotable": "^5.0.2",
     "lucide-react": "^0.539.0",
     "mammoth": "^1.11.0",
     "moment": "^2.30.1",
@@ -49,8 +50,8 @@
     "react-quill": "^2.0.0",
     "react-resizable": "^3.0.5",
     "react-router-dom": "^6.25.1",
-    "react-scripts": "5.0.1",
-    "react-to-pdf": "^1.0.1",
+    "react-scripts": "^5.0.1",
+    "react-to-pdf": "^2.0.3",
     "recharts": "^3.1.2",
     "to": "^0.2.9",
     "web-vitals": "^2.1.4",
@@ -58,7 +59,7 @@
     "yarn": "^1.22.22"
   },
   "scripts": {
-    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 react-scripts start",
+    "start": "cross-env NODE_OPTIONS=--max-old-space-size=4096 react-scripts start --experimental-https",
     "build": "CI=false react-scripts build",
     "eject": "react-scripts eject"
   },
@@ -84,7 +85,7 @@
     "@babel/plugin-proposal-private-property-in-object": "^7.21.11",
     "autoprefixer": "^10.4.21",
     "cross-env": "^7.0.3",
-    "office-addin-debugging": "^5.1.6",
+    "office-addin-debugging": "^6.0.6",
     "postcss": "^8.5.4",
     "tailwindcss": "^4.1.8"
   }

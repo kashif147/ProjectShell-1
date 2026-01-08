@@ -5,6 +5,7 @@ import Entry from "./Entry";
 import React, { useEffect, useRef } from "react";
 import AuthProvider from "./pages/auth/AuthProvider";
 import { ChatbotProvider } from "./context/ChatbotContext";
+import { FCMProvider } from "./context/FCMContext";
 import { App as AntApp, notification } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "./features/LookupsSlice";
@@ -85,11 +86,13 @@ function App() {
     <AntApp>
       {contextHolder}
       <AuthProvider>
-        <ChatbotProvider>
-          <div className="App">
-            <Entry />
-          </div>
-        </ChatbotProvider>
+        <FCMProvider>
+          <ChatbotProvider>
+            <div className="App">
+              <Entry />
+            </div>
+          </ChatbotProvider>
+        </FCMProvider>
       </AuthProvider>
     </AntApp>
   );
