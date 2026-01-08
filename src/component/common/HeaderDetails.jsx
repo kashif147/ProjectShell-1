@@ -63,6 +63,7 @@ import axios from "axios";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
+import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -1294,6 +1295,26 @@ function HeaderDetails() {
       <SimpleBatch
         open={isSimpleBatchOpen}
         onClose={() => setIsSimpleBatchOpen(false)}
+        onSubmit={() => {
+          let batchType = "";
+          if (nav.toLowerCase().includes("newgraduate")) {
+            batchType = "new-graduate";
+          } else if (nav.toLowerCase().includes("cornmarketrewards")) {
+            batchType = "inmo-rewards";
+          } else if (nav.toLowerCase().includes("recruitafriend")) {
+            batchType = "recruit-friend";
+          } else if (nav.toLowerCase().includes("directdebit")) {
+            batchType = "direct-debit";
+          }
+
+          if (batchType) {
+            dispatch(fetchBatchesByType({
+              type: batchType,
+              page: 1,
+              limit: 500
+            }));
+          }
+        }}
       />
 
       <MyDrawer
