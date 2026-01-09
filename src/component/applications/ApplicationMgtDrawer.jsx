@@ -1015,18 +1015,73 @@ function ApplicationMgtDrawer({
         setRecruiterSearchValue("");
         navigate("/Applications");
       } else {
-        setInfData(inputValue);
+        // Preserve ONLY the specified fields when Batch Entry is checked
+        const preservedFields = {
+          professionalDetails: {
+            // Only preserve these specific fields
+            grade: InfData.professionalDetails?.grade || "",
+            studyLocation: InfData.professionalDetails?.studyLocation || "",
+            workLocation: InfData.professionalDetails?.workLocation || "",
+            region: InfData.professionalDetails?.region || "",
+            branch: InfData.professionalDetails?.branch || "",
+            startDate: InfData.professionalDetails?.startDate || null,
+          },
+          subscriptionDetails: {
+            // Only preserve these specific fields
+            membershipCategory: InfData.subscriptionDetails?.membershipCategory || "",
+            paymentType: InfData.subscriptionDetails?.paymentType || "",
+            primarySection: InfData.subscriptionDetails?.primarySection || "",
+          },
+        };
+
+        // Create new state with preserved fields
+        const newInfData = {
+          ...inputValue,
+          professionalDetails: {
+            ...inputValue.professionalDetails,
+            ...preservedFields.professionalDetails,
+          },
+          subscriptionDetails: {
+            ...inputValue.subscriptionDetails,
+            ...preservedFields.subscriptionDetails,
+          },
+        };
+
+        // Reset other fields to default values
+        newInfData.personalInfo = { ...inputValue.personalInfo };
+        newInfData.contactInfo = { ...inputValue.contactInfo };
+
+        // Reset other professional details fields
+        newInfData.professionalDetails.nmbiNumber = "";
+        newInfData.professionalDetails.otherWorkLocation = "";
+        newInfData.professionalDetails.otherGrade = "";
+        newInfData.professionalDetails.nurseType = null;
+        newInfData.professionalDetails.nursingAdaptationProgramme = null;
+        newInfData.professionalDetails.isRetired = false;
+        newInfData.professionalDetails.retiredDate = null;
+        newInfData.professionalDetails.pensionNo = "";
+        newInfData.professionalDetails.graduationDate = null;
+
+        setInfData(newInfData);
         setSelectedMember(null);
         setAddressSearchValue("");
         setRecruiterSearchValue("");
         setSelected((prev) => ({
           ...prev,
           Reject: false,
-          Bulk: false,
+          Bulk: true, // Keep Bulk checked for next entry
         }));
+
+        // Trigger handleLocationChange to refresh region/branch if workLocation exists
+        if (preservedFields.professionalDetails.workLocation) {
+          setTimeout(() => {
+            handleLocationChange(preservedFields.professionalDetails.workLocation);
+          }, 100);
+        }
+
         MyAlert(
           "success",
-          "Application submitted successfully! Form cleared and ready for next entry."
+          "Application submitted successfully! Form cleared (except preserved fields) and ready for next entry."
         );
       }
     } catch (error) {

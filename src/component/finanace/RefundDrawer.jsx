@@ -5,12 +5,14 @@ import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import MyDatePicker1 from "../common/MyDatePicker1";
+import MemberSearch from "../profile/MemberSearch";
 
 const RefundDrawer = ({ open, onClose, onSubmit }) => {
     const [formValues, setFormValues] = useState({
         refund: "",
         refundDate: dayjs(),
         type: "",
+        refNo: "",
     });
 
     const [errors, setErrors] = useState({});
@@ -44,6 +46,7 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                 refund: "",
                 refundDate: dayjs(),
                 type: "",
+                refNo: "",
             });
             setErrors({});
         } else {
@@ -56,12 +59,29 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
             title="Refund Entry Drawer"
             open={open}
             onClose={onClose}
-            width={500}
+            width={700}
             isPagination={false}
             add={handleSubmit}
         >
             <div style={{ padding: "10px" }}>
                 <Row gutter={[16, 16]}>
+                    <Col span={24}>
+                        <label className="my-input-label">Member Search</label>
+                        <MemberSearch
+                            fullWidth={true}
+                            style={{ width: "100%" }}
+                            onSelectBehavior="none"
+                        />
+                    </Col>
+                    <Col span={24}>
+                        <MyInput
+                            label="Ref No."
+                            name="refNo"
+                            placeholder="Enter Ref No."
+                            value={formValues.refNo}
+                            onChange={(e) => handleChange("refNo", e.target.value)}
+                        />
+                    </Col>
                     <Col span={24}>
                         <MyInput
                             label="Refund"
@@ -98,6 +118,7 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                             onChange={(e) => handleChange("type", e.target.value)}
                             required
                             hasError={errors.type}
+                            isMarginBtm={false}
                         />
                     </Col>
                 </Row>
