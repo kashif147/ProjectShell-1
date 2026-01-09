@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Row, Col, message } from "antd";
+import { Row, Col, message, Checkbox } from "antd";
 import dayjs from "dayjs";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
@@ -54,9 +54,18 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
         }
     };
 
+    const drawerTitle = (
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <span>Refund Entry Drawer</span>
+            <Checkbox>
+                <span style={{ marginLeft: '10px' }}>Bulk Entry</span>
+            </Checkbox>
+        </div>
+    );
+
     return (
         <MyDrawer
-            title="Refund Entry Drawer"
+            title={drawerTitle}
             open={open}
             onClose={onClose}
             width={700}
