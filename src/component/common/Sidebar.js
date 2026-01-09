@@ -139,6 +139,7 @@ const Sidebar = () => {
       "/RecruitAFriend": "Recruit a Friend",
       "/DirectDebitAuthorization": "DD Authorisations",
       "/DirectDebit": "Direct Debit",
+      "/write-offs": "Write-offs",
       "/SuspendedMembersReport": "Suspended Members Report",
       "/ResignedMembersReport": "Resigned Members Report",
       "/NewMembersReport": "New Members Report",
@@ -223,6 +224,9 @@ const Sidebar = () => {
         break;
       case "Refunds":
         navigate("/Refunds", { state: { search: "Refunds" } });
+        break;
+      case "Write-offs":
+        navigate("/write-offs", { state: { search: "Write-offs" } });
         break;
       case "DD Authorisations":
         navigate("/DirectDebitAuthorization", { state: { search: "Direct Debit Authorization" } });

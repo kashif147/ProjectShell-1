@@ -217,6 +217,7 @@ const DirectDebitSummary = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitSummary")
 );
 const RefundsSummary = lazyWithRetry(() => import("./pages/finance/RefundsSummary"));
+const WriteOffsSummary = lazyWithRetry(() => import("./pages/finance/WriteOffsSummary"));
 const DirectDebitBatchDetails = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitBatchDetails")
 );
@@ -702,6 +703,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <RefundsSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="write-offs"
+                      element={
+                        <ProtectedRoute>
+                          <WriteOffsSummary />
                         </ProtectedRoute>
                       }
                     />

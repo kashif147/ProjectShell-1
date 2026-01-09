@@ -65,6 +65,7 @@ import { useFilters } from "../../context/FilterContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer"
+import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 
 function HeaderDetails() {
@@ -95,6 +96,7 @@ function HeaderDetails() {
   const [sortOption, setSortOption] = useState(null);
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
+  const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
 
 
@@ -784,13 +786,14 @@ function HeaderDetails() {
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
             location?.pathname == "/templeteSummary" ||
+            location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : "")}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -857,6 +860,8 @@ function HeaderDetails() {
                                   setDdDrawerOpen(true);
                                 } else if (nav === "/Refunds") {
                                   setRefundDrawerOpen(true);
+                                } else if (nav === "/write-offs") {
+                                  setWriteOffDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -1342,6 +1347,10 @@ function HeaderDetails() {
       <RefundDrawer
         open={refundDrawerOpen}
         onClose={() => setRefundDrawerOpen(false)}
+      />
+      <WriteOffDrawer
+        open={writeOffDrawerOpen}
+        onClose={() => setWriteOffDrawerOpen(false)}
       />
       {/* <MyDrawer
         title="Refund Entry Drawer"

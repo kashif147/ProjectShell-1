@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Modal, Button } from "antd";
+import { Modal, Button, message } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -17,6 +17,8 @@ import MyDatePicker from "./MyDatePicker";
 import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
 import { useSelector } from "react-redux";
+import axios from "axios";
+import MyAlert from "./MyAlert"; // Assuming you have this component
 
 function ProfileHeader({
   isEditMode = false,
@@ -29,6 +31,10 @@ function ProfileHeader({
     dateResigned: null,
     reason: "",
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [alertVisible, setAlertVisible] = useState(false);
+  const [alertMessage, setAlertMessage] = useState("");
+  const [alertType, setAlertType] = useState("success");
 
   // Get data from Redux store
   const { profileDetails, loading, error } = useSelector(
@@ -41,7 +47,7 @@ function ProfileHeader({
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-  console.log(ProfileSubData,"ProfileSubData")
+  
   const {
     profileSearchData,
     loading: searchLoading,
@@ -53,7 +59,10 @@ function ProfileHeader({
   
   // Choose source dynamically - profileDetails has priority
   const source = profileDetails || searchAoiRes;
-debugger
+
+  // Get token from Redux store (assuming you have auth state)
+  const { token } = useSelector((state) => state.auth || {});
+
   // Function to calculate age from date of birth using dayjs
   const calculateAge = (dateString) => {
     if (!dateString) return "";
@@ -81,7 +90,7 @@ debugger
   const subscriptionData = useMemo(() => {
     if (ProfileSubData?.data?.length > 0) {
       const subscription = ProfileSubData.data[0];
-debugger
+
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
@@ -227,18 +236,86 @@ debugger
       dateResigned: null,
       reason: "",
     });
+    setIsSubmitting(false);
   };
 
-  const handleCancelSubmit = () => {
+  const showAlert = (message, type = "success") => {
+    setAlertMessage(message);
+    setAlertType(type);
+    setAlertVisible(true);
+    
+    // Auto-hide alert after 5 seconds
+    setTimeout(() => {
+      setAlertVisible(false);
+    }, 5000);
+  };
+
+  const handleCancelSubmit = async () => {
     if (!cancelFormData.dateResigned || !cancelFormData.reason) {
+      showAlert("Please fill all required fields", "error");
       return;
     }
 
-    // Handle cancellation submission here
-    console.log("Cancellation submitted:", cancelFormData);
+    // Check if token exists
+    if (!token) {
+      showAlert("Authentication token is missing. Please log in again.", "error");
+      return;
+    }
 
-    // Close modal and reset form
-    handleCancelModalClose();
+    // Format date to YYYY-MM-DD
+    const formattedDate = dayjs(cancelFormData.dateResigned).format("YYYY-MM-DD");
+
+    // Prepare request payload
+    const payload = {
+      dateResigned: formattedDate,
+      reason: cancelFormData.reason,
+      // Add member ID if needed by the API
+      membershipNumber: memberData.memberId
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.post(
+        "https://subscriptionserviceshell-ambyf5dsa8c9dhcg.northeurope-01.azurewebsites.net/api/v1/subscriptions/resign",
+        payload,
+        {
+          headers: {
+            'Authorization': `Bearer ${token}`,
+            'Content-Type': 'application/json'
+          }
+        }
+      );
+
+      if (response.status === 200 || response.status === 201) {
+        showAlert("Membership cancellation submitted successfully!", "success");
+        
+        // Optionally, you can trigger a refresh of subscription data here
+        // dispatch(fetchProfileSubscription()); // Uncomment if you have this action
+        
+        // Close modal and reset form
+        handleCancelModalClose();
+      } else {
+        showAlert("Failed to submit cancellation. Please try again.", "error");
+      }
+    } catch (error) {
+      console.error("Error submitting cancellation:", error);
+      
+      // Show specific error messages based on error type
+      if (error.response) {
+        // Server responded with error status
+        const errorMessage = error.response.data?.message || "Server error occurred";
+        showAlert(`Cancellation failed: ${errorMessage}`, "error");
+      } else if (error.request) {
+        // No response received
+        showAlert("No response from server. Please check your connection.", "error");
+      } else {
+        // Request setup error
+        showAlert("Error setting up request. Please try again.", "error");
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const handleFormChange = (field, value) => {
@@ -285,6 +362,15 @@ debugger
 
   return (
     <div className="member-header-container">
+      {/* MyAlert Component */}
+      {alertVisible && (
+        <MyAlert
+          message={alertMessage}
+          type={alertType}
+          onClose={() => setAlertVisible(false)}
+        />
+      )}
+      
       <div className="member-header-single-card">
         {/* Profile Header Section */}
         <div className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}>
@@ -423,7 +509,7 @@ debugger
         open={isCancelModalVisible}
         onCancel={handleCancelModalClose}
         footer={[
-          <Button key="cancel" onClick={handleCancelModalClose}>
+          <Button key="cancel" onClick={handleCancelModalClose} disabled={isSubmitting}>
             Cancel
           </Button>,
           <Button
@@ -431,9 +517,10 @@ debugger
             type="primary"
             danger
             onClick={handleCancelSubmit}
-            disabled={!cancelFormData.dateResigned || !cancelFormData.reason}
+            disabled={!cancelFormData.dateResigned || !cancelFormData.reason || isSubmitting}
+            loading={isSubmitting}
           >
-            Confirm Cancellation
+            {isSubmitting ? "Submitting..." : "Confirm Cancellation"}
           </Button>,
         ]}
         width={520}
@@ -452,6 +539,7 @@ debugger
               placeholder="Select date resigned"
               value={cancelFormData.dateResigned}
               onChange={(date) => handleFormChange("dateResigned", date)}
+              disabled={isSubmitting}
               required
             />
           </div>
@@ -462,6 +550,7 @@ debugger
               options={cancellationReasons}
               value={cancelFormData.reason}
               onChange={(e) => handleFormChange("reason", e.target.value)}
+              disabled={isSubmitting}
               required
             />
           </div>
