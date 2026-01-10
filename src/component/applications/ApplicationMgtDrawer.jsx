@@ -2081,12 +2081,12 @@ function ApplicationMgtDrawer({
                         borderRadius: "4px",
                         height: "100%",
                         backgroundColor: "#1173d41a",
-                        border: "1px solid #97c5efff",
+                        border: errors?.preferredAddress ? "1px solid #ff4d4f" : "1px solid #97c5efff",
                       }}
                     >
                       <div className="d-flex justify-content-between align-items-center">
                         <label
-                          style={{ color: "#215e97" }}
+                          // style={{ color: errors?.preferredAddress ? "#ff4d4f" : "#215e97" }}
                           className={`my-input-label ${errors?.preferredAddress ? "error-text1" : ""
                             }`}
                         >
@@ -2108,9 +2108,7 @@ function ApplicationMgtDrawer({
                             { value: "home", label: "Home" },
                             { value: "work", label: "Work" },
                           ]}
-                          className={
-                            errors?.preferredAddress ? "radio-error" : ""
-                          }
+                          className="mt-2"
                         />
                       </div>
                     </div>
@@ -2302,13 +2300,13 @@ function ApplicationMgtDrawer({
                     borderRadius: "4px",
                     height: "100%",
                     backgroundColor: "#1173d41a",
-                    border: "1px solid #97c5efff",
+                    border: errors?.preferredEmail ? "1px solid #ff4d4f" : "1px solid #97c5efff",
                     borderRadius: "4px",
                   }}
                 >
                   <div className="d-flex justify-content-between align-items-center">
                     <label
-                      style={{ color: "#215e97" }}
+                      // style={{ color: errors?.preferredEmail ? "#ff4d4f" : "#215e97" }}
                       className={`my-input-label ${errors?.preferredEmail ? "error-text1" : ""
                         }`}
                     >
@@ -2316,7 +2314,7 @@ function ApplicationMgtDrawer({
                       <span className="text-danger ms-1">*</span>
                     </label>
                     <Radio.Group
-                      style={{ color: "#215e97" }}
+                      style={{ color: "green" }}
                       onChange={(e) =>
                         handleInputChange(
                           "contactInfo",
@@ -2326,7 +2324,7 @@ function ApplicationMgtDrawer({
                       }
                       value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
-                      className={errors?.preferredEmail ? "radio-error" : ""}
+                      // className={errors?.preferredEmail ? "radio-error" : ""}
                     >
                       <Radio style={{ color: "#215e97" }} value="personal">
                         Personal
@@ -2667,12 +2665,12 @@ function ApplicationMgtDrawer({
                     borderRadius: "4px",
                     height: "100%",
                     backgroundColor: "#1173d41a",
-                    border: "1px solid #97c5efff",
+                    border: errors?.nursingAdaptationProgramme ? "1px solid #ff4d4f" : "1px solid #97c5efff",
                   }}
                 >
                   <label
                     style={{
-                      color: "#215e97",
+                      color: errors?.nursingAdaptationProgramme ? "#ff4d4f" : "#215e97",
                       display: "block",
                       marginBottom: "8px",
                     }}
@@ -3098,13 +3096,13 @@ function ApplicationMgtDrawer({
                           </a>
                         </Checkbox>
                         <p>
-                          By selecting ‘I consent’ below, you are agreeing to the
+                          By selecting 'I consent' below, you are agreeing to the
                           INMO, sharing your Trade Union membership details with
                           Cornmarket. Cornmarket as Scheme Administrator will
                           process and retain details of your Trade Union
                           membership for the purposes of assessing eligibility and
                           admitting eligible members (automatically) to the Income
-                          Protection Scheme (with 9 Months’ Free Cover), and for
+                          Protection Scheme (with 9 Months' Free Cover), and for
                           the ongoing administration of the Scheme. Where you have
                           also opted in to receiving marketing communications,
                           Cornmarket will provide you with information on
@@ -3116,7 +3114,7 @@ function ApplicationMgtDrawer({
                           automatic Income Protection Scheme membership. If you do
                           not consent, your data will not be shared with
                           Cornmarket for this purpose, you will not be assessed
-                          for automatic Scheme membership (including 9 Months’
+                          for automatic Scheme membership (including 9 Months'
                           Free Cover) and you will have to contact Cornmarket
                           separately should you wish to apply for Scheme
                           membership. This offer will run on a pilot basis. Terms
