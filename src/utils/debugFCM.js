@@ -44,17 +44,17 @@ const debugFCM = async () => {
   console.log("   Controller script URL:", controller.scriptURL);
   console.log("   Controller state:", controller.state);
 
-  // Check service worker registration at Firebase scope
+  // Check service worker registration at root scope (Firebase requirement)
   let registration;
   try {
-    const serviceWorkerScope = "/firebase-cloud-messaging-push-scope";
-    registration = await navigator.serviceWorker.getRegistration(serviceWorkerScope);
+    registration = await navigator.serviceWorker.getRegistration("/");
     console.log("\n🔧 SERVICE WORKER REGISTRATION:");
     console.log("   Status:", registration ? "✅ Found" : "❌ Not found");
     
     if (!registration) {
-      console.warn("⚠️ No service worker found at Firebase scope");
+      console.warn("⚠️ No service worker found at root scope (/)");
       console.warn("💡 Service worker should be registered by FCMContext on app load");
+      console.warn("💡 Firebase requires root scope registration for FCM to work");
       console.log("\n=== End FCM Debug (No registration) ===");
       return;
     }

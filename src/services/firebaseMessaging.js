@@ -34,8 +34,10 @@ const getMessaging = async () => {
   }
 
   try {
-    // Get the ready service worker registration
+    // Use navigator.serviceWorker.ready - Firebase requires root scope registration
+    // This aligns with Firebase's internal expectations
     const registration = await navigator.serviceWorker.ready;
+
     if (!registration) {
       console.error("No service worker registration found");
       return null;
@@ -46,6 +48,11 @@ const getMessaging = async () => {
       console.error("Service Worker is not controlling the page");
       return null;
     }
+
+    console.log("🔍 getMessaging: Using service worker registration:", {
+      scope: registration.scope,
+      active: registration.active?.state,
+    });
 
     cachedMessaging = await getMessagingInstance(registration);
     return cachedMessaging;
@@ -92,13 +99,46 @@ export const requestPermission = async (messagingInstance = null) => {
 
 export const getFCMToken = async () => {
   try {
+    console.log("🔄 getFCMToken: Starting token retrieval...");
+
+    // Check notification permission
+    if (Notification.permission !== "granted") {
+      console.error(
+        "❌ getFCMToken: Notification permission is not granted:",
+        Notification.permission
+      );
+      return null;
+    }
+
+    // Check service worker controller
+    if (!navigator.serviceWorker.controller) {
+      console.error(
+        "❌ getFCMToken: Service worker is not controlling the page"
+      );
+      return null;
+    }
+
     console.log("🔄 getFCMToken: Getting messaging instance...");
     const messaging = await getMessaging();
     if (!messaging) {
-      console.warn("❌ Firebase messaging is not initialized");
+      console.warn("❌ getFCMToken: Firebase messaging is not initialized");
+      console.warn("❌ This could be due to:");
+      console.warn("   - Service worker not ready");
+      console.warn("   - Service worker registration mismatch");
+      console.warn("   - Firebase initialization error");
       return null;
     }
     console.log("✅ getFCMToken: Messaging instance available");
+
+    if (!vapidKey) {
+      console.error(
+        "❌ getFCMToken: VAPID key is missing! Cannot generate token."
+      );
+      console.error(
+        "❌ Please set REACT_APP_FIREBASE_VAPID_KEY in your .env file"
+      );
+      return null;
+    }
 
     console.log(
       "🔑 getFCMToken: VAPID key:",
@@ -108,12 +148,64 @@ export const getFCMToken = async () => {
     console.log(
       "🎫 getFCMToken: Calling getToken with messaging and vapidKey..."
     );
+    console.log(
+      "🎫 getFCMToken: Service worker controller scriptURL:",
+      navigator.serviceWorker.controller.scriptURL
+    );
 
-    const token = await getToken(messaging, { vapidKey });
+    // Verify service worker registration (using root scope)
+    const currentRegistration = await navigator.serviceWorker.ready;
+    if (currentRegistration) {
+      console.log(
+        "🎫 getFCMToken: Current SW registration scope:",
+        currentRegistration.scope
+      );
+      console.log(
+        "🎫 getFCMToken: Current SW active state:",
+        currentRegistration.active?.state
+      );
+      console.log(
+        "🎫 getFCMToken: Current SW scriptURL:",
+        currentRegistration.active?.scriptURL
+      );
+    } else {
+      console.warn(
+        "⚠️ getFCMToken: Could not get current service worker registration"
+      );
+      return null;
+    }
+
+    // Ensure service worker is active and controlling
+    if (!navigator.serviceWorker.controller) {
+      console.error(
+        "❌ getFCMToken: Service worker is not controlling the page at this point"
+      );
+      return null;
+    }
+
+    let token;
+    try {
+      token = await getToken(messaging, { vapidKey });
+    } catch (tokenError) {
+      console.error("❌ getFCMToken: Error calling getToken():", tokenError);
+      console.error("❌ Error code:", tokenError.code);
+      console.error("❌ Error message:", tokenError.message);
+      console.error("❌ Error name:", tokenError.name);
+      console.error("❌ Full error:", tokenError);
+
+      // Check for specific Firebase error codes
+      if (tokenError.code === "messaging/token-subscribe-failed") {
+        console.error("❌ This usually means:");
+        console.error("   - Service worker registration doesn't match");
+        console.error("   - VAPID key is incorrect");
+        console.error("   - Service worker scope mismatch");
+      }
+
+      throw tokenError; // Re-throw to be caught by outer catch
+    }
 
     console.log("📝 getFCMToken: getToken returned:", token);
     console.log("📝 getFCMToken: Token type:", typeof token);
-    console.log("📝 getFCMToken: Token value:", token);
     console.log("📝 getFCMToken: Token length:", token ? token.length : 0);
     console.log("📝 getFCMToken: Is token truthy?", !!token);
     console.log("📝 getFCMToken: Is token empty string?", token === "");
@@ -129,16 +221,19 @@ export const getFCMToken = async () => {
       console.warn("⚠️ This usually indicates:");
       console.warn("   - Service worker registration mismatch");
       console.warn("   - VAPID key doesn't match Firebase project");
-      console.warn(
-        "   - Notification permission issue (but permission shows as granted)"
-      );
+      console.warn("   - Firebase project configuration mismatch");
+      console.warn("   - Service worker not registered at root scope (/)");
       return null;
     }
   } catch (error) {
     console.error("❌ Error getting FCM token:", error);
-    console.error("Error code:", error.code);
-    console.error("Error message:", error.message);
-    console.error("Full error:", error);
+    console.error("❌ Error code:", error?.code);
+    console.error("❌ Error message:", error?.message);
+    console.error("❌ Error name:", error?.name);
+    console.error("❌ Full error object:", error);
+    if (error?.stack) {
+      console.error("❌ Error stack:", error.stack);
+    }
     return null;
   }
 };
@@ -170,19 +265,16 @@ export const getDeviceId = () => {
   return deviceId;
 };
 
-// Get user ID from token
-export const getUserId = () => {
+// Decode JWT token helper
+const decodeToken = () => {
   try {
     const token = localStorage.getItem("token");
     if (!token) {
-      console.warn("⚠️ No token found, cannot extract user ID");
       return null;
     }
 
-    // Decode JWT token to extract user ID
     const base64Url = token.split(".")[1];
     if (!base64Url) {
-      console.warn("⚠️ Invalid token format");
       return null;
     }
 
@@ -193,13 +285,77 @@ export const getUserId = () => {
         .map((c) => "%" + ("00" + c.charCodeAt(0).toString(16)).slice(-2))
         .join("")
     );
-    const decodedToken = JSON.parse(jsonPayload);
+    return JSON.parse(jsonPayload);
+  } catch (error) {
+    console.error("❌ Error decoding token:", error);
+    return null;
+  }
+};
+
+// Get user ID from token
+export const getUserId = () => {
+  try {
+    const decodedToken = decodeToken();
+    if (!decodedToken) {
+      console.warn("⚠️ No token found or invalid token, cannot extract user ID");
+      return null;
+    }
 
     const userId = decodedToken.sub || decodedToken.id || decodedToken.userId;
     return userId;
   } catch (error) {
     console.error("❌ Error extracting user ID from token:", error);
     return null;
+  }
+};
+
+// Get tenant ID from token
+export const getTenantId = () => {
+  try {
+    const decodedToken = decodeToken();
+    if (!decodedToken) {
+      console.warn("⚠️ No token found or invalid token, cannot extract tenant ID");
+      return null;
+    }
+
+    const tenantId = decodedToken.tenantId || decodedToken.tenant_id;
+    return tenantId;
+  } catch (error) {
+    console.error("❌ Error extracting tenant ID from token:", error);
+    return null;
+  }
+};
+
+// Detect platform (web, ios, android)
+export const getPlatform = () => {
+  try {
+    // Since this is a React web app, default to "web"
+    // Only check for mobile platforms if running in a hybrid app (Cordova/Capacitor)
+    if (typeof window === "undefined") {
+      return "web";
+    }
+
+    const userAgent = navigator.userAgent || navigator.vendor || window.opera;
+
+    // Check if running in Capacitor/Cordova (hybrid app)
+    if (window.Capacitor || window.cordova) {
+      // Check for iOS
+      if (/iPad|iPhone|iPod/.test(userAgent) && !window.MSStream) {
+        return "ios";
+      }
+      // Check for Android
+      if (/android/i.test(userAgent)) {
+        return "android";
+      }
+    }
+
+    // For web browser, always return "web"
+    // This includes mobile web browsers (Chrome on Android, Safari on iOS)
+    // FCM for web uses the same token regardless of device OS
+    return "web";
+  } catch (error) {
+    console.error("❌ Error detecting platform:", error);
+    return "web"; // Default to web
   }
 };
 
@@ -212,7 +368,14 @@ export const registerFCMToken = async (fcmToken) => {
       return { success: false, error: "User ID not available" };
     }
 
+    const tenantId = getTenantId();
+    if (!tenantId) {
+      console.warn("⚠️ Cannot register FCM token: Tenant ID not available");
+      return { success: false, error: "Tenant ID not available" };
+    }
+
     const deviceId = getDeviceId();
+    const platform = getPlatform();
     const token = localStorage.getItem("token");
 
     // Determine API endpoint - prefer notification service, fallback to gateway
@@ -240,7 +403,9 @@ export const registerFCMToken = async (fcmToken) => {
     console.log("📤 Registering FCM token:", {
       endpoint,
       userId,
+      tenantId,
       deviceId,
+      platform,
       tokenLength: fcmToken?.length,
     });
 
@@ -249,7 +414,9 @@ export const registerFCMToken = async (fcmToken) => {
       {
         fcmToken,
         userId,
+        tenantId,
         deviceId,
+        platform,
       },
       {
         headers: {
@@ -279,15 +446,40 @@ export const registerFCMToken = async (fcmToken) => {
 // Generate FCM token and register it
 export const generateAndRegisterFCMToken = async () => {
   try {
-    console.log("🔄 Generating FCM token...");
+    console.log("🔄 generateAndRegisterFCMToken: Starting token generation...");
+
+    // Verify service worker is controlling
+    if (!navigator.serviceWorker.controller) {
+      const errorMsg =
+        "Service Worker is not controlling the page. Cannot generate token.";
+      console.error("❌", errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    // Check notification permission
+    if (Notification.permission !== "granted") {
+      const errorMsg = `Notification permission is "${Notification.permission}", not "granted"`;
+      console.error("❌", errorMsg);
+      return { success: false, error: errorMsg };
+    }
+
+    console.log("🔄 generateAndRegisterFCMToken: Calling getFCMToken()...");
     const fcmToken = await getFCMToken();
+    console.log(
+      "🔄 generateAndRegisterFCMToken: getFCMToken() returned:",
+      fcmToken ? "Token received" : "null/undefined"
+    );
 
     if (!fcmToken) {
-      console.warn("⚠️ Failed to generate FCM token");
+      console.warn(
+        "⚠️ generateAndRegisterFCMToken: Failed to generate FCM token"
+      );
       return { success: false, error: "Failed to generate FCM token" };
     }
 
-    console.log("✅ FCM token generated, registering with backend...");
+    console.log(
+      "✅ generateAndRegisterFCMToken: FCM token generated, registering with backend..."
+    );
     const registrationResult = await registerFCMToken(fcmToken);
 
     return {
@@ -297,6 +489,12 @@ export const generateAndRegisterFCMToken = async () => {
     };
   } catch (error) {
     console.error("❌ Error in generateAndRegisterFCMToken:", error);
+    console.error("❌ Error stack:", error?.stack);
+    console.error("❌ Error details:", {
+      code: error?.code,
+      message: error?.message,
+      name: error?.name,
+    });
     return {
       success: false,
       error: error?.message || "Unknown error",
