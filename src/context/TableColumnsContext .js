@@ -19,6 +19,120 @@ const TableColumnsContext = createContext();
 
 // Static column configurations
 const staticColumns = {
+  onlinePayment: [
+    {
+      title: "Member No",
+      dataIndex: "memberId",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+    },
+    {
+      title: "Phone",
+      dataIndex: "phone",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Join Date",
+      dataIndex: "joinDate",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Membership Status",
+      dataIndex: "membershipStatus",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      title: "Renewal Date",
+      dataIndex: "renewalDate",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Transaction ID",
+      dataIndex: "transactionId",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      title: "Paid Amount",
+      dataIndex: "paidAmount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Payment Date",
+      dataIndex: "paymentDate",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "paymentMethod",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Payment Status",
+      dataIndex: "paymentStatus",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Billing Cycle",
+      dataIndex: "billingCycle",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+  ],
   Refunds: [
     {
       dataIndex: "refund",
@@ -2548,6 +2662,22 @@ const staticColumns = {
 };
 
 const staticSearchFilters = {
+  onlinePayment: [
+    { titleColumn: "Member ID", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Full Name", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Email", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Phone", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Join Date", isSearch: false, isCheck: false, lookups: {} },
+    { titleColumn: "Category", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Membership Status", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Renewal Date", isSearch: false, isCheck: false, lookups: {} },
+    { titleColumn: "Transaction ID", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Paid Amount", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Payment Date", isSearch: false, isCheck: false, lookups: {} },
+    { titleColumn: "Payment Method", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Payment Status", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Billing Cycle", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+  ],
   Profile: [
     {
       titleColumn: "Membership No",

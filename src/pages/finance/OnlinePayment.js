@@ -14,14 +14,10 @@ function OnlinePayment() {
 
   const chequeBatches = batches.filter(batch => batch.PaymentType === "Online Payments");
 
-  const formattedData = chequeBatches.map((item) => ({
-    ...item,
-    batchDate: moment(item.batchDate).format("DD/MM/YYYY"),
-    createdAt: moment(item.createdAt).format("DD/MM/YYYY HH:mm"),
-  }));
+  const formattedData = []
   return (
     <div>
-       <TableComponent data={formattedData} screenName="Batches" />
+       <TableComponent data={formattedData} screenName="onlinePayment" />
     </div>
   )
 }
