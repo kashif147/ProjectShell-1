@@ -61,7 +61,8 @@ function ProfileHeader({
   const source = profileDetails || searchAoiRes;
 
   // Get token from Redux store (assuming you have auth state)
-  const { token } = useSelector((state) => state.auth || {});
+  // const { token } = useSelector((state) => state.auth || {});
+  const token = localStorage.getItem("token");
 
   // Function to calculate age from date of birth using dayjs
   const calculateAge = (dateString) => {
@@ -251,14 +252,17 @@ function ProfileHeader({
   };
 
   const handleCancelSubmit = async () => {
+    debugger
     if (!cancelFormData.dateResigned || !cancelFormData.reason) {
       showAlert("Please fill all required fields", "error");
+      debugger
       return;
     }
 
     // Check if token exists
     if (!token) {
       showAlert("Authentication token is missing. Please log in again.", "error");
+      debugger
       return;
     }
 
