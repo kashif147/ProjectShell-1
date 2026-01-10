@@ -627,22 +627,22 @@ const TableComponent = ({
                 </Link>
               );
 
-            case "Membership No":
-              return (
-                <span
-                  style={{ color: "blue", cursor: "pointer" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const transferId = record?._id;
-                    if (transferId) {
-                      dispatch(fetchAndFilterTransferById(transferId));
-                      settransferreq(!transferreq);
-                    }
-                  }}
-                >
-                  {text || "View"}
-                </span>
-              );
+            // case "Membership No":
+            //   return (
+            //     <span
+            //       style={{ color: "blue", cursor: "pointer" }}
+            //       onClick={(e) => {
+            //         e.stopPropagation();
+            //         const transferId = record?._id;
+            //         if (transferId) {
+            //           dispatch(fetchAndFilterTransferById(transferId));
+            //           settransferreq(!transferreq);
+            //         }
+            //       }}
+            //     >
+            //       {text || "View"}
+            //     </span>
+            //   );
 
             case "Date of Birth":
             case "Date Of Birth":
@@ -923,7 +923,7 @@ const TableComponent = ({
             paddingLeft: "34px",
             paddingRight: "34px",
             width: "100%",
-            overflow: "hidden",
+            overflowX: "auto",
             paddingBottom: "80px", // Add padding to ensure pagination is visible
           }}
         >
@@ -937,7 +937,7 @@ const TableComponent = ({
             // **FIXED: Using the updated getRowSelectionConfig**
             rowSelection={rowSelectionConfig}
             pagination={false}
-            style={{ tableLayout: "auto" }}
+            style={{}}
             bordered
             scroll={{ x: "max-content", y: 590 }}
             size="middle"
