@@ -69,8 +69,11 @@ export const FilterProvider = ({ children }) => {
   const location = useLocation();
   const activeScreenName = location?.pathname;
 
-  // 🔹 Fetch lookups and categories on mount
+  // 🔹 Fetch lookups and categories on mount (only if authenticated)
   useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+
     dispatch(getAllLookups());
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, [dispatch]);

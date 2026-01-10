@@ -1,16 +1,18 @@
-importScripts("https://www.gstatic.com/firebasejs/12.7.0/firebase-app.js");
 importScripts(
-  "https://www.gstatic.com/firebasejs/12.7.0/firebase-messaging.js"
+  "https://www.gstatic.com/firebasejs/12.7.0/firebase-app-compat.js"
+);
+importScripts(
+  "https://www.gstatic.com/firebasejs/12.7.0/firebase-messaging-compat.js"
 );
 
 const firebaseConfig = {
-  apiKey: process.env.REACT_APP_FIREBASE_API_KEY,
-  authDomain: process.env.REACT_APP_FIREBASE_AUTH_DOMAIN,
-  projectId: process.env.REACT_APP_FIREBASE_PROJECT_ID,
-  storageBucket: process.env.REACT_APP_FIREBASE_STORAGE_BUCKET,
-  messagingSenderId: process.env.REACT_APP_FIREBASE_MESSAGING_SENDER_ID,
-  appId: process.env.REACT_APP_FIREBASE_APP_ID,
-  measurementId: process.env.REACT_APP_FIREBASE_MEASUREMENT_ID,
+  "apiKey": "AIzaSyCXGt41botyVbEkMsfo0SEe5iu8Qy1hguY",
+  "authDomain": "portal-2ba29.firebaseapp.com",
+  "projectId": "portal-2ba29",
+  "storageBucket": "portal-2ba29.firebasestorage.app",
+  "messagingSenderId": "31732856266",
+  "appId": "1:31732856266:web:d3033d39df7ca6d0100b33",
+  "measurementId": "G-3F413XVYM2"
 };
 
 firebase.initializeApp(firebaseConfig);

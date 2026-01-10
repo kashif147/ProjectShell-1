@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState } from "react";
+import React, { createContext, useContext, useEffect, useState, useCallback } from "react";
 import {
   getFCMToken,
   setupMessageListener,
@@ -25,6 +25,7 @@ export const FCMProvider = ({ children }) => {
   const [pushAvailable, setPushAvailable] = useState(false);
   const initializationRef = React.useRef(false);
   const tokenRetrievalRef = React.useRef(false);
+  const authTokenRef = React.useRef(localStorage.getItem("token"));
 
   useEffect(() => {
     // Prevent double execution in StrictMode
@@ -449,9 +450,171 @@ export const FCMProvider = ({ children }) => {
     });
   }, [fcmToken]);
 
+  // Function to request permission (called immediately after Microsoft login)
+  const triggerPermissionRequest = useCallback(async () => {
+    // Check if notification API is supported
+    if (!("Notification" in window)) {
+      console.log("❌ Notification API not supported");
+      return;
+    }
+
+    const permission = Notification.permission;
+
+    // Only request if permission is default
+    if (permission !== "default") {
+      console.log(`📱 Notification permission is already "${permission}" - skipping request`);
+      // If permission is already granted, still try to get token if service worker is ready
+      if (permission === "granted" && pushAvailable && navigator.serviceWorker.controller) {
+        try {
+          const registration = await navigator.serviceWorker.ready;
+          if (registration) {
+            const messaging = await initializeMessaging(registration);
+            if (messaging) {
+              const result = await generateAndRegisterFCMToken();
+              if (result.success && result.fcmToken) {
+                setFcmToken(result.fcmToken);
+                localStorage.setItem("fcmToken", result.fcmToken);
+                tokenRetrievalRef.current = true;
+              }
+            }
+          }
+        } catch (error) {
+          console.warn("⚠️ Failed to retrieve token:", error);
+        }
+      }
+      return;
+    }
+
+    // Check if we've already requested in this session
+    if (sessionStorage.getItem("fcm-permission-requested")) {
+      console.log("📱 Notification permission already requested in this session");
+      return;
+    }
+
+    try {
+      console.log("🔔 Requesting notification permission immediately after Microsoft login...");
+      sessionStorage.setItem("fcm-permission-requested", "true");
+
+      // Request permission immediately (while still in user interaction context from login)
+      // Note: We don't need service worker to be ready to request permission
+      const newPermission = await Notification.requestPermission();
+      console.log("📱 Notification permission result:", newPermission);
+
+      if (newPermission === "granted") {
+        console.log("✅ Notification permission granted! Getting FCM token...");
+        
+        // Now wait for service worker to be ready (it might not be ready immediately)
+        // Retry a few times if needed
+        let registration = null;
+        let retries = 0;
+        const maxRetries = 10;
+        
+        while (!registration && retries < maxRetries) {
+          try {
+            registration = await navigator.serviceWorker.ready.catch(() => null);
+            if (registration && navigator.serviceWorker.controller) {
+              break;
+            }
+            // Wait a bit before retrying
+            await new Promise(resolve => setTimeout(resolve, 200));
+            retries++;
+          } catch (error) {
+            console.warn(`⚠️ Service worker not ready yet (attempt ${retries + 1}/${maxRetries})`);
+            await new Promise(resolve => setTimeout(resolve, 200));
+            retries++;
+          }
+        }
+
+        if (registration && navigator.serviceWorker.controller) {
+          // Initialize Firebase messaging
+          const messaging = await initializeMessaging(registration);
+          if (messaging) {
+            // Get FCM token and register it
+            const result = await generateAndRegisterFCMToken();
+            if (result.success && result.fcmToken) {
+              setFcmToken(result.fcmToken);
+              localStorage.setItem("fcmToken", result.fcmToken);
+              tokenRetrievalRef.current = true;
+              console.log("✅ FCM Token saved after login:", result.fcmToken.substring(0, 50) + "...");
+              if (result.registrationResult?.success) {
+                console.log("✅ FCM Token registered with backend");
+              } else {
+                console.warn("⚠️ FCM Token generated but registration with backend failed");
+              }
+            } else {
+              console.warn("⚠️ Failed to generate FCM token");
+            }
+          } else {
+            console.warn("⚠️ Failed to initialize Firebase messaging");
+          }
+        } else {
+          console.warn("⚠️ Service worker not ready after permission granted. Token will be retrieved when service worker is ready.");
+          // The existing useEffect will handle getting the token when service worker is ready
+        }
+      } else if (newPermission === "denied") {
+        console.warn("❌ Notification permission denied by user");
+        console.warn("💡 User can enable notifications later via browser settings");
+      } else {
+        console.log(`📱 Notification permission: "${newPermission}"`);
+      }
+    } catch (error) {
+      console.error("❌ Error requesting notification permission:", error);
+      sessionStorage.removeItem("fcm-permission-requested");
+    }
+  }, [pushAvailable]);
+
+  // Listen for authentication token changes (login/logout)
+  useEffect(() => {
+    const checkAuthToken = () => {
+      const currentToken = localStorage.getItem("token");
+      const previousToken = authTokenRef.current;
+
+      // User just logged in (token changed from null/undefined to a value)
+      if (!previousToken && currentToken) {
+        console.log("✅ User logged in detected (token saved).");
+        // Clear session flag to allow permission request on new login
+        sessionStorage.removeItem("fcm-permission-requested");
+        tokenRetrievalRef.current = false; // Reset to allow token retrieval
+        
+        // Note: Permission request is handled directly in Login.js after token save
+        // to ensure we're still in user interaction context
+        // This useEffect just detects login for other purposes
+      }
+      // User logged out (token removed)
+      else if (previousToken && !currentToken) {
+        console.log("👋 User logged out. Clearing FCM token state.");
+        sessionStorage.removeItem("fcm-permission-requested");
+        tokenRetrievalRef.current = false;
+      }
+
+      authTokenRef.current = currentToken;
+    };
+
+    // Check immediately
+    checkAuthToken();
+
+    // Listen for storage events (in case token is set in another tab)
+    const handleStorageChange = (e) => {
+      if (e.key === "token") {
+        checkAuthToken();
+      }
+    };
+
+    window.addEventListener("storage", handleStorageChange);
+
+    // Also check periodically (in case storage event doesn't fire)
+    const interval = setInterval(checkAuthToken, 1000);
+
+    return () => {
+      window.removeEventListener("storage", handleStorageChange);
+      clearInterval(interval);
+    };
+  }, [triggerPermissionRequest]);
+
   useEffect(() => {
     // Automatically retrieve FCM token if permission is already granted
-    const retrieveTokenIfPermissionGranted = async () => {
+    // OR automatically request permission if user is authenticated and permission is default
+    const handleTokenAndPermission = async () => {
       // Prevent multiple executions
       if (tokenRetrievalRef.current) {
         return;
@@ -462,78 +625,144 @@ export const FCMProvider = ({ children }) => {
         return;
       }
 
-      // Check if notification permission is already granted
+      // Check if notification API is supported
       if (!("Notification" in window)) {
         return;
       }
 
+      // Check if user is authenticated
+      const token = localStorage.getItem("token");
+      if (!token) {
+        return; // Not logged in yet
+      }
+
       const permission = Notification.permission;
-      if (permission !== "granted") {
+
+      // Case 1: Permission already granted - just retrieve token
+      if (permission === "granted") {
+        // Prevent retry if we already have a token in localStorage
+        const existingToken = localStorage.getItem("fcmToken");
+        if (existingToken && fcmToken === existingToken) {
+          console.log("✅ FCM Token already exists, skipping retrieval");
+          tokenRetrievalRef.current = true;
+          return;
+        }
+
+        try {
+          tokenRetrievalRef.current = true;
+          console.log(
+            "🔄 Auto-retrieving FCM token (permission already granted)..."
+          );
+
+          // Wait for service worker to be ready
+          const registration = await navigator.serviceWorker.ready;
+          if (!registration) {
+            console.error("❌ Service Worker registration not found");
+            tokenRetrievalRef.current = false;
+            return;
+          }
+
+          // Initialize Firebase messaging
+          const messaging = await initializeMessaging(registration);
+          if (!messaging) {
+            console.error("❌ Failed to initialize Firebase messaging");
+            tokenRetrievalRef.current = false;
+            return;
+          }
+
+          // Get FCM token and register it
+          const result = await generateAndRegisterFCMToken();
+          if (result.success && result.fcmToken) {
+            setFcmToken(result.fcmToken);
+            localStorage.setItem("fcmToken", result.fcmToken);
+            console.log(
+              "✅ FCM Token auto-retrieved and saved:",
+              result.fcmToken.substring(0, 50) + "..."
+            );
+            if (result.registrationResult?.success) {
+              console.log("✅ FCM Token registered with backend");
+            } else {
+              console.warn(
+                "⚠️ FCM Token generated but registration failed:",
+                result.registrationResult?.error
+              );
+            }
+          } else {
+            console.warn("⚠️ Failed to retrieve FCM token");
+            tokenRetrievalRef.current = false;
+          }
+        } catch (error) {
+          console.error("❌ Error auto-retrieving FCM token:", error);
+          tokenRetrievalRef.current = false;
+        }
+      }
+      // Case 2: Permission is default - automatically request (user is authenticated, so this is triggered by login action)
+      else if (permission === "default") {
+        // Check if we've already attempted to request permission in this session
+        const permissionRequested = sessionStorage.getItem("fcm-permission-requested");
+        if (permissionRequested) {
+          console.log("📱 Notification permission already requested in this session");
+          return;
+        }
+
+        try {
+          console.log("🔔 User is authenticated. Requesting notification permission...");
+          sessionStorage.setItem("fcm-permission-requested", "true");
+
+          // Request permission
+          const newPermission = await Notification.requestPermission();
+          console.log("📱 Notification permission result:", newPermission);
+
+          if (newPermission === "granted") {
+            // Get service worker registration
+            const registration = await navigator.serviceWorker.ready;
+            if (!registration) {
+              console.error("❌ Service Worker registration not found");
+              return;
+            }
+
+            // Initialize Firebase messaging
+            const messaging = await initializeMessaging(registration);
+            if (!messaging) {
+              console.error("❌ Failed to initialize Firebase messaging");
+              return;
+            }
+
+            // Get FCM token and register it
+            const result = await generateAndRegisterFCMToken();
+            if (result.success && result.fcmToken) {
+              setFcmToken(result.fcmToken);
+              localStorage.setItem("fcmToken", result.fcmToken);
+              tokenRetrievalRef.current = true;
+              console.log("✅ FCM Token saved:", result.fcmToken.substring(0, 50) + "...");
+              if (result.registrationResult?.success) {
+                console.log("✅ FCM Token registered with backend");
+              } else {
+                console.warn(
+                  "⚠️ FCM Token generated but registration failed:",
+                  result.registrationResult?.error
+                );
+              }
+            }
+          } else {
+            console.log(
+              `📱 Notification permission "${newPermission}". User can enable later via settings.`
+            );
+          }
+        } catch (error) {
+          console.error("❌ Error requesting notification permission:", error);
+          sessionStorage.removeItem("fcm-permission-requested"); // Allow retry
+        }
+      }
+      // Case 3: Permission denied - don't do anything
+      else {
         console.log(
           `📱 Notification permission is "${permission}". Token will be retrieved after user grants permission.`
         );
-        return;
-      }
-
-      // Prevent retry if we already have a token in localStorage
-      // But still allow refresh if token is missing in state
-      const existingToken = localStorage.getItem("fcmToken");
-      if (existingToken && fcmToken === existingToken) {
-        console.log("✅ FCM Token already exists, skipping retrieval");
-        tokenRetrievalRef.current = true;
-        return;
-      }
-
-      try {
-        tokenRetrievalRef.current = true;
-        console.log(
-          "🔄 Auto-retrieving FCM token (permission already granted)..."
-        );
-
-        // Wait for service worker to be ready
-        const registration = await navigator.serviceWorker.ready;
-        if (!registration) {
-          console.error("❌ Service Worker registration not found");
-          tokenRetrievalRef.current = false;
-          return;
-        }
-
-        // Initialize Firebase messaging
-        const messaging = await initializeMessaging(registration);
-        if (!messaging) {
-          console.error("❌ Failed to initialize Firebase messaging");
-          tokenRetrievalRef.current = false;
-          return;
-        }
-
-        // Get FCM token and register it
-        const result = await generateAndRegisterFCMToken();
-        if (result.success && result.fcmToken) {
-          setFcmToken(result.fcmToken);
-          localStorage.setItem("fcmToken", result.fcmToken);
-          console.log(
-            "✅ FCM Token auto-retrieved and saved:",
-            result.fcmToken.substring(0, 50) + "..."
-          );
-          if (result.registrationResult?.success) {
-            console.log("✅ FCM Token registered with backend");
-          } else {
-            console.warn(
-              "⚠️ FCM Token generated but registration failed:",
-              result.registrationResult?.error
-            );
-          }
-        } else {
-          console.warn("⚠️ Failed to retrieve FCM token");
-          tokenRetrievalRef.current = false;
-        }
-      } catch (error) {
-        console.error("❌ Error auto-retrieving FCM token:", error);
-        tokenRetrievalRef.current = false;
       }
     };
 
-    retrieveTokenIfPermissionGranted();
+    handleTokenAndPermission();
   }, [pushAvailable, fcmToken]);
 
   // Step 3: Only allow FCM token generation from user action
@@ -625,6 +854,13 @@ export const FCMProvider = ({ children }) => {
     return null;
   };
 
+  // Expose triggerPermissionRequest for external use (e.g., from login handler)
+  React.useEffect(() => {
+    if (typeof window !== "undefined") {
+      window.triggerFCMPermissionRequest = triggerPermissionRequest;
+    }
+  }, [triggerPermissionRequest]);
+
   return (
     <FCMContext.Provider
       value={{
@@ -632,6 +868,7 @@ export const FCMProvider = ({ children }) => {
         pushAvailable,
         requestNotificationPermission,
         refreshToken,
+        triggerPermissionRequest,
       }}
     >
       {children}

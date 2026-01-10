@@ -312,6 +312,19 @@ const Login = () => {
         // Set appropriate menu label based on user role
         setMenuLabelForRole(roleCodes);
 
+        // Trigger FCM permission request immediately after Microsoft login and JWT token acquisition
+        // This must be called synchronously to maintain user interaction context
+        console.log("🔔 Microsoft login successful. Requesting notification permission...");
+        if (window.triggerFCMPermissionRequest && typeof window.triggerFCMPermissionRequest === 'function') {
+          // Call immediately (no delay) to stay in user interaction context
+          // The permission request doesn't require service worker to be ready
+          window.triggerFCMPermissionRequest().catch((error) => {
+            console.warn("⚠️ Permission request failed:", error);
+          });
+        } else {
+          console.warn("⚠️ FCM permission request function not available yet");
+        }
+
         // Navigate based on user role for default login behavior
         console.log("Login Debug - roleCodes:", roleCodes);
         if (roleCodes.includes("SU")) {
@@ -463,6 +476,14 @@ const Login = () => {
 
       // Set appropriate menu label based on user role
       setMenuLabelForRole(roleCodes);
+
+      // Trigger FCM permission request immediately after login (while still in user interaction context)
+      if (window.triggerFCMPermissionRequest && typeof window.triggerFCMPermissionRequest === 'function') {
+        // Small delay to ensure service worker registration has started
+        setTimeout(() => {
+          window.triggerFCMPermissionRequest();
+        }, 300);
+      }
 
       // Navigate based on user role
       if (roleCodes.includes("SU")) {
