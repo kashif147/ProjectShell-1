@@ -74,6 +74,7 @@ const MyInput = ({
   };
 
   const showError = hasError || internalError;
+  
   useEffect(() => {
     if (type === "mobile") {
       if (!value) {
@@ -121,6 +122,7 @@ const MyInput = ({
       setMobileNumber(number);
     }
   }, [type, value]);
+  
   return (
     <div className="my-input-wrapper">
       <div className="d-flex justify-content-between">
@@ -148,7 +150,7 @@ const MyInput = ({
         ) : type === "mobile" ? (
           <div className="mobile-input-group">
             <select
-              className="country-code-select"
+              className={`country-code-select ${showError ? "error" : ""}`}
               value={countryCode}
               onChange={(e) => {
                 setCountryCode(e.target.value);
@@ -170,7 +172,7 @@ const MyInput = ({
 
             <input
               type="text"
-              className="mobile-number-input"
+              className={`mobile-number-input ${showError ? "error" : ""}`}
               placeholder="87 900 0538"
               value={mobileNumber}
               onChange={handleMobileChange}

@@ -685,6 +685,7 @@ function ApplicationMgtDrawer({
       "otherScheme",
       "nurseType",
       "membershipStatus",
+      "nursingAdaptationProgramme",
     ];
 
     const fieldMap = {
@@ -722,6 +723,7 @@ function ApplicationMgtDrawer({
       otherSecondarySection: ["subscriptionDetails", "otherSecondarySection"],
       nurseType: ["professionalDetails", "nurseType"],
       membershipStatus: ["subscriptionDetails", "membershipStatus"],
+      nursingAdaptationProgramme: ["professionalDetails", "nursingAdaptationProgramme"],
     };
 
     const newErrors = {};
@@ -730,7 +732,7 @@ function ApplicationMgtDrawer({
       const [section, key] = fieldMap[field] || [];
       const value = section ? InfData[section]?.[key] : null;
 
-      const booleanAllowed = ["otherIrishTradeUnion", "otherScheme"];
+      const booleanAllowed = ["otherIrishTradeUnion", "otherScheme", "nursingAdaptationProgramme"];
 
       if (
         value === undefined ||
@@ -808,7 +810,11 @@ function ApplicationMgtDrawer({
         newErrors.otherSecondarySection = "Other secondary section is required";
       }
     }
-
+    if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
+      if (!InfData.professionalDetails.nmbiNumber?.trim()) {
+        newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
+      }
+    }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
       return false;
@@ -2702,7 +2708,7 @@ function ApplicationMgtDrawer({
                     disabled={isDisable}
                     style={{
                       color: "#215e97",
-                      borderColor: "#215e97",
+                      // borderColor: "#215e97",
                       display: "flex",
                       gap: "20px",
                     }}
