@@ -663,6 +663,12 @@ function HeaderDetails() {
       : location.pathname === "/RemindersSummary"
         ? "reminder"
         : null;
+
+  const batchSearchPaths = [
+  
+  ];
+  const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
+  
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
@@ -847,7 +853,7 @@ function HeaderDetails() {
                                 }
                                 else if (
                                   nav === "/Import" ||
-                                  nav === "/onlinePayment" ||
+                                  // nav === "/onlinePayment" ||
                                   nav === "/Deductions" ||
                                   nav === "/StandingOrders" ||
                                   nav === "/Cheque" ||
@@ -958,7 +964,16 @@ function HeaderDetails() {
                   </div>
                 ) : nav !== "/templeteSummary" && (
                   <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
-                    <Toolbar />
+                    {isBatchSearchPage ? (
+                      <Search
+                        placeholder="Search by Batch Number"
+                        onSearch={(value) => console.log("Searching for batch:", value)}
+                        style={{ width: 300 }}
+                        className="inp"
+                      />
+                    ) : (
+                      <Toolbar />
+                    )}
                     <div className="d-flex">
                       <SaveViewMenu className="me-4" />
                     </div>

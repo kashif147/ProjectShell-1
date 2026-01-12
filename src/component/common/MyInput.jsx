@@ -16,6 +16,7 @@ const MyInput = ({
   disabled = false,
   rows = 4,
   extra = null,
+  onBlur,
   maxLength,
 }) => {
   const dispatch = useDispatch();
@@ -60,6 +61,13 @@ const MyInput = ({
     setInternalError("");
   };
 
+  const handleBlur = (e) => {
+    setIsFocused(false);
+    if (onBlur) {
+      onBlur(e);
+    }
+  };
+
   const commonProps = {
     id: name,
     name,
@@ -67,7 +75,7 @@ const MyInput = ({
     onChange: handleChange,
     placeholder,
     onFocus: () => setIsFocused(true),
-    onBlur: () => setIsFocused(false),
+    onBlur: handleBlur,
     className: "my-input-field",
     disabled,
     maxLength,

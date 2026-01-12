@@ -81,11 +81,13 @@ function ApplicationMgtDrawer({
   console.log(hierarchyData, "lk");
   const { filtersState } = useFilters();
   const EmailConflictScreen = () => {
+    if (!emailConflictData?.hasConflict) return null;
+
     return (
       <div className="p-3 w-60" style={{ width: '60%', backgroundColor: "#fef9c6", borderLeft: '5px solid #edb301' }}>
         <div className="font-monospace">
-          <div className="text-danger fw-bold" style={{ color: '#772400' }}>A, Action Required: Email Conflict</div>
-          <div style={{ color: '#9E5600' }}>Email already in use. Membership Category: Fellow, Name: Sarah Jenkins, Email: s.jenkins@example.com</div>
+          <div className="text-danger fw-bold" style={{ color: '#772400' }}>Action Required: Email Conflict</div>
+          <div style={{ color: '#9E5600' }}>{emailConflictData.message}</div>
         </div>
       </div>
     );
@@ -1103,6 +1105,54 @@ function ApplicationMgtDrawer({
     }
   };
 
+  // Also check when preferred email selection changes
+  // useEffect(() => {
+  //   handleEmailBlur();
+  // }, [InfData?.contactInfo?.preferredEmail]);
+  const checkEmailConflict = async (email) => {
+    debugger
+    if (!email || email.trim() === "") {
+      setEmailConflictData(null);
+      return false;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        throw new Error("No authentication token found");
+      }
+
+      const response = await axios.get(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/profile/check-email`,
+        {
+          params: { email: email.trim() },
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      if (response.data?.status === "success" && response.data.data?.status === true) {
+        setEmailConflictData({
+          hasConflict: true,
+          message: response.data.data.message || "Email already in use"
+        });
+        return true;
+      } else {
+        setEmailConflictData(null);
+        return false;
+      }
+    } catch (error) {
+      console.error("Error checking email conflict:", error);
+      setEmailConflictData(null);
+      return false;
+    }
+  };
+
+  // Add this state
+  const [emailConflictData, setEmailConflictData] = useState(null);
+console.log(emailConflictData, "emailConflictData");
   const hasSubscriptionDetailsChanged = (current, original) => {
     const currentSub = current.subscriptionDetails || {};
     const originalSub = original.subscriptionDetails || {};
@@ -1748,6 +1798,24 @@ function ApplicationMgtDrawer({
       // message.success(`Form populated with member: ${memberData.membershipNumber}`);
     }
   };
+  const handleEmailBlur = async () => {
+    let emailToCheck = "";
+    if (InfData?.contactInfo?.preferredEmail === "personal") {
+      emailToCheck = InfData?.contactInfo?.personalEmail;
+    } else if (InfData?.contactInfo?.preferredEmail === "work") {
+      emailToCheck = InfData?.contactInfo?.workEmail;
+    }
+    debugger
+
+    if (emailToCheck) {
+      await checkEmailConflict(emailToCheck);
+    }
+  };
+
+  // Also check when preferred email selection changes
+  // useEffect(() => {
+  //   handleEmailBlur();
+  // }, [InfData?.contactInfo?.preferredEmail]);
   const handleRecruteBy = (memberData) => {
     console.log("Recruited by member:", memberData?._id);
 
@@ -1906,8 +1974,7 @@ function ApplicationMgtDrawer({
           </div>
         </div>
         {
-          InfData?.contactInfo?.personalEmail === "s.jenkins@example.com" &&
-          <EmailConflictScreen />
+          emailConflictData?.hasConflict && <EmailConflictScreen />
         }
         <div
           className="hide-scroll-webkit"
@@ -2330,7 +2397,7 @@ function ApplicationMgtDrawer({
                       }
                       value={InfData?.contactInfo?.preferredEmail}
                       disabled={isDisable}
-                      // className={errors?.preferredEmail ? "radio-error" : ""}
+                    // className={errors?.preferredEmail ? "radio-error" : ""}
                     >
                       <Radio style={{ color: "#215e97" }} value="personal">
                         Personal
@@ -2360,6 +2427,7 @@ function ApplicationMgtDrawer({
                       e.target.value
                     )
                   }
+                  onBlur={handleEmailBlur} // Add this
                   hasError={!!errors?.email}
                 />
               </Col>
@@ -2379,6 +2447,7 @@ function ApplicationMgtDrawer({
                       e.target.value
                     )
                   }
+                  onBlur={handleEmailBlur} // Add this
                   hasError={!!errors?.workEmail}
                 />
               </Col>
