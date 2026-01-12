@@ -2476,7 +2476,7 @@ console.log(emailConflictData, "emailConflictData");
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.subscriptionDetails?.membershipCategory}
-                  isIDs={true}
+                  // isIDs={true}
                   options={categoryData}
                   required
                   disabled={isDisable}

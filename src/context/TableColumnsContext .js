@@ -836,8 +836,8 @@ const staticColumns = {
   Applications: [
     // 🔹 Top-Level Fields
     {
-      dataIndex: "ApplicationId",
-      title: "Application ID",
+      dataIndex: ["subscriptionDetails","membershipCategory",],
+      title: "Membership Category",
       ellipsis: true,
       isGride: true,
       isVisible: true,

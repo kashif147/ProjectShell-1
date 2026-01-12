@@ -410,6 +410,7 @@ const TableComponent = ({
       render: col.render
         ? col.render
         : (text, record, index) => {
+          debugger
           switch (col.title) {
             case "Full Name":
               return (
@@ -512,7 +513,7 @@ const TableComponent = ({
                 </Link>
               );
 
-            case "Application ID":
+            case "Membership Category":
               return (
                 <span
                   style={{ color: "blue", cursor: "pointer" }}
@@ -537,7 +538,7 @@ const TableComponent = ({
                     }
                   }}
                 >
-                  View
+                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </span>
               );
 

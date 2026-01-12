@@ -83,12 +83,12 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       setLoading(true);
       const cleanedValues = {
         ...values,
-        name: values.name?.trim(),
-        code: values.code?.trim().toUpperCase(),
-        description: values.description?.trim(),
-        resource: values.resource?.trim(),
-        action: values.action?.toLowerCase(), // 确保 action 是小写
-        category: values.category?.toUpperCase(), // 确保 category 是大写
+        name: values.name,
+        code: values.code,
+        description: values.description,
+        resource: values.resource,
+        action: values.action, // 确保 action 是小写
+        category: values.category, // 确保 category 是大写
         level: Number(values.level) || 0,
         isActive: Boolean(values.isActive)
       };
