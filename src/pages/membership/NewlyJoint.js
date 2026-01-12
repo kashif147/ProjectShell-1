@@ -1,16 +1,53 @@
 import { useEffect } from "react";
-import TableComponent from "../../component/common/TableComponent";
+import MyTable from "../../component/common/MyTable";
 import { fetchBatchesByType, clearBatchesError } from "../../features/profiles/batchMemberSlice";
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { Link, useLocation } from "react-router-dom";
+import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
 
 function NewlyJoint() {
   const dispatch = useDispatch();
+  const location = useLocation();
   const {
     loadingBatches,
     batchesData,
     batchesError
   } = useSelector((state) => state.batchMember);
+
+  const { columns } = useTableColumns();
+  const tableColumnsRaw = columns["CornMarketRewards"];
+
+  const tableColumns = tableColumnsRaw.map(col => {
+    if (col.title === "Batch Name") {
+      return {
+        ...col,
+        render: (text, record) => {
+          const targetPath = "/SimpleBatchMemberSummary";
+          return (
+            <Link
+              to={targetPath}
+              state={{
+                batchName: text,
+                batchId: record?.key,
+                batchStatus: record?.batchStatus,
+              }}
+              style={{ color: "inherit", textDecoration: "none" }}
+              onClick={() => {
+                if (record?._original?._id) {
+                    dispatch(getCornMarketBatchById(record._original._id));
+                }
+              }}
+            >
+              {text}
+            </Link>
+          );
+        }
+      };
+    }
+    return col;
+  });
 
   console.log(batchesData?.data?.batches?.results, "batchesData")
 
@@ -85,10 +122,11 @@ function NewlyJoint() {
 
   return (
     <div className="" style={{ width: "100%" }}>
-      <TableComponent
-        data={tableData}
-        isGrideLoading={loadingBatches}
-        screenName="NewGraduate"
+      <MyTable
+        dataSource={tableData}
+        columns={tableColumns}
+        loading={loadingBatches}
+        selection={false}
       />
     </div>
   );

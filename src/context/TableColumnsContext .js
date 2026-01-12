@@ -2234,7 +2234,7 @@ const staticColumns = {
   ],
   CornMarketRewards: [
     {
-      dataIndex: "batchName",
+      dataIndex: "name",
       title: "Batch Name",
       ellipsis: true,
       isGride: true,
@@ -2242,7 +2242,7 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: "batchDate",
+      dataIndex: "date",
       title: "Batch Date",
       ellipsis: true,
       isGride: true,
@@ -2284,7 +2284,7 @@ const staticColumns = {
   ],
   RecruitAFriend: [
     {
-      dataIndex: "batchName",
+      dataIndex: "name",
       title: "Batch Name",
       ellipsis: true,
       isGride: true,
@@ -2292,7 +2292,7 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: "batchDate",
+      dataIndex: "date",
       title: "Batch Date",
       ellipsis: true,
       isGride: true,

@@ -50,6 +50,15 @@ const CancelledMembersReport = () => {
       pinned: null,
     },
     {
+      headerName: "Membership No",
+      field: "memberName",
+      width: 220,
+      minWidth: 150,
+      flex: 1,
+      sortable: true,
+      filter: true,
+    },
+    {
       headerName: "Member Name",
       field: "memberName",
       width: 220,

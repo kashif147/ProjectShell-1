@@ -1110,7 +1110,7 @@ function ApplicationMgtDrawer({
   //   handleEmailBlur();
   // }, [InfData?.contactInfo?.preferredEmail]);
   const checkEmailConflict = async (email) => {
-    debugger
+
     if (!email || email.trim() === "") {
       setEmailConflictData(null);
       return false;
@@ -1809,6 +1809,9 @@ console.log(emailConflictData, "emailConflictData");
 
     if (emailToCheck) {
       await checkEmailConflict(emailToCheck);
+    }
+    else{
+      setEmailConflictData(null);
     }
   };
 
