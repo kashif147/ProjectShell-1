@@ -1,9 +1,13 @@
 import React, { useState } from "react";
-import TableComponent from "../../component/common/TableComponent";
+import MyTable from "../../component/common/MyTable";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 const RefundsSummary = () => {
+    const { columns } = useTableColumns();
+    const tableColumns = columns["Refunds"] || [];
+
     // Mock data for Refunds Summary
-    const [mockData, setMockData] = useState([
+    const [mockData] = useState([
         {
             key: "1",
             refund: "REF-001",
@@ -41,11 +45,11 @@ const RefundsSummary = () => {
 
     return (
         <div style={{ width: "100%", padding: "0" }}>
-            <TableComponent
-                data={mockData}
-                screenName="Refunds"
-                isGrideLoading={false}
-                enableRowSelection={true}
+            <MyTable
+                dataSource={mockData}
+                columns={tableColumns}
+                loading={false}
+                selection={true}
                 selectionType="checkbox"
             />
         </div>

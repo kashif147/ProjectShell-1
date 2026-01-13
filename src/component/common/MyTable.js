@@ -14,6 +14,8 @@ const MyTable = ({
   onRowClick,
 }) => {
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const [sortedInfo, setSortedInfo] = useState({});
 
   const isExternallyControlled = externalRowSelection !== undefined && onSelectionChange !== undefined;
 
@@ -66,22 +68,88 @@ const MyTable = ({
     handleSelectionChange,
   ]);
 
-  const defaultPageSize = useMemo(() => getDefaultPageSize(dataSource.length), [dataSource.length]);
+  const handleTableChange = (pagination, filters, sorter) => {
+    setFilteredInfo(filters);
+    setSortedInfo(sorter);
+    setCurrentPage(1); // Reset to first page on filter/sort change
+  };
+
+  // Process data for filtering and sorting
+  const processedData = useMemo(() => {
+    let data = [...dataSource];
+
+    // Filter data
+    Object.keys(filteredInfo).forEach((key) => {
+      const filterValues = filteredInfo[key];
+      if (filterValues && filterValues.length > 0) {
+        const column = columns.find((col) => col.dataIndex === key || col.key === key);
+        if (column && column.onFilter) {
+          data = data.filter((record) =>
+            filterValues.some((value) => column.onFilter(value, record))
+          );
+        } else {
+          // Default filtering if onFilter is missing but filters are provided
+          data = data.filter((record) => {
+            const val = record[key];
+            return filterValues.includes(String(val));
+          });
+        }
+      }
+    });
+
+    // Sort data
+    if (sortedInfo.column && sortedInfo.field) {
+      const { field, order } = sortedInfo;
+      const column = columns.find((col) => col.dataIndex === field || col.key === field);
+
+      if (order) {
+        data.sort((a, b) => {
+          let result = 0;
+          if (column && column.sorter && typeof column.sorter.compare === 'function') {
+            result = column.sorter.compare(a, b);
+          } else {
+            // Default sorting
+            const valA = a[field];
+            const valB = b[field];
+            if (typeof valA === 'string') {
+              result = valA.localeCompare(valB);
+            } else {
+              result = valA - valB;
+            }
+          }
+          return order === 'descend' ? -result : result;
+        });
+      }
+    }
+
+    return data;
+  }, [dataSource, filteredInfo, sortedInfo, columns]);
+
+  const defaultPageSize = useMemo(() => getDefaultPageSize(processedData.length), [processedData.length]);
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [currentPageData, setCurrentPageData] = useState([]);
 
   useEffect(() => {
-    const newDefaultPageSize = getDefaultPageSize(dataSource.length || 0);
+    const newDefaultPageSize = getDefaultPageSize(processedData.length || 0);
     setPageSize(newDefaultPageSize);
     setCurrentPage(1);
-  }, [dataSource]);
+  }, [dataSource, processedData.length]);
 
   useEffect(() => {
     const startIndex = (currentPage - 1) * pageSize;
     const endIndex = startIndex + pageSize;
-    setCurrentPageData(dataSource.slice(startIndex, endIndex));
-  }, [currentPage, pageSize, dataSource]);
+    setCurrentPageData(processedData.slice(startIndex, endIndex));
+  }, [currentPage, pageSize, processedData]);
+
+  // Enhance columns with filtered/sorted info
+  const enhancedColumns = useMemo(() => {
+    return columns.map((col) => ({
+      ...col,
+      filteredValue: filteredInfo[col.dataIndex || col.key] || null,
+      sortOrder: sortedInfo.field === (col.dataIndex || col.key) ? sortedInfo.order : null,
+    }));
+  }, [columns, filteredInfo, sortedInfo]);
 
   return (
     <div
@@ -97,10 +165,11 @@ const MyTable = ({
       <Table
         rowKey={(record) => record.key || record.id || record._id}
         loading={loading}
-        columns={columns}
+        columns={enhancedColumns}
         dataSource={currentPageData || []}
         rowSelection={rowSelectionConfig}
         pagination={false}
+        onChange={handleTableChange}
         bordered
         scroll={{ x: "max-content", y: 590 }}
         size="middle"
@@ -108,7 +177,7 @@ const MyTable = ({
           onClick: () => onRowClick && onRowClick(record, rowIndex),
         })}
         locale={{
-            emptyText: "No Data"
+          emptyText: "No Data"
         }}
       />
       <div
@@ -123,7 +192,7 @@ const MyTable = ({
         }}
       >
         <UnifiedPagination
-          total={dataSource.length}
+          total={processedData.length}
           current={currentPage}
           pageSize={pageSize}
           onChange={(page, size) => {
@@ -139,23 +208,23 @@ const MyTable = ({
           itemName="items"
           style={{ margin: 0, padding: 0 }}
           showTotalFormatter={(total, range) => (
-              <span style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
-                {`${range[0]}-${range[1]} of ${total} items`}
-                <LuRefreshCw
-                  style={{
-                    cursor: "pointer",
-                    fontSize: "14px",
-                    color: "#215e97",
-                    transition: "color 0.3s ease",
-                    marginLeft: "4px"
-                  }}
-                  onClick={() => window.location.reload()}
-                  title="Refresh"
-                  onMouseEnter={(e) => e.currentTarget.style.color = "#1890ff"}
-                  onMouseLeave={(e) => e.currentTarget.style.color = "#215e97"}
-                />
-              </span>
-            )
+            <span style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+              {`${range[0]}-${range[1]} of ${total} items`}
+              <LuRefreshCw
+                style={{
+                  cursor: "pointer",
+                  fontSize: "14px",
+                  color: "#215e97",
+                  transition: "color 0.3s ease",
+                  marginLeft: "4px"
+                }}
+                onClick={() => window.location.reload()}
+                title="Refresh"
+                onMouseEnter={(e) => e.currentTarget.style.color = "#1890ff"}
+                onMouseLeave={(e) => e.currentTarget.style.color = "#215e97"}
+              />
+            </span>
+          )
           }
         />
       </div>

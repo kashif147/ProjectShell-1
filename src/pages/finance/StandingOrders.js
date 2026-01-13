@@ -1,33 +1,38 @@
-import {useEffect} from "react";
-import TableComponent from "../../component/common/TableComponent";
-// import { tableData } from "../../Data";
+import React, { useEffect } from "react";
+import MyTable from "../../component/common/MyTable";
 import { getAllBatches } from "../../features/BatchesSlice";
 import { useSelector, useDispatch } from "react-redux";
-import moment from 'moment'
+import dayjs from 'dayjs';
+import { useTableColumns } from "../../context/TableColumnsContext ";
+
 const StandingOrders = () => {
   const dispatch = useDispatch();
-  const { batches, batchesloading, batcheserror } = useSelector((state) => state.batches);
+  const { batches, batchesloading } = useSelector((state) => state.batches);
+  const { columns } = useTableColumns();
+  const tableColumns = columns["Batches"] || [];
 
   useEffect(() => {
     dispatch(getAllBatches());
   }, [dispatch]);
 
-  // Filter batches where PaymentType is "Cheque"
-  const chequeBatches = batches.filter(batch => batch.PaymentType === "Standing Orders");
+  const standingOrderBatches = batches.filter(batch => batch.PaymentType === "Standing Orders");
 
-  // Convert & format date fields for cheque batches only
-  const formattedData = chequeBatches.map((item) => ({
+  const formattedData = standingOrderBatches.map((item, index) => ({
     ...item,
-    batchDate: moment(item.batchDate).format("DD/MM/YYYY"),
-    createdAt: moment(item.createdAt).format("DD/MM/YYYY HH:mm"),
+    key: item.id || item._id || index,
+    batchDate: dayjs(item.batchDate).format("DD/MM/YYYY"),
+    createdAt: dayjs(item.createdAt).format("DD/MM/YYYY HH:mm"),
   }));
+
   return (
-    <div style={{ padding: 16 }}>
-      <TableComponent data={formattedData} screenName="Batches" />
+    <div style={{ width: "100%", padding: "0" }}>
+      <MyTable
+        dataSource={formattedData}
+        columns={tableColumns}
+        loading={batchesloading}
+      />
     </div>
   );
 };
 
 export default StandingOrders;
-
-

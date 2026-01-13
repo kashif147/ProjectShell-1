@@ -1,31 +1,38 @@
-import {useEffect} from "react";
-import TableComponent from "../../component/common/TableComponent";
-import moment from "moment";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect } from "react";
+import MyTable from "../../component/common/MyTable";
 import { getAllBatches } from "../../features/BatchesSlice";
+import dayjs from "dayjs";
+import { useSelector, useDispatch } from "react-redux";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
-function Deductions() {
-    const dispatch = useDispatch();
+const Deductions = () => {
+  const dispatch = useDispatch();
+  const { batches, batchesloading } = useSelector((state) => state.batches);
+  const { columns } = useTableColumns();
+  const tableColumns = columns["Deductions"] || [];
+
+  useEffect(() => {
     dispatch(getAllBatches());
-    const { batches, batchesloading, batcheserror } = useSelector((state) => state.batches);
-    useEffect(() => {
-      dispatch(getAllBatches());
-    }, [dispatch]);
-  
-    const chequeBatches = batches.filter(batch => batch.PaymentType === "Deductions");
-  
-    const formattedData = chequeBatches.map((item) => ({
-      ...item,
-      batchDate: moment(item.batchDate).format("DD/MM/YYYY"),
-      createdAt: moment(item.createdAt).format("DD/MM/YYYY HH:mm"),
-    }));
+  }, [dispatch]);
+
+  const deductionBatches = batches.filter(batch => batch.PaymentType === "Deductions");
+
+  const formattedData = deductionBatches.map((item, index) => ({
+    ...item,
+    key: item.id || item._id || index,
+    batchDate: dayjs(item.batchDate).format("DD/MM/YYYY"),
+    createdAt: dayjs(item.createdAt).format("DD/MM/YYYY HH:mm"),
+  }));
+
   return (
-    <div className="" style={{ width: "100%" }}>
-      <TableComponent data={formattedData} screenName="Batches" />
+    <div style={{ width: "100%", padding: "0" }}>
+      <MyTable
+        dataSource={formattedData}
+        columns={tableColumns}
+        loading={batchesloading}
+      />
     </div>
   );
-}
+};
 
 export default Deductions;
-
-

@@ -1,8 +1,9 @@
 import { useEffect } from "react";
-import TableComponent from "../../component/common/TableComponent";
+import MyTable from "../../component/common/MyTable";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 function DirectDebitSummary() {
     const dispatch = useDispatch();
@@ -10,6 +11,8 @@ function DirectDebitSummary() {
         loadingBatches,
         batchesData
     } = useSelector((state) => state.batchMember);
+    const { columns } = useTableColumns();
+    const tableColumns = columns["DirectDebitSummary"] || [];
 
     useEffect(() => {
         dispatch(fetchBatchesByType({
@@ -120,10 +123,10 @@ function DirectDebitSummary() {
 
     return (
         <div className="" style={{ width: "100%" }}>
-            <TableComponent
-                data={tableData}
-                isGrideLoading={loadingBatches}
-                screenName="DirectDebitSummary"
+            <MyTable
+                dataSource={tableData}
+                columns={tableColumns}
+                loading={loadingBatches}
             />
         </div>
     );

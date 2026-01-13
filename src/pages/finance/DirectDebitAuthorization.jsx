@@ -1,9 +1,13 @@
-import React, { useState, useEffect } from "react";
-import TableComponent from "../../component/common/TableComponent";
+import React, { useState } from "react";
+import MyTable from "../../component/common/MyTable";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 const DirectDebitAuthorization = () => {
+    const { columns } = useTableColumns();
+    const tableColumns = columns["DirectDebitAuthorization"];
+
     // Mock data for Direct Debit Summary
-    const [mockData, setMockData] = useState([
+    const [mockData] = useState([
         {
             key: "1",
             id: "DD-001",
@@ -35,11 +39,11 @@ const DirectDebitAuthorization = () => {
 
     return (
         <div style={{ width: "100%", padding: "0" }}>
-            <TableComponent
-                data={mockData}
-                screenName="DirectDebitAuthorization"
-                isGrideLoading={false}
-                enableRowSelection={true}
+            <MyTable
+                dataSource={mockData}
+                columns={tableColumns}
+                loading={false}
+                selection={true}
                 selectionType="checkbox"
             />
         </div>

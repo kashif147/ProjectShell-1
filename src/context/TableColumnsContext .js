@@ -27,6 +27,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      sorter: true,
     },
     {
       title: "Full Name",
@@ -35,6 +36,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 200,
+      sorter: true,
     },
     {
       title: "Email",
@@ -141,6 +143,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      sorter: true,
     },
     {
       dataIndex: "refundDate",
@@ -149,6 +152,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      sorter: true,
       render: (value) => formatDateOnly(value),
     },
     {
@@ -218,7 +222,7 @@ const staticColumns = {
       width: 150,
       render: (value) => formatDateOnly(value),
     },
-       {
+    {
       dataIndex: "MembershipNo",
       title: "Membership Number",
       ellipsis: true,
@@ -580,6 +584,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 100,
+      sorter: true,
     },
     {
       dataIndex: "accountName",
@@ -588,6 +593,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 180,
+      sorter: true,
     },
     {
       dataIndex: "bankName",
@@ -836,7 +842,7 @@ const staticColumns = {
   Applications: [
     // 🔹 Top-Level Fields
     {
-      dataIndex: ["subscriptionDetails","membershipCategory",],
+      dataIndex: ["subscriptionDetails", "membershipCategory",],
       title: "Membership Category",
       ellipsis: true,
       isGride: true,
