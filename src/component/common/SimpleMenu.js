@@ -33,7 +33,12 @@ import { getTransferRequestById } from "../../features/profiles/TransferRequest"
 
 import { clearSingleTransferRequest } from "../../features/profiles/TransferRequest";
 import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getAllApplications } from "../../features/ApplicationSlice";
+import dayjs from "dayjs";
+import utc from "dayjs/plugin/utc";
+
+dayjs.extend(utc);
 function SimpleMenu({
   title,
   data,
@@ -54,9 +59,11 @@ function SimpleMenu({
   const location = useLocation();
 
   const {
+    columns,
     updateSelectedTitles,
     searchFilters,
     gridData,
+    setGridData,
     globleFilters,
     getProfile,
     ProfileDetails
@@ -67,8 +74,136 @@ function SimpleMenu({
     visibleFilters,
     toggleFilter,
     resetFilters,
-    activePage
+    activePage,
+    filtersState
   } = useFilters();
+
+  const { applications, applicationsLoading } = useSelector(
+    (state) => state.applications
+  );
+
+  // Function to format dates in the application data (matching MembershipApplication.jsx)
+  const formatApplicationDates = (applicationData) => {
+    if (!applicationData) return applicationData;
+
+    const formatDate = (dateString) => {
+      if (!dateString) return null;
+      return dayjs.utc(dateString).format("DD/MM/YYYY HH:mm");
+    };
+
+    const formatDateOnly = (dateString) => {
+      if (!dateString) return null;
+      return dayjs.utc(dateString).format("DD/MM/YYYY");
+    };
+
+    return {
+      ...applicationData,
+      personalDetails: applicationData.personalDetails ? {
+        ...applicationData.personalDetails,
+        personalInfo: applicationData.personalDetails.personalInfo ? {
+          ...applicationData.personalDetails.personalInfo,
+          dateOfBirth: formatDateOnly(applicationData.personalDetails.personalInfo.dateOfBirth),
+          deceasedDate: formatDateOnly(applicationData.personalDetails.personalInfo.deceasedDate)
+        } : null,
+        contactInfo: applicationData.personalDetails.contactInfo,
+        approvalDetails: applicationData.personalDetails.approvalDetails ? {
+          ...applicationData.personalDetails.approvalDetails,
+          approvedAt: formatDate(applicationData.personalDetails.approvalDetails.approvedAt)
+        } : null,
+        createdAt: formatDate(applicationData.personalDetails.createdAt),
+        updatedAt: formatDate(applicationData.personalDetails.updatedAt)
+      } : null,
+      professionalDetails: applicationData.professionalDetails ? {
+        ...applicationData.professionalDetails,
+        retiredDate: formatDate(applicationData.professionalDetails.retiredDate),
+        graduationDate: formatDate(applicationData.professionalDetails.graduationDate)
+      } : null,
+      subscriptionDetails: applicationData.subscriptionDetails ? {
+        ...applicationData.subscriptionDetails,
+        dateJoined: formatDate(applicationData.subscriptionDetails.dateJoined),
+        submissionDate: formatDate(applicationData.subscriptionDetails.submissionDate)
+      } : null,
+      createdAt: formatDate(applicationData.createdAt),
+      updatedAt: formatDate(applicationData.updatedAt),
+      approvalDetails: applicationData.approvalDetails ? {
+        ...applicationData.approvalDetails,
+        approvedAt: formatDate(applicationData.approvalDetails.approvedAt)
+      } : null
+    };
+  };
+
+  const prepareDataForExport = (data, screenName) => {
+    // Determine the correct mapping key for the screen
+    let mappingKey = screenName;
+    if (location.pathname === "/MembershipApplication" || location.pathname === "/Applications") {
+      mappingKey = "Applications";
+    }
+
+    if (!data || !mappingKey || !columns[mappingKey]) return data;
+
+    const activeColumns = columns[mappingKey].filter(
+      (col) => col.isGride !== false && col.title !== "Action" && col.dataIndex
+    );
+
+    return data.map((record) => {
+      const flattened = {};
+      activeColumns.forEach((col) => {
+        let value = "";
+        if (Array.isArray(col.dataIndex)) {
+          value = col.dataIndex.reduce((acc, key) => acc?.[key], record);
+        } else {
+          value = record[col.dataIndex];
+        }
+
+        // Apply basic formatting if value is still an object or boolean
+        if (typeof value === "boolean") {
+          value = value ? "Yes" : "No";
+        } else if (value === null || value === undefined) {
+          value = "-";
+        } else if (typeof value === "object") {
+          value = JSON.stringify(value);
+        }
+
+        flattened[col.title] = value;
+      });
+      return flattened;
+    });
+  };
+
+  const getAppliedFiltersMetadata = () => {
+    const lines = [];
+
+    // 1. Applied Filters line
+    if (filtersState) {
+      const applied = Object.entries(filtersState)
+        .filter(([_, value]) => value?.selectedValues && value.selectedValues.length > 0)
+        .map(([key, value]) => `${key}: ${value.selectedValues.join(", ")}`);
+
+      lines.push(applied.length > 0 ? `Applied Filters: ${applied.join(" | ")}` : "Applied Filters: None");
+    } else {
+      lines.push("Applied Filters: None");
+    }
+
+    // 2. Created At line
+    lines.push(`Exported At: ${dayjs().format("DD/MM/YYYY HH:mm")}`);
+
+    return lines;
+  };
+
+  useEffect(() => {
+    if (location.pathname === "/Applications" && !record) {
+      dispatch(getAllApplications(filtersState));
+    }
+  }, [location.pathname, filtersState, dispatch, record]);
+
+  useEffect(() => {
+    if (location.pathname === "/Applications" && applications && applications.length > 0) {
+      const formatted = applications.map(app => formatApplicationDates(app));
+      setGridData(formatted);
+    } else if (location.pathname === "/Applications") {
+      setGridData([]);
+    }
+  }, [applications, location.pathname, setGridData]);
 
   useEffect(() => {
     setCheckboxes(globleFilters);
@@ -220,9 +355,13 @@ function SimpleMenu({
                   View
                 </div>
               ) : key === "Export CSV" ? (
-                <ExportCSV data={gridData} filename="my-data.csv" />
+                <ExportCSV
+                  data={prepareDataForExport(gridData, activePage)}
+                  filename={`${activePage}-data.csv`}
+                  metadata={getAppliedFiltersMetadata()}
+                />
               ) : key === "Export PDF" ? (
-                <ExportPDF data={gridData} filename="my-data.pdf" />
+                <ExportPDF data={prepareDataForExport(gridData, activePage)} filename={`${activePage}-data.pdf`} />
               ) : key === "Print Label" ? (
                 <div className="d-flex align-items-baseline">
                   <MdOutlineLocalPrintshop
@@ -240,7 +379,7 @@ function SimpleMenu({
                   onClick={(e) => {
                     e.stopPropagation(); // Prevent menu from closing
                     settransferreq(true); // Just set the state to open the drawer
-                   getTransferRequestById(record)
+                    getTransferRequestById(record)
                   }}
                 >
                   <FaRegArrowAltCircleRight
@@ -343,24 +482,24 @@ function SimpleMenu({
       >
         <Button
           style={
-            isCheckBox 
+            isCheckBox
               ? {
-                  backgroundColor: '#091e420a',
-                  borderRadius: '4px',
-                  height: '32px',
-                  border: 'none',
-                  fontWeight: '500',
-                  marginLeft: '8px'
-                }
+                backgroundColor: '#091e420a',
+                borderRadius: '4px',
+                height: '32px',
+                border: 'none',
+                fontWeight: '500',
+                marginLeft: '8px'
+              }
               : {
-                  backgroundColor: 'transparent',
-                  borderRadius: '4px',
-                  height: '32px',
-                  border: 'none',
-                  fontWeight: '500',
-                  marginLeft: '0px',
-                  boxShadow: 'none'
-                }
+                backgroundColor: 'transparent',
+                borderRadius: '4px',
+                height: '32px',
+                border: 'none',
+                fontWeight: '500',
+                marginLeft: '0px',
+                boxShadow: 'none'
+              }
           }
         >
           {title}
