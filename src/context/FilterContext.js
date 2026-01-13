@@ -185,7 +185,7 @@ export const FilterProvider = ({ children }) => {
       '/applications': 'Applications',
       '/Summary': 'Profile',
       '/membership': 'Membership',
-      "/Members": "Members"
+      "/members": "Members"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
