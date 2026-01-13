@@ -6,13 +6,13 @@ importScripts(
 );
 
 const firebaseConfig = {
-  "apiKey": "",
-  "authDomain": "",
-  "projectId": "",
-  "storageBucket": "",
-  "messagingSenderId": "",
-  "appId": "",
-  "measurementId": ""
+  apiKey: "AIzaSyCXGt41botyVbEkMsfo0SEe5iu8Qy1hguY",
+  authDomain: "portal-2ba29.firebaseapp.com",
+  projectId: "portal-2ba29",
+  storageBucket: "portal-2ba29.firebasestorage.app",
+  messagingSenderId: "31732856266",
+  appId: "1:31732856266:web:d3033d39df7ca6d0100b33",
+  measurementId: "G-3F413XVYM2",
 };
 
 firebase.initializeApp(firebaseConfig);

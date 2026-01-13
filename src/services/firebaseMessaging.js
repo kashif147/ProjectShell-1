@@ -297,7 +297,9 @@ export const getUserId = () => {
   try {
     const decodedToken = decodeToken();
     if (!decodedToken) {
-      console.warn("⚠️ No token found or invalid token, cannot extract user ID");
+      console.warn(
+        "⚠️ No token found or invalid token, cannot extract user ID"
+      );
       return null;
     }
 
@@ -314,7 +316,9 @@ export const getTenantId = () => {
   try {
     const decodedToken = decodeToken();
     if (!decodedToken) {
-      console.warn("⚠️ No token found or invalid token, cannot extract tenant ID");
+      console.warn(
+        "⚠️ No token found or invalid token, cannot extract tenant ID"
+      );
       return null;
     }
 
