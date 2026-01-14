@@ -183,7 +183,7 @@ const Sidebar = () => {
         navigate("/Applications", { state: { search: "Applications" } });
         break;
       case "Membership":
-        navigate("/members", { state: { search: "members" } });
+        navigate("/members", { state: { search: "Members" } });
         break;
       case "MembershipDashboard":
         navigate("/MembershipDashboard", {

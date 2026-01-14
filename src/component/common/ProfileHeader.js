@@ -32,9 +32,6 @@ function ProfileHeader({
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [alertVisible, setAlertVisible] = useState(false);
-  const [alertMessage, setAlertMessage] = useState("");
-  const [alertType, setAlertType] = useState("success");
 
   // Get data from Redux store
   const { profileDetails, loading, error } = useSelector(
@@ -47,16 +44,16 @@ function ProfileHeader({
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-  
+
   const {
     profileSearchData,
     loading: searchLoading,
     error: searchError
   } = useSelector((state) => state.searchProfile);
-  
+
   // FIXED: Safely access results with proper null checking
   const searchAoiRes = profileSearchData?.results?.[0] || null;
-  
+
   // Choose source dynamically - profileDetails has priority
   const source = profileDetails || searchAoiRes;
 
@@ -69,7 +66,7 @@ function ProfileHeader({
     if (!dateString) return "";
     const birthDate = dayjs(dateString);
     if (!birthDate.isValid()) return "";
-    
+
     const today = dayjs();
     const age = today.diff(birthDate, 'year');
     return `${age} Yrs`;
@@ -114,15 +111,15 @@ function ProfileHeader({
 
   // Helper function to safely get nested properties
   const getSafe = (obj, path, defaultValue = "") => {
-    
+
     const keys = path.split('.');
     let result = obj;
-    
+
     for (const key of keys) {
       if (result === null || result === undefined) return defaultValue;
       result = result[key];
     }
-    
+
     return result !== undefined ? result : defaultValue;
   };
 
@@ -155,11 +152,11 @@ function ProfileHeader({
     const address = source?.contactInfo ?
       `${getSafe(source, 'contactInfo.buildingOrHouse', '')} ${getSafe(source, 'contactInfo.streetOrRoad', '')}, ${getSafe(source, 'contactInfo.areaOrTown', '')}`.trim() ||
       "123 Main Street, New York" : "123 Main Street, New York";
-    
+
     const email = getSafe(source, 'contactInfo.preferredEmail') === "work" ?
       getSafe(source, 'contactInfo.workEmail') :
       getSafe(source, 'contactInfo.personalEmail', '');
-    
+
     const phone = getSafe(source, 'contactInfo.mobileNumber', '');
 
     // Professional Info
@@ -173,11 +170,11 @@ function ProfileHeader({
     // Financial Info - These would likely come from a different API endpoint
     const balance = "€200";
     const lastPayment = "€74.7";
-    
+
     // Use subscription start date for payment date if available
-    const paymentDate = subscriptionData?.startDate || 
+    const paymentDate = subscriptionData?.startDate ||
       formatDate(getSafe(source, 'submissionDate')) || "1/02/2025";
-    
+
     // Include subscription year in payment code if available
     const paymentCode = `MB-${subscriptionData?.subscriptionYear || dayjs().year()}-${getSafe(source, 'membershipNumber', '001')}`;
 
@@ -240,48 +237,40 @@ function ProfileHeader({
     setIsSubmitting(false);
   };
 
-  const showAlert = (message, type = "success") => {
-    setAlertMessage(message);
-    setAlertType(type);
-    setAlertVisible(true);
-    
-    // Auto-hide alert after 5 seconds
-    setTimeout(() => {
-      setAlertVisible(false);
-    }, 5000);
-  };
-
   const handleCancelSubmit = async () => {
-    debugger
     if (!cancelFormData.dateResigned || !cancelFormData.reason) {
-      showAlert("Please fill all required fields", "error");
-      debugger
+      MyAlert("error", "Please fill all required fields");
       return;
     }
 
     // Check if token exists
     if (!token) {
-      showAlert("Authentication token is missing. Please log in again.", "error");
-      debugger
+      MyAlert("error", "Authentication token is missing. Please log in again.");
       return;
     }
 
     // Format date to YYYY-MM-DD
     const formattedDate = dayjs(cancelFormData.dateResigned).format("YYYY-MM-DD");
 
+    // Get the profile ID
+    const profileId = source?.id || source?._id;
+    debugger
+    if (!profileId) {
+      MyAlert("error", "Profile ID not found. Cannot proceed.");
+      return;
+    }
+
     // Prepare request payload
     const payload = {
       dateResigned: formattedDate,
       reason: cancelFormData.reason,
-      // Add member ID if needed by the API
-      membershipNumber: memberData.memberId
     };
 
     setIsSubmitting(true);
 
     try {
       const response = await axios.post(
-        "https://subscriptionserviceshell-ambyf5dsa8c9dhcg.northeurope-01.azurewebsites.net/api/v1/subscriptions/resign",
+        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
         payload,
         {
           headers: {
@@ -292,30 +281,30 @@ function ProfileHeader({
       );
 
       if (response.status === 200 || response.status === 201) {
-        showAlert("Membership cancellation submitted successfully!", "success");
-        
+        MyAlert("success", "Membership cancellation submitted successfully!");
+
         // Optionally, you can trigger a refresh of subscription data here
         // dispatch(fetchProfileSubscription()); // Uncomment if you have this action
-        
+
         // Close modal and reset form
         handleCancelModalClose();
       } else {
-        showAlert("Failed to submit cancellation. Please try again.", "error");
+        MyAlert("error", "Failed to submit cancellation. Please try again.");
       }
     } catch (error) {
       console.error("Error submitting cancellation:", error);
-      
+
       // Show specific error messages based on error type
       if (error.response) {
         // Server responded with error status
         const errorMessage = error.response.data?.message || "Server error occurred";
-        showAlert(`Cancellation failed: ${errorMessage}`, "error");
+        MyAlert("error", `Cancellation failed: ${errorMessage}`);
       } else if (error.request) {
         // No response received
-        showAlert("No response from server. Please check your connection.", "error");
+        MyAlert("error", "No response from server. Please check your connection.");
       } else {
         // Request setup error
-        showAlert("Error setting up request. Please try again.", "error");
+        MyAlert("error", "Error setting up request. Please try again.");
       }
     } finally {
       setIsSubmitting(false);
@@ -366,15 +355,6 @@ function ProfileHeader({
 
   return (
     <div className="member-header-container">
-      {/* MyAlert Component */}
-      {alertVisible && (
-        <MyAlert
-          message={alertMessage}
-          type={alertType}
-          onClose={() => setAlertVisible(false)}
-        />
-      )}
-      
       <div className="member-header-single-card">
         {/* Profile Header Section */}
         <div className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}>
