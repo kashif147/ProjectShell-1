@@ -102,7 +102,6 @@ function AddNewGarda({ open, onClose, isGard }) {
   };
   const [InfData, setInfData] = useState(inputsInitValue);
   const [value, setValue] = useState(false);
-  console.log("tet", value)
   const mapApplicationDetailToInfData = (applicationDetail) => {
     if (!applicationDetail) return {};
 
@@ -322,7 +321,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       }
 
     } catch (error) {
-      console.error('Error during application submission:', error);
+      
       notification.error({
         message: 'Submission failed!',
         description: error?.response?.data?.message || error.message,
@@ -418,7 +417,7 @@ function AddNewGarda({ open, onClose, isGard }) {
       setInfData(inputsInitValue);
       onClose();
     } catch (error) {
-      console.error("Error saving to localStorage:", error);
+      
       notification.error({ message: "Failed to save draft!" });
     }
   };
@@ -494,7 +493,6 @@ function AddNewGarda({ open, onClose, isGard }) {
       setInfData((prev) => ({ ...prev, ...newdata }));
     }
   }, [application]);
-  console.log(application, "bonai")
   const handleSubmit = () => {
     const requiredFields = [
       "title",
@@ -913,7 +911,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={InfData?.dateOfBirth} // ✅ just string like "01/07/2019"
                   disabled={isDisable}
                   onChange={(date, dateString) => {
-                    console.log(date, "dte")
                     handleInputChange("dateOfBirth", date)
                   }}
                   hasError={!!errors?.dateOfBirth}
@@ -1215,7 +1212,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                 value={InfData?.dateJoined} // ✅ just string like "01/07/2019"
                 disabled={isDisable}
                 onChange={(date, dateString) => {
-                  console.log(date, "dte")
                   handleInputChange("dateJoined", date)
                 }}
                 hasError={!!errors?.dateJoined}
@@ -1248,7 +1244,6 @@ function AddNewGarda({ open, onClose, isGard }) {
                   value={moment(InfData?.graduationDate)} // ✅ just string like "01/07/2019"
                   disabled={isDisable}
                   onChange={(date, dateString) => {
-                    console.log(date, "dte")
                     handleInputChange("graduationDate", date)
                   }}
                   hasError={!!errors?.graduationDate}

@@ -9,21 +9,21 @@ const FCMTokenExample = () => {
 
   useEffect(() => {
     if (fcmToken) {
-      console.log("FCM Token from hook:", fcmToken);
+      
     }
   }, [fcmToken]);
 
   const handleEnableNotifications = async () => {
     const token = await requestNotificationPermission();
     if (token) {
-      console.log("FCM Token received:", token);
+      
     }
   };
 
   const handleRefresh = async () => {
     const newToken = await refreshToken();
     if (newToken) {
-      console.log("New FCM Token:", newToken);
+      
     }
   };
 

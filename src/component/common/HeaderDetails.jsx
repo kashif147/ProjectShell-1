@@ -164,8 +164,8 @@ function HeaderDetails() {
     },
   ];
   const handleAction = (label, e) => {
-    console.log("Label:", label);
-    console.log("Event type:", e?.type); // now safe
+    
+     // now safe
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
 
@@ -200,12 +200,12 @@ function HeaderDetails() {
         return [...acc, ...filteredColumns];
       }, []);
 
-      console.log(data, "data");
+      
       settrueFilters(filteredResults);
-      console.log(filteredResults, "filteredResults");
+      
     }
   }
-  console.log(trueFilters, "trueFilters");
+  
   const currentSearchFilters = useMemo(() => {
     return searchFilters[screenName];
   }, [screenName, searchFilters]);
@@ -385,7 +385,7 @@ function HeaderDetails() {
             return Promise.resolve();
           }
         } catch (error) {
-          console.error('Bulk approval error:', error);
+          
 
           // Clear any processing notifications
           message.destroy('bulk-approval-processing');
@@ -967,7 +967,7 @@ function HeaderDetails() {
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
-                        onSearch={(value) => console.log("Searching for batch:", value)}
+                        onSearch={(value) => }
                         style={{ width: 300 }}
                         className="inp"
                       />
@@ -1144,7 +1144,7 @@ function HeaderDetails() {
                   await handleSave(ReportName);
                   showHidSavModal();
                 } catch (error) {
-                  console.error("Error saving changes:", error);
+                  
                 }
               }}
             >
@@ -1354,7 +1354,7 @@ function HeaderDetails() {
         <DirectDebitForm
           onCancel={() => setDdDrawerOpen(false)}
           onSubmit={(data) => {
-            console.log("Saving Direct Debit:", data);
+            
             setDdDrawerOpen(false);
           }}
         />
@@ -1382,7 +1382,7 @@ function HeaderDetails() {
           ref={refundFormRef}
           onCancel={() => setRefundDrawerOpen(false)}
           onSubmit={(data) => {
-            console.log("Creating Refund:", data);
+            
             setRefundDrawerOpen(false);
           }}
         />

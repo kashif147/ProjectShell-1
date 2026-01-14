@@ -5,7 +5,7 @@ const FileExplorer = () => {
   const [path, setPath] = useState('/projectShell');  // Default to root directory
 
   const handleFolderClick = (newPath) => {
-    console.log("Navigating to path:", newPath);  // Debugging log
+      // Debugging log
     setPath(newPath);
   };
 

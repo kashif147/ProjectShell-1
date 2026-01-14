@@ -31,11 +31,11 @@ const CreateWordDocument = ({ refreshFileList }) => {
         alert('Document Created. Please rename and save it in Word Online.');
         window.open(response.webUrl, '_blank'); // Open the document in a new tab
       } else {
-        console.error('Error: No document ID returned from API', response);
+        
         alert('Error: Failed to create document.');
       }
     } catch (error) {
-      console.error('Error creating document:', error.message, error);
+      
       alert('Error: Failed to create document.');
     }
   };
@@ -54,7 +54,7 @@ const CreateWordDocument = ({ refreshFileList }) => {
             clearInterval(intervalId); // Stop polling
           }
         } catch (error) {
-          console.error('Error polling document name:', error);
+          
         }
       };
 

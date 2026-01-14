@@ -88,84 +88,84 @@ function SimpleBatchMemberSummary() {
   const { data: apiData, loading, error } = useSelector(
     (state) => state.cornMarketBatchById
   );
-  debugger
+
   const { batchName, batchId, search } = location.state || {};
   const [activeKey, setActiveKey] = useState("1");
-const normalizeProfiles = (profiles = []) =>
-  profiles.map((p, index) => ({
-    key: p._id || p.id || index,
+  const normalizeProfiles = (profiles = []) =>
+    profiles.map((p, index) => ({
+      key: p._id || p.id || index,
 
-    // Full Name (API OR mock)
-    fullName:
-      p.fullName ??
-      `${p.forenames ?? ""} ${p.surname ?? ""}`.trim(),
+      // Full Name (API OR mock)
+      fullName:
+        p.fullName ??
+        `${p.forenames ?? ""} ${p.surname ?? ""}`.trim(),
 
-    // Membership
-    membershipNo:
-      p.membershipNo ??
-      p.membershipNumber ??
-      "",
+      // Membership
+      membershipNo:
+        p.membershipNo ??
+        p.membershipNumber ??
+        "",
 
-    // Address (API OR mock)
-    addressLine1: p.addressLine1 ?? p.address ?? "",
-    addressLine2: p.addressLine2 ?? p.addr2 ?? "",
-    addressLine3: p.addressLine3 ?? p.addr3 ?? "",
-    addressCity: p.addressCity ?? p.addr4 ?? "",
-    addressCounty: p.addressCounty ?? "",
-    addressPostcode: p.addressPostcode ?? p.eircode ?? "",
+      // Address (API OR mock)
+      addressLine1: p.addressLine1 ?? p.address ?? "",
+      addressLine2: p.addressLine2 ?? p.addr2 ?? "",
+      addressLine3: p.addressLine3 ?? p.addr3 ?? "",
+      addressCity: p.addressCity ?? p.addr4 ?? "",
+      addressCounty: p.addressCounty ?? "",
+      addressPostcode: p.addressPostcode ?? p.eircode ?? "",
 
-    // Contact
-    email: p.email ?? p.emailAddress ?? "",
-    mobileNumber: p.mobileNumber ?? p.telephoneMobile ?? "",
-  }));
+      // Contact
+      email: p.email ?? p.emailAddress ?? "",
+      mobileNumber: p.mobileNumber ?? p.telephoneMobile ?? "",
+    }));
 
   // Use API data if available, otherwise use mock data for Direct Debit
-const data = useMemo(() => {
-  // 🔹 Scenario 1: API response (different keys)
-  if (apiData) {
-    return {
-      ...apiData,
-      profiles: normalizeProfiles(apiData.profiles),
-    };
-  }
+  const data = useMemo(() => {
+    // 🔹 Scenario 1: API response (different keys)
+    if (apiData) {
+      return {
+        ...apiData,
+        profiles: normalizeProfiles(apiData.profiles),
+      };
+    }
 
-  // 🔹 Scenario 2: Direct Debit Summary (already correct keys)
-  if (search === "DirectDebitSummary") {
-    return {
-      id: batchId,
-      name: batchName || "Monthly DD Batch - January 2024",
-      date: "2024-01-05",
-      createdBy: "John Doe",
-      profiles: normalizeProfiles([
-        {
-          id: "M001",
-          fullName: "Alice Thompson",
-          membershipNo: "45217A",
-          addressLine1: "123 Main St",
-          addressCity: "Dublin",
-          addressCounty: "Dublin",
-          email: "alice@example.com",
-          mobileNumber: "0871234567",
-        },
-        {
-          id: "M002",
-          fullName: "Bob Murphy",
-          membershipNo: "93824B",
-          addressLine1: "45 Park Lane",
-          addressCity: "Cork",
-          addressCounty: "Cork",
-          email: "bob@example.com",
-          mobileNumber: "0867654321",
-        },
-      ]),
-    };
-  }
+    // 🔹 Scenario 2: Direct Debit Summary (already correct keys)
+    if (search === "DirectDebitSummary") {
+      return {
+        id: batchId,
+        name: batchName || "Monthly DD Batch - January 2024",
+        date: "2024-01-05",
+        createdBy: "John Doe",
+        profiles: normalizeProfiles([
+          {
+            id: "M001",
+            fullName: "Alice Thompson",
+            membershipNo: "45217A",
+            addressLine1: "123 Main St",
+            addressCity: "Dublin",
+            addressCounty: "Dublin",
+            email: "alice@example.com",
+            mobileNumber: "0871234567",
+          },
+          {
+            id: "M002",
+            fullName: "Bob Murphy",
+            membershipNo: "93824B",
+            addressLine1: "45 Park Lane",
+            addressCity: "Cork",
+            addressCounty: "Cork",
+            email: "bob@example.com",
+            mobileNumber: "0867654321",
+          },
+        ]),
+      };
+    }
 
-  return null;
-}, [apiData, search, batchId, batchName]);
+    return null;
+  }, [apiData, search, batchId, batchName]);
 
-console.log("btch",data?.profiles)
-console.log("btch1",apiData?.profiles)
+  console.log("btch", data?.profiles)
+  console.log("btch1", apiData?.profiles)
   // Function to export to Excel with batch name as filename
   const exportToExcel = () => {
     // Check if we have data and profiles

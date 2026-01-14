@@ -30,7 +30,7 @@ const UpdateWordDocument = () => {
       alert('Document Created and Opened Successfully in Word Online!');
 
     } catch (error) {
-      console.error('Error creating document:', error);
+      
       alert('Error creating document');
     }
   };

@@ -71,7 +71,7 @@ function App() {
             await window.sharedStorage.worklet.addModule(
               "/shared-storage-worklet.js"
             );
-            console.log("✅ Shared Storage worklet loaded");
+            
           }
         } catch (err) {
           // Silently fail - Shared Storage is not available in localhost/development

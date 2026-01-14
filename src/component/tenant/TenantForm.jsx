@@ -178,12 +178,12 @@ const TenantForm = ({ tenant, onClose }) => {
               onClose();
               setErrors({});
               const res = await dispatch(getAllTenants());
-              console.log("after dispatch", res);
+              
             },
             "Tenant updated successfully"
           );
         } catch (err) {
-          console.error("Update failed:", err);
+          
         }
         return;
       }
@@ -205,8 +205,6 @@ const TenantForm = ({ tenant, onClose }) => {
       );
 
   };
-  console.log(errors, "yrs")
-
   return (
     <Drawer
       title={tenant ? "Edit Tenant" : "Add New Tenant"}

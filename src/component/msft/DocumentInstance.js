@@ -34,11 +34,11 @@ const DocumentInstance = ({ refreshFileList }) => {
         // Open the document in a new tab
         window.open(response.webUrl, '_blank');
       } else {
-        console.error('Error: No document ID returned from API', response);
+        
         alert('Error: Failed to create document.');
       }
     } catch (error) {
-      console.error('Error creating document:', error.message, error);
+      
       alert('Error: Failed to create document.');
     }
   };
@@ -68,7 +68,7 @@ const DocumentInstance = ({ refreshFileList }) => {
       // Update the document with the new content (this will depend on the format)
       await graphClient.api(`/me/drive/items/${documentId}/content`).put(updatedContent);
     } catch (error) {
-      console.error('Error replacing placeholders:', error);
+      
       alert('Error: Failed to replace placeholders in the document.');
     }
   };

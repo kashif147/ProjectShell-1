@@ -259,7 +259,7 @@ const MemberSearch = ({
 
   // Simplified search handler - only trigger on manual typing
   const handleSearch = (value) => {
-    console.log('Search triggered with:', value);
+    
     // Only trigger search if value length >= 2 and it's a new search
     if (value.length >= 2) {
       setIsManualSearch(true);
@@ -270,9 +270,9 @@ const MemberSearch = ({
   };
 
   const handleSelect = async (value, option) => {
-    console.log('Selected value:', value);
-    console.log('Selected option:', option);
-    console.log('onSelectBehavior:', onSelectBehavior);
+    
+    
+    
     
     // Check if this is a "no match" option with Add Member button
     if (value === "__no_match__") {
@@ -282,7 +282,7 @@ const MemberSearch = ({
     try {
       // Parse the stringified value to get member data
       const parsedValue = JSON.parse(value);
-      console.log('Parsed value:', parsedValue);
+      
 
       setLoading(true);
       setApiError(null);
@@ -327,7 +327,7 @@ const MemberSearch = ({
 
               message.success(`Member ${memberData.membershipNumber} loaded successfully`);
             } catch (error) {
-              console.error("Redux dispatch error:", error);
+              
               message.error(`Failed to load member data: ${error.message}`);
             }
             break;
@@ -361,7 +361,7 @@ const MemberSearch = ({
 
               message.success(`Member ${memberData.membershipNumber} selected`);
             } catch (error) {
-              console.error("Callback error:", error);
+              
               message.error(`Failed in callback: ${error.message}`);
             } finally {
               setCurrentSearchTerm("");
@@ -406,7 +406,7 @@ const MemberSearch = ({
 
               message.success(`Member ${memberData.membershipNumber} loaded successfully`);
             } catch (error) {
-              console.error("Redux dispatch error:", error);
+              
               message.error(`Failed to load member data: ${error.message}`);
             }
             break;
@@ -463,7 +463,7 @@ const MemberSearch = ({
               });
               message.success(`Member ${memberData.membershipNumber} loaded successfully`);
             } catch (error) {
-              console.error("Redux dispatch error:", error);
+              
               message.error(`Failed to load member data: ${error.message}`);
             }
             break;
@@ -476,7 +476,7 @@ const MemberSearch = ({
       }
 
     } catch (error) {
-      console.error("Error handling selection:", error);
+      
       message.error(`Error: ${error.message || 'Unknown error'}. Please try again or contact support.`);
       setApiError(error.message || 'Failed to handle selection');
       
@@ -488,7 +488,7 @@ const MemberSearch = ({
 
   // Handle input change (for typing)
   const handleInputChange = (value) => {
-    console.log('Input changed to:', value);
+    
     
     // Update value based on control mode
     if (isControlled && externalOnChange) {

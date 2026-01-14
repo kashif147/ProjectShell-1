@@ -36,7 +36,7 @@ export const getRedirectUri = () => {
 };
 
 // For debugging: log the redirect URI when the module loads (remove in production)
-console.log("DEBUG: Redirect URI resolved to:", getRedirectUri());
+
 
 // export const msalConfig = {
 //   auth: {

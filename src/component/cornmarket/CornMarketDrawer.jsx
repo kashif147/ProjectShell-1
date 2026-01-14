@@ -14,7 +14,6 @@ const { TabPane } = Tabs;
 function CornMarketDrawer({ isOpen, onClose }) {
   const filename = "corn-market.csv";
 const { ProfileDetails } = useTableColumns();
-  console.log(ProfileDetails,'ProfileDetailsx')
   const convertToCSV = (data) => {
     const header = Object.keys(data[0]).join(",") + "\n";
     const rows = data.map(row => Object.values(row).join(",")).join("\n");
@@ -429,14 +428,13 @@ const { ProfileDetails } = useTableColumns();
 
       setSelectedFullname(""); // optional: clear input
     } else {
-      console.warn("No matching member found.");
+      
     }
   };
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isExModalOpen, setIsExModalOpen] = useState(false);
   const [activeKey, setActiveKey] = useState(1);
   const [memberModalSelectVal, setmemberModalSelectVal] = useState()
-  console.log(memberModalSelectVal, "mem")
   return (
     <Drawer
       title="Corn Market"

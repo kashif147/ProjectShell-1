@@ -12,15 +12,14 @@ const CancellationDrawer = ({ open, onClose }) => {
 
     const { cancallationbyId, getCancellationById } = useReminders()
     const [activeTab, setActiveTab] = useState("summary");
-    console.log(cancallationbyId, "console")
     const [isDisable, setIsDisable] = useState(false);
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
     const getRowSelection = {
         selectedRowKeys,
         onChange: (newSelectedRowKeys, selectedRows) => {
-            console.log("Selected Keys: ", newSelectedRowKeys);
-            console.log("Selected Rows: ", selectedRows);
+            
+            
 
             setSelectedRowKeys(newSelectedRowKeys);
 

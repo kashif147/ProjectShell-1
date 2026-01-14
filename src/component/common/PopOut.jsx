@@ -22,7 +22,7 @@ function PopOut() {
   const filtered = lookups?.filter(
     (item) => item.lookuptypeId?._id === targetId
   );
-  console.log(filtered, "pe");
+  
   return (
     <TableComponent data={filtered} screenName="Popout" />
     // <>

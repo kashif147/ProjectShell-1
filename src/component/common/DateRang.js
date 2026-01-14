@@ -14,7 +14,7 @@ import { DownOutlined } from "@ant-design/icons";
 // import { width } from "@mui/system";
 const { RangePicker } = DatePicker;
 const onOk = (value) => {
-  console.log("onOk: ", value);
+  
 };
 const data = [
   { key: "Comming week", label: "Comming week" },
@@ -23,7 +23,7 @@ const data = [
 ];
 function DateRang({ title }) {
   const onChange = (date, dateString) => {
-    console.log(date, dateString);
+    
   };
   const menu = (
     <Menu>

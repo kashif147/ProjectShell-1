@@ -10,7 +10,7 @@ const FileList = ({ path, onFolderClick, refreshFileList }) => {
 
   const fetchItems = async () => {
     if (!path) {
-      console.error("Path is undefined or empty");
+      
       return;
     }
 
@@ -34,7 +34,7 @@ const FileList = ({ path, onFolderClick, refreshFileList }) => {
       
       setItems(itemsWithUrls);
     } catch (error) {
-      console.error("Error fetching items:", error);
+      
     } finally {
       setLoading(false);
     }

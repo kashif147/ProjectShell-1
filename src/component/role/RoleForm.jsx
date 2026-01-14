@@ -34,7 +34,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
     setOriginalData(mapped); // save original snapshot
   }, [role, isEdit]);
 
-  console.log(data, "data1");
+  
 
   const [errors, setErrors] = useState({});
   const validate = () => {
@@ -63,7 +63,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
 
   const handleSubmit = async () => {
     if (!validate()) {
-      console.log("Validation failed", errors);
+      
       return;
     }
 
@@ -103,7 +103,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
           }
         );
       } catch (err) {
-        console.error("Unexpected error:", err);
+        
         setErrors((prev) => ({
           ...prev,
           api: "Something went wrong. Please try again.",
@@ -165,7 +165,7 @@ const RoleForm = ({ isEdit, onClose, role }) => {
   //       role ? "Role updated successfully" : "Role created successfully"
   //     );
   //   } catch (error) {
-  //     console.error("Form validation failed:", error);
+  //     
   //     message.error("Please fill in all required fields");
   //   } finally {
   //     setLoading(false);

@@ -35,7 +35,6 @@ const MultiFilterDropdown = ({
     const newSelectedValues = selectedValues.includes(value)
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
-    console.log(newSelectedValues,"new")
     onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
   };
 
@@ -44,18 +43,11 @@ const MultiFilterDropdown = ({
   };
 
   const handleApply = () => {
-    console.log("🎯 APPLY BUTTON CLICKED - Selected Filters:", {
-      filterLabel: label,
-      operator: propOperator,
-      selectedValues: selectedValues,
-      selectedCount: selectedValues.length,
-      totalOptions: options.length,
-      isAllSelected: selectedValues.length === options.length
-    });
+    
 
     if (selectedValues.length === options.length) {
-      console.log("✅ ALL FILTERS ARE SELECTED for:", label);
-      console.log("📋 Selected values:", selectedValues);
+      
+      
     }
 
     setOpen(false);

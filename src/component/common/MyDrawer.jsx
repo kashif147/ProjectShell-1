@@ -203,11 +203,7 @@ function MyDrawer({
   const [isEndDate, setisEndDate] = useState(true);
   const rowSelection = {
     onChange: (selectedRowKeys, selectedRows) => {
-      console.log(
-        `selectedRowKeys: ${selectedRowKeys}`,
-        "selectedRows: ",
-        selectedRows
-      );
+      
     },
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",

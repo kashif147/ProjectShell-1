@@ -254,7 +254,7 @@ function ProfileHeader({
 
     // Get the profile ID
     const profileId = source?.id || source?._id;
-    debugger
+
     if (!profileId) {
       MyAlert("error", "Profile ID not found. Cannot proceed.");
       return;
@@ -292,7 +292,7 @@ function ProfileHeader({
         MyAlert("error", "Failed to submit cancellation. Please try again.");
       }
     } catch (error) {
-      console.error("Error submitting cancellation:", error);
+      
 
       // Show specific error messages based on error type
       if (error.response) {

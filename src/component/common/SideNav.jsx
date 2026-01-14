@@ -148,7 +148,7 @@ const nav = location?.pathname
         navigate("/Roster");
         break;
       default:
-        console.log("Menu item clicked:", key);
+        
     }
   };
 

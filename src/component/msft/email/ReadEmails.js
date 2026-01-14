@@ -33,7 +33,7 @@ const ReadEmails = () => {
       const data = await emailData.json();
       setEmails(data.value || []);
     } catch (error) {
-      console.error("Error fetching emails:", error);
+      
       setError(error.message); // Display error message
     }
   };

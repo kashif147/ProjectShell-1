@@ -5,38 +5,38 @@ import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
 export const fetchAndFilterTransferById = createAsyncThunk(
   "filterTransfer/fetchAndFilterById",
   async (id, { rejectWithValue, getState }) => {
-    debugger
+
     try {
       // Get current state
       const state = getState();
-      
+
       // Check if we already have the filtered data for this ID
       if (state.filterTransfer.lastFilteredId === id && state.filterTransfer.filteredData) {
         return state.filterTransfer.filteredData;
       }
-      
+
       // Access main data from the state
       const mainData = state.transferRequest?.data?.data || state.transferRequest?.data;
-        debugger
+
       // Validate main data
       if (!mainData || !Array.isArray(mainData)) {
         throw new Error("Main data not available. Please ensure transfer requests are loaded first.");
       }
-      
+
       // Filter the data by ID (checking multiple possible ID fields)
-      const filteredItem = mainData.find(item => 
-        item.id === id || 
-        item._id === id || 
-        item.transferId === id || 
+      const filteredItem = mainData.find(item =>
+        item.id === id ||
+        item._id === id ||
+        item.transferId === id ||
         item.key === id
       );
-        debugger
+
       if (!filteredItem) {
         throw new Error(`Transfer request with ID ${id} not found in the dataset`);
       }
-      
+
       return filteredItem;
-      
+
     } catch (error) {
       return rejectWithValue(error.message);
     }
@@ -58,7 +58,7 @@ const filterTransferSlice = createSlice({
       state.error = null;
       state.lastFilteredId = null;
     },
-    
+
     // Reset entire state
     resetFilterTransfer: (state) => {
       state.filteredData = null;
@@ -90,9 +90,9 @@ const filterTransferSlice = createSlice({
 });
 
 // Export actions
-export const { 
-  clearFilteredTransfer, 
-  resetFilterTransfer 
+export const {
+  clearFilteredTransfer,
+  resetFilterTransfer
 } = filterTransferSlice.actions;
 
 // Export selectors

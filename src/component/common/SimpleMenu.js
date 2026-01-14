@@ -273,7 +273,7 @@ function SimpleMenu({
       link.click();
       document.body.removeChild(link);
     } catch (error) {
-      console.error("Error generating QR code:", error);
+      
     }
   };
 
