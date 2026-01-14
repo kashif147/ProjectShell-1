@@ -36,7 +36,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
   } = useSelector((state) => state.roles);
 
   const [selectedRoles, setSelectedRoles] = useState([]);
-  
+  console.log("User in Drawer:", selectedRoles);
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [initialPermissions, setInitialPermissions] = useState([]);
@@ -46,7 +46,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
       setInitialPermissions(user.roles?.map((role) => role._id) || []);
     }
   }, [user]);
-  
+  console.log("Selected Roles:", selectedRoles);
   useEffect(() => {
     dispatch(getAllRoles());
   }, [dispatch]);

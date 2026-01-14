@@ -45,7 +45,7 @@ export const getTransferRequest = createAsyncThunk(
 export const getTransferRequestById = createAsyncThunk(
   "transferRequest/getById",
   async (transferRequestId, { rejectWithValue }) => {
-
+    debugger
     try {
       const token = localStorage.getItem("token");
 
@@ -55,7 +55,7 @@ export const getTransferRequestById = createAsyncThunk(
           headers: { Authorization: `Bearer ${token}` },
         }
       );
-
+debugger
       console.log("API RESPONSE by ID", response.data);
       return response.data;
     } catch (error) {
@@ -73,7 +73,7 @@ const transferRequestSlice = createSlice({
     getError: null,
     createLoading: false,
     createError: null,
-
+    
     // NEW: State for single transfer request by ID
     singleData: null,
     singleLoading: false,
@@ -112,7 +112,7 @@ const transferRequestSlice = createSlice({
         state.createLoading = false;
         state.createError = action.payload;
       })
-
+      
       // NEW: Cases for getTransferRequestById
       .addCase(getTransferRequestById.pending, (state) => {
         state.singleLoading = true;

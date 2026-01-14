@@ -45,10 +45,10 @@ const ApiPaginationExample = () => {
         showQuickJumper={true}
         showTotal={true}
         onDataChange={(data) => {
-          
+          console.log('Data changed:', data);
         }}
         onPaginationChange={({ page, pageSize, total, totalPages }) => {
-          
+          console.log('Pagination changed:', { page, pageSize, total, totalPages });
         }}
         transformResponse={(response) => {
           // Custom response transformer if API returns different format
@@ -93,7 +93,7 @@ export const StandaloneApiPaginationExample = () => {
         showSizeChanger={true}
         showQuickJumper={false}
         onPaginationChange={(pagination) => {
-          
+          console.log('Pagination state:', pagination);
         }}
       />
     </Card>

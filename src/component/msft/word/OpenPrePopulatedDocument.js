@@ -29,10 +29,10 @@ const OpenPrePopulatedDocument = () => {
         setFileUrl(documentWebUrl);
         await fetchDocumentContent(documentWebUrl); // Fetch content using proxy
       } else {
-        
+        console.error('Error: Unable to retrieve webUrl');
       }
     } catch (error) {
-      
+      console.error('Error copying template document:', error.message, error);
     }
   };
 
@@ -43,7 +43,7 @@ const OpenPrePopulatedDocument = () => {
 
       return file ? file.webUrl : null;
     } catch (error) {
-      
+      console.error('Error retrieving file ID:', error);
       return null;
     }
   };
@@ -65,15 +65,15 @@ const OpenPrePopulatedDocument = () => {
       });
 
       if (response.ok) {
-        
+        console.log('Document fetched successfully through proxy');
         const blob = await response.blob();
         const url = URL.createObjectURL(blob);
         window.open(url, '_blank'); // Open document in a new tab
       } else {
-        
+        console.error('Failed to fetch document through proxy');
       }
     } catch (error) {
-      
+      console.error('Error fetching document content:', error);
     }
   };
 

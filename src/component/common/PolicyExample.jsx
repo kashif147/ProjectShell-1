@@ -57,9 +57,9 @@ const PolicyExample = () => {
         "user-management",
         "delete"
       );
-      
+      console.log("Can delete users:", canDelete);
     } catch (error) {
-      
+      console.error("Quick check failed:", error);
     }
   };
 

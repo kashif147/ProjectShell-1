@@ -8,7 +8,7 @@ export const getSubscriptionByProfileId = createAsyncThunk(
   async ({ profileId, isCurrent = "true" }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-
+debugger
       const res = await axios.get(
         `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}&isCurrent=${isCurrent}`,
         {
@@ -19,11 +19,11 @@ export const getSubscriptionByProfileId = createAsyncThunk(
       );
 
       // Adjust based on actual API response structure
-      return res.data.data;
+      return  res.data.data;
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.message ||
-        "Failed to fetch subscription by profile ID"
+          "Failed to fetch subscription by profile ID"
       );
     }
   }

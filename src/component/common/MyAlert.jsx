@@ -4,7 +4,7 @@ import { notification } from "antd";
 const MyAlert = (type, message, description) => {
   // Ensure `type` is valid: success, error, info, warning
   if (!["success", "error", "info", "warning"].includes(type)) {
-    
+    console.warn(`⚠️ Invalid notification type: ${type}`);
     return;
   }
 

@@ -103,7 +103,7 @@ function TrigerBatchMemberDrawer({ isOpen, onClose, }) {
     //       <Button 
     //         type="link" 
     //         danger 
-    //         onClick={() => }
+    //         onClick={() => console.log(record)}
     //       >
     //         Exclude
     //       </Button>

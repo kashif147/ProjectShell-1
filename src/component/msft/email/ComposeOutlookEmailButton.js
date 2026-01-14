@@ -19,7 +19,7 @@ const ComposeOutlookEmailButton = () => {
       window.open(mailUrl, '_blank');
 
     } catch (error) {
-      
+      console.error('Error acquiring token silently', error);
 
       // If token acquisition fails, fall back to interactive login
       try {
@@ -30,7 +30,7 @@ const ComposeOutlookEmailButton = () => {
         const mailUrl = `https://outlook.office.com/mail/deeplink/compose?access_token=${token}`;
         window.open(mailUrl, '_blank');
       } catch (interactiveError) {
-        
+        console.error('Error during interactive login', interactiveError);
       }
     }
   };

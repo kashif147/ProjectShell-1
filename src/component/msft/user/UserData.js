@@ -22,7 +22,7 @@ const UserData = () => {
                 const response = await instance.acquireTokenPopup(request);
                 return response.accessToken;
             } else {
-                
+                console.error(error);
             }
         }
     };
@@ -42,7 +42,7 @@ const UserData = () => {
             const user = await client.api('/me').get();
             setUserData(user); // Set the user data to state
         } catch (error) {
-            
+            console.error('Error fetching user data: ', error);
         }
     };
 

@@ -23,7 +23,12 @@ const Toolbar = () => {
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
-    
+    console.log("🔄 Applying filter:", {
+      filter: label,
+      values: selectedValues,
+      operator: operator,
+      count: selectedValues.length,
+    });
 
     updateFilter(label, operator, selectedValues);
   };
@@ -36,12 +41,12 @@ const Toolbar = () => {
       }
     });
 
-    
+    console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
 
     if (Object.keys(cleanedFilters).length > 0) {
       dispatch(getAllApplications(cleanedFilters));
     } else {
-      
+      console.log("⚠️ No filters selected, fetching all applications");
       dispatch(getAllApplications({}));
     }
   };
@@ -70,7 +75,7 @@ const Toolbar = () => {
   };
 
   const handleReset = () => {
-    
+    console.log("🔄 Resetting all filters");
     resetFilters();
     dispatch(getAllApplications({}));
   };

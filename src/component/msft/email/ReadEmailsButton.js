@@ -15,10 +15,10 @@ const ReadEmailsButton = () => {
       });
   
       const data = await response.json();
-      
+      console.log("Emails:", data);
       // You can now display the emails in your UI
     } catch (error) {
-      
+      console.error("Error fetching emails: ", error);
     }
   };
   
@@ -34,7 +34,7 @@ const ReadEmailsButton = () => {
       // Call the Graph API to get emails
       fetchEmails(accessToken);
     } catch (error) {
-      
+      console.error("Error acquiring token: ", error);
     }
   };
 

@@ -15,7 +15,7 @@ export const getTransferRequestHistoryById = createAsyncThunk(
       );
 
       if (response) {
-        
+        console.log("Transfer Request History API RESPONSE", response.data);
         return response.data;
       } else {
         return rejectWithValue(

@@ -37,7 +37,7 @@ const ReadEmailsAxios = () => {
       setMessages(response.data.value);
     })
     .catch((error) => {
-      
+      console.error("Error fetching emails:", error);
     });
   };
 

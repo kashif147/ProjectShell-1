@@ -108,7 +108,7 @@ function Configuratin() {
     isCoum
   ) => {
     const token = localStorage.getItem("token");
-    ;
+    debugger;
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
@@ -250,10 +250,10 @@ function Configuratin() {
       const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
       let finalEndPoint = endPoint;
-      ;
+      debugger;
       // const { id, ...finalData } = data1;
       // const { id, ...finalData } = data1;
-      ;
+      debugger;
 
       const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
         headers: {
@@ -4022,7 +4022,7 @@ function Configuratin() {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => { },
+    onChange: (selectedRowKeys, selectedRows) => {},
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -4143,17 +4143,17 @@ function Configuratin() {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => { };
+  const addmembershipFtn = () => {};
 
-  const AddpartnershipFtn = () => { };
+  const AddpartnershipFtn = () => {};
 
-  const AddprofileModalFtn = () => { };
+  const AddprofileModalFtn = () => {};
 
-  const AddRegionTypeModalFtn = () => { };
+  const AddRegionTypeModalFtn = () => {};
 
-  const AddContactTypeModalFtn = () => { };
+  const AddContactTypeModalFtn = () => {};
 
-  const AddSubscriptionsFtn = () => { };
+  const AddSubscriptionsFtn = () => {};
 
   const columnClaimType = [
     {
@@ -7045,8 +7045,8 @@ function Configuratin() {
           );
           dispatch(getLookupTypes());
         }}
-      //   onChange={handlePageChange}
-      // total={lookupsTypes?.length}
+        //   onChange={handlePageChange}
+        // total={lookupsTypes?.length}
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
@@ -7411,7 +7411,7 @@ function Configuratin() {
                   );
                   // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
-              // hasError={!!errors?.Lookup?.lookuptypeId}
+                // hasError={!!errors?.Lookup?.lookuptypeId}
               />
             </Col>
           </Row>
@@ -10206,7 +10206,7 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-      // width="680"
+        // width="680"
       >
         <div className="drawer-main-cntainer p-4">
           {" "}

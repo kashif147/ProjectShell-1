@@ -61,7 +61,7 @@ function CategoryChangeRequest({
     }
 
     // ✅ Do something with valid formData
-    
+    console.log('Submitted Category Change:', formData);
 
     // Optionally reset and close
     setFormData(initialFormData);

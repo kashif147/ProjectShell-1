@@ -26,16 +26,22 @@ export const getMessagingInstance = async (serviceWorkerRegistration) => {
 
   try {
     if (serviceWorkerRegistration) {
-      
+      console.log("🔍 Passing service worker registration to Firebase:", {
+        scope: serviceWorkerRegistration.scope,
+        active: serviceWorkerRegistration.active?.state,
+        scriptURL: serviceWorkerRegistration.active?.scriptURL,
+      });
       messagingInstance = getMessaging(app, { serviceWorkerRegistration });
-      
+      console.log("✅ Firebase messaging instance created with service worker");
     } else {
-      
+      console.log(
+        "⚠️ No service worker registration provided, Firebase will use default"
+      );
       messagingInstance = getMessaging(app);
     }
     return messagingInstance;
   } catch (error) {
-    
+    console.error("Firebase messaging initialization error:", error);
     return null;
   }
 };

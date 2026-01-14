@@ -10,11 +10,11 @@ const FileList = ({ path = '/', onFolderClick }) => {
 
   const fetchItems = async () => {
     if (!path) {
-        // Debugging
+      console.error("Path is undefined or empty");  // Debugging
       return;
     }
     
-      // Debugging log
+    console.log("Fetching items from path:", path);  // Debugging log
 
     setLoading(true);
     try {
@@ -23,7 +23,7 @@ const FileList = ({ path = '/', onFolderClick }) => {
       const response = await graphClient.api(`/me/drive/root:${formattedPath}:/children`).get();
       setItems(response.value);
     } catch (error) {
-      
+      console.error("Error fetching items:", error);
     } finally {
       setLoading(false);
     }
@@ -35,13 +35,13 @@ const FileList = ({ path = '/', onFolderClick }) => {
 
   const handleFolderClick = (folderPath) => {
     const newPath = `${path}/${folderPath}`;
-      // Debugging log
+    console.log("Folder clicked, new path:", newPath);  // Debugging log
     onFolderClick(newPath);
   };
 
   const handleBackClick = () => {
     const parentPath = path.substring(0, path.lastIndexOf('/')) || '/';
-      // Debugging log
+    console.log("Navigating back to path:", parentPath);  // Debugging log
     onFolderClick(parentPath);
   };
 

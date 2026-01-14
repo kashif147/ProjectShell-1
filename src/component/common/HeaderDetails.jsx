@@ -1382,7 +1382,7 @@ function HeaderDetails() {
           ref={refundFormRef}
           onCancel={() => setRefundDrawerOpen(false)}
           onSubmit={(data) => {
-            
+            console.log("Creating Refund:", data);
             setRefundDrawerOpen(false);
           }}
         />

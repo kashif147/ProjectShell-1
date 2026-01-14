@@ -12,7 +12,7 @@ const FileActions = ({ itemId, itemName, onDelete }) => {
       // alert('File deleted successfully.');
       onDelete(); // Call the refresh function after deletion
     } catch (error) {
-      
+      console.error('Error deleting file:', error);
       // alert('Error: Failed to delete file.');
     }
   };

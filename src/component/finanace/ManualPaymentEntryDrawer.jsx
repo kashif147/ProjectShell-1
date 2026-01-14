@@ -48,7 +48,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
 
   const [loading, setLoading] = useState(false);
 
-  
+  console.log('select', selectedMember);
 
   const handleMemberChange = (value) => {
     const found = memberData.find((m) => m.membershipNumber === value.target.value);
@@ -90,7 +90,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
       
       // Validate required fields
       // if (!formData.memberNo) {
-      //   
+      //   console.error("Member No is required");
       //   return;
       // }
 
@@ -103,7 +103,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
         paymentType: batchSummryData?.PaymentType || ""
       };
       
-      
+      console.log("Form Submitted:", submissionData);
       
       // Simulate API call
       // await new Promise(resolve => setTimeout(resolve, 1000));
@@ -123,7 +123,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
       onClose();
       
     } catch (error) {
-      
+      console.error("Submission error:", error);
     } finally {
       setLoading(false);
     }

@@ -240,7 +240,7 @@ const ApiPagination = ({
       }
 
     } catch (error) {
-      
+      console.error('Error fetching paginated data:', error);
       message.error(
         error?.response?.data?.message || 
         error?.message || 

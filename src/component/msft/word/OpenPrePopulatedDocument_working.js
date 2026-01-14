@@ -23,21 +23,21 @@ const OpenPrePopulatedDocument = () => {
           parentReference: { path: destinationPath }
         });
 
-      
+      console.log('Template copied:', copyResponse);
 
       const documentWebUrl = await getFileIdByName(graphClient, newDocumentName, destinationPath);
 
       if (documentWebUrl) {
         setFileUrl(documentWebUrl);
         window.open(documentWebUrl, '_blank');
-        
+        console.log('Document opened successfully');
 
       } else {
-        
+        console.error('Error: Unable to retrieve webUrl');
         // alert('Error: Failed to copy template.');
       }
     } catch (error) {
-      
+      console.error('Error copying template document:', error.message, error);
     //   alert('Error: Failed to copy template.');
     }
   };
@@ -49,7 +49,7 @@ const OpenPrePopulatedDocument = () => {
 
       return file ? file.webUrl : null;
     } catch (error) {
-      
+      console.error('Error retrieving file ID:', error);
       return null;
     }
   };

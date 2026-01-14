@@ -510,7 +510,15 @@ export const filterMenuItemsByAuth = (
       !item.roles?.length ||
       item.roles.some((role) => userRoles.includes(role));
 
-    
+    console.log(`Filtering item ${item.key}:`, {
+      hasWildcardPermission,
+      hasRequiredPermission,
+      hasRequiredRole,
+      userPermissions,
+      userRoles,
+      itemPermissions: item.permissions,
+      itemRoles: item.roles,
+    });
 
     return hasRequiredPermission && hasRequiredRole;
   });

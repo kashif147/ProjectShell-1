@@ -292,7 +292,7 @@ const TableComponent = ({
       onChange: handleSelectionChange,
       onSelect: (record, selected, selectedRows) => {
         // Trigger row click logic only when checkbox is clicked
-         // ✅ your row clicked log
+        console.log("Row clicked:", record); // ✅ your row clicked log
         setSelectedRowData([record]);
         setSelectedRowIndex(
           dataSource.findIndex((r) => {
@@ -303,7 +303,7 @@ const TableComponent = ({
         );
       },
       onSelectAll: (selected, selectedRows, changeRows) => {
-        
+        console.log("Select all triggered:", selectedRows);
         // Optional: handle select all logic
       },
       columnWidth: 60,
@@ -410,7 +410,7 @@ const TableComponent = ({
       render: col.render
         ? col.render
         : (text, record, index) => {
-
+          debugger
           switch (col.title) {
             case "Full Name":
               return (
@@ -538,7 +538,7 @@ const TableComponent = ({
                     }
                   }}
                 >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </span>
               );
 
@@ -593,8 +593,8 @@ const TableComponent = ({
                   }}
                   style={{ color: "inherit", textDecoration: "none" }}
                   onClick={() => {
-                    
-
+                    console.log(record?._original?._id, "recordid");
+                    debugger
                     dispatch(getCornMarketBatchById(record?._original?._id))
                   }
 

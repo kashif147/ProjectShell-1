@@ -87,7 +87,7 @@ function MyDeatails() {
     e.preventDefault();
     setSubmitted(true); // Track form submission attempt
     if (validateForm()) {
-      
+      console.log("Form Data:", InfDataPartner);
 
       insertDataFtn(
         "/partner",
@@ -146,7 +146,7 @@ function MyDeatails() {
     e.preventDefault();
 
     if (!validateChildren()) {
-      
+      console.error("Form data is invalid!");
       return;
     }
     insertDataFtn(
@@ -324,7 +324,7 @@ function MyDeatails() {
   const [value4, setValue4] = useState("Male");
 
   const onChange4 = ({ target: { value } }) => {
-    
+    console.log("radio4 checked", value);
     setValue4(value);
   };
   const onCheckboxChange = (e) => {
@@ -414,7 +414,7 @@ function MyDeatails() {
 
       return response.data; // Assuming the API returns an array of regions
     } catch (error) {
-      
+      console.error(error.response?.data?.message);
     }
   };
 
@@ -706,7 +706,7 @@ function MyDeatails() {
   ];
   const handleMenuClick = (e) => {
     message.info("Click on menu item.");
-    
+    console.log("click", e);
   };
   const items = [
     {
@@ -737,7 +737,7 @@ function MyDeatails() {
     action: "https://660d2bd96ddfa2943b33731c.mockapi.io/api/upload",
     onChange({ file, fileList }) {
       if (file.status !== "uploading") {
-        
+        console.log(file, fileList);
       }
     },
     defaultFileList: [

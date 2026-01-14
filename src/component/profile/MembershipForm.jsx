@@ -37,13 +37,14 @@ const MembershipForm = ({
     loading: searchLoading,
     error: searchError
   } = useSelector((state) => state.searchProfile);
-
+  
   // Subscription API data
   const {
     ProfileSubData,
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
+console.log(ProfileSubData,"ProfileSubData")
   const dispatch = useDispatch();
   const {
     titleOptions,
@@ -88,7 +89,7 @@ const MembershipForm = ({
   const subscriptionData = useMemo(() => {
     if (ProfileSubData?.data?.length > 0) {
       const subscription = ProfileSubData.data[0];
-
+      debugger
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
@@ -197,11 +198,11 @@ const MembershipForm = ({
 
     // Override with subscription data if available
     if (subscriptionData) {
-
+      debugger
       setFormData(prev => ({
         ...prev,
         ...initialFormData,
-
+      
         // Subscription Details
         subscriptionStatus: subscriptionData.subscriptionStatus || "",
         membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
@@ -320,7 +321,7 @@ const MembershipForm = ({
     endDate: null,
     subscriptionYear: null,
   });
-  
+console.log("formData", formData);
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },
@@ -491,11 +492,11 @@ const MembershipForm = ({
   };
 
   const handleSaveDraft = () => {
-    
+    console.log("Saving draft:", formData);
   };
 
   const handleSubmit = () => {
-    
+    console.log("Submitting form:", formData);
   };
 
   const NursingSpecializationSelectOptn = [

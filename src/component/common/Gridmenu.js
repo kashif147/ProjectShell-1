@@ -49,7 +49,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       }
       
     );
-    //  
+    // console.log(filteredResults, "//"); 
     setColumnsForFilter(filteredResults);
     
   };

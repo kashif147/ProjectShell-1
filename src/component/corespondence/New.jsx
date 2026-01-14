@@ -22,7 +22,7 @@ function New() {
 
     const rowSelection = {
         onChange: (selectedRowKeys, selectedRows) => {
-            
+            console.log(`selectedRowKeys: ${selectedRowKeys}`, 'selectedRows: ', selectedRows);
         },
         getCheckboxProps: (record) => ({
             disabled: record.name === 'Disabled User',
@@ -51,7 +51,7 @@ function New() {
                 setactiveKey("4");
                 break;
             default:
-                
+                console.error("Invalid value provided");
         }
     };
     const handleNewFtn = () => {
@@ -91,9 +91,10 @@ function New() {
             refreshFileList(); // Refresh the file list after creating the document
           } else {
             // alert('Error: Failed to create document.');
-            }
+            console.log('Error: Failed to create document.')
+          }
         } catch (error) {
-          
+          console.error('Error creating document:', error.message);
           // alert('Error: Failed to create document.');
         }
       };

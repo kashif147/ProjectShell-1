@@ -55,7 +55,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
   const [form] = Form.useForm();
   const { excelData, setExcelData, setBatchTotals, batchTotals, setUploadedFile, uploadedFile } = useContext(ExcelContext);
-  
+  console.log("uploadedFile", excelData);
 
   const [isSpecialPath, setIsSpecialPath] = useState(false);
   const [autoBatchType, setAutoBatchType] = useState('');

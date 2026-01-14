@@ -237,79 +237,58 @@ function ProfileHeader({
     setIsSubmitting(false);
   };
 
-  const handleCancelSubmit = async () => {
-    if (!cancelFormData.dateResigned || !cancelFormData.reason) {
-      MyAlert("error", "Please fill all required fields");
-      return;
-    }
+const handleCancelSubmit = async () => {
+  if (!cancelFormData.dateResigned || !cancelFormData.reason?.trim()) {
+    MyAlert("error", "Please fill all required fields");
+    return;
+  }
 
-    // Check if token exists
-    if (!token) {
-      MyAlert("error", "Authentication token is missing. Please log in again.");
-      return;
-    }
+  if (!token) {
+    MyAlert("error", "Authentication token is missing. Please log in again.");
+    return;
+  }
 
-    // Format date to YYYY-MM-DD
-    const formattedDate = dayjs(cancelFormData.dateResigned).format("YYYY-MM-DD");
+  const profileId = source?.id || source?._id;
+  if (!profileId) {
+    MyAlert("error", "Profile ID not found. Cannot proceed.");
+    return;
+  }
 
-    // Get the profile ID
-    const profileId = source?.id || source?._id;
-
-    if (!profileId) {
-      MyAlert("error", "Profile ID not found. Cannot proceed.");
-      return;
-    }
-
-    // Prepare request payload
-    const payload = {
-      dateResigned: formattedDate,
-      reason: cancelFormData.reason,
-    };
-
-    setIsSubmitting(true);
-
-    try {
-      const response = await axios.post(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
-        payload,
-        {
-          headers: {
-            'Authorization': `Bearer ${token}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-
-      if (response.status === 200 || response.status === 201) {
-        MyAlert("success", "Membership cancellation submitted successfully!");
-
-        // Optionally, you can trigger a refresh of subscription data here
-        // dispatch(fetchProfileSubscription()); // Uncomment if you have this action
-
-        // Close modal and reset form
-        handleCancelModalClose();
-      } else {
-        MyAlert("error", "Failed to submit cancellation. Please try again.");
-      }
-    } catch (error) {
-      
-
-      // Show specific error messages based on error type
-      if (error.response) {
-        // Server responded with error status
-        const errorMessage = error.response.data?.message || "Server error occurred";
-        MyAlert("error", `Cancellation failed: ${errorMessage}`);
-      } else if (error.request) {
-        // No response received
-        MyAlert("error", "No response from server. Please check your connection.");
-      } else {
-        // Request setup error
-        MyAlert("error", "Error setting up request. Please try again.");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
+  const payload = {
+    dateResigned: dayjs(cancelFormData.dateResigned).format("YYYY-MM-DD"),
+    reason: cancelFormData.reason.trim(),
   };
+
+  setIsSubmitting(true);
+
+  try {
+    const response = await axios.put(
+      `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
+      payload,
+      {
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-Type": "application/json",
+        },
+      }
+    );
+
+    MyAlert("success", "Membership cancellation submitted successfully!");
+    handleCancelModalClose();
+
+  } catch (error) {
+    const message =
+      error.response?.data?.message ||
+      (error.request
+        ? "No response from server. Please check your connection."
+        : "Error setting up request.");
+
+    MyAlert("error", `Cancellation failed: ${message}`);
+  } finally {
+    setIsSubmitting(false);
+  }
+};
+
 
   const handleFormChange = (field, value) => {
     setCancelFormData({ ...cancelFormData, [field]: value });

@@ -98,7 +98,7 @@ const ReportViewer = ({
       );
       message.success("PDF exported successfully");
     } catch (error) {
-      
+      console.error("PDF export error:", error);
       message.error("Failed to export PDF");
     }
   };
@@ -125,7 +125,7 @@ const ReportViewer = ({
       );
       message.success("Excel file exported successfully");
     } catch (error) {
-      
+      console.error("Excel export error:", error);
       message.error("Failed to export Excel file");
     }
   };
@@ -173,7 +173,7 @@ const ReportViewer = ({
         message.warning("No data available for printing");
       }
     } catch (error) {
-      
+      console.error("Print error:", error);
       message.error("Failed to print report");
     }
   };

@@ -78,7 +78,7 @@ function ApplicationMgtDrawer({
     workLocationLoading,
     workLocationError,
   } = useSelector((state) => state.lookupsWorkLocation);
-  
+  console.log(hierarchyData, "lk");
   const { filtersState } = useFilters();
   const EmailConflictScreen = () => {
     if (!emailConflictData?.hasConflict) return null;
@@ -101,7 +101,7 @@ function ApplicationMgtDrawer({
   const { profileSearchData } = useSelector(
     (state) => state.searchProfile
   );
-  
+  console.log("profileSearchData", profileSearchData);
   useEffect(() => {
     // Setup code runs on mount
 
@@ -124,7 +124,7 @@ function ApplicationMgtDrawer({
 
   // Handle clear
   const handleClear = () => {
-    
+    console.log("Clearing search and form");
 
     // Clear search state
     setQuery('');
@@ -241,7 +241,7 @@ function ApplicationMgtDrawer({
   useEffect(() => {
     // Auto-populate form when search results come back
     if (selectedMember && profileSearchData?.results && profileSearchData.results.length > 0) {
-      
+      console.log("Auto-populating form with search result:", profileSearchData.results[0]);
 
       // Take the first result from search
       const firstResult = profileSearchData.results[0];
@@ -293,7 +293,7 @@ function ApplicationMgtDrawer({
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries
   );
-  
+  console.log(countriesOptions, "countriesOptions");
   const nextPrevData = { total: applications?.length };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
@@ -401,7 +401,7 @@ function ApplicationMgtDrawer({
   const { categoryData, error, currentCategoryId } = useSelector(
     (state) => state.categoryLookup
   );
-  
+  console.log(categoryData, "categoryData");
 
   useEffect(() => {
     dispatch(fetchCountries());
@@ -426,7 +426,7 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
-  
+  console.log(application, "application92");
 
   useEffect(() => {
     if (application && isEdit) {
@@ -1000,7 +1000,7 @@ function ApplicationMgtDrawer({
             "Application submitted and approved successfully!"
           );
         } catch (approveError) {
-          
+          console.error("Approval failed:", approveError);
           MyAlert(
             "warning",
             "Application submitted successfully but approval failed",
@@ -1093,7 +1093,7 @@ function ApplicationMgtDrawer({
         );
       }
     } catch (error) {
-      
+      console.error("Submission error:", error);
       MyAlert(
         "error",
         "Failed to submit application",
@@ -1144,7 +1144,7 @@ function ApplicationMgtDrawer({
         return false;
       }
     } catch (error) {
-      
+      console.error("Error checking email conflict:", error);
       setEmailConflictData(null);
       return false;
     }
@@ -1152,7 +1152,7 @@ function ApplicationMgtDrawer({
 
   // Add this state
   const [emailConflictData, setEmailConflictData] = useState(null);
-  
+console.log(emailConflictData, "emailConflictData");
   const hasSubscriptionDetailsChanged = (current, original) => {
     const currentSub = current.subscriptionDetails || {};
     const originalSub = original.subscriptionDetails || {};
@@ -1285,7 +1285,7 @@ function ApplicationMgtDrawer({
         MyAlert("info", "No changes detected to save.");
       }
     } catch (error) {
-      
+      console.error("Save error:", error);
       MyAlert(
         "error",
         "Failed to save changes",
@@ -1299,7 +1299,7 @@ function ApplicationMgtDrawer({
 
   const { hierarchicalData, hierarchicalDataLoading, hierarchicalDataError } =
     useSelector((state) => state.hierarchicalDataByLocation);
-  
+  console.log(hierarchicalData, "hierarchicalData");
 
   const handleInputChange = (section, field, value) => {
     if (section === "subscriptionDetails" && field === "membershipStatus") {
@@ -1401,7 +1401,7 @@ function ApplicationMgtDrawer({
           details
         ) {
           const components = details.address_components;
-          
+          console.log('components=========>', components);
 
           const getComponent = type =>
             components.find(c => c.types.includes(type))?.long_name || '';
@@ -1430,7 +1430,12 @@ function ApplicationMgtDrawer({
           let countryDisplayName = InfData.contactInfo?.country;
           // Default to Ireland if not found
           if (countryLongName || countryShortName) {
-            
+            console.log(
+              'Country from API - Long Name:',
+              countryLongName,
+              'Short Name:',
+              countryShortName,
+            );
             const matchedCountry = countriesOptions?.find(
               c =>
                 c?.code === countryLongName ||
@@ -1440,9 +1445,9 @@ function ApplicationMgtDrawer({
             );
             if (matchedCountry) {
               countryDisplayName = matchedCountry.displayname;
-              
+              console.log('Matched country:', matchedCountry);
             } else {
-              
+              console.log('No matching country found in lookup');
             }
           }
 
@@ -1712,8 +1717,8 @@ function ApplicationMgtDrawer({
         navigate("/Applications");
       }
     } catch (error) {
-      
-      
+      console.error(`❌ Error ${action} application:`, error);
+      console.error('Error details:', error.response?.data || error.message);
 
       MyAlert(
         "error",
@@ -1777,7 +1782,7 @@ function ApplicationMgtDrawer({
   }
 
   const handleMemberSelect = (memberData) => {
-    
+    console.log("Selected member:", memberData);
     setSelectedMember(memberData);
 
     const formData = mapSearchResultToFormData(memberData);
@@ -1800,12 +1805,12 @@ function ApplicationMgtDrawer({
     } else if (InfData?.contactInfo?.preferredEmail === "work") {
       emailToCheck = InfData?.contactInfo?.workEmail;
     }
-
+    debugger
 
     if (emailToCheck) {
       await checkEmailConflict(emailToCheck);
     }
-    else {
+    else{
       setEmailConflictData(null);
     }
   };
@@ -1815,7 +1820,7 @@ function ApplicationMgtDrawer({
   //   handleEmailBlur();
   // }, [InfData?.contactInfo?.preferredEmail]);
   const handleRecruteBy = (memberData) => {
-    
+    console.log("Recruited by member:", memberData?._id);
 
     if (memberData) {
       // Update the confirmedRecruiterProfileId in subscriptionDetails
@@ -1837,7 +1842,7 @@ function ApplicationMgtDrawer({
   const [searchResults, setSearchResults] = useState([]);
 
   const handleSearchResult = (results) => {
-    
+    console.log("Search results:", results);
     setSearchResults(results);
   };
 

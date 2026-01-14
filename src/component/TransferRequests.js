@@ -18,7 +18,7 @@ import { Table } from "antd";
 function TransferRequests({ open, onClose }) {
   const dispatch = useDispatch();
   const filteredData = useSelector(selectFilteredTransfer);
-  
+  console.log("Filtered Transfer Data in Drawer:", filteredData);
   const [formData, setFormData] = useState({
     newWorkLocation: "",
     newBranch: "",
@@ -69,7 +69,7 @@ function TransferRequests({ open, onClose }) {
         }
       );
 
-      
+      console.log("Status update successful:", response.data);
 
       // Show success notification
       MyAlert('success',
@@ -85,14 +85,14 @@ function TransferRequests({ open, onClose }) {
       return { success: true, data: response.data };
 
     } catch (error) {
-      
+      console.error("Error approving transfer:", error);
 
       // Show error notification
       let errorMessage = "Failed to approve transfer request";
 
       if (error.response) {
         // Server responded with error status
-        
+        console.error("Error response:", error.response.data);
         errorMessage = error.response.data?.message || error.message;
         MyAlert('error',
           'Approval Failed',
@@ -100,7 +100,7 @@ function TransferRequests({ open, onClose }) {
         );
       } else if (error.request) {
         // Request made but no response
-        
+        console.error("No response received:", error.request);
         MyAlert('error',
           'Network Error',
           'No response from server. Please check your connection.'
@@ -123,7 +123,7 @@ function TransferRequests({ open, onClose }) {
   };
 
   // Populate form when filteredData changes
-  
+  console.log("Filtered Data in useEffect:", filteredData);
   useEffect(() => {
     if (filteredData) {
       setFormData({
@@ -137,7 +137,7 @@ function TransferRequests({ open, onClose }) {
       setRequestId(filteredData._id);
     }
   }, [filteredData]);
-  
+  console.log("Form Data:", formData);
 
   const handleChange = (name, value) => {
     const formattedValue = dayjs.isDayjs(value)
@@ -182,7 +182,7 @@ function TransferRequests({ open, onClose }) {
     }
 
     // TODO: Dispatch create/update request action
-    
+    console.log("Submitted data:", formData);
   };
 
   // Format the transfer history data

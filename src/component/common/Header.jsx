@@ -332,13 +332,13 @@ function Header() {
           }
         )
         .then(() => {
-          
+          console.log("Logout API call successful");
         })
         .catch((error) => {
           if (error.name === "AbortError" || error.code === "ECONNABORTED") {
-            
+            console.warn("Logout API call timed out (non-critical)");
           } else {
-            
+            console.error("Logout API call failed (non-critical):", error);
           }
         })
         .finally(() => {
