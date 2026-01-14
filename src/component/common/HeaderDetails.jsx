@@ -164,8 +164,8 @@ function HeaderDetails() {
     },
   ];
   const handleAction = (label, e) => {
-    
-     // now safe
+
+    // now safe
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
 
@@ -200,12 +200,12 @@ function HeaderDetails() {
         return [...acc, ...filteredColumns];
       }, []);
 
-      
+
       settrueFilters(filteredResults);
-      
+
     }
   }
-  
+
   const currentSearchFilters = useMemo(() => {
     return searchFilters[screenName];
   }, [screenName, searchFilters]);
@@ -385,7 +385,7 @@ function HeaderDetails() {
             return Promise.resolve();
           }
         } catch (error) {
-          
+
 
           // Clear any processing notifications
           message.destroy('bulk-approval-processing');
@@ -665,10 +665,10 @@ function HeaderDetails() {
         : null;
 
   const batchSearchPaths = [
-  
+
   ];
   const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
-  
+
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
@@ -967,7 +967,7 @@ function HeaderDetails() {
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
-                        onSearch={(value) => }
+                        onSearch={(value) => { }}
                         style={{ width: 300 }}
                         className="inp"
                       />
@@ -1144,7 +1144,7 @@ function HeaderDetails() {
                   await handleSave(ReportName);
                   showHidSavModal();
                 } catch (error) {
-                  
+
                 }
               }}
             >
@@ -1354,7 +1354,7 @@ function HeaderDetails() {
         <DirectDebitForm
           onCancel={() => setDdDrawerOpen(false)}
           onSubmit={(data) => {
-            
+
             setDdDrawerOpen(false);
           }}
         />
