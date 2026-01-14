@@ -45,7 +45,7 @@ const ExportCSV = ({ data, filename, metadata }) => {
   };
   return (
     <button className='transparent-bg' onClick={downloadCSV}>
-      Export as CSV
+      Export as excel
     </button>
   );
 };
