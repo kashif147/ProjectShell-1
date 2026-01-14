@@ -37,14 +37,14 @@ const MembershipForm = ({
     loading: searchLoading,
     error: searchError
   } = useSelector((state) => state.searchProfile);
-  
+
   // Subscription API data
   const {
     ProfileSubData,
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-console.log(ProfileSubData,"ProfileSubData")
+  console.log(ProfileSubData, "ProfileSubData")
   const dispatch = useDispatch();
   const {
     titleOptions,
@@ -202,7 +202,7 @@ console.log(ProfileSubData,"ProfileSubData")
       setFormData(prev => ({
         ...prev,
         ...initialFormData,
-      
+
         // Subscription Details
         subscriptionStatus: subscriptionData.subscriptionStatus || "",
         membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
@@ -321,7 +321,7 @@ console.log(ProfileSubData,"ProfileSubData")
     endDate: null,
     subscriptionYear: null,
   });
-console.log("formData", formData);
+  console.log("formData", formData);
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },
@@ -1285,7 +1285,7 @@ console.log("formData", formData);
                 label="Membership Category"
                 placeholder="Select Category..."
                 options={categoryData}
-                isIDs={true}
+                // isIDs={true}
                 value={formData.membershipCategory}
                 onChange={(e) =>
                   handleChange("membershipCategory", e.target.value)

@@ -161,8 +161,9 @@ function ProfileHeader({
 
     // Professional Info
     const grade = getSafe(source, 'professionalDetails.grade', ' ');
-    const category = getSafe(source, 'membershipCategory', ' ');
-
+    // const category = getSafe(source, 'membershipCategory', ' ');
+    const category = subscriptionData?.membershipCategory || "";
+    debugger
     // Subscription Info
     const paymentType = subscriptionData?.paymentType || "Salary Deduction";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
@@ -237,57 +238,57 @@ function ProfileHeader({
     setIsSubmitting(false);
   };
 
-const handleCancelSubmit = async () => {
-  if (!cancelFormData.dateResigned || !cancelFormData.reason?.trim()) {
-    MyAlert("error", "Please fill all required fields");
-    return;
-  }
+  const handleCancelSubmit = async () => {
+    if (!cancelFormData.dateResigned || !cancelFormData.reason?.trim()) {
+      MyAlert("error", "Please fill all required fields");
+      return;
+    }
 
-  if (!token) {
-    MyAlert("error", "Authentication token is missing. Please log in again.");
-    return;
-  }
+    if (!token) {
+      MyAlert("error", "Authentication token is missing. Please log in again.");
+      return;
+    }
 
-  const profileId = source?.id || source?._id;
-  if (!profileId) {
-    MyAlert("error", "Profile ID not found. Cannot proceed.");
-    return;
-  }
+    const profileId = source?.id || source?._id;
+    if (!profileId) {
+      MyAlert("error", "Profile ID not found. Cannot proceed.");
+      return;
+    }
 
-  const payload = {
-    dateResigned: dayjs(cancelFormData.dateResigned).format("YYYY-MM-DD"),
-    reason: cancelFormData.reason.trim(),
+    const payload = {
+      dateResigned: dayjs(cancelFormData.dateResigned).format("YYYY-MM-DD"),
+      reason: cancelFormData.reason.trim(),
+    };
+
+    setIsSubmitting(true);
+
+    try {
+      const response = await axios.put(
+        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      MyAlert("success", "Membership cancellation submitted successfully!");
+      handleCancelModalClose();
+
+    } catch (error) {
+      const message =
+        error.response?.data?.message ||
+        (error.request
+          ? "No response from server. Please check your connection."
+          : "Error setting up request.");
+
+      MyAlert("error", `Cancellation failed: ${message}`);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
-
-  setIsSubmitting(true);
-
-  try {
-    const response = await axios.put(
-      `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/resign/${profileId}`,
-      payload,
-      {
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json",
-        },
-      }
-    );
-
-    MyAlert("success", "Membership cancellation submitted successfully!");
-    handleCancelModalClose();
-
-  } catch (error) {
-    const message =
-      error.response?.data?.message ||
-      (error.request
-        ? "No response from server. Please check your connection."
-        : "Error setting up request.");
-
-    MyAlert("error", `Cancellation failed: ${message}`);
-  } finally {
-    setIsSubmitting(false);
-  }
-};
 
 
   const handleFormChange = (field, value) => {
@@ -454,7 +455,7 @@ const handleCancelSubmit = async () => {
           </div>
           <div className="grade-row-blue">
             <span className="grade-label-blue">Category:</span>
-            <span className="grade-value-blue">{memberData.category}</span>
+            <span className="grade-value-blue">{memberData?.category}</span>
           </div>
         </div>
 

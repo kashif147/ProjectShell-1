@@ -410,7 +410,7 @@ const TableComponent = ({
       render: col.render
         ? col.render
         : (text, record, index) => {
-          debugger
+
           switch (col.title) {
             case "Full Name":
               return (
@@ -538,7 +538,7 @@ const TableComponent = ({
                     }
                   }}
                 >
-                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </span>
               );
 
@@ -594,7 +594,7 @@ const TableComponent = ({
                   style={{ color: "inherit", textDecoration: "none" }}
                   onClick={() => {
                     console.log(record?._original?._id, "recordid");
-                    debugger
+
                     dispatch(getCornMarketBatchById(record?._original?._id))
                   }
 
