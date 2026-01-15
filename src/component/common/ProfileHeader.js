@@ -21,6 +21,7 @@ import "../../styles/ProfileHeader.css";
 import { useSelector } from "react-redux";
 import axios from "axios";
 import MyAlert from "./MyAlert"; // Assuming you have this component
+import UndoCancellationModal from "./UndoCancellationModal";
 
 function ProfileHeader({
   isEditMode = false,
@@ -30,6 +31,7 @@ function ProfileHeader({
   onDuplicateClick,
 }) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
+  const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] = useState(false);
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
     reason: "",
@@ -89,28 +91,55 @@ function ProfileHeader({
 
   // FIXED: Simplified subscription data extraction - now reactive
   const subscriptionData = useMemo(() => {
-    if (ProfileSubData?.data?.length > 0) {
-      const subscription = ProfileSubData.data[0];
-
+    // Check for direct array (existing logic)
+    if (Array.isArray(ProfileSubData?.data) && ProfileSubData.data.length > 0) {
       return {
-        subscriptionStatus: subscription.subscriptionStatus || "",
-        paymentType: subscription.paymentType || "",
-        payrollNo: subscription.payrollNo || "",
-        paymentFrequency: subscription.paymentFrequency || "",
-        subscriptionYear: subscription.subscriptionYear || "",
-        isCurrent: subscription.isCurrent || false,
-        startDate: subscription.startDate ? formatDate(subscription.startDate) : "",
-        endDate: subscription.endDate ? formatDate(subscription.endDate) : "",
-        renewalDate: subscription.rolloverDate ? formatDate(subscription.rolloverDate) : "",
-        membershipMovement: subscription.membershipMovement || "",
-        reinstated: subscription.cancellation?.reinstated || false,
-        yearendProcessed: subscription.yearend?.processed || false,
-        // Keep the original function signature
-        ...subscription
+        subscriptionStatus: ProfileSubData.data[0].subscriptionStatus || "",
+        paymentType: ProfileSubData.data[0].paymentType || "",
+        payrollNo: ProfileSubData.data[0].payrollNo || "",
+        paymentFrequency: ProfileSubData.data[0].paymentFrequency || "",
+        subscriptionYear: ProfileSubData.data[0].subscriptionYear || "",
+        isCurrent: ProfileSubData.data[0].isCurrent || false,
+        startDate: ProfileSubData.data[0].startDate ? formatDate(ProfileSubData.data[0].startDate) : "",
+        endDate: ProfileSubData.data[0].endDate ? formatDate(ProfileSubData.data[0].endDate) : "",
+        renewalDate: ProfileSubData.data[0].rolloverDate ? formatDate(ProfileSubData.data[0].rolloverDate) : "",
+        membershipMovement: ProfileSubData.data[0].membershipMovement || "",
+        reinstated: ProfileSubData.data[0].cancellation?.reinstated || false,
+        yearendProcessed: ProfileSubData.data[0].yearend?.processed || false,
+        ...ProfileSubData.data[0]
+      };
+    }
+    // Check for nested data structure (from screenshot: data.data)
+    else if (ProfileSubData?.data?.data && Array.isArray(ProfileSubData.data.data) && ProfileSubData.data.data.length > 0) {
+      const sub = ProfileSubData.data.data[0];
+      return {
+        subscriptionStatus: sub.subscriptionStatus || "",
+        paymentType: sub.paymentType || "",
+        payrollNo: sub.payrollNo || "",
+        paymentFrequency: sub.paymentFrequency || "",
+        subscriptionYear: sub.subscriptionYear || "",
+        isCurrent: sub.isCurrent || false,
+        startDate: sub.startDate ? formatDate(sub.startDate) : "",
+        endDate: sub.endDate ? formatDate(sub.endDate) : "",
+        renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
+        membershipMovement: sub.membershipMovement || "",
+        reinstated: sub.cancellation?.reinstated || false,
+        yearendProcessed: sub.yearend?.processed || false,
+        ...sub
       };
     }
     return null;
-  }, [ProfileSubData]); // This will update when ProfileSubData changes
+  }, [ProfileSubData]);
+
+  const isSubscriptionEmpty = useMemo(() => {
+    if (!ProfileSubData) return false;
+    // Direct array empty
+    if (Array.isArray(ProfileSubData.data) && ProfileSubData.data.length === 0) return true;
+    // Nested array empty
+    if (ProfileSubData.data && typeof ProfileSubData.data === 'object' &&
+      Array.isArray(ProfileSubData.data.data) && ProfileSubData.data.data.length === 0) return true;
+    return false;
+  }, [ProfileSubData]);
 
   // Helper function to safely get nested properties
   const getSafe = (obj, path, defaultValue = "") => {
@@ -140,6 +169,8 @@ function ProfileHeader({
       status = "Deceased";
     } else if (subscriptionData?.subscriptionStatus) {
       status = subscriptionData.subscriptionStatus;
+    } else if (isSubscriptionEmpty && !ProfileSubLoading) {
+      status = "Resigned";
     } else {
       status = getSafe(source, 'membershipStatus') ||
         (getSafe(source, 'deactivatedAt') ? "Inactive" : "Active Member");
@@ -166,7 +197,6 @@ function ProfileHeader({
     const grade = getSafe(source, 'professionalDetails.grade', ' ');
     // const category = getSafe(source, 'membershipCategory', ' ');
     const category = subscriptionData?.membershipCategory || "";
-    debugger
     // Subscription Info
     const paymentType = subscriptionData?.paymentType || "Salary Deduction";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
@@ -216,7 +246,7 @@ function ProfileHeader({
       paymentDate,
       paymentCode,
     };
-  }, [source, subscriptionData, isDeceased]); // Now recalculates when source OR subscriptionData changes
+  }, [source, subscriptionData, isDeceased, isSubscriptionEmpty, ProfileSubLoading]); // Now recalculates when source OR subscriptionData changes
 
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
@@ -486,11 +516,23 @@ function ProfileHeader({
           </div>
         </div>
 
-        {/* Cancel Membership Button */}
-        {showButtons && !isDeceased && !subscriptionData?.reinstated && (
-          <button className="member-cancel-btn" onClick={handleCancelClick}>
-            Cancel Membership
-          </button>
+        {/* Action Buttons: Activate (Green) if Resigned, Cancel (Red) if Active */}
+        {showButtons && !isDeceased && (
+          <>
+            {memberData.status === "Resigned" ? (
+              <button
+                className="member-cancel-btn"
+                style={{ backgroundColor: "#52c41a", borderColor: "#52c41a", color: "#fff" }}
+                onClick={() => setIsUndoCancelModalVisible(true)}
+              >
+                Activate Membership
+              </button>
+            ) : !subscriptionData?.reinstated ? (
+              <button className="member-cancel-btn" onClick={handleCancelClick}>
+                Cancel Membership
+              </button>
+            ) : null}
+          </>
         )}
       </div>
 
@@ -547,6 +589,20 @@ function ProfileHeader({
           </div>
         </div>
       </Modal>
+
+      {/* Undo Cancellation Modal */}
+      <UndoCancellationModal
+        visible={isUndoCancelModalVisible}
+        onClose={() => setIsUndoCancelModalVisible(false)}
+        record={source}
+        onSuccess={() => {
+          // Optionally refresh data here if needed, or rely on Redux/Parent refresh
+          if (typeof window !== 'undefined') {
+            // A simple way to trigger a refresh if the parent doesn't handle it automatically
+            // But ideally, the modal update triggers a redux action that updates the view.
+          }
+        }}
+      />
     </div>
   );
 }

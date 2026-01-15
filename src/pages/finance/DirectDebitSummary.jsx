@@ -4,15 +4,39 @@ import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useSelector, useDispatch } from 'react-redux';
 import dayjs from 'dayjs';
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { useNavigate } from "react-router-dom";
 
 function DirectDebitSummary() {
     const dispatch = useDispatch();
+    const navigate = useNavigate();
     const {
         loadingBatches,
         batchesData
     } = useSelector((state) => state.batchMember);
     const { columns } = useTableColumns();
-    const tableColumns = columns["DirectDebitSummary"] || [];
+
+    // Get columns and add render function for Name column
+    const tableColumns = (columns["DirectDebitSummary"] || []).map(col => {
+        if (col.dataIndex === "name") {
+            return {
+                ...col,
+                render: (text, record) => (
+                    <span
+                        style={{ color: '#1890ff', cursor: 'pointer', fontWeight: '500' }}
+                        onClick={() => navigate("/DirectDebitBatchDetails", {
+                            state: {
+                                batchId: record.key,
+                                batch: record._original
+                            }
+                        })}
+                    >
+                        {text}
+                    </span>
+                )
+            };
+        }
+        return col;
+    });
 
     useEffect(() => {
         dispatch(fetchBatchesByType({
