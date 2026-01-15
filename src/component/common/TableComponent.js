@@ -431,7 +431,7 @@ const TableComponent = ({
                       })
                     );
                   }}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
@@ -458,8 +458,8 @@ const TableComponent = ({
                     // dispatch(getProfileDetailsById(record?._id))
                   }}
                   style={{
-                    color: "inherit",
-                    textDecoration: "none",
+                    color: "blue",
+                    textDecoration: "underline",
                     cursor: "pointer",
                   }}
                 >
@@ -484,7 +484,7 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
@@ -507,40 +507,50 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
               );
 
             case "Membership Category":
-              return (
-                <span
-                  style={{ color: "blue", cursor: "pointer" }}
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    const { applicationStatus, applicationId } = record || {};
-                    if (applicationStatus === "Draft") {
-                      dispatch(
-                        getApplicationById({
-                          id: "draft",
-                          draftId: applicationId,
-                        })
-                      );
-                      navigate("/applicationMgt", {
-                        state: { isEdit: true },
-                      });
-                    } else {
-                      dispatch(getApplicationById({ id: applicationId }));
-                      navigate("/applicationMgt", {
-                        state: { isEdit: true },
-                      });
-                    }
-                  }}
-                >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                </span>
-              );
+              const isApplicationsPage = location.pathname === '/Applications';
+
+              if (isApplicationsPage) {
+                return (
+                  <span
+                    style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      const { applicationStatus, applicationId } = record || {};
+                      if (applicationStatus === "Draft") {
+                        dispatch(
+                          getApplicationById({
+                            id: "draft",
+                            draftId: applicationId,
+                          })
+                        );
+                        navigate("/applicationMgt", {
+                          state: { isEdit: true },
+                        });
+                      } else {
+                        dispatch(getApplicationById({ id: applicationId }));
+                        navigate("/applicationMgt", {
+                          state: { isEdit: true },
+                        });
+                      }
+                    }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </span>
+                );
+              } else {
+                return (
+                  <span style={{ textOverflow: "ellipsis" }}>
+                    {text}
+                  </span>
+                );
+              }
 
             case "Change To":
               return (
@@ -559,7 +569,7 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>
@@ -591,7 +601,7 @@ const TableComponent = ({
                     batchId: record?.id || record?.key,
                     batchStatus: record?.batchStatus || record?.status,
                   }}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                   onClick={() => {
                     console.log(record?._original?._id, "recordid");
 
@@ -622,7 +632,7 @@ const TableComponent = ({
                     handleRowClick(record, index);
                     getProfile([record], index);
                   }}
-                  style={{ color: "inherit", textDecoration: "none" }}
+                  style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
                   <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 </Link>

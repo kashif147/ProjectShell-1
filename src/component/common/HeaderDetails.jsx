@@ -894,7 +894,7 @@ function HeaderDetails() {
                           actions={genaratePdf}
                         />
 
-                        <Button className="me-1 gray-btn butn">Executive Council</Button>
+                        {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
                         <Button className="me-1 gray-btn butn">Share</Button>
                         <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                         {currentKey && (

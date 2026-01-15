@@ -2494,6 +2494,15 @@ const staticColumns = {
       editable: false,
     },
     {
+      dataIndex: "FullName",
+      title: "Full Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
       dataIndex: "membershipCategory",
       title: "Membership Category",
       ellipsis: true,
@@ -2505,15 +2514,6 @@ const staticColumns = {
     {
       dataIndex: "subscriptionStatus",
       title: "Membership Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-      editable: false,
-    },
-    {
-      dataIndex: "FullName",
-      title: "Full Name",
       ellipsis: true,
       isGride: true,
       isVisible: true,
