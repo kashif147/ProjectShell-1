@@ -1,35 +1,83 @@
 import React, { useEffect } from "react";
 import MyTable from "../../component/common/MyTable";
-import { getAllBatches } from "../../features/BatchesSlice";
-import dayjs from "dayjs";
-import { useSelector, useDispatch } from "react-redux";
-import { useTableColumns } from "../../context/TableColumnsContext ";
+// import { useTableColumns } from "../../context/TableColumnsContext "; // Context not needed for static definition
+
+const tableColumns = [
+  {
+    title: "Member No",
+    dataIndex: "memberId",
+    key: "memberId",
+    width: 150,
+  },
+  {
+    title: "Full Name",
+    dataIndex: "fullName",
+    key: "fullName",
+    width: 200,
+  },
+  {
+    title: "Amount",
+    dataIndex: "amount",
+    key: "amount",
+    width: 150,
+  },
+  {
+    title: "Deduction Date",
+    dataIndex: "deductionDate",
+    key: "deductionDate",
+    width: 150,
+  },
+  {
+    title: "Status",
+    dataIndex: "status",
+    key: "status",
+    width: 150,
+  },
+  {
+    title: "Description",
+    dataIndex: "description",
+    key: "description",
+    width: 250,
+  },
+];
+
+const staticData = [
+  {
+    key: "1",
+    memberId: "M001",
+    fullName: "John Doe",
+    amount: "€50.00",
+    deductionDate: "01/02/2024",
+    status: "Successful",
+    description: "Monthly Subscription Deduction",
+  },
+  {
+    key: "2",
+    memberId: "M002",
+    fullName: "Jane Smith",
+    amount: "€50.00",
+    deductionDate: "01/02/2024",
+    status: "Successful",
+    description: "Monthly Subscription Deduction",
+  },
+  {
+    key: "3",
+    memberId: "M003",
+    fullName: "Michael Brown",
+    amount: "€50.00",
+    deductionDate: "01/02/2024",
+    status: "Failed",
+    description: "Insufficient Funds",
+  },
+];
 
 const Deductions = () => {
-  const dispatch = useDispatch();
-  const { batches, batchesloading } = useSelector((state) => state.batches);
-  const { columns } = useTableColumns();
-  const tableColumns = columns["Deductions"] || [];
-
-  useEffect(() => {
-    dispatch(getAllBatches());
-  }, [dispatch]);
-
-  const deductionBatches = batches.filter(batch => batch.PaymentType === "Deductions");
-
-  const formattedData = deductionBatches.map((item, index) => ({
-    ...item,
-    key: item.id || item._id || index,
-    batchDate: dayjs(item.batchDate).format("DD/MM/YYYY"),
-    createdAt: dayjs(item.createdAt).format("DD/MM/YYYY HH:mm"),
-  }));
-
   return (
     <div style={{ width: "100%", padding: "0" }}>
       <MyTable
-        dataSource={formattedData}
+        dataSource={staticData}
         columns={tableColumns}
-        loading={batchesloading}
+        loading={false}
       />
     </div>
   );

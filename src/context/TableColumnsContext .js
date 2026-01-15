@@ -1084,7 +1084,7 @@ const staticColumns = {
       // render: (value) => value ? convertToLocalTime(value) : "-",
     },
   ],
-  Members: [
+  members: [
     // 🔹 Top-Level Info
     // {
     // //   dataIndex: "applicationId",
@@ -2483,10 +2483,28 @@ const staticColumns = {
       width: 100,
     },
   ],
-  members: [
+  Members: [
     {
-      dataIndex: "MembershipNo",
+      dataIndex: "membershipNo",
       title: "Membership No",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
+      dataIndex: "membershipCategory",
+      title: "Membership Category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
+      dataIndex: "subscriptionStatus",
+      title: "Membership Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -2521,25 +2539,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "MembershipStatus",
-      title: "Membership Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-      editable: false,
-    },
-    {
-      dataIndex: "MembershipCategory",
-      title: "Membership Category",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-      editable: false,
-    },
-    {
-      dataIndex: "WorkLocation",
+      dataIndex: "workLocation",
       title: "Work Location",
       ellipsis: true,
       isGride: true,
@@ -2549,7 +2549,7 @@ const staticColumns = {
     },
     {
       dataIndex: "Branch",
-      title: "Branch",
+      title: "branch",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -2584,7 +2584,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "JoiningDate",
+      dataIndex: "joiningDate",
       title: "Joining Date",
       ellipsis: true,
       isGride: true,
@@ -2593,7 +2593,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "ExpiryDate",
+      dataIndex: "expiryDate",
       title: "Expiry Date",
       ellipsis: true,
       isGride: true,
@@ -2602,7 +2602,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "LastPaymentAmount",
+      dataIndex: "lastPaymentAmount",
       title: "Last Payment Amount",
       ellipsis: true,
       isGride: true,
@@ -2611,7 +2611,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "LastPaymentDate",
+      dataIndex: "lastPaymentDate",
       title: "Last Payment Date",
       ellipsis: true,
       isGride: true,
@@ -2620,7 +2620,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "MembershipFee",
+      dataIndex: "membershipFee",
       title: "Membership Fee",
       ellipsis: true,
       isGride: true,
@@ -2629,7 +2629,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "OutstandingBalance",
+      dataIndex: "outstandingBalance",
       title: "Outstanding Balance",
       ellipsis: true,
       isGride: true,
@@ -2638,7 +2638,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "ReminderNo",
+      dataIndex: "reminderNo",
       title: "Reminder No",
       ellipsis: true,
       isGride: true,
@@ -2647,7 +2647,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "ReminderDate",
+      dataIndex: "reminderDate",
       title: "Reminder Date",
       ellipsis: true,
       isGride: true,

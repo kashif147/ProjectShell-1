@@ -25,8 +25,9 @@ const ThreeDotsMenu = lazy(() => import("../common/ThreeDotsMenu"));
 const Roster = lazy(() => import("../../pages/roster/RosterDetails"));
 const HistoryByID = lazy(() => import("../../pages/HistoryByID"));
 const ProfileHeader = lazy(() => import("../common/ProfileHeader"));
+const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 
-const staticTabKeys = ["1", "2", "4", "5", "6", "7"];
+const staticTabKeys = ["1", "15", "2", "4", "5", "6", "7"];
 
 function AppTabs() {
   const [activeKey, setActiveKey] = useState("1");
@@ -43,6 +44,7 @@ function AppTabs() {
       label: "Membership",
       children: <MyDeatails isEditMode={isEditMode} setIsEditMode={setIsEditMode} isDeceased={isDeceased} setIsDeceased={setIsDeceased} />,
     },
+    { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
     { key: "2", label: "Finance", children: <FinanceByID /> },
     { key: "4", label: "Documents", children: <DoucmentsById /> },
     {
@@ -55,7 +57,7 @@ function AppTabs() {
     { key: "8", label: "Roster", children: <Roster /> },
     { key: "11", label: "Audit History", children: <HistoryByID /> },
     { key: "9", label: "Projects", children: <div>Projects</div> },
-    { key: "10", label: "Trainings", children: <div>Trainings</div> },
+    { key: "10", label: "Trainings", children: <div >Trainings</div> },
   ];
 
   const handleMenuClick = (key) => {
@@ -212,9 +214,9 @@ function AppTabs() {
 
   return (
     <div className="d-flex">
-      <ProfileHeader 
-        isEditMode={isEditMode} 
-        setIsEditMode={setIsEditMode} 
+      <ProfileHeader
+        isEditMode={isEditMode}
+        setIsEditMode={setIsEditMode}
         showButtons={activeKey === "1"}
         isDeceased={isDeceased}
       />

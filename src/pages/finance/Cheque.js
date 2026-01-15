@@ -1,35 +1,53 @@
-import React, { useEffect } from "react";
+import React from "react";
 import MyTable from "../../component/common/MyTable";
-import { getAllBatches } from "../../features/BatchesSlice";
-import dayjs from "dayjs";
-import { useSelector, useDispatch } from "react-redux";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
 const Cheque = () => {
-  const dispatch = useDispatch();
-  const { batches, batchesloading } = useSelector((state) => state.batches);
   const { columns } = useTableColumns();
-  const tableColumns = columns["Cheque"] || [];
+  const tableColumns = columns["Batches"] || [];
 
-  useEffect(() => {
-    dispatch(getAllBatches());
-  }, [dispatch]);
-
-  const chequeBatches = batches.filter(batch => batch.PaymentType === "Cheque");
-
-  const formattedData = chequeBatches.map((item, index) => ({
-    ...item,
-    key: item.id || item._id || index,
-    batchDate: dayjs(item.batchDate).format("DD/MM/YYYY"),
-    createdAt: dayjs(item.createdAt).format("DD/MM/YYYY HH:mm"),
-  }));
+  const staticData = [
+    {
+      key: "1",
+      batchName: "Cheque Batch 001",
+      batchDate: "10/01/2024",
+      batchStatus: "Processed",
+      createdAt: "10/01/2024 10:00",
+      createdBy: "Admin",
+      noOfMembers: 15,
+      totalAmount: "€1125",
+      PaymentType: "Cheque",
+    },
+    {
+      key: "2",
+      batchName: "Cheque Batch 002",
+      batchDate: "12/02/2024",
+      batchStatus: "Pending",
+      createdAt: "12/02/2024 14:30",
+      createdBy: "Admin",
+      noOfMembers: 10,
+      totalAmount: "€750",
+      PaymentType: "Cheque",
+    },
+    {
+      key: "3",
+      batchName: "Cheque Batch 003",
+      batchDate: "15/03/2024",
+      batchStatus: "Processed",
+      createdAt: "15/03/2024 11:00",
+      createdBy: "UserA",
+      noOfMembers: 20,
+      totalAmount: "€1500",
+      PaymentType: "Cheque",
+    },
+  ];
 
   return (
     <div style={{ width: "100%", padding: "0" }}>
       <MyTable
-        dataSource={formattedData}
+        dataSource={staticData}
         columns={tableColumns}
-        loading={batchesloading}
+        loading={false}
       />
     </div>
   );

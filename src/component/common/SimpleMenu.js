@@ -12,7 +12,8 @@ import { SearchOutlined } from "@ant-design/icons";
 import {
   FaTrashAlt,
   FaRegArrowAltCircleRight,
-  FaUserAltSlash
+  FaUserAltSlash,
+  FaUndo
 } from "react-icons/fa";
 import { ImAttachment } from "react-icons/im";
 import { GrView } from "react-icons/gr";
@@ -30,6 +31,7 @@ import ChangeCategoryDrawer from "../details/ChangeCategoryDrawer";
 import ContactDrawer from "./ContactDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 import { getTransferRequestById } from "../../features/profiles/TransferRequest";
+import UndoCancellationModal from "./UndoCancellationModal";
 
 import { clearSingleTransferRequest } from "../../features/profiles/TransferRequest";
 import { getTransferRequestHistoryById } from "../../constants/TransferRequestHistory";
@@ -54,6 +56,7 @@ function SimpleMenu({
   const [careerBreak, setcareerBreak] = useState(false);
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [contactDrawer, setcontactDrawer] = useState(false);
+  const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] = useState(false);
   const dispatch = useDispatch();
   const [ddSearch, setddSearch] = useState("");
   const location = useLocation();
@@ -450,6 +453,17 @@ function SimpleMenu({
               )}
             </Menu.Item>
           ))}
+          {location.pathname === "/members" && record?.subscriptionStatus === "Resigned" && (
+            <Menu.Item key="undo-cancel" onClick={(e) => {
+              e.domEvent.stopPropagation();
+              setIsUndoCancelModalVisible(true);
+            }}>
+              <div className="d-flex align-items-baseline">
+                <FaUndo style={{ fontSize: "12px", marginRight: "10px", color: "#45669d" }} />
+                Undo Cancel
+              </div>
+            </Menu.Item>
+          )}
         </>
       )}
     </Menu>
@@ -535,6 +549,14 @@ function SimpleMenu({
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(false)}
+      />
+      <UndoCancellationModal
+        visible={isUndoCancelModalVisible}
+        onClose={() => setIsUndoCancelModalVisible(false)}
+        record={record}
+        onSuccess={() => {
+          // Optionally refresh data here
+        }}
       />
     </>
   );
