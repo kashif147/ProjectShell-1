@@ -237,6 +237,12 @@ export const FilterProvider = ({ children }) => {
         "Income Protection",
         "INMO Rewards",
         "Partner Consent",
+        "Joining Date",
+        "Membership Fee",
+        "Outstanding Balance",
+        "Reminder No",
+        "Reminder Date",
+        "Cancellation Flag",
       ],
       Membership: [
         "Membership No",
