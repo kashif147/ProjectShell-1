@@ -58,6 +58,10 @@ export const FilterProvider = ({ children }) => {
     Members: {
       visibleFilters: [],
       filtersState: {}
+    },
+    OnlinePayment: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -185,7 +189,8 @@ export const FilterProvider = ({ children }) => {
       '/applications': 'Applications',
       '/Summary': 'Profile',
       '/membership': 'Membership',
-      "/members": "Members"
+      "/members": "Members",
+      "/onlinePayment": "OnlinePayment"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
@@ -274,6 +279,21 @@ export const FilterProvider = ({ children }) => {
         "Branch",
         "Region",
       ],
+      OnlinePayment: [
+        "Membership No",
+        "Email",
+        "Mobile No",
+        "Joining Date",
+        "Membership Category",
+        "Membership Status",
+        "Renewal Date",
+        "Transaction ID",
+        "Paid Amount",
+        "Payment Date",
+        "Payment Method",
+        "Payment Status",
+        "Billing Cycle",
+      ],
     }),
     []
   );
@@ -284,6 +304,7 @@ export const FilterProvider = ({ children }) => {
     Profile: ["Email", "Membership Category"],
     Membership: ["Membership Status", "Membership Category"],
     Members: ["Subscription Status", "Membership Category"],
+    OnlinePayment: ["Membership Status", "Payment Status"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -301,7 +322,8 @@ export const FilterProvider = ({ children }) => {
     Profile: getDefaultVisibleFilters("Profile"),
     Membership: getDefaultVisibleFilters("Membership"),
     Members: getDefaultVisibleFilters("Members"),
-  }), []);
+    OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
+  }), [],);
 
   // 🔹 Default filter VALUES for each screen
   const defaultFilterValues = useMemo(() => ({
@@ -405,6 +427,28 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Branch": {
+        operator: "==",
+        selectedValues: []
+      }
+    },
+    OnlinePayment: {
+      "Membership Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Payment Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Payment Method": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Billing Cycle": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Membership Category": {
         operator: "==",
         selectedValues: []
       }
@@ -593,6 +637,9 @@ export const FilterProvider = ({ children }) => {
       "Cancellation/Reinstated": ["", "Yes", "No"],
       "Payment Frequency": ["", "Monthly", "Quarterly", "Yearly"],
       "Membership Movement": ["", "New", "Renewal", "Upgrade", "Downgrade"],
+      "Payment Method": ["", "Credit Card", "PayPal", "Debit Card", "Stripe"],
+      "Payment Status": ["", "Paid", "Pending", "Failed", "Refunded"],
+      "Billing Cycle": ["", "Annual", "Monthly"],
 
       // 🔹 Text input filters
       "Email": [],
@@ -609,6 +656,8 @@ export const FilterProvider = ({ children }) => {
       "Last Payment Amount": [],
       "Reminder No": [],
       "Subscription Year": [],
+      "Transaction ID": [],
+      "Paid Amount": [],
 
       // 🔹 Date filters
       "Submission Date": [],
@@ -618,6 +667,8 @@ export const FilterProvider = ({ children }) => {
       "Expiry Date": [],
       "Last Payment Date": [],
       "Reminder Date": [],
+      "Renewal Date": [],
+      "Payment Date": [],
       "Start Date": [],
       "End Date": [],
       "Rollover Date": [],

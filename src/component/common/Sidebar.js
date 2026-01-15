@@ -235,7 +235,7 @@ const Sidebar = () => {
         navigate("/DirectDebit", { state: { search: "Direct Debit" } });
         break;
       case "Online Payments":
-        navigate("/onlinePayment", { state: { search: "onlinePayment" } });
+        navigate("/onlinePayment", { state: { search: "Online Payment" } });
         break;
       case "Email":
         navigate("/Email", { state: { search: "Email" } });
