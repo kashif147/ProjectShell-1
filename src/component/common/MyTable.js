@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import { Table } from "antd";
 import UnifiedPagination, { getDefaultPageSize } from "./UnifiedPagination";
 import { LuRefreshCw } from "react-icons/lu";
+import { Link } from "react-router-dom";
 
 const MyTable = ({
   columns,
@@ -144,11 +145,31 @@ const MyTable = ({
 
   // Enhance columns with filtered/sorted info
   const enhancedColumns = useMemo(() => {
-    return columns.map((col) => ({
-      ...col,
-      filteredValue: filteredInfo[col.dataIndex || col.key] || null,
-      sortOrder: sortedInfo.field === (col.dataIndex || col.key) ? sortedInfo.order : null,
-    }));
+    return columns.map((col) => {
+      const newCol = {
+        ...col,
+        filteredValue: filteredInfo[col.dataIndex || col.key] || null,
+        sortOrder: sortedInfo.field === (col.dataIndex || col.key) ? sortedInfo.order : null,
+      };
+
+      if ((newCol.title === "Batch Name" || newCol.dataIndex === "batchName") && !newCol.render) {
+        newCol.render = (text, record) => (
+          <Link
+            to="/BatchMemberSummary"
+            state={{
+              batchName: text,
+              batchId: record?.key || record?.id || record?._id,
+              batchStatus: record?.batchStatus || record?.status,
+            }}
+            style={{ color: "inherit", textDecoration: "none" }}
+          >
+            {text}
+          </Link>
+        );
+      }
+
+      return newCol;
+    });
   }, [columns, filteredInfo, sortedInfo]);
 
   return (
