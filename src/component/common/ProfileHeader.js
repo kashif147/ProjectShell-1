@@ -1,5 +1,5 @@
 import React, { useState, useMemo } from "react";
-import { Modal, Button, message } from "antd";
+import { Modal, Button, message, Dropdown } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -11,6 +11,8 @@ import {
   FaExclamationTriangle,
   FaEdit,
   FaUser,
+  FaEllipsisV,
+  FaClone,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
@@ -24,7 +26,8 @@ function ProfileHeader({
   isEditMode = false,
   setIsEditMode,
   showButtons = false,
-  isDeceased = false
+  isDeceased = false,
+  onDuplicateClick,
 }) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [cancelFormData, setCancelFormData] = useState({
@@ -339,13 +342,37 @@ function ProfileHeader({
         {/* Profile Header Section */}
         <div className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}>
           {showButtons && (
-            <button
-              className="member-edit-btn"
-              onClick={() => setIsEditMode && setIsEditMode(!isEditMode)}
+            <Dropdown
+              menu={{
+                items: [
+                  {
+                    key: "edit",
+                    label: isEditMode ? "Cancel Edit" : "Edit Profile",
+                    icon: <FaEdit />,
+                    onClick: () => setIsEditMode && setIsEditMode(!isEditMode),
+                  },
+                  {
+                    key: "duplicate",
+                    label: "Check Duplicate",
+                    icon: <FaClone />,
+                    onClick: onDuplicateClick,
+                  },
+                ],
+              }}
+              trigger={["click"]}
             >
-              <FaEdit className="edit-icon" />
-              <span>{isEditMode ? "Cancel" : "Edit"}</span>
-            </button>
+              <FaEllipsisV
+                className="menu-icon"
+                style={{
+                  cursor: "pointer",
+                  fontSize: "1rem",
+                  color: "#fff",
+                  position: "absolute",
+                  right: "10px",
+                  top: "10px",
+                }}
+              />
+            </Dropdown>
           )}
 
           <div className="member-profile-section">

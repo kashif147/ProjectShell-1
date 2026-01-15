@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
-import { Button, Select, Tag } from 'antd';
-import { FaSync } from 'react-icons/fa';
+import { Button, Select, Tag, Drawer } from 'antd';
+import { FaSync, FaCodeBranch } from 'react-icons/fa';
 import MyTable from '../common/MyTable';
 import MySearchInput from '../common/MySearchInput';
 import MergeAndReview from './MergeAndReview';
+import '../../styles/MyDrawer.css';
 
 const DuplicateMembers = () => {
     const [searchText, setSearchText] = useState("");
     const [view, setView] = useState("list"); // 'list' | 'merge'
     const [selectedMember, setSelectedMember] = useState(null);
+    const [isMergeDrawerOpen, setIsMergeDrawerOpen] = useState(false);
 
     // Mock Data
     const initialData = [
@@ -112,7 +114,7 @@ const DuplicateMembers = () => {
                     style={{ backgroundColor: '#135bec', borderColor: '#135bec' }}
                     onClick={() => {
                         setSelectedMember(record);
-                        setView('merge');
+                        setIsMergeDrawerOpen(true);
                     }}
                 >
                     Review & Merge
@@ -132,9 +134,9 @@ const DuplicateMembers = () => {
         setDataSource(filtered);
     };
 
-    if (view === 'merge') {
-        return <MergeAndReview onBack={() => setView('list')} />;
-    }
+    // if (view === 'merge') {
+    //     return <MergeAndReview onBack={() => setView('list')} />;
+    // }
 
     return (
         <div className="p-4 bg-gray-50 dark:bg-gray-900 min-h-screen">
@@ -195,6 +197,34 @@ const DuplicateMembers = () => {
                     selection={true}
                 />
             </div>
+
+            <Drawer
+                title={
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <FaCodeBranch />
+                        <span>Merge & Review</span>
+                    </div>
+                }
+                open={isMergeDrawerOpen}
+                onClose={() => setIsMergeDrawerOpen(false)}
+                width={1000}
+                styles={{ body: { padding: 0 } }}
+                extra={
+                    <Button
+                        className="butn primary-btn"
+                        icon={<FaCodeBranch />}
+                        onClick={() => console.log('Merge profiles')}
+                    >
+                        Merge Profiles
+                    </Button>
+                }
+            >
+                {/* Note: Assuming MergeAndReview accepts props or needs wrapping. 
+                    If it expects 'onBack' to close/switch view, we might not pass it, 
+                    or pass onClose to close the drawer. 
+                    Ideally it should just display content now. */}
+                <MergeAndReview onBack={() => setIsMergeDrawerOpen(false)} />
+            </Drawer>
         </div>
     );
 };

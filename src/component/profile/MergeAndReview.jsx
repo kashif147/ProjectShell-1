@@ -1,5 +1,7 @@
 import React from 'react';
 import { FaRegBell, FaCodeBranch } from 'react-icons/fa';
+import { Button } from 'antd';
+import '../../styles/MyDrawer.css';
 
 const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
     // Default data if props are not provided (matching the HTML static content)
@@ -36,8 +38,7 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
         container: {
             display: 'flex',
             flexDirection: 'column',
-            height: 'calc(100vh - 140px)', // Adjusted to account for existing headers/padding
-            overflow: 'hidden',
+            height: '100%',
             overflow: 'hidden',
             backgroundColor: '#f9fafb',
             fontFamily: 'sans-serif',
@@ -128,8 +129,8 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
         },
         main: {
             flex: 1,
-            padding: '32px 40px',
-            maxWidth: '1280px',
+            padding: '24px',
+            maxWidth: '100%',
             margin: '0 auto',
             width: '100%',
             boxSizing: 'border-box',
@@ -152,39 +153,40 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
         grid: {
             display: 'flex',
             gap: '32px',
-            flexWrap: 'wrap'
+            flexWrap: 'nowrap'
         },
         column: {
-            flex: 1,
-            minWidth: '350px',
+            flex: '1 1 calc(50% - 16px)',
             display: 'flex',
             flexDirection: 'column',
-            gap: '24px',
+            gap: '20px',
             backgroundColor: '#fff',
-            padding: '24px',
-            borderRadius: '12px',
+            padding: '20px',
+            borderRadius: '8px',
             border: '1px solid #e5e7eb'
         },
         columnHeader: {
             display: 'flex',
             flexDirection: 'column',
-            gap: '8px'
+            gap: '4px'
         },
         columnTitle: {
             fontSize: '18px',
-            fontWeight: '700',
-            color: '#111827',
+            fontWeight: '500',
+            color: '#1a1a1a',
             margin: 0
         },
         columnSubtitle: {
             fontSize: '14px',
-            color: '#6b7280',
-            margin: 0
+            fontWeight: '400',
+            color: '#666',
+            margin: 0,
+            marginTop: '4px'
         },
         fieldGroup: {
             display: 'flex',
             flexDirection: 'column',
-            gap: '16px'
+            gap: '12px'
         },
         fieldContainer: {
             display: 'flex',
@@ -194,48 +196,53 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
         fieldLabel: {
             fontSize: '14px',
             fontWeight: '500',
-            color: '#4b5563',
+            color: '#666',
             margin: 0
         },
         radioCard: {
             display: 'flex',
             alignItems: 'center',
-            gap: '16px',
-            padding: '16px',
+            gap: '12px',
+            padding: '12px',
             border: '1px solid #d1d5db',
-            borderRadius: '8px',
+            borderRadius: '6px',
             cursor: 'pointer',
-            backgroundColor: '#fff'
+            backgroundColor: '#fff',
+            transition: 'all 0.2s ease'
         },
         radioCardSelected: {
             backgroundColor: 'rgba(19, 91, 236, 0.05)',
             borderColor: '#135bec'
         },
         radioInput: {
-            height: '20px',
-            width: '20px',
+            height: '18px',
+            width: '18px',
             accentColor: '#135bec',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            flexShrink: 0
         },
         radioLabelContainer: {
             flex: 1,
             cursor: 'pointer'
         },
         radioValue: {
-            fontWeight: '500',
-            color: '#111827',
-            margin: 0
+            fontWeight: '400',
+            fontSize: '14px',
+            color: '#1a1a1a',
+            margin: 0,
+            lineHeight: '1.5'
         },
         retainText: {
-            fontSize: '14px',
-            color: '#135bec',
+            fontSize: '12px',
+            color: '#666',
             display: 'block',
-            marginTop: '2px'
+            marginTop: '2px',
+            lineHeight: '1.4'
         },
         sectionHeader: {
             fontSize: '18px',
-            fontWeight: '700',
-            color: '#111827',
+            fontWeight: '500',
+            color: '#1a1a1a',
             paddingBottom: '12px',
             borderBottom: '1px solid #e5e7eb',
             marginBottom: '16px',
@@ -253,47 +260,6 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
         statusExpired: {
             color: '#ea580c',
             fontWeight: '600'
-        },
-        footer: {
-            width: '100%',
-            backgroundColor: 'rgba(255, 255, 255, 0.9)',
-            borderTop: '1px solid #e5e7eb',
-            padding: '16px 40px',
-            backdropFilter: 'blur(4px)',
-            boxSizing: 'border-box',
-            flexShrink: 0
-        },
-        footerContent: {
-            maxWidth: '1280px',
-            margin: '0 auto',
-            display: 'flex',
-            justifyContent: 'flex-end',
-            gap: '16px'
-        },
-        cancelButton: {
-            height: '48px',
-            padding: '0 24px',
-            backgroundColor: '#f3f4f6',
-            color: '#111827',
-            fontSize: '16px',
-            fontWeight: '700',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer'
-        },
-        mergeButton: {
-            height: '48px',
-            padding: '0 24px',
-            backgroundColor: '#135bec',
-            color: '#fff',
-            fontSize: '16px',
-            fontWeight: '700',
-            border: 'none',
-            borderRadius: '8px',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px'
         }
     };
 
@@ -318,41 +284,12 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
 
     return (
         <div style={styles.container}>
-            {/* Header */}
-            <header style={styles.header}>
-                <div style={styles.headerLeft}>
-                    <div style={styles.logoContainer}>
-                        <svg fill="none" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" style={{ width: '24px', height: '24px' }}>
-                            <g clipPath="url(#clip0_6_535)">
-                                <path clipRule="evenodd" d="M47.2426 24L24 47.2426L0.757355 24L24 0.757355L47.2426 24ZM12.2426 21H35.7574L24 9.24264L12.2426 21Z" fill="#135bec" fillRule="evenodd"></path>
-                            </g>
-                            <defs>
-                                <clipPath id="clip0_6_535">
-                                    <rect fill="white" height="48" width="48"></rect>
-                                </clipPath>
-                            </defs>
-                        </svg>
-                    </div>
-                    <h2 style={styles.headerTitle}>Membership Management</h2>
-                </div>
-                <div style={styles.headerRight}>
-                    <div style={styles.buttonGroup}>
-                        <button style={styles.helpButton}>Help</button>
-                        <button style={styles.settingsButton}>Settings</button>
-                        <button style={styles.iconButton}>
-                            <FaRegBell />
-                        </button>
-                    </div>
-                    <div style={styles.avatar}></div>
-                </div>
-            </header>
-
             {/* Main Content */}
             <main style={styles.main}>
-                <div style={styles.pageTitleContainer}>
+                {/* <div style={styles.pageTitleContainer}>
                     <h1 style={styles.pageTitle}>Merge Profiles Side-by-Side</h1>
                     <p style={styles.pageSubtitle}>Review the conflicting information and select the values to keep in the final merged profile.</p>
-                </div>
+                </div> */}
 
                 <div style={styles.grid}>
                     {/* Column 1: Primary Candidate */}
@@ -425,19 +362,6 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
                     </div>
                 </div>
             </main>
-
-            {/* Footer */}
-            <footer style={styles.footer}>
-                <div style={styles.footerContent}>
-                    <button onClick={onBack} style={styles.cancelButton}>
-                        Cancel
-                    </button>
-                    <button style={styles.mergeButton}>
-                        <FaCodeBranch />
-                        Merge Profiles
-                    </button>
-                </div>
-            </footer>
         </div>
     );
 };

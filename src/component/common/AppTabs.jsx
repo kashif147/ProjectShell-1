@@ -1,5 +1,5 @@
 import { useState, Suspense, lazy } from "react";
-import { Tabs, Spin } from "antd";
+import { Tabs, Spin, Drawer } from "antd";
 import {
   FaFolder,
   FaFileAlt,
@@ -37,6 +37,7 @@ function AppTabs() {
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
+  const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
 
   const allItems = [
     {
@@ -44,7 +45,7 @@ function AppTabs() {
       label: "Membership",
       children: <MyDeatails isEditMode={isEditMode} setIsEditMode={setIsEditMode} isDeceased={isDeceased} setIsDeceased={setIsDeceased} />,
     },
-    { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
+    // { key: "15", label: "Duplicate Members", children: <DuplicateMembers /> },
     { key: "2", label: "Finance", children: <FinanceByID /> },
     { key: "4", label: "Documents", children: <DoucmentsById /> },
     {
@@ -219,6 +220,7 @@ function AppTabs() {
         setIsEditMode={setIsEditMode}
         showButtons={activeKey === "1"}
         isDeceased={isDeceased}
+        onDuplicateClick={() => setIsDuplicateDrawerOpen(true)}
       />
       <Tabs
         activeKey={activeKey}
@@ -254,6 +256,16 @@ function AppTabs() {
         historyData={historyData}
       />
       <Reminder open={isReminder} onClose={() => setIsReminder(false)} />
+
+      <Drawer
+        title="Duplicate Members"
+        open={isDuplicateDrawerOpen}
+        onClose={() => setIsDuplicateDrawerOpen(false)}
+        width={1000}
+        styles={{ body: { padding: 0 } }}
+      >
+        <DuplicateMembers />
+      </Drawer>
     </div>
   );
 }
