@@ -1,9 +1,10 @@
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { FaRegBell, FaCodeBranch } from 'react-icons/fa';
 import { Button } from 'antd';
 import '../../styles/MyDrawer.css';
+import MergeConfirmation from './MergeConfirmation';
 
-const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
+const MergeAndReview = ({ onBack, primaryMember, secondaryMember, onMergeClick }) => {
     // Default data if props are not provided (matching the HTML static content)
     const primary = primaryMember || {
         name: "Johnathan Doe",
@@ -30,6 +31,26 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
         section: "Engineering",
         lastUpdated: "1 month ago"
     };
+
+    const [isMergeModalOpen, setIsMergeModalOpen] = useState(false);
+
+    const handleMergeClick = () => {
+        setIsMergeModalOpen(true);
+    };
+
+    const handleMergeConfirm = () => {
+        console.log('Merge confirmed!');
+        // Add your merge logic here
+        setIsMergeModalOpen(false);
+        if (onBack) onBack();
+    };
+
+    // Expose handleMergeClick to parent via onMergeClick prop
+    useEffect(() => {
+        if (onMergeClick) {
+            onMergeClick(handleMergeClick);
+        }
+    }, [onMergeClick]);
 
 
 
@@ -362,6 +383,14 @@ const MergeAndReview = ({ onBack, primaryMember, secondaryMember }) => {
                     </div>
                 </div>
             </main>
+
+            <MergeConfirmation
+                open={isMergeModalOpen}
+                onClose={() => setIsMergeModalOpen(false)}
+                onConfirm={handleMergeConfirm}
+                primaryMember={primary}
+                secondaryMember={secondary}
+            />
         </div>
     );
 };

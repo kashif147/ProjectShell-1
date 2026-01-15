@@ -11,6 +11,7 @@ const DuplicateMembers = () => {
     const [view, setView] = useState("list"); // 'list' | 'merge'
     const [selectedMember, setSelectedMember] = useState(null);
     const [isMergeDrawerOpen, setIsMergeDrawerOpen] = useState(false);
+    const [onMergeClickHandler, setOnMergeClickHandler] = useState(null);
 
     // Mock Data
     const initialData = [
@@ -213,17 +214,20 @@ const DuplicateMembers = () => {
                     <Button
                         className="butn primary-btn"
                         icon={<FaCodeBranch />}
-                        onClick={() => console.log('Merge profiles')}
+                        onClick={onMergeClickHandler}
                     >
                         Merge Profiles
                     </Button>
                 }
             >
-                {/* Note: Assuming MergeAndReview accepts props or needs wrapping. 
-                    If it expects 'onBack' to close/switch view, we might not pass it, 
-                    or pass onClose to close the drawer. 
+                {/* Note: Assuming MergeAndReview accepts props or needs wrapping.
+                    If it expects 'onBack' to close/switch view, we might not pass it,
+                    or pass onClose to close the drawer.
                     Ideally it should just display content now. */}
-                <MergeAndReview onBack={() => setIsMergeDrawerOpen(false)} />
+                <MergeAndReview
+                    onBack={() => setIsMergeDrawerOpen(false)}
+                    onMergeClick={(handler) => setOnMergeClickHandler(() => handler)}
+                />
             </Drawer>
         </div>
     );
