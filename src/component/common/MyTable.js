@@ -161,7 +161,7 @@ const MyTable = ({
               batchId: record?.key || record?.id || record?._id,
               batchStatus: record?.batchStatus || record?.status,
             }}
-            style={{ color: "inherit", textDecoration: "none" }}
+            style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
           >
             {text}
           </Link>

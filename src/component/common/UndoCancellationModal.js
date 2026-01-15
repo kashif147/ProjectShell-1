@@ -34,16 +34,16 @@ const UndoCancellationModal = ({
     setLoading(true);
 
     try {
-        const response = await axios.put(
-            `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/reinstate/${record._id}`,
-            { reason },
-            {
-              headers: {
-                Authorization: `Bearer ${token}`,
-                "Content-Type": "application/json",
-              },
-            }
-          );
+      const response = await axios.put(
+        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/undo-resign/${record._id}`,
+        { reason },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
 
       MyAlert("success", "Membership cancellation has been undone.");
       if (onSuccess) {
@@ -51,7 +51,7 @@ const UndoCancellationModal = ({
       }
       onClose();
     } catch (error) {
-        const message =
+      const message =
         error.response?.data?.message ||
         (error.request
           ? "No response from server. Please check your connection."
