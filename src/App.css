@@ -636,7 +636,7 @@ body {
   /* Hide overflow text */
   text-overflow: ellipsis;
   background-color: #fff;
-  color: var(--FontsColor) !important;
+  color: var(--FontsColor);
 }
 
 .ant-table-tbody > tr > td {

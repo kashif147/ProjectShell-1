@@ -567,7 +567,7 @@
   background: var(--background-tertiary);
   border-bottom: 2px solid var(--border-color);
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff !important;
   white-space: nowrap;
   position: sticky;
   top: 0;
@@ -576,6 +576,10 @@
   border-right: none !important;
   border-inline-start: none !important;
   border-inline-end: none !important;
+}
+
+.main-table-scroll-container .ant-table-thead > tr > th * {
+  color: #fff !important;
 }
 
 .main-table-scroll-container .ant-table-tbody > tr > td {
@@ -613,12 +617,16 @@
   background: var(--background-tertiary);
   border-bottom: 2px solid var(--border-color);
   font-weight: 600;
-  color: var(--text-primary);
+  color: #fff !important;
   white-space: nowrap;
   border-left: none !important;
   border-right: none !important;
   border-inline-start: none !important;
   border-inline-end: none !important;
+}
+
+.table-scroll-container .ant-table-thead > tr > th * {
+  color: #fff !important;
 }
 
 .table-scroll-container .ant-table-tbody > tr > td {

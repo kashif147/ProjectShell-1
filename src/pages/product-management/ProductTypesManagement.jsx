@@ -251,7 +251,7 @@ const ProductTypesManagement = () => {
       sorter: (a, b) => new Date(a.updatedAt) - new Date(b.updatedAt),
     },
     {
-      title: "Actions1",
+      title: "Actions",
       key: "actions",
       render: (_, record) => (
         <Space>
@@ -400,8 +400,8 @@ const ProductTypesManagement = () => {
         dataIndex: "code",
         key: "code",
       },
-      {
-        title: "Status1",
+    {
+      title: "Status",
         dataIndex: "status",
         key: "status",
         render: (status) => (
