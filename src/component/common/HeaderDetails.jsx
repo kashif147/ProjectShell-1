@@ -172,6 +172,7 @@ function HeaderDetails() {
   const menuItems = [
     { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds) },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
+    { label: "Send Notification", onClick: (e) => handleAction("Bulk Changes", e) },
 
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
@@ -793,7 +794,8 @@ function HeaderDetails() {
             location?.pathname == "/DirectDebit" ||
             location?.pathname == "/templeteSummary" ||
             location?.pathname == "/write-offs" ||
-            location?.pathname == "/Refunds") && (
+            location?.pathname == "/Refunds" ||
+            location?.pathname == "/InAppNotifications") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
@@ -847,7 +849,8 @@ function HeaderDetails() {
                                   nav === "/NewGraduate" ||
                                   nav === "/CornMarketRewards" ||
                                   nav === "/RecruitAFriend" ||
-                                  nav === "/DirectDebit"
+                                  nav === "/DirectDebit" ||
+                                  nav === "/InAppNotifications"
                                 ) {
                                   setIsSimpleBatchOpen(true);
                                 }

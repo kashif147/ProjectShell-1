@@ -103,7 +103,8 @@ const Toolbar = () => {
     "/Import",
     "/Batches",
     "/Cheque",
-    "/DirectDebit"
+    "/DirectDebit",
+    "/InAppNotifications"
   ];
 
   if (specialRoutes.includes(location.pathname)) {

@@ -77,6 +77,15 @@ const TransferSummary = lazyWithRetry(() =>
 const CorrespondencesSummary = lazyWithRetry(() =>
   import("./pages/Correspondences/CorrespondencesSummary")
 );
+const CorrespondenceDashboard = lazy(() =>
+  import("./pages/Correspondences/CorrespondenceDashboard")
+);
+const CommunicationBatchDetail = lazy(() =>
+  import("./pages/Correspondences/CommunicationBatchDetail")
+);
+const InAppNotifications = lazy(() =>
+  import("./pages/Correspondences/InAppNotifications")
+);
 const AddNewProfile = lazyWithRetry(() =>
   import("./pages/Profiles/AddNewProfile")
 );
@@ -475,6 +484,30 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <CorrespondencesSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="InAppNotifications"
+                      element={
+                        <ProtectedRoute>
+                          <InAppNotifications />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="CorrespondenceDashboard"
+                      element={
+                        <ProtectedRoute>
+                          <CorrespondenceDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="CommunicationBatchDetail"
+                      element={
+                        <ProtectedRoute>
+                          <CommunicationBatchDetail />
                         </ProtectedRoute>
                       }
                     />

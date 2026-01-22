@@ -135,6 +135,17 @@ const Breadcrumb = () => {
       page: "Notes & Letters",
       icon: "📝",
     },
+    "/CommunicationBatchDetail": {
+      module: "Correspondence",
+      page: "Batch Details",
+      icon: "📧",
+      recordIdField: "batchName",
+    },
+    "/InAppNotifications": {
+      module: "Correspondence",
+      page: "In-App Notifications",
+      icon: "🔔",
+    },
     // Finance Pages
     "/Batches": {
       module: "Finance",

@@ -69,8 +69,18 @@ import {
   FaQuestionCircle,
   FaFolderOpen,
   FaClipboard,
+  FaBell,
 } from "react-icons/fa";
 export const correspondenceItems = [
+  {
+    key: "Dashboard",
+    icon: (
+      <div className="icon">
+        <FaChartLine />
+      </div>
+    ),
+    label: <div className="sidebar-label">Dashboard</div>,
+  },
   {
     key: "Email",
     icon: (
@@ -79,6 +89,15 @@ export const correspondenceItems = [
       </div>
     ),
     label: <div className="sidebar-label">Email</div>,
+  },
+  {
+    key: "InAppNotifications",
+    icon: (
+      <div className="icon">
+        <FaBell />
+      </div>
+    ),
+    label: <div className="sidebar-label">In-App Notifications</div>,
   },
   {
     key: "SMS",

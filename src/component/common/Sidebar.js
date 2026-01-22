@@ -145,6 +145,7 @@ const Sidebar = () => {
       "/NewMembersReport": "New Members Report",
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
+      "/CorrespondenceDashboard": "Dashboard",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -165,7 +166,10 @@ const Sidebar = () => {
         navigate("/CasesSummary", { state: { search: "Cases" } });
         break;
       case "Correspondences":
-        navigate("/CorrespondencesSummary", { state: { search: "" } });
+        navigate("/CorrespondenceDashboard", { state: { search: "" } });
+        break;
+      case "Dashboard":
+        navigate("/CorrespondenceDashboard", { state: { search: "" } });
         break;
       case "Transfer Requests":
         navigate("/Transfers", { state: { search: "Transfers" } });
@@ -242,6 +246,9 @@ const Sidebar = () => {
         break;
       case "SMS":
         navigate("/Sms", { state: { search: "Sms" } });
+        break;
+      case "InAppNotifications":
+        navigate("/InAppNotifications", { state: { search: "In-App Notifications" } });
         break;
       case "Notes & Letters":
         navigate("/Notes", { state: { search: "Notes" } });

@@ -8,6 +8,8 @@ import MyDatePicker from "../../../component/common/MyDatePicker";
 import { convertEuroToSand, insertDataFtn, updateFtn } from "../../../utils/Utilities";
 import { convertSandToEuro } from "../../../utils/Utilities";
 import MyAlert from "../../../component/common/MyAlert";
+import dayjs from "dayjs";
+
 const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
 
   const [formData, setFormData] = useState({
@@ -34,8 +36,8 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         currency: (pricing.currency || "").toUpperCase(),
         memberPrice: pricing.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.memberPrice)) : "",
         nonMemberPrice: pricing.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.nonMemberPrice)) : "",
-        effectiveFrom: pricing.effectiveFrom || null,
-        effectiveTo: pricing.effectiveTo || null,
+        effectiveFrom: pricing.effectiveFrom ? dayjs(pricing.effectiveFrom) : null,
+        effectiveTo: pricing.effectiveTo ? dayjs(pricing.effectiveTo) : null,
         status: pricing.status || "Active",
         productId: product._id,
         price: pricing.price ? formatToTwoDecimals(convertSandToEuro(pricing.price)) : "",

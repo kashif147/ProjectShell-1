@@ -50,6 +50,7 @@ import {
   FaCoins,
   FaWallet,
   FaCommentDollar,
+  FaBell
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
@@ -62,6 +63,20 @@ const createMenuItem = (key, icon, label, permissions = [], roles = []) => ({
 });
 
 export const correspondenceItems = [
+  createMenuItem(
+    "Dashboard",
+    <FaChartLine />,
+    "Dashboard",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "InAppNotifications",
+    <FaBell />,
+    "In-App Notifications",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
   createMenuItem(
     "Email",
     <FaEnvelope />,

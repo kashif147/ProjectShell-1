@@ -400,8 +400,8 @@ const ProductTypesManagement = () => {
         dataIndex: "code",
         key: "code",
       },
-    {
-      title: "Status",
+      {
+        title: "Status",
         dataIndex: "status",
         key: "status",
         render: (status) => (
@@ -741,6 +741,7 @@ const ProductTypesManagement = () => {
         product={editingPricing}
         productType={selectedProductType}
         onSubmit={() => dispatch(getProductTypesWithProducts())}
+        destroyOnClose
       />
       {/* <MyDrawer
         title={editingPricing ? "Edit Pricing" : "Add New Pricing"}
