@@ -503,6 +503,7 @@ const TableComponent = ({
                     search: screenName,
                     name: record?.fullName,
                     code: record?.regNo,
+                    memberId: record?.membershipNumber,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
@@ -528,6 +529,7 @@ const TableComponent = ({
                     search: screenName,
                     name: record?.fullName,
                     code: record?.regNo,
+                    memberId: record?.membershipNumber || record?.regNo || record?._id,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
