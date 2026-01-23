@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { Row, Col, Card, Checkbox, Radio, Dropdown } from "antd";
 import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
@@ -32,6 +32,11 @@ const MembershipForm = ({
   const { categoryData, currentCategoryId } = useSelector(
     (state) => state.categoryLookup
   );
+  const {
+    profileSearchData,
+    loading: searchLoading,
+    error: searchError
+  } = useSelector((state) => state.searchProfile);
 
   // Subscription API data
   const {
@@ -39,7 +44,7 @@ const MembershipForm = ({
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-
+  console.log(ProfileSubData, "ProfileSubData")
   const dispatch = useDispatch();
   const {
     titleOptions,
@@ -58,23 +63,57 @@ const MembershipForm = ({
   dayjs.extend(utc);
   dayjs.extend(timezone);
 
-  useEffect(() => {
-    return () => {
-      dispatch(clearProfileDetails());
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     dispatch(clearProfileDetails());
+  //   };
+  // }, []);
 
   const convertUTCToLocalDate = (utcDateString) => {
     if (!utcDateString) return null;
     return dayjs.utc(utcDateString).local();
   };
-  useEffect(() => {
-    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"))
-  }, [])
 
   useEffect(() => {
+    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
+  }, []);
+
+  // Helper function to format dates safely
+  const formatDateSafe = (dateString, format = "DD/MM/YYYY") => {
+    if (!dateString) return "";
+    const date = dayjs(dateString);
+    return date.isValid() ? date.format(format) : "";
+  };
+
+  // Memoize subscription data to prevent unnecessary recalculations
+  const subscriptionData = useMemo(() => {
+    if (ProfileSubData?.data?.length > 0) {
+      const subscription = ProfileSubData.data[0];
+      debugger
+      return {
+        subscriptionStatus: subscription.subscriptionStatus || "",
+        paymentType: subscription.paymentType || "",
+        payrollNo: subscription.payrollNo || "",
+        paymentFrequency: subscription.paymentFrequency || "",
+        subscriptionYear: subscription.subscriptionYear || "",
+        isCurrent: subscription.isCurrent || false,
+        startDate: subscription.startDate,
+        endDate: subscription.endDate,
+        renewalDate: subscription.rolloverDate,
+        membershipMovement: subscription.membershipMovement || "",
+        reinstated: subscription.cancellation?.reinstated || false,
+        yearendProcessed: subscription.yearend?.processed || false,
+        membershipCategory: subscription.membershipCategory || "",
+      };
+    }
+    return null;
+  }, [ProfileSubData]);
+
+  useEffect(() => {
+    // FIXED: Safely access profileSearchData results
+    const searchAoiRes = profileSearchData?.results?.[0] || null;
     // Choose source dynamically
-    const source = profileDetails;
+    const source = profileDetails || searchAoiRes;
 
     if (!source) return;
 
@@ -158,34 +197,34 @@ const MembershipForm = ({
     };
 
     // Override with subscription data if available
-    if (ProfileSubData && ProfileSubData.data && ProfileSubData.data.length > 0) {
-      const subscription = ProfileSubData.data[0];
-
+    if (subscriptionData) {
+      debugger
       setFormData(prev => ({
         ...prev,
         ...initialFormData,
+
         // Subscription Details
-        subscriptionStatus: subscription.subscriptionStatus || "",
-        membershipCategory: subscription.membershipCategory || prev.membershipCategory || "",
-        paymentType: subscription.paymentType || prev.paymentType || "",
-        payrollNumber: subscription.payrollNo || prev.payrollNumber || "",
+        subscriptionStatus: subscriptionData.subscriptionStatus || "",
+        membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
+        paymentType: subscriptionData.paymentType || prev.paymentType || "",
+        payrollNumber: subscriptionData.payrollNo || prev.payrollNumber || "",
 
         // Subscription Dates
-        startDate: convertUTCToLocalDate(subscription.startDate) || prev.startDate,
-        endDate: convertUTCToLocalDate(subscription.endDate),
-        renewalDate: convertUTCToLocalDate(subscription.rolloverDate) || prev.renewalDate,
+        startDate: convertUTCToLocalDate(subscriptionData.startDate) || prev.startDate,
+        endDate: convertUTCToLocalDate(subscriptionData.endDate),
+        renewalDate: convertUTCToLocalDate(subscriptionData.renewalDate) || prev.renewalDate,
 
         // Payment Information
-        paymentFrequency: subscription.paymentFrequency || "",
+        paymentFrequency: subscriptionData.paymentFrequency || "",
 
         // Membership Movement
-        membershipMovement: subscription.membershipMovement || "",
+        membershipMovement: subscriptionData.membershipMovement || "",
 
         // Subscription Status Flags
-        isCurrent: subscription.isCurrent || false,
-        reinstated: subscription.cancellation?.reinstated || false,
-        yearendProcessed: subscription.yearend?.processed || false,
-        subscriptionYear: subscription.subscriptionYear || null,
+        isCurrent: subscriptionData.isCurrent || false,
+        reinstated: subscriptionData.reinstated || false,
+        yearendProcessed: subscriptionData.yearendProcessed || false,
+        subscriptionYear: subscriptionData.subscriptionYear || null,
       }));
     } else {
       // If no subscription data, just set profile data
@@ -194,7 +233,7 @@ const MembershipForm = ({
         ...initialFormData
       }));
     }
-  }, [profileDetails, ProfileSubData]);
+  }, [profileDetails, profileSearchData, subscriptionData]); // FIXED: Removed ProfileSubData from dependencies
 
   // Internal form state
   const [formData, setFormData] = useState({
@@ -282,7 +321,7 @@ const MembershipForm = ({
     endDate: null,
     subscriptionYear: null,
   });
-
+  console.log("formData", formData);
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },
@@ -823,7 +862,6 @@ const MembershipForm = ({
                 <Checkbox
                   checked={formData.consent}
                   indeterminate={isIndeterminate()}
-                  // value={formData}
                   onChange={(e) =>
                     handleChange("consentCorrespondence", e.target.checked)
                   }
@@ -1247,7 +1285,7 @@ const MembershipForm = ({
                 label="Membership Category"
                 placeholder="Select Category..."
                 options={categoryData}
-                isIDs={true}
+                // isIDs={true}
                 value={formData.membershipCategory}
                 onChange={(e) =>
                   handleChange("membershipCategory", e.target.value)

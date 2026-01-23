@@ -178,7 +178,11 @@
 }
 
 .drawer-main-cntainer {
-  padding: 24px;
+  padding: 12px;
+}
+
+.role-form-drawer .drawer-main-cntainer .my-input-wrapper {
+  margin-bottom: 12px;
 }
 
 .role-form .ant-form-item-label > label {
@@ -414,12 +418,35 @@
 }
 
 .ant-pagination .ant-pagination-item-active {
-  background-color: var(--primary-color);
-  border-color: var(--primary-color);
+  background-color: #215e97 !important;
+  border-color: #215e97 !important;
 }
 
 .ant-pagination .ant-pagination-item-active a {
-  color: white;
+  color: white !important;
+}
+
+.ant-pagination .ant-pagination-item:hover {
+  border-color: #215e97 !important;
+}
+
+.ant-pagination .ant-pagination-item:hover a {
+  color: #215e97 !important;
+}
+
+.ant-pagination .ant-pagination-prev:hover .ant-pagination-item-link,
+.ant-pagination .ant-pagination-next:hover .ant-pagination-item-link {
+  border-color: #215e97 !important;
+  color: #215e97 !important;
+}
+
+.ant-pagination .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
+  border-color: #215e97 !important;
+}
+
+.ant-pagination .ant-select-focused .ant-select-selector {
+  border-color: #215e97 !important;
+  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
 }
 
 /* Hide scrollbars for drawer tables - keep scroll functionality */

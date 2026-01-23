@@ -62,6 +62,11 @@ import MyAlert from "./MyAlert";
 import axios from "axios";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
+import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
+// import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
+import RefundDrawer from "../../component/finanace/RefundDrawer"
+import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
+import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -89,6 +94,10 @@ function HeaderDetails() {
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
   const [sortOption, setSortOption] = useState(null);
+  const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
+  const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
+  const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const refundFormRef = useRef(null);
 
 
   const handleDateChange = (val) => {
@@ -155,14 +164,15 @@ function HeaderDetails() {
     },
   ];
   const handleAction = (label, e) => {
-    console.log("Label:", label);
-    console.log("Event type:", e?.type); // now safe
+
+    // now safe
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
 
   const menuItems = [
     { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds) },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
+    { label: "Send Notification", onClick: (e) => handleAction("Bulk Changes", e) },
 
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
@@ -191,12 +201,12 @@ function HeaderDetails() {
         return [...acc, ...filteredColumns];
       }, []);
 
-      console.log(data, "data");
+
       settrueFilters(filteredResults);
-      console.log(filteredResults, "filteredResults");
+
     }
   }
-  console.log(trueFilters, "trueFilters");
+
   const currentSearchFilters = useMemo(() => {
     return searchFilters[screenName];
   }, [screenName, searchFilters]);
@@ -376,7 +386,7 @@ function HeaderDetails() {
             return Promise.resolve();
           }
         } catch (error) {
-          console.error('Bulk approval error:', error);
+
 
           // Clear any processing notifications
           message.destroy('bulk-approval-processing');
@@ -654,11 +664,18 @@ function HeaderDetails() {
       : location.pathname === "/RemindersSummary"
         ? "reminder"
         : null;
+
+  const batchSearchPaths = [
+
+  ];
+  const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
+
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
       {
         location?.pathname !== "/applicationMgt" &&
+        location?.pathname !== "/CommunicationBatchDetail" &&
         <Breadcrumb />
       }
 
@@ -774,13 +791,18 @@ function HeaderDetails() {
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
             location?.pathname == "/Popout" ||
-            location?.pathname == "/templeteSummary") && (
+            location?.pathname == "/DirectDebitAuthorization" ||
+            location?.pathname == "/DirectDebit" ||
+            location?.pathname == "/templeteSummary" ||
+            location?.pathname == "/write-offs" ||
+            location?.pathname == "/Refunds" ||
+            location?.pathname == "/InAppNotifications") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : ` ${location?.state?.search}`}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -827,13 +849,15 @@ function HeaderDetails() {
                                   nav === "/CornMarket" ||
                                   nav === "/NewGraduate" ||
                                   nav === "/CornMarketRewards" ||
-                                  nav === "/RecruitAFriend"
+                                  nav === "/RecruitAFriend" ||
+                                  nav === "/DirectDebit" ||
+                                  nav === "/InAppNotifications"
                                 ) {
                                   setIsSimpleBatchOpen(true);
                                 }
                                 else if (
                                   nav === "/Import" ||
-                                  nav === "/onlinePayment" ||
+                                  // nav === "/onlinePayment" ||
                                   nav === "/Deductions" ||
                                   nav === "/StandingOrders" ||
                                   nav === "/Cheque" ||
@@ -842,6 +866,12 @@ function HeaderDetails() {
                                   setIsBatchOpen(!isBatchOpen);
                                 } else if (nav === "/ChangCateSumm") {
                                   setisDrawerOpen(!isDrawerOpen);
+                                } else if (nav === "/DirectDebitAuthorization") {
+                                  setDdDrawerOpen(true);
+                                } else if (nav === "/Refunds") {
+                                  setRefundDrawerOpen(true);
+                                } else if (nav === "/write-offs") {
+                                  setWriteOffDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -868,7 +898,7 @@ function HeaderDetails() {
                           actions={genaratePdf}
                         />
 
-                        <Button className="me-1 gray-btn butn">Executive Council</Button>
+                        {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
                         <Button className="me-1 gray-btn butn">Share</Button>
                         <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
                         {currentKey && (
@@ -936,9 +966,18 @@ function HeaderDetails() {
                       )}
                     </Row>
                   </div>
-                ) : nav !== "/templeteSummary" && (
+                ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
-                    <Toolbar />
+                    {isBatchSearchPage ? (
+                      <Search
+                        placeholder="Search by Batch Number"
+                        onSearch={(value) => { }}
+                        style={{ width: 300 }}
+                        className="inp"
+                      />
+                    ) : (
+                      <Toolbar />
+                    )}
                     <div className="d-flex">
                       <SaveViewMenu className="me-4" />
                     </div>
@@ -1109,7 +1148,7 @@ function HeaderDetails() {
                   await handleSave(ReportName);
                   showHidSavModal();
                 } catch (error) {
-                  console.error("Error saving changes:", error);
+
                 }
               }}
             >
@@ -1287,7 +1326,73 @@ function HeaderDetails() {
       <SimpleBatch
         open={isSimpleBatchOpen}
         onClose={() => setIsSimpleBatchOpen(false)}
+        onSubmit={() => {
+          let batchType = "";
+          if (nav.toLowerCase().includes("newgraduate")) {
+            batchType = "new-graduate";
+          } else if (nav.toLowerCase().includes("cornmarketrewards")) {
+            batchType = "inmo-rewards";
+          } else if (nav.toLowerCase().includes("recruitafriend")) {
+            batchType = "recruit-friend";
+          } else if (nav.toLowerCase().includes("directdebit")) {
+            batchType = "direct-debit";
+          } else if (nav.toLowerCase().includes("inappnotifications") || nav.toLowerCase().includes("communicationbatchdetail")) {
+            batchType = "communication";
+          }
+
+          if (batchType) {
+            dispatch(fetchBatchesByType({
+              type: batchType,
+              page: 1,
+              limit: 500
+            }));
+          }
+        }}
       />
+
+      <MyDrawer
+        title="Direct Debit Authorization"
+        open={ddDrawerOpen}
+        onClose={() => setDdDrawerOpen(false)}
+        width={1000}
+        isPagination={false}
+      >
+        <DirectDebitForm
+          onCancel={() => setDdDrawerOpen(false)}
+          onSubmit={(data) => {
+
+            setDdDrawerOpen(false);
+          }}
+        />
+      </MyDrawer>
+      <RefundDrawer
+        open={refundDrawerOpen}
+        onClose={() => setRefundDrawerOpen(false)}
+      />
+      <WriteOffDrawer
+        open={writeOffDrawerOpen}
+        onClose={() => setWriteOffDrawerOpen(false)}
+      />
+      {/* <MyDrawer
+        title="Refund Entry Drawer"
+
+        width={500}
+        isPagination={false}
+        add={() => {
+          if (refundFormRef.current && typeof refundFormRef.current.submit === 'function') {
+            refundFormRef.current.submit();
+          }
+        }}
+      >
+        <RefundEntryForm
+          ref={refundFormRef}
+          onCancel={() => setRefundDrawerOpen(false)}
+          onSubmit={(data) => {
+            console.log("Creating Refund:", data);
+            setRefundDrawerOpen(false);
+          }}
+        />
+      </MyDrawer> */}
     </div>
   );
 }

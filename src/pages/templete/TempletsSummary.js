@@ -13,6 +13,7 @@ import MyAlert from "../../component/common/MyAlert";
 import { loadtempletedetails } from "../../features/templete/templeteDetailsSlice";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
+import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
 // Add these imports at the top of your file
 
 dayjs.extend(utc);
@@ -232,87 +233,20 @@ const TempletsSummary = () => {
 
             <Table
                 columns={columns}
-                dataSource={filteredData}
+                dataSource={filteredData || []}
                 loading={loading}
-                 scroll={{ y: 400 }} 
+                scroll={{ x: "max-content", y: 590 }}
                 bordered
-                pagination={{
+                pagination={getUnifiedPaginationConfig({
                     total: filteredData.length,
-                    pageSize: 10,
-                    showSizeChanger: true,
-                    showQuickJumper: true,
-                    showTotal: (total, range) => `${range[0]}-${range[1]} of ${total} items`,
-                }}
-                // Custom table header styling
-                components={{
-                    header: {
-                        cell: (props) => (
-                            <th
-                                {...props}
-                                style={{
-                                    backgroundColor: '#f5f5f5',
-                                    color: '#333',
-                                    fontWeight: '600',
-                                    fontSize: '13px',
-                                    padding: '12px 16px',
-                                    borderBottom: '2px solid #e8e8e8',
-                                    textTransform: 'uppercase',
-                                    letterSpacing: '0.5px',
-                                }}
-                            />
-                        ),
-                    },
-                }}
-                style={{
-                    backgroundColor: '#fff',
-                    borderRadius: '8px',
-                    overflow: 'hidden',
-                }}
-                rowClassName={() => 'template-table-row'}
-                onRow={(record) => ({
-                    style: {
-                        borderBottom: '1px solid #f0f0f0',
-                    },
+                    itemName: "items",
                 })}
+                className="drawer-tbl"
+                size="middle"
+                locale={{
+                    emptyText: "No Data"
+                }}
             />
-
-            {/* Custom CSS for table cells */}
-            <style jsx="true">{`
-        .template-table-row td {
-          padding: 12px 16px !important;
-          font-size: 14px !important;
-          color: #333 !important;
-        }
-        
-        .template-table-row:hover td {
-          background-color: #fafafa !important;
-        }
-        
-        .ant-table-thead > tr > th {
-          background-color: #45669d !important;
-          color: #fff !important;
-          font-weight: 600 !important;
-          font-size: 13px !important;
-          padding: 12px 16px !important;
-          border-bottom: 2px solid #e8e8e8 !important;
-          text-transform: uppercase !important;
-          letter-spacing: 0.5px !important;
-        }
-        
-        .ant-table-tbody > tr > td {
-          border-bottom: 1px solid #f0f0f0 !important;
-        }
-        
-        .ant-table-tbody > tr:last-child > td {
-          border-bottom: none !important;
-        }
-        
-        .ant-table-wrapper {
-          border-radius: 8px !important;
-          overflow: hidden !important;
-          box-shadow: 0 1px 3px rgba(0,0,0,0.1) !important;
-        }
-      `}</style>
 
             {error && <p className="text-danger mt-2">Error: {error}</p>}
         </div>

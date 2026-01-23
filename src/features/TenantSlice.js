@@ -12,7 +12,7 @@ export const getAllTenants = createAsyncThunk(
     try {
       const token = localStorage.getItem("token"); // 🔹 assumes token is stored
       const response = await axios.get(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/tenants`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/tenants`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -71,7 +71,7 @@ export const updateTenant = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.put(
-        `${baseURL}/api/tenants/${id}`,
+        `${baseURL}/tenants/${id}`,
         updatedTenant,
         {
           headers: {
@@ -94,7 +94,7 @@ export const deleteTenant = createAsyncThunk(
   async (id, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const res = await axios.delete(`${baseURL}/api/tenants/${id}`, {
+      const res = await axios.delete(`${baseURL}/tenants/${id}`, {
         headers: {
           Authorization: `Bearer ${token}`,
         },

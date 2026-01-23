@@ -171,7 +171,7 @@ const TenantForm = ({ tenant, onClose }) => {
         try {
           await updateFtn(
             process.env.REACT_APP_POLICY_SERVICE_URL,
-            `/api/tenants/${tenant?._id}`,
+            `/tenants/${tenant?._id}`,
             // { id: tenant?._id, ...changedFields },
             { ...changedFields },
             async () => {
@@ -192,7 +192,7 @@ const TenantForm = ({ tenant, onClose }) => {
     else
       insertDataFtn(
         process.env.REACT_APP_POLICY_SERVICE_URL,
-        "/api/tenants",      // API endpoint
+        "/tenants",      // API endpoint
         iData,               // Payload
         "Tenant created successfully",   // Success message
         "Error creating tenant",         // Error message

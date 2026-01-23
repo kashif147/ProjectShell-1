@@ -9,7 +9,7 @@ export const getAllRoles = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/roles`, {
+      const response = await fetch(`${baseURL}/roles`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -52,7 +52,7 @@ export const addRole = createAsyncThunk(
   async (roleData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/roles`, {
+      const response = await fetch(`${baseURL}/roles`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -78,7 +78,7 @@ export const updateRole = createAsyncThunk(
   async ({ id, updatedRole }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/roles/${id}`, {
+      const response = await fetch(`${baseURL}/roles/${id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -104,7 +104,7 @@ export const deleteRole = createAsyncThunk(
   async (roleId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/roles/${roleId}`, {
+      const response = await fetch(`${baseURL}/roles/${roleId}`, {
         method: "DELETE",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -129,7 +129,7 @@ export const assignPermissionsToRole = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `${baseURL}/api/roles/${roleId}/permissions`,
+        `${baseURL}/roles/${roleId}/permissions`,
         {
           method: "POST",
           headers: {

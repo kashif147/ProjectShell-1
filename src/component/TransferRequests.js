@@ -5,6 +5,7 @@ import CustomSelect from "./common/CustomSelect";
 import SubTableComp from "./common/SubTableComp";
 import { useSelector } from "react-redux";
 import { selectFilteredTransfer } from '../features/profiles/filterTransferSlice';
+import { getTransferRequest } from "../features/profiles/TransferRequest";
 import "../styles/MyDetails.css";
 import dayjs from "dayjs";
 import axios from "axios";
@@ -42,7 +43,7 @@ function TransferRequests({ open, onClose }) {
   const [errors, setErrors] = useState({});
   const [requestId, setRequestId] = useState("");
   const [drawerOpen, setDrawerOpen] = useState(open);
-  
+
   useEffect(() => {
     setDrawerOpen(open);
   }, [open]);
@@ -75,7 +76,9 @@ function TransferRequests({ open, onClose }) {
         'Transfer Request Approved',
         'The transfer request has been approved successfully.'
       );
-
+      dispatch(getTransferRequest())
+      oncloseftn();
+         
       // Dispatch action to update Redux state if needed
       // dispatch(updateTransferStatus({ id: requestId, status: "APPROVED" }));
 
@@ -118,7 +121,7 @@ function TransferRequests({ open, onClose }) {
       };
     }
   };
-  
+
   // Populate form when filteredData changes
   console.log("Filtered Data in useEffect:", filteredData);
   useEffect(() => {
@@ -391,10 +394,10 @@ function TransferRequests({ open, onClose }) {
 
         <div>
           <h4 className="mt-2 mb-3">Transfer History</h4>
-          <Table 
-          className='claims-table' 
-          bortdered
-          columns={columnHistory} dataSource={transferHistory} loading={!filteredData} pagination={false} />
+          <Table
+            className='claims-table'
+            bortdered
+            columns={columnHistory} dataSource={transferHistory} loading={!filteredData} pagination={false} />
           {/* <SubTableComp
             columns={columnHistory}
             dataSource={transferHistory}

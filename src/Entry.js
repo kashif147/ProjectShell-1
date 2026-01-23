@@ -11,7 +11,6 @@ import { AuthorizationProvider } from "./context/AuthorizationContext";
 import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
-// import RemindersDetails from "./pages/reminders/RemindersDetails";
 
 // Wrapper for lazy loading with retry logic
 const lazyWithRetry = (componentImport) => {
@@ -62,6 +61,7 @@ const ProfileDetails = lazyWithRetry(() =>
 const ProfileSummary = lazyWithRetry(() =>
   import("./pages/Profiles/ProfileSummary")
 );
+
 const CasesSummary = lazyWithRetry(() => import("./pages/Cases/CasesSummary"));
 const CasesDetails = lazyWithRetry(() => import("./pages/Cases/CasesDetails"));
 const ClaimSummary = lazyWithRetry(() => import("./pages/Claims/ClaimSummary"));
@@ -76,6 +76,15 @@ const TransferSummary = lazyWithRetry(() =>
 );
 const CorrespondencesSummary = lazyWithRetry(() =>
   import("./pages/Correspondences/CorrespondencesSummary")
+);
+const CorrespondenceDashboard = lazy(() =>
+  import("./pages/Correspondences/CorrespondenceDashboard")
+);
+const CommunicationBatchDetail = lazy(() =>
+  import("./pages/Correspondences/CommunicationBatchDetail")
+);
+const InAppNotifications = lazy(() =>
+  import("./pages/Correspondences/InAppNotifications")
 );
 const AddNewProfile = lazyWithRetry(() =>
   import("./pages/Profiles/AddNewProfile")
@@ -93,7 +102,7 @@ const TempleteConfig = lazyWithRetry(() =>
 const CorspndncDetail = lazyWithRetry(() =>
   import("./pages/Correspondences/CorspndncDetail")
 );
-
+const IncomeProtectionTooltip = lazyWithRetry(() => import("./component/profile/IncomeProtectionTooltip"));
 const Doucmnets = lazyWithRetry(() => import("./pages/Doucmnets"));
 const RosterDetails = lazyWithRetry(() =>
   import("./pages/roster/RosterDetails")
@@ -136,6 +145,9 @@ const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
 const Reconciliation = lazyWithRetry(() =>
   import("./pages/finance/Reconciliation")
 );
+const DirectDebitAuthorization = lazyWithRetry(() =>
+  import("./pages/finance/DirectDebitAuthorization")
+);
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
@@ -162,6 +174,21 @@ const PermissionManagement = lazyWithRetry(() =>
 );
 const CancelledMembersReport = lazyWithRetry(() =>
   import("./features/reports/cancelled-members/CancelledMembersReport")
+);
+const SuspendedMembersReport = lazyWithRetry(() =>
+  import("./pages/reports/SuspendedMembersReport")
+);
+const ResignedMembersReport = lazyWithRetry(() =>
+  import("./pages/reports/ResignedMembersReport")
+);
+const NewMembersReport = lazyWithRetry(() =>
+  import("./pages/reports/NewMembersReport")
+);
+const LeaversReport = lazyWithRetry(() =>
+  import("./pages/reports/LeaversReport")
+);
+const JoinersReport = lazyWithRetry(() =>
+  import("./pages/reports/JoinersReport")
 );
 const ReportViewerDemo = lazyWithRetry(() =>
   import("./features/reports/report-viewer/ReportViewerDemo")
@@ -190,25 +217,38 @@ const ProductTypesManagement = lazyWithRetry(() =>
 const ProductManagementDemo = lazyWithRetry(() =>
   import("./pages/product-management/ProductManagementDemo")
 );
-// const ProductManagementDemo = lazyWithRetry(() =>
-//   import("./pages/product-management/ProductManagementDemo")
-// );
 const NewGraduate = lazyWithRetry(() => import("./pages/membership/NewGraduate"));
 const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
 const RecruitAFriend = lazyWithRetry(() =>
   import("./pages/membership/RecruitAFriend")
 );
+const DirectDebitSummary = lazyWithRetry(() =>
+  import("./pages/finance/DirectDebitSummary")
+);
+const RefundsSummary = lazyWithRetry(() => import("./pages/finance/RefundsSummary"));
+const WriteOffsSummary = lazyWithRetry(() => import("./pages/finance/WriteOffsSummary"));
+const DirectDebitBatchDetails = lazyWithRetry(() =>
+  import("./pages/finance/DirectDebitBatchDetails")
+);
 
 function Entry() {
   const location = useLocation();
 
-  const showSidebar = location.pathname !== "/";
+  // Define routes where sidebar should NOT be shown
+  const noSidebarRoutes = [
+    "/", // login page
+    "/rewards/insurance",
+    "/rewards/rewards"
+  ];
+
+  const showSidebar = !noSidebarRoutes.includes(location.pathname);
   const showHeaderDetails = showSidebar;
 
   // Debug logging
   console.log("Entry Debug - Current pathname:", location.pathname);
   console.log("Entry Debug - showSidebar:", showSidebar);
   console.log("Entry Debug - showHeaderDetails:", showHeaderDetails);
+
   const showResizableCompRoutes = [
     "/ClaimsDetails",
     "/CasesDetails",
@@ -248,9 +288,6 @@ function Entry() {
           >
             {/* Header Details */}
             {showHeaderDetails && <HeaderDetails />}
-
-            {/* Profile Header */}
-            {/* {showProfileHeaderRoutes.includes(location.pathname) && <ProfileHeader />} */}
 
             {/* Content area + resizable section */}
             <div style={{ flex: 1, display: "flex" }}>
@@ -334,6 +371,25 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
+
+                    {/* InmoRewards routes - these will have no sidebar */}
+                    <Route
+                      path="rewards/insurance"
+                      element={
+                        <ProtectedRoute>
+                          <IncomeProtectionTooltip />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="rewards/rewards"
+                      element={
+                        <ProtectedRoute>
+                          <IncomeProtectionTooltip />
+                        </ProtectedRoute>
+                      }
+                    />
+
                     <Route
                       path="templeteSummary"
                       element={
@@ -428,6 +484,30 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <CorrespondencesSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="InAppNotifications"
+                      element={
+                        <ProtectedRoute>
+                          <InAppNotifications />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="CorrespondenceDashboard"
+                      element={
+                        <ProtectedRoute>
+                          <CorrespondenceDashboard />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="CommunicationBatchDetail"
+                      element={
+                        <ProtectedRoute>
+                          <CommunicationBatchDetail />
                         </ProtectedRoute>
                       }
                     />
@@ -610,6 +690,14 @@ function Entry() {
                       }
                     />
                     <Route
+                      path="DirectDebitAuthorization"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitAuthorization />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
                       path="Members"
                       element={
                         <ProtectedRoute>
@@ -634,14 +722,55 @@ function Entry() {
                         </ProtectedRoute>
                       }
                     />
-                <Route
-                  path="SimpleBatchMemberSummary"
-                  element={
-                    <ProtectedRoute>
-                      <SimpleBatchMemberSummary />
-                    </ProtectedRoute>
-                  }
-                />
+                    <Route
+                      path="DirectDebit"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="Refunds"
+                      element={
+                        <ProtectedRoute>
+                          <RefundsSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="write-offs"
+                      element={
+                        <ProtectedRoute>
+                          <WriteOffsSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="Batch/:id"
+                      element={
+                        <ProtectedRoute>
+                          <SimpleBatchMemberSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="SimpleBatchMemberSummary"
+                      element={
+                        <ProtectedRoute>
+                          <SimpleBatchMemberSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="DirectDebitBatchDetails"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitBatchDetails />
+                        </ProtectedRoute>
+                      }
+                    />
 
                     <Route
                       path="NotDesignedYet"
@@ -698,6 +827,15 @@ function Entry() {
                     />
 
                     <Route
+                      path="DirectDebit"
+                      element={
+                        <ProtectedRoute>
+                          <DirectDebitSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
                       path="members"
                       element={
                         <ProtectedRoute>
@@ -740,6 +878,54 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <TenantManagement />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="CancelledMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <CancelledMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="SuspendedMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <SuspendedMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="ResignedMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <ResignedMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="NewMembersReport"
+                      element={
+                        <ProtectedRoute>
+                          <NewMembersReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="LeaversReport"
+                      element={
+                        <ProtectedRoute>
+                          <LeaversReport />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="JoinersReport"
+                      element={
+                        <ProtectedRoute>
+                          <JoinersReport />
                         </ProtectedRoute>
                       }
                     />
@@ -879,9 +1065,8 @@ function Entry() {
           </div>
         </div>
 
-        {/* Footer */}
-        {location?.pathname === "/" ? null : <MyFooter />}
-        {/* <MyFooter /> */}
+        {/* Footer - also hide for noSidebarRoutes */}
+        {showSidebar && <MyFooter />}
       </div>
     </AuthorizationProvider>
   );

@@ -118,12 +118,20 @@ color: #215e97 !important;
   color: red !important;
 }
 .radio-error {
-  border: 1px solid red;
+  /* border: 1px solid red; */
   padding: 4px 8px;
   border-radius: 4px;
   color: red !important;
 }
+.country-code-select.error,
+.mobile-number-input.error {
+  border-color: #ff0000 !important; /* Or your error color */
+}
 
+/* If you want to remove the container border for mobile type when there's an error */
+.my-input-container.error .mobile-input-group {
+  border: none;
+}
 .has-error .ant-radio-group {
   border-color: red !important;
 }

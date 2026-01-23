@@ -135,15 +135,36 @@ const Breadcrumb = () => {
       page: "Notes & Letters",
       icon: "📝",
     },
+    "/CommunicationBatchDetail": {
+      module: "Correspondence",
+      page: "Batch Details",
+      icon: "📧",
+      recordIdField: "batchName",
+    },
+    "/InAppNotifications": {
+      module: "Correspondence",
+      page: "In-App Notifications",
+      icon: "🔔",
+    },
     // Finance Pages
     "/Batches": {
       module: "Finance",
       page: "Batches",
       icon: "💳",
     },
-    "/Batches": {
+    "/DirectDebit": {
       module: "Finance",
-      page: "/Reconciliation",
+      page: "Direct Debit",
+      icon: "💳",
+    },
+    "/Refunds": {
+      module: "Finance",
+      page: "Refunds",
+      icon: "💰",
+    },
+    "/DirectDebitAuthorization": {
+      module: "Finance",
+      page: "Direct Debit Authorization",
       icon: "💳",
     },
     "/Import": {
@@ -182,11 +203,48 @@ const Breadcrumb = () => {
       icon: "💳",
       recordIdField: "batchName",
     },
+    "/SimpleBatchMemberSummary": {
+      module: "Finance",
+      page: "Batch Member Summary",
+      icon: "💳",
+      recordIdField: "batchName",
+    },
+    "/DirectDebitBatchDetails": {
+      module: "Finance",
+      page: "Direct Debit Batch Details",
+      icon: "💳",
+      recordIdField: "batchName",
+    },
 
     // Reports Pages
     "/CancelledMembersReport": {
       module: "Reports",
       page: "Cancelled Members Report",
+      icon: "📊",
+    },
+    "/SuspendedMembersReport": {
+      module: "Reports",
+      page: "Suspended Members Report",
+      icon: "📊",
+    },
+    "/ResignedMembersReport": {
+      module: "Reports",
+      page: "Resigned Members Report",
+      icon: "📊",
+    },
+    "/NewMembersReport": {
+      module: "Reports",
+      page: "New Members Report",
+      icon: "📊",
+    },
+    "/LeaversReport": {
+      module: "Reports",
+      page: "Leavers Report",
+      icon: "📊",
+    },
+    "/JoinersReport": {
+      module: "Reports",
+      page: "Joiners Report",
       icon: "📊",
     },
     "/Reports": {
@@ -472,8 +530,8 @@ const Breadcrumb = () => {
   // Add app launcher item (only if different from module)
   const appLauncherName = breadcrumbData.appLauncher
     ? Object.keys(appLauncherItems).find(
-        (key) => appLauncherItems[key] === breadcrumbData.appLauncher
-      )
+      (key) => appLauncherItems[key] === breadcrumbData.appLauncher
+    )
     : "App Launcher";
 
   if (appLauncherName !== breadcrumbData.module) {
@@ -514,11 +572,33 @@ const Breadcrumb = () => {
 
   // Add record level if we have a record ID
   if (recordId) {
+    const isBatchPage = location.pathname.includes("BatchMemberSummary") || location.pathname.includes("DirectDebitBatchDetails");
+    const batchId = location.state?.batchId;
+    const batchStatus = location.state?.batchStatus;
+
     breadcrumbItems.push({
       title: (
-        <span style={{ display: "flex", alignItems: "center" }}>
+        <span style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <span style={{ marginRight: 4 }}>📄</span>
-          {recordId}
+          <span style={{ fontWeight: 600 }}>{recordId}</span>
+          {isBatchPage && batchId && (
+            <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId})</span>
+          )}
+          {isBatchPage && batchStatus && (
+            <span style={{
+              fontSize: "10px",
+              padding: "2px 8px",
+              borderRadius: "10px",
+              backgroundColor: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#f0fdf4" : "#eff6ff",
+              color: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#166534" : "#1e40af",
+              border: "1px solid",
+              borderColor: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#bbf7d0" : "#bfdbfe",
+              textTransform: "uppercase",
+              fontWeight: "700"
+            }}>
+              {batchStatus}
+            </span>
+          )}
         </span>
       ),
       onClick: () => {

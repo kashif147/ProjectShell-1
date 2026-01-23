@@ -9,7 +9,7 @@ export const getHierarchicalDataByLocation = createAsyncThunk(
         try {
             const token = localStorage.getItem('token');
             const response = await axios.get(
-                `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/lookup/by-type/68d036e2662428d1c504b3ad/hierarchy/${lookupId}`,
+                `${process.env.REACT_APP_POLICY_SERVICE_URL}/lookup/by-type/68d036e2662428d1c504b3ad/hierarchy/${lookupId}`,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,

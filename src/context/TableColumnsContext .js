@@ -19,6 +19,333 @@ const TableColumnsContext = createContext();
 
 // Static column configurations
 const staticColumns = {
+  onlinePayment: [
+    {
+      title: "Member No",
+      dataIndex: "memberId",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      sorter: true,
+    },
+    {
+      title: "Category",
+      dataIndex: "category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      sorter: true,
+    },
+    {
+      title: "Membership Status",
+      dataIndex: "membershipStatus",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      title: "Renewal Date",
+      dataIndex: "renewalDate",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Transaction ID",
+      dataIndex: "transactionId",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      title: "Paid Amount",
+      dataIndex: "paidAmount",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Payment Date",
+      dataIndex: "paymentDate",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Payment Method",
+      dataIndex: "paymentMethod",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Payment Status",
+      dataIndex: "paymentStatus",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Billing Cycle",
+      dataIndex: "billingCycle",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Email",
+      dataIndex: "email",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+    },
+    {
+      title: "Phone",
+      dataIndex: "phone",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      title: "Join Date",
+      dataIndex: "joinDate",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+  ],
+  Refunds: [
+    {
+      dataIndex: "refund",
+      title: "Refund",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      sorter: true,
+    },
+    {
+      dataIndex: "refundDate",
+      title: "Refund Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      sorter: true,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "ref",
+      title: "Ref",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "type",
+      title: "Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "updatedBy",
+      title: "Updated By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+  ],
+  "write-offs": [
+    {
+      dataIndex: "Write-offs",
+      title: "Refund",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Write-offs Date",
+      title: "Refund Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "MembershipNo",
+      title: "Membership Number",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "ref",
+      title: "Ref",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "type",
+      title: "Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "updatedBy",
+      title: "Updated By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+  ],
+  WriteOffs: [
+    {
+      dataIndex: "writeOff",
+      title: "WriteOff",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "writeOffDate",
+      title: "WriteOff Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "ref",
+      title: "Ref",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "type",
+      title: "Type",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "updatedBy",
+      title: "Updated By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+  ],
   Profile: [
     // ======================= PROFILE BASICS =======================
     {
@@ -248,6 +575,112 @@ const staticColumns = {
       isVisible: true,
       width: 180,
     },
+    {
+      dataIndex: "joiningDate",
+      title: "Joining Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "membershipFee",
+      title: "Membership Fee",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "outstandingBalance",
+      title: "Outstanding Balance",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "reminderNo",
+      title: "Reminder No",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+    },
+    {
+      dataIndex: "reminderDate",
+      title: "Reminder Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+      render: (value) => formatDateOnly(value),
+    },
+    {
+      dataIndex: "cancellationFlag",
+      title: "Cancellation Flag",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (value) => (value ? "Yes" : "No"),
+    },
+  ],
+  DirectDebitAuthorization: [
+    {
+      dataIndex: "id",
+      title: "ID",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+      sorter: true,
+    },
+    {
+      dataIndex: "accountName",
+      title: "Account Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+      sorter: true,
+    },
+    {
+      dataIndex: "bankName",
+      title: "Bank Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "iban",
+      title: "IBAN",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 250,
+    },
+    {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 120,
+      render: (status) => (
+        <Tag color={status === "Active" ? "green" : "orange"}>{status}</Tag>
+      ),
+    },
+    {
+      dataIndex: "dateAuthorized",
+      title: "Date Authorized",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
   ],
   ChangCateSumm: [
     {
@@ -460,8 +893,8 @@ const staticColumns = {
   Applications: [
     // 🔹 Top-Level Fields
     {
-      dataIndex: "ApplicationId",
-      title: "Application ID",
+      dataIndex: ["subscriptionDetails", "membershipCategory",],
+      title: "Membership Category",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -702,7 +1135,7 @@ const staticColumns = {
       // render: (value) => value ? convertToLocalTime(value) : "-",
     },
   ],
-  Members: [
+  members: [
     // 🔹 Top-Level Info
     // {
     // //   dataIndex: "applicationId",
@@ -1798,9 +2231,9 @@ const staticColumns = {
       width: 100,
     },
   ],
-  CornMarketRewards: [
+  DirectDebitSummary: [
     {
-      dataIndex: "batchName",
+      dataIndex: "name",
       title: "Batch Name",
       ellipsis: true,
       isGride: true,
@@ -1808,7 +2241,65 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: "batchDate",
+      dataIndex: "date",
+      title: "Batch Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+    },
+    {
+      dataIndex: "batchStatus",
+      title: "Batch Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "createdBy",
+      title: "Created By",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "Count",
+      title: "Count",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 100,
+    },
+  ],
+  CornMarketRewards: [
+    {
+      dataIndex: "name",
+      title: "Batch Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "date",
       title: "Batch Date",
       ellipsis: true,
       isGride: true,
@@ -1850,7 +2341,7 @@ const staticColumns = {
   ],
   RecruitAFriend: [
     {
-      dataIndex: "batchName",
+      dataIndex: "name",
       title: "Batch Name",
       ellipsis: true,
       isGride: true,
@@ -1858,7 +2349,7 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: "batchDate",
+      dataIndex: "date",
       title: "Batch Date",
       ellipsis: true,
       isGride: true,
@@ -2043,9 +2534,9 @@ const staticColumns = {
       width: 100,
     },
   ],
-  members: [
+  Members: [
     {
-      dataIndex: "MembershipNo",
+      dataIndex: "membershipNo",
       title: "Membership No",
       ellipsis: true,
       isGride: true,
@@ -2056,6 +2547,24 @@ const staticColumns = {
     {
       dataIndex: "FullName",
       title: "Full Name",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
+      dataIndex: "membershipCategory",
+      title: "Membership Category",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
+      dataIndex: "subscriptionStatus",
+      title: "Membership Status",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -2081,25 +2590,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "MembershipStatus",
-      title: "Membership Status",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-      editable: false,
-    },
-    {
-      dataIndex: "MembershipCategory",
-      title: "Membership Category",
-      ellipsis: true,
-      isGride: true,
-      isVisible: true,
-      width: 200,
-      editable: false,
-    },
-    {
-      dataIndex: "WorkLocation",
+      dataIndex: "workLocation",
       title: "Work Location",
       ellipsis: true,
       isGride: true,
@@ -2109,7 +2600,7 @@ const staticColumns = {
     },
     {
       dataIndex: "Branch",
-      title: "Branch",
+      title: "branch",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -2144,7 +2635,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "JoiningDate",
+      dataIndex: "joiningDate",
       title: "Joining Date",
       ellipsis: true,
       isGride: true,
@@ -2153,7 +2644,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "ExpiryDate",
+      dataIndex: "expiryDate",
       title: "Expiry Date",
       ellipsis: true,
       isGride: true,
@@ -2162,7 +2653,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "LastPaymentAmount",
+      dataIndex: "lastPaymentAmount",
       title: "Last Payment Amount",
       ellipsis: true,
       isGride: true,
@@ -2171,7 +2662,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "LastPaymentDate",
+      dataIndex: "lastPaymentDate",
       title: "Last Payment Date",
       ellipsis: true,
       isGride: true,
@@ -2180,7 +2671,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "MembershipFee",
+      dataIndex: "membershipFee",
       title: "Membership Fee",
       ellipsis: true,
       isGride: true,
@@ -2189,7 +2680,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "OutstandingBalance",
+      dataIndex: "outstandingBalance",
       title: "Outstanding Balance",
       ellipsis: true,
       isGride: true,
@@ -2198,7 +2689,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "ReminderNo",
+      dataIndex: "reminderNo",
       title: "Reminder No",
       ellipsis: true,
       isGride: true,
@@ -2207,7 +2698,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "ReminderDate",
+      dataIndex: "reminderDate",
       title: "Reminder Date",
       ellipsis: true,
       isGride: true,
@@ -2224,10 +2715,44 @@ const staticColumns = {
       width: 200,
       editable: false,
     },
+    {
+      dataIndex: "createdAt",
+      title: "Created At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
+    {
+      dataIndex: "updatedAt",
+      title: "Updated At",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 160,
+      editable: false,
+    },
   ],
 };
 
 const staticSearchFilters = {
+  onlinePayment: [
+    { titleColumn: "Member ID", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Full Name", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Email", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Phone", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Join Date", isSearch: false, isCheck: false, lookups: {} },
+    { titleColumn: "Category", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Membership Status", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Renewal Date", isSearch: false, isCheck: false, lookups: {} },
+    { titleColumn: "Transaction ID", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Paid Amount", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Payment Date", isSearch: false, isCheck: false, lookups: {} },
+    { titleColumn: "Payment Method", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Payment Status", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+    { titleColumn: "Billing Cycle", isSearch: true, isCheck: false, comp: "!=", lookups: {} },
+  ],
   Profile: [
     {
       titleColumn: "Membership No",
@@ -4452,12 +4977,12 @@ export const TableColumnsProvider = ({ children }) => {
         Profile: prevState.Profile.map((item) =>
           item.titleColumn === titleColumn
             ? {
-                ...item,
-                lookups: lookupsForSelect[lookupKey].reduce((acc, entry) => {
-                  acc[entry.label] = false;
-                  return acc;
-                }, {}),
-              }
+              ...item,
+              lookups: lookupsForSelect[lookupKey].reduce((acc, entry) => {
+                acc[entry.label] = false;
+                return acc;
+              }, {}),
+            }
             : item
         ),
       }));
@@ -4478,12 +5003,12 @@ export const TableColumnsProvider = ({ children }) => {
       Profile: prevState.Profile.map((item) =>
         item.titleColumn === "Division"
           ? {
-              ...item,
-              lookups: selectLokups.Divisions.reduce((acc, division) => {
-                acc[division.label] = false;
-                return acc;
-              }, {}),
-            }
+            ...item,
+            lookups: selectLokups.Divisions.reduce((acc, division) => {
+              acc[division.label] = false;
+              return acc;
+            }, {}),
+          }
           : item
       ),
     }));
@@ -4493,10 +5018,10 @@ export const TableColumnsProvider = ({ children }) => {
   const contextValue = useMemo(
     () => ({
       columns,
-      updateColumns: () => {},
+      updateColumns: () => { },
       state: { selectedOption: "!=", checkboxes: {} },
-      setState: () => {},
-      updateState: () => {},
+      setState: () => { },
+      updateState: () => { },
       gridData,
       handleCheckboxFilterChange,
       addColumnToSection,

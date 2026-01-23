@@ -42,6 +42,7 @@ import MyInput from "./MyInput";
 import { FaAngleLeft } from "react-icons/fa6";
 import { FaAngleRight } from "react-icons/fa";
 import MemberSearch from "../profile/MemberSearch";
+import UnifiedPagination from "./UnifiedPagination";
 import "../../styles/Configuration.css";
 
 function MyDrawer({
@@ -619,7 +620,7 @@ function MyDrawer({
                 message: "Do you want to delete this solicitor?",
                 onConfirm: async () => {
                   await deleteFtn(
-                    `${baseURL}/api/contacts/${record?._id}`,
+                    `${baseURL}/contacts/${record?._id}`,
                     null,
                     () => resetCounteries("Solicitors", dispatch(getContacts()))
                   );
@@ -645,7 +646,7 @@ function MyDrawer({
     if (!validateSolicitors("Solicitors")) return;
     insertDataFtn(
       process.env.REACT_APP_API_URL,
-      `/api/contacts`,
+      `/contacts`,
       drawerIpnuts?.Solicitors,
       "Data inserted successfully:",
       "Data did not insert:",
@@ -661,7 +662,7 @@ function MyDrawer({
     const simplified = simplifyContact(drawerIpnuts?.Solicitors);
     if (!validateSolicitors("Solicitors")) return;
     await updateFtn(
-      `/api/contacts/${drawerIpnuts?.Solicitors?.id}`,
+      `/contacts/${drawerIpnuts?.Solicitors?.id}`,
       simplified,
       () => {
         resetCounteries("Solicitors", () => {
@@ -838,15 +839,16 @@ function MyDrawer({
       >
         {children}
         {isPagination && (
-          <div style={{ width: "100%", backgroundColor: "red" }}>
+          <div style={{ width: "100%" }}>
             <div className="bottom-div">
-              <Pagination
+              <UnifiedPagination
                 total={total}
+                current={1}
                 showSizeChanger={showSizeChanger}
                 showQuickJumper={showQuickJumper}
-                showTotal={(total) => `Total ${total} items`}
                 onChange={onChange}
                 pageSize={pageSize}
+                itemName="items"
               />
             </div>
           </div>

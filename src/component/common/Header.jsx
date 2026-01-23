@@ -1,6 +1,5 @@
-import { React, useEffect, useState, useRef } from "react";
+import { React, useState, useRef, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import MyDrowpDown from "./MyDrowpDown";
 import {
   SettingOutlined,
   BellOutlined,
@@ -8,36 +7,23 @@ import {
   PhoneOutlined,
   UserOutlined,
   LogoutOutlined,
-  SearchOutlined,
 } from "@ant-design/icons";
-import {
-  FaRegCircleUser,
-  FaListCheck,
-  FaDiagramProject,
-} from "react-icons/fa6";
 import {
   FaRegUserCircle,
   FaRegMoneyBillAlt,
   FaRegEnvelope,
   FaCalendarAlt,
   FaRegClipboard,
-  FaRegChartBar,
   FaRegFileAlt,
   FaCogs,
-  FaUsers,
-  FaToolbox,
-  FaListUl,
-  FaUserCircle,
 } from "react-icons/fa";
 import { TbReportAnalytics } from "react-icons/tb";
 import { LuCalendarClock } from "react-icons/lu";
 import { IoSettingsOutline } from "react-icons/io5";
-import { TbGridDots } from "react-icons/tb";
 import { MdOutlineWork } from "react-icons/md";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { Link, useLocation } from "react-router-dom";
-import { Button, Input } from "antd";
-import logo from "../../assets/images/gra_logo.png";
+import { message } from "antd";
 import { Dropdown } from "antd";
 import { PiDotsNineLight } from "react-icons/pi";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
@@ -46,19 +32,35 @@ import { useAuthorization } from "../../context/AuthorizationContext";
 import { clearAuth } from "../../features/AuthSlice";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
-import { searchProfiles } from "../../features/profiles/SearchProfile";
+import MemberSearch from "../profile/MemberSearch";
+
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
+  const navigate = useNavigate();
   const { permissions, roles } = useAuthorization();
   const menuLbl = useSelector((state) => state.menuLbl);
   const [searchTerm, setSearchTerm] = useState("");
   let userdata = localStorage.getItem("userdata");
   userdata = JSON.parse(userdata);
   const permission = userdata?.permissions;
-  console.log(permission, "userdata");
 
-  const handleUpdate = (key, value) => {
+  const handleUpdate = (key, value, appName) => {
+    const routeMap = {
+      "Membership": "/MembershipDashboard",
+      "Finance": "/onlinePayment",
+      "Correspondence": "/Email",
+      "Configuration": "/Configuratin",
+      "Events": "/Events",
+      "Reports": "/Reports",
+      "Settings": "/Settings",
+    };
+
     dispatch(updateMenuLbl({ key, value }));
+
+    if (routeMap[appName]) {
+      navigate(routeMap[appName]);
+    }
+
     closeDropdown();
   };
 
@@ -67,6 +69,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       name: "Membership",
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
+      route: "/MembershipDashboard",
     },
     {
       name: "Finance",
@@ -74,6 +77,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#4CAF50",
       permissions: ["USER_READ", "USER_WRITE"],
       roles: ["AM", "DAM", "GS", "DGS", "ASU", "SU"],
+      route: "/onlinePayment",
     },
     {
       name: "Correspondence",
@@ -81,6 +85,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#FF7043",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Email",
     },
     {
       name: "Events",
@@ -88,6 +93,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#EF5350",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Events",
     },
     {
       name: "Courses",
@@ -95,6 +101,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#7E57C2",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Courses",
     },
     {
       name: "Professional Development",
@@ -102,6 +109,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#3F51B5",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/ProfessionalDevelopment",
     },
     {
       name: "Settings",
@@ -109,6 +117,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#3F51B5",
       permissions: ["portal:settings:read"],
       roles: ["MEMBER", "MO", "AMO", "GS", "DGS", "SU"],
+      route: "/Settings",
     },
     {
       name: "Configuration",
@@ -116,6 +125,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#5E35B1",
       permissions: ["user:read", "role:read"],
       roles: ["SU", "GS", "DGS"],
+      route: "/Configuration",
     },
     {
       name: "Reports",
@@ -123,26 +133,22 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       bgColor: "#A63D2F",
       permissions: ["crm:reports:read"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      route: "/Reports",
     },
   ];
 
-  // Filter app items based on user permissions and roles
   const accessibleApps = appItems.filter((app) => {
-    // If no permissions/roles required, show the app
     if (!app.permissions?.length && !app.roles?.length) {
       return true;
     }
 
-    // Check if user has wildcard permission (grants all permissions)
     const hasWildcardPermission = permissions.includes("*");
 
-    // Check permissions
     const hasRequiredPermission =
       hasWildcardPermission ||
       !app.permissions?.length ||
       app.permissions.some((permission) => permissions.includes(permission));
 
-    // Check roles
     const hasRequiredRole =
       !app.roles?.length || app.roles.some((role) => roles.includes(role));
 
@@ -163,17 +169,16 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       />
       <div className="app-launcher-menu">
         {filteredItems.map((app) => {
-          // Map app names to correct menu label keys that exist in sidebar itemsMap
           const menuLabelMap = {
-            Membership: "Subscriptions & Rewards", // Maps to subscriptionItems
-            Finance: "Finance", // Maps to financeItems
-            Correspondence: "Correspondence", // Maps to correspondenceItems
-            Events: "Events", // Maps to eventsItems
-            Courses: "Events", // Map Courses to Events for now
-            "Professional Development": "Events", // Map Professional Development to Events for now
-            Settings: "Configuration", // Map Settings to Configuration
-            Configuration: "Configuration", // Maps to configurationItems
-            Reports: "Reports", // Maps to reportItems
+            Membership: "Subscriptions & Rewards",
+            Finance: "Finance",
+            Correspondence: "Correspondence",
+            Events: "Events",
+            Courses: "",
+            "Professional Development": "",
+            Settings: "",
+            Configuration: "Configuration",
+            Reports: "Reports",
           };
 
           const menuKey = menuLabelMap[app.name] || app.name;
@@ -184,7 +189,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             <div
               key={app.name}
               className={`app-item ${isActive ? "active-item" : ""}`}
-              onClick={() => handleUpdate(menuKey, true)}
+              onClick={() => handleUpdate(menuKey, true, app.name)}
             >
               <div
                 className="icon-circle"
@@ -263,30 +268,16 @@ export const AppLauncher = () => {
 
 function Header() {
   const dispatch = useDispatch();
-  const [token, settoken] = useState(null);
-  const [regNo, setregNo] = useState("");
   const isLoggingOutRef = useRef(false);
   const navigate = useNavigate();
   const { clearAuth: clearAuthContext } = useAuthorization();
 
-  // Debug logging
-  console.log("Header Debug - Component rendered");
   const {
-    filterByRegNo,
-    topSearchData,
     ProfileDetails,
     ReportsTitle,
-    updateMenuLbl,
-    updateMeu,
   } = useTableColumns();
   const location = useLocation();
-  const pathname = location?.pathname;
-  const profile =
-    Array.isArray(ProfileDetails) && ProfileDetails.length > 0
-      ? ProfileDetails[0]
-      : null;
 
-  let arr = [];
   const reportLink =
     ReportsTitle?.map((i, index) => {
       return {
@@ -298,8 +289,9 @@ function Header() {
         ),
       };
     }) || [];
+
   const logout = async () => {
-    if (isLoggingOutRef.current) return; // Prevent multiple logout attempts
+    if (isLoggingOutRef.current) return;
     isLoggingOutRef.current = true;
 
     const token = localStorage.getItem("token");
@@ -322,13 +314,13 @@ function Header() {
 
     // Call logout API in background with timeout (non-blocking)
     if (token) {
-      const logoutTimeout = 5000; // 5 second timeout
+      const logoutTimeout = 5000;
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), logoutTimeout);
 
       axios
         .post(
-          `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/logout`,
+          `${process.env.REACT_APP_BASE_URL_DEV}/auth/logout`,
           {},
           {
             headers: {
@@ -357,6 +349,7 @@ function Header() {
       isLoggingOutRef.current = false;
     }
   };
+
   return (
     <div
       className="Header-border overflow-y-hidden bg pt-0 pb-0"
@@ -365,7 +358,7 @@ function Header() {
       <div className="d-flex justify-content-between align-items-center ">
         <div
           className="d-flex flex-row align-items-center"
-          style={{ paddingLeft: "2.5%", width: "33%" }}
+          style={{ paddingLeft: "1%", width: "33%" }}
         >
           <AppLauncher />
           <nav className="navbar navbar-expand-lg navbar-light">
@@ -383,74 +376,19 @@ function Header() {
           </nav>
         </div>
         <div style={{ width: "33%" }}>
-          <Input
-            placeholder="Search by Membership Number, Name, Email or Mobile number"
-            value={regNo}
-            onChange={(e) => setregNo(e.target.value)}
-            onPressEnter={async (e) => {
-              try {
-                const value = e.target.value;
-                if (!value.trim()) return;
-
-                // Wait for API success:
-                const result = await dispatch(searchProfiles(value)).unwrap();
-
-                // result = response.data from your thunk
-                // Example: { fullName: "...", regNo: "..." }
-
-                navigate("/Details", {
-                  state: {
-                    name: result?.fullName,
-                    code: result?.regNo,
-                    search: "Profile",
-                  },
-                });
-              } catch (error) {
-                console.error("Profile search failed:", error);
-                // Optionally show error message
-                // message.error("Profile not found");
-              }
+          {/* <MemberSearch
+            headerStyle={true}
+            fullWidth={true}
+            showAddButton={false}
+            style={{
+              width: "100%",
+              backgroundColor: "#ffffff",
             }}
-            suffix={
-              <SearchOutlined
-                onClick={async () => {
-                  try {
-                    if (!regNo.trim()) return;
-
-                    // Wait for API success:
-                    const result = await dispatch(
-                      searchProfiles(regNo)
-                    ).unwrap();
-
-                    navigate("/Details", {
-                      state: {
-                        name: result?.fullName,
-                        code: result?.regNo,
-                        search: "Profile",
-                      },
-                    });
-                  } catch (error) {
-                    console.error("Profile search failed:", error);
-                    // Optionally show error message
-                    // message.error("Profile not found");
-                  }
-                }}
-                style={{
-                  cursor: "pointer",
-                  paddingRight: "12px",
-                  color: "#8c8c8c",
-                  transition: "color 0.2s ease",
-                }}
-                onMouseEnter={(e) => {
-                  e.currentTarget.style.color = "#1890ff";
-                }}
-                onMouseLeave={(e) => {
-                  e.currentTarget.style.color = "#8c8c8c";
-                }}
-              />
-            }
-            className="top-search"
-            style={{ width: "100%", paddingLeft: "12px", borderRadius: "4px" }}
+          /> */}
+          <MemberSearch
+            headerStyle={true}
+          // onSelectBehavior="navigate" (default)
+          // navigateTo="/Details" (default)
           />
         </div>
 
@@ -473,11 +411,7 @@ function Header() {
           <LogoutOutlined
             className="top-icon"
             style={{ marginRight: "30px" }}
-            onClick={() => {
-              // localStorage.removeItem("token");
-              // navigate("/");
-              logout();
-            }}
+            onClick={logout}
           />
         </div>
       </div>

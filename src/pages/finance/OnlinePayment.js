@@ -1,29 +1,28 @@
-import {useEffect} from "react";
-import TableComponent from '../../component/common/TableComponent'
-import { getAllBatches } from "../../features/BatchesSlice";
-import moment from "moment";
-import { useSelector, useDispatch } from "react-redux";
+import React, { useEffect } from "react";
+import MyTable from "../../component/common/MyTable";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { useDispatch, useSelector } from "react-redux";
+import { fetchStripePayments } from "../../features/AccountSlice";
 
-function OnlinePayment() {
+const OnlinePayment = () => {
+  const { columns } = useTableColumns();
+  const tableColumns = columns["onlinePayment"] || [];
   const dispatch = useDispatch();
-  dispatch(getAllBatches());
-  const { batches, batchesloading, batcheserror } = useSelector((state) => state.batches);
+  const { stripePayments, loading } = useSelector((state) => state.account);
+
   useEffect(() => {
-    dispatch(getAllBatches());
+    dispatch(fetchStripePayments());
   }, [dispatch]);
 
-  const chequeBatches = batches.filter(batch => batch.PaymentType === "Online Payments");
-
-  const formattedData = chequeBatches.map((item) => ({
-    ...item,
-    batchDate: moment(item.batchDate).format("DD/MM/YYYY"),
-    createdAt: moment(item.createdAt).format("DD/MM/YYYY HH:mm"),
-  }));
   return (
-    <div>
-       <TableComponent data={formattedData} screenName="Batches" />
+    <div style={{ width: "100%", padding: "0" }}>
+      <MyTable
+        dataSource={stripePayments}
+        columns={tableColumns}
+        loading={loading}
+      />
     </div>
-  )
-}
+  );
+};
 
-export default OnlinePayment
+export default OnlinePayment;

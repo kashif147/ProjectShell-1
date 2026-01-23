@@ -56,16 +56,16 @@ const Sidebar = () => {
   const menuItems = useMemo(() => {
     // Get the base menu items for the active module
     const baseMenuItems = itemsMap[activeKey] || [];
-  
+
 
     // Debug each menu item's requirements
-baseMenuItems.forEach((item, index) => {
-  const hasPermission =
-    item.permissions?.some((p) => permissions.includes(p)) || true;
-  const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
+    baseMenuItems.forEach((item, index) => {
+      const hasPermission =
+        item.permissions?.some((p) => permissions.includes(p)) || true;
+      const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
 
-  // You can use hasPermission and hasRole for further logic if needed
-});
+      // You can use hasPermission and hasRole for further logic if needed
+    });
 
 
     const filtered = filterMenuItemsByAuth(baseMenuItems, permissions, roles);
@@ -84,7 +84,7 @@ baseMenuItems.forEach((item, index) => {
             <Tooltip
               title={item.label.props.children}
               placement="right"
-              // overlayClassName="sidebar-tooltip"
+            // overlayClassName="sidebar-tooltip"
             >
               <div className="icon-only-item">{item.icon}</div>
             </Tooltip>
@@ -137,6 +137,15 @@ baseMenuItems.forEach((item, index) => {
       "/NewGraduate": "CornMarket New Graduate",
       "/CornMarketRewards": "CornMarket Rewards",
       "/RecruitAFriend": "Recruit a Friend",
+      "/DirectDebitAuthorization": "DD Authorisations",
+      "/DirectDebit": "Direct Debit",
+      "/write-offs": "Write-offs",
+      "/SuspendedMembersReport": "Suspended Members Report",
+      "/ResignedMembersReport": "Resigned Members Report",
+      "/NewMembersReport": "New Members Report",
+      "/LeaversReport": "Leavers Report",
+      "/JoinersReport": "Joiners Report",
+      "/CorrespondenceDashboard": "Dashboard",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
@@ -157,7 +166,10 @@ baseMenuItems.forEach((item, index) => {
         navigate("/CasesSummary", { state: { search: "Cases" } });
         break;
       case "Correspondences":
-        navigate("/CorrespondencesSummary", { state: { search: "" } });
+        navigate("/CorrespondenceDashboard", { state: { search: "" } });
+        break;
+      case "Dashboard":
+        navigate("/CorrespondenceDashboard", { state: { search: "" } });
         break;
       case "Transfer Requests":
         navigate("/Transfers", { state: { search: "Transfers" } });
@@ -175,7 +187,7 @@ baseMenuItems.forEach((item, index) => {
         navigate("/Applications", { state: { search: "Applications" } });
         break;
       case "Membership":
-        navigate("/members", { state: { search: "members" } });
+        navigate("/members", { state: { search: "Members" } });
         break;
       case "MembershipDashboard":
         navigate("/MembershipDashboard", {
@@ -214,14 +226,29 @@ baseMenuItems.forEach((item, index) => {
       case "Reconciliations":
         navigate("/Reconciliation", { state: { search: "Reconciliation" } });
         break;
+      case "Refunds":
+        navigate("/Refunds", { state: { search: "Refunds" } });
+        break;
+      case "Write-offs":
+        navigate("/write-offs", { state: { search: "Write-offs" } });
+        break;
+      case "DD Authorisations":
+        navigate("/DirectDebitAuthorization", { state: { search: "Direct Debit Authorization" } });
+        break;
+      case "Direct Debit":
+        navigate("/DirectDebit", { state: { search: "Direct Debit" } });
+        break;
       case "Online Payments":
-        navigate("/onlinePayment", { state: { search: "onlinePayment" } });
+        navigate("/onlinePayment", { state: { search: "Online Payment" } });
         break;
       case "Email":
         navigate("/Email", { state: { search: "Email" } });
         break;
       case "SMS":
         navigate("/Sms", { state: { search: "Sms" } });
+        break;
+      case "InAppNotifications":
+        navigate("/InAppNotifications", { state: { search: "In-App Notifications" } });
         break;
       case "Notes & Letters":
         navigate("/Notes", { state: { search: "Notes" } });
@@ -262,6 +289,31 @@ baseMenuItems.forEach((item, index) => {
       case "Cancelled Members Report":
         navigate("/CancelledMembersReport", {
           state: { search: "Cancelled Members Report" },
+        });
+        break;
+      case "Suspended Members Report":
+        navigate("/SuspendedMembersReport", {
+          state: { search: "Suspended Members Report" },
+        });
+        break;
+      case "Resigned Members Report":
+        navigate("/ResignedMembersReport", {
+          state: { search: "Resigned Members Report" },
+        });
+        break;
+      case "New Members Report":
+        navigate("/NewMembersReport", {
+          state: { search: "New Members Report" },
+        });
+        break;
+      case "Leavers Report":
+        navigate("/LeaversReport", {
+          state: { search: "Leavers Report" },
+        });
+        break;
+      case "Joiners Report":
+        navigate("/JoinersReport", {
+          state: { search: "Joiners Report" },
         });
         break;
       case "Policy Client Example":
@@ -322,8 +374,8 @@ baseMenuItems.forEach((item, index) => {
   const sideBarWidth = showProfileHeaderRoutes.includes(location.pathname)
     ? "19vw"
     : isPinned
-    ? "80px"
-    : "200px";
+      ? "80px"
+      : "200px";
 
   return (
     <div
@@ -358,9 +410,8 @@ baseMenuItems.forEach((item, index) => {
           scrollbarWidth: "none",
         }}
         items={transformedMenuItems}
-        className={`sidebar-menu hide-scroll-webkit ${
-          isPinned ? "collapsed" : "expanded"
-        }`}
+        className={`sidebar-menu hide-scroll-webkit ${isPinned ? "collapsed" : "expanded"
+          }`}
         onClick={handleClick}
       />
     </div>

@@ -11,6 +11,7 @@ import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { generatePKCE } from "../../utils/Utilities";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { getRedirectUri } from "../../component/msft/msalConfig";
+import MyAlert from "../../component/common/MyAlert";
 import {
   UserOutlined,
   LockOutlined,
@@ -233,7 +234,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/auth/azure-crm`,
+        `${process.env.REACT_APP_BASE_URL_DEV}/auth/azure-crm`,
         {
           method: "POST",
           headers: { "Content-Type": "application/json" },
@@ -246,11 +247,31 @@ const Login = () => {
       );
 
       if (!response.ok) {
+        let errorMessage = `${response.status} ${response.statusText}`;
+        try {
+          const errorData = await response.json();
+          errorMessage =
+            errorData.message || errorData.error || JSON.stringify(errorData);
+          console.error(
+            "Backend authentication failed - Error details:",
+            errorData
+          );
+        } catch (e) {
+          const errorText = await response.text();
+          errorMessage = errorText || errorMessage;
+          console.error(
+            "Backend authentication failed - Response text:",
+            errorText
+          );
+        }
         console.error(
           "Backend authentication failed:",
           response.status,
-          response.statusText
+          response.statusText,
+          "Details:",
+          errorMessage
         );
+        MyAlert("error", "Authentication failed", errorMessage);
         isProcessingAuthRef.current = false;
         setAuthLoading(false);
         return;
@@ -290,6 +311,19 @@ const Login = () => {
 
         // Set appropriate menu label based on user role
         setMenuLabelForRole(roleCodes);
+
+        // Trigger FCM permission request immediately after Microsoft login and JWT token acquisition
+        // This must be called synchronously to maintain user interaction context
+        console.log("🔔 Microsoft login successful. Requesting notification permission...");
+        if (window.triggerFCMPermissionRequest && typeof window.triggerFCMPermissionRequest === 'function') {
+          // Call immediately (no delay) to stay in user interaction context
+          // The permission request doesn't require service worker to be ready
+          window.triggerFCMPermissionRequest().catch((error) => {
+            console.warn("⚠️ Permission request failed:", error);
+          });
+        } else {
+          console.warn("⚠️ FCM permission request function not available yet");
+        }
 
         // Navigate based on user role for default login behavior
         console.log("Login Debug - roleCodes:", roleCodes);
@@ -442,6 +476,14 @@ const Login = () => {
 
       // Set appropriate menu label based on user role
       setMenuLabelForRole(roleCodes);
+
+      // Trigger FCM permission request immediately after login (while still in user interaction context)
+      if (window.triggerFCMPermissionRequest && typeof window.triggerFCMPermissionRequest === 'function') {
+        // Small delay to ensure service worker registration has started
+        setTimeout(() => {
+          window.triggerFCMPermissionRequest();
+        }, 300);
+      }
 
       // Navigate based on user role
       if (roleCodes.includes("SU")) {

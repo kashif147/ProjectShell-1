@@ -1,10 +1,35 @@
 import React from 'react';
 
-const ExportCSV = ({ data, filename }) => {
+const ExportCSV = ({ data, filename, metadata }) => {
   const convertToCSV = (data) => {
-    const header = Object.keys(data[0]).join(",") + "\n"; // Create CSV header
-    const rows = data.map(row => Object.values(row).join(",")).join("\n"); // Create CSV rows
-    return header + rows;
+    let csvString = "";
+
+    // Prepend metadata if provided
+    if (metadata && Array.isArray(metadata)) {
+      metadata.forEach(line => {
+        // Simple escaping for metadata line if it contains commas, 
+        // though usually metadata lines are single strings.
+        csvString += line.includes(',') ? `"${line.replace(/"/g, '""')}"` : line;
+        csvString += "\n";
+      });
+      csvString += "\n"; // Empty line between metadata and table
+    }
+
+    if (data && data.length > 0) {
+      const header = Object.keys(data[0]).join(",") + "\n"; // Create CSV header
+      const rows = data.map(row =>
+        Object.values(row).map(val => {
+          const str = val === null || val === undefined ? "" : String(val);
+          // Standard CSV escaping: surround with quotes and double existing quotes
+          return str.includes(',') || str.includes('"') || str.includes('\n')
+            ? `"${str.replace(/"/g, '""')}"`
+            : str;
+        }).join(",")
+      ).join("\n"); // Create CSV rows
+      csvString += header + rows;
+    }
+
+    return csvString;
   };
 
   const downloadCSV = () => {
@@ -20,7 +45,7 @@ const ExportCSV = ({ data, filename }) => {
   };
   return (
     <button className='transparent-bg' onClick={downloadCSV}>
-      Export as CSV
+      Export as excel
     </button>
   );
 };

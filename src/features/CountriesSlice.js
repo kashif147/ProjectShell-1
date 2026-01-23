@@ -7,7 +7,7 @@ export const fetchCountries = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
-        `${process.env.REACT_APP_POLICY_SERVICE_URL}/api/countries`,
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/countries`,
         {
           headers: {
             Authorization: `Bearer ${token}`,

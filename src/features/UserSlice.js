@@ -12,7 +12,7 @@ export const getAllUsers = createAsyncThunk(
 
       // Uncomment below when API is ready
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/users`, {
+      const response = await fetch(`${process.env.REACT_APP_POLICY_SERVICE_URL}/users`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -36,7 +36,7 @@ export const updateUserStatus = createAsyncThunk(
   async ({ userId, isActive }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/users/${userId}/status`, {
+      const response = await fetch(`${baseURL}/users/${userId}/status`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -62,7 +62,7 @@ export const assignRolesToUser = createAsyncThunk(
   async ({ userId, roleIds }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/users/${userId}/roles`, {
+      const response = await fetch(`${baseURL}/users/${userId}/roles`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -88,7 +88,7 @@ export const getUserDetails = createAsyncThunk(
   async (userId, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/users/${userId}`, {
+      const response = await fetch(`${baseURL}/users/${userId}`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",

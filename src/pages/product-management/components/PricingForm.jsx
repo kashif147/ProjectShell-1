@@ -8,7 +8,9 @@ import MyDatePicker from "../../../component/common/MyDatePicker";
 import { convertEuroToSand, insertDataFtn, updateFtn } from "../../../utils/Utilities";
 import { convertSandToEuro } from "../../../utils/Utilities";
 import MyAlert from "../../../component/common/MyAlert";
-const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
+import dayjs from "dayjs";
+
+const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
 
   const [formData, setFormData] = useState({
     currency: "",
@@ -28,26 +30,31 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
         return isNaN(num) ? "" : num.toFixed(2);
       };
 
+      const pricing = product.currentPricing;
+
       setFormData({
-        currency: product.currentPricing.currency || "",
-        memberPrice: "€" + (product.currentPricing.memberPrice !== null && product.currentPricing.memberPrice !== undefined && product.currentPricing.memberPrice !== "")
-          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.memberPrice)))
-          : "",
-        nonMemberPrice: "€" + (product.currentPricing.nonMemberPrice !== null && product.currentPricing.nonMemberPrice !== undefined && product.currentPricing.nonMemberPrice !== "")
-          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.nonMemberPrice)))
-          : "",
-        effectiveFrom: product.currentPricing.effectiveFrom || null,
-        effectiveTo: product.currentPricing.effectiveTo || null,
-        status: product.currentPricing.status || "Active",
+        currency: (pricing.currency || "").toUpperCase(),
+        memberPrice: pricing.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.memberPrice)) : "",
+        nonMemberPrice: pricing.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.nonMemberPrice)) : "",
+        effectiveFrom: pricing.effectiveFrom ? dayjs(pricing.effectiveFrom) : null,
+        effectiveTo: pricing.effectiveTo ? dayjs(pricing.effectiveTo) : null,
+        status: pricing.status || "Active",
         productId: product._id,
-        price: "€" + (product.currentPricing.price !== null && product.currentPricing.price !== undefined && product.currentPricing.price !== "")
-          ? formatToTwoDecimals(convertSandToEuro(Number(product.currentPricing.price)))
-          : "",
+        price: pricing.price ? formatToTwoDecimals(convertSandToEuro(pricing.price)) : "",
       });
     }
   }, [product]);
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const getCurrencySymbol = () => {
+    switch (formData.currency) {
+      case "USD": return "$";
+      case "EUR": return "€";
+      case "PKR": return "Rs";
+      default: return "";
+    }
   };
 
   const handleSave = async () => {
@@ -57,10 +64,12 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
       // Prepare data according to API body structure
       const requestData = {
         currency: formData.currency,
-        price: convertEuroToSand(formData.price),
         effectiveFrom: formData.effectiveFrom,
         effectiveTo: formData.effectiveTo,
         status: formData.status,
+        price: productType?.name === "Membership" ? convertEuroToSand(formData.price) : undefined,
+        memberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.memberPrice),
+        nonMemberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.nonMemberPrice),
       };
 
       // Get the pricing ID from product's currentPricing
@@ -72,27 +81,34 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
       }
 
       // Construct the endpoint URL
-      const endpoint = `${process.env.REACT_APP_POLICY_SERVICE_URL || ''}/api/pricing/${pricingId}`;
+      const endpoint = `${process.env.REACT_APP_POLICY_SERVICE_URL || ''}/pricing/${pricingId}`;
 
       // Make the update call
       const response = await updateFtn(
         process.env.REACT_APP_POLICY_SERVICE_URL,
-        `/api/pricing/${pricingId}`,
+        `/pricing/${pricingId}`,
         requestData,
-        () => {
-          onClose();
-          // Reset form data
-          setFormData({
-            currency: "",
-            memberPrice: "",
-            nonMemberPrice: "",
-            effectiveFrom: null,
-            effectiveTo: null,
-            status: "Active",
-            price: "",
-          })
+        async () => {
+          try {
+            // Reset form data first
+            setFormData({
+              currency: "",
+              memberPrice: "",
+              nonMemberPrice: "",
+              effectiveFrom: null,
+              effectiveTo: null,
+              status: "Active",
+              price: "",
+            });
 
-          //  "Updated successfully"
+            // Refresh product data
+            if (onSubmit) await onSubmit();
+
+            // Close last
+            onClose();
+          } catch (err) {
+            console.error("Error in update callback:", err);
+          }
         },
         "Updated Successfully"
       );
@@ -144,7 +160,7 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
       extra={
         <Space>
           {/* <Button onClick={onClose}>Cancel</Button> */}
-          <Button type="primary" onClick={handleSave}>
+          <Button type="primary" className="butn primary-btn" onClick={handleSave} loading={loading}>
             update
           </Button>
         </Space>
@@ -156,7 +172,7 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
           <label className="form-label fw-semibold">Currency</label>
           <CustomSelect
             value={formData.currency}
-            onChange={(val) => handleChange("currency", val)}
+            onChange={(e) => handleChange("currency", e.target.value)}
             options={[
               { label: "USD", value: "USD" },
               { label: "EUR", value: "EUR" },
@@ -166,10 +182,24 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
           />
         </div>
         {
-          product?.name === "Membership" ?
+          productType?.name === "Membership" ?
+            <div className="mb-3">
+              <label className="form-label fw-semibold">
+                Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
+              </label>
+              <MyInput
+                type="number"
+                value={formData.price}
+                onChange={(e) => handleChange("price", e.target.value)}
+                placeholder="Enter price"
+              />
+            </div>
+            :
             <>
               <div className="mb-3">
-                <label className="form-label fw-semibold">Member Price</label>
+                <label className="form-label fw-semibold">
+                  Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
+                </label>
                 <MyInput
                   type="number"
                   value={formData.memberPrice}
@@ -178,7 +208,9 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
                 />
               </div>
               <div className="mb-3">
-                <label className="form-label fw-semibold">Non-Member Price</label>
+                <label className="form-label fw-semibold">
+                  Non-Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
+                </label>
                 <MyInput
                   type="number"
                   value={formData.nonMemberPrice}
@@ -187,22 +219,13 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
                 />
               </div>
             </>
-            :
-            <div className="mb-3">
-              <label className="form-label fw-semibold">Price</label>
-              <MyInput
-                type="number"
-                value={formData.price}
-                onChange={(e) => handleChange("price", e.target.value)}
-                placeholder="Enter non-member price"
-              />
-            </div>
         }
 
 
         <div className="mb-3">
           <label className="form-label fw-semibold">Effective From</label>
           <MyDatePicker
+            name="effectiveFrom"
             value={formData.effectiveFrom}
             onChange={(date) => handleChange("effectiveFrom", date)}
           />
@@ -211,6 +234,7 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
         <div className="mb-3">
           <label className="form-label fw-semibold">Effective To</label>
           <MyDatePicker
+            name="effectiveTo"
             value={formData.effectiveTo}
             onChange={(date) => handleChange("effectiveTo", date)}
           />
@@ -220,6 +244,8 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
           <label className="form-label fw-semibold">Status</label>
           <Switch
             checked={formData.status === "Active"}
+            // className="butn"
+            style={{ backgroundColor: '#215e97' }}
             onChange={(checked) => handleChange("status", checked ? "Active" : "Inactive")}
             checkedChildren="Active"
             unCheckedChildren="Inactive"
@@ -227,13 +253,13 @@ const PricingDrawer = ({ open, onClose, product, onSubmit }) => {
         </div>
 
         {/* Pricing History */}
-        <Divider orientation="left">Pricing History</Divider>
-        <Table
+        {/* <Divider orientation="left">Pricing History</Divider> */}
+        {/* <Table
           columns={historyColumns}
           dataSource={historyData}
-          size="small"
+          size="small"   
           pagination={false}
-        />
+        /> */}
 
       </div>
     </Drawer>

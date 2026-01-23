@@ -1,8 +1,11 @@
 import { useEffect } from "react";
-import TableComponent from "../../component/common/TableComponent";
+import MyTable from "../../component/common/MyTable";
 import { fetchBatchesByType, clearBatchesError } from "../../features/profiles/batchMemberSlice";
 import { useSelector, useDispatch } from 'react-redux';
+import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
+import { Link, useLocation } from "react-router-dom";
 import dayjs from 'dayjs';
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 function NewGraduate() {
   const dispatch = useDispatch();
@@ -10,18 +13,55 @@ function NewGraduate() {
     loadingBatches,
     batchesData,
     batchesError
-  } = useSelector((state) => state.batchMember); 
+  } = useSelector((state) => state.batchMember);
 
-  console.log(batchesData?.data?.batches, "batchesData")
-  
+  const { columns } = useTableColumns();
+  // const tableColumns = columns["NewGraduate"];
+ const tableColumnsRaw = columns["CornMarketRewards"];
+
+  const tableColumns = tableColumnsRaw.map(col => {
+    if (col.title === "Batch Name") {
+      return {
+        ...col,
+        render: (text, record) => {
+          const targetPath = "/SimpleBatchMemberSummary";
+          return (
+            <Link
+              to={targetPath}
+              state={{
+                batchName: text,
+                batchId: record?.key,
+                batchStatus: record?.batchStatus,
+              }}
+              style={{ color: "inherit", textDecoration: "none" }}
+              onClick={() => {
+                if (record?._original?._id) {
+                    dispatch(getCornMarketBatchById(record._original._id));
+                }
+              }}
+            >
+              {text}
+            </Link>
+          );
+        }
+      };
+    }
+    return col;
+  });
+
+  console.log(batchesData?.data?.batches?.results, "batchesData")
+
   useEffect(() => {
     dispatch(fetchBatchesByType({
-      type: 'new',  
+      type: 'new-graduate',
       page: 1,
       limit: 500
     }));
   }, [dispatch]);
-
+  useEffect(() => {
+    let data = batchesData?.data?.batches?.results
+    
+  }, [batchesData])
   // Format the batches data for the table
   const formatTableData = () => {
     if (!batchesData?.data?.batches || !Array.isArray(batchesData.data.batches)) {
@@ -82,10 +122,11 @@ function NewGraduate() {
 
   return (
     <div className="" style={{ width: "100%" }}>
-      <TableComponent 
-        data={tableData} 
-        isGrideLoading={loadingBatches} 
-        screenName="NewGraduate" 
+      <MyTable
+        dataSource={tableData}
+        columns={tableColumns}
+        loading={loadingBatches}
+        selection={false}
       />
     </div>
   );

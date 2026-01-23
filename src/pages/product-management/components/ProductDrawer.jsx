@@ -4,8 +4,9 @@ import { SaveOutlined, CloseOutlined, PlusOutlined } from "@ant-design/icons";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
+import { convertSandToEuro } from "../../../utils/Utilities";
 
-const ProductForm = ({ product, productType, onClose, onSubmit }) => {
+const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) => {
   const initialFormState = {
     name: "",
     code: "",
@@ -45,7 +46,15 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
         code: product.code || "",
         description: product.description || "",
         status: product.status,
-        // Meta fields
+        memberPrice: product.currentPricing?.memberPrice
+          ? convertSandToEuro(product.currentPricing.memberPrice)
+          : product.currentPricing?.price
+            ? convertSandToEuro(product.currentPricing.price)
+            : "",
+        nonMemberPrice: product.currentPricing?.nonMemberPrice ? convertSandToEuro(product.currentPricing.nonMemberPrice) : "",
+        currency: product.currentPricing?.currency || "",
+        effectiveFrom: product.currentPricing?.effectiveFrom || null,
+        effectiveTo: product.currentPricing?.effectiveTo || null,
       });
     } else if (isProduct) {
       // Set default values for new product
@@ -61,9 +70,9 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
   }, [product, productType, isProduct, isProductType]);
 
   const CURRENCY_OPTIONS = [
-    { value: "EUR", label: "EUR (€)" },
-    { value: "USD", label: "USD ($)" },
-    { value: "GBP", label: "GBP (£)" },
+    { value: "EUR", label: "EUR" },
+    { value: "USD", label: "USD" },
+    { value: "GBP", label: "GBP" },
   ];
 
   const handleInputChange = (field, value) => {
@@ -80,30 +89,31 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
     }
   };
 
+  const getCurrencySymbol = () => {
+    switch (formData.currency) {
+      case "USD": return "$";
+      case "EUR": return "€";
+      case "GBP": return "£";
+      default: return "";
+    }
+  };
+
   const validate = (e) => {
     e.preventDefault();
     let newErrors = {};
 
     if (!formData.name?.trim())
-      newErrors.name = `${
-        isProductType ? "Product type" : "Product"
-      } name is required`;
+      newErrors.name = `${isProductType ? "Product type" : "Product"
+        } name is required`;
 
     if (!formData.code?.trim())
-      newErrors.code = `${
-        isProductType ? "Product type" : "Product"
-      } code is required`;
+      newErrors.code = `${isProductType ? "Product type" : "Product"
+        } code is required`;
 
     if (!formData.description?.trim())
       newErrors.description = "Description is required";
 
-    if (isProduct) {
-      // if (!formData.memberPrice >= 0)
-      //   newErrors.memberPrice = "Price must be greater than 0";
-
-      // if (!formData.nonMemberPrice <= 0)
-      //   newErrors.nonMemberPrice = "Non-mem ber price must be greater than 0";
-
+    if (isProduct && !hidePricing) {
       if (!formData.effectiveFrom)
         newErrors.effectiveFrom = "Effective from date is required";
     }
@@ -138,7 +148,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       }
 
       // 🔹 For membership products, use same price for both
-      if (isProduct && productType?.category === "MEMBERSHIP") {
+      if (isProduct && productType?.name === "Membership") {
         submissionData.nonMemberPrice = submissionData.memberPrice;
       }
 
@@ -164,6 +174,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
 
   return (
     <form
+      id={productType ? "product-form" : "product-type-form"}
       className="drawer-main-container product-form"
       onSubmit={(e) => {
         e.preventDefault();
@@ -181,9 +192,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
           onChange={(e) => handleInputChange("name", e.target.value)}
           hasError={!!errors.name}
           errorMessage={errors.name}
-          placeholder={`Enter ${
-            isProductType ? "product type" : "product"
-          } name`}
+          placeholder={`Enter ${isProductType ? "product type" : "product"
+            } name`}
         />
       </div>
 
@@ -195,9 +205,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
           onChange={(e) => handleInputChange("code", e.target.value)}
           hasError={!!errors.code}
           errorMessage={errors.code}
-          placeholder={`Enter unique ${
-            isProductType ? "product type" : "product"
-          } code`}
+          placeholder={`Enter unique ${isProductType ? "product type" : "product"
+            } code`}
         />
       </div>
 
@@ -216,7 +225,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
       </div>
 
       {/* Product-specific fields */}
-      {isProduct && (
+      {isProduct && !hidePricing && (
         <>
           <Divider orientation="left">Pricing Information</Divider>
 
@@ -235,16 +244,10 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
           </div>
 
           {/* Price Field - Single price for membership, dual prices for others */}
-          {productType?.category === "MEMBERSHIP" ? (
+          {productType?.name === "Membership" ? (
             <div className="mb-3">
               <label className="form-label fw-semibold">
-                Price (
-                {formData.currency === "EUR"
-                  ? "€"
-                  : formData.currency === "USD"
-                  ? "€"
-                  : "£"}
-                )
+                Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
               </label>
               <MyInput
                 name="memberPrice"
@@ -264,13 +267,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
             <>
               <div className="mb-3">
                 <label className="form-label fw-semibold">
-                  Member Price (
-                  {formData.currency === "EUR"
-                    ? "€"
-                    : formData.currency === "USD"
-                    ? "€"
-                    : "£"}
-                  )
+                  Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
                 </label>
                 <MyInput
                   name="memberPrice"
@@ -289,13 +286,7 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
 
               <div className="mb-3">
                 <label className="form-label fw-semibold">
-                  Non-Member Price (
-                  {formData.currency === "EUR"
-                    ? "€"
-                    : formData.currency === "USD"
-                    ? "€"
-                    : "£"}
-                  )
+                  Non-Member Price {formData.currency && getCurrencySymbol() ? `(${getCurrencySymbol()})` : ""}
                 </label>
                 <MyInput
                   name="nonMemberPrice"
@@ -345,8 +336,10 @@ const ProductForm = ({ product, productType, onClose, onSubmit }) => {
         <div className="switch-container">
           <Switch
             checked={formData.status === "Active"} // convert string → boolean
+            style={{ backgroundColor: '#215e97' }}
             onChange={(checked) =>
               handleInputChange("status", checked ? "Active" : "Inactive")
+
             }
             checkedChildren="Active"
             unCheckedChildren="Inactive"

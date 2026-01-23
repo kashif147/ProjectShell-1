@@ -6,6 +6,7 @@ export const searchProfiles = createAsyncThunk(
   'searchProfile/searchProfiles',
   async (query, { rejectWithValue }) => {
     try {
+      debugger
       const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
       const token = localStorage.getItem("token");
       const que = String(query).trim();

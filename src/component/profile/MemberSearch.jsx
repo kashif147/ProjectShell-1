@@ -1,149 +1,737 @@
-import React, { useState } from "react";
-import { AutoComplete, Input, Button } from "antd";
-import { SearchOutlined } from "@ant-design/icons";
-import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import React, { useState, useEffect, useRef } from "react";
+import { AutoComplete, Input, Button, message, Spin } from "antd";
+import { SearchOutlined, LoadingOutlined, UserAddOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
-// import { useTableColumns } from "../../context/TableColumnsContext";
-import { useTableColumns } from "../../context/TableColumnsContext ";
+import { useNavigate } from "react-router-dom";
+import axios from "axios";
+import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import { searchProfiles } from "../../features/profiles/SearchProfile";
 
-// Mock data extended for UI demo
-const mockMembers = [
-  {
-    id: "e2c16ea2-c6b6-4579-9ff6-febfab4e5bf5",
-    name: "John Smith",
-    email: "john.smith@email.com",
-    phone: "+44 7123 456789",
-    dob: "1985-03-12",
-    address: "12 River St, London, UK",
-    membership: "General – Full Member",
-    status: "Active",
-    expiry: "2025-12-31",
-  },
-  {
-    id: "2e1d0f2b-ad56-45e2-b712-69862183b97b",
-    name: "Peter Smith",
-    email: "peter.smith@email.com",
-    phone: "+44 7123 987654",
-    dob: "1990-07-22",
-    address: "10 Downing St, London, UK",
-    membership: "General – Full Member",
-    status: "Active",
-    expiry: "2025-12-31",
-  },
-];
+// Debounce hook
+const useDebounce = (value, delay) => {
+  const [debouncedValue, setDebouncedValue] = useState(value);
 
-const MemberSearch = ({fullWidth=false}) => {
-  const { disableFtn } = useTableColumns();
+  useEffect(() => {
+    const handler = setTimeout(() => {
+      setDebouncedValue(value);
+    }, delay);
+
+    return () => {
+      clearTimeout(handler);
+    };
+  }, [value, delay]);
+
+  return debouncedValue;
+};
+
+const MemberSearch = ({
+  fullWidth = false,
+  headerStyle = false,
+  showAddButton = false,
+  style = {},
+  disable = false,
+  // Selection behavior props
+  onSelectBehavior = "navigate", // "navigate", "callback", "both", or "none"
+  onSelectCallback = null, // Callback function when onSelectBehavior is "callback" or "both"
+  navigateTo = "/Details", // Route to navigate to when onSelectBehavior is "navigate" or "both"
+
+  // Add member functionality
+  onAddMember = null, // Callback function when "Add Member" button is clicked
+  addMemberLabel = "Add Member", // Label for the add member button
+  
+  // Search props
+  searchType = "profiles", // "profiles", "subscriptions", or "both"
+  searchContext = null, // Context for subscription search
+  
+  // NEW: Controlled input props
+  value: externalValue = undefined, // External control value
+  onChange: externalOnChange = null, // External onChange handler
+  onClear: externalOnClear = null, // Optional external clear callback
+}) => {
+  // Internal state for backward compatibility
+  const [internalValue, setInternalValue] = useState("");
+  
+  // Determine if component is controlled or uncontrolled
+  const isControlled = externalValue !== undefined;
+  const searchValue = isControlled ? externalValue : internalValue;
+  
   const [options, setOptions] = useState([]);
-  const [searchValue, setSearchValue] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [apiError, setApiError] = useState(null);
+  const [currentSearchTerm, setCurrentSearchTerm] = useState("");
+  const [selectedOption, setSelectedOption] = useState(null);
+  const [showNoMatchOption, setShowNoMatchOption] = useState(false);
+  const [isSearchTriggered, setIsSearchTriggered] = useState(false);
+  const [isManualSearch, setIsManualSearch] = useState(false);
   const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const searchTimeoutRef = useRef(null);
+  const inputRef = useRef(null);
 
-  const handleSearch = (value) => {
-    setSearchValue(value);
+  // Use debounce for search input
+  const debouncedSearchValue = useDebounce(searchValue, 300);
 
-    if (!value) {
-      setOptions([]);
+  // Update value internally when external value changes
+  useEffect(() => {
+    if (isControlled) {
+      // When external value is cleared, clear internal states too
+      if (externalValue === "") {
+        setOptions([]);
+        setApiError(null);
+        setCurrentSearchTerm("");
+        setSelectedOption(null);
+        setShowNoMatchOption(false);
+        setIsSearchTriggered(false);
+      }
+    }
+  }, [externalValue, isControlled]);
+
+  // Direct API call function for searching profiles (for search only)
+  const searchProfilesDirect = async (query) => {
+    try {
+      const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
+      const token = localStorage.getItem("token");
+      const que = String(query).trim();
+
+      if (!que) {
+        throw new Error('Search query cannot be empty');
+      }
+
+      const response = await axios.get(`${baseUrl}/profile/search?q=${que}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      return response.data.data;
+    } catch (error) {
+      throw new Error(
+        error.response?.data?.message ||
+        error.message ||
+        'Network error'
+      );
+    }
+  };
+
+  // Handle search API call with debounce using direct API call
+  useEffect(() => {
+    // Only search if search was manually triggered by typing
+    if (!isManualSearch) {
       return;
     }
 
-    const filtered = mockMembers.filter(
-      (m) =>
-        m.name.toLowerCase().includes(value.toLowerCase()) ||
-        (m.email && m.email.toLowerCase().includes(value.toLowerCase())) ||
-        (m.phone && m.phone.includes(value))
-    );
+    const fetchSearchResults = async () => {
+      if (!debouncedSearchValue.trim() || debouncedSearchValue.length < 2) {
+        setOptions([]);
+        setCurrentSearchTerm("");
+        setSelectedOption(null);
+        setShowNoMatchOption(false);
+        setIsSearchTriggered(false);
+        return;
+      }
 
-    if (filtered.length > 0) {
-      setOptions(
-        filtered.map((member) => ({
-          value: member.email || member.name,
-          label: (
-            <div style={{ padding: "8px 0" }}>
-              {/* Row 1: Name, email, phone */}
-              <div style={{ fontWeight: "600" }}>
-                {member.name}{" "}
-                <span style={{ color: "#555", fontWeight: "normal" }}>
-                  • {member.email} • {member.phone}
-                </span>
-              </div>
+      // Clear any existing timeout
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
 
-              {/* Row 2: DOB + Address */}
-              <div style={{ fontSize: "13px", color: "#555" }}>
-                DOB: {member.dob} • {member.address}
-              </div>
+      // Set loading state after a short delay to prevent flickering
+      searchTimeoutRef.current = setTimeout(() => {
+        setLoading(true);
+      }, 100);
 
-              {/* Row 3: membership, status, expiry */}
-              <div style={{ fontSize: "13px", marginTop: "2px" }}>
-                <span>📘 {member.membership}</span> •{" "}
-                <span>☑ {member.status}</span> •{" "}
-                <span>⏳ {member.expiry}</span>
-              </div>
-            </div>
-          ),
-          memberId: member.id,
-        }))
-      );
+      setApiError(null);
+      setCurrentSearchTerm(debouncedSearchValue);
+      setIsSearchTriggered(true);
+
+      try {
+        // Direct API call to search profiles (NO Redux)
+        const result = await searchProfilesDirect(debouncedSearchValue);
+
+        // Clear the timeout
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+          searchTimeoutRef.current = null;
+        }
+
+        // Check if result has data and results array
+        if (result && result.results && Array.isArray(result.results) && result.results.length > 0) {
+          const members = result.results;
+          setShowNoMatchOption(false);
+
+          setOptions(
+            members.map((member) => ({
+              value: JSON.stringify({
+                // Store member data as stringified JSON
+                displayValue: `${member.personalInfo?.forename || ''} ${member.personalInfo?.surname || ''}`,
+                membershipNumber: member.membershipNumber,
+                searchTerm: debouncedSearchValue,
+                memberData: member
+              }),
+              label: (
+                <div style={{ padding: "8px 0" }}>
+                  {/* Row 1: Name, Membership Number, Email */}
+                  <div style={{ fontWeight: "600" }}>
+                    {`${member.personalInfo?.title || ''} ${member.personalInfo?.forename || ''} ${member.personalInfo?.surname || ''}`.trim()}
+                    <span style={{ color: "#555", fontWeight: "normal" }}>
+                      • {member.membershipNumber} • {member.contactInfo?.personalEmail || 'No email'}
+                    </span>
+                  </div>
+
+                  {/* Row 2: Mobile Number, Address */}
+                  <div style={{ fontSize: "13px", color: "#555" }}>
+                    📱 {member.contactInfo?.mobileNumber || 'No phone'} •
+                    📍 {member.contactInfo?.fullAddress || 'No address'}
+                  </div>
+
+                  {/* Row 3: Additional Info */}
+                  <div style={{ fontSize: "13px", marginTop: "2px" }}>
+                    <span>👤 {member.additionalInformation?.membershipStatus || 'Unknown'}</span> •{" "}
+                    <span>🎂 {member.personalInfo?.dateOfBirth ? new Date(member.personalInfo.dateOfBirth).toLocaleDateString() : 'No DOB'}</span> •{" "}
+                    <span>💼 {member.professionalDetails?.grade || 'No grade'}</span>
+                  </div>
+                </div>
+              ),
+              memberId: member._id,
+              membershipNumber: member.membershipNumber,
+              memberData: member
+            }))
+          );
+        } else {
+          // No results found - show "Add Member" option
+          setShowNoMatchOption(true);
+          setOptions([
+            {
+              value: "__no_match__",
+              label: (
+                <div style={{ padding: "12px", textAlign: "center" }}>
+                  <div style={{ color: "#999", fontSize: "14px", marginBottom: "12px" }}>
+                    No member found for "{debouncedSearchValue}"
+                  </div>
+                  {onAddMember && (
+                    <Button
+                      type="primary"
+                      icon={<UserAddOutlined />}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (onAddMember) {
+                          onAddMember(debouncedSearchValue);
+                          // Clear the search after clicking
+                          clearSearch();
+                        }
+                      }}
+                      style={{
+                        backgroundColor: "#52c41a",
+                        borderColor: "#52c41a",
+                        fontWeight: 500
+                      }}
+                    >
+                      {addMemberLabel}
+                    </Button>
+                  )}
+                </div>
+              ),
+              disabled: false,
+            },
+          ]);
+        }
+      } catch (error) {
+        setApiError(error.message || 'Search failed');
+        message.error(`Search failed: ${error.message || 'Unknown error'}. Please try again.`);
+        setOptions([]);
+        setShowNoMatchOption(false);
+      } finally {
+        setLoading(false);
+        setIsManualSearch(false); // Reset manual search flag
+        if (searchTimeoutRef.current) {
+          clearTimeout(searchTimeoutRef.current);
+          searchTimeoutRef.current = null;
+        }
+      }
+    };
+
+    fetchSearchResults();
+
+    // Cleanup function
+    return () => {
+      if (searchTimeoutRef.current) {
+        clearTimeout(searchTimeoutRef.current);
+      }
+    };
+  }, [debouncedSearchValue, onAddMember, addMemberLabel, isManualSearch]);
+
+  // Simplified search handler - only trigger on manual typing
+  const handleSearch = (value) => {
+    console.log('Search triggered with:', value);
+    // Only trigger search if value length >= 2 and it's a new search
+    if (value.length >= 2) {
+      setIsManualSearch(true);
+    }
+
+    // Update value through handleInputChange which handles both controlled and uncontrolled
+    handleInputChange(value);
+  };
+
+  const handleSelect = async (value, option) => {
+    console.log('Selected value:', value);
+    console.log('Selected option:', option);
+    console.log('onSelectBehavior:', onSelectBehavior);
+    
+    // Check if this is a "no match" option with Add Member button
+    if (value === "__no_match__") {
+      return;
+    }
+    
+    try {
+      // Parse the stringified value to get member data
+      const parsedValue = JSON.parse(value);
+      console.log('Parsed value:', parsedValue);
+
+      setLoading(true);
+      setApiError(null);
+      setSelectedOption(parsedValue);
+      setIsManualSearch(false);
+
+      // Use the stored member data directly
+      if (parsedValue.memberData) {
+        const memberData = parsedValue.memberData;
+        const searchTerm = parsedValue.searchTerm;
+
+        // Handle selection based on onSelectBehavior prop
+        switch (onSelectBehavior) {
+          case "navigate":
+            // First clear the search input immediately
+            handleClear();
+            
+            // Use Redux for BOTH subscription AND profile search when selecting
+            try {
+              // Dispatch searchProfiles to update Redux state
+              await dispatch(searchProfiles(searchTerm)).unwrap();
+
+              // Dispatch subscription lookup
+              await dispatch(
+                getSubscriptionByProfileId({
+                  profileId: memberData?._id,
+                  isCurrent: true,
+                })
+              ).unwrap();
+
+              // Navigate to the specified route
+              navigate(navigateTo, {
+                state: {
+                  name: memberData.fullName ||
+                    `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
+                  code: memberData.membershipNumber,
+                  search: "Profile",
+                  memberData: memberData,
+                  searchTerm: searchTerm
+                }
+              });
+
+              message.success(`Member ${memberData.membershipNumber} loaded successfully`);
+            } catch (error) {
+              console.error("Redux dispatch error:", error);
+              message.error(`Failed to load member data: ${error.message}`);
+            }
+            break;
+
+          case "callback":
+            try {
+              // DON'T clear search value - keep it visible in the input!
+              // The search value should show the selected member's name or membership number
+              const displayValue = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
+              
+              // Update the value to show selected member
+              handleInputChange(displayValue);
+              
+              // Clear options dropdown
+              setOptions([]);
+
+              // Call the provided callback function and wait for it to complete
+              if (onSelectCallback && typeof onSelectCallback === 'function') {
+                await onSelectCallback(memberData, parsedValue);
+              }
+
+              // Also dispatch Redux actions for callback mode if needed
+              if (memberData?._id) {
+                await dispatch(
+                  getSubscriptionByProfileId({
+                    profileId: memberData?._id,
+                    isCurrent: true,
+                  })
+                ).unwrap();
+              }
+
+              message.success(`Member ${memberData.membershipNumber} selected`);
+            } catch (error) {
+              console.error("Callback error:", error);
+              message.error(`Failed in callback: ${error.message}`);
+            } finally {
+              setCurrentSearchTerm("");
+              setShowNoMatchOption(false);
+              setIsSearchTriggered(false);
+            }
+            break;
+
+          case "both":
+            // Clear search input
+            handleClear();
+
+            // Use Redux for BOTH subscription AND profile search when selecting
+            try {
+              // Dispatch searchProfiles to update Redux state
+              await dispatch(searchProfiles(searchTerm)).unwrap();
+
+              // Dispatch subscription lookup
+              await dispatch(
+                getSubscriptionByProfileId({
+                  profileId: memberData?._id,
+                  isCurrent: true,
+                })
+              ).unwrap();
+
+              // Both navigate and call callback
+              navigate(navigateTo, {
+                state: {
+                  name: memberData.fullName ||
+                    `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
+                  code: memberData.membershipNumber,
+                  search: "Profile",
+                  memberData: memberData,
+                  searchTerm: searchTerm
+                }
+              });
+
+              // Call the provided callback function
+              if (onSelectCallback && typeof onSelectCallback === 'function') {
+                await onSelectCallback(memberData, parsedValue);
+              }
+
+              message.success(`Member ${memberData.membershipNumber} loaded successfully`);
+            } catch (error) {
+              console.error("Redux dispatch error:", error);
+              message.error(`Failed to load member data: ${error.message}`);
+            }
+            break;
+
+          case "none":
+            // Just show success message and keep search value visible
+            const displayValueNone = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
+            handleInputChange(displayValueNone); // Keep value visible
+            setOptions([]); // Clear dropdown
+            
+            message.success(`Member ${memberData.membershipNumber} selected`);
+
+            // Still dispatch Redux actions even for "none" behavior
+            if (memberData?._id) {
+              await dispatch(
+                getSubscriptionByProfileId({
+                  profileId: memberData?._id,
+                  isCurrent: true,
+                })
+              ).unwrap();
+            }
+
+            setCurrentSearchTerm("");
+            setShowNoMatchOption(false);
+            setIsSearchTriggered(false);
+            break;
+
+          default:
+            // Default to navigate behavior
+            handleClear();
+
+            // Use Redux for BOTH subscription AND profile search when selecting
+            try {
+              // Dispatch searchProfiles to update Redux state
+              await dispatch(searchProfiles(searchTerm)).unwrap();
+
+              // Dispatch subscription lookup
+              await dispatch(
+                getSubscriptionByProfileId({
+                  profileId: memberData?._id,
+                  isCurrent: true,
+                })
+              ).unwrap();
+
+              navigate(navigateTo, {
+                state: {
+                  name: memberData.fullName ||
+                    `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
+                  code: memberData.membershipNumber,
+                  search: "Profile",
+                  memberData: memberData,
+                  searchTerm: searchTerm
+                }
+              });
+              message.success(`Member ${memberData.membershipNumber} loaded successfully`);
+            } catch (error) {
+              console.error("Redux dispatch error:", error);
+              message.error(`Failed to load member data: ${error.message}`);
+            }
+            break;
+        }
+
+        setCurrentSearchTerm("");
+        setShowNoMatchOption(false);
+        setIsSearchTriggered(false);
+        return;
+      }
+
+    } catch (error) {
+      console.error("Error handling selection:", error);
+      message.error(`Error: ${error.message || 'Unknown error'}. Please try again or contact support.`);
+      setApiError(error.message || 'Failed to handle selection');
+      
+      handleClear();
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle input change (for typing)
+  const handleInputChange = (value) => {
+    console.log('Input changed to:', value);
+    
+    // Update value based on control mode
+    if (isControlled && externalOnChange) {
+      externalOnChange(value); // Call external onChange
     } else {
-      setOptions([
-        {
-          value: "__no_match__",
-          label: (
-            <div
-              style={{
-                padding: "8px",
-                display: "flex",
-                justifyContent: "space-between",
-                alignItems: "center",
-              }}
-            >
-              <span>No Member Found</span>
-              <Button
-                size="small"
-                type="primary"
-                onClick={() => handleAdd(searchValue)}
-              >
-                Add
-              </Button>
-            </div>
-          ),
-          disabled: true,
-        },
-      ]);
+      setInternalValue(value); // Use internal state
+    }
+    
+    setSelectedOption(null);
+
+    if (value === "") {
+      setShowNoMatchOption(false);
+      setIsSearchTriggered(false);
     }
   };
 
-  const handleSelect = (value, option) => {
-    if (option.memberId) {
-      dispatch(getApplicationById({ id: option.memberId }));
-      disableFtn(false);
+  const handleClear = () => {
+    // Clear value based on control mode
+    if (isControlled && externalOnChange) {
+      externalOnChange(""); // Clear external value
+    } else {
+      setInternalValue(""); // Clear internal value
     }
-  };
-
-  const handleAdd = () => {
-    disableFtn(false);
-    setSearchValue("");
+    
+    // Clear all other states
     setOptions([]);
+    setApiError(null);
+    setCurrentSearchTerm("");
+    setSelectedOption(null);
+    setShowNoMatchOption(false);
+    setIsSearchTriggered(false);
+    setIsManualSearch(false);
+    
+    // Call external clear callback if provided
+    if (externalOnClear) {
+      externalOnClear();
+    }
+  };
+
+  // Clear search function (for internal use)
+  const clearSearch = () => {
+    handleClear();
+  };
+
+  // Handle keyboard events
+  const handleKeyDown = (e) => {
+    if (e.key === 'Enter' && searchValue.trim().length >= 2) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      if (options.length > 0 && options[0].value !== "__no_match__") {
+        const firstOption = options[0];
+        handleSelect(firstOption.value, firstOption);
+      }
+    }
+    
+    // Clear on Escape
+    if (e.key === 'Escape' && searchValue) {
+      handleClear();
+    }
+  };
+
+  // Handle input click - prevent search trigger on click
+  const handleInputClick = (e) => {
+    e.stopPropagation();
   };
 
   return (
-    <div style={{ width: fullWidth ? "100%" : "20rem" }}>
+    <div style={{
+      width: fullWidth ? "100%" : headerStyle ? "100%" : "400px",
+      position: "relative",
+      ...style
+    }}>
       <AutoComplete
         style={{ width: "100%" }}
         options={options}
         onSearch={handleSearch}
         onSelect={handleSelect}
         value={searchValue}
-        onChange={setSearchValue}
+        onChange={handleInputChange}
         dropdownMatchSelectWidth={true}
+        notFoundContent={null}
+        dropdownStyle={{
+          maxHeight: "400px",
+          overflowY: "auto",
+          borderRadius: "4px",
+          boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+          padding: "0",
+          position: "absolute",
+          zIndex: 1050
+        }}
+        filterOption={false}
+        defaultActiveFirstOption={false}
+        backfill={false}
+        getPopupContainer={trigger => trigger.parentNode}
       >
         <Input
-          // size="small"
-          prefix={<SearchOutlined />}
-          placeholder="Search Member by Email or Mobile Number"
-          // style={}
+          disabled={disable || loading}
+          ref={inputRef}
+          size={headerStyle ? "middle" : "large"}
+          prefix={
+            loading ? (
+              <Spin
+                indicator={<LoadingOutlined style={{ fontSize: 14 }} spin />}
+                size="small"
+              />
+            ) : (
+              <SearchOutlined />
+            )
+          }
+          placeholder={
+            headerStyle
+              ? "Search by name, email, or membership number..."
+              : "Search by name, email, membership number..."
+          }
           className="p-2 my-input-field"
+          style={{
+            width: "100%",
+            borderRadius: headerStyle ? "4px" : "4px",
+            border: apiError ? "1px solid #ff4d4f" : "1px solid #d9d9d9",
+            height: headerStyle ? "32px" : "40px",
+            fontSize: headerStyle ? "14px" : "16px",
+            backgroundColor: "#ffffff",
+            lineHeight: headerStyle ? "20px" : "24px"
+          }}
+          suffix={
+            searchValue && !loading && (
+              <Button
+                type="text"
+                size="small"
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleClear();
+                }}
+                style={{
+                  width: "16px",
+                  height: "16px",
+                  minWidth: "16px",
+                  padding: 0,
+                  marginRight: 0,
+                  fontSize: "10px",
+                  lineHeight: "1",
+                  display: "flex",
+                  alignItems: "center",
+                  justifyContent: "center"
+                }}
+              >
+                ×
+              </Button>
+            )
+          }
+          onKeyDown={handleKeyDown}
+          onClick={handleInputClick}
+          allowClear={false}
         />
       </AutoComplete>
+
+      {/* Show search status - ONLY when actively searching */}
+      {isSearchTriggered && searchValue && searchValue.length >= 2 && !showNoMatchOption && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          fontSize: "12px",
+          color: loading ? "#1890ff" : options.length > 0 ? "#52c41a" : "#ff4d4f",
+          padding: "4px 8px",
+          backgroundColor: "transparent",
+          marginTop: "4px",
+          zIndex: 1
+        }}>
+          {loading
+            ? `Searching for "${searchValue}"...`
+            : options.length > 0 && options[0].value !== "__no_match__"
+              ? `Found ${options.length} member(s) for "${searchValue}"`
+              : ""
+          }
+        </div>
+      )}
+
+      {/* Show "no results" status with add member option */}
+      {showNoMatchOption && !loading && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          fontSize: "12px",
+          color: "#fa8c16",
+          padding: "8px",
+          backgroundColor: "#fff7e6",
+          border: "1px solid #ffd591",
+          borderRadius: "4px",
+          marginTop: "4px",
+          zIndex: 1,
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between"
+        }}>
+          <span>
+            No member found for "{searchValue}"
+          </span>
+          {onAddMember && (
+            <Button
+              type="primary"
+              size="small"
+              icon={<UserAddOutlined />}
+              onClick={() => {
+                onAddMember(searchValue);
+                handleClear();
+              }}
+              style={{
+                backgroundColor: "#52c41a",
+                borderColor: "#52c41a",
+                fontSize: "12px",
+                height: "24px"
+              }}
+            >
+              {addMemberLabel}
+            </Button>
+          )}
+        </div>
+      )}
+
+      {/* Error message display */}
+      {apiError && (
+        <div style={{
+          position: "absolute",
+          top: "100%",
+          left: 0,
+          right: 0,
+          fontSize: "12px",
+          color: "#ff4d4f",
+          padding: "4px 8px",
+          backgroundColor: "#fff2f0",
+          border: "1px solid #ffccc7",
+          borderRadius: "0 0 4px 4px",
+          marginTop: "-1px",
+          zIndex: 1
+        }}>
+          ⚠️ {apiError}
+        </div>
+      )}
     </div>
   );
 };

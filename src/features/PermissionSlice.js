@@ -10,7 +10,7 @@ export const getAllPermissions = createAsyncThunk(
   async (_, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/permissions`, {
+      const response = await fetch(`${baseURL}/permissions`, {
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
@@ -34,7 +34,7 @@ export const addPermission = createAsyncThunk(
   async (permissionData, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${process.env.REACT_APP_POLICY_SERVICE_URL}/api/permissions`, {
+      const response = await fetch(`${process.env.REACT_APP_POLICY_SERVICE_URL}/permissions`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -60,7 +60,7 @@ export const updatePermission = createAsyncThunk(
   async ({ id, updatedPermission }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/api/permissions/${id}`, {
+      const response = await fetch(`${baseURL}/permissions/${id}`, {
         method: "PUT",
         headers: {
           Authorization: `Bearer ${token}`,
@@ -87,7 +87,7 @@ export const deletePermission = createAsyncThunk(
     try {
       const token = localStorage.getItem("token");
       const response = await fetch(
-        `${baseURL}/api/permissions/${permissionId}`,
+        `${baseURL}/permissions/${permissionId}`,
         {
           method: "DELETE",
           headers: {

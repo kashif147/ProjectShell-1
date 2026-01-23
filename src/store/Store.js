@@ -40,11 +40,15 @@ import transferRequestHistoryReducer from "../constants/TransferRequestHistory";
 import filterTransferReducer from '../features/profiles/filterTransferSlice';
 import subscriptionReducer from "../features/subscription/subscriptionSlice";
 import profileSubscriptionReducer from "../features/subscription/profileSubscriptionSlice";
-import batchMemberReducer  from '../features/profiles/batchMemberSlice';
+import batchMemberReducer from '../features/profiles/batchMemberSlice';
+import getCornMarketBatchByIdReducer from "../features/profiles/CornMarketBatchByIdSlice";
+import accountReducer from "../features/AccountSlice";
 
 const store = configureStore({
   reducer: {
     subscription: subscriptionReducer,
+    account: accountReducer,
+    cornMarketBatchById: getCornMarketBatchByIdReducer,
     profileSubscription: profileSubscriptionReducer,
     auth: authReducer, // Authentication state
     regions: regionReducer, // Regions state
@@ -69,7 +73,7 @@ const store = configureStore({
     profileDetails: profileDetailsReducer,
     users: userReducer,
     roles: roleReducer,
-    batchMember: batchMemberReducer ,
+    batchMember: batchMemberReducer,
     permissions: permissionReducer,
     roleById: roleByIdReducer,
     transferRequest: transferRequestReducer,

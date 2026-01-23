@@ -260,9 +260,9 @@
   border-inline-end: none !important;
 }
 
-/* Remove empty placeholder rows only */
+/* Show empty placeholder for no data state */
 .common-table .ant-table-placeholder {
-  display: none !important;
+  display: table-row !important;
 }
 
 /* Hide Ant Design's measurement row safely - keeps it in DOM for width calculations */
@@ -405,9 +405,6 @@
   padding-right: 8px !important;
 }
 
-
-
-
 .bulk-approval-modal .ant-modal-confirm-btns .ant-btn-primary {
   background-color: #45669d !important;
   border-color: #45669d !important;
@@ -424,8 +421,6 @@
   border-color: #d9d9d9 !important;
   color: rgba(0, 0, 0, 0.25) !important;
 }
-
-
 
 /* Add to your CSS file */
 .disabled-row {

@@ -1127,14 +1127,14 @@ const PolicyClientExample = () => {
                     const endpoints = [
                       "/health",
                       "/",
-                      "/api/health",
+                      "/health",
                       "/policy",
                       "/policy/health",
                       "/policy/evaluate",
                       "/evaluate",
-                      "/api/policy/evaluate",
+                      "/policy/evaluate",
                       "/v1/policy/evaluate",
-                      "/api/v1/policy/evaluate",
+                      "/v1/policy/evaluate",
                     ];
 
                     for (const endpoint of endpoints) {

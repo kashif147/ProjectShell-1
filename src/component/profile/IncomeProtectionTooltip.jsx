@@ -1,11 +1,13 @@
-import React, { useState } from 'react';
+import React, { useState,useEffect } from 'react';
 import { Shield, Heart, FileText, Users, Gift, Home, Percent, Trophy } from 'lucide-react';
-
+import { useLocation, useNavigate } from 'react-router-dom';
 
 export const InsuranceScreen = () => {
   const containerStyle = {
     background: 'linear-gradient(135deg, #1e3a8a 0%, #1e40af 100%)',
-    minHeight: '100vh'
+    height: '100%', // Changed from minHeight to height
+    overflowY: 'auto', // Added for scrolling
+    padding: '0.75rem'
   };
 
   const blue800Style = {
@@ -21,15 +23,15 @@ export const InsuranceScreen = () => {
   };
 
   return (
-    <div style={containerStyle} className="p-3">
-      <div className="container" style={{ maxWidth: '900px' }}>
-        
+    <div style={containerStyle}>
+      <div className="container" style={{ maxWidth: '100%' }}>
+
         {/* Header */}
-        <div style={blue800Style} className="text-white p-4 rounded-top">
+        <div style={blue800Style} className="text-white p-4 rounded-top mb-3">
           <h1 className="h2 font-weight-bold mb-3">
             INMO Income Protection Scheme – Automatic Access and 9 Months' Free Cover!
           </h1>
-          <div style={{ ...blue900Style, opacity: 0.3 }} className="p-3 rounded small">
+          <div style={{ ...blue900Style, }} className="p-3 rounded small">
             <p>The INMO has negotiated automatic membership of the INMO Income Protection Scheme, for new INMO graduate members who:</p>
             <div className="ml-4">
               <p>1. Join the INMO via this Graduate application form, <span className="font-weight-bold">and</span></p>
@@ -42,9 +44,9 @@ export const InsuranceScreen = () => {
         </div>
 
         {/* Benefits Section */}
-        <div className="bg-white p-4">
+        <div className="bg-white p-4 rounded mb-3">
           <h2 className="h2 font-weight-bold mb-4" style={{ color: '#1e3a8a' }}>The Scheme Includes:</h2>
-          
+
           <div className="row">
             {/* Left Column */}
             <div className="col-md-12 mb-3">
@@ -60,7 +62,7 @@ export const InsuranceScreen = () => {
                 </div>
               </div>
 
-              <div style={blue800Style} className="text-white p-3 rounded">
+              <div style={blue800Style} className="text-white p-3 rounded mb-3">
                 <div className="d-flex align-items-start">
                   <div className="mr-3" style={{ color: 'white', flexShrink: 0 }}>
                     <Heart size={32} />
@@ -87,7 +89,7 @@ export const InsuranceScreen = () => {
                 </div>
               </div>
 
-              <div style={blue700Style} className="text-white p-3 rounded">
+              <div style={blue700Style} className="text-white p-3 rounded mb-3">
                 <div className="d-flex align-items-start">
                   <div className="mr-3" style={{ color: 'white', flexShrink: 0 }}>
                     <Users size={32} />
@@ -129,11 +131,14 @@ export const InsuranceScreen = () => {
     </div>
   );
 };
+
 export const RewardsScreen = () => {
   // Exact Tailwind color mappings
   const containerStyle = {
     background: 'linear-gradient(135deg, #0891b2 0%, #3b82f6 100%)', // from-cyan-600 to-blue-500
-    minHeight: '100vh'
+    height: '100%', // Changed from minHeight to height
+    overflowY: 'auto', // Added for scrolling
+    padding: '0.75rem'
   };
 
   const cyan400To300 = { background: 'linear-gradient(90deg, #22d3ee 0%, #67e8f9 100%)' }; // from-cyan-400 to-cyan-300
@@ -143,19 +148,19 @@ export const RewardsScreen = () => {
   const blue200To100 = { background: 'linear-gradient(90deg, #bfdbfe 0%, #dbeafe 100%)' }; // from-blue-200 to-blue-100
 
   return (
-    <div style={containerStyle} className="p-3">
+    <div style={containerStyle}>
       <div className="container" style={{ maxWidth: '800px' }}>
-        
+
         {/* Header */}
-        <div className="bg-white rounded-top p-4">
+        <div className="bg-white rounded-top p-4 mb-3">
           <div className="d-flex align-items-center mb-4">
-            <Gift 
-              className="mr-3" 
-              style={{ 
-                width: '60px', 
+            <Gift
+              className="mr-3"
+              style={{
+                width: '60px',
                 height: '60px',
                 color: '#1e3a8a' // blue-900
-              }} 
+              }}
             />
             <div>
               <h1 className="h2 font-weight-bold mb-0" style={{ color: '#1e3a8a' }}>INMO</h1>
@@ -179,7 +184,7 @@ export const RewardsScreen = () => {
           </div>
 
           {/* Benefits List */}
-          <div>
+          <div className="mb-4">
             {/* 1. MyDoc */}
             <div className="d-flex align-items-center p-3 rounded mb-2" style={cyan400To300}>
               <Users className="mr-3" style={{ width: '40px', height: '40px', color: '#1e3a8a' }} />
@@ -230,7 +235,7 @@ export const RewardsScreen = () => {
           </div>
 
           {/* Footer Info */}
-          <div className="mt-4 small" style={{ color: '#374151' }}> {/* gray-700 */}
+          <div className="mb-4 small" style={{ color: '#374151' }}> {/* gray-700 */}
             <p className="mb-1">To get more information about Rewards Benefits, visit: <span className="font-weight-semibold">Cornmarket.ie/rewards-inmo/</span></p>
             <p className="mb-1">For Rewards Membership Terms & Conditions, visit: <span className="font-weight-semibold">Cornmarket.ie/rewards-club-terms</span></p>
             <p className="mb-1">For Income Data Protection Statement, visit: <span className="font-weight-semibold">Cornmarket.ie/rewards-privacy-notices</span></p>
@@ -253,16 +258,48 @@ export const RewardsScreen = () => {
 };
 
 const IncomeProtectionTooltip = () => {
-const [activeScreen, setActiveScreen] = useState('insurance');
+  const location = useLocation(); // Use the hook
+  const navigate = useNavigate();
+  
+  const getScreenFromPath = () => {
+    const pathSegments = location.pathname.split('/');
+    const lastSegment = pathSegments[pathSegments.length - 1];
 
+    // Check if the last segment is 'insurance' or 'rewards'
+    if (lastSegment === 'rewards') {
+      return 'rewards';
+      
+    }
+    // Default to 'insurance' for '/inmoRewards' or any other path
+    return 'insurance';
+  };
+  
+  const [activeScreen, setActiveScreen] = useState(getScreenFromPath());
+  
+  useEffect(() => {
+    const newScreen = getScreenFromPath();
+    if (newScreen !== activeScreen) {
+      setActiveScreen(newScreen);
+    }
+  }, [location.pathname, activeScreen]); // Added activeScreen to dependency array
+// Main container style with full height and scrolling
+  const mainContainerStyle = {
+    display: 'flex',
+    flexDirection: 'column',
+    height: '100vh',
+    overflow: 'hidden'
+  };
 
-
-
+  const contentContainerStyle = {
+    flex: 1,
+    overflowY: 'auto',
+    backgroundColor: '#f3f4f6' // gray-100 for background
+  };
 
   return (
-    <div>
+    <div style={mainContainerStyle}>
       {/* Navigation Tabs */}
-      <div className="bg-gray-800 p-4 flex justify-center gap-4">
+      {/* <div className="bg-gray-800 p-4 flex justify-center gap-4">
         <button
           onClick={() => setActiveScreen('insurance')}
           className={`px-6 py-3 rounded-lg font-semibold transition-all ${
@@ -283,13 +320,14 @@ const [activeScreen, setActiveScreen] = useState('insurance');
         >
           INMO Rewards
         </button>
-      </div>
+      </div> */}
 
       {/* Active Screen */}
-      {activeScreen === 'insurance' ? <InsuranceScreen /> : <RewardsScreen />}
+      <div style={contentContainerStyle}>
+        {activeScreen === 'insurance' ? <InsuranceScreen /> : <RewardsScreen />}
+      </div>
     </div>
   );
 };
 
 export default IncomeProtectionTooltip;
-

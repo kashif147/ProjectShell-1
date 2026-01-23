@@ -5,25 +5,21 @@ import axios from "axios";
 // ✅ Fetch subscription by profileId
 export const getSubscriptionByProfileId = createAsyncThunk(
   "profileSubscription/getByProfileId",
-  async ({ profileId, isCurrent = true }, { rejectWithValue }) => {
+  async ({ profileId, isCurrent = "true" }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-
+debugger
       const res = await axios.get(
-        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions`,
+        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions?profileId=${profileId}&isCurrent=${isCurrent}`,
         {
-          params: {
-            profileId,
-            isCurrent,
-          },
           headers: {
             Authorization: `Bearer ${token}`,
           },
         }
       );
 
-      // keep data unwrap consistent with your style
-      return res.data.data;
+      // Adjust based on actual API response structure
+      return  res.data.data;
     } catch (err) {
       return rejectWithValue(
         err.response?.data?.message ||

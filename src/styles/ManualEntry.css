@@ -1,5 +1,5 @@
-.batch-tabs > .ant-tabs-nav,
-.batch-tabs > div > .ant-tabs-nav {
+.batch-tabs>.ant-tabs-nav,
+.batch-tabs>div>.ant-tabs-nav {
   margin-left: 38px !important;
   margin-right: 32px !important;
   margin-bottom: 10px !important;

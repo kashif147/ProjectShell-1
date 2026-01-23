@@ -1,9 +1,16 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { useLocation } from "react-router-dom";
+import { useSelector, useDispatch } from 'react-redux';
 import { Row, Col, Button, Space, Tabs, Table } from "antd";
+import { FileExcelOutlined, DownloadOutlined } from "@ant-design/icons";
+import * as XLSX from "xlsx";
 import moment from "moment";
 import { tableData } from "../../Data"; // Assuming batch data comes from here
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
+import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
+import { useEffect } from "react";
+import { getUnifiedPaginationConfig } from "../../component/common/UnifiedPagination";
+import dayjs from "dayjs";
 
 const inputStyle = {
   width: "100%",
@@ -23,80 +30,205 @@ const buttonStyle = {
   minWidth: "150px",
 };
 
-// Table columns configuration
 const columns = [
   {
-    title: "First name",
-    dataIndex: "First name",
+    title: "Full Name",
+    dataIndex: "fullName",
+    key: "fullName",
     ellipsis: true,
-    width: 150,
-    render: (_, record) =>
-      `${record["First name"] || ""} ${record["Last name"] || ""}`.trim(),
+    width: 180,
   },
   {
-    dataIndex: "Last name",
-    title: "Last name",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Membership No",
     title: "Membership No",
+    dataIndex: "membershipNo",
+    key: "membershipNo",
+    ellipsis: true,
+    width: 140,
+  },
+  {
+    title: "Address",
+    key: "address",
+    ellipsis: true,
+    width: 300,
+    render: (_, record) => (
+      <>
+        {[
+          record.addressLine1,
+          record.addressLine2,
+          record.addressLine3,
+          record.addressCity,
+          record.addressCounty,
+          record.addressPostcode,
+        ]
+          .filter(Boolean)
+          .join(", ")}
+      </>
+    ),
+  },
+  {
+    title: "Email",
+    dataIndex: "email",
+    key: "email",
+    ellipsis: true,
+    width: 200,
+  },
+  {
+    title: "Mobile",
+    dataIndex: "mobileNumber",
+    key: "mobileNumber",
     ellipsis: true,
     width: 150,
-  },
-  {
-    dataIndex: "Value for Periods Selected",
-    title: "Value for Periods Selected",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Arrears",
-    title: "Arrears",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Comments",
-    title: "Comments",
-    ellipsis: true,
-    width: 150,
-  },
-  {
-    dataIndex: "Advance",
-    title: "Advance",
-    ellipsis: true,
-    width: 100,
-  },
-  {
-    dataIndex: "Total Amount",
-    title: "Total Amount",
-    ellipsis: true,
-    width: 100,
   },
 ];
 
 function SimpleBatchMemberSummary() {
   const location = useLocation();
-  const { batchName, batchId } = location.state || {};
-  const [activeKey, setActiveKey] = useState("1");
+  const dispatch = useDispatch();
 
-  // Find the current batch data
-  const currentBatch = tableData.find(
-    (b) => b.id === batchId || b.batchName === batchName
+  const { data: apiData, loading, error } = useSelector(
+    (state) => state.cornMarketBatchById
   );
+  debugger
+  const { batchName, batchId, search } = location.state || {};
+  const [activeKey, setActiveKey] = useState("1");
+const normalizeProfiles = (profiles = []) =>
+  profiles.map((p, index) => ({
+    key: p._id || p.id || index,
 
-  const batchInfo = currentBatch || {};
-  const members = Array.isArray(batchInfo.members) ? batchInfo.members : [];
+    // Full Name (API OR mock)
+    fullName:
+      p.fullName ??
+      `${p.forenames ?? ""} ${p.surname ?? ""}`.trim(),
+
+    // Membership
+    membershipNo:
+      p.membershipNo ??
+      p.membershipNumber ??
+      "",
+
+    // Address (API OR mock)
+    addressLine1: p.addressLine1 ?? p.address ?? "",
+    addressLine2: p.addressLine2 ?? p.addr2 ?? "",
+    addressLine3: p.addressLine3 ?? p.addr3 ?? "",
+    addressCity: p.addressCity ?? p.addr4 ?? "",
+    addressCounty: p.addressCounty ?? "",
+    addressPostcode: p.addressPostcode ?? p.eircode ?? "",
+
+    // Contact
+    email: p.email ?? p.emailAddress ?? "",
+    mobileNumber: p.mobileNumber ?? p.telephoneMobile ?? "",
+  }));
+
+  // Use API data if available, otherwise use mock data for Direct Debit
+const data = useMemo(() => {
+  // 🔹 Scenario 1: API response (different keys)
+  if (apiData) {
+    return {
+      ...apiData,
+      profiles: normalizeProfiles(apiData.profiles),
+    };
+  }
+
+  // 🔹 Scenario 2: Direct Debit Summary (already correct keys)
+  if (search === "DirectDebitSummary") {
+    return {
+      id: batchId,
+      name: batchName || "Monthly DD Batch - January 2024",
+      date: "2024-01-05",
+      createdBy: "John Doe",
+      profiles: normalizeProfiles([
+        {
+          id: "M001",
+          fullName: "Alice Thompson",
+          membershipNo: "45217A",
+          addressLine1: "123 Main St",
+          addressCity: "Dublin",
+          addressCounty: "Dublin",
+          email: "alice@example.com",
+          mobileNumber: "0871234567",
+        },
+        {
+          id: "M002",
+          fullName: "Bob Murphy",
+          membershipNo: "93824B",
+          addressLine1: "45 Park Lane",
+          addressCity: "Cork",
+          addressCounty: "Cork",
+          email: "bob@example.com",
+          mobileNumber: "0867654321",
+        },
+      ]),
+    };
+  }
+
+  return null;
+}, [apiData, search, batchId, batchName]);
+
+console.log("btch",data?.profiles)
+console.log("btch1",apiData?.profiles)
+  // Function to export to Excel with batch name as filename
+  const exportToExcel = () => {
+    // Check if we have data and profiles
+    if (!data?.profiles || data.profiles.length === 0) {
+      console.warn("No data to export");
+      return;
+    }
+
+    // Prepare the data for Excel
+    const excelData = data.profiles.map((member) => ({
+      "Full Name": member.fullName || "",
+      "Membership No": member.membershipNo || "",
+      "Address": [
+        member.addressLine1,
+        member.addressLine2,
+        member.addressLine3,
+        member.addressCity,
+        member.addressCounty,
+        member.addressPostcode,
+      ]
+        .filter(Boolean)
+        .join(", "),
+      "Email": member.email || "",
+      "Mobile": member.mobileNumber || "",
+    }));
+
+    // Create worksheet and workbook
+    const worksheet = XLSX.utils.json_to_sheet(excelData);
+    const workbook = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Batch Members");
+
+    // Generate Excel file
+    const excelBuffer = XLSX.write(workbook, {
+      bookType: "xlsx",
+      type: "array",
+    });
+
+    // Create blob and download
+    const blob = new Blob([excelBuffer], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    });
+
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+
+    // Use batch name for filename, sanitize it
+    const batchNameForFile = data?.name
+      ? data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()
+      : "batch_members";
+
+    a.download = `${batchNameForFile}.xlsx`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
 
   const getSafeDate = (dateValue) => {
     if (!dateValue) return null;
     if (moment.isMoment(dateValue)) return dateValue;
     return moment(dateValue);
   };
-
-  const displayBatchDate = getSafeDate(batchInfo.batchDate);
 
   const items = [
     {
@@ -112,16 +244,11 @@ function SimpleBatchMemberSummary() {
         >
           <Table
             columns={columns}
-            dataSource={members}
+            dataSource={data?.profiles}
             className="mt-2"
-            rowKey={(record) => record.id || record["Membership No"]}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
-            }}
+            pagination={getUnifiedPaginationConfig({
+              itemName: "items",
+            })}
             scroll={{ x: 'max-content' }}
             bordered
             size="middle"
@@ -142,16 +269,12 @@ function SimpleBatchMemberSummary() {
         >
           <Table
             columns={columns}
-              className="mt-2"
-            dataSource={[]}
+            className="mt-2"
+            dataSource={data?.profiles}
             rowKey={(record) => record.id || record["Membership No"]}
-            pagination={{
-              pageSize: 10,
-              showSizeChanger: true,
-              showQuickJumper: true,
-              showTotal: (total, range) =>
-                `${range[0]}-${range[1]} of ${total} items`,
-            }}
+            pagination={getUnifiedPaginationConfig({
+              itemName: "items",
+            })}
             scroll={{ x: 'max-content' }}
             bordered
             size="middle"
@@ -167,41 +290,12 @@ function SimpleBatchMemberSummary() {
   };
 
   const handleTrigger = () => {
-    // Add your trigger button logic here
     console.log("Trigger button clicked");
   };
 
   return (
     <div>
-      {/* Trigger Button Row - Placed ABOVE the header fields */}
-      <Row
-        style={{
-     padding: "5px 35px 0px 35px",
-          display: "flex",
-          justifyContent: "flex-end",
-          alignItems: "center",
-        }}
-      >
-        <Col span={24} style={{ textAlign: "right" }}>
-          <Button
-            onClick={handleTrigger}
-            style={{
-              backgroundColor: "#215e97",
-              color: "white",
-              borderRadius: "6px",
-              padding: "6px 20px",
-              height: "auto",
-              fontWeight: "500",
-              border: "1px solid #215e97",
-              minWidth: "120px",
-            }}
-          >
-            Trigger
-          </Button>
-        </Col>
-      </Row>
-
-      {/* Header Info - BELOW the trigger button */}
+      {/* Header Info */}
       <Row
         gutter={[16, 16]}
         style={{
@@ -212,7 +306,7 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Name</label>
           <input
-            value={batchInfo.batchName || ""}
+            value={data?.name || ""}
             disabled
             style={inputStyle}
           />
@@ -220,9 +314,7 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Date</label>
           <input
-            value={
-              displayBatchDate ? displayBatchDate.format("DD/MM/YYYY") : ""
-            }
+            value={dayjs(data?.date).format("DD/MM/YYYY") || ""}
             disabled
             style={inputStyle}
           />
@@ -230,7 +322,6 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Batch Status</label>
           <input
-            value={batchInfo.batchStatus || ""}
             disabled
             style={inputStyle}
           />
@@ -238,7 +329,7 @@ function SimpleBatchMemberSummary() {
         <Col span={6}>
           <label>Created By</label>
           <input
-            value={batchInfo.createdBy || ""}
+            value={data?.createdBy || ""}
             disabled
             style={inputStyle}
           />
@@ -252,18 +343,57 @@ function SimpleBatchMemberSummary() {
           paddingRight: "35px",
           paddingBottom: "20px",
           display: "flex",
+          justifyContent: "space-between",
           alignItems: "center",
         }}
       >
-        <Col span={24}>
+        {/* Left Side Buttons */}
+        <Col>
           <Space size="middle">
-            <Button style={buttonStyle}>
-              Include
-            </Button>
+            <Button style={buttonStyle}>Include</Button>
             <CommonPopConfirm title="Do you want to exclude member?">
               <Button style={buttonStyle}>Exclude Members</Button>
             </CommonPopConfirm>
           </Space>
+        </Col>
+
+        {/* Right Side Export Button */}
+        <Col>
+          <a
+            onClick={exportToExcel}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "10px",
+              color: "#0969da",
+              textDecoration: "none",
+              padding: "10px 16px",
+              border: "1px solid #d0d7de",
+              borderRadius: "6px",
+              backgroundColor: "white",
+              fontSize: "14px",
+              fontWeight: "500",
+              transition: "all 0.2s ease",
+              cursor: "pointer",
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = "#f6f8fa";
+              e.currentTarget.style.borderColor = "#0969da";
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = "white";
+              e.currentTarget.style.borderColor = "#d0d7de";
+            }}
+          >
+            <FileExcelOutlined />
+            <span>
+              {data?.name
+                ? `${data.name.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.xlsx`
+                : "batch_data.xlsx"
+              }
+            </span>
+            <DownloadOutlined style={{ fontSize: "12px" }} />
+          </a>
         </Col>
       </Row>
 

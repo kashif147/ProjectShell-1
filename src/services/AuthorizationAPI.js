@@ -1,5 +1,5 @@
 // API service for authorization-related calls using existing JWT and policy endpoints
-const API_BASE_URL = process.env.REACT_APP_BASE_URL_DEV;
+const API_BASE_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 
 class AuthorizationAPI {
   // Decode JWT token to extract user data
