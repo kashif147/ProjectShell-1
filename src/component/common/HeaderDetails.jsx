@@ -795,7 +795,8 @@ function HeaderDetails() {
             location?.pathname == "/templeteSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
-            location?.pathname == "/InAppNotifications") && (
+            location?.pathname == "/InAppNotifications" ||
+            location?.pathname === "/CommunicationBatchDetail") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
@@ -850,7 +851,8 @@ function HeaderDetails() {
                                   nav === "/CornMarketRewards" ||
                                   nav === "/RecruitAFriend" ||
                                   nav === "/DirectDebit" ||
-                                  nav === "/InAppNotifications"
+                                  nav === "/InAppNotifications" ||
+                                  nav === "/CommunicationBatchDetail"
                                 ) {
                                   setIsSimpleBatchOpen(true);
                                 }
@@ -1335,6 +1337,8 @@ function HeaderDetails() {
             batchType = "recruit-friend";
           } else if (nav.toLowerCase().includes("directdebit")) {
             batchType = "direct-debit";
+          } else if (nav.toLowerCase().includes("inappnotifications") || nav.toLowerCase().includes("communicationbatchdetail")) {
+            batchType = "communication";
           }
 
           if (batchType) {

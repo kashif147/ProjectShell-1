@@ -10,6 +10,8 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
   const location = useLocation();
   const [formData, setFormData] = useState({
     name: "",
+    title: "",
+    description: "",
     date: null,
   });
 
@@ -29,7 +31,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     }
 
     lastPathRef.current = path;
-    console.log("🔄 useEffect triggered with path:", path);
 
     let determinedType = "";
 
@@ -42,9 +43,10 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       determinedType = "recruit-friend";
     } else if (path.toLowerCase().includes("directdebit")) {
       determinedType = "direct-debit";
+    } else if (path.toLowerCase().includes("inappnotifications") || path.toLowerCase().includes("communicationbatchdetail")) {
+      determinedType = "communication";
     } else {
       determinedType = "";
-      console.warn("⚠️ Could not determine batch type from path:", path);
     }
 
     console.log("🎯 Determined batch type:", determinedType);
@@ -155,22 +157,11 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
     const apiData = {
       name: formData.name.trim(),
+      title: formData.title.trim(),
+      description: formData.description.trim(),
       type: apiType, // Use the determined type
       date: formattedDate,
     };
-
-    console.log("📤 FINAL Payload to be sent:", JSON.stringify(apiData, null, 2));
-    console.log("Expected for /CornMarketRewards: type should be 'inmo-rewards'");
-    console.log("=".repeat(50));
-
-    // TEST: Let's also log what would happen with different logic
-    console.log("🧪 Testing alternative determinations:");
-    console.log("1. State-based:", batchType);
-    console.log("2. Ref-based:", batchTypeRef.current);
-    console.log("3. Direct path analysis:", hardcodedType);
-    console.log("4. Using includes '/NewGraduate':", location.pathname.includes("/NewGraduate"));
-    console.log("5. Using includes '/CornMarketRewards':", location.pathname.includes("/CornMarketRewards"));
-    console.log("6. Using includes '/RecruitAFriend':", location.pathname.includes("/RecruitAFriend"));
 
     const token = localStorage.getItem("accessToken") ||
       localStorage.getItem("token") ||
@@ -184,8 +175,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     setLoading(true);
 
     try {
-      console.log("🌐 Making API request...");
-
       const response = await axios.post(
         `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batches`,
         apiData,
@@ -198,8 +187,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         }
       );
 
-      console.log("✅ API Response:", response.data);
-
       if (onSubmit && typeof onSubmit === 'function') {
         onSubmit(response.data);
       }
@@ -208,6 +195,8 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
       setFormData({
         name: "",
+        title: "",
+        description: "",
         date: null,
       });
       setErrors({});
@@ -276,6 +265,8 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         return "Recruit A Friend";
       case "direct-debit":
         return "Direct Debit";
+      case "communication":
+        return "Communication";
       default:
         return "Batch";
     }
@@ -321,27 +312,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
           border: "1px solid #e8e8e8"
         }}>
           <Row gutter={[16, 16]}>
-            {/* <Col span={24}>
-              <div style={{ 
-                marginBottom: "16px",
-                padding: "12px",
-                backgroundColor: "#fff0f0",
-                borderRadius: "4px",
-                borderLeft: "4px solid #ff4d4f"
-              }}>
-                <strong style={{ color: "#ff4d4f" }}>DEBUG PANEL - Current State:</strong>
-                <div><strong>Path:</strong> {location.pathname}</div>
-                <div><strong>Batch Type (UI):</strong> {batchType}</div>
-                <div><strong>Batch Type (Ref):</strong> {batchTypeRef.current}</div>
-                <div><strong>Display Title:</strong> {getBatchTypeDisplay()}</div>
-                <div><strong>Expected API Type:</strong> {
-                  location.pathname.toLowerCase().includes("cornmarketrewards") ? "inmo-rewards" :
-                  location.pathname.toLowerCase().includes("newgraduate") ? "new-graduate" :
-                  location.pathname.toLowerCase().includes("recruitafriend") ? "recruit-friend" : "unknown"
-                }</div>
-              </div>
-            </Col> */}
-
             <Col span={24}>
               <MyInput
                 label="Batch Name:"
@@ -352,6 +322,28 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
                 error={errors.name}
                 validateOnBlur={true}
                 placeholder={`Enter ${getBatchTypeDisplay()} batch name`}
+              />
+            </Col>
+
+            <Col span={24}>
+              <MyInput
+                label="Title:"
+                name="title"
+                value={formData.title}
+                onChange={(e) => handleChange("title", e.target.value)}
+                placeholder="Enter title"
+              />
+            </Col>
+
+            <Col span={24}>
+              <MyInput
+                label="Description:"
+                name="description"
+                type="textarea"
+                rows={4}
+                value={formData.description}
+                onChange={(e) => handleChange("description", e.target.value)}
+                placeholder="Enter description"
               />
             </Col>
 
