@@ -1,10 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Table, Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty } from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty } from "antd";
 import dayjs from "dayjs";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
-
 import { useSelector } from "react-redux";
+import SubTableComp from "../common/SubTableComp";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -65,7 +65,7 @@ const TransactionHistory = () => {
     }
   };
 
-  const columns = [
+  const columns = useMemo(() => [
     {
       title: "Date",
       dataIndex: "date",
@@ -95,36 +95,40 @@ const TransactionHistory = () => {
         <span style={{ color: value < 0 ? "red" : "green" }}>€{value?.toLocaleString() || 0}</span>
       ),
     },
-  ];
+  ], []);
 
   // ---- Filtering logic ----
-  const filteredData = Array.isArray(data) ? data.filter((d) => {
-    // Search text (description or reference)
-    const matchesSearch =
-      (d.description?.toLowerCase().includes(searchText.toLowerCase()) || false) ||
-      (d.reference?.toLowerCase().includes(searchText.toLowerCase()) || false);
+  const filteredData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
 
-    // Transaction type (debit/credit/all)
-    const matchesType =
-      transactionType === "All" ||
-      (transactionType === "debit" && d.debit) ||
-      (transactionType === "credit" && d.credit);
+    return data.filter((d) => {
+      // Search text (description or reference)
+      const matchesSearch =
+        (d.description?.toLowerCase().includes(searchText.toLowerCase()) || false) ||
+        (d.reference?.toLowerCase().includes(searchText.toLowerCase()) || false);
 
-    // Date range filter
-    const matchesDate =
-      !dateRange.length ||
-      (dayjs(d.date).isAfter(dateRange[0].startOf("day")) &&
-        dayjs(d.date).isBefore(dateRange[1].endOf("day")));
+      // Transaction type (debit/credit/all)
+      const matchesType =
+        transactionType === "All" ||
+        (transactionType === "debit" && d.debit) ||
+        (transactionType === "credit" && d.credit);
 
-    // Amount range filter (check debit/credit whichever exists)
-    const amount = d.debit || d.credit || 0;
-    let matchesAmount = true;
-    if (amountRange === "small") matchesAmount = amount <= 500;
-    if (amountRange === "medium") matchesAmount = amount > 500 && amount <= 1000;
-    if (amountRange === "large") matchesAmount = amount > 1000;
+      // Date range filter
+      const matchesDate =
+        !dateRange.length ||
+        (dayjs(d.date).isAfter(dateRange[0].startOf("day")) &&
+          dayjs(d.date).isBefore(dateRange[1].endOf("day")));
 
-    return matchesSearch && matchesType && matchesDate && matchesAmount;
-  }) : [];
+      // Amount range filter (check debit/credit whichever exists)
+      const amount = d.debit || d.credit || 0;
+      let matchesAmount = true;
+      if (amountRange === "small") matchesAmount = amount <= 500;
+      if (amountRange === "medium") matchesAmount = amount > 500 && amount <= 1000;
+      if (amountRange === "large") matchesAmount = amount > 1000;
+
+      return matchesSearch && matchesType && matchesDate && matchesAmount;
+    });
+  }, [data, searchText, transactionType, dateRange, amountRange]);
 
   // Reset filters
   const handleReset = () => {
@@ -190,14 +194,16 @@ const TransactionHistory = () => {
 
       {/* Table */}
       <Card bodyStyle={{ padding: 0 }}>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          pagination={{ pageSize: 10, showSizeChanger: true }}
-          bordered
-          loading={loading}
-          locale={{ emptyText: <Empty description="No transactions found" /> }}
-        />
+        {loading ? (
+          <div style={{ padding: "50px", textAlign: "center" }}>
+            <Spin size="large" />
+          </div>
+        ) : (
+          <SubTableComp
+            columns={columns}
+            dataSource={filteredData}
+          />
+        )}
       </Card>
     </div>
   );
