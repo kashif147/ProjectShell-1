@@ -225,6 +225,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         <div className="mb-3">
           <label className="form-label fw-semibold">Effective From</label>
           <MyDatePicker
+            name="effectiveFrom"
             value={formData.effectiveFrom}
             onChange={(date) => handleChange("effectiveFrom", date)}
           />
@@ -233,6 +234,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         <div className="mb-3">
           <label className="form-label fw-semibold">Effective To</label>
           <MyDatePicker
+            name="effectiveTo"
             value={formData.effectiveTo}
             onChange={(date) => handleChange("effectiveTo", date)}
           />
