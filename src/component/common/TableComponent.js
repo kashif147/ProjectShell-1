@@ -51,6 +51,87 @@ import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchB
 
 const EditableContext = React.createContext(null);
 
+const EditableRow = ({ index, ...props }) => {
+  const [form] = Form.useForm();
+  return (
+    <Form form={form} component={false}>
+      <EditableContext.Provider value={form}>
+        <tr {...props} />
+      </EditableContext.Provider>
+    </Form>
+  );
+};
+
+const EditableCell = ({
+  title,
+  editable,
+  children,
+  dataIndex,
+  record,
+  handleSave,
+  ...restProps
+}) => {
+  const [editing, setEditing] = useState(false);
+  const inputRef = useRef(null);
+  const form = useContext(EditableContext);
+
+  useEffect(() => {
+    if (editing) {
+      inputRef.current?.focus();
+    }
+  }, [editing]);
+
+  const toggleEdit = () => {
+    setEditing(!editing);
+    form.setFieldsValue({
+      [dataIndex]: record[dataIndex],
+    });
+  };
+
+  const save = async () => {
+    try {
+      const values = await form.validateFields();
+      toggleEdit();
+      handleSave({
+        ...record,
+        ...values,
+      });
+    } catch (errInfo) { }
+  };
+
+  let childNode = children;
+  if (editable) {
+    childNode = editing ? (
+      <Form.Item
+        style={{
+          margin: 0,
+        }}
+        name={dataIndex}
+        rules={[
+          {
+            required: true,
+            message: `${title} is required.`,
+          },
+        ]}
+      >
+        <Input ref={inputRef} onPressEnter={save} onBlur={save} />
+      </Form.Item>
+    ) : (
+      <div
+        className="editable-cell-value-wrap"
+        style={{
+          paddingInlineEnd: 24,
+          width: "1px",
+        }}
+        onClick={toggleEdit}
+      >
+        {children}
+      </div>
+    );
+  }
+  return <td {...restProps}>{childNode}</td>;
+};
+
 const DraggableHeaderCell = ({ id, style, children, ...props }) => {
   const { attributes, listeners, setNodeRef, isDragging } = useSortable({ id });
   const customStyle = {
@@ -130,7 +211,9 @@ const TableComponent = ({
     selectedRowKeys !== undefined && onSelectionChange !== undefined;
 
   useEffect(() => {
-    setdataSource(data);
+    if (JSON.stringify(dataSource) !== JSON.stringify(data)) {
+      setdataSource(data);
+    }
     // When data changes, filter out selected keys that no longer exist
     if (!isExternallyControlled && internalSelectedRowKeys.length > 0) {
       const validKeys = internalSelectedRowKeys.filter(
@@ -168,7 +251,7 @@ const TableComponent = ({
   const fileInputRef = useRef(null);
 
   // **UPDATED: Row click handler that can be overridden by props**
-  const handleRowClick = (record, rowIndex) => {
+  const handleRowClick = useCallback((record, rowIndex) => {
     // Call external handler first if provided
     if (externalOnRowClick) {
       externalOnRowClick(record, rowIndex);
@@ -183,7 +266,7 @@ const TableComponent = ({
       setSelectedRowData([record]);
       setSelectedRowIndex(rowIndex);
     }
-  };
+  }, [externalOnRowClick, disableDefaultRowClick, setSelectedRowData, setSelectedRowIndex]);
 
   // Alternative: Separate handlers for different scenarios
   const handleRowClickWithDefault = (record, rowIndex) => {
@@ -327,7 +410,7 @@ const TableComponent = ({
   ]);
 
   // Build columns
-  const draggableColumns = [
+  const draggableColumns = useMemo(() => [
     {
       title: (
         <Gridmenu
@@ -753,7 +836,7 @@ const TableComponent = ({
         return true;
       },
     })),
-  ];
+  ], [columnsDragbe, columnsForFilter, screenName, location?.pathname, handleRowClick, dispatch, navigate, getProfile]);
 
   // Pagination logic with UnifiedPagination
   const defaultPageSize = useMemo(() => getDefaultPageSize(dataSource.length), [dataSource.length]);
@@ -781,88 +864,8 @@ const TableComponent = ({
     return batch;
   };
 
-  const EditableRow = ({ index, ...props }) => {
-    const [form] = Form.useForm();
-    return (
-      <Form form={form} component={false}>
-        <EditableContext.Provider value={form}>
-          <tr {...props} />
-        </EditableContext.Provider>
-      </Form>
-    );
-  };
 
-  const EditableCell = ({
-    title,
-    editable,
-    children,
-    dataIndex,
-    record,
-    handleSave,
-    ...restProps
-  }) => {
-    const [editing, setEditing] = useState(false);
-    const inputRef = useRef(null);
-    const form = useContext(EditableContext);
-
-    useEffect(() => {
-      if (editing) {
-        inputRef.current?.focus();
-      }
-    }, [editing]);
-
-    const toggleEdit = () => {
-      setEditing(!editing);
-      form.setFieldsValue({
-        [dataIndex]: record[dataIndex],
-      });
-    };
-
-    const save = async () => {
-      try {
-        const values = await form.validateFields();
-        toggleEdit();
-        handleSave({
-          ...record,
-          ...values,
-        });
-      } catch (errInfo) { }
-    };
-
-    let childNode = children;
-    if (editable) {
-      childNode = editing ? (
-        <Form.Item
-          style={{
-            margin: 0,
-          }}
-          name={dataIndex}
-          rules={[
-            {
-              required: true,
-              message: `${title} is required.`,
-            },
-          ]}
-        >
-          <Input ref={inputRef} onPressEnter={save} onBlur={save} />
-        </Form.Item>
-      ) : (
-        <div
-          className="editable-cell-value-wrap"
-          style={{
-            paddingInlineEnd: 24,
-            width: "1px",
-          }}
-          onClick={toggleEdit}
-        >
-          {children}
-        </div>
-      );
-    }
-    return <td {...restProps}>{childNode}</td>;
-  };
-
-  const handleSave = (row) => {
+  const handleSave = useCallback((row) => {
     const newData = [...dataSource];
     const index = newData.findIndex((item) => row.key === item.key);
     const item = newData[index];
@@ -871,16 +874,16 @@ const TableComponent = ({
       ...row,
     });
     setGridData(newData);
-  };
+  }, [dataSource, setGridData]);
 
-  const components = {
+  const components = useMemo(() => ({
     body: {
       row: EditableRow,
       cell: EditableCell,
     },
-  };
+  }), []);
 
-  const editableColumns = draggableColumns.map((col) => {
+  const editableColumns = useMemo(() => draggableColumns.map((col) => {
     if (!col.editable) {
       return col;
     }
@@ -894,20 +897,20 @@ const TableComponent = ({
         handleSave,
       }),
     };
-  });
+  }), [draggableColumns, handleSave]);
 
   // Calculate minimum width based on header text length for auto-sizing columns
-  const calculateMinWidth = (title) => {
+  const calculateMinWidth = useCallback((title) => {
     if (!title) return 80; // Default minimum
     // Estimate width: ~8px per character for typical font, plus padding (20px total)
     // Add extra space for sorting/filter icons if present (~30px)
     const baseWidth = title.toString().length * 8 + 20;
     // Minimum width should be at least the header text width
     return Math.max(baseWidth, 80); // Minimum 80px
-  };
+  }, []);
 
   // Remove width from all non-fixed columns but add minWidth based on header text
-  const processedColumns = editableColumns.map((col) => {
+  const processedColumns = useMemo(() => editableColumns.map((col) => {
     if (!col.fixed) {
       const { width, ...rest } = col;
       return {
@@ -916,7 +919,7 @@ const TableComponent = ({
       };
     }
     return col; // Keep width for fixed columns (checkbox, actions)
-  });
+  }), [editableColumns, calculateMinWidth]);
 
   return (
     <DndContext

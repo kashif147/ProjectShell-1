@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, Row, Col, Input, Select, Button, Tag } from "antd";
 import {
     UserOutlined,
@@ -26,7 +26,7 @@ const CommunicationBatchDetail = () => {
     const batchId = location.state?.batchId || "#BTH-2023-08-15";
 
     // Static Columns Definition
-    const tableColumns = [
+    const tableColumns = useMemo(() => [
         {
             dataIndex: "memberName",
             title: "Mbbember",
@@ -102,7 +102,7 @@ const CommunicationBatchDetail = () => {
                 <Button type="text" icon={<MoreOutlined />} />
             )
         }
-    ];
+    ], []);
 
     // Static Stats Data
     const stats = {
@@ -117,7 +117,7 @@ const CommunicationBatchDetail = () => {
     };
 
     // Static Table Data
-    const data = Array.from({ length: 15 }).map((_, i) => ({
+    const data = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
         key: i,
         memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
         memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
@@ -127,7 +127,7 @@ const CommunicationBatchDetail = () => {
         recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
         timestamp: "Aug 15, 11:02 AM",
         status: i % 3 === 0 ? "Failed" : i % 2 === 0 ? "Read" : "Delivered"
-    }));
+    })), []);
 
     const buttonStyle = {
         backgroundColor: "#215e97",
