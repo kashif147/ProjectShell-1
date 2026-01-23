@@ -8,14 +8,15 @@ import {
     SearchOutlined,
     ExportOutlined,
     ReloadOutlined,
-    MoreOutlined
+    MoreOutlined,
+    SendOutlined
 } from "@ant-design/icons";
 import MyTable from "../../component/common/MyTable";
 import { useLocation, useNavigate } from "react-router-dom";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { Space } from "antd";
+import Toolbar from "../../component/common/Toolbar";
 
-const { Search } = Input;
 const { Option } = Select;
 
 const CommunicationBatchDetail = () => {
@@ -196,6 +197,9 @@ const CommunicationBatchDetail = () => {
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <CommonPopConfirm title="Are you sure you want to trigger notifications for all members in this batch?">
+                            <Button style={retryButtonStyle} icon={<SendOutlined />}>Trigger Notifications</Button>
+                        </CommonPopConfirm>
                         <Button style={navyButtonStyle}>Include</Button>
                         <CommonPopConfirm title="Are you sure you want to exclude members?">
                             <Button style={navyButtonStyle}>Exclude Members</Button>
@@ -250,20 +254,7 @@ const CommunicationBatchDetail = () => {
                 </Row>
 
                 {/* Filters Row */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', backgroundColor: '#fff', padding: '16px', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
-                        <Search placeholder="Search members..." style={{ width: 300 }} />
-                        <Select defaultValue="All Status" style={{ width: 150 }}>
-                            <Option value="All Status">All Status</Option>
-                            <Option value="Delivered">Delivered</Option>
-                            <Option value="Read">Read</Option>
-                            <Option value="Failed">Failed</Option>
-                        </Select>
-                    </div>
-                    <div style={{ color: '#8c8c8c' }}>
-                        Showing 1-10 of 12,500
-                    </div>
-                </div>
+                <Toolbar />
             </div>
 
             {/* Table */}

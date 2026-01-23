@@ -675,6 +675,7 @@ function HeaderDetails() {
       {/* New Breadcrumb Component */}
       {
         location?.pathname !== "/applicationMgt" &&
+        location?.pathname !== "/CommunicationBatchDetail" &&
         <Breadcrumb />
       }
 
@@ -795,8 +796,7 @@ function HeaderDetails() {
             location?.pathname == "/templeteSummary" ||
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
-            location?.pathname == "/InAppNotifications" ||
-            location?.pathname === "/CommunicationBatchDetail") && (
+            location?.pathname == "/InAppNotifications") && (
               <div className="search-main">
                 <div className="title d-flex justify-content-between ">
                   <h2 className="title-main">
@@ -851,8 +851,7 @@ function HeaderDetails() {
                                   nav === "/CornMarketRewards" ||
                                   nav === "/RecruitAFriend" ||
                                   nav === "/DirectDebit" ||
-                                  nav === "/InAppNotifications" ||
-                                  nav === "/CommunicationBatchDetail"
+                                  nav === "/InAppNotifications"
                                 ) {
                                   setIsSimpleBatchOpen(true);
                                 }
@@ -967,7 +966,7 @@ function HeaderDetails() {
                       )}
                     </Row>
                   </div>
-                ) : nav !== "/templeteSummary" && (
+                ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search

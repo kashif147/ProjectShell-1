@@ -62,6 +62,10 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: {
       visibleFilters: [],
       filtersState: {}
+    },
+    Communication: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -190,7 +194,8 @@ export const FilterProvider = ({ children }) => {
       '/Summary': 'Profile',
       '/membership': 'Membership',
       "/members": "Members",
-      "/onlinePayment": "OnlinePayment"
+      "/onlinePayment": "OnlinePayment",
+      "/CommunicationBatchDetail": "Communication"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
@@ -300,6 +305,17 @@ export const FilterProvider = ({ children }) => {
         "Payment Status",
         "Billing Cycle",
       ],
+      Communication: [
+        "Membership No",
+        "Email",
+        "Mobile No",
+        "Grade",
+        "Work Location",
+        "Region",
+        "Branch",
+        "Membership Category",
+        "Payment Status",
+      ],
     }),
     []
   );
@@ -311,6 +327,7 @@ export const FilterProvider = ({ children }) => {
     Membership: ["Membership Status", "Membership Category"],
     Members: ["Subscription Status", "Membership Category"],
     OnlinePayment: ["Membership Status", "Payment Status"],
+    Communication: ["Grade", "Work Location"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -329,6 +346,7 @@ export const FilterProvider = ({ children }) => {
     Membership: getDefaultVisibleFilters("Membership"),
     Members: getDefaultVisibleFilters("Members"),
     OnlinePayment: getDefaultVisibleFilters("OnlinePayment"),
+    Communication: getDefaultVisibleFilters("Communication"),
   }), [],);
 
   // 🔹 Default filter VALUES for each screen
@@ -451,6 +469,28 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Billing Cycle": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      }
+    },
+    Communication: {
+      "Grade": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Work Location": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Region": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Branch": {
         operator: "==",
         selectedValues: []
       },
