@@ -675,6 +675,7 @@ function HeaderDetails() {
       {/* New Breadcrumb Component */}
       {
         location?.pathname !== "/applicationMgt" &&
+        location?.pathname !== "/CommunicationBatchDetail" &&
         <Breadcrumb />
       }
 
@@ -965,7 +966,7 @@ function HeaderDetails() {
                       )}
                     </Row>
                   </div>
-                ) : nav !== "/templeteSummary" && (
+                ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
@@ -1335,6 +1336,8 @@ function HeaderDetails() {
             batchType = "recruit-friend";
           } else if (nav.toLowerCase().includes("directdebit")) {
             batchType = "direct-debit";
+          } else if (nav.toLowerCase().includes("inappnotifications") || nav.toLowerCase().includes("communicationbatchdetail")) {
+            batchType = "communication";
           }
 
           if (batchType) {

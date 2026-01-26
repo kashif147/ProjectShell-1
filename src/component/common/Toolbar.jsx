@@ -88,6 +88,7 @@ const Toolbar = () => {
       "/Summary": "Profile",
       "/membership": "Membership",
       "/Members": "Members",
+      "/CommunicationBatchDetail": "Communication",
     };
     return pathMap[activeScreenName] || "Applications";
   };

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useMemo } from "react";
 import { Card, Row, Col, Input, Select, Button, Tag } from "antd";
 import {
     UserOutlined,
@@ -8,14 +8,15 @@ import {
     SearchOutlined,
     ExportOutlined,
     ReloadOutlined,
-    MoreOutlined
+    MoreOutlined,
+    SendOutlined
 } from "@ant-design/icons";
 import MyTable from "../../component/common/MyTable";
 import { useLocation, useNavigate } from "react-router-dom";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { Space } from "antd";
+import Toolbar from "../../component/common/Toolbar";
 
-const { Search } = Input;
 const { Option } = Select;
 
 const CommunicationBatchDetail = () => {
@@ -26,7 +27,7 @@ const CommunicationBatchDetail = () => {
     const batchId = location.state?.batchId || "#BTH-2023-08-15";
 
     // Static Columns Definition
-    const tableColumns = [
+    const tableColumns = useMemo(() => [
         {
             dataIndex: "memberName",
             title: "Mbbember",
@@ -102,7 +103,7 @@ const CommunicationBatchDetail = () => {
                 <Button type="text" icon={<MoreOutlined />} />
             )
         }
-    ];
+    ], []);
 
     // Static Stats Data
     const stats = {
@@ -117,7 +118,7 @@ const CommunicationBatchDetail = () => {
     };
 
     // Static Table Data
-    const data = Array.from({ length: 15 }).map((_, i) => ({
+    const data = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
         key: i,
         memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
         memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
@@ -127,36 +128,84 @@ const CommunicationBatchDetail = () => {
         recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
         timestamp: "Aug 15, 11:02 AM",
         status: i % 3 === 0 ? "Failed" : i % 2 === 0 ? "Read" : "Delivered"
-    }));
+    })), []);
 
-    const buttonStyle = {
-        backgroundColor: "#215e97",
+    const navyButtonStyle = {
+        backgroundColor: "#1d5b95",
+        borderColor: "#1d5b95",
         color: "white",
-        borderRadius: "3px",
-        minWidth: "150px",
+        borderRadius: "4px",
+        height: "38px",
+        padding: "0 30px",
+        fontWeight: "500",
+        fontSize: "14px",
+        display: "flex",
+        alignItems: "center",
+        justifyContent: "center",
+    };
+
+    const outlineButtonStyle = {
+        color: "#595959",
+        borderColor: "#d9d9d9",
+        borderRadius: "4px",
+        height: "38px",
+        padding: "0 16px",
+        fontWeight: "400",
+        fontSize: "14px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px",
+        backgroundColor: "#fff"
+    };
+
+    const retryButtonStyle = {
+        backgroundColor: "#1677ff",
+        borderColor: "#1677ff",
+        color: "white",
+        borderRadius: "4px",
+        height: "38px",
+        padding: "0 16px",
+        fontWeight: "500",
+        fontSize: "14px",
+        display: "flex",
+        alignItems: "center",
+        gap: "8px"
     };
 
     return (
-        <div style={{ padding: "0" }}>
-            <div style={{ padding: "24px 24px 0 24px" }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+        <div style={{ padding: "0", minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
+            <div style={{ padding: "16px 24px 0 24px" }}>
+                {/* Breadcrumbs */}
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '24px', fontSize: '12px', color: '#8c8c8c' }}>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 12, height: 12, borderRadius: '2px', border: '2px solid #adc6ff' }}></div> Correspondence</span>
+                    <span>&gt;</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 12, height: 12, borderRadius: '2px', border: '2px solid #adc6ff' }}></div> Batch Details</span>
+                    <span>&gt;</span>
+                    <span style={{ display: 'flex', alignItems: 'center', gap: '4px' }}><div style={{ width: 12, height: 12, border: '2px solid #d9d9d9', opacity: 0.5 }}></div> {batchName}</span>
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px' }}>
                     <div>
-                        <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0, display: 'flex', alignItems: 'center', gap: '12px' }}>
-                            {batchName} <Tag color="blue">ACTIVE</Tag>
-                        </h1>
-                        <div style={{ color: '#8c8c8c', marginTop: '4px' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                            <h1 style={{ fontSize: '24px', fontWeight: 'bold', margin: 0 }}>
+                                {batchName}
+                            </h1>
+                            <Tag color="blue" style={{ borderRadius: '4px', margin: 0, fontWeight: 'bold' }}>ACTIVE</Tag>
+                        </div>
+                        <div style={{ color: '#8c8c8c', marginTop: '4px', fontSize: '13px' }}>
                             Batch ID: {batchId} • Created on Aug 15, 2023 at 10:45 AM
                         </div>
                     </div>
-                    <div style={{ display: 'flex', gap: '12px' }}>
-                        <Space size="middle">
-                            <Button style={buttonStyle}>Include</Button>
-                            <CommonPopConfirm title="Do you want to exclude member?">
-                                <Button style={buttonStyle}>Exclude Members</Button>
-                            </CommonPopConfirm>
-                        </Space>
-                        <Button icon={<ExportOutlined />}>Export CSV</Button>
-                        <Button type="primary" icon={<ReloadOutlined />}>Retry Failed</Button>
+                    <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                        <CommonPopConfirm title="Are you sure you want to trigger notifications for all members in this batch?">
+                            <Button style={retryButtonStyle} icon={<SendOutlined />}>Trigger Notifications</Button>
+                        </CommonPopConfirm>
+                        <Button style={navyButtonStyle}>Include</Button>
+                        <CommonPopConfirm title="Are you sure you want to exclude members?">
+                            <Button style={navyButtonStyle}>Exclude Members</Button>
+                        </CommonPopConfirm>
+                        <Button style={outlineButtonStyle} icon={<ExportOutlined />}>Export CSV</Button>
+                        <Button style={retryButtonStyle} icon={<ReloadOutlined />}>Retry Failed</Button>
                     </div>
                 </div>
 
@@ -205,20 +254,7 @@ const CommunicationBatchDetail = () => {
                 </Row>
 
                 {/* Filters Row */}
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', backgroundColor: '#fff', padding: '16px', borderRadius: '8px' }}>
-                    <div style={{ display: 'flex', gap: '16px', flex: 1 }}>
-                        <Search placeholder="Search members..." style={{ width: 300 }} />
-                        <Select defaultValue="All Status" style={{ width: 150 }}>
-                            <Option value="All Status">All Status</Option>
-                            <Option value="Delivered">Delivered</Option>
-                            <Option value="Read">Read</Option>
-                            <Option value="Failed">Failed</Option>
-                        </Select>
-                    </div>
-                    <div style={{ color: '#8c8c8c' }}>
-                        Showing 1-10 of 12,500
-                    </div>
-                </div>
+                <Toolbar />
             </div>
 
             {/* Table */}

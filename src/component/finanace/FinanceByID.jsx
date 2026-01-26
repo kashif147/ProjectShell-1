@@ -1,6 +1,10 @@
-import React, { useState, useEffect } from "react";
-import { Table, Input, Select, DatePicker, Button, Card, Row, Col, Spin, message } from "antd";
+import React, { useState, useEffect, useMemo } from "react";
+import { Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty } from "antd";
 import dayjs from "dayjs";
+import { useLocation } from "react-router-dom";
+import axios from "axios";
+import { useSelector } from "react-redux";
+import SubTableComp from "../common/SubTableComp";
 import axios from "axios";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
@@ -8,21 +12,69 @@ const { Option } = Select;
 const { RangePicker } = DatePicker;
 
 const TransactionHistory = () => {
+  const location = useLocation();
+  const { profileDetails } = useSelector((state) => state.profileDetails || {});
+
+  // Try to get memberId from location state first, then fallback to Redux profileDetails
+  const memberId = location.state?.memberId || profileDetails?.membershipNumber || profileDetails?.regNo;
+
+  console.log("FinanceByID - location.state:", location.state);
+  console.log("FinanceByID - profileDetails:", profileDetails);
+  console.log("FinanceByID - decided memberId:", memberId);
+
+  const [loading, setLoading] = useState(false);
+  const [data, setData] = useState([]);
   const { ProfileDetails } = useTableColumns();
   const [searchText, setSearchText] = useState("");
   const [transactionType, setTransactionType] = useState("All");
   const [dateRange, setDateRange] = useState([]);
   const [amountRange, setAmountRange] = useState("All");
-  const [data, setData] = useState([]);
-  const [loading, setLoading] = useState(false);
 
-  const columns = [
+  useEffect(() => {
+    if (memberId) {
+      fetchLedgerData();
+    }
+  }, [memberId]);
+
+  const fetchLedgerData = async () => {
+    setLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const response = await axios.get(
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberId}/ledger`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      // Extract data safely, checking multiple common patterns
+      let ledgerData = [];
+      if (Array.isArray(response.data)) {
+        ledgerData = response.data;
+      } else if (response.data?.data && Array.isArray(response.data.data)) {
+        ledgerData = response.data.data;
+      } else if (response.data?.results && Array.isArray(response.data.results)) {
+        ledgerData = response.data.results;
+      }
+
+      setData(ledgerData);
+    } catch (error) {
+      console.error("Error fetching ledger data:", error);
+      setData([]); // Ensure data is reset to empty array on error
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const columns = useMemo(() => [
     {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      sorter: (a, b) => dayjs(a.date, "D/M/YYYY") - dayjs(b.date, "D/M/YYYY"),
-      render: (text) => text ? dayjs(text).format("DD/MM/YYYY") : "",
+      sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
+      render: (text) => text ? dayjs(text).format("DD/MM/YYYY") : "-",
     },
     { title: "Description", dataIndex: "description", key: "description" },
     { title: "Reference", dataIndex: "reference", key: "reference" },
@@ -30,86 +82,56 @@ const TransactionHistory = () => {
       title: "Debit",
       dataIndex: "debit",
       key: "debit",
-      render: (value) => value ? <span style={{ color: "red" }}>€{value}</span> : "-",
+      render: (value) => value ? <span style={{ color: "red" }}>€{value.toLocaleString()}</span> : "-",
     },
     {
       title: "Credit",
       dataIndex: "credit",
       key: "credit",
-      render: (value) => value ? <span style={{ color: "green" }}>€{value}</span> : "-",
+      render: (value) => value ? <span style={{ color: "green" }}>€{value.toLocaleString()}</span> : "-",
     },
     {
       title: "Running Balance",
       dataIndex: "balance",
       key: "balance",
       render: (value) => (
-        <span style={{ color: value < 0 ? "red" : "green" }}>€{value}</span>
+        <span style={{ color: value < 0 ? "red" : "green" }}>€{value?.toLocaleString() || 0}</span>
       ),
     },
-  ];
-
-  useEffect(() => {
-    const fetchLedger = async () => {
-      const memberId = ProfileDetails?.[0]?.regNo;
-      if (!memberId) return;
-
-      setLoading(true);
-      try {
-        const token = localStorage.getItem("token");
-        const response = await axios.get(
-          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberId}/ledger`,
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        // Add keys to data if missing
-        const formattedData = Array.isArray(response.data)
-          ? response.data.map((item, index) => ({ ...item, key: item.id || index }))
-          : [];
-
-        setData(formattedData);
-      } catch (error) {
-        console.error("Error fetching ledger:", error);
-        message.error("Failed to load finance ledger.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchLedger();
-  }, [ProfileDetails]);
+  ], []);
 
   // ---- Filtering logic ----
-  const filteredData = data.filter((d) => {
-    // Search text (description or reference)
-    const matchesSearch =
-      (d.description && d.description.toLowerCase().includes(searchText.toLowerCase())) ||
-      (d.reference && d.reference.toLowerCase().includes(searchText.toLowerCase()));
+  const filteredData = useMemo(() => {
+    if (!Array.isArray(data)) return [];
 
-    // Transaction type (debit/credit/all)
-    const matchesType =
-      transactionType === "All" ||
-      (transactionType === "debit" && d.debit) ||
-      (transactionType === "credit" && d.credit);
+    return data.filter((d) => {
+      // Search text (description or reference)
+      const matchesSearch =
+        (d.description?.toLowerCase().includes(searchText.toLowerCase()) || false) ||
+        (d.reference?.toLowerCase().includes(searchText.toLowerCase()) || false);
 
-    // Date range filter
-    const matchesDate =
-      !dateRange.length ||
-      (dayjs(d.date).isAfter(dateRange[0].startOf("day")) &&
-        dayjs(d.date).isBefore(dateRange[1].endOf("day")));
+      // Transaction type (debit/credit/all)
+      const matchesType =
+        transactionType === "All" ||
+        (transactionType === "debit" && d.debit) ||
+        (transactionType === "credit" && d.credit);
 
-    // Amount range filter (check debit/credit whichever exists)
-    const amount = d.debit || d.credit || 0;
-    let matchesAmount = true;
-    if (amountRange === "small") matchesAmount = amount <= 500;
-    if (amountRange === "medium") matchesAmount = amount > 500 && amount <= 1000;
-    if (amountRange === "large") matchesAmount = amount > 1000;
+      // Date range filter
+      const matchesDate =
+        !dateRange.length ||
+        (dayjs(d.date).isAfter(dateRange[0].startOf("day")) &&
+          dayjs(d.date).isBefore(dateRange[1].endOf("day")));
 
-    return matchesSearch && matchesType && matchesDate && matchesAmount;
-  });
+      // Amount range filter (check debit/credit whichever exists)
+      const amount = d.debit || d.credit || 0;
+      let matchesAmount = true;
+      if (amountRange === "small") matchesAmount = amount <= 500;
+      if (amountRange === "medium") matchesAmount = amount > 500 && amount <= 1000;
+      if (amountRange === "large") matchesAmount = amount > 1000;
+
+      return matchesSearch && matchesType && matchesDate && matchesAmount;
+    });
+  }, [data, searchText, transactionType, dateRange, amountRange]);
 
   // Reset filters
   const handleReset = () => {
@@ -119,11 +141,15 @@ const TransactionHistory = () => {
     setAmountRange("All");
   };
 
+  if (!memberId) {
+    return <div className="mt-4"><Empty description="No Member ID provided" /></div>;
+  }
+
   return (
     <div className="mt-4">
       {/* Filters */}
-      <Card className="">
-        <Row gutter={16} className="mb-2">
+      <Card className="mb-3">
+        <Row gutter={16} align="middle">
           <Col xs={24} md={6}>
             <Input
               placeholder="Search transactions"
@@ -170,16 +196,18 @@ const TransactionHistory = () => {
       </Card>
 
       {/* Table */}
-
-      <Spin spinning={loading}>
-        <Table
-          columns={columns}
-          dataSource={filteredData}
-          pagination={{ pageSize: 5 }}
-          bordered
-        />
-      </Spin>
-
+      <Card bodyStyle={{ padding: 0 }}>
+        {loading ? (
+          <div style={{ padding: "50px", textAlign: "center" }}>
+            <Spin size="large" />
+          </div>
+        ) : (
+          <SubTableComp
+            columns={columns}
+            dataSource={filteredData}
+          />
+        )}
+      </Card>
     </div>
   );
 };

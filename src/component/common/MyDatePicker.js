@@ -44,15 +44,14 @@ const MyDatePicker = ({
       </div>
 
       <div
-        className={`my-input-container ${hasError ? 'error' : ''} ${
-          isFocused ? 'focused' : ''
-        } ${disabled ? 'disabled' : ''}`}
+        className={`my-input-container ${hasError ? 'error' : ''} ${isFocused ? 'focused' : ''
+          } ${disabled ? 'disabled' : ''}`}
       >
         <DatePicker
           name={name}
           onChange={onChange}
-          // ✅ this now works correctly with DD/MM/YYYY format
-          value={value ? dayjs(value) : null}
+          // ✅ check if value is already a valid dayjs object to prevent reference instability
+          value={value ? (dayjs.isDayjs(value) ? value : dayjs(value)) : null}
           onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           disabled={disabled}

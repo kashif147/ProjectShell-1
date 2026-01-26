@@ -8,61 +8,65 @@ const { Title, Text } = Typography;
 
 const IdleModal = () => {
     const navigate = useNavigate();
-    const [isModalOpen, setIsModalOpen] = useState(false);
-    const [countdown, setCountdown] = useState(60);
-    const countdownRef = useRef(null);
+    const [isPrompted, setIsPrompted] = useState(false);
+    const [remaining, setRemaining] = useState(60);
 
-    // Function to logout user
-    const handleLogout = () => {
-        setIsModalOpen(false);
-        clearInterval(countdownRef.current);
+    // Final Idle Logout
+    const onIdle = () => {
+        setIsPrompted(false);
         localStorage.removeItem("token");
         navigate("/");
     };
 
-    // Function to start countdown
-    const startCountdown = () => {
-        setCountdown(60);
-        clearInterval(countdownRef.current); // Ensure no duplicate timers
-        countdownRef.current = setInterval(() => {
-            setCountdown((prev) => {
-                if (prev <= 1) {
-                    clearInterval(countdownRef.current);
-                    handleLogout(); // Auto logout when countdown reaches 0
-                    return 0;
-                }
-                return prev - 1;
-            });
-        }, 1000);
+    // User is idle for 9 minutes
+    const onPrompt = () => {
+        setIsPrompted(true);
+        setRemaining(60);
     };
 
-    // Function to continue session
-    const handleContinue = () => {
-        setIsModalOpen(false);
-        clearInterval(countdownRef.current);
-        reset(); // Reset idle timer
+    // User is active again
+    const onActive = () => {
+        setIsPrompted(false);
     };
 
-    // Idle Timer Hook
-    const { reset } = useIdleTimer({
-        timeout: 9 * 60 * 1000, // 9 minutes
-        onIdle: () => {
-            setIsModalOpen(true);
-            startCountdown();
-        },
+    // Use idle timer hook
+    const { getRemainingTime, activate } = useIdleTimer({
+        timeout: 10 * 60 * 1000, // Total 10 minutes
+        promptTimeout: 1 * 60 * 1000, // 1 minute warning
+        onIdle,
+        onPrompt,
+        onActive,
+        crossTab: true,
         debounce: 500,
     });
 
-    // Cleanup on unmount
+    // Handle session continuation
+    const handleContinue = () => {
+        activate(); // Reset the timer and mark as active
+        setIsPrompted(false);
+    };
+
+    // Synchronize countdown with actual remaining time
     useEffect(() => {
-        return () => {
-            clearInterval(countdownRef.current);
-        };
-    }, []);
+        let interval;
+        if (isPrompted) {
+            interval = setInterval(() => {
+                const totalRemaining = Math.ceil(getRemainingTime() / 1000);
+                // The prompt remaining time is the total remaining time
+                setRemaining(totalRemaining > 0 ? totalRemaining : 0);
+            }, 500);
+        }
+        return () => clearInterval(interval);
+    }, [isPrompted, getRemainingTime]);
+
+    // Logout manually
+    const handleLogout = () => {
+        onIdle();
+    };
 
     return (
         <Modal
-            open={isModalOpen}
+            open={isPrompted}
             footer={null}
             closable={false}
             centered
@@ -89,7 +93,7 @@ const IdleModal = () => {
                         color: "#ff4d4f",
                     }}
                 >
-                    {countdown} seconds
+                    {remaining} seconds
                 </span>.
             </Text>
             <div

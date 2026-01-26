@@ -63,11 +63,11 @@ const MembershipForm = ({
   dayjs.extend(utc);
   dayjs.extend(timezone);
 
-  useEffect(() => {
-    return () => {
-      dispatch(clearProfileDetails());
-    };
-  }, []);
+  // useEffect(() => {
+  //   return () => {
+  //     dispatch(clearProfileDetails());
+  //   };
+  // }, []);
 
   const convertUTCToLocalDate = (utcDateString) => {
     if (!utcDateString) return null;
