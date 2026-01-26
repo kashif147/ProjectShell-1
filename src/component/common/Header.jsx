@@ -23,8 +23,8 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { MdOutlineWork } from "react-icons/md";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { Link, useLocation } from "react-router-dom";
-import { message } from "antd";
-import { Dropdown } from "antd";
+import { message, Popover } from "antd";
+import NotificationPopover from "./NotificationPopover";
 import { PiDotsNineLight } from "react-icons/pi";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -404,7 +404,14 @@ function Header() {
               })
             }
           />
-          <BellOutlined className="top-icon" />
+          <Popover
+            content={<NotificationPopover />}
+            trigger="click"
+            placement="bottomRight"
+            overlayInnerStyle={{ padding: 0 }}
+          >
+            <BellOutlined className="top-icon" />
+          </Popover>
           <QuestionCircleOutlined className="top-icon" />
           <SettingOutlined className="top-icon" />
           <UserOutlined className="top-icon" />

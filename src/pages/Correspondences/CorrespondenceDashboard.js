@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import {
     Card,
     Row,
@@ -42,6 +43,7 @@ import "../../styles/MembershipDashboard.css";
 const { Option } = Select;
 
 const CorrespondenceDashboard = () => {
+    const navigate = useNavigate();
     // Mock Data for Stats
     const statsData = [
         {
