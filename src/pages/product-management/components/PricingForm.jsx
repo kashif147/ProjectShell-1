@@ -1,7 +1,7 @@
 
 
 import React, { useEffect, useState } from "react";
-import { Drawer, Button, Space, Divider, Table, Switch } from "antd";
+import { Drawer, Button, Space, Divider, Table, Switch, Tag } from "antd";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
@@ -120,36 +120,85 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
     }
   };
 
-  // History table
-  const historyColumns = [
-    { title: "Currency", dataIndex: "currency", key: "currency" },
-    { title: "Member Price", dataIndex: "memberPrice", key: "memberPrice" },
-    { title: "Non-Member Price", dataIndex: "nonMemberPrice", key: "nonMemberPrice" },
-    { title: "Effective From", dataIndex: "effectiveFrom", key: "effectiveFrom" },
-    { title: "Effective To", dataIndex: "effectiveTo", key: "effectiveTo" },
-    { title: "Status", dataIndex: "status", key: "status" },
-  ];
+  // History table columns with formatting
+  const getHistoryColumns = () => {
+    const baseColumns = [
+      {
+        title: "Currency",
+        dataIndex: "currency",
+        key: "currency",
+        render: (currency) => currency?.toUpperCase() || "-"
+      },
+    ];
 
-  const historyData = [
-    {
-      key: "1",
-      currency: "USD",
-      memberPrice: 2000,
-      nonMemberPrice: 3500,
-      effectiveFrom: "2024-01-01",
-      effectiveTo: "2024-12-31",
-      status: "Inactive",
-    },
-    {
-      key: "2",
-      currency: "EUR",
-      memberPrice: 3000,
-      nonMemberPrice: 5000,
-      effectiveFrom: "2025-01-01",
-      effectiveTo: "2028-10-11",
-      status: "Active",
-    },
-  ];
+    // Add price columns based on product type
+    if (productType?.name === "Membership") {
+      baseColumns.push({
+        title: "Price",
+        dataIndex: "price",
+        key: "price",
+        render: (price, record) => {
+          if (!price) return "-";
+          const formattedPrice = convertSandToEuro(price);
+          const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+          return `${symbol}${formattedPrice}.00`;
+        }
+      });
+    } else {
+      baseColumns.push(
+        {
+          title: "Member Price",
+          dataIndex: "memberPrice",
+          key: "memberPrice",
+          render: (price, record) => {
+            if (!price) return "-";
+            const formattedPrice = convertSandToEuro(price);
+            const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+            return `${symbol}${formattedPrice}.00`;
+          }
+        },
+        {
+          title: "Non-Member Price",
+          dataIndex: "nonMemberPrice",
+          key: "nonMemberPrice",
+          render: (price, record) => {
+            if (!price) return "-";
+            const formattedPrice = convertSandToEuro(price);
+            const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+            return `${symbol}${formattedPrice}.00`;
+          }
+        }
+      );
+    }
+
+    // Add date and status columns
+    baseColumns.push(
+      {
+        title: "Effective From",
+        dataIndex: "effectiveFrom",
+        key: "effectiveFrom",
+        render: (date) => date ? new Date(date).toLocaleDateString() : "-"
+      },
+      {
+        title: "Effective To",
+        dataIndex: "effectiveTo",
+        key: "effectiveTo",
+        render: (date) => date ? new Date(date).toLocaleDateString() : "-"
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (status) => (
+          <Tag color={status === "Active" ? "green" : "red"}>
+            {status}
+          </Tag>
+        )
+      }
+    );
+
+    return baseColumns;
+  };
 
   return (
     <Drawer
@@ -253,13 +302,39 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         </div>
 
         {/* Pricing History */}
-        {/* <Divider orientation="left">Pricing History</Divider> */}
-        {/* <Table
-          columns={historyColumns}
-          dataSource={historyData}
-          size="small"   
-          pagination={false}
-        /> */}
+        {product?.pricingHistory && product.pricingHistory.length > 0 && (
+          <>
+            <Divider orientation="left">Pricing History</Divider>
+            <Table
+              columns={getHistoryColumns()}
+              dataSource={product?.pricingHistory || []}
+              rowKey="_id"
+              size="small"
+              pagination={false}
+              scroll={{ x: "max-content" }}
+              components={{
+                header: {
+                  cell: (props) => {
+                    const { children, ...restProps } = props;
+                    return (
+                      <th
+                        {...restProps}
+                        style={{
+                          backgroundColor: '#215e97',
+                          ...restProps.style
+                        }}
+                      >
+                        <div style={{ color: '#fff' }}>
+                          {children}
+                        </div>
+                      </th>
+                    );
+                  },
+                },
+              }}
+            />
+          </>
+        )}
 
       </div>
     </Drawer>
