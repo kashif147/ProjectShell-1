@@ -2,6 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import { Drawer, Button, Space, Divider, Table, Switch, Tag } from "antd";
+import { EditOutlined } from "@ant-design/icons";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
@@ -22,30 +23,64 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
     price: "",
   });
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingPricingId, setEditingPricingId] = useState(null);
+  // Helper function to format prices
+  const formatToTwoDecimals = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    return isNaN(num) ? "" : num.toFixed(2);
+  };
+
+  // Reset form when drawer closes
   useEffect(() => {
-    if (product?.currentPricing) {
-      const formatToTwoDecimals = (value) => {
-        if (value === null || value === undefined || value === "") return "";
-        const num = Number(value);
-        return isNaN(num) ? "" : num.toFixed(2);
-      };
-
-      const pricing = product.currentPricing;
-
+    if (!open) {
       setFormData({
-        currency: (pricing.currency || "").toUpperCase(),
-        memberPrice: pricing.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.memberPrice)) : "",
-        nonMemberPrice: pricing.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.nonMemberPrice)) : "",
-        effectiveFrom: pricing.effectiveFrom ? dayjs(pricing.effectiveFrom) : null,
-        effectiveTo: pricing.effectiveTo ? dayjs(pricing.effectiveTo) : null,
-        status: pricing.status || "Active",
-        productId: product._id,
-        price: pricing.price ? formatToTwoDecimals(convertSandToEuro(pricing.price)) : "",
+        currency: "",
+        memberPrice: "",
+        nonMemberPrice: "",
+        effectiveFrom: null,
+        effectiveTo: null,
+        status: "Active",
+        price: "",
       });
+      setIsEditMode(false);
+      setEditingPricingId(null);
     }
-  }, [product]);
+  }, [open]);
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  // Handle editing existing pricing
+  const handleEditPricing = (pricingRecord) => {
+    setIsEditMode(true);
+    setEditingPricingId(pricingRecord._id);
+
+    setFormData({
+      currency: (pricingRecord.currency || "").toUpperCase(),
+      memberPrice: pricingRecord.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricingRecord.memberPrice)) : "",
+      nonMemberPrice: pricingRecord.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricingRecord.nonMemberPrice)) : "",
+      effectiveFrom: pricingRecord.effectiveFrom ? dayjs(pricingRecord.effectiveFrom) : null,
+      effectiveTo: pricingRecord.effectiveTo ? dayjs(pricingRecord.effectiveTo) : null,
+      status: pricingRecord.status || "Active",
+      price: pricingRecord.price ? formatToTwoDecimals(convertSandToEuro(pricingRecord.price)) : "",
+    });
+  };
+
+  // Handle canceling edit mode
+  const handleCancel = () => {
+    setIsEditMode(false);
+    setEditingPricingId(null);
+    setFormData({
+      currency: "",
+      memberPrice: "",
+      nonMemberPrice: "",
+      effectiveFrom: null,
+      effectiveTo: null,
+      status: "Active",
+      price: "",
+    });
   };
 
   const getCurrencySymbol = () => {
@@ -67,54 +102,52 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         effectiveFrom: formData.effectiveFrom,
         effectiveTo: formData.effectiveTo,
         status: formData.status,
-        price: productType?.name === "Membership" ? convertEuroToSand(formData.price) : undefined,
-        memberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.memberPrice),
-        nonMemberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.nonMemberPrice),
       };
 
-      // Get the pricing ID from product's currentPricing
-      const pricingId = product?.currentPricing?._id;
-
-      if (!pricingId) {
-        // message.error("Pricing ID not found");
-        return;
+      // Add price fields based on product type
+      if (productType?.name === "Membership") {
+        requestData.price = convertEuroToSand(formData.price);
+      } else {
+        requestData.memberPrice = convertEuroToSand(formData.memberPrice);
+        requestData.nonMemberPrice = convertEuroToSand(formData.nonMemberPrice);
       }
 
-      // Construct the endpoint URL
-      const endpoint = `${process.env.REACT_APP_POLICY_SERVICE_URL || ''}/pricing/${pricingId}`;
+      // Add productId for CREATE mode
+      if (!isEditMode) {
+        requestData.productId = product._id;
+      }
 
-      // Make the update call
-      const response = await updateFtn(
-        process.env.REACT_APP_POLICY_SERVICE_URL,
-        `/pricing/${pricingId}`,
-        requestData,
-        async () => {
-          try {
-            // Reset form data first
-            setFormData({
-              currency: "",
-              memberPrice: "",
-              nonMemberPrice: "",
-              effectiveFrom: null,
-              effectiveTo: null,
-              status: "Active",
-              price: "",
-            });
-
-            // Refresh product data
+      if (isEditMode) {
+        // UPDATE existing pricing
+        await updateFtn(
+          process.env.REACT_APP_POLICY_SERVICE_URL,
+          `/pricing/${editingPricingId}`,
+          requestData,
+          async () => {
+            handleCancel();
             if (onSubmit) await onSubmit();
-
-            // Close last
             onClose();
-          } catch (err) {
-            console.error("Error in update callback:", err);
+          },
+          "Pricing Updated Successfully"
+        );
+      } else {
+        // CREATE new pricing
+        await insertDataFtn(
+          process.env.REACT_APP_POLICY_SERVICE_URL,
+          `/pricing`,
+          requestData,
+          "Pricing Created Successfully",
+          "Failed to create pricing",
+          async () => {
+            handleCancel();
+            if (onSubmit) await onSubmit();
+            onClose();
           }
-        },
-        "Updated Successfully"
-      );
+        );
+      }
 
     } catch (error) {
-      MyAlert("error", "Failed to update pricing");
+      MyAlert("error", isEditMode ? "Failed to update pricing" : "Failed to create pricing");
     } finally {
       setLoading(false);
     }
@@ -194,6 +227,25 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
             {status}
           </Tag>
         )
+      },
+      {
+        title: "Action",
+        key: "action",
+        align: "center",
+        render: (_, record) => {
+          // Only show edit button for current pricing
+          const isCurrentPricing = record._id === product?.currentPricing?._id;
+
+          if (!isCurrentPricing) return null;
+
+          return (
+            <Button
+              size="small"
+              icon={<EditOutlined />}
+              onClick={() => handleEditPricing(record)}
+            />
+          );
+        }
       }
     );
 
@@ -210,7 +262,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         <Space>
           {/* <Button onClick={onClose}>Cancel</Button> */}
           <Button type="primary" className="butn primary-btn" onClick={handleSave} loading={loading}>
-            update
+            {isEditMode ? "Update" : "Create"}
           </Button>
         </Space>
       }
@@ -302,39 +354,37 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         </div>
 
         {/* Pricing History */}
-        {product?.pricingHistory && product.pricingHistory.length > 0 && (
-          <>
-            <Divider orientation="left">Pricing History</Divider>
-            <Table
-              columns={getHistoryColumns()}
-              dataSource={product?.pricingHistory || []}
-              rowKey="_id"
-              size="small"
-              pagination={false}
-              scroll={{ x: "max-content" }}
-              components={{
-                header: {
-                  cell: (props) => {
-                    const { children, ...restProps } = props;
-                    return (
-                      <th
-                        {...restProps}
-                        style={{
-                          backgroundColor: '#215e97',
-                          ...restProps.style
-                        }}
-                      >
-                        <div style={{ color: '#fff' }}>
-                          {children}
-                        </div>
-                      </th>
-                    );
-                  },
+        <>
+          <Divider orientation="left">Pricing History</Divider>
+          <Table
+            columns={getHistoryColumns()}
+            dataSource={product?.pricingHistory || []}
+            rowKey="_id"
+            size="small"
+            pagination={false}
+            scroll={{ x: "max-content" }}
+            components={{
+              header: {
+                cell: (props) => {
+                  const { children, ...restProps } = props;
+                  return (
+                    <th
+                      {...restProps}
+                      style={{
+                        backgroundColor: '#215e97',
+                        ...restProps.style
+                      }}
+                    >
+                      <div style={{ color: '#fff' }}>
+                        {children}
+                      </div>
+                    </th>
+                  );
                 },
-              }}
-            />
-          </>
-        )}
+              },
+            }}
+          />
+        </>
 
       </div>
     </Drawer>
