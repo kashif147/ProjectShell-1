@@ -69,6 +69,170 @@
   margin-bottom: 16px;
 }
 
+.tenant-form-drawer .ant-drawer-header {
+  background: var(--secoundry-bg-color);
+  border-bottom: none;
+  padding: 12px 20px;
+}
+
+.tenant-form-drawer .ant-drawer-title {
+  color: var(--primary-color);
+  font-weight: 600;
+  font-size: 16px;
+}
+
+.tenant-form-drawer .ant-drawer-close {
+  color: var(--primary-color);
+}
+
+.tenant-form-drawer .ant-drawer-close:hover {
+  color: rgba(33, 94, 151, 0.8);
+}
+
+.tenant-form-drawer .ant-drawer-body {
+  padding: 0px;
+  background-color: #f6f9fc;
+}
+
+.tenant-form-drawer .drawer-main-cntainer {
+  padding: 20px 24px 24px;
+}
+
+.tenant-form-drawer .drawer-tab-content {
+  background: #fff;
+  border-radius: 8px;
+  padding: 16px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  margin-top: 12px;
+}
+
+.tenant-form-drawer .section-header {
+  margin-top: 20px;
+  margin-bottom: 12px;
+  font-weight: 600;
+  color: #334155;
+}
+
+.tenant-form-drawer .switch-field {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 10px;
+}
+
+.tenant-form-drawer .tenant-active-switch {
+  min-width: 52px;
+  height: 26px;
+  background-color: #cbd5f5;
+  border-radius: 999px;
+}
+
+.tenant-form-drawer .tenant-active-switch .ant-switch-handle {
+  width: 22px;
+  height: 22px;
+  top: 2px;
+  left: 2px;
+}
+
+.tenant-form-drawer .tenant-active-switch .ant-switch-handle::before {
+  border-radius: 50%;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
+}
+
+.tenant-form-drawer .tenant-active-switch.ant-switch-checked {
+  background-color: #22c55e;
+}
+
+.tenant-form-drawer .tenant-active-switch.ant-switch-checked .ant-switch-handle {
+  left: calc(100% - 24px);
+}
+.tenant-form-drawer .ant-tabs-nav {
+  padding: 0 24px;
+  background: #fff;
+  border-bottom: 1px solid #e5e7eb;
+}
+
+.tenant-form-drawer .ant-tabs-tab {
+  padding: 12px 0;
+  font-weight: 500;
+  color: #475569;
+}
+
+.tenant-form-drawer .ant-tabs-tab-active {
+  color: var(--primary-color);
+}
+
+.tenant-form-drawer .my-input-wrapper {
+  margin-bottom: 12px;
+}
+
+.tenant-form-drawer .my-input-label {
+  font-weight: 600;
+  color: #334155;
+}
+
+.tenant-form-drawer .my-input-container {
+  border-radius: 6px;
+  background: #fff;
+}
+
+.tenant-form-drawer .ant-input,
+.tenant-form-drawer .ant-select-selector {
+  border-radius: 6px !important;
+  border: 1px solid #d9d9d9 !important;
+}
+
+.tenant-form-drawer .ant-input:focus,
+.tenant-form-drawer .ant-select-focused .ant-select-selector {
+  border-color: var(--primary-color) !important;
+  box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
+}
+
+.tenant-form-drawer .ant-divider {
+  margin: 12px 0;
+}
+
+.tenant-form-drawer .switch-inline-group {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.tenant-form-drawer .switch-inline-group .switch-label {
+  flex: 1 1 22%;
+  min-width: 140px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.tenant-form-drawer .ant-switch {
+  background-color: #d1d5db;
+}
+
+.tenant-form-drawer .ant-switch-checked {
+  background-color: #10b981;
+}
+
+.tenant-form-drawer .tenant-add-connection-btn {
+  margin-bottom: 12px;
+}
+
+.tenant-form-drawer .auth-connection-card {
+  border: 1px solid #e5e7eb;
+  padding: 14px;
+  margin-top: 12px;
+  border-radius: 8px;
+  background: #f8fafc;
+}
+
+.tenant-form-drawer .auth-connection-actions {
+  gap: 8px;
+}
+
 .tenant-form .ant-card-head {
   background-color: #f8f9fa;
 }
