@@ -234,6 +234,7 @@ const Login = () => {
 
     try {
       const response = await fetch(
+        //fixing login api call
         `${process.env.REACT_APP_BASE_URL_DEV}/auth/azure-crm`,
         {
           method: "POST",
@@ -314,8 +315,13 @@ const Login = () => {
 
         // Trigger FCM permission request immediately after Microsoft login and JWT token acquisition
         // This must be called synchronously to maintain user interaction context
-        console.log("🔔 Microsoft login successful. Requesting notification permission...");
-        if (window.triggerFCMPermissionRequest && typeof window.triggerFCMPermissionRequest === 'function') {
+        console.log(
+          "🔔 Microsoft login successful. Requesting notification permission..."
+        );
+        if (
+          window.triggerFCMPermissionRequest &&
+          typeof window.triggerFCMPermissionRequest === "function"
+        ) {
           // Call immediately (no delay) to stay in user interaction context
           // The permission request doesn't require service worker to be ready
           window.triggerFCMPermissionRequest().catch((error) => {
@@ -478,7 +484,10 @@ const Login = () => {
       setMenuLabelForRole(roleCodes);
 
       // Trigger FCM permission request immediately after login (while still in user interaction context)
-      if (window.triggerFCMPermissionRequest && typeof window.triggerFCMPermissionRequest === 'function') {
+      if (
+        window.triggerFCMPermissionRequest &&
+        typeof window.triggerFCMPermissionRequest === "function"
+      ) {
         // Small delay to ensure service worker registration has started
         setTimeout(() => {
           window.triggerFCMPermissionRequest();
