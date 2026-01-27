@@ -5,6 +5,7 @@ import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
 import { convertSandToEuro } from "../../../utils/Utilities";
+import dayjs from "dayjs";
 
 const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) => {
   const initialFormState = {
@@ -53,8 +54,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
             : "",
         nonMemberPrice: product.currentPricing?.nonMemberPrice ? convertSandToEuro(product.currentPricing.nonMemberPrice) : "",
         currency: product.currentPricing?.currency || "",
-        effectiveFrom: product.currentPricing?.effectiveFrom || null,
-        effectiveTo: product.currentPricing?.effectiveTo || null,
+        effectiveFrom: product.currentPricing?.effectiveFrom ? dayjs(product.currentPricing.effectiveFrom) : null,
+        effectiveTo: product.currentPricing?.effectiveTo ? dayjs(product.currentPricing.effectiveTo) : null,
       });
     } else if (isProduct) {
       // Set default values for new product

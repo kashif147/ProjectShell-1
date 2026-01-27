@@ -360,6 +360,8 @@ const ProductTypesManagement = () => {
           `${process.env.REACT_APP_POLICY_SERVICE_URL}/pricing/${product.currentPricing._id}`,
           {
             currency: data?.currency,
+            effectiveFrom: data?.effectiveFrom,
+            effectiveTo: data?.effectiveTo,
             status: data?.status,
             price: selectedProductType?.name === "Membership" ? data?.memberPrice : undefined,
             memberPrice: selectedProductType?.name === "Membership" ? undefined : data?.memberPrice,
