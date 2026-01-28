@@ -99,7 +99,7 @@ function Configuratin() {
   const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
     (state) => state.bookmarks
   );
-  const insertDataFtn = async (
+const insertDataFtn = async (
     url,
     data,
     successNotification,
@@ -112,6 +112,7 @@ function Configuratin() {
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
+      setButtonLoading(prev => ({ ...prev, insert: true }));
       const response = await axios.post(`${baseUrl}${url}`, data, {
         headers: {
           "Content-Type": "application/json",
@@ -141,6 +142,8 @@ function Configuratin() {
       // ✅ Trigger failure alert properly
       MyAlert("error", failureNotification, errMsg); // Remove return here
       return null; // Always return something
+    } finally {
+      setButtonLoading(prev => ({ ...prev, insert: false }));
     }
   };
   useEffect(() => {
@@ -217,9 +220,10 @@ function Configuratin() {
               addIdKeyToLookup(record?._id, "Solicitors");
             }}
           />
-          <AiFillDelete
+<AiFillDelete
             size={16}
             style={{ cursor: "pointer" }}
+            spin={buttonLoading.delete}
             onClick={() =>
               MyConfirm({
                 title: "Confirm Deletion",
@@ -238,7 +242,7 @@ function Configuratin() {
     },
   ];
 
-  const updateFtn = async (
+const updateFtn = async (
     endPoint,
     data1,
     callback,
@@ -255,6 +259,7 @@ function Configuratin() {
       // const { id, ...finalData } = data1;
       debugger;
 
+      setButtonLoading(prev => ({ ...prev, update: true }));
       const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -282,6 +287,8 @@ function Configuratin() {
         error.response?.data?.message || error.message
       );
       return null; // ← Add this
+    } finally {
+      setButtonLoading(prev => ({ ...prev, update: false }));
     }
   };
   const updateCountiesFtn = async (
@@ -326,7 +333,7 @@ function Configuratin() {
       // throw error;
     }
   };
-  const deleteFtn = async (
+const deleteFtn = async (
     url1,
     body = null,
     callback,
@@ -353,6 +360,7 @@ function Configuratin() {
     if (body) config.data = JSON.stringify(body);
 
     try {
+      setButtonLoading(prev => ({ ...prev, delete: true }));
       console.log("Making DELETE request...");
       const response = await axios.request(config);
       console.log("DELETE successful");
@@ -390,6 +398,7 @@ function Configuratin() {
 
       return null;
     } finally {
+      setButtonLoading(prev => ({ ...prev, delete: false }));
       // ✅ Ensure modal is always destroyed (double safety)
       setTimeout(() => Modal.destroyAll(), 100);
     }
@@ -474,8 +483,9 @@ function Configuratin() {
               addIdKeyToLookup(record?._id, "Bookmarks");
             }}
           />
-          <AiFillDelete
+<AiFillDelete
             size={16}
+            spin={buttonLoading.delete}
             onClick={() =>
               MyConfirm({
                 title: "Confirm Deletion",
@@ -665,7 +675,7 @@ function Configuratin() {
     MaritalStatus: [],
   });
 
-  const [isUpdateRec, setisUpdateRec] = useState({
+const [isUpdateRec, setisUpdateRec] = useState({
     counties: false,
     Countries: false,
     Provinces: false,
@@ -694,6 +704,11 @@ function Configuratin() {
     RosterType: false,
     Sections: false,
     Bookmarks: false,
+  });
+  const [buttonLoading, setButtonLoading] = useState({
+    insert: false,
+    update: false,
+    delete: false,
   });
   function transformData(originalData) {
     return originalData.map((item) => ({
@@ -5365,7 +5380,7 @@ function Configuratin() {
         open={drawerOpen?.counties}
         onClose={() => openCloseDrawerFtn("counties")}
         isEdit={isUpdateRec?.counties}
-        add={async () => {
+add={async () => {
           if (!validateForm("counties")) return;
           insertDataFtn(
             `/lookup`,
@@ -5383,6 +5398,8 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("counties", false);
         }}
+        addLoading={buttonLoading.insert}
+        updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
@@ -5628,7 +5645,7 @@ function Configuratin() {
         // isPagination={true}
         total={countriesData?.length}
         onClose={() => openCloseDrawerFtn("Countries")}
-        add={() => {
+add={() => {
           if (!validateForm("Countries")) return;
           insertDataFtn(
             `/countries`,
@@ -5650,6 +5667,8 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Countries", false);
         }}
+        addLoading={buttonLoading.insert}
+        updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
@@ -5768,7 +5787,7 @@ function Configuratin() {
         isPagination={true}
         isEdit={isUpdateRec?.Cities}
         onClose={() => openCloseDrawerFtn("Cities")}
-        add={() => {
+add={() => {
           if (!validateForm("Cities")) return;
           insertDataFtn(
             `/lookup`,
@@ -5790,6 +5809,8 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Cities", false);
         }}
+        addLoading={buttonLoading.insert}
+        updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">

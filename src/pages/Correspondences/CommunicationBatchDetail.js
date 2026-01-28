@@ -17,17 +17,32 @@ import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { Space } from "antd";
 import Toolbar from "../../component/common/Toolbar";
 
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getNotificationTokens } from "../../features/NotificationSlice";
+
 const { Option } = Select;
 
 const CommunicationBatchDetail = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { tokens, loading } = useSelector((state) => state.notification);
+
+    useEffect(() => {
+        dispatch(getNotificationTokens());
+    }, [dispatch]);
     // Fallback to static values if no state is passed, but keep it simple
     const batchName = location.state?.batchName || "August Newsletter - Email";
     const batchId = location.state?.batchId || "#BTH-2023-08-15";
 
     // Static Columns Definition
     const tableColumns = useMemo(() => [
+        {
+            dataIndex: "userId",
+            title: "User ID",
+            width: 150,
+        },
         {
             dataIndex: "memberName",
             title: "Mbbember",
@@ -118,17 +133,41 @@ const CommunicationBatchDetail = () => {
     };
 
     // Static Table Data
-    const data = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
-        key: i,
-        memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
-        memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
-        initials: i % 2 === 0 ? "AS" : "BJ",
-        avatarColor: i % 2 === 0 ? "#1890ff" : "#fa8c16",
-        channel: "Email",
-        recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
-        timestamp: "Aug 15, 11:02 AM",
-        status: i % 3 === 0 ? "Failed" : i % 2 === 0 ? "Read" : "Delivered"
-    })), []);
+    // const data = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
+    //     key: i,
+    //     memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
+    //     memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
+    //     initials: i % 2 === 0 ? "AS" : "BJ",
+    //     avatarColor: i % 2 === 0 ? "#1890ff" : "#fa8c16",
+    //     channel: "Email",
+    //     recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
+    //     timestamp: "Aug 15, 11:02 AM",
+    //     status: i % 3 === 0 ? "Failed" : i % 2 === 0 ? "Read" : "Delivered"
+    // })), []);
+
+    const data = useMemo(() => {
+        let tokenList = [];
+        if (Array.isArray(tokens)) {
+            tokenList = tokens;
+        } else if (tokens?.data?.tokens && Array.isArray(tokens.data.tokens)) {
+            tokenList = tokens.data.tokens;
+        } else if (Array.isArray(tokens?.data)) {
+            tokenList = tokens.data;
+        }
+
+        return tokenList.map((token, index) => ({
+            key: index,
+            userId: token.userId || "N/A",
+            memberName: token.profile?.name || "Unknown",
+            memberId: token.memberId || "N/A",
+            initials: "MB",
+            avatarColor: "#1890ff",
+            channel: token.platform || "Unknown",
+            recipientDetail: token.fcmToken ? `${token.fcmToken.substring(0, 20)}...` : "N/A",
+            timestamp: token.createdAt ? new Date(token.createdAt).toLocaleString() : "N/A",
+            status: token.isActive ? "Active" : "Inactive"
+        }));
+    }, [tokens]);
 
     const navyButtonStyle = {
         backgroundColor: "#1d5b95",
