@@ -1,8 +1,8 @@
 
 
 import React, { useEffect, useState } from "react";
-import { Drawer, Button, Space, Divider, Table, Switch, Tag } from "antd";
-import { EditOutlined } from "@ant-design/icons";
+import { Drawer, Button, Space, Divider, Table, Switch, Tag, Tooltip } from "antd";
+import { CopyOutlined } from "@ant-design/icons";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
@@ -46,26 +46,50 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       });
       setIsEditMode(false);
       setEditingPricingId(null);
+      setHasCloned(false);
     }
   }, [open]);
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  // Handle editing existing pricing
-  const handleEditPricing = (pricingRecord) => {
-    setIsEditMode(true);
-    setEditingPricingId(pricingRecord._id);
+  const [hasCloned, setHasCloned] = useState(false);
 
+  // Handle cloning logic for the top button
+  const handleCloneLastActive = () => {
+    // 1. Find Current Active Pricing
+    const currentActive = product?.currentPricing;
+
+    if (!currentActive) {
+      MyAlert("warning", "No active pricing found to clone!");
+      return;
+    }
+
+    // 2. Calculate Dates
+    let newEffectiveFrom = dayjs();
+    let newEffectiveTo = dayjs().add(1, 'year');
+
+    if (currentActive.effectiveTo) {
+      const lastEndDate = dayjs(currentActive.effectiveTo);
+      newEffectiveFrom = lastEndDate.add(1, 'day');
+      newEffectiveTo = newEffectiveFrom.add(1, 'year');
+    }
+
+    // 3. Populate Form
     setFormData({
-      currency: (pricingRecord.currency || "").toUpperCase(),
-      memberPrice: pricingRecord.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricingRecord.memberPrice)) : "",
-      nonMemberPrice: pricingRecord.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricingRecord.nonMemberPrice)) : "",
-      effectiveFrom: pricingRecord.effectiveFrom ? dayjs(pricingRecord.effectiveFrom) : null,
-      effectiveTo: pricingRecord.effectiveTo ? dayjs(pricingRecord.effectiveTo) : null,
-      status: pricingRecord.status || "Active",
-      price: pricingRecord.price ? formatToTwoDecimals(convertSandToEuro(pricingRecord.price)) : "",
+      currency: (currentActive.currency || "").toUpperCase(),
+      memberPrice: currentActive.memberPrice ? formatToTwoDecimals(convertSandToEuro(currentActive.memberPrice)) : "",
+      nonMemberPrice: currentActive.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(currentActive.nonMemberPrice)) : "",
+      effectiveFrom: newEffectiveFrom,
+      effectiveTo: newEffectiveTo,
+      status: "Active",
+      price: currentActive.price ? formatToTwoDecimals(convertSandToEuro(currentActive.price)) : "",
     });
+
+    // 4. Update State to show "Create" button
+    setHasCloned(true);
+    setIsEditMode(false);
+    setEditingPricingId(null);
   };
 
   // Handle canceling edit mode
@@ -162,6 +186,7 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         key: "currency",
         render: (currency) => currency?.toUpperCase() || "-"
       },
+      // ... (Price columns logic is same as before, see next block)
     ];
 
     // Add price columns based on product type
@@ -227,25 +252,6 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
             {status}
           </Tag>
         )
-      },
-      {
-        title: "Action",
-        key: "action",
-        align: "center",
-        render: (_, record) => {
-          // Only show edit button for current pricing
-          const isCurrentPricing = record._id === product?.currentPricing?._id;
-
-          if (!isCurrentPricing) return null;
-
-          return (
-            <Button
-              size="small"
-              icon={<EditOutlined />}
-              onClick={() => handleEditPricing(record)}
-            />
-          );
-        }
       }
     );
 
@@ -260,10 +266,24 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       width={800}
       extra={
         <Space>
-          {/* <Button onClick={onClose}>Cancel</Button> */}
-          <Button type="primary" className="butn primary-btn" onClick={handleSave} loading={loading}>
-            {isEditMode ? "Update" : "Create"}
-          </Button>
+          {!isEditMode && product?.currentPricing && !hasCloned ? (
+            <Button
+              type="primary"
+              className="butn primary-btn"
+              onClick={handleCloneLastActive}
+            >
+              Clone Last Active
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              className="butn primary-btn"
+              onClick={handleSave}
+              loading={loading}
+            >
+              {isEditMode ? "Update" : "Create"}
+            </Button>
+          )}
         </Space>
       }
     >
