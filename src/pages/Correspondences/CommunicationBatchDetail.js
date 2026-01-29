@@ -110,14 +110,14 @@ const CommunicationBatchDetail = () => {
                 );
             }
         },
-        {
-            title: "Actions",
-            key: "actions",
-            width: 100,
-            render: () => (
-                <Button type="text" icon={<MoreOutlined />} />
-            )
-        }
+        // {
+        //     title: "Actions",
+        //     key: "actions",
+        //     width: 100,
+        //     render: () => (
+        //         <Button type="text" icon={<MoreOutlined />} />
+        //     )
+        // }
     ], []);
 
     // Static Stats Data
