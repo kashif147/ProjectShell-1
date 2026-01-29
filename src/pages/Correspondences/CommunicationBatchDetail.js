@@ -19,7 +19,8 @@ import Toolbar from "../../component/common/Toolbar";
 
 import { useDispatch, useSelector } from "react-redux";
 import { useEffect } from "react";
-import { getNotificationTokens } from "../../features/NotificationSlice";
+import { getNotificationTokens, sendNotification, clearNotificationState } from "../../features/NotificationSlice";
+import MyAlert from "../../component/common/MyAlert";
 
 const { Option } = Select;
 
@@ -27,7 +28,22 @@ const CommunicationBatchDetail = () => {
     const location = useLocation();
     const navigate = useNavigate();
     const dispatch = useDispatch();
-    const { tokens, loading } = useSelector((state) => state.notification);
+    const { tokens, loading, sending, successMessage, error } = useSelector((state) => state.notification);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [selectedRows, setSelectedRows] = useState([]);
+
+    useEffect(() => {
+        if (successMessage) {
+            MyAlert("success", "Success", successMessage);
+            dispatch(clearNotificationState());
+            setSelectedRowKeys([]);
+            setSelectedRows([]);
+        }
+        if (error) {
+            MyAlert("error", "Error", typeof error === 'string' ? error : "Failed to send notifications");
+            dispatch(clearNotificationState());
+        }
+    }, [successMessage, error, dispatch]);
 
     useEffect(() => {
         dispatch(getNotificationTokens());
@@ -35,6 +51,8 @@ const CommunicationBatchDetail = () => {
     // Fallback to static values if no state is passed, but keep it simple
     const batchName = location.state?.batchName || "August Newsletter - Email";
     const batchId = location.state?.batchId || "#BTH-2023-08-15";
+    const notificationTitle = location.state?.title || "Notification Title";
+    const notificationMessage = location.state?.message || "This is the content of the notification message.";
 
     // Static Columns Definition
     const tableColumns = useMemo(() => [
@@ -165,7 +183,8 @@ const CommunicationBatchDetail = () => {
             channel: token.platform || "Unknown",
             recipientDetail: token.fcmToken ? `${token.fcmToken.substring(0, 20)}...` : "N/A",
             timestamp: token.createdAt ? new Date(token.createdAt).toLocaleString() : "N/A",
-            status: token.isActive ? "Active" : "Inactive"
+            status: token.isActive ? "Active" : "Inactive",
+            tenantId: token.tenantId // Ensure tenantId is passed
         }));
     }, [tokens]);
 
@@ -211,6 +230,22 @@ const CommunicationBatchDetail = () => {
         gap: "8px"
     };
 
+    const handleSendNotification = () => {
+        if (selectedRows.length === 0) {
+            MyAlert("warning", "Selection Required", "Please select at least one user to send notification.");
+            return;
+        }
+
+        const payload = {
+            title: notificationTitle,
+            body: notificationMessage,
+            userId: selectedRows.map(row => row.userId),
+            tenantId: selectedRows.map(row => row.tenantId || "68cbf7806080b4621d469d34")
+        };
+
+        dispatch(sendNotification(payload));
+    };
+
     return (
         <div style={{ padding: "0", minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
             <div style={{ padding: "16px 24px 0 24px" }}>
@@ -231,13 +266,42 @@ const CommunicationBatchDetail = () => {
                             </h1>
                             <Tag color="blue" style={{ borderRadius: '4px', margin: 0, fontWeight: 'bold' }}>ACTIVE</Tag>
                         </div>
-                        <div style={{ color: '#8c8c8c', marginTop: '4px', fontSize: '13px' }}>
+                        <div style={{ color: '#8c8c8c', marginTop: '4px', fontSize: '13px', marginBottom: '16px' }}>
                             Batch ID: {batchId} • Created on Aug 15, 2023 at 10:45 AM
+                        </div>
+
+                        <div style={{ backgroundColor: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #f0f0f0', maxWidth: '800px' }}>
+                            <div style={{ marginBottom: '8px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#8c8c8c', textTransform: 'uppercase', marginRight: '8px' }}>
+                                    Subject:
+                                </span>
+                                <span style={{ fontWeight: '500', color: '#262626', fontSize: '15px' }}>
+                                    {notificationTitle}
+                                </span>
+                            </div>
+                            <div>
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#8c8c8c', textTransform: 'uppercase', marginRight: '8px', verticalAlign: 'top' }}>
+                                    Message:
+                                </span>
+                                <span style={{ color: '#595959', fontSize: '14px', lineHeight: '1.5' }}>
+                                    {notificationMessage}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <CommonPopConfirm title="Are you sure you want to trigger notifications for all members in this batch?">
-                            <Button style={retryButtonStyle} icon={<SendOutlined />}>Trigger Notifications</Button>
+                        <CommonPopConfirm
+                            title={`Are you sure you want to send notifications to ${selectedRows.length} selected members?`}
+                            onConfirm={handleSendNotification}
+                        >
+                            <Button
+                                style={retryButtonStyle}
+                                icon={<SendOutlined />}
+                                loading={sending}
+                                disabled={selectedRows.length === 0}
+                            >
+                                Send Notification
+                            </Button>
                         </CommonPopConfirm>
                         <Button style={navyButtonStyle}>Include</Button>
                         <CommonPopConfirm title="Are you sure you want to exclude members?">
@@ -302,6 +366,12 @@ const CommunicationBatchDetail = () => {
                 columns={tableColumns}
                 onRowClick={(record) => {
                     navigate("/Details", { state: { id: record.memberId, ...record } });
+                }}
+                selection={true}
+                rowSelection={{ selectedRowKeys }}
+                onSelectionChange={(selectedKeys, selectedRows) => {
+                    setSelectedRowKeys(selectedKeys);
+                    setSelectedRows(selectedRows);
                 }}
             />
         </div>

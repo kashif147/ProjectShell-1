@@ -49,14 +49,46 @@ export const getActiveToken = createAsyncThunk(
     }
 );
 
+// Send notification action
+export const sendNotification = createAsyncThunk(
+    "notification/sendNotification",
+    async (payload, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const config = {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            };
+            const response = await axios.post(
+                `${baseURL}/firebase/send-notification`,
+                payload,
+                config
+            );
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 const notificationSlice = createSlice({
     name: "notification",
     initialState: {
         tokens: [],
         loading: false,
+        sending: false,
         error: null,
+        successMessage: null,
     },
-    reducers: {},
+    reducers: {
+        clearNotificationState: (state) => {
+            state.sending = false;
+            state.successMessage = null;
+            state.error = null;
+        }
+    },
     extraReducers: (builder) => {
         builder
             .addCase(getNotificationTokens.pending, (state) => {
@@ -71,6 +103,19 @@ const notificationSlice = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
+            .addCase(sendNotification.pending, (state) => {
+                state.sending = true;
+                state.error = null;
+                state.successMessage = null;
+            })
+            .addCase(sendNotification.fulfilled, (state, action) => {
+                state.sending = false;
+                state.successMessage = "Notifications sent successfully!";
+            })
+            .addCase(sendNotification.rejected, (state, action) => {
+                state.sending = false;
+                state.error = action.payload;
+            })
             .addCase(getActiveToken.pending, (state) => {
                 // Handle pending
             })
@@ -79,5 +124,7 @@ const notificationSlice = createSlice({
             });
     },
 });
+
+export const { clearNotificationState } = notificationSlice.actions;
 
 export default notificationSlice.reducer;

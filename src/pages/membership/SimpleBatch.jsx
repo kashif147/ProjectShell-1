@@ -327,7 +327,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
             <Col span={24}>
               <MyInput
-                label="Title:"
+                label="Notification Title:"
                 name="title"
                 value={formData.title}
                 onChange={(e) => handleChange("title", e.target.value)}
@@ -337,7 +337,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
 
             <Col span={24}>
               <MyInput
-                label="Description:"
+                label="Message:"
                 name="description"
                 type="textarea"
                 rows={4}
