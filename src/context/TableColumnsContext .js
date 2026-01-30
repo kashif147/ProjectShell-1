@@ -14,6 +14,8 @@ import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
 import { convertToLocalTime, formatDateOnly } from "../utils/Utilities";
+import { Triangle } from "lucide-react";
+import { Tooltip } from "antd";
 
 const TableColumnsContext = createContext();
 
@@ -893,13 +895,26 @@ const staticColumns = {
   Applications: [
     // 🔹 Top-Level Fields
     {
-      dataIndex: ["subscriptionDetails", "membershipCategory",],
+      dataIndex: ["subscriptionDetails", "membershipCategory"],
       title: "Membership Category",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 200,
+      width: 250,
       editable: false,
+      render: (category, record) => {
+        const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+        return (
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span>{category || "-"}</span>
+            {isPotentialDuplicate && (
+              <Tooltip title="Potential Duplicate Detected">
+                <Triangle size={16} color="#f5222d" style={{ minWidth: '16px', fill: '#f5222d' }} />
+              </Tooltip>
+            )}
+          </div>
+        );
+      }
     },
     {
       dataIndex: "applicationStatus",
