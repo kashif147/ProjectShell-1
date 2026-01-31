@@ -90,6 +90,12 @@ const Breadcrumb = () => {
       icon: "📋",
       recordIdField: "code",
     },
+    "/CasesDetails": {
+      module: "Issue Management",
+      page: "Case Details",
+      icon: "📋",
+      recordIdField: "caseId",
+    },
 
     // Claims Pages
     "/ClaimSummary": {

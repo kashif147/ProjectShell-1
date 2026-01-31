@@ -66,6 +66,10 @@ export const FilterProvider = ({ children }) => {
     Communication: {
       visibleFilters: [],
       filtersState: {}
+    },
+    Cases: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -195,7 +199,8 @@ export const FilterProvider = ({ children }) => {
       '/membership': 'Membership',
       "/members": "Members",
       "/onlinePayment": "OnlinePayment",
-      "/CommunicationBatchDetail": "Communication"
+      "/CommunicationBatchDetail": "Communication",
+      "/CasesSummary": "Cases"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
@@ -316,6 +321,13 @@ export const FilterProvider = ({ children }) => {
         "Membership Category",
         "Payment Status",
       ],
+      Cases: [
+        "Search",
+        "Incident Date",
+        "Case Type",
+        "Stakeholder",
+        "Priority",
+      ],
     }),
     []
   );
@@ -328,6 +340,7 @@ export const FilterProvider = ({ children }) => {
     Members: ["Subscription Status", "Membership Category"],
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
+    Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -495,6 +508,24 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Membership Category": {
+        operator: "==",
+        selectedValues: []
+      }
+    },
+    Cases: {
+      "Incident Date": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Case Type": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Stakeholder": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Priority": {
         operator: "==",
         selectedValues: []
       }
@@ -686,6 +717,9 @@ export const FilterProvider = ({ children }) => {
       "Payment Method": ["", "Credit Card", "PayPal", "Debit Card", "Stripe"],
       "Payment Status": ["", "Paid", "Pending", "Failed", "Refunded"],
       "Billing Cycle": ["", "Annual", "Monthly"],
+      "Case Type": ["", "General", "Legal", "Financial", "Other"],
+      "Priority": ["", "Low", "Medium", "High", "Critical"],
+      "Stakeholder": ["", "Internal", "External", "Partner"],
 
       // 🔹 Text input filters
       "Email": [],
@@ -720,6 +754,7 @@ export const FilterProvider = ({ children }) => {
       "Rollover Date": [],
       "Created At": [],
       "Updated At": [],
+      "Incident Date": [],
     };
   }, [
     workLocationOptions,

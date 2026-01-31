@@ -8,7 +8,7 @@ const initialState = {
   "Issue Management": false,
   Events: false,
   Courses: false,
-  "Professional Development": false,
+  "Cases": false,
   Settings: false,
   Configuration: false,
   Profiles: false,

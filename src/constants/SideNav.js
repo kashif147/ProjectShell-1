@@ -612,6 +612,45 @@ export const reportItems = [
     label: <div className="sidebar-label">Suspended Members Report</div>,
   },
 ];
+export const casesItems = [
+  {
+    key: "Dashboard",
+    icon: (
+      <div className="icon">
+        <FaChartPie />
+      </div>
+    ),
+    label: <div className="sidebar-label">Dashboard</div>,
+  },
+  {
+    key: "All cases",
+    icon: (
+      <div className="icon">
+        <FaFolder />
+      </div>
+    ),
+    label: <div className="sidebar-label">All cases</div>,
+  },
+  {
+    key: "Assigned to me",
+    icon: (
+      <div className="icon">
+        <FaUserCheck />
+      </div>
+    ),
+    label: <div className="sidebar-label">Assigned to me</div>,
+  },
+  {
+    key: "Reports setting",
+    icon: (
+      <div className="icon">
+        <FaWrench />
+      </div>
+    ),
+    label: <div className="sidebar-label">Reports setting</div>,
+  },
+];
+
 export const issuesItems = [
   {
     key: "Issues",

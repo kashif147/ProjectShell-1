@@ -470,6 +470,37 @@ export const reportItems = [
   ),
 ];
 
+export const casesItems = [
+  createMenuItem(
+    "Dashboard",
+    <FaChartPie />,
+    "Dashboard",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "All cases",
+    <FaFolderOpen />,
+    "All cases",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Assigned to me",
+    <FaUserShield />,
+    "Assigned to me",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Reports setting",
+    <FaWrench />,
+    "Reports setting",
+    ["role:read", "role:write"],
+    ["SU", "GS"]
+  ),
+];
+
 export const issuesItems = [
   createMenuItem(
     "Issues",
@@ -546,6 +577,7 @@ const SideNavWithAuth = {
   subscriptionItems,
   configurationItems,
   reportItems,
+  casesItems,
   issuesItems,
   eventsItems,
   filterMenuItemsByAuth,

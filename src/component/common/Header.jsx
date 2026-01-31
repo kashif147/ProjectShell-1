@@ -104,12 +104,12 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       route: "/Courses",
     },
     {
-      name: "Professional Development",
+      name: "Cases",
       icon: MdOutlineWork,
       bgColor: "#3F51B5",
       permissions: ["crm:access"],
       roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
-      route: "/ProfessionalDevelopment",
+      route: "/CasesSummary",
     },
     {
       name: "Settings",
@@ -175,7 +175,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             Correspondence: "Correspondence",
             Events: "Events",
             Courses: "",
-            "Professional Development": "",
+            "Cases": "Cases",
             Settings: "",
             Configuration: "Configuration",
             Reports: "Reports",

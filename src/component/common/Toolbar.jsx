@@ -156,7 +156,11 @@ const Toolbar = () => {
         <div style={{ flex: "0: 0 250px" }}>
           <Input
             className="my-input-field"
-            placeholder="Membership No or Surname"
+            placeholder={
+              location.pathname === "/CasesSummary"
+                ? "Search Case ID, team, or stakeholder"
+                : "Membership No or Surname"
+            }
             style={{
               height: "30px",
               borderRadius: "4px",

@@ -251,7 +251,6 @@ function Entry() {
 
   const showResizableCompRoutes = [
     "/ClaimsDetails",
-    "/CasesDetails",
     "/AddNewProfile",
     "/AddClaims",
     "/ClaimsById",
@@ -292,8 +291,11 @@ function Entry() {
             {/* Content area + resizable section */}
             <div style={{ flex: 1, display: "flex" }}>
               <div
-                style={{ flex: 1, scrollbarWidth: "none" }}
-                className="main-main "
+                style={{
+                  flex: 1,
+                  scrollbarWidth: location.pathname === "/CasesDetails" ? "auto" : "none"
+                }}
+                className={`main-main ${location.pathname === "/CasesDetails" ? "enable-vertical-scroll" : ""}`}
               >
                 <Suspense
                   fallback={

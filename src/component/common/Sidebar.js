@@ -5,6 +5,7 @@ import {
   financeItems,
   correspondenceItems,
   configurationItems,
+  casesItems,
   profileItems,
   reportItems,
   issuesItems,
@@ -45,6 +46,7 @@ const Sidebar = () => {
       Profiles: profileItems,
       Reports: reportItems,
       "Issue Management": issuesItems,
+      Cases: casesItems,
       Events: eventsItems,
     }),
     []
@@ -165,11 +167,19 @@ const Sidebar = () => {
       case "Cases":
         navigate("/CasesSummary", { state: { search: "Cases" } });
         break;
+      case "All cases":
+      case "Assigned to me":
+        navigate("/CasesSummary", { state: { search: "Cases" } });
+        break;
       case "Correspondences":
         navigate("/CorrespondenceDashboard", { state: { search: "" } });
         break;
       case "Dashboard":
-        navigate("/CorrespondenceDashboard", { state: { search: "" } });
+        if (activeKey === "Cases") {
+          navigate("/CasesSummary", { state: { search: "" } });
+        } else {
+          navigate("/CorrespondenceDashboard", { state: { search: "" } });
+        }
         break;
       case "Transfer Requests":
         navigate("/Transfers", { state: { search: "Transfers" } });
@@ -319,15 +329,6 @@ const Sidebar = () => {
       case "Policy Client Example":
         navigate("/PolicyClientExample", {
           state: { search: "Policy Client Example" },
-        });
-      case "Templetes":
-        navigate("/templeteSummary", {
-          state: { search: "Templetes" },
-        });
-        break;
-      case "Membership":
-        navigate("/Members", {
-          state: { search: "Membership" },
         });
         break;
       case "Templetes":

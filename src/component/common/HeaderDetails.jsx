@@ -943,7 +943,11 @@ function HeaderDetails() {
                           inputReadOnly={false} // allow typing
                           allowClear={false} // keep a value always; set true if you want clear
                           style={{ width: 220 }} // compact width for year
-                          placeholder="Select year"
+                          placeholder={
+                            nav === "/CasesSummary"
+                              ? "Search Case ID, team, or stakeholder"
+                              : "Search anything..."
+                          }
                         />
                       </Col>
                       {nav == "/RemindersSummary" && (
