@@ -53,6 +53,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       "Events": "/Events",
       "Reports": "/Reports",
       "Settings": "/Settings",
+      "Issues Management": "/CasesSummary",
     };
 
     dispatch(updateMenuLbl({ key, value }));
@@ -104,7 +105,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       route: "/Courses",
     },
     {
-      name: "Cases",
+      name: "Issues Management",
       icon: MdOutlineWork,
       bgColor: "#3F51B5",
       permissions: ["crm:access"],
@@ -175,7 +176,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
             Correspondence: "Correspondence",
             Events: "Events",
             Courses: "",
-            "Cases": "Cases",
+            "Issues Management": "Issues Management",
             Settings: "",
             Configuration: "Configuration",
             Reports: "Reports",

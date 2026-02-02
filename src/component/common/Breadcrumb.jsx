@@ -80,19 +80,19 @@ const Breadcrumb = () => {
 
     // Cases Pages
     "/CasesSummary": {
-      module: "Issue Management",
-      page: "Cases Summary",
+      module: "Issues Management",
+      page: "Issues Summary",
       icon: "📋",
     },
     "/CasesById": {
-      module: "Issue Management",
-      page: "Case Details",
+      module: "Issues Management",
+      page: "Issue Details",
       icon: "📋",
       recordIdField: "code",
     },
     "/CasesDetails": {
-      module: "Issue Management",
-      page: "Case Details",
+      module: "Issues Management",
+      page: "",
       icon: "📋",
       recordIdField: "caseId",
     },
@@ -501,7 +501,7 @@ const Breadcrumb = () => {
     const moduleRoutes = {
       Configuration: "/Configuratin",
       "Subscriptions & Rewards": "/Summary",
-      "Issue Management": "/CasesSummary",
+      "Issues Management": "/CasesSummary",
       Correspondence: "/CorrespondencesSummary",
       Finance: "/Batches",
       Reports: "/Reports",

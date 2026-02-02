@@ -503,18 +503,32 @@ export const casesItems = [
 
 export const issuesItems = [
   createMenuItem(
-    "Issues",
-    <FaExclamationTriangle />,
-    "Issues",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    "Dashboard",
+    <FaChartPie />,
+    "Dashboard",
+    [], // No permission restrictions
+    [] // No role restrictions
   ),
   createMenuItem(
-    "Cases",
+    "All Issues",
     <FaFolderOpen />,
-    "Cases",
-    ["crm:member:read", "crm:member:list"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    "All Issues",
+    [], // No permission restrictions
+    [] // No role restrictions
+  ),
+  createMenuItem(
+    "Assigned to me",
+    <FaUserShield />,
+    "Assigned to me",
+    [], // No permission restrictions
+    [] // No role restrictions
+  ),
+  createMenuItem(
+    "Reports setting",
+    <FaWrench />,
+    "Reports setting",
+    [], // No permission restrictions
+    [] // No role restrictions
   ),
 ];
 

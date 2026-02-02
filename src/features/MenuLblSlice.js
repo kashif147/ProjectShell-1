@@ -5,7 +5,7 @@ const initialState = {
   "Subscriptions & Rewards": true,
   Finance: false,
   Correspondence: false,
-  "Issue Management": false,
+  "Issues Management": false,
   Events: false,
   Courses: false,
   "Cases": false,

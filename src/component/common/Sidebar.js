@@ -45,7 +45,7 @@ const Sidebar = () => {
       Configuration: configurationItems,
       Profiles: profileItems,
       Reports: reportItems,
-      "Issue Management": issuesItems,
+      "Issues Management": issuesItems,
       Cases: casesItems,
       Events: eventsItems,
     }),
@@ -165,11 +165,12 @@ const Sidebar = () => {
         navigate("/ClaimSummary", { state: { search: "Claims" } });
         break;
       case "Cases":
-        navigate("/CasesSummary", { state: { search: "Cases" } });
+        navigate("/CasesSummary", { state: { search: "All Issues" } });
         break;
+      case "All Issues":
       case "All cases":
       case "Assigned to me":
-        navigate("/CasesSummary", { state: { search: "Cases" } });
+        navigate("/CasesSummary", { state: { search: "All Issues" } });
         break;
       case "Correspondences":
         navigate("/CorrespondenceDashboard", { state: { search: "" } });

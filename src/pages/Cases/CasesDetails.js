@@ -36,7 +36,7 @@ function CasesDetails() {
 
   const activities = [
     {
-      title: 'Case Updated: In Progress',
+      title: 'Issue Updated: In Progress',
       time: '2 hours ago - Alex Rivera',
       icon: <FileTextOutlined />,
       color: 'var(--info-bg)',
@@ -133,7 +133,7 @@ function CasesDetails() {
       actor: { name: 'Sarah Johnson', avatar: 'https://i.pravatar.cc/150?u=sarah', title: 'STATUS CHANGE' },
       time: '2m ago',
       type: 'status',
-      label: 'Modified Case Status',
+      label: 'Modified Issue Status',
       from: 'Draft',
       to: 'Review',
       fromColor: 'var(--error-bg)',
@@ -163,7 +163,7 @@ function CasesDetails() {
       actor: { name: 'John Doe', avatar: '', icon: <UserAddOutlined />, title: 'CONTENT EDIT' },
       time: '3h ago',
       type: 'diff',
-      label: 'Modified Case Summary',
+      label: 'Modified Issue Summary',
       oldText: 'Initial assessment complete, pending further files...',
       newText: 'Comprehensive review finished, evidence cross-referenced with regional guidelines...'
     }
@@ -360,7 +360,7 @@ function CasesDetails() {
     },
     {
       key: '2',
-      label: 'CASE NOTES',
+      label: 'ISSUE NOTES',
       children: <div style={{ padding: 20 }}>Case notes content...</div>,
     },
     {

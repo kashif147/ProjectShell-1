@@ -67,6 +67,7 @@ import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer"
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
+import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -97,6 +98,7 @@ function HeaderDetails() {
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
 
 
@@ -872,6 +874,8 @@ function HeaderDetails() {
                                   setRefundDrawerOpen(true);
                                 } else if (nav === "/write-offs") {
                                   setWriteOffDrawerOpen(true);
+                                } else if (nav === "/CasesSummary") {
+                                  setCasesDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -945,7 +949,7 @@ function HeaderDetails() {
                           style={{ width: 220 }} // compact width for year
                           placeholder={
                             nav === "/CasesSummary"
-                              ? "Search Case ID, team, or stakeholder"
+                              ? "Search Issue ID, team, or stakeholder"
                               : "Search anything..."
                           }
                         />
@@ -993,7 +997,7 @@ function HeaderDetails() {
       </div>
       <MyDrawer
         title={`${nav === "/CasesById"
-          ? "Enter Cases"
+          ? "Enter Issue"
           : nav == "/ClaimSummary"
             ? "Enter Claims"
             : nav === "/ClaimsById"
@@ -1376,6 +1380,10 @@ function HeaderDetails() {
       <WriteOffDrawer
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
+      />
+      <CreateCasesDrawer
+        open={casesDrawerOpen}
+        onClose={() => setCasesDrawerOpen(false)}
       />
       {/* <MyDrawer
         title="Refund Entry Drawer"
