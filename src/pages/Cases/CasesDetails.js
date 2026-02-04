@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, Avatar, Button, Row, Col, Tooltip } from 'antd';
+import { Avatar, Button, Row, Col, Tooltip, Dropdown, Input } from 'antd';
 import {
   ArrowLeftOutlined,
   ShareAltOutlined,
@@ -23,16 +23,92 @@ function CasesDetails() {
   const navigate = useNavigate();
   const caseId = location.state?.caseId || "#8821";
 
-  const [activeTabKey, setActiveTabKey] = useState('1');
   const [activeStep, setActiveStep] = useState('Intake');
+  const [activeNav, setActiveNav] = useState('Summary');
 
-  const steps = ['Intake', 'Investigation', 'Review', 'Closed'];
+  // Section Refs
+  const summaryRef = useRef(null);
+  const notesRef = useRef(null);
+  const attachmentsRef = useRef(null);
+  const historyRef = useRef(null);
 
-  const teamMembers = [
+  const [assignee, setAssignee] = useState({ name: 'Alex Rivera', avatar: 'https://i.pravatar.cc/150?u=alex' });
+  const [teamMembers, setTeamMembers] = useState([
     { name: 'Sarah C.', avatar: 'https://i.pravatar.cc/150?u=sarah', active: true },
     { name: 'Michael S.', avatar: 'https://i.pravatar.cc/150?u=michael', active: false },
     { name: 'David W.', avatar: 'https://i.pravatar.cc/150?u=david', active: false },
+  ]);
+
+  const steps = ['Intake', 'Investigation', 'Review', 'Closed'];
+
+  // Mock data for dropdowns
+  const availableAssignees = [
+    { name: 'Alex Rivera', avatar: 'https://i.pravatar.cc/150?u=alex' },
+    { name: 'Sarah Johnson', avatar: 'https://i.pravatar.cc/150?u=sarah' },
+    { name: 'Mike Chen', avatar: 'https://i.pravatar.cc/150?u=number' },
   ];
+
+  const availableTeamMembers = [
+    { name: 'Emma W.', avatar: 'https://i.pravatar.cc/150?u=emma' },
+    { name: 'James B.', avatar: 'https://i.pravatar.cc/150?u=james' },
+    { name: 'Linda K.', avatar: 'https://i.pravatar.cc/150?u=linda' },
+  ];
+
+  const handleAssigneeChange = ({ key }) => {
+    const selected = availableAssignees.find(a => a.name === key);
+    if (selected) setAssignee(selected);
+  };
+
+  const handleAddTeamMember = ({ key }) => {
+    const selected = availableTeamMembers.find(m => m.name === key);
+    if (selected && !teamMembers.find(m => m.name === selected.name)) {
+      setTeamMembers([...teamMembers, { ...selected, active: false }]);
+    }
+  };
+
+  const scrollToSection = (sectionName) => {
+    setActiveNav(sectionName);
+    let ref = null;
+    switch (sectionName) {
+      case 'Summary': ref = summaryRef; break;
+      case 'Activities': ref = notesRef; break;
+      case 'Communications': ref = attachmentsRef; break;
+      case 'History': ref = historyRef; break;
+      default: return;
+    }
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const assigneeMenu = {
+    items: availableAssignees.map(a => ({
+      key: a.name,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Avatar size="small" src={a.avatar} />
+          <span>{a.name}</span>
+        </div>
+      )
+    })),
+    onClick: handleAssigneeChange,
+    style: { width: 160 }
+  };
+
+  const teamMemberMenu = {
+    items: availableTeamMembers.map(m => ({
+      key: m.name,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Avatar size="small" src={m.avatar} />
+          <span>{m.name}</span>
+        </div>
+      )
+    })),
+    onClick: handleAddTeamMember,
+    style: { minWidth: 220 }
+  };
+
 
   const activities = [
     {
@@ -63,8 +139,12 @@ function CasesDetails() {
       <div className="summary-grid">
         <span className="summary-label">Assigne</span>
         <div className="owner-value">
-          <span className="summary-value">Alex Rivera</span>
-          <Avatar size="small" src="https://i.pravatar.cc/150?u=alex" />
+          <Dropdown menu={assigneeMenu} trigger={['click']}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+              <span className="summary-value">{assignee.name}</span>
+              <Avatar size="small" src={assignee.avatar} />
+            </div>
+          </Dropdown>
         </div>
 
         <span className="summary-label">Created Date</span>
@@ -99,9 +179,11 @@ function CasesDetails() {
               <span>{member.name}</span>
             </div>
           ))}
-          <div className="add-member-btn">
-            <PlusOutlined />
-          </div>
+          <Dropdown menu={teamMemberMenu} trigger={['click']}>
+            <div className="add-member-btn">
+              <PlusOutlined />
+            </div>
+          </Dropdown>
         </div>
       </div>
 
@@ -123,7 +205,7 @@ function CasesDetails() {
             </div>
           </div>
         ))}
-        <Button className="view-history-btn" onClick={() => setActiveTabKey('4')}>VIEW FULL HISTORY</Button>
+        <Button className="view-history-btn" onClick={() => scrollToSection('History')}>VIEW FULL HISTORY</Button>
       </div>
     </div >
   );
@@ -352,66 +434,156 @@ function CasesDetails() {
     </div>
   );
 
-  const tabItems = [
+  const [notes, setNotes] = useState([
     {
-      key: '1',
-      label: 'SUMMARY',
-      children: renderSummary(),
+      id: 1,
+      user: 'Sarah C.',
+      avatar: 'https://i.pravatar.cc/150?u=sarah',
+      text: 'Initial review of the transaction logs shows some inconsistencies with the reported timeline.',
+      time: 'Oct 24, 10:30 AM'
     },
     {
-      key: '2',
-      label: 'ISSUE NOTES',
-      children: <div style={{ padding: 20 }}>Case notes content...</div>,
-    },
-    {
-      key: '3',
-      label: 'EMAILS AND ATTACHMENTS',
-      children: renderAttachments(),
-    },
-    {
-      key: '4',
-      label: 'HISTORY',
-      children: renderHistory(),
-    },
-  ];
+      id: 2,
+      user: 'Michael S.',
+      avatar: 'https://i.pravatar.cc/150?u=michael',
+      text: 'I have requested the external vendor logs to cross-verify. Should have them by EOD.',
+      time: 'Oct 24, 11:15 AM'
+    }
+  ]);
+  const [newNote, setNewNote] = useState('');
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    const note = {
+      id: Date.now(),
+      user: 'Alex Rivera', // Current user
+      avatar: 'https://i.pravatar.cc/150?u=alex',
+      text: newNote,
+      time: 'Just now'
+    };
+    setNotes([...notes, note]);
+    setNewNote('');
+  };
+
+  const loadPreviousNotes = () => {
+    const olderNotes = [
+      {
+        id: 99,
+        user: 'System',
+        avatar: '',
+        text: 'Case created automatically by Risk Engine Rule #442.',
+        time: 'Oct 23, 09:00 PM'
+      }
+    ];
+    setNotes([...olderNotes, ...notes]);
+  };
+
+  const renderIssueNotes = () => (
+    <div className="issue-notes-container" style={{ padding: '0' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <button className="custom-action-btn custom-secondary-btn" onClick={loadPreviousNotes}>
+          Load previous comments
+        </button>
+      </div>
+
+      <div className="notes-list" style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+        {notes.map(note => (
+          <div key={note.id} className="note-item" style={{ display: 'flex', gap: '16px' }}>
+            <Avatar src={note.avatar} icon={<UserAddOutlined />} />
+            <div className="note-content" style={{ flex: 1 }}>
+              <div className="note-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontWeight: 600, color: '#212529', fontSize: '14px' }}>{note.user}</span>
+                <span style={{ color: '#bfbfbf', fontSize: '12px' }}>{note.time}</span>
+              </div>
+              <div className="note-text" style={{ background: '#f8faff', padding: '12px', borderRadius: '8px', color: '#595959', fontSize: '14px' }}>
+                {note.text}
+              </div>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      <div className="add-note-section" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+        <Avatar src="https://i.pravatar.cc/150?u=alex" />
+        <div style={{ flex: 1 }}>
+          <Input.TextArea
+            rows={3}
+            placeholder="Add a comment..."
+            value={newNote}
+            onChange={(e) => setNewNote(e.target.value)}
+            style={{ marginBottom: '12px', borderRadius: '8px' }}
+          />
+          <button className="custom-action-btn custom-primary-btn" onClick={handleAddNote}>
+            Add Comment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <div className="cases-details-container">
       {/* Header */}
       <div className="case-header">
         <div className="case-header-left">
-          <ArrowLeftOutlined style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => navigate(-1)} />
           <div className="tag-container">
             <span className="theme-status theme-status-info">IN PROGRESS</span>
             <span className="theme-status theme-status-error">HIGH PRIORITY</span>
           </div>
         </div>
+
+        {/* Stepper Moved to Header */}
+        <div className="workflow-stepper" style={{ marginBottom: 0, flex: 1, justifyContent: 'center' }}>
+          {steps.map((step) => (
+            <div
+              key={step}
+              className={`stepper-item ${activeStep === step ? 'active' : ''}`}
+              onClick={() => setActiveStep(step)}
+              style={{ minWidth: '100px', fontSize: '12px', height: '32px' }}
+            >
+              {step}
+            </div>
+          ))}
+        </div>
+
         <div className="case-header-right">
           <ShareAltOutlined style={{ marginRight: 16, cursor: 'pointer', fontSize: '18px' }} />
           <EllipsisOutlined style={{ cursor: 'pointer', fontSize: '18px' }} />
         </div>
       </div>
 
-      {/* Stepper */}
-      <div className="workflow-stepper">
-        {steps.map((step) => (
+      {/* Anchor Navigation Bar */}
+      <div className="anchor-nav-header">
+        {['Summary', 'Activities', 'Communications', 'History'].map((item) => (
           <div
-            key={step}
-            className={`stepper-item ${activeStep === step ? 'active' : ''}`}
-            onClick={() => setActiveStep(step)}
+            key={item}
+            className={`anchor-nav-item ${activeNav === item ? 'active' : ''}`}
+            onClick={() => scrollToSection(item)}
           >
-            {step}
+            {item.toUpperCase()}
           </div>
         ))}
       </div>
 
-      {/* Tabs */}
-      <Tabs
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        className="custom-tabs"
-        items={tabItems}
-      />
+      {/* Scrollable Content Body */}
+      <div className="cases-content-body">
+        <div className="section-container" ref={summaryRef}>
+          {renderSummary()}
+        </div>
+
+        <div className="section-container" ref={notesRef}>
+          {renderIssueNotes()}
+        </div>
+
+        <div className="section-container" ref={attachmentsRef}>
+          {renderAttachments()}
+        </div>
+
+        <div className="section-container" ref={historyRef}>
+          {renderHistory()}
+        </div>
+      </div>
+
 
       {/* Floating Action Button */}
       <div className="fab-btn">

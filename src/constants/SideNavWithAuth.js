@@ -534,9 +534,37 @@ export const issuesItems = [
 
 export const eventsItems = [
   createMenuItem(
-    "Manage Events",
+    "Dashboard",
+    <FaChartPie />,
+    "Dashboard",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Events",
     <FaCalendarAlt />,
-    "Manage Events",
+    "Events",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Attendees",
+    <FaUsers />,
+    "Attendees",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Reporting",
+    <FaChartLine />,
+    "Reporting",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Settings",
+    <FaWrench />,
+    "Settings",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),

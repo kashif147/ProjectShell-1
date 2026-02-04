@@ -113,6 +113,7 @@ const Sidebar = () => {
       "/Transfers": "Transfer Requests",
       "/Configuratin": "System Configuration",
       "/RosterSummary": "Roster",
+      "/EventsSummary": "Events",
       "/Batches": "Batches",
       "/Applications": "Applications",
       "/RemindersSummary": "Reminders",
@@ -190,6 +191,9 @@ const Sidebar = () => {
         break;
       case "Roster":
         navigate("/RosterSummary", { state: { search: "Rosters" } });
+        break;
+      case "Events":
+        navigate("/EventsSummary", { state: { search: "Events" } });
         break;
       case "Batches":
         navigate("/Batches", { state: { search: "Batches" } });

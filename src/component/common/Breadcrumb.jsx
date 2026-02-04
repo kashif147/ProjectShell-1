@@ -20,7 +20,7 @@ const Breadcrumb = () => {
     Membership: { icon: "👤", route: "/Summary" },
     Finance: { icon: "💰", route: "/Batches" },
     Correspondence: { icon: "📧", route: "/CorrespondencesSummary" },
-    Events: { icon: "📅", route: "/RosterSummary" },
+    Events: { icon: "📅", route: "/EventsSummary" },
     Configuration: { icon: "⚙️", route: "/Configuratin" },
     Reports: { icon: "📊", route: "/Reports" },
     Settings: { icon: "⚙️", route: "/Configuratin" },
@@ -92,7 +92,7 @@ const Breadcrumb = () => {
     },
     "/CasesDetails": {
       module: "Issues Management",
-      page: "",
+      page: "Case Details",
       icon: "📋",
       recordIdField: "caseId",
     },
@@ -287,7 +287,13 @@ const Breadcrumb = () => {
       recordIdField: "code",
     },
 
-    // Roster Pages
+    // Events Pages
+    "/EventsSummary": {
+      module: "Events",
+      page: "Events Summary",
+      icon: "📅",
+    },
+    // Roster Pages (Legacy)
     "/RosterSummary": {
       module: "Events",
       page: "Roster Summary",
@@ -505,7 +511,7 @@ const Breadcrumb = () => {
       Correspondence: "/CorrespondencesSummary",
       Finance: "/Batches",
       Reports: "/Reports",
-      Events: "/RosterSummary",
+      Events: "/EventsSummary",
       Settings: "/Configuratin",
       Courses: "/Courses",
       "Professional Development": "/ProfessionalDevelopment",
@@ -565,16 +571,18 @@ const Breadcrumb = () => {
     onClick: handleModuleClick,
   });
 
-  // Add page item
-  breadcrumbItems.push({
-    title: (
-      <span style={{ display: "flex", alignItems: "center" }}>
-        <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
-        {breadcrumbData.page}
-      </span>
-    ),
-    onClick: handlePageClick,
-  });
+  // Add page item only if page title is present
+  if (breadcrumbData.page) {
+    breadcrumbItems.push({
+      title: (
+        <span style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
+          {breadcrumbData.page}
+        </span>
+      ),
+      onClick: handlePageClick,
+    });
+  }
 
   // Add record level if we have a record ID
   if (recordId) {

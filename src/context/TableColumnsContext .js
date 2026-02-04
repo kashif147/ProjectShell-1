@@ -901,20 +901,8 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 250,
+      width: 250,
       editable: false,
-      render: (category, record) => {
-        const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
-        return (
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <span>{category || "-"}</span>
-            {isPotentialDuplicate && (
-              <Tooltip title="Potential Duplicate Detected">
-                <Triangle size={16} color="#f5222d" style={{ minWidth: '16px', fill: '#f5222d' }} />
-              </Tooltip>
-            )}
-          </div>
-        );
-      }
     },
     {
       dataIndex: "applicationStatus",

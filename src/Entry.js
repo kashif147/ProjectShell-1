@@ -230,6 +230,7 @@ const WriteOffsSummary = lazyWithRetry(() => import("./pages/finance/WriteOffsSu
 const DirectDebitBatchDetails = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitBatchDetails")
 );
+const EventsSummary = lazyWithRetry(() => import("./pages/events/EventsSummary"));
 
 function Entry() {
   const location = useLocation();
@@ -545,6 +546,15 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <CorspndncDetail />
+                        </ProtectedRoute>
+                      }
+                    />
+
+                    <Route
+                      path="EventsSummary"
+                      element={
+                        <ProtectedRoute>
+                          <EventsSummary />
                         </ProtectedRoute>
                       }
                     />
