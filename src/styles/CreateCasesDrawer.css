@@ -1,262 +1,400 @@
 .create-case-drawer-content {
-    padding: 1rem 1.5rem;
-    font-family: var(--font-family);
-    color: var(--font-color);
-    background-color: #ffffff;
+  padding: 0.5rem 0.75rem;
+  font-family: var(--font-family);
+  color: var(--font-color);
+  background-color: #f6f9fc;
 }
 
 .completion-progress-container {
-    margin-bottom: 2rem;
+  margin-bottom: 0.5rem;
 }
 
 .progress-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.5rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  /* margin-bottom: 0.5rem; */
 }
 
 .progress-title {
-    font-size: 11px;
-    font-weight: 700;
-    color: #000000;
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #000000;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .progress-percentage {
-    font-size: 12px;
-    font-weight: 700;
-    color: #000000;
+  font-size: 12px;
+  font-weight: 700;
+  color: #000000;
 }
 
 /* Customizing Ant Design Progress */
 .completion-progress-container .ant-progress-inner {
-    background-color: #f0f0f0;
-    border-radius: 2px;
+  background-color: #f0f0f0;
+  border-radius: 2px;
 }
 
 .completion-progress-container .ant-progress-bg {
-    height: 4px !important;
-    border-radius: 2px;
+  height: 4px !important;
+  border-radius: 2px;
 }
 
 /* Scroll Container */
 .case-form-scroll-container {
-    height: calc(100vh - 200px);
-    /* Adjusted for removed nav */
-    overflow-y: auto;
-    padding-right: 8px;
-    scroll-behavior: smooth;
+  height: calc(100vh - 200px);
+  /* Adjusted for removed nav */
+  overflow-y: auto;
+  padding-right: 8px;
+  scroll-behavior: smooth;
 }
 
 /* Form Sections */
 .form-section {
-    margin-bottom: 9px;
-    padding: 12px;
-    background-color: #f7f8fa;
-    border: none;
-    border-radius: 8px;
-    box-shadow: none;
+  margin-bottom: 0px;
+  /* padding: 10px 12px; */
+  background-color: #ffffff;
+  border: 1px solid #f0f0f0;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.02);
 }
 
 .section-header-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
 }
 
 .section-title {
-    font-size: 16px;
-    font-weight: 700;
-    margin-bottom: 1.25rem;
-    color: #000000 !important;
+  font-size: 12px;
+  font-weight: 600;
+  color: #8c8c8c;
+  letter-spacing: 0.5px;
+  /* margin: 0 0 12px 0; */
+  text-transform: uppercase;
 }
 
 /* Checkbox styling */
 .pertinent-checkbox {
-    color: #000000;
-    font-size: 13px;
+  color: #000000;
+  font-size: 13px;
 }
 
 .pertinent-checkbox .ant-checkbox-checked .ant-checkbox-inner {
-    background-color: var(--primary-blue);
-    border-color: var(--primary-blue);
+  background-color: var(--primary-blue);
+  border-color: var(--primary-blue);
 }
 
 .form-label {
-    display: block;
-    font-size: 13px;
-    font-weight: 600;
-    margin-bottom: 8px;
-    color: #000000;
+  display: block;
+  font-size: 13px;
+  font-weight: 600;
+  /* margin-bottom: 0.5rem; */
+  color: #000000;
 }
 
 /* Input Styles */
 .case-input-container {
-    margin-bottom: 1.25rem;
+  margin-bottom: 0.75rem;
 }
 
 .case-input-container .ant-input,
 .case-input-container .ant-select-selector,
 .case-input-container .ant-picker {
-    border-radius: 6px !important;
-    border: 1px solid #d9d9d9 !important;
-    padding: 6px 11px !important;
+  border-radius: 6px !important;
+  border: 1px solid #d9d9d9 !important;
+  padding: 6px 11px !important;
 }
 
 .case-input-container .ant-input:focus,
 .case-input-container .ant-select-focused .ant-select-selector {
-    border-color: var(--primary-blue) !important;
-    box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1) !important;
+  border-color: var(--primary-blue) !important;
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1) !important;
 }
 
 .disabled-input-bg {
-    background-color: #f5f5f5 !important;
-    color: #8c8c8c !important;
-    cursor: not-allowed;
+  background-color: #f5f5f5 !important;
+  color: #8c8c8c !important;
+  cursor: not-allowed;
 }
 
 /* Rich Text Mock Toolbar */
 .description-toolbar {
-    display: flex;
-    gap: 12px;
-    padding: 8px 12px;
-    background-color: #f9f9f9;
-    border: 1px solid #d9d9d9;
-    border-bottom: none;
-    border-radius: 6px 6px 0 0;
-    align-items: center;
+  display: flex;
+  gap: 12px;
+  padding: 8px 12px;
+  background-color: #f9f9f9;
+  border: 1px solid #d9d9d9;
+  border-bottom: none;
+  border-radius: 6px 6px 0 0;
+  align-items: center;
 }
 
 .toolbar-icon {
-    font-size: 14px;
-    color: #595959;
-    cursor: pointer;
+  font-size: 14px;
+  color: #595959;
+  cursor: pointer;
 }
 
 .toolbar-icon:hover {
-    color: var(--primary-blue);
+  color: var(--primary-blue);
 }
 
 .description-textarea {
-    border: 1px solid #d9d9d9 !important;
-    border-radius: 0 0 6px 6px !important;
-    padding: 12px !important;
-    background-color: #ffffff !important;
-    resize: vertical !important;
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 0 0 6px 6px !important;
+  padding: 12px !important;
+  background-color: #ffffff !important;
+  resize: vertical !important;
 }
 
 /* Stakeholders Tags */
 .stakeholders-select-container .ant-select-selector {
-    padding: 4px 11px !important;
-    min-height: 40px;
+  padding: 4px 11px !important;
+  min-height: 40px;
 }
 
 /* Upload Area */
 .case-upload-dragger {
-    background-color: transparent !important;
-    border: none !important;
-    padding: 0 !important;
+  background-color: transparent !important;
+  border: none !important;
+  padding: 0 !important;
 }
 
 .case-upload-dragger .ant-upload-drag {
-    background: #ffffff !important;
-    border: 1px dashed #d9d9d9 !important;
-    border-radius: 6px !important;
-    padding: 24px 16px !important;
-    transition: border-color 0.3s;
+  background: #ffffff !important;
+  border: 1px dashed #d9d9d9 !important;
+  border-radius: 6px !important;
+  padding: 16px 12px !important;
+  transition: border-color 0.3s;
 }
 
 .case-upload-dragger .ant-upload-drag:hover {
-    border-color: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
 }
 
 .upload-icon-wrapper {
-    margin-bottom: 8px;
-    text-align: center;
+  margin-bottom: 4px;
+  text-align: center;
 }
 
 .upload-hint {
-    font-size: 13px;
-    color: #000000;
-    margin-bottom: 0;
-    text-align: center;
+  font-size: 13px;
+  color: #000000;
+  margin-bottom: 0;
+  text-align: center;
 }
 
 /* Priority Buttons */
 .priority-control-container {
-    width: 100%;
+  width: 100%;
 }
 
 .priority-group {
-    display: flex;
-    width: 100%;
+  display: flex;
+  width: 100%;
 }
 
 .priority-btn {
-    flex: 1;
-    text-align: center;
-    border-color: #d9d9d9 !important;
-    height: 40px !important;
-    line-height: 38px !important;
-    font-weight: 500 !important;
+  flex: 1;
+  text-align: center;
+  border-color: #d9d9d9 !important;
+  height: 40px !important;
+  line-height: 38px !important;
+  font-weight: 500 !important;
 }
 
 .priority-btn:first-child {
-    border-radius: 6px 0 0 6px !important;
+  border-radius: 6px 0 0 6px !important;
 }
 
 .priority-btn:last-child {
-    border-radius: 0 6px 6px 0 !important;
+  border-radius: 0 6px 6px 0 !important;
 }
 
 .priority-btn.ant-radio-button-wrapper-checked {
-    background: var(--primary-blue) !important;
-    border-color: var(--primary-blue) !important;
-    color: #fff !important;
-    z-index: 1;
+  background: var(--primary-blue) !important;
+  border-color: var(--primary-blue) !important;
+  color: #fff !important;
+  z-index: 1;
 }
 
 /* Header Buttons */
 .case-drawer-header-actions {
-    display: flex;
-    align-items: center;
-    gap: 12px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
 }
 
 .header-discard-btn {
-    border: 1px solid #d9d9d9 !important;
-    background: #ffffff !important;
-    color: #595959 !important;
-    font-weight: 600 !important;
+  border: 1px solid #d9d9d9 !important;
+  background: #ffffff !important;
+  color: #595959 !important;
+  font-weight: 600 !important;
 }
 
 .header-save-draft-btn {
-    border: 1px solid var(--primary-blue) !important;
-    color: var(--primary-blue) !important;
-    background: #ffffff !important;
-    border-radius: 4px !important;
-    font-weight: 600 !important;
+  border: 1px solid var(--primary-blue) !important;
+  color: var(--primary-blue) !important;
+  background: #ffffff !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
 }
 
 .header-finalize-btn {
-    background: var(--primary-blue) !important;
-    color: #fff !important;
-    border: none !important;
-    border-radius: 4px !important;
-    font-weight: 600 !important;
+  background: var(--primary-blue) !important;
+  color: #fff !important;
+  border: none !important;
+  border-radius: 4px !important;
+  font-weight: 600 !important;
 }
 
 .header-help-btn {
-    color: var(--primary-blue) !important;
-    font-weight: 600 !important;
-    margin-left: 12px;
-    text-decoration: none;
+  color: var(--primary-blue) !important;
+  font-weight: 600 !important;
+  margin-left: 12px;
+  text-decoration: none;
 }
 
 /* Ensure Drawer Title is Black */
 .create-case-drawer .ant-drawer-title {
-    color: #000000 !important;
+  color: #000000 !important;
+}
+
+/* Set drawer body background to grey */
+.create-case-drawer .ant-drawer-body {
+  background-color: #f6f9fc !important;
+  padding: 0 !important;
+}
+
+/* Reduce spacing between form fields */
+.create-case-drawer .form-section .my-input-wrapper {
+  margin-bottom: 0.5rem !important;
+}
+
+.create-case-drawer .form-section .my-input-wrapper:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Reduce spacing for MyDatePicker1 and other direct children with margin */
+.create-case-drawer .form-section > div {
+  margin-bottom: 0.5rem !important;
+}
+
+.create-case-drawer .form-section > div:last-child {
+  margin-bottom: 0 !important;
+}
+
+/* Override inline styles for MyDatePicker1 */
+.create-case-drawer .form-section > div[style*="margin-bottom: 16px"] {
+  margin-bottom: 0.5rem !important;
+}
+
+/* Ensure first section title has no extra top margin */
+.form-section:first-child .section-title {
+  margin-top: 0;
+}
+
+/* Improve spacing consistency */
+.form-section .section-title + * {
+  margin-top: 0;
+}
+
+/* Make textarea multiline - override container height */
+.create-case-drawer .form-section textarea.my-input-field {
+  width: 100% !important;
+  height: auto !important;
+  min-height: 60px !important;
+  padding: 8px 12px !important;
+  border: none !important;
+  outline: none !important;
+  resize: vertical !important;
+  line-height: 1.5 !important;
+  font-family: inherit !important;
+  font-size: 14px !important;
+  display: block !important;
+}
+
+/* Align Priority Level and Deadline fields */
+.create-case-drawer .form-section .ant-row .ant-col {
+  display: flex;
+  flex-direction: column;
+}
+
+.create-case-drawer .form-section .ant-row .ant-col .case-input-container {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.create-case-drawer .form-section .ant-row .ant-col .my-input-wrapper {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* Align labels at the same height */
+.create-case-drawer .form-section .ant-row .ant-col .form-label,
+.create-case-drawer .form-section .ant-row .ant-col .my-input-label {
+  margin-bottom: 0.5rem;
+  height: auto;
+  line-height: 1.5;
+}
+
+/* Set 8px bottom margin for specific labels */
+.create-case-drawer .form-section label[for="category"],
+.create-case-drawer .form-section label[for="caseType"],
+.create-case-drawer .form-section label[for="status"],
+.create-case-drawer .form-section label[for="assignedLead"],
+.create-case-drawer .form-section label[for="stakeholders"],
+.create-case-drawer .form-section label[for="category"].my-input-label.mb-0,
+.create-case-drawer .form-section label[for="caseType"].my-input-label.mb-0,
+.create-case-drawer .form-section label[for="status"].my-input-label.mb-0,
+.create-case-drawer .form-section label[for="assignedLead"].my-input-label.mb-0,
+.create-case-drawer .form-section label[for="stakeholders"].my-input-label,
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#category)
+  .my-input-label,
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#caseType)
+  .my-input-label,
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#status)
+  .my-input-label,
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#assignedLead)
+  .my-input-label,
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#stakeholders)
+  .my-input-label {
+  margin-bottom: 8px !important;
+}
+
+/* Override container height for textarea - target by ID for reliability */
+.create-case-drawer .form-section #incidentDescription {
+  height: auto !important;
+  min-height: 60px !important;
+}
+
+/* Make container flexible when it contains textarea */
+.create-case-drawer .form-section .my-input-container {
+  position: relative;
+}
+
+.create-case-drawer .form-section .my-input-container:has(textarea),
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(textarea)
+  .my-input-container {
+  height: auto !important;
+  min-height: auto !important;
+  align-items: flex-start !important;
+  padding: 0 !important;
 }
