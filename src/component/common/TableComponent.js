@@ -658,10 +658,10 @@ const TableComponent = ({
                     }}
                     onClick={() => {
                       handleRowClick(record, index);
-                      dispatch(getProfileDetailsById(record?._id));
+                      dispatch(getProfileDetailsById(record?.profileId));
                       dispatch(
                         getSubscriptionByProfileId({
-                          profileId: record?._id,
+                          profileId: record?.profileId,
                           isCurrent: true,
                         })
                       );
