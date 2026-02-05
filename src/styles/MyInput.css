@@ -190,75 +190,82 @@
 }
 
 .my-input-container {
-  position: relative;
-  display: flex;
+  display: flex !important;
   align-items: center;
+  position: relative;
+  width: 100%;
+  height: 40px;
+  background-color: #fff;
+  border: 1px solid #ced4da;
+  border-radius: 6px;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.my-input-container.focused {
+  border-color: #0d6efd;
+  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+}
+
+.my-input-container.error {
+  border-color: #dc3545;
+}
+
+.my-input-container.error.focused {
+  box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
 }
 
 .my-input-prefix {
   padding-left: 12px;
   color: #212529;
-  /* Match common input text color */
   font-size: 14px;
   display: flex;
   align-items: center;
+  user-select: none;
+}
+
+.my-input-container .my-input-field {
+  flex: 1;
+  height: 100%;
+  padding: 8px 12px;
+  border: none !important;
+  outline: none !important;
+  background-color: transparent !important;
+  font-size: 14px;
+  color: #212529;
 }
 
 .my-input-prefix+.my-input-field {
   padding-left: 8px;
-  /* Offset for prefix presence */
 }
 
-.my-input-container.error .my-input-field {
-  border-color: #dc3545;
-}
-
-.my-input-container.focused .my-input-field {
-  border-color: #0d6efd;
-}
-
-/* .my-input-field {
-  width: 100%;
-  padding: 10px 36px 10px 12px;
-  font-size: 14px;
-  border-radius: 6px;
-  border: 1px solid #ced4da;
-  outline: none;
-  color: #212529;
-  background-color: #fff;
-  transition: border-color 0.2s ease;
-} */
 .my-input-container.disabled {
-  background-color: #f5f5f5;
+  background-color: #f5f5f5 !important;
   /* light gray */
-  color: #a0a0a0;
-  border-color: #d9d9d9;
-  cursor: not-allowed;
+  color: #a0a0a0 !important;
+  border-color: #d9d9d9 !important;
+  cursor: not-allowed !important;
 }
 
-/* Optional: target input field inside the DatePicker too */
-.my-input-container.disabled input {
-  background-color: #f5f5f5;
-  color: #a0a0a0;
-  cursor: not-allowed;
+.my-input-container.disabled .my-input-field,
+.my-input-container.disabled .my-input-prefix {
+  color: #a0a0a0 !important;
+  cursor: not-allowed !important;
 }
 
-yse .my-input-field-select.disabled-select {
+.my-input-field {
+  /* Default styles for other inputs that might use this class but are not MyInput */
+  height: 40px;
+  padding: 6px 12px;
+  font-size: 14px;
+}
+
+.my-input-field-select.disabled-select {
   background-color: #f5f5f5;
   /* light gray like input[disabled] */
   color: #a0a0a0;
   cursor: not-allowed;
   border-color: #d9d9d9;
-}
-
-.my-input-field {
-  width: 100%;
-  padding: 8px 12px;
-  border: 1px solid #ccc;
-  border-radius: 6px;
-  font-size: 14px;
-  outline: none;
-  transition: border-color 0.3s;
 }
 
 textarea.my-input-field {

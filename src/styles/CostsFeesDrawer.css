@@ -33,16 +33,12 @@
 .cost-card .my-input-label {
     font-size: 10px;
     letter-spacing: 0.08em;
-    text-transform: uppercase;
+    text-transform: none;
 }
 
+/* Rely on standard MyInput styles for cleaner look and feel */
 .cost-card .my-input-container {
     background: #f8fafc;
-    border: 1px solid transparent;
-}
-
-.cost-card .my-input-container:hover {
-    border-color: #e2e8f0;
 }
 
 .input-group {
@@ -88,8 +84,8 @@
 .delete-icon-col {
     display: flex;
     justify-content: center;
-    padding-top: 28px;
-    /* Align with input field area rather than label */
+    padding-top: 30px;
+    /* Aligned with standard input field vertical center when label is present */
 }
 
 .cost-delete-icon {
