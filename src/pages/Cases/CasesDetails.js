@@ -12,9 +12,12 @@ import {
   MessageOutlined,
   UserAddOutlined,
   CloseOutlined,
-  FolderOpenOutlined
+  FolderOpenOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import "../../styles/CasesDetails.css";
+import ReactQuill from "react-quill";
+import "quill/dist/quill.snow.css";
 
 import MySearchInput from "../../component/common/MySearchInput";
 
@@ -39,6 +42,9 @@ function CasesDetails() {
     { name: 'David W.', avatar: 'https://i.pravatar.cc/150?u=david', active: false },
   ]);
 
+  const [caseType, setCaseType] = useState('Compliance');
+  const [caseStatus, setCaseStatus] = useState('In Progress');
+
   const steps = ['Intake', 'Investigation', 'Review', 'Closed'];
 
   // Mock data for dropdowns
@@ -54,6 +60,9 @@ function CasesDetails() {
     { name: 'Linda K.', avatar: 'https://i.pravatar.cc/150?u=linda' },
   ];
 
+  const caseTypes = ['Compliance', 'Risk', 'Legal', 'General'];
+  const caseStatuses = ['In Progress', 'Pending', 'Review', 'Closed'];
+
   const handleAssigneeChange = ({ key }) => {
     const selected = availableAssignees.find(a => a.name === key);
     if (selected) setAssignee(selected);
@@ -65,6 +74,9 @@ function CasesDetails() {
       setTeamMembers([...teamMembers, { ...selected, active: false }]);
     }
   };
+
+  const handleCaseTypeChange = ({ key }) => setCaseType(key);
+  const handleCaseStatusChange = ({ key }) => setCaseStatus(key);
 
   const scrollToSection = (sectionName) => {
     setActiveNav(sectionName);
@@ -109,6 +121,16 @@ function CasesDetails() {
     style: { minWidth: 220 }
   };
 
+  const caseTypeMenu = {
+    items: caseTypes.map(t => ({ key: t, label: t })),
+    onClick: handleCaseTypeChange
+  };
+
+  const caseStatusMenu = {
+    items: caseStatuses.map(s => ({ key: s, label: s })),
+    onClick: handleCaseStatusChange
+  };
+
 
   const activities = [
     {
@@ -134,10 +156,15 @@ function CasesDetails() {
     }
   ];
 
+  const [caseTitle, setCaseTitle] = useState('Critical AML Indicator Flag');
+
   const renderSummary = () => (
     <div className="summary-content">
       <div className="summary-grid">
-        <span className="summary-label">Assigne</span>
+        <span className="summary-label">Title</span>
+        <span className="summary-value" style={{ textAlign: 'right' }}>{caseTitle}</span>
+
+        <span className="summary-label">Assign To</span>
         <div className="owner-value">
           <Dropdown menu={assigneeMenu} trigger={['click']}>
             <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
@@ -150,15 +177,32 @@ function CasesDetails() {
         <span className="summary-label">Created Date</span>
         <span className="summary-value" style={{ textAlign: 'right' }}>Oct 24, 2023</span>
 
-        <span className="summary-label">Type</span>
-        <span className="summary-value" style={{ textAlign: 'right' }}>Compliance</span>
+        <span className="summary-label">Case Type</span>
+        <div className="owner-value">
+          <Dropdown menu={caseTypeMenu} trigger={['click']}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <span className="summary-value">{caseType}</span>
+              <DownOutlined style={{ fontSize: 12, color: '#bfbfbf' }} />
+            </div>
+          </Dropdown>
+        </div>
+
+        <span className="summary-label">Case Status</span>
+        <div className="owner-value">
+          <Dropdown menu={caseStatusMenu} trigger={['click']}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <span className="summary-value">{caseStatus}</span>
+              <DownOutlined style={{ fontSize: 12, color: '#bfbfbf' }} />
+            </div>
+          </Dropdown>
+        </div>
 
         <span className="summary-label">Department</span>
         <span className="summary-value" style={{ textAlign: 'right' }}>Global Risk (GRA)</span>
       </div>
 
       <div className="description-section">
-        <span className="summary-label">Internal Description</span>
+        <span className="summary-label">Description</span>
         <div className="description-box">
           Initial flagged transaction originating from region 4. Potential anti-money laundering (AML) indicators detected. Requires manual cross-verification with external vendor logs.
         </div>
@@ -187,26 +231,7 @@ function CasesDetails() {
         </div>
       </div>
 
-      <div className="activity-section">
-        <div className="section-title">
-          <h3>Recent Activity</h3>
-        </div>
-        {activities.map((activity, index) => (
-          <div key={index} className="activity-item">
-            <div
-              className="activity-icon-wrapper"
-              style={{ background: activity.color, color: activity.iconColor }}
-            >
-              {activity.icon}
-            </div>
-            <div className="activity-content">
-              <h4>{activity.title}</h4>
-              <span className="activity-time">{activity.time}</span>
-            </div>
-          </div>
-        ))}
-        <Button className="view-history-btn" onClick={() => scrollToSection('History')}>VIEW FULL HISTORY</Button>
-      </div>
+
     </div >
   );
 
@@ -291,23 +316,9 @@ function CasesDetails() {
     <div className="attachments-tab-content">
       <div className="attachments-header">
         <div className="header-actions-left">
-          <Button type="text" icon={<DownloadOutlined style={{ fontSize: 18 }} />} />
-          <Button type="text" icon={<ShareAltOutlined style={{ fontSize: 18 }} />} />
+          {/* Global Buttons Removed */}
         </div>
         <Button type="primary" className="upload-new-btn" icon={<PlusOutlined />}>Upload New</Button>
-      </div>
-
-      <div className="attachments-sub-tabs">
-        <div className="sub-tab active">ALL FILES</div>
-        <div className="sub-tab">RECENT</div>
-        <div className="sub-tab">STARRED</div>
-      </div>
-
-      <div className="attachments-breadcrumb">
-        <FolderOpenOutlined style={{ marginRight: 8, color: '#bfbfbf' }} />
-        <span className="breadcrumb-item">Case #4492</span>
-        <span className="breadcrumb-sep">{'>'}</span>
-        <span className="breadcrumb-item active">Legal Documents</span>
       </div>
 
       <div className="attachments-list">
@@ -333,7 +344,11 @@ function CasesDetails() {
                 </div>
               </div>
             </div>
-            <EllipsisOutlined style={{ fontSize: 20, color: '#bfbfbf', cursor: 'pointer' }} />
+            <div className="attachment-actions">
+              <DownloadOutlined style={{ fontSize: 18, color: '#bfbfbf', cursor: 'pointer' }} />
+              <ShareAltOutlined style={{ fontSize: 18, color: '#bfbfbf', cursor: 'pointer' }} />
+              <EllipsisOutlined style={{ fontSize: 20, color: '#bfbfbf', cursor: 'pointer' }} />
+            </div>
           </div>
         ))}
       </div>
@@ -495,9 +510,11 @@ function CasesDetails() {
                 <span style={{ fontWeight: 600, color: '#212529', fontSize: '14px' }}>{note.user}</span>
                 <span style={{ color: '#bfbfbf', fontSize: '12px' }}>{note.time}</span>
               </div>
-              <div className="note-text" style={{ background: '#f8faff', padding: '12px', borderRadius: '8px', color: '#595959', fontSize: '14px' }}>
-                {note.text}
-              </div>
+              <div
+                className="note-text"
+                style={{ background: '#f8faff', padding: '12px', borderRadius: '8px', color: '#595959', fontSize: '14px' }}
+                dangerouslySetInnerHTML={{ __html: note.text }}
+              />
             </div>
           </div>
         ))}
@@ -506,13 +523,25 @@ function CasesDetails() {
       <div className="add-note-section" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
         <Avatar src="https://i.pravatar.cc/150?u=alex" />
         <div style={{ flex: 1 }}>
-          <Input.TextArea
-            rows={3}
-            placeholder="Add a comment..."
-            value={newNote}
-            onChange={(e) => setNewNote(e.target.value)}
-            style={{ marginBottom: '12px', borderRadius: '8px' }}
-          />
+          <div className="rich-text-editor-wrapper" style={{ marginBottom: '12px' }}>
+            <ReactQuill
+              theme="snow"
+              value={newNote}
+              onChange={setNewNote}
+              placeholder="Add a comment..."
+              modules={{
+                toolbar: [
+                  ['bold', 'italic', 'underline'],
+                  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                  ['clean']
+                ]
+              }}
+              style={{
+                borderRadius: '8px',
+                background: '#fff'
+              }}
+            />
+          </div>
           <button className="custom-action-btn custom-primary-btn" onClick={handleAddNote}>
             Add Comment
           </button>
@@ -524,33 +553,7 @@ function CasesDetails() {
   return (
     <div className="cases-details-container">
       {/* Header */}
-      <div className="case-header">
-        <div className="case-header-left">
-          <div className="tag-container">
-            <span className="theme-status theme-status-info">IN PROGRESS</span>
-            <span className="theme-status theme-status-error">HIGH PRIORITY</span>
-          </div>
-        </div>
 
-        {/* Stepper Moved to Header */}
-        <div className="workflow-stepper" style={{ marginBottom: 0, flex: 1, justifyContent: 'center' }}>
-          {steps.map((step) => (
-            <div
-              key={step}
-              className={`stepper-item ${activeStep === step ? 'active' : ''}`}
-              onClick={() => setActiveStep(step)}
-              style={{ minWidth: '100px', fontSize: '12px', height: '32px' }}
-            >
-              {step}
-            </div>
-          ))}
-        </div>
-
-        <div className="case-header-right">
-          <ShareAltOutlined style={{ marginRight: 16, cursor: 'pointer', fontSize: '18px' }} />
-          <EllipsisOutlined style={{ cursor: 'pointer', fontSize: '18px' }} />
-        </div>
-      </div>
 
       {/* Anchor Navigation Bar */}
       <div className="anchor-nav-header">
@@ -581,6 +584,26 @@ function CasesDetails() {
 
         <div className="section-container" ref={historyRef}>
           {renderHistory()}
+        </div>
+        <div className="activity-section">
+          <div className="section-title">
+            <h3>Recent Activity</h3>
+          </div>
+          {activities.map((activity, index) => (
+            <div key={index} className="activity-item">
+              <div
+                className="activity-icon-wrapper"
+                style={{ background: activity.color, color: activity.iconColor }}
+              >
+                {activity.icon}
+              </div>
+              <div className="activity-content">
+                <h4>{activity.title}</h4>
+                <span className="activity-time">{activity.time}</span>
+              </div>
+            </div>
+          ))}
+          <Button className="view-history-btn" onClick={() => scrollToSection('History')}>VIEW FULL HISTORY</Button>
         </div>
       </div>
 
