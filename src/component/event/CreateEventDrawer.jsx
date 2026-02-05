@@ -5,7 +5,6 @@ import {
     Col,
     Card,
     Checkbox,
-    Modal,
     Switch,
     TimePicker,
     Input
@@ -17,6 +16,8 @@ import MyDatePicker1 from '../common/MyDatePicker1';
 import CustomSelect from '../common/CustomSelect';
 import "../../styles/CreateEventDrawer.css";
 import dayjs from 'dayjs';
+import ScheduleManagementDrawer from './ScheduleManagementDrawer';
+import CostsFeesDrawer from './CostsFeesDrawer';
 
 const CreateEventDrawer = ({ open, onClose }) => {
     const [eventName, setEventName] = useState('');
@@ -30,25 +31,76 @@ const CreateEventDrawer = ({ open, onClose }) => {
     const [accreditationType, setAccreditationType] = useState('');
     const [allowVirtualHosting, setAllowVirtualHosting] = useState(false);
     const [bookingOnMultipleDays, setBookingOnMultipleDays] = useState(false);
-    const [isScheduleModalVisible, setIsScheduleModalVisible] = useState(false);
+    const [isScheduleDrawerVisible, setIsScheduleDrawerVisible] = useState(false);
+    const [isCostsDrawerVisible, setIsCostsDrawerVisible] = useState(false);
+
     const [scheduleData, setScheduleData] = useState([
-        { id: 1, day: 'Day 1', date: '04/12/2024', location: 'Commercial Unit, 20 Ringrose', isOnline: false, startTime: null, endTime: null },
-        { id: 2, day: 'Day 2', date: '05/12/2024', location: 'Commercial Unit, 20 Ringrose', isOnline: false, startTime: null, endTime: null }
+        { id: 1, day: 'Day 1', date: dayjs('04/12/2024', 'DD/MM/YYYY'), location: 'Commercial Unit, 20 Ringrose', isOnline: false, startTime: null, endTime: null },
+        { id: 2, day: 'Day 2', date: dayjs('05/12/2024', 'DD/MM/YYYY'), location: 'Commercial Unit, 20 Ringrose', isOnline: false, startTime: null, endTime: null }
+    ]);
+
+    const [costsData, setCostsData] = useState([
+        { id: 1, name: 'Venue Rental', amount: '2500' },
+        { id: 2, name: 'Catering Service', amount: '1200' }
     ]);
 
     const handleScheduleClick = (e) => {
-        e.preventDefault(); // Prevent default anchor behavior
-        setIsScheduleModalVisible(true);
+        e.preventDefault();
+        setIsScheduleDrawerVisible(true);
     };
 
-    const handleScheduleModalClose = () => {
-        setIsScheduleModalVisible(false);
+    const handleCostsClick = (e) => {
+        e.preventDefault();
+        setIsCostsDrawerVisible(true);
+    };
+
+    const handleScheduleDrawerClose = () => {
+        setIsScheduleDrawerVisible(false);
+    };
+
+    const handleCostsDrawerClose = () => {
+        setIsCostsDrawerVisible(false);
     };
 
     const handleScheduleSubmit = () => {
-        // Logic to handle schedule submission
-        console.log("Schedule Submitted:", scheduleData);
-        setIsScheduleModalVisible(false);
+        setIsScheduleDrawerVisible(false);
+    };
+
+    const handleCostsSubmit = () => {
+        setIsCostsDrawerVisible(false);
+    };
+
+    const handleScheduleAddDay = () => {
+        const newId = scheduleData.length > 0 ? Math.max(...scheduleData.map(s => s.id)) + 1 : 1;
+        const newDayNum = scheduleData.length + 1;
+        setScheduleData([...scheduleData, {
+            id: newId,
+            day: `Day ${newDayNum}`,
+            date: dayjs(),
+            location: '',
+            isOnline: false,
+            startTime: null,
+            endTime: null
+        }]);
+    };
+
+    const handleScheduleRemoveDay = (id) => {
+        setScheduleData(scheduleData.filter(session => session.id !== id));
+    };
+
+    const handleAddCost = () => {
+        const newId = costsData.length > 0 ? Math.max(...costsData.map(c => c.id)) + 1 : 1;
+        setCostsData([...costsData, { id: newId, name: '', amount: '0' }]);
+    };
+
+    const handleRemoveCost = (id) => {
+        setCostsData(costsData.filter(cost => cost.id !== id));
+    };
+
+    const handleCostChange = (id, field, value) => {
+        setCostsData(prev => prev.map(cost =>
+            cost.id === id ? { ...cost, [field]: value } : cost
+        ));
     };
 
     const handleSessionChange = (id, field, value) => {
@@ -70,21 +122,30 @@ const CreateEventDrawer = ({ open, onClose }) => {
             accreditationType,
             allowVirtualHosting,
             bookingOnMultipleDays,
+            scheduleData,
+            costsData
         });
         onClose();
     };
 
     const handleCancel = () => {
-        // Show confirmation or directly cancel
         onClose();
     };
 
     const headerActions = (
         <div className="event-drawer-header-actions">
-            <Button className="header-discard-btn" onClick={onClose}>Discard</Button>
-            <Button className="header-save-btn" type="primary" onClick={handleSave}>Save Changes</Button>
+            <Button
+                className="header-save-btn"
+                type="primary"
+                onClick={handleSave}
+                style={{ backgroundColor: '#215E97', borderColor: '#215E97', padding: '0 32px' }}
+            >
+                Create
+            </Button>
         </div>
     );
+
+    const totalCosts = costsData.reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
     return (
         <MyDrawer
@@ -251,7 +312,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
                         <Card className="event-sidebar-card">
                             <div className="sidebar-card-icon">📅</div>
                             <h5 className="sidebar-card-title">Schedule</h5>
-                            <p class="text-sm text-slate-500">3 Days, 12 Sessions</p>
+                            <p className="text-sm text-slate-500">{scheduleData.length} Days, {scheduleData.length * 4} Sessions</p>
                             <a href="#/" className="sidebar-card-link" onClick={handleScheduleClick}>Go to Schedule Management</a>
                         </Card>
 
@@ -260,13 +321,14 @@ const CreateEventDrawer = ({ open, onClose }) => {
                             <div className="sidebar-card-icon">💰</div>
                             <h5 className="sidebar-card-title">Costs & Fees</h5>
                             <div className="cost-display">
-                                <span className="cost-currency">$</span>
-                                <span className="cost-amount">5,700</span>
-                                <span className="cost-period">per</span>
+                                <span className="cost-currency">€</span>
+                                <span className="cost-amount">{totalCosts.toLocaleString()}</span>
+                                <span className="cost-period">total</span>
                             </div>
                             <div className="cost-progress">
-                                <div className="cost-progress-bar"></div>
+                                <div className="cost-progress-bar" style={{ width: '65%' }}></div>
                             </div>
+                            <a href="#/" className="sidebar-card-link" style={{ marginTop: '12px', display: 'block' }} onClick={handleCostsClick}>Manage Costs & Fees</a>
                         </Card>
 
                         {/* CONFIGURATION TIP */}
@@ -283,97 +345,25 @@ const CreateEventDrawer = ({ open, onClose }) => {
                 </Row>
             </div>
 
-            {/* Schedule Management Modal */}
-            <Modal
-                title="Schedule Management"
-                open={isScheduleModalVisible}
-                onCancel={handleScheduleModalClose}
-                footer={[
-                    <Button
-                        key="submit"
-                        type="primary"
-                        onClick={handleScheduleSubmit}
-                        style={{ width: '100%', backgroundColor: '#215E97', borderColor: '#215E97' }}
-                    >
-                        Done
-                    </Button>,
-                ]}
-                width={600}
-                centered
-                className="schedule-management-modal"
-            >
-                <div
-                    style={{
-                        padding: "24px 16px",
-                        minHeight: "120px",
-                        maxHeight: "60vh",
-                        overflowY: "auto"
-                    }}
-                >
-                    {scheduleData.map((session, index) => (
-                        <div key={session.id} style={{
-                            marginBottom: index !== scheduleData.length - 1 ? "24px" : "0",
-                            borderBottom: index !== scheduleData.length - 1 ? "1px solid #f0f0f0" : "none",
-                            paddingBottom: index !== scheduleData.length - 1 ? "24px" : "0"
-                        }}>
-                            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                                <div>
-                                    <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '600' }}>{session.day} - {session.date}</h4>
-                                </div>
-                                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                                    <span style={{ fontSize: '14px', color: session.isOnline ? '#8c8c8c' : '#000000' }}>Inperson</span>
-                                    <Switch
-                                        checked={session.isOnline}
-                                        onChange={(checked) => handleSessionChange(session.id, 'isOnline', checked)}
-                                    />
-                                    <span style={{ fontSize: '14px', color: session.isOnline ? '#000000' : '#8c8c8c' }}>Online</span>
-                                </div>
-                            </div>
+            <ScheduleManagementDrawer
+                open={isScheduleDrawerVisible}
+                onClose={handleScheduleDrawerClose}
+                onSave={handleScheduleSubmit}
+                scheduleData={scheduleData}
+                onSessionChange={handleSessionChange}
+                onAddDay={handleScheduleAddDay}
+                onRemoveDay={handleScheduleRemoveDay}
+            />
 
-                            <div style={{ marginBottom: "20px" }}>
-                                <Input
-                                    prefix={<EnvironmentOutlined style={{ color: '#bfbfbf', marginRight: '8px' }} />}
-                                    value={session.location}
-                                    onChange={(e) => handleSessionChange(session.id, 'location', e.target.value)}
-                                    placeholder="Add Location"
-                                    style={{ borderRadius: '6px', height: '40px' }}
-                                />
-                            </div>
-
-                            <Row gutter={16}>
-                                <Col span={12}>
-                                    <div>
-                                        <label className="my-input-label" style={{ display: 'block', marginBottom: '8px' }}>
-                                            Start Time
-                                        </label>
-                                        <TimePicker
-                                            value={session.startTime}
-                                            onChange={(time) => handleSessionChange(session.id, 'startTime', time)}
-                                            format="HH:mm"
-                                            style={{ width: '100%', height: '40px', borderRadius: '6px' }}
-                                            placeholder="Select start time"
-                                        />
-                                    </div>
-                                </Col>
-                                <Col span={12}>
-                                    <div>
-                                        <label className="my-input-label" style={{ display: 'block', marginBottom: '8px' }}>
-                                            End Time
-                                        </label>
-                                        <TimePicker
-                                            value={session.endTime}
-                                            onChange={(time) => handleSessionChange(session.id, 'endTime', time)}
-                                            format="HH:mm"
-                                            style={{ width: '100%', height: '40px', borderRadius: '6px' }}
-                                            placeholder="Select end time"
-                                        />
-                                    </div>
-                                </Col>
-                            </Row>
-                        </div>
-                    ))}
-                </div>
-            </Modal>
+            <CostsFeesDrawer
+                open={isCostsDrawerVisible}
+                onClose={handleCostsDrawerClose}
+                costsData={costsData}
+                onCostChange={handleCostChange}
+                onAddCost={handleAddCost}
+                onRemoveCost={handleRemoveCost}
+                onSave={handleCostsSubmit}
+            />
         </MyDrawer>
     );
 };
