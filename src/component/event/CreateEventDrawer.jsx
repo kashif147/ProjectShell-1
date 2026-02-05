@@ -27,7 +27,10 @@ const CreateEventDrawer = ({ open, onClose }) => {
     const [description, setDescription] = useState('');
     const [venueName, setVenueName] = useState('');
     const [address, setAddress] = useState('');
-    const [cpfCredits, setCpfCredits] = useState('');
+    const [cpdCredits, setCpdCredits] = useState('5.0');
+    const [accreditationBody, setAccreditationBody] = useState('NMBI');
+    const [certificationType, setCertificationType] = useState('Digital Certificate');
+    const [autoIssueOnFinish, setAutoIssueOnFinish] = useState(true);
     const [accreditationType, setAccreditationType] = useState('');
     const [allowVirtualHosting, setAllowVirtualHosting] = useState(false);
     const [bookingOnMultipleDays, setBookingOnMultipleDays] = useState(false);
@@ -35,8 +38,8 @@ const CreateEventDrawer = ({ open, onClose }) => {
     const [isCostsDrawerVisible, setIsCostsDrawerVisible] = useState(false);
 
     const [scheduleData, setScheduleData] = useState([
-        { id: 1, day: 'Day 1', date: dayjs('04/12/2024', 'DD/MM/YYYY'), location: 'Commercial Unit, 20 Ringrose', isOnline: false, startTime: null, endTime: null },
-        { id: 2, day: 'Day 2', date: dayjs('05/12/2024', 'DD/MM/YYYY'), location: 'Commercial Unit, 20 Ringrose', isOnline: false, startTime: null, endTime: null }
+        { id: 1, day: 'Day 1', date: dayjs('04/12/2024', 'DD/MM/YYYY'), location: 'Commercial Unit, 20 Ringrose', zoomLink: '', isOnline: false, startTime: null, endTime: null },
+        { id: 2, day: 'Day 2', date: dayjs('05/12/2024', 'DD/MM/YYYY'), location: 'Commercial Unit, 20 Ringrose', zoomLink: '', isOnline: false, startTime: null, endTime: null }
     ]);
 
     const [costsData, setCostsData] = useState([
@@ -78,6 +81,7 @@ const CreateEventDrawer = ({ open, onClose }) => {
             day: `Day ${newDayNum}`,
             date: dayjs(),
             location: '',
+            zoomLink: '',
             isOnline: false,
             startTime: null,
             endTime: null
@@ -118,7 +122,10 @@ const CreateEventDrawer = ({ open, onClose }) => {
             description,
             venueName,
             address,
-            cpfCredits,
+            cpdCredits,
+            accreditationBody,
+            certificationType,
+            autoIssueOnFinish,
             accreditationType,
             allowVirtualHosting,
             bookingOnMultipleDays,
@@ -249,44 +256,56 @@ const CreateEventDrawer = ({ open, onClose }) => {
                             </div>
                         </div>
 
-                        {/* CPF & ACCREDITATIONS */}
-                        <div className="form-section">
-                            <h3 className="section-title">CPF & ACCREDITATIONS</h3>
+                        {/* CPD & ACCREDITATIONS */}
+                        <div className="form-section cpd-section">
+                            <h3 className="section-title">CPD & ACCREDITATIONS</h3>
 
-                            <Row gutter={[16, 0]}>
+                            <Row gutter={[16, 16]}>
                                 <Col xs={24} sm={12}>
                                     <MyInput
-                                        label="CPF Credits"
-                                        name="cpfCredits"
-                                        value={cpfCredits}
-                                        onChange={(e) => setCpfCredits(e.target.value)}
-                                        placeholder="32"
+                                        label="CPD Credits"
+                                        name="cpdCredits"
+                                        value={cpdCredits}
+                                        onChange={(e) => setCpdCredits(e.target.value)}
+                                        placeholder="5.0"
+                                        suffix="HRS"
                                     />
                                 </Col>
                                 <Col xs={24} sm={12}>
-                                    <CustomSelect
-                                        label="Accreditation Type"
-                                        name="accreditationType"
-                                        value={accreditationType}
-                                        onChange={(e) => setAccreditationType(e.target.value)}
-                                        placeholder="CPD Certification Service"
-                                        options={[
-                                            { label: 'CPD Certification Service', value: 'cpd' },
-                                            { label: 'Standard', value: 'standard' },
-                                            { label: 'Premium', value: 'premium' }
-                                        ]}
+                                    <MyInput
+                                        label="Accreditation Body"
+                                        name="accreditationBody"
+                                        value={accreditationBody}
+                                        onChange={(e) => setAccreditationBody(e.target.value)}
+                                        placeholder="NMBI"
                                     />
                                 </Col>
                             </Row>
 
-                            <div style={{ marginTop: '16px' }}>
-                                <Checkbox
-                                    checked={allowVirtualHosting}
-                                    onChange={(e) => setAllowVirtualHosting(e.target.checked)}
-                                >
-                                    Allow virtual live hosting
-                                </Checkbox>
-                            </div>
+                            <Row gutter={[16, 16]} align="bottom">
+                                <Col xs={24} sm={12}>
+                                    <CustomSelect
+                                        label="Certification Type"
+                                        value={certificationType}
+                                        onChange={(e) => setCertificationType(e.target.value)}
+                                        options={[
+                                            { label: 'Digital Certificate', value: 'Digital Certificate' },
+                                            { label: 'Paper Certificate', value: 'Paper Certificate' },
+                                            { label: 'Both', value: 'Both' }
+                                        ]}
+                                        isMarginBtm={false}
+                                    />
+                                </Col>
+                                <Col xs={24} sm={12}>
+                                    <div className="cpd-switch-container" style={{ height: '40px', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                        <span className="my-input-label" style={{ marginBottom: 0 }}>Auto-Issue on Finish</span>
+                                        <Switch
+                                            checked={autoIssueOnFinish}
+                                            onChange={setAutoIssueOnFinish}
+                                        />
+                                    </div>
+                                </Col>
+                            </Row>
                         </div>
 
                         {/* CANCEL EVENT SECTION */}

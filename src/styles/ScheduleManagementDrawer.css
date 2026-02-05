@@ -4,6 +4,15 @@
     padding: 24px 16px;
     background-color: #f8f9fa;
     min-height: 100%;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.schedule-management-container::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 .day-card {

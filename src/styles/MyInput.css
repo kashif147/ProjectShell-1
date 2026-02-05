@@ -224,6 +224,17 @@
   user-select: none;
 }
 
+.my-input-suffix {
+  padding-right: 12px;
+  color: #bfbfbf;
+  font-size: 12px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  user-select: none;
+  letter-spacing: 0.05em;
+}
+
 .my-input-container .my-input-field {
   flex: 1;
   height: 100%;
@@ -237,6 +248,10 @@
 
 .my-input-prefix+.my-input-field {
   padding-left: 8px;
+}
+
+.my-input-field:has(+ .my-input-suffix) {
+  padding-right: 8px;
 }
 
 .my-input-container.disabled {

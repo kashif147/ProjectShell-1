@@ -7,7 +7,7 @@ import {
     TimePicker,
     Input
 } from 'antd';
-import { EnvironmentOutlined, PlusOutlined, DeleteOutlined } from '@ant-design/icons';
+import { EnvironmentOutlined, PlusOutlined, DeleteOutlined, LinkOutlined } from '@ant-design/icons';
 import MyDrawer from '../common/MyDrawer';
 import MyDatePicker1 from '../common/MyDatePicker1';
 import '../../styles/ScheduleManagementDrawer.css';
@@ -101,7 +101,17 @@ const ScheduleManagementDrawer = ({ open, onClose, scheduleData, onSessionChange
                             </Col>
                         </Row>
 
-                        {!session.isOnline && (
+                        {session.isOnline ? (
+                            <div className="location-input-container">
+                                <label className="location-label">Meeting Link</label>
+                                <Input
+                                    prefix={<LinkOutlined style={{ color: '#bfbfbf' }} />}
+                                    value={session.zoomLink}
+                                    onChange={(e) => onSessionChange(session.id, 'zoomLink', e.target.value)}
+                                    placeholder="Enter Zoom, Teams or Google Meet link"
+                                />
+                            </div>
+                        ) : (
                             <div className="location-input-container">
                                 <label className="location-label">Location</label>
                                 <Input

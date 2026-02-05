@@ -8,6 +8,15 @@
     flex: 1;
     overflow-y: auto;
     padding-bottom: 20px;
+    -ms-overflow-style: none;
+    /* IE and Edge */
+    scrollbar-width: none;
+    /* Firefox */
+}
+
+.costs-list::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
 }
 
 .cost-card {
