@@ -1,0 +1,132 @@
+/* Schedule Management Drawer Styles */
+
+.schedule-management-container {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    margin: 1.5rem;
+    max-height: 80.5vh;
+    height: 80.5vh;
+    overflow-y: auto;
+}
+
+.schedule-management-container::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+.day-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid #e8e8e8;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    transition: all 0.3s ease;
+}
+
+.day-card:hover {
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    border-color: #d1d1d1;
+}
+
+.day-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding-bottom: 12px;
+    border-bottom: 1px solid #f0f0f0;
+}
+
+.day-title {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 700;
+    color: #1a1a1a;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.day-title::before {
+    content: '';
+    width: 4px;
+    height: 16px;
+    background-color: #215E97;
+    border-radius: 2px;
+}
+
+.status-toggle-container {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    background: #f5f5f5;
+    padding: 4px 12px;
+    border-radius: 20px;
+}
+
+.status-label {
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+}
+
+.status-label.active {
+    color: #215E97;
+}
+
+.status-label.inactive {
+    color: #bfbfbf;
+}
+
+.card-row {
+    margin-bottom: 16px;
+}
+
+.card-row:last-child {
+    margin-bottom: 0;
+}
+
+.time-picker-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #595959;
+}
+
+.location-input-container {
+    margin-top: 4px;
+}
+
+.location-label {
+    display: block;
+    margin-bottom: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #595959;
+}
+
+/* Customizing Ant Design elements within the card */
+.day-card .ant-input-affix-wrapper {
+    border-radius: 8px;
+    padding: 8px 12px;
+}
+
+.day-card .ant-picker {
+    border-radius: 8px;
+    height: 40px;
+}
+
+.day-card .delete-icon:hover {
+    color: #ff4d4f !important;
+    transform: scale(1.1);
+    transition: all 0.2s ease;
+}
+
+.day-card .ant-switch-checked {
+    background-color: #215E97;
+}

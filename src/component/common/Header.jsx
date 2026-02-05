@@ -50,7 +50,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       "Finance": "/onlinePayment",
       "Correspondence": "/Email",
       "Configuration": "/Configuratin",
-      "Events": "/Events",
+      "Events": "/EventsSummary",
       "Reports": "/Reports",
       "Settings": "/Settings",
       "Issues Management": "/CasesSummary",

@@ -82,7 +82,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         isSpecial = true;
         break;
       case "/Deductions":
-        batchType = 'Deductions';
+        batchType = 'Deduction';
         isSpecial = true;
         break;
       case "/onlinePayment":

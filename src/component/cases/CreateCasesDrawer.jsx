@@ -1,15 +1,10 @@
 import React, { useState, useRef } from 'react';
 import {
     Progress,
-    Row,
-    Col,
-    Input,
-    Select,
-    DatePicker,
     Radio,
-    Tag,
     Upload,
-    Button
+    Button,
+    Checkbox
 } from 'antd';
 import {
     InboxOutlined,
@@ -17,28 +12,38 @@ import {
     ItalicOutlined,
     UnderlineOutlined,
     LinkOutlined,
-    PlusOutlined
+    StarOutlined,
+    FileTextOutlined
 } from '@ant-design/icons';
 import MyDrawer from '../common/MyDrawer';
+import MyInput from '../common/MyInput';
+import MyDatePicker1 from '../common/MyDatePicker1';
+import CustomSelect from '../common/CustomSelect';
 import "../../styles/CreateCasesDrawer.css";
 
 const { Dragger } = Upload;
-const { TextArea } = Input;
 
 const CreateCasesDrawer = ({ open, onClose }) => {
-    const [activeNav, setActiveNav] = useState('1');
     const [priority, setPriority] = useState('Medium');
+    const [caseTitle, setCaseTitle] = useState('');
+    const [incidentDescription, setIncidentDescription] = useState('');
+    const [incidentDate, setIncidentDate] = useState(null);
+    const [location, setLocation] = useState('');
+    const [category, setCategory] = useState('');
+    const [caseType, setCaseType] = useState('');
+    const [status, setStatus] = useState('Draft');
+    const [caseFileNumber, setCaseFileNumber] = useState('');
+    const [assignedLead, setAssignedLead] = useState('');
+    const [deadline, setDeadline] = useState(null);
 
-    // Refs for scroll navigation
-    const caseInfoRef = useRef(null);
+    // Refs for scroll navigation if needed in future
+    const issueRef = useRef(null);
     const incidentRef = useRef(null);
-    const legalRef = useRef(null);
+    const classificationRef = useRef(null);
+    const referenceRef = useRef(null);
+    const ownershipRef = useRef(null);
+    const documentationRef = useRef(null);
     const workflowRef = useRef(null);
-
-    const scrollToSection = (ref, navId) => {
-        setActiveNav(navId);
-        ref.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-    };
 
     const headerActions = (
         <div className="case-drawer-header-actions">
@@ -49,178 +54,205 @@ const CreateCasesDrawer = ({ open, onClose }) => {
         </div>
     );
 
-    const renderCaseInfo = () => (
-        <div className="form-section" ref={caseInfoRef}>
-            <h3 className="section-title">Case Info</h3>
-            <Row gutter={24}>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Case Title</label>
-                        <Input placeholder="Enter descriptive title" />
-                    </div>
-                </Col>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Assigned Lead</label>
-                        <Select
-                            placeholder="Select Lead Counsel"
-                            style={{ width: '100%' }}
-                            options={[{ value: 'alex', label: 'Alex Rivera' }]}
-                        />
-                    </div>
-                </Col>
-            </Row>
-            <Row>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Case ID (Auto-generated)</label>
-                        <Input value="IRA - 2024 - 00012" disabled />
-                    </div>
-                </Col>
-            </Row>
+    const renderIssueOverview = () => (
+        <div className="form-section issue-overview-section" ref={issueRef}>
+            <div className="section-header-row">
+                <h3 className="section-title">Issue Overview</h3>
+                <Checkbox className="pertinent-checkbox">Pertinent to File Review</Checkbox>
+            </div>
+            <MyInput
+                label="Title"
+                name="caseTitle"
+                value={caseTitle}
+                onChange={(e) => setCaseTitle(e.target.value)}
+                placeholder="Enter descriptive title"
+            />
+            <MyInput
+                label="Description"
+                name="incidentDescription"
+                value={incidentDescription}
+                onChange={(e) => setIncidentDescription(e.target.value)}
+                placeholder="Detailed description of the incident..."
+                type="textarea"
+                rows={6}
+            />
         </div>
     );
 
     const renderIncidentDetails = () => (
         <div className="form-section" ref={incidentRef}>
             <h3 className="section-title">Incident Details</h3>
-            <Row gutter={24}>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Incident Date</label>
-                        <DatePicker style={{ width: '100%' }} format="MM/DD/YYYY" placeholder="mm/dd/yyyy" />
-                    </div>
-                </Col>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Location</label>
-                        <Input placeholder="City, Region or Branch" />
-                    </div>
-                </Col>
-            </Row>
-            <div className="case-input-container">
-                <label className="form-label">Incident Description</label>
-                <div className="description-rich-editor">
-                    <div className="description-toolbar">
-                        <BoldOutlined className="toolbar-icon" style={{ marginRight: 12 }} />
-                        <ItalicOutlined className="toolbar-icon" style={{ marginRight: 12 }} />
-                        <UnderlineOutlined className="toolbar-icon" style={{ marginRight: 12 }} />
-                        <LinkOutlined className="toolbar-icon" />
-                    </div>
-                    <TextArea
-                        rows={4}
-                        placeholder="Describe the incident in detail..."
-                        className="description-textarea"
-                    />
-                </div>
-            </div>
+            <MyDatePicker1
+                label="Date"
+                name="incidentDate"
+                value={incidentDate}
+                onChange={setIncidentDate}
+                placeholder="DD/MM/YYYY"
+                format="DD/MM/YYYY"
+            />
+            <MyInput
+                label="Location"
+                name="location"
+                value={location}
+                onChange={(e) => setLocation(e.target.value)}
+                placeholder="City, Region or Branch"
+            />
         </div>
     );
 
-    const renderLegalTeam = () => (
-        <div className="form-section" ref={legalRef}>
-            <h3 className="section-title">Legal Team</h3>
-            <div className="case-input-container">
-                <label className="form-label">Internal Stakeholders</label>
-                <div className="stakeholders-container">
-                    <Tag closable className="stakeholder-tag">Legal Dept</Tag>
-                    <Tag closable className="stakeholder-tag">HR Compliance</Tag>
-                    <span className="add-member-btn"><PlusOutlined /> Add Member</span>
-                </div>
-            </div>
-            <div className="case-input-container">
-                <label className="form-label">Initial Documentation</label>
-                <Dragger className="case-upload-dragger">
-                    <div className="upload-icon-container">
-                        <InboxOutlined className="upload-icon" />
-                    </div>
-                    <p className="upload-text">Upload files</p>
-                    <p className="upload-hint">Drag & drop your legal relevant PDFs, Photos, or Scans</p>
-                </Dragger>
-            </div>
+    const renderClassification = () => (
+        <div className="form-section" ref={classificationRef}>
+            <h3 className="section-title">Classification</h3>
+            <CustomSelect
+                label="Category"
+                name="category"
+                value={category}
+                onChange={(e) => setCategory(e.target.value)}
+                placeholder="Select Category"
+                options={[
+                    { label: 'Misconduct', value: 'misconduct' },
+                    { label: 'Harassment', value: 'harassment' }
+                ]}
+            />
+            <CustomSelect
+                label="Case Type"
+                name="caseType"
+                value={caseType}
+                onChange={(e) => setCaseType(e.target.value)}
+                placeholder="Select Type"
+                options={[
+                    { label: 'Internal', value: 'internal' },
+                    { label: 'External', value: 'external' }
+                ]}
+            />
+            <CustomSelect
+                label="Status"
+                name="status"
+                value={status}
+                onChange={(e) => setStatus(e.target.value)}
+                placeholder="Select Status"
+                options={[
+                    { label: 'Draft', value: 'Draft' },
+                    { label: 'Active', value: 'Active' }
+                ]}
+            />
+        </div>
+    );
+
+    const renderCaseReference = () => (
+        <div className="form-section" ref={referenceRef}>
+            <h3 className="section-title">Case Reference</h3>
+            <MyInput
+                label="Case File Number"
+                name="caseFileNumber"
+                value={caseFileNumber}
+                onChange={(e) => setCaseFileNumber(e.target.value)}
+                placeholder="e.g. CFN-88210"
+            />
+            <MyInput
+                label="Case ID (Auto-generated)"
+                name="caseId"
+                value="GRA-2023-9892"
+                disabled={true}
+            />
+        </div>
+    );
+
+    const renderOwnership = () => (
+        <div className="form-section" ref={ownershipRef}>
+            <h3 className="section-title">Ownership</h3>
+            <CustomSelect
+                label="Assigned to"
+                name="assignedLead"
+                value={assignedLead}
+                onChange={(e) => setAssignedLead(e.target.value)}
+                placeholder="Select Lead Counsel"
+                options={[
+                    { label: 'Alex Rivera', value: 'alex' },
+                    { label: 'John Smith', value: 'john' },
+                    { label: 'Sarah Johnson', value: 'sarah' }
+                ]}
+            />
+            <MyInput
+                label="Internal Stakeholders"
+                name="stakeholders"
+                value="Legal Dept, HR Compliance"
+                placeholder="Enter stakeholders"
+                disabled={true}
+            />
+        </div>
+    );
+
+    const renderDocumentation = () => (
+        <div className="form-section" ref={documentationRef}>
+            <h3 className="section-title">Documentation</h3>
+            <label className="form-label">Initial Documentation</label>
+            <Dragger className="case-upload-dragger">
+                <p className="upload-icon-wrapper">
+                    <InboxOutlined style={{ fontSize: '32px', color: '#1890ff' }} />
+                </p>
+                <p className="upload-hint">Drag & drop or tap to select PDFs, PNGs, or DOCX</p>
+            </Dragger>
         </div>
     );
 
     const renderWorkflow = () => (
         <div className="form-section" ref={workflowRef}>
-            <h3 className="section-title">WorkFlow</h3>
-            <Row gutter={24}>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Priority Level</label>
-                        <Radio.Group
-                            value={priority}
-                            onChange={(e) => setPriority(e.target.value)}
-                            className="priority-group"
-                        >
-                            <Radio.Button value="Low" className="priority-btn">Low</Radio.Button>
-                            <Radio.Button value="Medium" className="priority-btn">Medium</Radio.Button>
-                            <Radio.Button value="High" className="priority-btn">High</Radio.Button>
-                        </Radio.Group>
-                    </div>
-                </Col>
-                <Col span={12}>
-                    <div className="case-input-container">
-                        <label className="form-label">Deadline</label>
-                        <DatePicker style={{ width: '100%' }} format="MM/DD/YYYY" placeholder="mm/dd/yyyy" />
-                    </div>
-                </Col>
-            </Row>
+            <h3 className="section-title">Workflow</h3>
+            <div className="case-input-container">
+                <label className="form-label">Priority Level</label>
+                <div className="priority-control-container">
+                    <Radio.Group
+                        value={priority}
+                        onChange={(e) => setPriority(e.target.value)}
+                        buttonStyle="solid"
+                        className="priority-group"
+                    >
+                        <Radio.Button value="Low" className="priority-btn">Low</Radio.Button>
+                        <Radio.Button value="Medium" className="priority-btn">Medium</Radio.Button>
+                        <Radio.Button value="High" className="priority-btn">High</Radio.Button>
+                    </Radio.Group>
+                </div>
+            </div>
+            <MyDatePicker1
+                label="Deadline"
+                name="deadline"
+                value={deadline}
+                onChange={setDeadline}
+                placeholder="DD/MM/YYYY"
+                format="DD/MM/YYYY"
+            />
         </div>
     );
 
     return (
         <MyDrawer
-            title="New Case Entry"
+            title="Create issue"
             open={open}
             onClose={onClose}
-            width={700}
+            width={900}
             isPagination={false}
             extra={headerActions}
+            className="create-case-drawer"
         >
             <div className="create-case-drawer-content">
                 {/* Progress Bar */}
                 <div className="completion-progress-container">
                     <div className="progress-header">
-                        <span className="progress-title">COMPLETION PROGRESS</span>
-                        <span className="progress-percentage">45%</span>
+                        <span className="progress-title">FORM COMPLETION</span>
+                        <span className="progress-percentage">25%</span>
                     </div>
-                    <Progress percent={45} showInfo={false} strokeWidth={8} />
-                </div>
-
-                {/* Anchor Navigation */}
-                <div className="case-anchor-nav">
-                    <div
-                        className={`anchor-nav-item ${activeNav === '1' ? 'active' : ''}`}
-                        onClick={() => scrollToSection(caseInfoRef, '1')}
-                    >
-                        Case Info
-                    </div>
-                    <div
-                        className={`anchor-nav-item ${activeNav === '2' ? 'active' : ''}`}
-                        onClick={() => scrollToSection(incidentRef, '2')}
-                    >
-                        Incident
-                    </div>
-                    <div
-                        className={`anchor-nav-item ${activeNav === '3' ? 'active' : ''}`}
-                        onClick={() => scrollToSection(legalRef, '3')}
-                    >
-                        Legal
-                    </div>
-                    <div
-                        className={`anchor-nav-item ${activeNav === '4' ? 'active' : ''}`}
-                        onClick={() => scrollToSection(workflowRef, '4')}
-                    >
-                        WorkFlow
-                    </div>
+                    <Progress percent={25} showInfo={false} strokeWidth={4} strokeColor="#1890ff" trailColor="#d9d9d9" />
                 </div>
 
                 {/* Scrollable Sections */}
                 <div className="case-form-scroll-container">
-                    {renderCaseInfo()}
+                    {renderIssueOverview()}
                     {renderIncidentDetails()}
-                    {renderLegalTeam()}
+                    {renderClassification()}
+                    {renderCaseReference()}
+                    {renderOwnership()}
+                    {renderDocumentation()}
                     {renderWorkflow()}
                 </div>
             </div>

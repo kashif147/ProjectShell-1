@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { useLocation, useNavigate } from 'react-router-dom';
-import { Tabs, Avatar, Button, Row, Col, Tooltip } from 'antd';
+import { Avatar, Button, Row, Col, Tooltip, Dropdown, Input } from 'antd';
 import {
   ArrowLeftOutlined,
   ShareAltOutlined,
@@ -12,9 +12,12 @@ import {
   MessageOutlined,
   UserAddOutlined,
   CloseOutlined,
-  FolderOpenOutlined
+  FolderOpenOutlined,
+  DownOutlined
 } from '@ant-design/icons';
 import "../../styles/CasesDetails.css";
+import ReactQuill from "react-quill";
+import "quill/dist/quill.snow.css";
 
 import MySearchInput from "../../component/common/MySearchInput";
 
@@ -23,16 +26,111 @@ function CasesDetails() {
   const navigate = useNavigate();
   const caseId = location.state?.caseId || "#8821";
 
-  const [activeTabKey, setActiveTabKey] = useState('1');
   const [activeStep, setActiveStep] = useState('Intake');
+  const [activeNav, setActiveNav] = useState('Summary');
 
-  const steps = ['Intake', 'Investigation', 'Review', 'Closed'];
+  // Section Refs
+  const summaryRef = useRef(null);
+  const notesRef = useRef(null);
+  const attachmentsRef = useRef(null);
+  const historyRef = useRef(null);
 
-  const teamMembers = [
+  const [assignee, setAssignee] = useState({ name: 'Alex Rivera', avatar: 'https://i.pravatar.cc/150?u=alex' });
+  const [teamMembers, setTeamMembers] = useState([
     { name: 'Sarah C.', avatar: 'https://i.pravatar.cc/150?u=sarah', active: true },
     { name: 'Michael S.', avatar: 'https://i.pravatar.cc/150?u=michael', active: false },
     { name: 'David W.', avatar: 'https://i.pravatar.cc/150?u=david', active: false },
+  ]);
+
+  const [caseType, setCaseType] = useState('Compliance');
+  const [caseStatus, setCaseStatus] = useState('In Progress');
+
+  const steps = ['Intake', 'Investigation', 'Review', 'Closed'];
+
+  // Mock data for dropdowns
+  const availableAssignees = [
+    { name: 'Alex Rivera', avatar: 'https://i.pravatar.cc/150?u=alex' },
+    { name: 'Sarah Johnson', avatar: 'https://i.pravatar.cc/150?u=sarah' },
+    { name: 'Mike Chen', avatar: 'https://i.pravatar.cc/150?u=number' },
   ];
+
+  const availableTeamMembers = [
+    { name: 'Emma W.', avatar: 'https://i.pravatar.cc/150?u=emma' },
+    { name: 'James B.', avatar: 'https://i.pravatar.cc/150?u=james' },
+    { name: 'Linda K.', avatar: 'https://i.pravatar.cc/150?u=linda' },
+  ];
+
+  const caseTypes = ['Compliance', 'Risk', 'Legal', 'General'];
+  const caseStatuses = ['In Progress', 'Pending', 'Review', 'Closed'];
+
+  const handleAssigneeChange = ({ key }) => {
+    const selected = availableAssignees.find(a => a.name === key);
+    if (selected) setAssignee(selected);
+  };
+
+  const handleAddTeamMember = ({ key }) => {
+    const selected = availableTeamMembers.find(m => m.name === key);
+    if (selected && !teamMembers.find(m => m.name === selected.name)) {
+      setTeamMembers([...teamMembers, { ...selected, active: false }]);
+    }
+  };
+
+  const handleCaseTypeChange = ({ key }) => setCaseType(key);
+  const handleCaseStatusChange = ({ key }) => setCaseStatus(key);
+
+  const scrollToSection = (sectionName) => {
+    setActiveNav(sectionName);
+    let ref = null;
+    switch (sectionName) {
+      case 'Summary': ref = summaryRef; break;
+      case 'Activities': ref = notesRef; break;
+      case 'Communications': ref = attachmentsRef; break;
+      case 'History': ref = historyRef; break;
+      default: return;
+    }
+    if (ref && ref.current) {
+      ref.current.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+  };
+
+  const assigneeMenu = {
+    items: availableAssignees.map(a => ({
+      key: a.name,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Avatar size="small" src={a.avatar} />
+          <span>{a.name}</span>
+        </div>
+      )
+    })),
+    onClick: handleAssigneeChange,
+    style: { width: 160 }
+  };
+
+  const teamMemberMenu = {
+    items: availableTeamMembers.map(m => ({
+      key: m.name,
+      label: (
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <Avatar size="small" src={m.avatar} />
+          <span>{m.name}</span>
+        </div>
+      )
+    })),
+    onClick: handleAddTeamMember,
+    style: { minWidth: 220 }
+  };
+
+  const caseTypeMenu = {
+    items: caseTypes.map(t => ({ key: t, label: t })),
+    onClick: handleCaseTypeChange
+  };
+
+  const caseStatusMenu = {
+    items: caseStatuses.map(s => ({ key: s, label: s })),
+    onClick: handleCaseStatusChange
+  };
+
 
   const activities = [
     {
@@ -58,27 +156,53 @@ function CasesDetails() {
     }
   ];
 
+  const [caseTitle, setCaseTitle] = useState('Critical AML Indicator Flag');
+
   const renderSummary = () => (
     <div className="summary-content">
       <div className="summary-grid">
-        <span className="summary-label">Assigne</span>
+        <span className="summary-label">Title</span>
+        <span className="summary-value" style={{ textAlign: 'right' }}>{caseTitle}</span>
+
+        <span className="summary-label">Assign To</span>
         <div className="owner-value">
-          <span className="summary-value">Alex Rivera</span>
-          <Avatar size="small" src="https://i.pravatar.cc/150?u=alex" />
+          <Dropdown menu={assigneeMenu} trigger={['click']}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+              <span className="summary-value">{assignee.name}</span>
+              <Avatar size="small" src={assignee.avatar} />
+            </div>
+          </Dropdown>
         </div>
 
         <span className="summary-label">Created Date</span>
         <span className="summary-value" style={{ textAlign: 'right' }}>Oct 24, 2023</span>
 
-        <span className="summary-label">Type</span>
-        <span className="summary-value" style={{ textAlign: 'right' }}>Compliance</span>
+        <span className="summary-label">Case Type</span>
+        <div className="owner-value">
+          <Dropdown menu={caseTypeMenu} trigger={['click']}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <span className="summary-value">{caseType}</span>
+              <DownOutlined style={{ fontSize: 12, color: '#bfbfbf' }} />
+            </div>
+          </Dropdown>
+        </div>
+
+        <span className="summary-label">Case Status</span>
+        <div className="owner-value">
+          <Dropdown menu={caseStatusMenu} trigger={['click']}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, cursor: 'pointer' }}>
+              <span className="summary-value">{caseStatus}</span>
+              <DownOutlined style={{ fontSize: 12, color: '#bfbfbf' }} />
+            </div>
+          </Dropdown>
+        </div>
 
         <span className="summary-label">Department</span>
         <span className="summary-value" style={{ textAlign: 'right' }}>Global Risk (GRA)</span>
       </div>
 
       <div className="description-section">
-        <span className="summary-label">Internal Description</span>
+        <span className="summary-label">Description</span>
         <div className="description-box">
           Initial flagged transaction originating from region 4. Potential anti-money laundering (AML) indicators detected. Requires manual cross-verification with external vendor logs.
         </div>
@@ -99,32 +223,15 @@ function CasesDetails() {
               <span>{member.name}</span>
             </div>
           ))}
-          <div className="add-member-btn">
-            <PlusOutlined />
-          </div>
+          <Dropdown menu={teamMemberMenu} trigger={['click']}>
+            <div className="add-member-btn">
+              <PlusOutlined />
+            </div>
+          </Dropdown>
         </div>
       </div>
 
-      <div className="activity-section">
-        <div className="section-title">
-          <h3>Recent Activity</h3>
-        </div>
-        {activities.map((activity, index) => (
-          <div key={index} className="activity-item">
-            <div
-              className="activity-icon-wrapper"
-              style={{ background: activity.color, color: activity.iconColor }}
-            >
-              {activity.icon}
-            </div>
-            <div className="activity-content">
-              <h4>{activity.title}</h4>
-              <span className="activity-time">{activity.time}</span>
-            </div>
-          </div>
-        ))}
-        <Button className="view-history-btn" onClick={() => setActiveTabKey('4')}>VIEW FULL HISTORY</Button>
-      </div>
+
     </div >
   );
 
@@ -209,23 +316,9 @@ function CasesDetails() {
     <div className="attachments-tab-content">
       <div className="attachments-header">
         <div className="header-actions-left">
-          <Button type="text" icon={<DownloadOutlined style={{ fontSize: 18 }} />} />
-          <Button type="text" icon={<ShareAltOutlined style={{ fontSize: 18 }} />} />
+          {/* Global Buttons Removed */}
         </div>
         <Button type="primary" className="upload-new-btn" icon={<PlusOutlined />}>Upload New</Button>
-      </div>
-
-      <div className="attachments-sub-tabs">
-        <div className="sub-tab active">ALL FILES</div>
-        <div className="sub-tab">RECENT</div>
-        <div className="sub-tab">STARRED</div>
-      </div>
-
-      <div className="attachments-breadcrumb">
-        <FolderOpenOutlined style={{ marginRight: 8, color: '#bfbfbf' }} />
-        <span className="breadcrumb-item">Case #4492</span>
-        <span className="breadcrumb-sep">{'>'}</span>
-        <span className="breadcrumb-item active">Legal Documents</span>
       </div>
 
       <div className="attachments-list">
@@ -251,7 +344,11 @@ function CasesDetails() {
                 </div>
               </div>
             </div>
-            <EllipsisOutlined style={{ fontSize: 20, color: '#bfbfbf', cursor: 'pointer' }} />
+            <div className="attachment-actions">
+              <DownloadOutlined style={{ fontSize: 18, color: '#bfbfbf', cursor: 'pointer' }} />
+              <ShareAltOutlined style={{ fontSize: 18, color: '#bfbfbf', cursor: 'pointer' }} />
+              <EllipsisOutlined style={{ fontSize: 20, color: '#bfbfbf', cursor: 'pointer' }} />
+            </div>
           </div>
         ))}
       </div>
@@ -352,66 +449,164 @@ function CasesDetails() {
     </div>
   );
 
-  const tabItems = [
+  const [notes, setNotes] = useState([
     {
-      key: '1',
-      label: 'SUMMARY',
-      children: renderSummary(),
+      id: 1,
+      user: 'Sarah C.',
+      avatar: 'https://i.pravatar.cc/150?u=sarah',
+      text: 'Initial review of the transaction logs shows some inconsistencies with the reported timeline.',
+      time: 'Oct 24, 10:30 AM'
     },
     {
-      key: '2',
-      label: 'ISSUE NOTES',
-      children: <div style={{ padding: 20 }}>Case notes content...</div>,
-    },
-    {
-      key: '3',
-      label: 'EMAILS AND ATTACHMENTS',
-      children: renderAttachments(),
-    },
-    {
-      key: '4',
-      label: 'HISTORY',
-      children: renderHistory(),
-    },
-  ];
+      id: 2,
+      user: 'Michael S.',
+      avatar: 'https://i.pravatar.cc/150?u=michael',
+      text: 'I have requested the external vendor logs to cross-verify. Should have them by EOD.',
+      time: 'Oct 24, 11:15 AM'
+    }
+  ]);
+  const [newNote, setNewNote] = useState('');
 
-  return (
-    <div className="cases-details-container">
-      {/* Header */}
-      <div className="case-header">
-        <div className="case-header-left">
-          <ArrowLeftOutlined style={{ cursor: 'pointer', fontSize: '18px' }} onClick={() => navigate(-1)} />
-          <div className="tag-container">
-            <span className="theme-status theme-status-info">IN PROGRESS</span>
-            <span className="theme-status theme-status-error">HIGH PRIORITY</span>
-          </div>
-        </div>
-        <div className="case-header-right">
-          <ShareAltOutlined style={{ marginRight: 16, cursor: 'pointer', fontSize: '18px' }} />
-          <EllipsisOutlined style={{ cursor: 'pointer', fontSize: '18px' }} />
-        </div>
+  const handleAddNote = () => {
+    if (!newNote.trim()) return;
+    const note = {
+      id: Date.now(),
+      user: 'Alex Rivera', // Current user
+      avatar: 'https://i.pravatar.cc/150?u=alex',
+      text: newNote,
+      time: 'Just now'
+    };
+    setNotes([...notes, note]);
+    setNewNote('');
+  };
+
+  const loadPreviousNotes = () => {
+    const olderNotes = [
+      {
+        id: 99,
+        user: 'System',
+        avatar: '',
+        text: 'Case created automatically by Risk Engine Rule #442.',
+        time: 'Oct 23, 09:00 PM'
+      }
+    ];
+    setNotes([...olderNotes, ...notes]);
+  };
+
+  const renderIssueNotes = () => (
+    <div className="issue-notes-container" style={{ padding: '0' }}>
+      <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+        <button className="custom-action-btn custom-secondary-btn" onClick={loadPreviousNotes}>
+          Load previous comments
+        </button>
       </div>
 
-      {/* Stepper */}
-      <div className="workflow-stepper">
-        {steps.map((step) => (
-          <div
-            key={step}
-            className={`stepper-item ${activeStep === step ? 'active' : ''}`}
-            onClick={() => setActiveStep(step)}
-          >
-            {step}
+      <div className="notes-list" style={{ display: 'flex', flexDirection: 'column', gap: '24px', marginBottom: '24px' }}>
+        {notes.map(note => (
+          <div key={note.id} className="note-item" style={{ display: 'flex', gap: '16px' }}>
+            <Avatar src={note.avatar} icon={<UserAddOutlined />} />
+            <div className="note-content" style={{ flex: 1 }}>
+              <div className="note-header" style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                <span style={{ fontWeight: 600, color: '#212529', fontSize: '14px' }}>{note.user}</span>
+                <span style={{ color: '#bfbfbf', fontSize: '12px' }}>{note.time}</span>
+              </div>
+              <div
+                className="note-text"
+                style={{ background: '#f8faff', padding: '12px', borderRadius: '8px', color: '#595959', fontSize: '14px' }}
+                dangerouslySetInnerHTML={{ __html: note.text }}
+              />
+            </div>
           </div>
         ))}
       </div>
 
-      {/* Tabs */}
-      <Tabs
-        activeKey={activeTabKey}
-        onChange={setActiveTabKey}
-        className="custom-tabs"
-        items={tabItems}
-      />
+      <div className="add-note-section" style={{ display: 'flex', gap: '16px', alignItems: 'flex-start' }}>
+        <Avatar src="https://i.pravatar.cc/150?u=alex" />
+        <div style={{ flex: 1 }}>
+          <div className="rich-text-editor-wrapper" style={{ marginBottom: '12px' }}>
+            <ReactQuill
+              theme="snow"
+              value={newNote}
+              onChange={setNewNote}
+              placeholder="Add a comment..."
+              modules={{
+                toolbar: [
+                  ['bold', 'italic', 'underline'],
+                  [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+                  ['clean']
+                ]
+              }}
+              style={{
+                borderRadius: '8px',
+                background: '#fff'
+              }}
+            />
+          </div>
+          <button className="custom-action-btn custom-primary-btn" onClick={handleAddNote}>
+            Add Comment
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="cases-details-container">
+      {/* Header */}
+
+
+      {/* Anchor Navigation Bar */}
+      <div className="anchor-nav-header">
+        {['Summary', 'Activities', 'Communications', 'History'].map((item) => (
+          <div
+            key={item}
+            className={`anchor-nav-item ${activeNav === item ? 'active' : ''}`}
+            onClick={() => scrollToSection(item)}
+          >
+            {item.toUpperCase()}
+          </div>
+        ))}
+      </div>
+
+      {/* Scrollable Content Body */}
+      <div className="cases-content-body">
+        <div className="section-container" ref={summaryRef}>
+          {renderSummary()}
+        </div>
+
+        <div className="section-container" ref={notesRef}>
+          {renderIssueNotes()}
+        </div>
+
+        <div className="section-container" ref={attachmentsRef}>
+          {renderAttachments()}
+        </div>
+
+        <div className="section-container" ref={historyRef}>
+          {renderHistory()}
+        </div>
+        <div className="activity-section">
+          <div className="section-title">
+            <h3>Recent Activity</h3>
+          </div>
+          {activities.map((activity, index) => (
+            <div key={index} className="activity-item">
+              <div
+                className="activity-icon-wrapper"
+                style={{ background: activity.color, color: activity.iconColor }}
+              >
+                {activity.icon}
+              </div>
+              <div className="activity-content">
+                <h4>{activity.title}</h4>
+                <span className="activity-time">{activity.time}</span>
+              </div>
+            </div>
+          ))}
+          <Button className="view-history-btn" onClick={() => scrollToSection('History')}>VIEW FULL HISTORY</Button>
+        </div>
+      </div>
+
 
       {/* Floating Action Button */}
       <div className="fab-btn">

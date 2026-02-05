@@ -70,6 +70,10 @@ export const FilterProvider = ({ children }) => {
     Cases: {
       visibleFilters: [],
       filtersState: {}
+    },
+    Events: {
+      visibleFilters: [],
+      filtersState: {}
     }
   });
 
@@ -200,7 +204,8 @@ export const FilterProvider = ({ children }) => {
       "/members": "Members",
       "/onlinePayment": "OnlinePayment",
       "/CommunicationBatchDetail": "Communication",
-      "/CasesSummary": "Cases"
+      "/CasesSummary": "Cases",
+      "/EventsSummary": "Events"
     };
     return pathMap[activeScreenName] || 'Applications';
   };
@@ -328,6 +333,12 @@ export const FilterProvider = ({ children }) => {
         "Stakeholder",
         "Priority",
       ],
+      Events: [
+        "Search",
+        "Event Type",
+        "Status",
+        "Created At",
+      ],
     }),
     []
   );
@@ -341,6 +352,7 @@ export const FilterProvider = ({ children }) => {
     OnlinePayment: ["Membership Status", "Payment Status"],
     Communication: ["Grade", "Work Location"],
     Cases: ["Incident Date", "Case Type", "Stakeholder", "Priority"],
+    Events: ["Event Type", "Status"],
   };
 
   // 🔹 Helper to get default visible filters for a screen
@@ -526,6 +538,20 @@ export const FilterProvider = ({ children }) => {
         selectedValues: []
       },
       "Priority": {
+        operator: "==",
+        selectedValues: []
+      }
+    },
+    Events: {
+      "Event Type": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Status": {
+        operator: "==",
+        selectedValues: []
+      },
+      "Created At": {
         operator: "==",
         selectedValues: []
       }
@@ -720,6 +746,8 @@ export const FilterProvider = ({ children }) => {
       "Case Type": ["", "General", "Legal", "Financial", "Other"],
       "Priority": ["", "Low", "Medium", "High", "Critical"],
       "Stakeholder": ["", "Internal", "External", "Partner"],
+      "Event Type": ["", "Internal", "Workshop", "External"],
+      "Status": ["", "Active", "Planning", "Review", "Canceled"],
 
       // 🔹 Text input filters
       "Email": [],

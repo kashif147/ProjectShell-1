@@ -17,6 +17,8 @@ import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import { Triangle } from "lucide-react";
+import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
 import {
   filterTransferById,
@@ -599,43 +601,94 @@ const TableComponent = ({
               );
 
             case "Membership Category":
-              const isApplicationsPage = location.pathname === '/Applications';
+              // console.log("DEBUG: Membership Category Case Hit");
+              const currentPath = location.pathname.toLowerCase();
+              // console.log("DEBUG: Path:", location.pathname, "Lower:", currentPath, "Screen:", screenName);
+
+              const isApplicationsPage = currentPath.includes('/applications');
+              const isMembersPage = currentPath.includes('/members');
+              const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+
+              let content;
 
               if (isApplicationsPage) {
-                return (
+                content = (
                   <span
                     style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      const { applicationStatus, applicationId } = record || {};
+                      const { applicationStatus } = record || {};
+                      // Robust ID retrieval
+                      const id = record?.applicationId || record?._id || record?.id;
+
                       if (applicationStatus === "Draft") {
                         dispatch(
                           getApplicationById({
                             id: "draft",
-                            draftId: applicationId,
+                            draftId: id,
                           })
                         );
                         navigate("/applicationMgt", {
                           state: { isEdit: true },
                         });
                       } else {
-                        dispatch(getApplicationById({ id: applicationId }));
-                        navigate("/applicationMgt", {
-                          state: { isEdit: true },
-                        });
+                        if (id) {
+                          dispatch(getApplicationById({ id: id }));
+                          navigate("/applicationMgt", {
+                            state: { isEdit: true },
+                          });
+                        } else {
+                          console.error("No valid application ID found in record:", record);
+                        }
                       }
                     }}
                   >
                     <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                   </span>
                 );
+              } else if (isMembersPage) {
+                content = (
+                  <Link
+                    to="/Details"
+                    state={{
+                      search: screenName,
+                      name: record?.fullName,
+                      code: record?.regNo,
+                      memberId: record?.membershipNumber,
+                    }}
+                    onClick={() => {
+                      handleRowClick(record, index);
+                      dispatch(getProfileDetailsById(record?.profileId));
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId: record?.profileId,
+                          isCurrent: true,
+                        })
+                      );
+                    }}
+                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
+                );
               } else {
-                return (
+                content = (
                   <span style={{ textOverflow: "ellipsis" }}>
                     {text}
                   </span>
                 );
               }
+
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {content}
+                  {isPotentialDuplicate && (
+                    <Tooltip title="Potential Duplicate Detected">
+                      <Triangle size={16} color="#f5222d" style={{ minWidth: '16px', fill: '#f5222d' }} />
+                    </Tooltip>
+                  )}
+                </div>
+              );
 
             case "Change To":
               return (

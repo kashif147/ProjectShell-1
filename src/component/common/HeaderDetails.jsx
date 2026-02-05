@@ -68,6 +68,7 @@ import RefundDrawer from "../../component/finanace/RefundDrawer"
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
+import CreateEventDrawer from "../event/CreateEventDrawer";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -99,6 +100,7 @@ function HeaderDetails() {
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
+  const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
 
 
@@ -649,6 +651,7 @@ function HeaderDetails() {
           location?.pathname === "/CorrespondencesSummary" ||
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
+          location?.pathname === "/EventsSummary" ||
           location?.pathname === "/CasesSummary") && (
             <FaClipboardList
               style={{
@@ -775,6 +778,7 @@ function HeaderDetails() {
             location?.pathname == "/CorrespondencesSummary" ||
             location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
+            location?.pathname == "/EventsSummary" ||
             location?.pathname == "/ChangCateSumm" ||
             location?.pathname == "/RemindersSummary" ||
             location?.pathname == "/Cancallation" ||
@@ -876,6 +880,8 @@ function HeaderDetails() {
                                   setWriteOffDrawerOpen(true);
                                 } else if (nav === "/CasesSummary") {
                                   setCasesDrawerOpen(true);
+                                } else if (nav === "/EventsSummary") {
+                                  setEventDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -1384,6 +1390,10 @@ function HeaderDetails() {
       <CreateCasesDrawer
         open={casesDrawerOpen}
         onClose={() => setCasesDrawerOpen(false)}
+      />
+      <CreateEventDrawer
+        open={eventDrawerOpen}
+        onClose={() => setEventDrawerOpen(false)}
       />
       {/* <MyDrawer
         title="Refund Entry Drawer"

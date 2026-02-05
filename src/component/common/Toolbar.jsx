@@ -159,7 +159,9 @@ const Toolbar = () => {
             placeholder={
               location.pathname === "/CasesSummary"
                 ? "Search Case ID, team, or stakeholder"
-                : "Membership No or Surname"
+                : location.pathname === "/EventsSummary"
+                  ? "Search Event ID or Name"
+                  : "Membership No or Surname"
             }
             style={{
               height: "30px",

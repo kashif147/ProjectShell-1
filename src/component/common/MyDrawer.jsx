@@ -84,6 +84,8 @@ function MyDrawer({
   PrevFtn,
   status,
   extra,
+  className,
+  rootClassName,
 }) {
   const {
     selectLokups,
@@ -691,6 +693,8 @@ function MyDrawer({
       placement="right"
       onClose={onClose}
       open={open}
+      className={className}
+      rootClassName={rootClassName}
       extra={
         extra || (
           <div className="d-flex flex-wrap align-items-center gap-3">
@@ -874,8 +878,8 @@ function MyDrawer({
                 isUpdate?.Contacts === true
                   ? update()
                   : isDisable === true
-                  ? disableFtn(false)
-                  : addFtn()
+                    ? disableFtn(false)
+                    : addFtn()
               }
               onKeyDown={(event) =>
                 event.key === "Enter" &&
@@ -883,15 +887,15 @@ function MyDrawer({
                   isUpdate?.Contacts === true
                     ? updatftn()
                     : isDisable === false
-                    ? disableFtn(true)
-                    : addFtn())
+                      ? disableFtn(true)
+                      : addFtn())
               }
             >
               {isUpdate?.Contacts === true
                 ? "Update"
                 : isDisable === true
-                ? "Add"
-                : "Submit"}
+                  ? "Add"
+                  : "Submit"}
             </Button>
           </Space>
         }
@@ -1201,40 +1205,40 @@ function MyDrawer({
               )}
               {(recData?.timeDur === "Year" ||
                 recData?.timeDur === "Month") && (
-                <div className="d-flex flex-column pt-4">
-                  <Checkbox>On December 16</Checkbox>
-                  <Checkbox>On third Monday of December</Checkbox>
-                  <div className="pt-3 d-flex flex-column">
-                    <p>
-                      Occur on day 16 of every month
-                      {isEndDate === true &&
-                        (recData?.timeDur === "Year" ||
-                          recData?.timeDur === "Month") && (
-                          <span
-                            onClick={() => setisEndDate(false)}
+                  <div className="d-flex flex-column pt-4">
+                    <Checkbox>On December 16</Checkbox>
+                    <Checkbox>On third Monday of December</Checkbox>
+                    <div className="pt-3 d-flex flex-column">
+                      <p>
+                        Occur on day 16 of every month
+                        {isEndDate === true &&
+                          (recData?.timeDur === "Year" ||
+                            recData?.timeDur === "Month") && (
+                            <span
+                              onClick={() => setisEndDate(false)}
+                              style={{ cursor: "pointer", color: "#215E97" }}
+                            >
+                              {" "}
+                              Choose an end date
+                            </span>
+                          )}
+                      </p>
+                      {isEndDate === false && (
+                        <div className="d-flex ">
+                          <div style={{ width: "50%" }} className="me-4">
+                            <MyDatePicker />
+                          </div>
+                          <p
                             style={{ cursor: "pointer", color: "#215E97" }}
+                            onClick={() => setisEndDate(true)}
                           >
-                            {" "}
-                            Choose an end date
-                          </span>
-                        )}
-                    </p>
-                    {isEndDate === false && (
-                      <div className="d-flex ">
-                        <div style={{ width: "50%" }} className="me-4">
-                          <MyDatePicker />
+                            Remove end Date
+                          </p>
                         </div>
-                        <p
-                          style={{ cursor: "pointer", color: "#215E97" }}
-                          onClick={() => setisEndDate(true)}
-                        >
-                          Remove end Date
-                        </p>
-                      </div>
-                    )}
+                      )}
+                    </div>
                   </div>
-                </div>
-              )}
+                )}
               {/* <div>
                 {
                   isEndDate === false && (
@@ -1397,7 +1401,7 @@ function MyDrawer({
             >
               Close
             </Button>
-            <Button className="butn primary-btn" onClick={() => {}}>
+            <Button className="butn primary-btn" onClick={() => { }}>
               Add
             </Button>
           </Space>
