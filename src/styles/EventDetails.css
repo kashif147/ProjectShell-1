@@ -8,7 +8,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 24px;
+    margin-bottom: 8px;
 }
 
 .back-link {
@@ -47,6 +47,7 @@
     margin-bottom: 16px;
     /* Reduced from 20px */
     gap: 16px;
+    padding: 0 34px;
 }
 
 .filter-group {
@@ -114,4 +115,20 @@
 .attendance-checkbox {
     display: flex;
     justify-content: center;
+}
+
+.action-buttons-group {
+    display: flex;
+    gap: 12px;
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.hide-scroll-webkit::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar,
+.hide-scroll-webkit {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
 }
