@@ -161,8 +161,9 @@ const CreateEventDrawer = ({ open, onClose }) => {
             open={open}
             width={1200}
             extra={headerActions}
+            rootClassName="hide-scroll-webkit"
         >
-            <div className="event-drawer-container">
+            <div className="event-drawer-container hide-scroll-webkit">
                 <Row gutter={[24, 24]}>
                     <Col xs={24} lg={16}>
                         {/* BASIC INFORMATION */}

@@ -38,8 +38,9 @@ const ScheduleManagementDrawer = ({ open, onClose, scheduleData, onSessionChange
             onClose={onClose}
             width={600}
             extra={headerActions}
+            rootClassName="hide-scroll-webkit"
         >
-            <div className="schedule-management-container">
+            <div className="schedule-management-container hide-scroll-webkit">
                 {scheduleData.map((session, index) => (
                     <div key={session.id} className="day-card">
                         <div className="day-card-header">

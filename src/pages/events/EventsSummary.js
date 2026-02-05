@@ -121,8 +121,8 @@ function EventsSummary() {
                     }}
                     onClick={(e) => {
                         e.stopPropagation();
-                        // Navigate to event details page when implemented
-                        // navigate("/EventDetails", { state: { eventId: text } });
+                        // Navigate to event details page
+                        navigate("/EventDetails", { state: { eventId: text } });
                     }}
                 >
                     {text}
@@ -169,13 +169,13 @@ function EventsSummary() {
                 dataSource={dataSource}
                 columns={columns}
                 onRowClick={(record) => {
-                    // Navigate to event details when implemented
-                    // navigate("/EventDetails", { state: { eventId: record.eventId } });
+                    // Navigate to event details
+                    navigate("/EventDetails", { state: { eventId: record.eventId } });
                 }}
             />
-            <CreateEventDrawer 
-                open={drawerOpen} 
-                onClose={() => setDrawerOpen(false)} 
+            <CreateEventDrawer
+                open={drawerOpen}
+                onClose={() => setDrawerOpen(false)}
             />
         </div>
     );

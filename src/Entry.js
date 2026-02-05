@@ -231,6 +231,7 @@ const DirectDebitBatchDetails = lazyWithRetry(() =>
   import("./pages/finance/DirectDebitBatchDetails")
 );
 const EventsSummary = lazyWithRetry(() => import("./pages/events/EventsSummary"));
+const EventDetails = lazyWithRetry(() => import("./pages/events/EventDetails"));
 
 function Entry() {
   const location = useLocation();
@@ -555,6 +556,14 @@ function Entry() {
                       element={
                         <ProtectedRoute>
                           <EventsSummary />
+                        </ProtectedRoute>
+                      }
+                    />
+                    <Route
+                      path="EventDetails"
+                      element={
+                        <ProtectedRoute>
+                          <EventDetails />
                         </ProtectedRoute>
                       }
                     />

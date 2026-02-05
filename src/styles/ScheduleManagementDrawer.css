@@ -1,13 +1,14 @@
 /* Schedule Management Drawer Styles */
 
 .schedule-management-container {
-    padding: 24px 16px;
-    background-color: #f8f9fa;
-    min-height: 100%;
-    -ms-overflow-style: none;
-    /* IE and Edge */
-    scrollbar-width: none;
-    /* Firefox */
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    margin: 1.5rem;
+    max-height: 80.5vh;
+    height: 80.5vh;
+    overflow-y: auto;
 }
 
 .schedule-management-container::-webkit-scrollbar {

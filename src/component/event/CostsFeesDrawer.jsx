@@ -36,11 +36,12 @@ const CostsFeesDrawer = ({ open, onClose, costsData, onCostChange, onAddCost, on
             title="Costs & Fees"
             open={open}
             onClose={onClose}
-            width={500}
+            width={600}
             extra={headerActions}
+            rootClassName="hide-scroll-webkit"
         >
             <div className="costs-fees-container">
-                <div className="costs-list">
+                <div className="costs-list hide-scroll-webkit">
                     {costsData.length === 0 ? (
                         <div className="empty-costs-state">
                             <Empty
