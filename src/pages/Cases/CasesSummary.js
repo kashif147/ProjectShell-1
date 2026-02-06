@@ -1,7 +1,8 @@
 import React from "react";
 import { useLocation } from "react-router-dom";
-import { Row, Col, Card, Statistic, Tag } from "antd";
+import { Row, Col, Card, Statistic, Tag, Switch } from "antd";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import MyTable from "../../component/common/MyTable";
 
 function CasesSummary() {
@@ -11,53 +12,87 @@ function CasesSummary() {
     {
       key: "1",
       "Issue ID": "C-001",
-      "Status": "Open",
-      Priority: "High",
-      Assignee: "Legal Team",
+      Title: "Critical AML Indicator Flag",
       "Incident Date": "2024-03-05",
+      Location: "Region 4",
+      Category: "Compliance",
+      "Case Type": "Compliance",
+      Status: "Open",
+      Priority: "High",
+      "Due Date": "2024-03-20",
+      "Pertinent to File Review": true,
+      "File Number": "CFN-88210",
+      Assignee: "Legal Team",
+      "Related Member(s)": "Sarah C., Michael S., David W.",
     },
     {
       key: "2",
       "Issue ID": "C-002",
-      "Status": "Pending",
-      Priority: "Medium",
-      Assignee: "Support Team",
+      Title: "Suspicious Transaction Pattern Detected",
       "Incident Date": "2024-03-04",
+      Location: "Region 2",
+      Category: "Risk",
+      "Case Type": "Risk",
+      Status: "Pending",
+      Priority: "Medium",
+      "Due Date": "2024-03-18",
+      "Pertinent to File Review": false,
+      "File Number": "CFN-88211",
+      Assignee: "Support Team",
+      "Related Member(s)": "Emma W., James B.",
     },
     {
       key: "3",
       "Issue ID": "C-003",
-      "Status": "Closed",
-      Priority: "Low",
-      Assignee: "HR Team",
+      Title: "Compliance Review Required",
       "Incident Date": "2024-03-02",
+      Location: "Region 1",
+      Category: "Legal",
+      "Case Type": "Legal",
+      Status: "Closed",
+      Priority: "Low",
+      "Due Date": "2024-03-15",
+      "Pertinent to File Review": true,
+      "File Number": "CFN-88212",
+      Assignee: "HR Team",
+      "Related Member(s)": "Linda K., Sarah C.",
     },
     {
       key: "4",
       "Issue ID": "C-004",
-      "Status": "Open",
-      Priority: "Critical",
-      Assignee: "IT Team",
+      Title: "Security Breach Investigation",
       "Incident Date": "2024-03-01",
+      Location: "Region 3",
+      Category: "General",
+      "Case Type": "General",
+      Status: "Open",
+      Priority: "Critical",
+      "Due Date": "2024-03-10",
+      "Pertinent to File Review": false,
+      "File Number": "CFN-88213",
+      Assignee: "IT Team",
+      "Related Member(s)": "Michael S., David W., Emma W.",
     },
   ];
 
   // Status tag colors matching existing application style
   const getStatusTag = (status) => {
     const statusConfig = {
-      'Open': { color: '#52c41a', bg: '#f6ffed', border: '#b7eb8f' },
-      'Pending': { color: '#faad14', bg: '#fffbe6', border: '#ffe58f' },
-      'Closed': { color: '#8c8c8c', bg: '#fafafa', border: '#d9d9d9' },
+      Open: { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f" },
+      Pending: { color: "#faad14", bg: "#fffbe6", border: "#ffe58f" },
+      Closed: { color: "#8c8c8c", bg: "#fafafa", border: "#d9d9d9" },
     };
-    const config = statusConfig[status] || statusConfig['Pending'];
+    const config = statusConfig[status] || statusConfig["Pending"];
     return (
-      <Tag style={{
-        color: config.color,
-        backgroundColor: config.bg,
-        border: `1px solid ${config.border}`,
-        borderRadius: '4px',
-        fontWeight: 500,
-      }}>
+      <Tag
+        style={{
+          color: config.color,
+          backgroundColor: config.bg,
+          border: `1px solid ${config.border}`,
+          borderRadius: "4px",
+          fontWeight: 500,
+        }}
+      >
         {status}
       </Tag>
     );
@@ -66,20 +101,22 @@ function CasesSummary() {
   // Priority tag colors
   const getPriorityTag = (priority) => {
     const priorityConfig = {
-      'Critical': { color: '#ff4d4f', bg: '#fff2f0', border: '#ffccc7' },
-      'High': { color: '#fa8c16', bg: '#fff7e6', border: '#ffd591' },
-      'Medium': { color: '#1890ff', bg: '#e6f7ff', border: '#91d5ff' },
-      'Low': { color: '#52c41a', bg: '#f6ffed', border: '#b7eb8f' },
+      Critical: { color: "#ff4d4f", bg: "#fff2f0", border: "#ffccc7" },
+      High: { color: "#fa8c16", bg: "#fff7e6", border: "#ffd591" },
+      Medium: { color: "#1890ff", bg: "#e6f7ff", border: "#91d5ff" },
+      Low: { color: "#52c41a", bg: "#f6ffed", border: "#b7eb8f" },
     };
-    const config = priorityConfig[priority] || priorityConfig['Medium'];
+    const config = priorityConfig[priority] || priorityConfig["Medium"];
     return (
-      <Tag style={{
-        color: config.color,
-        backgroundColor: config.bg,
-        border: `1px solid ${config.border}`,
-        borderRadius: '4px',
-        fontWeight: 500,
-      }}>
+      <Tag
+        style={{
+          color: config.color,
+          backgroundColor: config.bg,
+          border: `1px solid ${config.border}`,
+          borderRadius: "4px",
+          fontWeight: 500,
+        }}
+      >
         {priority}
       </Tag>
     );
@@ -93,9 +130,9 @@ function CasesSummary() {
       render: (text, record) => (
         <a
           style={{
-            color: '#0000FF',
-            cursor: 'pointer',
-            textDecoration: 'underline'
+            color: "#0000FF",
+            cursor: "pointer",
+            textDecoration: "underline",
           }}
           onClick={(e) => {
             e.stopPropagation();
@@ -104,29 +141,71 @@ function CasesSummary() {
         >
           {text}
         </a>
-      )
+      ),
+    },
+    {
+      title: "TITLE",
+      dataIndex: "Title",
+      key: "Title",
+    },
+    {
+      title: "RELATED MEMBER(S)",
+      dataIndex: "Related Member(s)",
+      key: "Related Member(s)",
+    },
+    {
+      title: "INCIDENT DATE",
+      dataIndex: "Incident Date",
+      key: "Incident Date",
+    },
+    {
+      title: "LOCATION",
+      dataIndex: "Location",
+      key: "Location",
+    },
+    {
+      title: "CATEGORY",
+      dataIndex: "Category",
+      key: "Category",
+    },
+    {
+      title: "CASE TYPE",
+      dataIndex: "Case Type",
+      key: "Case Type",
     },
     {
       title: "STATUS",
       dataIndex: "Status",
       key: "Status",
-      render: (status) => getStatusTag(status)
+      render: (status) => getStatusTag(status),
     },
     {
       title: "PRIORITY",
       dataIndex: "Priority",
       key: "Priority",
-      render: (priority) => getPriorityTag(priority)
+      render: (priority) => getPriorityTag(priority),
     },
     {
-      title: "ASSIGNED TEAM",
+      title: "DUE DATE",
+      dataIndex: "Due Date",
+      key: "Due Date",
+    },
+    {
+      title: "REVIEW",
+      dataIndex: "Pertinent to File Review",
+      key: "Pertinent to File Review",
+      width: 120,
+      render: (value) => <Switch checked={value} disabled size="small" />,
+    },
+    {
+      title: "FILE NUMBER",
+      dataIndex: "File Number",
+      key: "File Number",
+    },
+    {
+      title: "ASSIGNEE",
       dataIndex: "Assignee",
       key: "Assignee",
-    },
-    {
-      title: "LAST UPDATED",
-      dataIndex: "Incident Date",
-      key: "Incident Date",
     },
   ];
 
@@ -137,30 +216,72 @@ function CasesSummary() {
         <Col xs={24} sm={8}>
           <Card bordered={false} className="stats-card">
             <Statistic
-              title={<span style={{ fontSize: '14px', color: '#8c8c8c' }}>Open Issues</span>}
+              title={
+                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
+                  Open Issues
+                </span>
+              }
               value={124}
-              valueStyle={{ fontSize: '24px', fontWeight: 'bold' }}
-              suffix={<span style={{ color: '#52c41a', fontSize: '14px', fontWeight: 'normal' }}>(+5%)</span>}
+              valueStyle={{ fontSize: "24px", fontWeight: "bold" }}
+              suffix={
+                <span
+                  style={{
+                    color: "#52c41a",
+                    fontSize: "14px",
+                    fontWeight: "normal",
+                  }}
+                >
+                  (+5%)
+                </span>
+              }
             />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card bordered={false} className="stats-card">
             <Statistic
-              title={<span style={{ fontSize: '14px', color: '#8c8c8c' }}>Critical Issues</span>}
+              title={
+                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
+                  Critical Issues
+                </span>
+              }
               value={12}
-              valueStyle={{ fontSize: '24px', fontWeight: 'bold' }}
-              suffix={<span style={{ color: '#52c41a', fontSize: '14px', fontWeight: 'normal' }}>(+2%)</span>}
+              valueStyle={{ fontSize: "24px", fontWeight: "bold" }}
+              suffix={
+                <span
+                  style={{
+                    color: "#52c41a",
+                    fontSize: "14px",
+                    fontWeight: "normal",
+                  }}
+                >
+                  (+2%)
+                </span>
+              }
             />
           </Card>
         </Col>
         <Col xs={24} sm={8}>
           <Card bordered={false} className="stats-card">
             <Statistic
-              title={<span style={{ fontSize: '14px', color: '#8c8c8c' }}>Pending Review</span>}
+              title={
+                <span style={{ fontSize: "14px", color: "#8c8c8c" }}>
+                  Pending Review
+                </span>
+              }
               value={45}
-              valueStyle={{ fontSize: '24px', fontWeight: 'bold' }}
-              suffix={<span style={{ color: '#ff4d4f', fontSize: '14px', fontWeight: 'normal' }}>(-1%)</span>}
+              valueStyle={{ fontSize: "24px", fontWeight: "bold" }}
+              suffix={
+                <span
+                  style={{
+                    color: "#ff4d4f",
+                    fontSize: "14px",
+                    fontWeight: "normal",
+                  }}
+                >
+                  (-1%)
+                </span>
+              }
             />
           </Card>
         </Col>
@@ -169,7 +290,9 @@ function CasesSummary() {
       <MyTable
         dataSource={gridData}
         columns={columns}
-        onRowClick={(record) => navigate("/CasesDetails", { state: { caseId: record["Issue ID"] } })}
+        onRowClick={(record) =>
+          navigate("/CasesDetails", { state: { caseId: record["Issue ID"] } })
+        }
       />
     </div>
   );
