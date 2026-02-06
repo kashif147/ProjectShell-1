@@ -269,6 +269,15 @@ function BatchMemberSummary() {
         }}
       >
         <Col span={3}>
+          <CustomSelect
+            label="Batch Type"
+            value={displayPaymentType || ""}
+            disabled
+            options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
+            style={{ width: "100%" }}
+          />
+        </Col>
+        <Col span={3}>
           <MyDatePicker
             label="Payment Date"
             value={displayBatchDate}
@@ -278,7 +287,7 @@ function BatchMemberSummary() {
             style={{ width: "100%" }}
           />
         </Col>
-        <Col span={3}>
+        <Col span={4}>
           <MyInput
             label="Work Location"
             value={batchInfo.workLocation || ""}
@@ -289,18 +298,9 @@ function BatchMemberSummary() {
           <label>Batch Ref No</label>
           <input value={batchInfo.batchRef || ""} disabled style={inputStyle} />
         </Col>
-        <Col span={11}>
+        <Col span={7}>
           <label>Comments</label>
           <input value={displayComments || ""} disabled style={inputStyle} />
-        </Col>
-        <Col span={3}>
-          <CustomSelect
-            label="Batch Type"
-            value={displayPaymentType || ""}
-            disabled
-            options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
-            style={{ width: "100%" }}
-          />
         </Col>
         <Col span={3}>
           <label>Source</label>
