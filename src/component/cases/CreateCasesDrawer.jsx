@@ -87,7 +87,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
       <Row gutter={16}>
         <Col span={8}>
           <MyDatePicker1
-            label="Date"
+            label="Incident Date"
             name="incidentDate"
             value={incidentDate}
             onChange={setIncidentDate}
@@ -217,7 +217,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
       <Row gutter={16}>
         <Col span={8}>
           <CustomSelect
-            label="Assigned to"
+            label="Assignee"
             name="assignedLead"
             value={assignedLead}
             onChange={(e) => setAssignedLead(e.target.value)}
@@ -232,7 +232,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
         </Col>
         <Col span={16}>
           <MyInput
-            label="Stakeholders"
+            label="Related Member(s)"
             name="stakeholders"
             value="Legal Dept, HR Compliance"
             placeholder="Enter stakeholders"
@@ -289,7 +289,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
         </Col>
         <Col span={8}>
           <MyDatePicker1
-            label="Deadline"
+            label="Due Date"
             name="deadline"
             value={deadline}
             onChange={setDeadline}
