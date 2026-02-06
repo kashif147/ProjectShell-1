@@ -21,9 +21,10 @@ const MyDatePicker = ({
   placeholder = 'Select date',
   isMarginBtm = true,
   extra = null,
+  picker = 'date',
+  format = "DD/MM/YYYY",
 }) => {
   const [isFocused, setIsFocused] = useState(false);
-  const format = "DD/MM/YYYY";
 
   return (
     <div className={`${isMarginBtm ? 'my-input-wrapper' : ''}`}>
@@ -58,6 +59,7 @@ const MyDatePicker = ({
           className="my-input-field-select"
           placeholder={placeholder}
           format={format}
+          picker={picker}
           allowClear
         />
         {hasError && !disabled && (

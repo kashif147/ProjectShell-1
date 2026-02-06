@@ -29,14 +29,14 @@ function BatchMemberSummary() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const { batchId } = useParams();
   const location = useLocation();
-  
+
   const batches = useSelector(state => state.batches.batches);
   const { excelData, uploadedFile, batchTotals } = useContext(ExcelContext);
-  
+
   // Find the current batch with proper date handling
   const locationBatchData = location.state?.batchData;
   const batchFromRedux = batchId ? batches.find(batch => batch.id === parseInt(batchId)) : null;
-  
+
   const currentBatch = locationBatchData || batchFromRedux || excelData;
   const batchInfo = currentBatch || {};
 
@@ -102,41 +102,83 @@ function BatchMemberSummary() {
 
   const columns = [
     {
-      title: "Membership No",
+      title: "Ref No (membership no on file)",
       dataIndex: "Membership No",
-      key: "Membership No",
+      key: "refNo",
       ellipsis: true,
-      width: 120,
+      width: 180,
     },
     {
       title: "Full Name",
       dataIndex: "Full name",
-      key: "Full name",
+      key: "fullName",
       ellipsis: true,
       width: 150,
       render: (text, record) => text || `${record["First name"] || ''} ${record["Last name"] || ''}`.trim(),
     },
     {
-      title: "First Name",
-      dataIndex: "First name",
-      key: "First name",
-      ellipsis: true,
-      width: 120,
-    },
-    {
-      title: "Last Name",
-      dataIndex: "Last name",
-      key: "Last name",
-      ellipsis: true,
-      width: 120,
-    },
-    {
-      title: "Value for Periods Selected",
+      title: "Amount",
       dataIndex: "Value for Periods Selected",
-      key: "Value for Periods Selected",
+      key: "amount",
       ellipsis: true,
       width: 120,
       render: (value) => formatCurrency(value || 0),
+    },
+    {
+      title: "Membership No (in system)",
+      dataIndex: "systemMembershipNo",
+      key: "systemMembershipNo",
+      ellipsis: true,
+      width: 180,
+    },
+    {
+      title: "Member Name",
+      dataIndex: "systemMemberName",
+      key: "systemMemberName",
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "Payroll No",
+      dataIndex: "Payroll No",
+      key: "payrollNo",
+      ellipsis: true,
+      width: 120,
+    },
+    {
+      title: "Batch Ref No",
+      key: "batchRefNo",
+      ellipsis: true,
+      width: 150,
+      render: () => batchInfo.batchRef || "",
+    },
+    {
+      title: "Description",
+      key: "description",
+      ellipsis: true,
+      width: 200,
+      render: () => batchInfo.description || batchInfo.comments || "",
+    },
+    {
+      title: "Comments",
+      dataIndex: "Comments",
+      key: "comments",
+      ellipsis: true,
+      width: 200,
+    },
+    {
+      title: "Payment Date",
+      key: "paymentDateColumn",
+      ellipsis: true,
+      width: 130,
+      render: () => displayBatchDate ? displayBatchDate.format("MM/YYYY") : "",
+    },
+    {
+      title: "Work Location",
+      key: "workLocationColumn",
+      ellipsis: true,
+      width: 150,
+      render: () => batchInfo.workLocation || "",
     },
   ];
 
@@ -226,7 +268,32 @@ function BatchMemberSummary() {
           paddingTop: "20px",
         }}
       >
+        <Col span={3}>
+          <MyDatePicker
+            label="Payment Date"
+            value={displayBatchDate}
+            disabled
+            picker="month"
+            format="MM/YYYY"
+            style={{ width: "100%" }}
+          />
+        </Col>
+        <Col span={3}>
+          <MyInput
+            label="Work Location"
+            value={batchInfo.workLocation || ""}
+            disabled
+          />
+        </Col>
         <Col span={4}>
+          <label>Batch Ref No</label>
+          <input value={batchInfo.batchRef || ""} disabled style={inputStyle} />
+        </Col>
+        <Col span={11}>
+          <label>Comments</label>
+          <input value={displayComments || ""} disabled style={inputStyle} />
+        </Col>
+        <Col span={3}>
           <CustomSelect
             label="Batch Type"
             value={displayPaymentType || ""}
@@ -234,22 +301,6 @@ function BatchMemberSummary() {
             options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
             style={{ width: "100%" }}
           />
-        </Col>
-        <Col span={4}>
-          <MyDatePicker
-            label="Batch Date"
-            value={displayBatchDate}
-            disabled
-            style={{ width: "100%" }}
-          />
-        </Col>
-        <Col span={6}>
-          <label>Batch Ref No</label>
-          <input value={batchInfo.batchRef || ""} disabled style={inputStyle} />
-        </Col>
-        <Col span={7}>
-          <label>Comments</label>
-          <input value={displayComments || ""} disabled style={inputStyle} />
         </Col>
         <Col span={3}>
           <label>Source</label>
@@ -274,10 +325,10 @@ function BatchMemberSummary() {
           <input value={formatCurrency(displayArrears)} disabled style={inputStyle} />
         </Col>
         <Col span={4}>
-          <MyInput 
-            label="Total Current (€)" 
-            value={formatCurrency(displayTotalCurrent)} 
-            disabled 
+          <MyInput
+            label="Total Current (€)"
+            value={formatCurrency(displayTotalCurrent)}
+            disabled
           />
         </Col>
         <Col span={4}>
@@ -301,15 +352,15 @@ function BatchMemberSummary() {
           style={{ paddingLeft: "35px", paddingRight: "35px", paddingBottom: "10px" }}
         >
           <Col span={24}>
-            <div style={{ 
-              background: "#f0f8ff", 
-              padding: "10px", 
+            <div style={{
+              background: "#f0f8ff",
+              padding: "10px",
               borderRadius: "6px",
               border: "1px solid #d6e9ff"
             }}>
-              <strong>Batch: </strong>{batchInfo.batchName} | 
-              <strong> Status: </strong>{batchInfo.batchStatus} | 
-              <strong> Created By: </strong>{batchInfo.createdBy} | 
+              <strong>Batch: </strong>{batchInfo.batchName} |
+              <strong> Status: </strong>{batchInfo.batchStatus} |
+              <strong> Created By: </strong>{batchInfo.createdBy} |
               <strong> Created At: </strong>{displayCreatedAt ? displayCreatedAt.format('DD/MM/YYYY HH:mm') : 'N/A'}
             </div>
           </Col>
@@ -321,7 +372,7 @@ function BatchMemberSummary() {
         gutter={[16, 16]}
         style={{ paddingLeft: "35px", paddingRight: "35px", paddingBottom: "20px" }}
       >
-        <Col span={4}>
+        <Col span={8}>
           <div className="d-flex gap-2">
             <Button
               style={{
@@ -351,6 +402,19 @@ function BatchMemberSummary() {
             </CommonPopConfirm>
           </div>
         </Col>
+        <Col span={4} offset={12}>
+          <Button
+            style={{
+              backgroundColor: "#215e97",
+              color: "white",
+              borderRadius: "3px",
+              width: "100%",
+            }}
+            onClick={() => message.success("Batch Triggered Successfully")}
+          >
+            Trigger Batch
+          </Button>
+        </Col>
       </Row>
 
       {/* Tabs */}
@@ -361,10 +425,10 @@ function BatchMemberSummary() {
         isOpen={isBatchmemberOpen}
         onClose={() => setIsBatchmemberOpen(!isBatchmemberOpen)}
       />
-      
-      <ManualPaymentEntryDrawer          
+
+      <ManualPaymentEntryDrawer
         open={manualPayment}
-        onClose={() => setManualPayment(!manualPayment)} 
+        onClose={() => setManualPayment(!manualPayment)}
         batchSummryData={{
           PaymentType: displayPaymentType,
           total: displayTotalCurrent,

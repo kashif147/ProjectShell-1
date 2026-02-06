@@ -29,6 +29,7 @@ import dayjs from 'dayjs';
 
 import Breadcrumb from '../../component/common/Breadcrumb';
 import { Activity, CheckCircle, Shuffle, XCircle, Clock } from "lucide-react";
+import CreateAttendeeDrawer from '../../component/event/CreateAttendeeDrawer';
 
 const { Title, Text } = Typography;
 
@@ -37,6 +38,7 @@ const EventDetails = () => {
     const navigate = useNavigate();
     const eventId = location.state?.eventId || 'EVT-001';
     const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [isAttendeeDrawerVisible, setIsAttendeeDrawerVisible] = useState(false);
 
 
     // Event data state
@@ -212,27 +214,6 @@ const EventDetails = () => {
 
     return (
         <div className="event-details-page hide-scroll-webkit">
-            <Breadcrumb />
-            <div
-                className="event-details-header"
-                style={{
-                    paddingLeft: '34px',
-                    paddingRight: '34px',
-                    marginBottom: '8px',
-                    display: 'flex',
-                    justifyContent: 'flex-end',
-                    alignItems: 'center'
-                }}
-            >
-                <Button
-                    type="primary"
-                    icon={<PlusOutlined />}
-                    style={{ backgroundColor: '#215E97', borderColor: '#215E97' }}
-                >
-                    Add New attendee
-                </Button>
-            </div>
-
             <div
                 className="event-details-content"
                 style={{}}
@@ -353,7 +334,7 @@ const EventDetails = () => {
                 </div>
 
                 {/* ATTENDEE LISTING */}
-                <div className="attendee-section">
+                <div className="attendee-section" style={{ padding: '20px 0' }}>
                     <div className="attendee-filters d-flex align-items-center flex-wrap mb-3" style={{ gap: '16px', padding: '0 34px' }}>
                         <div style={{ flex: '0 0 350px' }}>
                             <Input
@@ -411,19 +392,33 @@ const EventDetails = () => {
                             >
                                 Process Refund
                             </Button>
+                            <Button
+                                className="butn primary-btn"
+                                icon={<PlusOutlined />}
+                                onClick={() => setIsAttendeeDrawerVisible(true)}
+                            >
+                                Add Attendee
+                            </Button>
                         </div>
                     </div>
 
-                    <MyTable
-                        dataSource={filteredAttendees}
-                        columns={columns}
-                        pagination={{ pageSize: 10 }}
-                        rowSelection={{
-                            selectedRowKeys,
-                            onChange: handleSelectionChange
-                        }}
-                    />
+                    <div>
+                        <MyTable
+                            dataSource={filteredAttendees}
+                            columns={columns}
+                            pagination={{ pageSize: 10 }}
+                            rowSelection={{
+                                selectedRowKeys,
+                                onChange: handleSelectionChange
+                            }}
+                        />
+                    </div>
                 </div>
+
+                <CreateAttendeeDrawer
+                    open={isAttendeeDrawerVisible}
+                    onClose={() => setIsAttendeeDrawerVisible(false)}
+                />
             </div>
         </div>
     );

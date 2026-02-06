@@ -25,10 +25,10 @@
 .attendee-section {
     background-color: #ffffff;
     border-radius: 8px;
-    padding: 20px;
-    /* Reduced from 24px */
+    padding: 24px 0;
     margin-top: 16px;
-    /* Reduced from 24px */
+    margin-left: 34px;
+    margin-right: 34px;
     box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
 }
 

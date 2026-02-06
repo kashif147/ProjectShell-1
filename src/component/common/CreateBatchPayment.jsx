@@ -1,4 +1,5 @@
 import { useState, useContext, forwardRef, useImperativeHandle, useEffect } from 'react';
+import { useSelector, useDispatch } from 'react-redux';
 import { Form, Input, Select, DatePicker, Row, Col, Card, Typography, Divider, message, Button } from 'antd';
 import * as XLSX from 'xlsx';
 import { ExcelContext } from '../../context/ExcelContext';
@@ -9,7 +10,6 @@ import MyDatePicker from './MyDatePicker';
 import MyInput from './MyInput';
 import CustomSelect from './CustomSelect';
 import { useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
 import { addBatchWithMember } from '../../features/BatchesSlice'; // Import the Redux action
 import { useNavigate } from 'react-router-dom';
 import moment from 'moment';
@@ -31,6 +31,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   const location = useLocation();
   const navigate = useNavigate()
   const dispatch = useDispatch(); // Initialize Redux dispatch
+  const { workLocationOptions } = useSelector((state) => state.lookups);
 
   const memberData = [
     {
@@ -66,6 +67,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     batchRef: '',
     description: '',
     comments: '',
+    workLocation: '',
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -185,6 +187,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
           totalCurrent,
           total: batchTotal,
           records: json.length,
+          exceptionTotal: 0,
         });
       }
     };
@@ -203,7 +206,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   };
 
   const handleSubmit = () => {
-    const required = ['batchType', 'batchDate', 'batchRef'];
+    const required = ['batchType', 'batchDate', 'batchRef', 'workLocation'];
     const nextErrors = {};
     required.forEach((key) => {
       if (!formValues[key] || String(formValues[key]).trim() === '') {
@@ -230,6 +233,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       batchType: formValues.batchType,
       batchDate: formValues.batchDate,
       batchRef: formValues.batchRef,
+      workLocation: formValues.workLocation,
       description: formValues.description,
       batchStatus: 'Pending',
       comments: formValues.comments,
@@ -310,7 +314,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   };
 
   return (
-    <div className="create-batch-container">
+    <div className="create-batch-container drwer-bg-clr">
       <div className="header">
         <Title level={3} className="page-title">{getPageTitle()}</Title>
         <Text type="secondary">{getBreadcrumbText()}</Text>
@@ -342,15 +346,30 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 </div>
                 <div className='w-50'>
                   <MyDatePicker
-                    label="Batch Date"
+                    label="Payment Date"
                     name="batchDate"
                     required
                     hasError={!!formErrors.batchDate}
-                    errorMessage="Please select batch date"
+                    errorMessage="Please select payment date"
                     value={formValues.batchDate}
                     onChange={(dateString) => setField("batchDate", dateString)}
+                    picker="month"
+                    format="MM/YYYY"
                   />
                 </div>
+              </div>
+
+              <div className='w-100 mb-3'>
+                <CustomSelect
+                  label="Work Location"
+                  name="workLocation"
+                  required
+                  hasError={!!formErrors.workLocation}
+                  errorMessage="Please select work location"
+                  options={workLocationOptions}
+                  value={formValues.workLocation}
+                  onChange={(e) => setField('workLocation', e.target.value)}
+                />
               </div>
 
               <MyInput
@@ -414,6 +433,9 @@ const CreateBatchPayment = forwardRef((props, ref) => {
             </div>
             <div className="summary-line">
               <Text>Total Advance (€):</Text> <Text strong>€{batchTotals?.advance?.toLocaleString()}</Text>
+            </div>
+            <div className="summary-line">
+              <Text>Exception Total :</Text> <Text strong>{batchTotals?.exceptionTotal?.toLocaleString()}</Text>
             </div>
 
             <Divider style={{ margin: '16px 0' }} />

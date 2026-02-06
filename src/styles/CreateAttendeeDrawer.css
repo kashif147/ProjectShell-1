@@ -1,0 +1,162 @@
+.create-attendee-drawer .ant-drawer-body {
+    padding: 0;
+    overflow-x: hidden;
+}
+
+.create-attendee-container {
+    padding: 24px 34px;
+}
+
+.drawer-section-title {
+    font-size: 18px;
+    font-weight: 700;
+    color: #1a3353;
+    margin-bottom: 24px;
+}
+
+.drawer-subsection-title {
+    font-size: 12px;
+    font-weight: 700;
+    color: #4b5563;
+    letter-spacing: 0.05em;
+    margin-bottom: 16px;
+}
+
+.day-selection-card {
+    border: 1px solid #e5e7eb;
+    border-radius: 8px;
+    padding: 16px;
+    margin-bottom: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    transition: all 0.2s ease;
+}
+
+.day-selection-card.selected {
+    border-color: #2563eb;
+    background-color: #f0f7ff;
+}
+
+.day-info {
+    display: flex;
+    flex-direction: column;
+}
+
+.day-title {
+    font-weight: 600;
+    color: #1f2937;
+    font-size: 14px;
+}
+
+.day-date {
+    font-size: 12px;
+    color: #6b7280;
+}
+
+.day-price {
+    font-weight: 700;
+    color: #4b5563;
+    font-size: 16px;
+}
+
+.event-summary-box {
+    background-color: #f8fafc;
+    border-radius: 12px;
+    padding: 24px;
+    margin-top: 16px;
+    border: 1px solid #eef2f6;
+}
+
+.summary-table {
+    display: flex;
+    flex-direction: column;
+    margin-bottom: 8px;
+}
+
+.summary-table-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #e2e8f0;
+}
+
+.summary-table-row:last-child {
+    border-bottom: none;
+}
+
+.summary-table-label {
+    font-size: 12px;
+    font-weight: 700;
+    color: #64748b;
+}
+
+.summary-table-value {
+    font-weight: 600;
+    color: #1a3353;
+    font-size: 14px;
+    text-align: right;
+}
+
+.total-fee-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 24px;
+    padding-top: 24px;
+    border-top: 2px dashed #e2e8f0;
+}
+
+.total-label {
+    font-weight: 700;
+    color: #1a3353;
+    font-size: 16px;
+}
+
+.total-label p {
+    font-size: 11px;
+    font-style: italic;
+    color: #94a3b8;
+    margin: 4px 0 0 0;
+}
+
+.total-amount {
+    font-size: 32px;
+    font-weight: 800;
+    color: #215e97;
+}
+
+.payment-details-section {
+    margin-top: 32px;
+}
+
+.card-input-with-icon {
+    position: relative;
+}
+
+.card-icon {
+    position: absolute;
+    left: 12px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: #94a3b8;
+    z-index: 1;
+}
+
+.create-attendee-drawer .ant-drawer-header {
+    padding: 16px 24px;
+}
+
+.confirm-payment-btn {
+    background-color: #2563eb;
+    border-color: #2563eb;
+    font-weight: 600;
+    height: 40px;
+    padding: 0 24px;
+}
+
+.confirm-payment-btn:hover {
+    background-color: #1d4ed8 !important;
+    border-color: #1d4ed8 !important;
+}

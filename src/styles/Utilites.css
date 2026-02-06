@@ -245,9 +245,6 @@
 }
 
 /* Remove gap by using negative margin on tbody if first row is empty */
-.common-table .ant-table-tbody {
-  /* This will be adjusted if empty row exists */
-}
 
 /* Consistent row height for common-table */
 .common-table .ant-table-tbody>tr>td {
@@ -472,4 +469,8 @@
 .hide-scroll-webkit::-webkit-scrollbar {
   display: none;
   /* Chrome, Safari and Opera */
+}
+
+.drwer-bg-clr {
+  background-color: rgb(246, 249, 252) !important;
 }
