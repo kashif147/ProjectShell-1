@@ -1,7 +1,8 @@
 .event-details-page {
     padding: 24px;
     background-color: #f5f5f5;
-    min-height: calc(100vh - 120px);
+    height: calc(100vh - 64px);
+    overflow-y: auto;
 }
 
 .event-details-header {

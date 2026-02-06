@@ -293,6 +293,12 @@ const Breadcrumb = () => {
       page: "Events Summary",
       icon: "📅",
     },
+    "/EventDetails": {
+      module: "Events",
+      page: "Event Details",
+      icon: "📅",
+      recordIdField: "eventId",
+    },
     // Roster Pages (Legacy)
     "/RosterSummary": {
       module: "Events",
