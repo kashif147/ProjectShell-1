@@ -714,7 +714,6 @@ function CasesDetails() {
           <div className="main-content-layout">
             <div className="left-column-sections">
               <div className="section-container" ref={summaryRef}>
-                <h3 className="section-title-static">Summary</h3>
                 <div className="summary-wrapper">{renderSummary()}</div>
               </div>
 
