@@ -398,3 +398,15 @@
   align-items: flex-start !important;
   padding: 0 !important;
 }
+
+/* Hide label wrapper when label is empty for File Number and Issue ID */
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#caseFileNumber)
+  > div:first-child,
+.create-case-drawer
+  .form-section
+  .my-input-wrapper:has(#caseId)
+  > div:first-child {
+  display: none;
+}

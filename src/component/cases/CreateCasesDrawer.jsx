@@ -29,6 +29,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
   const [caseFileNumber, setCaseFileNumber] = useState("");
   const [assignedLead, setAssignedLead] = useState("");
   const [deadline, setDeadline] = useState(null);
+  const [pertinentToFileReview, setPertinentToFileReview] = useState(true);
 
   // Refs for scroll navigation if needed in future
   const issueRef = useRef(null);
@@ -42,15 +43,15 @@ const CreateCasesDrawer = ({ open, onClose }) => {
   const headerActions = (
     <div className="case-drawer-header-actions">
       <Button className="header-discard-btn" onClick={onClose}>
-        Discard
+        Cancel
       </Button>
-      <Button className="header-save-draft-btn">Save Draft</Button>
+      {/* <Button className="header-save-draft-btn">Save Draft</Button> */}
       <Button className="header-finalize-btn" type="primary">
-        Finalize Case
+        Save
       </Button>
-      <a href="#" className="header-help-btn">
+      {/* <a href="#" className="header-help-btn">
         Help
-      </a>
+      </a> */}
     </div>
   );
 
@@ -58,9 +59,6 @@ const CreateCasesDrawer = ({ open, onClose }) => {
     <div className="form-section issue-overview-section" ref={issueRef}>
       <div className="section-header-row">
         <h3 className="section-title">Issue Overview</h3>
-        <Checkbox className="pertinent-checkbox">
-          Pertinent to File Review
-        </Checkbox>
       </div>
       <MyInput
         label="Title"
@@ -68,6 +66,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
         value={caseTitle}
         onChange={(e) => setCaseTitle(e.target.value)}
         placeholder="Enter descriptive title"
+        required
       />
       <MyInput
         label="Description"
@@ -77,6 +76,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
         placeholder="Detailed description of the incident..."
         type="textarea"
         rows={2}
+        required
       />
     </div>
   );
@@ -93,6 +93,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
             onChange={setIncidentDate}
             placeholder="DD/MM/YYYY"
             format="DD/MM/YYYY"
+            required
           />
         </Col>
         <Col span={16}>
@@ -123,6 +124,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
               { label: "Misconduct", value: "misconduct" },
               { label: "Harassment", value: "harassment" },
             ]}
+            required
           />
         </Col>
         <Col span={8}>
@@ -149,6 +151,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
               { label: "Draft", value: "Draft" },
               { label: "Active", value: "Active" },
             ]}
+            required
           />
         </Col>
       </Row>
@@ -158,19 +161,47 @@ const CreateCasesDrawer = ({ open, onClose }) => {
   const renderCaseReference = () => (
     <div className="form-section" ref={referenceRef}>
       <h3 className="section-title">Case Reference</h3>
+      <Row gutter={16} style={{ marginBottom: "0.5rem" }}>
+        <Col span={12}>
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              justifyContent: "space-between",
+            }}
+          >
+            <label className="my-input-label" style={{ marginBottom: 0 }}>
+              File Number
+            </label>
+            <Checkbox
+              className="pertinent-checkbox"
+              checked={pertinentToFileReview}
+              onChange={(e) => setPertinentToFileReview(e.target.checked)}
+            >
+              Pertinent to File Review
+            </Checkbox>
+          </div>
+        </Col>
+        <Col span={12}>
+          <label className="my-input-label" style={{ marginBottom: 0 }}>
+            Issue ID
+          </label>
+        </Col>
+      </Row>
       <Row gutter={16}>
         <Col span={12}>
           <MyInput
-            label="Case File Number"
+            label=""
             name="caseFileNumber"
             value={caseFileNumber}
             onChange={(e) => setCaseFileNumber(e.target.value)}
             placeholder="e.g. CFN-88210"
+            disabled={pertinentToFileReview}
           />
         </Col>
         <Col span={12}>
           <MyInput
-            label="Case ID (Auto-generated)"
+            label=""
             name="caseId"
             value="GRA-2023-9892"
             disabled={true}
@@ -196,11 +227,12 @@ const CreateCasesDrawer = ({ open, onClose }) => {
               { label: "John Smith", value: "john" },
               { label: "Sarah Johnson", value: "sarah" },
             ]}
+            required
           />
         </Col>
         <Col span={16}>
           <MyInput
-            label="Internal Stakeholders"
+            label="Stakeholders"
             name="stakeholders"
             value="Legal Dept, HR Compliance"
             placeholder="Enter stakeholders"
@@ -214,7 +246,7 @@ const CreateCasesDrawer = ({ open, onClose }) => {
   const renderDocumentation = () => (
     <div className="form-section" ref={documentationRef}>
       <h3 className="section-title">Documentation</h3>
-      <label className="form-label">Initial Documentation</label>
+      <label className="form-label">Attachments</label>
       <Dragger className="case-upload-dragger">
         <p className="upload-icon-wrapper">
           <InboxOutlined style={{ fontSize: "32px", color: "#1890ff" }} />
@@ -232,7 +264,9 @@ const CreateCasesDrawer = ({ open, onClose }) => {
       <Row gutter={16}>
         <Col span={16}>
           <div className="case-input-container">
-            <label className="form-label">Priority Level</label>
+            <label className="form-label">
+              Priority <span className="required-star">*</span>
+            </label>
             <div className="priority-control-container">
               <Radio.Group
                 value={priority}
