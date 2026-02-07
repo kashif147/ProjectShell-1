@@ -10,6 +10,7 @@ import {
   Input,
   DatePicker,
   Switch,
+  Select,
 } from "antd";
 import dayjs from "dayjs";
 import {
@@ -83,6 +84,12 @@ function CasesDetails() {
   const steps = ["Intake", "Investigation", "Review", "Closed"];
 
   // Mock data for dropdowns
+  // Mock current user - replace with actual user from auth context
+  const currentUser = {
+    name: "Alex Rivera",
+    avatar: "https://i.pravatar.cc/150?u=alex",
+  };
+
   const availableAssignees = [
     { name: "Alex Rivera", avatar: "https://i.pravatar.cc/150?u=alex" },
     { name: "Sarah Johnson", avatar: "https://i.pravatar.cc/150?u=sarah" },
@@ -97,6 +104,8 @@ function CasesDetails() {
 
   const caseTypes = ["Compliance", "Risk", "Legal", "General"];
   const caseStatuses = ["In Progress", "Pending", "Review", "Closed"];
+  const categories = ["Compliance", "Risk", "Legal", "General"];
+  const priorities = ["Critical", "High", "Medium", "Low"];
 
   const handleAssigneeChange = ({ key }) => {
     const selected = availableAssignees.find((a) => a.name === key);
@@ -214,7 +223,7 @@ function CasesDetails() {
   const [caseDeadline, setCaseDeadline] = useState(dayjs("2023-11-15"));
   const [fileNumber, setFileNumber] = useState("CFN-88210");
   const [pertinentToFileReview, setPertinentToFileReview] = useState(true);
-  const [stakeholders, setStakeholders] = useState("Legal Dept, HR Compliance");
+  const [stakeholders, setStakeholders] = useState(["Emma W.", "James B."]);
 
   const renderSummary = () => (
     <div className="summary-content">
@@ -790,11 +799,22 @@ function CasesDetails() {
 
                   <div className="summary-field-single">
                     <span className="summary-label">Category</span>
-                    <Input
+                    <Select
                       value={caseCategory}
-                      onChange={(e) => setCaseCategory(e.target.value)}
+                      onChange={setCaseCategory}
                       className="summary-input"
                       bordered={false}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={categories.map((cat) => ({
+                        value: cat,
+                        label: cat,
+                      }))}
                     />
                   </div>
 
@@ -802,31 +822,64 @@ function CasesDetails() {
                     <span className="summary-label summary-label-case-type">
                       Case Type
                     </span>
-                    <Input
+                    <Select
                       value={caseType}
-                      onChange={(e) => setCaseType(e.target.value)}
+                      onChange={setCaseType}
                       className="summary-input"
                       bordered={false}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={caseTypes.map((type) => ({
+                        value: type,
+                        label: type,
+                      }))}
                     />
                   </div>
 
                   <div className="summary-field-single">
                     <span className="summary-label">Status</span>
-                    <Input
+                    <Select
                       value={caseStatus}
-                      onChange={(e) => setCaseStatus(e.target.value)}
+                      onChange={setCaseStatus}
                       className="summary-input"
                       bordered={false}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={caseStatuses.map((status) => ({
+                        value: status,
+                        label: status,
+                      }))}
                     />
                   </div>
 
                   <div className="summary-field-single">
                     <span className="summary-label">Priority</span>
-                    <Input
+                    <Select
                       value={casePriority}
-                      onChange={(e) => setCasePriority(e.target.value)}
+                      onChange={setCasePriority}
                       className="summary-input"
                       bordered={false}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={priorities.map((priority) => ({
+                        value: priority,
+                        label: priority,
+                      }))}
                     />
                   </div>
 
@@ -865,23 +918,66 @@ function CasesDetails() {
 
                   <div className="summary-field-single">
                     <span className="summary-label">Assignee</span>
-                    <Input
+                    <Select
                       value={assignee.name}
-                      onChange={(e) =>
-                        setAssignee({ ...assignee, name: e.target.value })
-                      }
+                      onChange={(value) => {
+                        const selected = availableAssignees.find(
+                          (a) => a.name === value
+                        );
+                        if (selected) setAssignee(selected);
+                      }}
                       className="summary-input"
                       bordered={false}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={availableAssignees.map((assignee) => ({
+                        value: assignee.name,
+                        label: assignee.name,
+                      }))}
                     />
+                  </div>
+                  <div style={{ marginLeft: "240px" }}>
+                    <a
+                      onClick={() => setAssignee(currentUser)}
+                      style={{
+                        cursor: "pointer",
+                        color: "var(--primary-blue)",
+                        fontSize: "14px",
+                        whiteSpace: "nowrap",
+                      }}
+                    >
+                      Assign to me
+                    </a>
                   </div>
 
                   <div className="summary-field-single">
                     <span className="summary-label">Related Member(s)</span>
-                    <Input
+                    <Select
+                      mode="multiple"
                       value={stakeholders}
-                      onChange={(e) => setStakeholders(e.target.value)}
+                      onChange={setStakeholders}
                       className="summary-input"
                       bordered={false}
+                      showSearch
+                      optionFilterProp="children"
+                      filterOption={(input, option) =>
+                        (option?.label ?? "")
+                          .toLowerCase()
+                          .includes(input.toLowerCase())
+                      }
+                      options={availableTeamMembers.map((member) => ({
+                        value: member.name,
+                        label: member.name,
+                      }))}
+                      maxTagCount={1}
+                      maxTagPlaceholder={(omittedValues) =>
+                        `+${omittedValues.length}`
+                      }
                     />
                   </div>
                 </div>
