@@ -338,15 +338,10 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                     value={formValues.batchType}
                     onChange={(e) => setField('batchType', e.target.value)}
                   />
-                  {isSpecialPath && (
-                    <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
-                      Payment type is automatically set to {autoBatchType}
-                    </Text>
-                  )}
                 </div>
                 <div className='w-50'>
                   <MyDatePicker
-                    label="Payment Date"
+                    label="Batch Date"
                     name="batchDate"
                     required
                     hasError={!!formErrors.batchDate}
@@ -357,6 +352,19 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                     format="MM/YYYY"
                   />
                 </div>
+              </div>
+              <div className='w-100'>
+                <MyDatePicker
+                  label="Payment Date"
+                  name="batchDate"
+                  required
+                  hasError={!!formErrors.batchDate}
+                  errorMessage="Please select payment date"
+                  value={formValues.batchDate}
+                  onChange={(dateString) => setField("batchDate", dateString)}
+                  picker="month"
+                  format="DD/MM/YYYY"
+                />
               </div>
 
               <div className='w-100 mb-3'>

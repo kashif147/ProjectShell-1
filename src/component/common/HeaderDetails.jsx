@@ -681,6 +681,7 @@ function HeaderDetails() {
       {
         location?.pathname !== "/applicationMgt" &&
         location?.pathname !== "/CommunicationBatchDetail" &&
+        location?.pathname !== "/BatchMemberSummary" &&
         <Breadcrumb />
       }
 
