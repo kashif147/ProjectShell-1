@@ -24,12 +24,18 @@ const staticColumns = {
   onlinePayment: [
     {
       title: "Member No",
-      dataIndex: "memberId",
+      dataIndex: "Member No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 250,
       sorter: true,
+      // render: (memo) => {
+      //   if (!memo) return "-";
+      //   const memberMatch = memo.match(/member\s+([a-f0-9]+)/i);
+      //   const appMatch = memo.match(/Application\s+([a-z0-9-]+)/i);
+      //   return memberMatch ? memberMatch[1] : (appMatch ? appMatch[1] : memo);
+      // }
     },
     {
       title: "Category",
@@ -66,7 +72,7 @@ const staticColumns = {
     },
     {
       title: "Transaction ID",
-      dataIndex: "transactionId",
+      dataIndex: "docNo",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -74,23 +80,29 @@ const staticColumns = {
     },
     {
       title: "Paid Amount",
-      dataIndex: "paidAmount",
+      dataIndex: "entries",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (entries) => {
+        if (!Array.isArray(entries)) return "-";
+        const bankEntry = entries.find(e => e.accountCode === "1220" && e.dc === "D");
+        return bankEntry ? bankEntry.amount : "-";
+      }
     },
     {
       title: "Payment Date",
-      dataIndex: "paymentDate",
+      dataIndex: "date",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (date) => formatDateOnly(date)
     },
     {
       title: "Payment Method",
-      dataIndex: "paymentMethod",
+      dataIndex: ["settlement", "provider"],
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -98,7 +110,7 @@ const staticColumns = {
     },
     {
       title: "Payment Status",
-      dataIndex: "paymentStatus",
+      dataIndex: ["settlement", "status"],
       ellipsis: true,
       isGride: true,
       isVisible: true,

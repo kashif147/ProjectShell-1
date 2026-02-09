@@ -308,6 +308,23 @@ const TableComponent = ({
       }))
   );
 
+  // **NEW: Sync columns when screenName or global columns change**
+  useEffect(() => {
+    const screenColumns = columns?.[screenName]
+      ?.filter((item) => item?.isGride)
+      ?.map((item, index) => ({
+        ...item,
+        key: `${index}`,
+        onHeaderCell: () => ({ id: `${index}` }),
+        onCell: () => ({ id: `${index}` }),
+      }));
+
+    if (screenColumns) {
+      setColumnsDragbe(screenColumns);
+      setColumnsForFilter(screenColumns);
+    }
+  }, [screenName, columns]);
+
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
   // Handle drag and drop
@@ -979,16 +996,14 @@ const TableComponent = ({
     return Math.max(baseWidth, 80); // Minimum 80px
   }, []);
 
-  // Remove width from all non-fixed columns but add minWidth based on header text
+  // Ensure columns retain their widths and set minWidth for those without it
   const processedColumns = useMemo(() => editableColumns.map((col) => {
-    if (!col.fixed) {
-      const { width, ...rest } = col;
-      return {
-        ...rest,
-        minWidth: calculateMinWidth(col.title),
-      };
-    }
-    return col; // Keep width for fixed columns (checkbox, actions)
+    const minWidth = calculateMinWidth(col.title);
+    return {
+      ...col,
+      width: col.width || (col.fixed ? undefined : minWidth),
+      minWidth: minWidth,
+    };
   }), [editableColumns, calculateMinWidth]);
 
   return (
@@ -1023,6 +1038,8 @@ const TableComponent = ({
             pagination={false}
             style={{}}
             bordered
+            tableLayout="fixed"
+            sticky
             scroll={{ x: "max-content", y: 590 }}
             size="middle"
             locale={{

@@ -50,6 +50,8 @@ const accountSlice = createSlice({
                 state.loading = false;
                 if (Array.isArray(action.payload)) {
                     state.stripePayments = action.payload;
+                } else if (Array.isArray(action.payload?.data?.items)) {
+                    state.stripePayments = action.payload.data.items;
                 } else if (Array.isArray(action.payload?.data)) {
                     state.stripePayments = action.payload.data;
                 } else {
