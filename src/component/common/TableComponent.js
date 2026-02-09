@@ -17,7 +17,7 @@ import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
-import { Triangle } from "lucide-react";
+import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
 import {
@@ -503,9 +503,9 @@ const TableComponent = ({
                   to="/Details"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    memberId: record?.membershipNumber,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
@@ -529,9 +529,9 @@ const TableComponent = ({
                   to="/Details"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    memberId: record?.membershipNumber || record?.regNo || record?._id,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
@@ -560,11 +560,11 @@ const TableComponent = ({
                   to="/ClaimsById"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -583,11 +583,11 @@ const TableComponent = ({
                   to="/Roster"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -652,9 +652,9 @@ const TableComponent = ({
                     to="/Details"
                     state={{
                       search: screenName,
-                      name: record?.fullName,
-                      code: record?.regNo,
-                      memberId: record?.membershipNumber,
+                      name: record?.user?.userFullName || record?.fullName,
+                      code: record?.personalDetails?.membershipNo || record?.regNo,
+                      memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
                     }}
                     onClick={() => {
                       handleRowClick(record, index);
@@ -684,7 +684,22 @@ const TableComponent = ({
                   {content}
                   {isPotentialDuplicate && (
                     <Tooltip title="Potential Duplicate Detected">
-                      <Triangle size={16} color="#f5222d" style={{ minWidth: '16px', fill: '#f5222d' }} />
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "22px",
+                          height: "22px",
+                          backgroundColor: "#fff1f0", // Soft red background (Ant red-1)
+                          border: "1px solid #ffa39e", // Soft red border (Ant red-3)
+                          borderRadius: "4px",
+                          color: "#f5222d", // Ant red-6
+                          flexShrink: 0
+                        }}
+                      >
+                        <AlertCircle size={14} fill="#f5222d" fillOpacity={0.1} />
+                      </div>
                     </Tooltip>
                   )}
                 </div>
@@ -696,11 +711,11 @@ const TableComponent = ({
                   to="/ChangeCatById"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -759,11 +774,11 @@ const TableComponent = ({
                   to="/CorspndncDetail"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
