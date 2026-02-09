@@ -819,6 +819,7 @@ function ApplicationMgtDrawer({
     }
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+      MyAlert("error", "Validation Error", "Please fill in all required fields.");
       return false;
     }
 
@@ -1152,7 +1153,7 @@ function ApplicationMgtDrawer({
 
   // Add this state
   const [emailConflictData, setEmailConflictData] = useState(null);
-console.log(emailConflictData, "emailConflictData");
+  console.log(emailConflictData, "emailConflictData");
   const hasSubscriptionDetailsChanged = (current, original) => {
     const currentSub = current.subscriptionDetails || {};
     const originalSub = original.subscriptionDetails || {};
@@ -1810,7 +1811,7 @@ console.log(emailConflictData, "emailConflictData");
     if (emailToCheck) {
       await checkEmailConflict(emailToCheck);
     }
-    else{
+    else {
       setEmailConflictData(null);
     }
   };

@@ -358,11 +358,11 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                   label="Payment Date"
                   name="batchDate"
                   required
-                  hasError={!!formErrors.batchDate}
+                  // hasError={!!formErrors.batchDate}
                   errorMessage="Please select payment date"
-                  value={formValues.batchDate}
+                  // value={formValues.batchDate}
                   onChange={(dateString) => setField("batchDate", dateString)}
-                  picker="month"
+                  // picker="month"
                   format="DD/MM/YYYY"
                 />
               </div>
