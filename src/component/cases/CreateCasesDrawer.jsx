@@ -334,8 +334,8 @@ const CreateCasesDrawer = ({ open, onClose }) => {
           {renderClassification()}
           {renderCaseReference()}
           {renderOwnership()}
-          {renderDocumentation()}
           {renderWorkflow()}
+          {renderDocumentation()}
         </div>
       </div>
     </MyDrawer>

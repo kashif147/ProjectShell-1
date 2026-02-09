@@ -285,12 +285,6 @@ const CreateEventDrawer = ({ open, onClose }) => {
                   />
                 </Col>
               </Row>
-
-              <div className="map-container">
-                <div className="map-placeholder">
-                  <div className="map-pin">📍</div>
-                </div>
-              </div>
             </div>
 
             {/* CPD & ACCREDITATIONS */}
