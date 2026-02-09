@@ -192,6 +192,8 @@ const MyTable = ({
         pagination={false}
         onChange={handleTableChange}
         bordered
+        tableLayout="fixed"
+        sticky
         scroll={{ x: "max-content", y: 590 }}
         size="middle"
         onRow={(record, rowIndex) => ({
