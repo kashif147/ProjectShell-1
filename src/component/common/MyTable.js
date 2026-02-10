@@ -13,6 +13,7 @@ const MyTable = ({
   selectionType = "checkbox",
   loading = false,
   onRowClick,
+  tablePadding = { paddingLeft: "34px", paddingRight: "34px" },
 }) => {
   const [internalSelectedRowKeys, setInternalSelectedRowKeys] = useState([]);
   const [filteredInfo, setFilteredInfo] = useState({});
@@ -176,8 +177,7 @@ const MyTable = ({
     <div
       className="common-table"
       style={{
-        paddingLeft: "34px",
-        paddingRight: "34px",
+        ...tablePadding,
         width: "100%",
         overflowX: "auto",
         paddingBottom: "80px",
