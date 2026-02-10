@@ -1,4 +1,5 @@
 import { useState, useContext, forwardRef, useImperativeHandle, useEffect } from 'react';
+import axios from 'axios';
 import { useSelector, useDispatch } from 'react-redux';
 import { Form, Input, Select, DatePicker, Row, Col, Card, Typography, Divider, message, Button } from 'antd';
 import * as XLSX from 'xlsx';
@@ -64,6 +65,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   const [formValues, setFormValues] = useState({
     batchType: '',
     batchDate: '',
+    paymentDate: '',
     batchRef: '',
     description: '',
     comments: '',
@@ -205,8 +207,8 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     setFormErrors((prev) => ({ ...prev, [name]: false }));
   };
 
-  const handleSubmit = () => {
-    const required = ['batchType', 'batchDate', 'batchRef', 'workLocation'];
+  const handleSubmit = async () => {
+    const required = ['batchType', 'batchDate', 'paymentDate', 'batchRef', 'workLocation'];
     const nextErrors = {};
     required.forEach((key) => {
       if (!formValues[key] || String(formValues[key]).trim() === '') {
@@ -241,6 +243,42 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       members: members,
     };
 
+    // If it's a deduction batch, call the API
+    if (formValues.batchType === 'Deduction') {
+      try {
+        const formData = new FormData();
+        formData.append('type', 'deduction');
+        formData.append('date', formValues.paymentDate);
+        formData.append('referenceNumber', formValues.batchRef);
+        formData.append('description', formValues.description);
+        formData.append('comments', formValues.comments || '');
+        if (uploadedFile) {
+          formData.append('file', uploadedFile);
+        }
+
+        const token = localStorage.getItem("token");
+        const response = await axios.post(`${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details`, formData, {
+          headers: {
+            'Content-Type': 'multipart/form-data',
+            'Authorization': `Bearer ${token}`
+          },
+        });
+
+        if (response.status === 200 || response.status === 201) {
+          message.success('Deduction batch created successfully in profile service');
+          const batchId = response?.data?.data?._id;
+          // Merge the API response ID into the batch object if needed
+          const finalBatchObject = { ...batchObject, _id: batchId };
+          setExcelData(finalBatchObject);
+          return finalBatchObject;
+        }
+      } catch (error) {
+        console.error('Error creating deduction batch:', error);
+        message.error('Failed to create deduction batch in profile service');
+        return null; // Stop navigation if API call fails
+      }
+    }
+
     setExcelData(batchObject);
     message.success('Batch data prepared successfully');
     return batchObject;
@@ -252,6 +290,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     setFormValues({
       batchType: '',
       batchDate: '',
+      paymentDate: '',
       batchRef: '',
       description: '',
       comments: '',
@@ -356,13 +395,12 @@ const CreateBatchPayment = forwardRef((props, ref) => {
               <div className='w-100'>
                 <MyDatePicker
                   label="Payment Date"
-                  name="batchDate"
+                  name="paymentDate"
                   required
-                  // hasError={!!formErrors.batchDate}
+                  hasError={!!formErrors.paymentDate}
                   errorMessage="Please select payment date"
-                  // value={formValues.batchDate}
-                  onChange={(dateString) => setField("batchDate", dateString)}
-                  // picker="month"
+                  value={formValues.paymentDate}
+                  onChange={(dateString) => setField("paymentDate", dateString)}
                   format="DD/MM/YYYY"
                 />
               </div>
@@ -442,9 +480,9 @@ const CreateBatchPayment = forwardRef((props, ref) => {
             <div className="summary-line">
               <Text>Total Advance (€):</Text> <Text strong>€{batchTotals?.advance?.toLocaleString()}</Text>
             </div>
-            <div className="summary-line">
+            {/* <div className="summary-line">
               <Text>Exception Total :</Text> <Text strong>{batchTotals?.exceptionTotal?.toLocaleString()}</Text>
-            </div>
+            </div> */}
 
             <Divider style={{ margin: '16px 0' }} />
 

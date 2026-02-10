@@ -736,7 +736,7 @@ function Entry() {
                     />
 
                     <Route
-                      path="BatchMemberSummary"
+                      path="BatchMemberSummary/:batchId?"
                       element={
                         <ProtectedRoute>
                           <BatchMemberSummary />

@@ -1,14 +1,14 @@
-import { useState, useContext, useEffect } from "react";
-import { Row, Col, Button, Tabs, Table, message, Tag, Space, Card, Input as AntInput } from "antd";
-import { useSelector } from "react-redux";
-import { useLocation, useParams } from "react-router-dom";
+import { useState, useEffect } from "react";
+import { Row, Col, Button, Tabs, Table, message, Tag, Space, Card, Input as AntInput, Spin } from "antd";
+import { useSelector, useDispatch } from "react-redux";
+import { useParams } from "react-router-dom";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
-import { ExcelContext } from "../../context/ExcelContext";
 import "../../styles/ManualEntry.css";
 import ManualPaymentEntryDrawer from "../../component/finanace/ManualPaymentEntryDrawer";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { formatCurrency } from "../../utils/Utilities";
 import { paymentTypes } from "../../Data";
+import { getBatchDetailsById, clearBatchDetails } from "../../features/profiles/BatchDetailsSlice";
 import CustomSelect from "../../component/common/CustomSelect";
 import MyDatePicker from "../../component/common/MyDatePicker";
 import MyInput from "../../component/common/MyInput";
@@ -25,41 +25,27 @@ import {
   CarryOutOutlined,
   UnorderedListOutlined,
   CloudUploadOutlined,
-  SettingOutlined,
   ThunderboltFilled,
-  MoonOutlined,
   FolderOpenOutlined,
   CalculatorOutlined
 } from "@ant-design/icons";
 
-const inputStyle = {
-  width: "100%",
-  padding: "6px 11px",
-  borderRadius: "6px",
-  border: "1px solid #d9d9d9",
-  backgroundColor: "#f5f5f5",
-  color: "rgba(0, 0, 0, 0.85)",
-  display: "block",
-  marginTop: "4px",
-};
-
 const cardStyle = {
   borderRadius: '12px',
   boxShadow: '0 1px 3px rgba(0,0,0,0.1)',
-  height: '100%',
   border: '1px solid #e2e8f0',
 };
 
 const SummaryCard = ({ title, value, icon, color, iconBg }) => (
-  <Card style={cardStyle} bodyStyle={{ padding: '20px' }}>
+  <Card style={cardStyle} bodyStyle={{ padding: '12px' }}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
       <div>
-        <div style={{ color: '#64748b', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', marginBottom: '12px', letterSpacing: '0.025em' }}>{title}</div>
+        <div style={{ color: '#64748b', fontSize: '13px', fontWeight: '600', textTransform: 'uppercase', marginBottom: '8px', letterSpacing: '0.025em' }}>{title}</div>
         <div style={{ fontSize: '24px', fontWeight: '700', color: '#0f172a' }}>{value}</div>
       </div>
       <div style={{
         width: '32px',
-        height: '32px',
+        height: '24px',
         borderRadius: '8px',
         backgroundColor: iconBg,
         display: 'flex',
@@ -77,17 +63,22 @@ const SummaryCard = ({ title, value, icon, color, iconBg }) => (
 function BatchMemberSummary() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const { batchId } = useParams();
-  const location = useLocation();
+  const dispatch = useDispatch();
 
-  const batches = useSelector(state => state.batches.batches);
-  const { excelData, uploadedFile, batchTotals } = useContext(ExcelContext);
+  const { data: batchDetails, loading } = useSelector(state => state.batchDetails);
 
-  // Find the current batch with proper date handling
-  const locationBatchData = location.state?.batchData;
-  const batchFromRedux = batchId ? batches.find(batch => batch.id === parseInt(batchId)) : null;
+  // Fetch batch details if batchId is available
+  useEffect(() => {
+    if (batchId) {
+      dispatch(getBatchDetailsById(batchId));
+    }
+    return () => {
+      dispatch(clearBatchDetails());
+    };
+  }, [batchId, dispatch]);
 
-  const currentBatch = locationBatchData || batchFromRedux || excelData;
-  const batchInfo = currentBatch || {};
+  // Strict Data Source: Only use data from Redux
+  const batchInfo = batchDetails || {};
 
   // Helper function to safely parse dates
   const getSafeDate = (dateValue) => {
@@ -96,11 +87,13 @@ function BatchMemberSummary() {
     return moment(dateValue);
   };
 
-  const members = Array.isArray(batchInfo?.members) ? batchInfo.members : [];
+  const members = Array.isArray(batchInfo?.batchPayments) ? batchInfo.batchPayments : [];
+  const exceptions = Array.isArray(batchInfo?.batchExceptions) ? batchInfo.batchExceptions : [];
 
   const onSelectAll = (checked) => {
+    const dataSource = activeKey === "1" ? members : exceptions;
     if (checked) {
-      const allKeys = members.map((item, index) => item.id || index);
+      const allKeys = dataSource.map((item, index) => item._id || item.id || index);
       setSelectedRowKeys(allKeys);
     } else {
       setSelectedRowKeys([]);
@@ -109,59 +102,51 @@ function BatchMemberSummary() {
 
   const onSelectSingle = (record, selected) => {
     if (selected) {
-      onSelectAll(true);
+      setSelectedRowKeys(prev => [...prev, record._id || record.id]);
     } else {
-      onSelectAll(false);
+      setSelectedRowKeys(prev => prev.filter(key => key !== (record._id || record.id)));
     }
   };
 
   const rowSelection = {
     selectedRowKeys,
     onSelect: onSelectSingle,
+    onSelectAll: (selected, selectedRows) => {
+      if (selected) {
+        const dataSource = activeKey === "1" ? members : exceptions;
+        const allKeys = dataSource.map(row => row._id || row.id);
+        setSelectedRowKeys(allKeys);
+      } else {
+        setSelectedRowKeys([]);
+      }
+    },
     onChange: (keys) => setSelectedRowKeys(keys),
   };
 
-  const [totalValueState, setTotalValueState] = useState(0);
-  const [manualPayment, setManualPayment] = useState(false);
-  const [fileUrl, setFileUrl] = useState(null);
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
   const [activeKey, setActiveKey] = useState("1");
-
-  useEffect(() => {
-    const total = members.reduce((sum, member) => {
-      const value = parseFloat(member["Value for Periods Selected"]) || 0;
-      return sum + value;
-    }, 0);
-    setTotalValueState(total);
-  }, [members]);
-
-  useEffect(() => {
-    if (uploadedFile) {
-      const url = URL.createObjectURL(uploadedFile);
-      setFileUrl(url);
-      return () => URL.revokeObjectURL(url);
-    }
-  }, [uploadedFile]);
+  const [manualPayment, setManualPayment] = useState(false);
 
   const columns = [
     {
-      title: "REF NO",
-      dataIndex: "Membership No",
+      title: "FILE REF NO",
+      dataIndex: "", // Updated to match API field
       key: "refNo",
       ellipsis: true,
       width: 150,
+      render: (text, record) => text || record["Membership No"] || "-",
     },
     {
       title: "FULL NAME",
-      dataIndex: "Full name",
+      dataIndex: "fullName", // Updated to match API field
       key: "fullName",
       ellipsis: true,
       width: 180,
-      render: (text, record) => text || `${record["First name"] || ''} ${record["Last name"] || ''}`.trim(),
+      render: (text, record) => text || record["Full name"] || `${record["forename"] || ''} ${record["surname"] || ''}`.trim() || "-",
     },
     {
       title: "AMOUNT",
-      dataIndex: "Value for Periods Selected",
+      dataIndex: "amount", // Updated to match API field
       key: "amount",
       ellipsis: true,
       width: 120,
@@ -169,8 +154,8 @@ function BatchMemberSummary() {
     },
     {
       title: "MEMBERSHIP NO",
-      dataIndex: "systemMembershipNo",
-      key: "systemMembershipNo",
+      dataIndex: "membershipNumber",
+      key: "membershipNumber",
       ellipsis: true,
       width: 180,
     },
@@ -186,28 +171,85 @@ function BatchMemberSummary() {
       key: "batchRefNo",
       ellipsis: true,
       width: 150,
-      render: () => batchInfo.batchRef || "",
+      render: () => batchInfo.referenceNumber || "",
     },
     {
       title: "DESCRIPTION",
       key: "description",
       ellipsis: true,
       width: 250,
-      render: () => batchInfo.description || batchInfo.comments || "",
+      render: () => batchInfo.description || "",
     },
+  ];
+
+  const exceptionColumns = [
+    {
+      title: "FILE REF NO",
+      dataIndex: "membershipNumber",
+      key: "refNo",
+      ellipsis: true,
+      width: 150,
+    },
+    {
+      title: "FULL NAME",
+      dataIndex: "fullName",
+      key: "fullName",
+      ellipsis: true,
+      width: 180,
+    },
+    {
+      title: "PAYROLL NO",
+      dataIndex: "Payroll No",
+      key: "payrollNo",
+      ellipsis: true,
+      width: 120,
+    },
+    {
+      title: "AMOUNT",
+      dataIndex: "valueForPeriodSelected",
+      key: "amount",
+      ellipsis: true,
+      width: 120,
+      // render: (value) => formatCurrency(value || ""),
+    },
+    {
+      title: "BATH REF",
+      key: "batchRefNo",
+      render: () => batchInfo.referenceNumber || "",
+    },
+    {
+      title: "DESCRIPTION",
+      key: "description",
+      ellipsis: true,
+      width: 250,
+      render: () => batchInfo.description || "",
+    }
   ];
 
   const onChange = (key) => setActiveKey(key);
 
-  // Get display values with fallbacks
-  const displayBatchDate = getSafeDate(batchInfo.batchDate);
-  const displayPaymentType = batchInfo.PaymentType || batchInfo.batchType;
-  const displayComments = batchInfo.Comments || batchInfo.comments;
-  const displayArrears = batchInfo.arrears || batchTotals?.arrears || 0;
-  const displayAdvance = batchInfo.advance || batchTotals?.advance || 0;
-  const displayTotalCurrent = batchInfo.totalCurrent || batchTotals?.totalCurrent || totalValueState;
-  const displayTotal = batchInfo.total || batchTotals?.total || totalValueState;
-  const displayRecords = batchInfo.Count || members?.length || 0;
+  // Get display values from Redux state
+  const displayBatchDate = getSafeDate(batchInfo.date);
+  const displayPaymentType = batchInfo.type;
+  const displayComments = batchInfo.comments;
+
+  // Calculate totals strictly from the Redux lists
+  const calcTotalCurrent = members.reduce((sum, m) => sum + (parseFloat(m.amount) || 0), 0);
+  const calcTotalExceptions = exceptions.reduce((sum, e) => sum + (parseFloat(e.valueForPeriodSelected) || 0), 0);
+  const calcTotalRecords = members.length + exceptions.length;
+
+  const displayArrears = 0;
+  const displayTotalCurrent = calcTotalExceptions;
+  const displayTotal = displayTotalCurrent + displayArrears;
+  const displayRecords = calcTotalRecords;
+
+  if (loading) {
+    return (
+      <div style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', height: '100vh' }}>
+        <Spin size="large" />
+      </div>
+    );
+  }
 
   return (
     <div style={{ backgroundColor: '#f8fafc', minHeight: '100vh', padding: '15px' }}>
@@ -218,17 +260,9 @@ function BatchMemberSummary() {
         justifyContent: 'space-between',
         alignItems: 'center',
         marginBottom: '12px',
-        // padding: '5px 10px'
       }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
           <Breadcrumb />
-          {/* <Tag color="orange" style={{
-            borderRadius: '12px',
-            fontWeight: '700',
-            padding: '2px 12px',
-          }}>
-            PENDING
-          </Tag> */}
         </div>
         <Button
           className="butn primary-btn"
@@ -262,7 +296,7 @@ function BatchMemberSummary() {
         <Col span={4.8} style={{ width: '20%' }}>
           <SummaryCard
             title="TOTAL ADVANCE"
-            value={formatCurrency(displayAdvance)}
+            value={formatCurrency(0)} // Resetting/fallback for now as not in API schema
             icon={<RiseOutlined />}
             color="#22c55e"
             iconBg="#dcfce7"
@@ -317,23 +351,7 @@ function BatchMemberSummary() {
             <MyInput
               label="Work Location"
               value={batchInfo.workLocation || ""}
-              placeholder="Enter location..."
-              disabled
-            />
-          </Col>
-          <Col span={6}>
-            <MyInput
-              label="Batch Ref No"
-              value={batchInfo.batchRef || ""}
-              placeholder="REF-0000"
-              disabled
-            />
-          </Col>
-          <Col span={18}>
-            <MyInput
-              label="Comments"
-              value={displayComments || ""}
-              placeholder="Add optional internal comments..."
+              placeholder="-"
               disabled
             />
           </Col>
@@ -352,12 +370,12 @@ function BatchMemberSummary() {
                 fontSize: '13px'
               }}>
                 <CloudUploadOutlined style={{ fontSize: '18px' }} />
-                {uploadedFile ? (
-                  <a href={fileUrl} download={uploadedFile.name} style={{ color: '#2563eb', fontWeight: '500' }}>
-                    {uploadedFile.name}
-                  </a>
+                {batchInfo.fileName ? (
+                  <span style={{ color: '#2563eb', fontWeight: '500' }}>
+                    {batchInfo.fileName}
+                  </span>
                 ) : (
-                  <span>No file uploaded</span>
+                  <span>No file metadata</span>
                 )}
               </div>
             </div>
@@ -385,7 +403,7 @@ function BatchMemberSummary() {
               style={{ marginBottom: '-9px' }}
               items={[
                 { key: "1", label: <span style={{ fontWeight: '600' }}>Batch Payments</span> },
-                { key: "2", label: <span style={{ fontWeight: '600' }}>Exceptions <Tag style={{ borderRadius: '10px', backgroundColor: '#fee2e2', border: 'none', color: '#ef4444', marginLeft: '4px' }}>9</Tag></span> }
+                { key: "2", label: <span style={{ fontWeight: '600' }}>Exceptions <Tag style={{ borderRadius: '10px', backgroundColor: '#fee2e2', border: 'none', color: '#ef4444', marginLeft: '4px' }}>{exceptions.length}</Tag></span> }
               ]}
             />
           </div>
@@ -461,10 +479,10 @@ function BatchMemberSummary() {
             rowClassName={() => ""}
             scroll={{ x: 1200 }}
             size="middle"
-            columns={columns}
-            dataSource={activeKey === "1" ? members : []}
+            columns={activeKey === "1" ? columns : exceptionColumns}
+            dataSource={activeKey === "1" ? members : exceptions}
             rowSelection={rowSelection}
-            rowKey={(record, index) => record.id || index}
+            rowKey={(record, index) => record._id || record.id || index}
             pagination={false}
             locale={{
               emptyText: (
@@ -485,14 +503,8 @@ function BatchMemberSummary() {
                   </div>
                   <div style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a', marginBottom: '4px' }}>No data available</div>
                   <div style={{ color: '#64748b', maxWidth: '300px', margin: '0 auto 20px', lineHeight: '1.5' }}>
-                    No payment records found for this batch. Add members to start processing.
+                    No payment records found for this batch in the system.
                   </div>
-                  <Button
-                    style={{ borderRadius: '8px', fontWeight: '600' }}
-                    onClick={() => message.info("Reloading...")}
-                  >
-                    Reload Data
-                  </Button>
                 </div>
               )
             }}
@@ -535,7 +547,7 @@ function BatchMemberSummary() {
         batchSummryData={{
           PaymentType: displayPaymentType,
           total: displayTotalCurrent,
-          batchRef: batchInfo?.batchRef
+          batchRef: batchInfo?.referenceNumber
         }}
       />
     </div>

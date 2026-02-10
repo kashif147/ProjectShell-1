@@ -681,7 +681,7 @@ function HeaderDetails() {
       {
         location?.pathname !== "/applicationMgt" &&
         location?.pathname !== "/CommunicationBatchDetail" &&
-        location?.pathname !== "/BatchMemberSummary" &&
+        !location?.pathname?.startsWith("/BatchMemberSummary") &&
         <Breadcrumb />
       }
 
@@ -1311,16 +1311,21 @@ function HeaderDetails() {
         onClose={() => {
           setIsBatchOpen(!isBatchOpen);
         }}
-        add={() => {
+        add={async () => {
           // Try to submit the batch form inside drawer first
           if (batchFormRef && batchFormRef.current && typeof batchFormRef.current.submit === 'function') {
-            const result = batchFormRef.current.submit();
-            if (!result) return; // validation failed inside form
+            const result = await batchFormRef.current.submit();
+            if (!result) return; // validation failed or API failed
+
+            navigate("/BatchMemberSummary", {
+              state: {
+                search: "BatchMemberSummary",
+                batchId: result._id || result.id, // Fallback for safety
+                batchData: result
+              },
+            });
+            setIsBatchOpen(!isBatchOpen);
           }
-          navigate("/BatchMemberSummary", {
-            state: { search: "BatchMemberSummary" },
-          });
-          setIsBatchOpen(!isBatchOpen);
         }}
       >
         {nav === "/Batches" || nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque" || nav === "/onlinePayment" ? (

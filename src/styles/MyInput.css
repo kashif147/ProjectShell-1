@@ -215,6 +215,11 @@
   box-shadow: 0 0 0 4px rgba(220, 53, 69, 0.1);
 }
 
+.my-input-container.textarea-container {
+  height: auto;
+  overflow: visible;
+}
+
 .my-input-prefix {
   padding-left: 12px;
   color: #212529;

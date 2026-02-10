@@ -44,12 +44,14 @@ import batchMemberReducer from '../features/profiles/batchMemberSlice';
 import getCornMarketBatchByIdReducer from "../features/profiles/CornMarketBatchByIdSlice";
 import accountReducer from "../features/AccountSlice";
 import notificationReducer from "../features/NotificationSlice";
+import batchDetailsReducer from "../features/profiles/BatchDetailsSlice";
 
 const store = configureStore({
   reducer: {
     subscription: subscriptionReducer,
     account: accountReducer,
     notification: notificationReducer,
+    batchDetails: batchDetailsReducer,
     cornMarketBatchById: getCornMarketBatchByIdReducer,
     profileSubscription: profileSubscriptionReducer,
     auth: authReducer, // Authentication state

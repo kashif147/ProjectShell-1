@@ -152,7 +152,7 @@ const MyInput = ({
 
       <div
         className={`my-input-container ${showError ? "error" : ""} ${isFocused ? "focused" : ""
-          } ${disabled ? "disabled" : ""}`}
+          } ${disabled ? "disabled" : ""} ${type === "textarea" ? "textarea-container" : ""}`}
       >
         {prefix && <div className="my-input-prefix">{prefix}</div>}
         {type === "textarea" ? (
