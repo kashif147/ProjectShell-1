@@ -19,7 +19,8 @@ const MyTable = ({
   const [filteredInfo, setFilteredInfo] = useState({});
   const [sortedInfo, setSortedInfo] = useState({});
 
-  const isExternallyControlled = externalRowSelection !== undefined && onSelectionChange !== undefined;
+  const isExternallyControlled =
+    externalRowSelection !== undefined && onSelectionChange !== undefined;
 
   useEffect(() => {
     if (!isExternallyControlled && internalSelectedRowKeys.length > 0) {
@@ -84,7 +85,9 @@ const MyTable = ({
     Object.keys(filteredInfo).forEach((key) => {
       const filterValues = filteredInfo[key];
       if (filterValues && filterValues.length > 0) {
-        const column = columns.find((col) => col.dataIndex === key || col.key === key);
+        const column = columns.find(
+          (col) => col.dataIndex === key || col.key === key
+        );
         if (column && column.onFilter) {
           data = data.filter((record) =>
             filterValues.some((value) => column.onFilter(value, record))
@@ -102,24 +105,30 @@ const MyTable = ({
     // Sort data
     if (sortedInfo.column && sortedInfo.field) {
       const { field, order } = sortedInfo;
-      const column = columns.find((col) => col.dataIndex === field || col.key === field);
+      const column = columns.find(
+        (col) => col.dataIndex === field || col.key === field
+      );
 
       if (order) {
         data.sort((a, b) => {
           let result = 0;
-          if (column && column.sorter && typeof column.sorter.compare === 'function') {
+          if (
+            column &&
+            column.sorter &&
+            typeof column.sorter.compare === "function"
+          ) {
             result = column.sorter.compare(a, b);
           } else {
             // Default sorting
             const valA = a[field];
             const valB = b[field];
-            if (typeof valA === 'string') {
+            if (typeof valA === "string") {
               result = valA.localeCompare(valB);
             } else {
               result = valA - valB;
             }
           }
-          return order === 'descend' ? -result : result;
+          return order === "descend" ? -result : result;
         });
       }
     }
@@ -127,7 +136,10 @@ const MyTable = ({
     return data;
   }, [dataSource, filteredInfo, sortedInfo, columns]);
 
-  const defaultPageSize = useMemo(() => getDefaultPageSize(processedData.length), [processedData.length]);
+  const defaultPageSize = useMemo(
+    () => getDefaultPageSize(processedData.length),
+    [processedData.length]
+  );
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [currentPageData, setCurrentPageData] = useState([]);
@@ -150,10 +162,16 @@ const MyTable = ({
       const newCol = {
         ...col,
         filteredValue: filteredInfo[col.dataIndex || col.key] || null,
-        sortOrder: sortedInfo.field === (col.dataIndex || col.key) ? sortedInfo.order : null,
+        sortOrder:
+          sortedInfo.field === (col.dataIndex || col.key)
+            ? sortedInfo.order
+            : null,
       };
 
-      if ((newCol.title === "Batch Name" || newCol.dataIndex === "batchName") && !newCol.render) {
+      if (
+        (newCol.title === "Batch Name" || newCol.dataIndex === "batchName") &&
+        !newCol.render
+      ) {
         newCol.render = (text, record) => (
           <Link
             to="/BatchMemberSummary"
@@ -162,7 +180,11 @@ const MyTable = ({
               batchId: record?.key || record?.id || record?._id,
               batchStatus: record?.batchStatus || record?.status,
             }}
-            style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+            style={{
+              color: "blue",
+              textDecoration: "underline",
+              cursor: "pointer",
+            }}
           >
             {text}
           </Link>
@@ -200,7 +222,7 @@ const MyTable = ({
           onClick: () => onRowClick && onRowClick(record, rowIndex),
         })}
         locale={{
-          emptyText: "No Data"
+          emptyText: "No Data",
         }}
       />
       <div
@@ -211,7 +233,7 @@ const MyTable = ({
           backgroundColor: "#fafafa",
           borderTop: "none",
           position: "relative",
-          zIndex: 10
+          zIndex: 10,
         }}
       >
         <UnifiedPagination
@@ -231,7 +253,14 @@ const MyTable = ({
           itemName="items"
           style={{ margin: 0, padding: 0 }}
           showTotalFormatter={(total, range) => (
-            <span style={{ fontSize: "14px", display: "flex", alignItems: "center", gap: "8px" }}>
+            <span
+              style={{
+                fontSize: "14px",
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+              }}
+            >
               {`${range[0]}-${range[1]} of ${total} items`}
               <LuRefreshCw
                 style={{
@@ -239,16 +268,15 @@ const MyTable = ({
                   fontSize: "14px",
                   color: "#215e97",
                   transition: "color 0.3s ease",
-                  marginLeft: "4px"
+                  marginLeft: "4px",
                 }}
                 onClick={() => window.location.reload()}
                 title="Refresh"
-                onMouseEnter={(e) => e.currentTarget.style.color = "#1890ff"}
-                onMouseLeave={(e) => e.currentTarget.style.color = "#215e97"}
+                onMouseEnter={(e) => (e.currentTarget.style.color = "#1890ff")}
+                onMouseLeave={(e) => (e.currentTarget.style.color = "#215e97")}
               />
             </span>
-          )
-          }
+          )}
         />
       </div>
     </div>
