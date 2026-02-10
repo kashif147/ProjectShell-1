@@ -21,7 +21,8 @@ const IdleModal = () => {
   // User is idle for 9 minutes
   const onPrompt = () => {
     setIsPrompted(true);
-    setRemaining(60);
+    // Set remaining to promptTimeout duration (10 minutes = 600 seconds)
+    setRemaining(10 * 60);
   };
 
   // User is active again
@@ -31,7 +32,7 @@ const IdleModal = () => {
 
   // Use idle timer hook
   const { getRemainingTime, activate } = useIdleTimer({
-    timeout: 1 * 60 * 1000, // Total 60 minutes
+    timeout: 30 * 60 * 1000, // Total 60 minutes
     promptTimeout: 10 * 60 * 1000, // 10 minute warning
     onIdle,
     onPrompt,
@@ -56,18 +57,26 @@ const IdleModal = () => {
     return `${secs} sec`;
   };
 
-  // Synchronize countdown with actual remaining time
+  // Countdown from promptTimeout (10 minutes)
   useEffect(() => {
     let interval;
     if (isPrompted) {
+      // Start countdown from promptTimeout (10 minutes = 600 seconds)
+      let countdown = 10 * 60;
+      setRemaining(countdown);
+
       interval = setInterval(() => {
-        const totalRemaining = Math.ceil(getRemainingTime() / 1000);
-        // The prompt remaining time is the total remaining time
-        setRemaining(totalRemaining > 0 ? totalRemaining : 0);
-      }, 500);
+        countdown -= 1;
+        setRemaining(countdown > 0 ? countdown : 0);
+
+        // If countdown reaches 0, trigger idle
+        if (countdown <= 0) {
+          clearInterval(interval);
+        }
+      }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isPrompted, getRemainingTime]);
+  }, [isPrompted]);
 
   // Logout manually
   const handleLogout = () => {
