@@ -409,7 +409,7 @@ function Header() {
             content={<NotificationPopover />}
             trigger="click"
             placement="bottomRight"
-            overlayInnerStyle={{ padding: 0 }}
+            styles={{ body: { padding: 0 } }}
           >
             <BellOutlined className="top-icon" />
           </Popover>

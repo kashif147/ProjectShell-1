@@ -161,7 +161,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
         </div>
       }
       width={800}
-      headerStyle={{ padding: '16px 24px' }}
+      styles={{ header: { padding: '16px 24px' } }}
     >
       <div className="drawer-main-cntainer p-4 me-2 ms-2">
         <Form layout="vertical" form={form}>

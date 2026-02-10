@@ -94,12 +94,6 @@ const IdleModal = () => {
         textAlign: "center",
         borderRadius: "8px",
       }}
-      bodyStyle={{
-        paddingTop: "40px !important",
-        paddingBottom: "40px !important",
-        paddingLeft: "40px !important",
-        paddingRight: "40px !important",
-      }}
       styles={{
         body: {
           paddingTop: "40px",

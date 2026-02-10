@@ -1027,7 +1027,7 @@ const TableComponent = ({
           }}
         >
           <Table
-            rowKey={(record, index) => record.key || record.id || index}
+            rowKey={(record) => record.key || record.id}
             rowClassName={() => ""}
             loading={isGrideLoading}
             components={components}
