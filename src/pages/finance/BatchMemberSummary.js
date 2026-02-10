@@ -180,10 +180,27 @@ function BatchMemberSummary() {
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
   const [activeKey, setActiveKey] = useState("1");
   const [manualPayment, setManualPayment] = useState(false);
+  const [filteredInfo, setFilteredInfo] = useState({});
+  const [sortedInfo, setSortedInfo] = useState({});
+
+  // Helper function to get unique filter values
+  const getUniqueFilterValues = (dataSource, getValue) => {
+    const uniqueValues = new Set();
+    dataSource.forEach((record) => {
+      const value = getValue(record);
+      if (value !== null && value !== undefined && value !== "") {
+        uniqueValues.add(value.toString());
+      }
+    });
+    return Array.from(uniqueValues)
+      .sort()
+      .map((value) => ({ text: value, value }));
+  };
 
   // Memoize columns to prevent infinite loops
-  const columns = useMemo(
-    () => [
+  const columns = useMemo(() => {
+    const dataSource = members;
+    return [
       {
         title: "FILE REF NO",
         dataIndex: "", // Updated to match API field
@@ -197,6 +214,14 @@ function BatchMemberSummary() {
         },
         sortDirections: ["ascend", "descend"],
         render: (text, record) => text || record["Membership No"] || "-",
+        filters: getUniqueFilterValues(
+          dataSource,
+          (record) => record["Membership No"]
+        ),
+        onFilter: (value, record) => {
+          const recordValue = record["Membership No"] || "";
+          return recordValue.toString() === value;
+        },
       },
       {
         title: "FULL NAME",
@@ -223,6 +248,21 @@ function BatchMemberSummary() {
           record["Full name"] ||
           `${record["forename"] || ""} ${record["surname"] || ""}`.trim() ||
           "-",
+        filters: getUniqueFilterValues(dataSource, (record) => {
+          return (
+            record.fullName ||
+            record["Full name"] ||
+            `${record.forename || ""} ${record.surname || ""}`.trim()
+          );
+        }),
+        onFilter: (value, record) => {
+          const recordValue =
+            record.fullName ||
+            record["Full name"] ||
+            `${record.forename || ""} ${record.surname || ""}`.trim() ||
+            "";
+          return recordValue.toString() === value;
+        },
       },
       {
         title: "AMOUNT",
@@ -238,6 +278,20 @@ function BatchMemberSummary() {
         },
         sortDirections: ["ascend", "descend"],
         render: (value) => formatCurrency(value || 0),
+        filters: [
+          { text: "0 - 100", value: "0-100" },
+          { text: "100 - 500", value: "100-500" },
+          { text: "500 - 1000", value: "500-1000" },
+          { text: "1000+", value: "1000+" },
+        ],
+        onFilter: (value, record) => {
+          const amount = parseFloat(record.amount) || 0;
+          if (value === "0-100") return amount >= 0 && amount < 100;
+          if (value === "100-500") return amount >= 100 && amount < 500;
+          if (value === "500-1000") return amount >= 500 && amount < 1000;
+          if (value === "1000+") return amount >= 1000;
+          return true;
+        },
       },
       {
         title: "MEMBERSHIP NO",
@@ -251,6 +305,14 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
+        filters: getUniqueFilterValues(
+          dataSource,
+          (record) => record.membershipNumber
+        ),
+        onFilter: (value, record) => {
+          const recordValue = (record.membershipNumber || "").toString();
+          return recordValue === value;
+        },
       },
       {
         title: "PAYROLL NO",
@@ -264,6 +326,14 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
+        filters: getUniqueFilterValues(
+          dataSource,
+          (record) => record["Payroll No"]
+        ),
+        onFilter: (value, record) => {
+          const recordValue = (record["Payroll No"] || "").toString();
+          return recordValue === value;
+        },
       },
       {
         title: "BATCH REF",
@@ -279,12 +349,12 @@ function BatchMemberSummary() {
         width: 250,
         render: () => batchInfo.description || "",
       },
-    ],
-    [batchInfo.referenceNumber, batchInfo.description]
-  );
+    ];
+  }, [batchInfo.referenceNumber, batchInfo.description, members]);
 
-  const exceptionColumns = useMemo(
-    () => [
+  const exceptionColumns = useMemo(() => {
+    const dataSource = exceptions;
+    return [
       {
         title: "FILE REF NO",
         dataIndex: "membershipNumber",
@@ -297,6 +367,14 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
+        filters: getUniqueFilterValues(
+          dataSource,
+          (record) => record.membershipNumber
+        ),
+        onFilter: (value, record) => {
+          const recordValue = (record.membershipNumber || "").toString();
+          return recordValue === value;
+        },
       },
       {
         title: "FULL NAME",
@@ -310,6 +388,11 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
+        filters: getUniqueFilterValues(dataSource, (record) => record.fullName),
+        onFilter: (value, record) => {
+          const recordValue = (record.fullName || "").toString();
+          return recordValue === value;
+        },
       },
       {
         title: "PAYROLL NO",
@@ -323,6 +406,14 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
+        filters: getUniqueFilterValues(
+          dataSource,
+          (record) => record["Payroll No"]
+        ),
+        onFilter: (value, record) => {
+          const recordValue = (record["Payroll No"] || "").toString();
+          return recordValue === value;
+        },
       },
       {
         title: "AMOUNT",
@@ -338,6 +429,20 @@ function BatchMemberSummary() {
         },
         sortDirections: ["ascend", "descend"],
         render: (value) => formatCurrency(value || 0),
+        filters: [
+          { text: "0 - 100", value: "0-100" },
+          { text: "100 - 500", value: "100-500" },
+          { text: "500 - 1000", value: "500-1000" },
+          { text: "1000+", value: "1000+" },
+        ],
+        onFilter: (value, record) => {
+          const amount = parseFloat(record.valueForPeriodSelected) || 0;
+          if (value === "0-100") return amount >= 0 && amount < 100;
+          if (value === "100-500") return amount >= 100 && amount < 500;
+          if (value === "500-1000") return amount >= 500 && amount < 1000;
+          if (value === "1000+") return amount >= 1000;
+          return true;
+        },
       },
       {
         title: "BATH REF",
@@ -351,9 +456,8 @@ function BatchMemberSummary() {
         width: 250,
         render: () => batchInfo.description || "",
       },
-    ],
-    [batchInfo.referenceNumber, batchInfo.description]
-  );
+    ];
+  }, [batchInfo.referenceNumber, batchInfo.description, exceptions]);
 
   // Pagination state
   const rawDataSource = useMemo(
@@ -364,8 +468,6 @@ function BatchMemberSummary() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(defaultPageSize);
   const [currentPageData, setCurrentPageData] = useState([]);
-  const [filteredInfo, setFilteredInfo] = useState({});
-  const [sortedInfo, setSortedInfo] = useState({});
 
   // Process data with filtering and sorting before pagination
   const processedDataSource = useMemo(() => {
