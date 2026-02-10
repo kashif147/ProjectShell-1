@@ -468,6 +468,9 @@ const Breadcrumb = () => {
     const commonIdFields = [
       "id",
       "memberNo",
+      "membershipNumber",
+      "membershipNo",
+      "memberId",
       "regNo",
       "code",
       "caseId",

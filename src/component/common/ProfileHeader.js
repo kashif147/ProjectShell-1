@@ -13,6 +13,8 @@ import {
   FaUser,
   FaEllipsisV,
   FaClone,
+  FaCreditCard,
+  FaMoneyBillWave,
 } from "react-icons/fa";
 import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
@@ -31,7 +33,8 @@ function ProfileHeader({
   onDuplicateClick,
 }) {
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
-  const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] = useState(false);
+  const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
+    useState(false);
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
     reason: "",
@@ -44,16 +47,14 @@ function ProfileHeader({
   );
 
   // Subscription API data
-  const {
-    ProfileSubData,
-    ProfileSubLoading,
-    ProfileSubError,
-  } = useSelector((state) => state.profileSubscription);
+  const { ProfileSubData, ProfileSubLoading, ProfileSubError } = useSelector(
+    (state) => state.profileSubscription
+  );
 
   const {
     profileSearchData,
     loading: searchLoading,
-    error: searchError
+    error: searchError,
   } = useSelector((state) => state.searchProfile);
 
   // FIXED: Safely access results with proper null checking
@@ -73,7 +74,7 @@ function ProfileHeader({
     if (!birthDate.isValid()) return "";
 
     const today = dayjs();
-    const age = today.diff(birthDate, 'year');
+    const age = today.diff(birthDate, "year");
     return `${age} Yrs`;
   };
 
@@ -82,6 +83,15 @@ function ProfileHeader({
     if (!dateString) return "";
     const date = dayjs(dateString);
     return date.isValid() ? date.format(format) : "";
+  };
+
+  // Format timestamp to date time format
+  const formatDateTime = (dateString) => {
+    if (!dateString) return "";
+    // Check if it's a timestamp (number) or date string
+    const date =
+      typeof dateString === "number" ? dayjs(dateString) : dayjs(dateString);
+    return date.isValid() ? date.format("DD/MM/YYYY HH:mm") : "";
   };
 
   // Format date to DD/MM/YYYY for DOB display
@@ -100,17 +110,29 @@ function ProfileHeader({
         paymentFrequency: ProfileSubData.data[0].paymentFrequency || "",
         subscriptionYear: ProfileSubData.data[0].subscriptionYear || "",
         isCurrent: ProfileSubData.data[0].isCurrent || false,
-        startDate: ProfileSubData.data[0].startDate ? formatDate(ProfileSubData.data[0].startDate) : "",
-        endDate: ProfileSubData.data[0].endDate ? formatDate(ProfileSubData.data[0].endDate) : "",
-        renewalDate: ProfileSubData.data[0].rolloverDate ? formatDate(ProfileSubData.data[0].rolloverDate) : "",
+        startDate: ProfileSubData.data[0].startDate || null, // Keep raw value for date-time formatting
+        startDateFormatted: ProfileSubData.data[0].startDate
+          ? formatDate(ProfileSubData.data[0].startDate)
+          : "",
+        endDate: ProfileSubData.data[0].endDate || null, // Keep raw value for date-time formatting
+        endDateFormatted: ProfileSubData.data[0].endDate
+          ? formatDate(ProfileSubData.data[0].endDate)
+          : "",
+        renewalDate: ProfileSubData.data[0].rolloverDate
+          ? formatDate(ProfileSubData.data[0].rolloverDate)
+          : "",
         membershipMovement: ProfileSubData.data[0].membershipMovement || "",
         reinstated: ProfileSubData.data[0].cancellation?.reinstated || false,
         yearendProcessed: ProfileSubData.data[0].yearend?.processed || false,
-        ...ProfileSubData.data[0]
+        ...ProfileSubData.data[0],
       };
     }
     // Check for nested data structure (from screenshot: data.data)
-    else if (ProfileSubData?.data?.data && Array.isArray(ProfileSubData.data.data) && ProfileSubData.data.data.length > 0) {
+    else if (
+      ProfileSubData?.data?.data &&
+      Array.isArray(ProfileSubData.data.data) &&
+      ProfileSubData.data.data.length > 0
+    ) {
       const sub = ProfileSubData.data.data[0];
       return {
         subscriptionStatus: sub.subscriptionStatus || "",
@@ -119,13 +141,15 @@ function ProfileHeader({
         paymentFrequency: sub.paymentFrequency || "",
         subscriptionYear: sub.subscriptionYear || "",
         isCurrent: sub.isCurrent || false,
-        startDate: sub.startDate ? formatDate(sub.startDate) : "",
-        endDate: sub.endDate ? formatDate(sub.endDate) : "",
+        startDate: sub.startDate || null, // Keep raw value for date-time formatting
+        startDateFormatted: sub.startDate ? formatDate(sub.startDate) : "",
+        endDate: sub.endDate || null, // Keep raw value for date-time formatting
+        endDateFormatted: sub.endDate ? formatDate(sub.endDate) : "",
         renewalDate: sub.rolloverDate ? formatDate(sub.rolloverDate) : "",
         membershipMovement: sub.membershipMovement || "",
         reinstated: sub.cancellation?.reinstated || false,
         yearendProcessed: sub.yearend?.processed || false,
-        ...sub
+        ...sub,
       };
     }
     return null;
@@ -134,17 +158,22 @@ function ProfileHeader({
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
     // Direct array empty
-    if (Array.isArray(ProfileSubData.data) && ProfileSubData.data.length === 0) return true;
+    if (Array.isArray(ProfileSubData.data) && ProfileSubData.data.length === 0)
+      return true;
     // Nested array empty
-    if (ProfileSubData.data && typeof ProfileSubData.data === 'object' &&
-      Array.isArray(ProfileSubData.data.data) && ProfileSubData.data.data.length === 0) return true;
+    if (
+      ProfileSubData.data &&
+      typeof ProfileSubData.data === "object" &&
+      Array.isArray(ProfileSubData.data.data) &&
+      ProfileSubData.data.data.length === 0
+    )
+      return true;
     return false;
   }, [ProfileSubData]);
 
   // Helper function to safely get nested properties
   const getSafe = (obj, path, defaultValue = "") => {
-
-    const keys = path.split('.');
+    const keys = path.split(".");
     let result = obj;
 
     for (const key of keys) {
@@ -158,10 +187,19 @@ function ProfileHeader({
   // FIXED: Derive member data from source - now properly reactive
   const memberData = useMemo(() => {
     // Personal Info
-    const name = source ? `${getSafe(source, 'personalInfo.forename', '')} ${getSafe(source, 'personalInfo.surname', '')}`.trim() : "";
-    const dob = formatDOB(getSafe(source, 'personalInfo.dateOfBirth'));
-    const gender = getSafe(source, 'personalInfo.gender', 'M').charAt(0).toUpperCase();
-    const age = calculateAge(getSafe(source, 'personalInfo.dateOfBirth')) || "36 Yrs";
+    const name = source
+      ? `${getSafe(source, "personalInfo.forename", "")} ${getSafe(
+          source,
+          "personalInfo.surname",
+          ""
+        )}`.trim()
+      : "";
+    const dob = formatDOB(getSafe(source, "personalInfo.dateOfBirth"));
+    const gender = getSafe(source, "personalInfo.gender", "M")
+      .charAt(0)
+      .toUpperCase();
+    const age =
+      calculateAge(getSafe(source, "personalInfo.dateOfBirth")) || "36 Yrs";
 
     // Status - Use subscription status if available, otherwise fall back to profile data
     let status = "";
@@ -172,29 +210,39 @@ function ProfileHeader({
     } else if (isSubscriptionEmpty && !ProfileSubLoading) {
       status = "Resigned";
     } else {
-      status = getSafe(source, 'membershipStatus') ||
-        (getSafe(source, 'deactivatedAt') ? "Inactive" : "Active Member");
+      status =
+        getSafe(source, "membershipStatus") ||
+        (getSafe(source, "deactivatedAt") ? "Inactive" : "Active Member");
     }
 
     // Membership Info - Use subscription end date if available, otherwise fall back
-    const memberId = getSafe(source, 'membershipNumber', '');
-    const joined = formatDate(getSafe(source, 'firstJoinedDate')) || "";
-    const expires = subscriptionData?.endDate ||
-      formatDate(getSafe(source, 'deactivatedAt')) || "";
+    const memberId = getSafe(source, "membershipNumber", "");
+    const joined = formatDate(getSafe(source, "firstJoinedDate")) || "";
+    // Format expires as date only - use formatted endDate from subscription or deactivatedAt from source
+    const expires =
+      subscriptionData?.endDateFormatted ||
+      formatDate(getSafe(source, "deactivatedAt")) ||
+      "";
 
     // Contact Info
-    const address = source?.contactInfo ?
-      `${getSafe(source, 'contactInfo.buildingOrHouse', '')} ${getSafe(source, 'contactInfo.streetOrRoad', '')}, ${getSafe(source, 'contactInfo.areaOrTown', '')}`.trim() ||
-      "123 Main Street, New York" : "123 Main Street, New York";
+    const address = source?.contactInfo
+      ? `${getSafe(source, "contactInfo.buildingOrHouse", "")} ${getSafe(
+          source,
+          "contactInfo.streetOrRoad",
+          ""
+        )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
+        "123 Main Street, New York"
+      : "123 Main Street, New York";
 
-    const email = getSafe(source, 'contactInfo.preferredEmail') === "work" ?
-      getSafe(source, 'contactInfo.workEmail') :
-      getSafe(source, 'contactInfo.personalEmail', '');
+    const email =
+      getSafe(source, "contactInfo.preferredEmail") === "work"
+        ? getSafe(source, "contactInfo.workEmail")
+        : getSafe(source, "contactInfo.personalEmail", "");
 
-    const phone = getSafe(source, 'contactInfo.mobileNumber', '');
+    const phone = getSafe(source, "contactInfo.mobileNumber", "");
 
     // Professional Info
-    const grade = getSafe(source, 'professionalDetails.grade', ' ');
+    const grade = getSafe(source, "professionalDetails.grade", " ");
     // const category = getSafe(source, 'membershipCategory', ' ');
     const category = subscriptionData?.membershipCategory || "";
     // Subscription Info
@@ -205,12 +253,17 @@ function ProfileHeader({
     const balance = "€200";
     const lastPayment = "€74.7";
 
-    // Use subscription start date for payment date if available
-    const paymentDate = subscriptionData?.startDate ||
-      formatDate(getSafe(source, 'submissionDate')) || "1/02/2025";
+    // Use subscription start date for payment date if available - format as date-time
+    const paymentDateRaw =
+      subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
+    const paymentDate = paymentDateRaw
+      ? formatDateTime(paymentDateRaw)
+      : "1/02/2025";
 
     // Include subscription year in payment code if available
-    const paymentCode = `MB-${subscriptionData?.subscriptionYear || dayjs().year()}-${getSafe(source, 'membershipNumber', '001')}`;
+    const paymentCode = `MB-${
+      subscriptionData?.subscriptionYear || dayjs().year()
+    }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
       // Personal Info
@@ -246,7 +299,13 @@ function ProfileHeader({
       paymentDate,
       paymentCode,
     };
-  }, [source, subscriptionData, isDeceased, isSubscriptionEmpty, ProfileSubLoading]); // Now recalculates when source OR subscriptionData changes
+  }, [
+    source,
+    subscriptionData,
+    isDeceased,
+    isSubscriptionEmpty,
+    ProfileSubLoading,
+  ]); // Now recalculates when source OR subscriptionData changes
 
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
@@ -309,7 +368,6 @@ function ProfileHeader({
 
       MyAlert("success", "Membership cancellation submitted successfully!");
       handleCancelModalClose();
-
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -322,7 +380,6 @@ function ProfileHeader({
       setIsSubmitting(false);
     }
   };
-
 
   const handleFormChange = (field, value) => {
     setCancelFormData({ ...cancelFormData, [field]: value });
@@ -370,7 +427,9 @@ function ProfileHeader({
     <div className="member-header-container">
       <div className="member-header-single-card">
         {/* Profile Header Section */}
-        <div className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}>
+        <div
+          className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
+        >
           {showButtons && (
             <Dropdown
               menu={{
@@ -413,7 +472,11 @@ function ProfileHeader({
             <p className="member-details">
               {memberData.dob} ({memberData.gender}) {memberData.age}
             </p>
-            <span className={`member-status-badge ${isDeceased ? "member-status-deceased" : ""}`}>
+            <span
+              className={`member-status-badge ${
+                isDeceased ? "member-status-deceased" : ""
+              }`}
+            >
               {memberData.status}
               {subscriptionData?.isCurrent && " (Current)"}
               {subscriptionData?.reinstated && " (Reinstated)"}
@@ -466,53 +529,77 @@ function ProfileHeader({
 
         {/* Financial Details Card */}
         <div className="member-financial-card">
-          <div className="financial-header">
-            <div className="financial-title">
-              <FaExclamationTriangle className="warning-icon" />
-              <span>Balance</span>
+          <div className="detail-row">
+            <FaExclamationTriangle className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Balance:</span>
+              <span
+                className="detail-value"
+                style={{ color: "#faad14", fontWeight: 700, fontSize: "18px" }}
+              >
+                {memberData.balance}
+              </span>
             </div>
-            <span className="balance-amount">{memberData.balance}</span>
           </div>
-          <div className="financial-details">
-            <div className="financial-row">
-              <span className="financial-label">Last Payment:</span>
-              <span className="financial-value">{memberData.lastPayment}</span>
+          <div className="detail-row">
+            <FaClock className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Last Payment:</span>
+              <span className="detail-value">{memberData.lastPayment}</span>
             </div>
-            <div className="financial-row">
-              <span className="financial-label">Payment Date:</span>
-              <span className="financial-value">{memberData.paymentDate}</span>
+          </div>
+          <div className="detail-row">
+            <FaCalendarAlt className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Payment Date:</span>
+              <span className="detail-value">{memberData.paymentDate}</span>
             </div>
-            <div className="financial-row">
-              <span className="financial-label">Payment Code:</span>
-              <span className="financial-value">{memberData.paymentCode}</span>
+          </div>
+          <div className="detail-row">
+            <FaCreditCard className="detail-icon" />
+            <div className="detail-content">
+              <span className="detail-label">Payment Code:</span>
+              <span className="detail-value">{memberData.paymentCode}</span>
             </div>
-            {/* Show subscription info if available */}
-            {subscriptionData && (
-              <>
-                <div className="financial-row">
-                  <span className="financial-label">Payment Type:</span>
-                  <span className="financial-value">{memberData.paymentType}</span>
+          </div>
+          {/* Show subscription info if available */}
+          {subscriptionData && (
+            <>
+              <div className="detail-row">
+                <FaMoneyBillWave className="detail-icon" />
+                <div className="detail-content">
+                  <span className="detail-label">Payment Type:</span>
+                  <span className="detail-value">{memberData.paymentType}</span>
                 </div>
-                {memberData.subscriptionYear && (
-                  <div className="financial-row">
-                    <span className="financial-label">Sub Year:</span>
-                    <span className="financial-value">{memberData.subscriptionYear}</span>
+              </div>
+              {memberData.subscriptionYear && (
+                <div className="detail-row">
+                  <FaCalendarAlt className="detail-icon" />
+                  <div className="detail-content">
+                    <span className="detail-label">Sub Year:</span>
+                    <span className="detail-value">
+                      {memberData.subscriptionYear}
+                    </span>
                   </div>
-                )}
-              </>
-            )}
-          </div>
+                </div>
+              )}
+            </>
+          )}
         </div>
 
         {/* Grade and Category Section - on blue background */}
-        <div className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}>
-          <div className="grade-row-blue">
-            <span className="grade-label-blue">Grade:</span>
-            <span className="grade-value-blue">{memberData.grade}</span>
-          </div>
+        <div
+          className={`member-grade-section-blue ${
+            isDeceased ? "member-deceased" : ""
+          }`}
+        >
           <div className="grade-row-blue">
             <span className="grade-label-blue">Category:</span>
             <span className="grade-value-blue">{memberData?.category}</span>
+          </div>
+          <div className="grade-row-blue">
+            <span className="grade-label-blue">Grade:</span>
+            <span className="grade-value-blue">{memberData.grade}</span>
           </div>
         </div>
 
@@ -522,7 +609,11 @@ function ProfileHeader({
             {memberData.status === "Resigned" ? (
               <button
                 className="member-cancel-btn"
-                style={{ backgroundColor: "#52c41a", borderColor: "#52c41a", color: "#fff" }}
+                style={{
+                  backgroundColor: "#52c41a",
+                  borderColor: "#52c41a",
+                  color: "#fff",
+                }}
                 onClick={() => setIsUndoCancelModalVisible(true)}
               >
                 Activate Membership
@@ -542,7 +633,11 @@ function ProfileHeader({
         open={isCancelModalVisible}
         onCancel={handleCancelModalClose}
         footer={[
-          <Button key="cancel" onClick={handleCancelModalClose} disabled={isSubmitting}>
+          <Button
+            key="cancel"
+            onClick={handleCancelModalClose}
+            disabled={isSubmitting}
+          >
             Cancel
           </Button>,
           <Button
@@ -550,7 +645,11 @@ function ProfileHeader({
             type="primary"
             danger
             onClick={handleCancelSubmit}
-            disabled={!cancelFormData.dateResigned || !cancelFormData.reason || isSubmitting}
+            disabled={
+              !cancelFormData.dateResigned ||
+              !cancelFormData.reason ||
+              isSubmitting
+            }
             loading={isSubmitting}
           >
             {isSubmitting ? "Submitting..." : "Confirm Cancellation"}
@@ -597,7 +696,7 @@ function ProfileHeader({
         record={source}
         onSuccess={() => {
           // Optionally refresh data here if needed, or rely on Redux/Parent refresh
-          if (typeof window !== 'undefined') {
+          if (typeof window !== "undefined") {
             // A simple way to trigger a refresh if the parent doesn't handle it automatically
             // But ideally, the modal update triggers a redux action that updates the view.
           }

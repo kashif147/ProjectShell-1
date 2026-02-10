@@ -21,7 +21,8 @@ const IdleModal = () => {
   // User is idle for 9 minutes
   const onPrompt = () => {
     setIsPrompted(true);
-    setRemaining(60);
+    // Set remaining to promptTimeout duration (10 minutes = 600 seconds)
+    setRemaining(10 * 60);
   };
 
   // User is active again
@@ -31,7 +32,7 @@ const IdleModal = () => {
 
   // Use idle timer hook
   const { getRemainingTime, activate } = useIdleTimer({
-    timeout: 60 * 60 * 1000, // Total 60 minutes
+    timeout: 30 * 60 * 1000, // Total 60 minutes
     promptTimeout: 10 * 60 * 1000, // 10 minute warning
     onIdle,
     onPrompt,
@@ -46,18 +47,36 @@ const IdleModal = () => {
     setIsPrompted(false);
   };
 
-  // Synchronize countdown with actual remaining time
+  // Format time in minutes and seconds
+  const formatTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    if (mins > 0) {
+      return `${mins} min ${secs} sec`;
+    }
+    return `${secs} sec`;
+  };
+
+  // Countdown from promptTimeout (10 minutes)
   useEffect(() => {
     let interval;
     if (isPrompted) {
+      // Start countdown from promptTimeout (10 minutes = 600 seconds)
+      let countdown = 10 * 60;
+      setRemaining(countdown);
+
       interval = setInterval(() => {
-        const totalRemaining = Math.ceil(getRemainingTime() / 1000);
-        // The prompt remaining time is the total remaining time
-        setRemaining(totalRemaining > 0 ? totalRemaining : 0);
-      }, 500);
+        countdown -= 1;
+        setRemaining(countdown > 0 ? countdown : 0);
+
+        // If countdown reaches 0, trigger idle
+        if (countdown <= 0) {
+          clearInterval(interval);
+        }
+      }, 1000);
     }
     return () => clearInterval(interval);
-  }, [isPrompted, getRemainingTime]);
+  }, [isPrompted]);
 
   // Logout manually
   const handleLogout = () => {
@@ -74,16 +93,40 @@ const IdleModal = () => {
       style={{
         textAlign: "center",
         borderRadius: "8px",
-        padding: "40px",
-        minHeight: "250px",
+      }}
+      bodyStyle={{
+        paddingTop: "40px !important",
+        paddingBottom: "40px !important",
+        paddingLeft: "40px !important",
+        paddingRight: "40px !important",
+      }}
+      styles={{
+        body: {
+          paddingTop: "40px",
+          paddingBottom: "40px",
+          paddingLeft: "40px",
+          paddingRight: "40px",
+        },
       }}
     >
-      <ExclamationCircleOutlined
-        style={{ fontSize: "60px", color: "#faad14", marginBottom: "18px" }}
-      />
-      <Title level={3} style={{ marginBottom: "18px" }}>
-        You have been inactive
-      </Title>
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "12px",
+          // marginTop: "20",
+          paddingTop: "20px",
+          marginBottom: "18px",
+        }}
+      >
+        <ExclamationCircleOutlined
+          style={{ fontSize: "24px", color: "#faad14" }}
+        />
+        <Title level={3} style={{ margin: 0 }}>
+          You have been inactive
+        </Title>
+      </div>
       <Text type="secondary" style={{ fontSize: "22px" }}>
         Your session will end in{" "}
         <span
@@ -93,13 +136,13 @@ const IdleModal = () => {
             color: "#ff4d4f",
           }}
         >
-          {remaining} seconds
+          {formatTime(remaining)}
         </span>
         .
       </Text>
       <div
         style={{
-          marginTop: "30px",
+          marginTop: "24px",
           display: "flex",
           justifyContent: "center",
           gap: "24px",
