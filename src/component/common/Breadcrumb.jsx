@@ -447,6 +447,23 @@ const Breadcrumb = () => {
 
   // Get record ID from location state or params
   const getRecordId = () => {
+    // For member details page, prioritize membership number fields
+    if (location.pathname === "/Details") {
+      const membershipFields = [
+        "membershipNumber",
+        "membershipNo",
+        "memberId",
+        "code",
+        "regNo",
+        "memberNo",
+      ];
+      for (const field of membershipFields) {
+        if (location.state && location.state[field]) {
+          return location.state[field];
+        }
+      }
+    }
+
     if (!breadcrumbData.recordIdField) return null;
 
     // Try to get from location state first
@@ -458,6 +475,9 @@ const Breadcrumb = () => {
     const commonIdFields = [
       "id",
       "memberNo",
+      "membershipNumber",
+      "membershipNo",
+      "memberId",
       "regNo",
       "code",
       "caseId",
