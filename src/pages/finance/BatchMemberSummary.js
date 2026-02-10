@@ -197,6 +197,109 @@ function BatchMemberSummary() {
       .map((value) => ({ text: value, value }));
   };
 
+  // Filter Dropdown Component
+  const FilterDropdown = ({
+    setSelectedKeys,
+    selectedKeys,
+    confirm,
+    clearFilters,
+    dataSource,
+    getValue,
+  }) => {
+    const [searchText, setSearchText] = useState("");
+    const uniqueValues = getUniqueFilterValues(dataSource, getValue);
+    const filteredOptions = uniqueValues.filter((option) =>
+      option.text.toLowerCase().includes(searchText.toLowerCase())
+    );
+
+    const handleReset = () => {
+      setSearchText("");
+      setSelectedKeys([]);
+      clearFilters();
+    };
+
+    const handleConfirm = () => {
+      confirm();
+    };
+
+    return (
+      <div style={{ padding: 8, width: 280, boxSizing: "border-box" }}>
+        <AntInput
+          placeholder="Search filter"
+          prefix={<SearchOutlined />}
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+          onPressEnter={handleConfirm}
+          style={{
+            marginBottom: 8,
+            width: "100%",
+            boxSizing: "border-box",
+          }}
+        />
+        <div
+          style={{
+            maxHeight: 200,
+            overflowY: "auto",
+            marginBottom: 8,
+          }}
+        >
+          {filteredOptions.length > 0 ? (
+            filteredOptions.map((option) => (
+              <div
+                key={option.value}
+                onClick={() => {
+                  const newSelectedKeys = selectedKeys?.includes(option.value)
+                    ? selectedKeys.filter((key) => key !== option.value)
+                    : [...(selectedKeys || []), option.value];
+                  setSelectedKeys(newSelectedKeys);
+                }}
+                style={{
+                  padding: "4px 8px",
+                  cursor: "pointer",
+                  backgroundColor: selectedKeys?.includes(option.value)
+                    ? "#e6f7ff"
+                    : "transparent",
+                }}
+              >
+                <input
+                  type="checkbox"
+                  checked={selectedKeys?.includes(option.value) || false}
+                  readOnly
+                  style={{ marginRight: 8 }}
+                />
+                {option.text}
+              </div>
+            ))
+          ) : (
+            <div style={{ padding: "8px", color: "#999" }}>
+              No options found
+            </div>
+          )}
+        </div>
+        <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+          <Button size="small" onClick={handleReset} style={{ width: 90 }}>
+            Clear
+          </Button>
+          <Button
+            type="primary"
+            size="small"
+            onClick={handleConfirm}
+            style={{ width: 90 }}
+          >
+            Apply
+          </Button>
+        </Space>
+      </div>
+    );
+  };
+
+  // Helper function to create searchable filter dropdown
+  const createFilterDropdown = (dataSource, getValue) => {
+    return (props) => (
+      <FilterDropdown {...props} dataSource={dataSource} getValue={getValue} />
+    );
+  };
+
   // Memoize columns to prevent infinite loops
   const columns = useMemo(() => {
     const dataSource = members;
@@ -214,7 +317,7 @@ function BatchMemberSummary() {
         },
         sortDirections: ["ascend", "descend"],
         render: (text, record) => text || record["Membership No"] || "-",
-        filters: getUniqueFilterValues(
+        filterDropdown: createFilterDropdown(
           dataSource,
           (record) => record["Membership No"]
         ),
@@ -222,6 +325,9 @@ function BatchMemberSummary() {
           const recordValue = record["Membership No"] || "";
           return recordValue.toString() === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "FULL NAME",
@@ -248,7 +354,7 @@ function BatchMemberSummary() {
           record["Full name"] ||
           `${record["forename"] || ""} ${record["surname"] || ""}`.trim() ||
           "-",
-        filters: getUniqueFilterValues(dataSource, (record) => {
+        filterDropdown: createFilterDropdown(dataSource, (record) => {
           return (
             record.fullName ||
             record["Full name"] ||
@@ -263,6 +369,9 @@ function BatchMemberSummary() {
             "";
           return recordValue.toString() === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "AMOUNT",
@@ -278,12 +387,76 @@ function BatchMemberSummary() {
         },
         sortDirections: ["ascend", "descend"],
         render: (value) => formatCurrency(value || 0),
-        filters: [
-          { text: "0 - 100", value: "0-100" },
-          { text: "100 - 500", value: "100-500" },
-          { text: "500 - 1000", value: "500-1000" },
-          { text: "1000+", value: "1000+" },
-        ],
+        filterDropdown: ({
+          setSelectedKeys,
+          selectedKeys,
+          confirm,
+          clearFilters,
+        }) => {
+          const amountRanges = [
+            { text: "0 - 100", value: "0-100" },
+            { text: "100 - 500", value: "100-500" },
+            { text: "500 - 1000", value: "500-1000" },
+            { text: "1000+", value: "1000+" },
+          ];
+
+          const handleReset = () => {
+            setSelectedKeys([]);
+            clearFilters();
+          };
+
+          return (
+            <div style={{ padding: 8 }}>
+              <div style={{ marginBottom: 8 }}>
+                {amountRanges.map((range) => (
+                  <div
+                    key={range.value}
+                    onClick={() => {
+                      const newSelectedKeys = selectedKeys?.includes(
+                        range.value
+                      )
+                        ? selectedKeys.filter((key) => key !== range.value)
+                        : [...(selectedKeys || []), range.value];
+                      setSelectedKeys(newSelectedKeys);
+                    }}
+                    style={{
+                      padding: "4px 8px",
+                      cursor: "pointer",
+                      backgroundColor: selectedKeys?.includes(range.value)
+                        ? "#e6f7ff"
+                        : "transparent",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedKeys?.includes(range.value) || false}
+                      readOnly
+                      style={{ marginRight: 8 }}
+                    />
+                    {range.text}
+                  </div>
+                ))}
+              </div>
+              <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  size="small"
+                  onClick={handleReset}
+                  style={{ width: 90 }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => confirm()}
+                  style={{ width: 90 }}
+                >
+                  Apply
+                </Button>
+              </Space>
+            </div>
+          );
+        },
         onFilter: (value, record) => {
           const amount = parseFloat(record.amount) || 0;
           if (value === "0-100") return amount >= 0 && amount < 100;
@@ -292,6 +465,9 @@ function BatchMemberSummary() {
           if (value === "1000+") return amount >= 1000;
           return true;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "MEMBERSHIP NO",
@@ -305,7 +481,7 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        filters: getUniqueFilterValues(
+        filterDropdown: createFilterDropdown(
           dataSource,
           (record) => record.membershipNumber
         ),
@@ -313,6 +489,9 @@ function BatchMemberSummary() {
           const recordValue = (record.membershipNumber || "").toString();
           return recordValue === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "PAYROLL NO",
@@ -326,7 +505,7 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        filters: getUniqueFilterValues(
+        filterDropdown: createFilterDropdown(
           dataSource,
           (record) => record["Payroll No"]
         ),
@@ -334,6 +513,9 @@ function BatchMemberSummary() {
           const recordValue = (record["Payroll No"] || "").toString();
           return recordValue === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "BATCH REF",
@@ -367,7 +549,7 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        filters: getUniqueFilterValues(
+        filterDropdown: createFilterDropdown(
           dataSource,
           (record) => record.membershipNumber
         ),
@@ -375,6 +557,9 @@ function BatchMemberSummary() {
           const recordValue = (record.membershipNumber || "").toString();
           return recordValue === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "FULL NAME",
@@ -388,11 +573,17 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        filters: getUniqueFilterValues(dataSource, (record) => record.fullName),
+        filterDropdown: createFilterDropdown(
+          dataSource,
+          (record) => record.fullName
+        ),
         onFilter: (value, record) => {
           const recordValue = (record.fullName || "").toString();
           return recordValue === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "PAYROLL NO",
@@ -406,7 +597,7 @@ function BatchMemberSummary() {
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        filters: getUniqueFilterValues(
+        filterDropdown: createFilterDropdown(
           dataSource,
           (record) => record["Payroll No"]
         ),
@@ -414,6 +605,9 @@ function BatchMemberSummary() {
           const recordValue = (record["Payroll No"] || "").toString();
           return recordValue === value;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "AMOUNT",
@@ -429,12 +623,76 @@ function BatchMemberSummary() {
         },
         sortDirections: ["ascend", "descend"],
         render: (value) => formatCurrency(value || 0),
-        filters: [
-          { text: "0 - 100", value: "0-100" },
-          { text: "100 - 500", value: "100-500" },
-          { text: "500 - 1000", value: "500-1000" },
-          { text: "1000+", value: "1000+" },
-        ],
+        filterDropdown: ({
+          setSelectedKeys,
+          selectedKeys,
+          confirm,
+          clearFilters,
+        }) => {
+          const amountRanges = [
+            { text: "0 - 100", value: "0-100" },
+            { text: "100 - 500", value: "100-500" },
+            { text: "500 - 1000", value: "500-1000" },
+            { text: "1000+", value: "1000+" },
+          ];
+
+          const handleReset = () => {
+            setSelectedKeys([]);
+            clearFilters();
+          };
+
+          return (
+            <div style={{ padding: 8 }}>
+              <div style={{ marginBottom: 8 }}>
+                {amountRanges.map((range) => (
+                  <div
+                    key={range.value}
+                    onClick={() => {
+                      const newSelectedKeys = selectedKeys?.includes(
+                        range.value
+                      )
+                        ? selectedKeys.filter((key) => key !== range.value)
+                        : [...(selectedKeys || []), range.value];
+                      setSelectedKeys(newSelectedKeys);
+                    }}
+                    style={{
+                      padding: "4px 8px",
+                      cursor: "pointer",
+                      backgroundColor: selectedKeys?.includes(range.value)
+                        ? "#e6f7ff"
+                        : "transparent",
+                    }}
+                  >
+                    <input
+                      type="checkbox"
+                      checked={selectedKeys?.includes(range.value) || false}
+                      readOnly
+                      style={{ marginRight: 8 }}
+                    />
+                    {range.text}
+                  </div>
+                ))}
+              </div>
+              <Space style={{ display: "flex", justifyContent: "flex-end" }}>
+                <Button
+                  size="small"
+                  onClick={handleReset}
+                  style={{ width: 90 }}
+                >
+                  Clear
+                </Button>
+                <Button
+                  type="primary"
+                  size="small"
+                  onClick={() => confirm()}
+                  style={{ width: 90 }}
+                >
+                  Apply
+                </Button>
+              </Space>
+            </div>
+          );
+        },
         onFilter: (value, record) => {
           const amount = parseFloat(record.valueForPeriodSelected) || 0;
           if (value === "0-100") return amount >= 0 && amount < 100;
@@ -443,6 +701,9 @@ function BatchMemberSummary() {
           if (value === "1000+") return amount >= 1000;
           return true;
         },
+        filterIcon: (filtered) => (
+          <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+        ),
       },
       {
         title: "BATH REF",
@@ -1194,11 +1455,9 @@ function BatchMemberSummary() {
         className="d-flex justify-content-center align-items-center tbl-footer"
         style={{
           marginTop: "10px",
-          padding: "8px 34px",
-          backgroundColor: "#ffffff",
-          borderRadius: "12px",
-          boxShadow: "0 1px 3px rgba(0,0,0,0.1)",
-          border: "1px solid #e2e8f0",
+          padding: "8px 0",
+          backgroundColor: "#fafafa",
+          borderTop: "none",
           position: "relative",
           zIndex: 10,
         }}
@@ -1218,12 +1477,20 @@ function BatchMemberSummary() {
             setPageSize(size);
           }}
           itemName="items"
+          style={{ margin: 0, padding: 0 }}
           showTotalFormatter={(total, range) => {
             const start = isNaN(range[0]) ? 0 : range[0];
             const end = isNaN(range[1]) ? 0 : range[1];
             const totalCount = isNaN(total) ? 0 : total;
             return (
-              <span style={{ fontSize: "14px" }}>
+              <span
+                style={{
+                  fontSize: "14px",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                }}
+              >
                 {`${start}-${end} of ${totalCount} items`}
               </span>
             );
