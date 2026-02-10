@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from "react";
+import { useState, useEffect, useMemo, useRef } from "react";
 import {
   Row,
   Col,
@@ -14,9 +14,12 @@ import {
 } from "antd";
 import { useSelector, useDispatch } from "react-redux";
 import { useParams } from "react-router-dom";
+import axios from "axios";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
 import "../../styles/ManualEntry.css";
 import ManualPaymentEntryDrawer from "../../component/finanace/ManualPaymentEntryDrawer";
+import MyDrawer from "../../component/common/MyDrawer";
+import CreateBatchPayment from "../../component/common/CreateBatchPayment";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { formatCurrency } from "../../utils/Utilities";
 import { paymentTypes } from "../../Data";
@@ -45,7 +48,9 @@ import {
   ThunderboltFilled,
   FolderOpenOutlined,
   CalculatorOutlined,
+  DownloadOutlined,
 } from "@ant-design/icons";
+import { BsThreeDots } from "react-icons/bs";
 
 const cardStyle = {
   borderRadius: "12px",
@@ -182,6 +187,9 @@ function BatchMemberSummary() {
   const [manualPayment, setManualPayment] = useState(false);
   const [filteredInfo, setFilteredInfo] = useState({});
   const [sortedInfo, setSortedInfo] = useState({});
+  const [isBatchDetailsDrawerOpen, setIsBatchDetailsDrawerOpen] =
+    useState(false);
+  const batchFormRef = useRef(null);
 
   // Helper function to get unique filter values
   const getUniqueFilterValues = (dataSource, getValue) => {
@@ -804,6 +812,56 @@ function BatchMemberSummary() {
 
   const onChange = (key) => setActiveKey(key);
 
+  // Handle file download with authentication
+  const handleFileDownload = async (e) => {
+    e.preventDefault();
+
+    const fileUrl = batchInfo.fileUrl || batchInfo.filePath || batchInfo.file;
+    if (!fileUrl || !batchInfo.fileName) {
+      message.warning("File download URL not available");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      if (!token) {
+        message.error("Authentication required to download file");
+        return;
+      }
+
+      // Show loading message
+      const hide = message.loading("Downloading file...", 0);
+
+      const response = await axios.get(fileUrl, {
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
+        responseType: "blob",
+      });
+
+      // Create blob and download
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = batchInfo.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      hide();
+      message.success("File downloaded successfully");
+    } catch (error) {
+      message.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to download file"
+      );
+      console.error("Download error:", error);
+    }
+  };
+
   // Get display values from Redux state
   const displayBatchDate = getSafeDate(batchInfo.date);
   const displayPaymentType = batchInfo.type;
@@ -862,13 +920,20 @@ function BatchMemberSummary() {
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
           <Breadcrumb />
         </div>
-        <Button
-          className="butn primary-btn"
-          icon={<ThunderboltFilled />}
-          onClick={() => message.success("Batch Triggered Successfully")}
-        >
-          Trigger Batch
-        </Button>
+        <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
+          <Button
+            className="me-1 gray-btn butn"
+            icon={<BsThreeDots style={{ fontSize: "15px", fontWeight: 500 }} />}
+            onClick={() => setIsBatchDetailsDrawerOpen(true)}
+          />
+          <Button
+            className="butn primary-btn"
+            icon={<ThunderboltFilled />}
+            onClick={() => message.success("Batch Triggered Successfully")}
+          >
+            Trigger Batch
+          </Button>
+        </div>
       </div>
 
       {/* Compact KPI Strip */}
@@ -1211,20 +1276,47 @@ function BatchMemberSummary() {
             >
               Source
             </div>
-            <div
-              style={{
-                fontSize: "12px",
-                fontWeight: "600",
-                color: batchInfo.fileName ? "#2563eb" : "#94a3b8",
-                lineHeight: "1.2",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
-                maxWidth: "200px",
-              }}
-            >
-              {batchInfo.fileName || "No file"}
-            </div>
+            {batchInfo.fileName ? (
+              <a
+                href="#"
+                onClick={handleFileDownload}
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#2563eb",
+                  lineHeight: "1.2",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  maxWidth: "200px",
+                  textDecoration: "none",
+                  cursor: "pointer",
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "4px",
+                }}
+                onMouseEnter={(e) => {
+                  e.currentTarget.style.textDecoration = "underline";
+                }}
+                onMouseLeave={(e) => {
+                  e.currentTarget.style.textDecoration = "none";
+                }}
+              >
+                <DownloadOutlined style={{ fontSize: "12px" }} />
+                {batchInfo.fileName}
+              </a>
+            ) : (
+              <div
+                style={{
+                  fontSize: "12px",
+                  fontWeight: "600",
+                  color: "#94a3b8",
+                  lineHeight: "1.2",
+                }}
+              >
+                No file
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -1513,6 +1605,39 @@ function BatchMemberSummary() {
           batchRef: batchInfo?.referenceNumber,
         }}
       />
+
+      {/* Batch Details Drawer */}
+      <MyDrawer
+        title="Batch Details"
+        open={isBatchDetailsDrawerOpen}
+        onClose={() => {
+          setIsBatchDetailsDrawerOpen(false);
+        }}
+        width={1200}
+        isPagination={false}
+        add={async () => {
+          // Try to submit the batch form inside drawer first
+          if (
+            batchFormRef &&
+            batchFormRef.current &&
+            typeof batchFormRef.current.submit === "function"
+          ) {
+            const result = await batchFormRef.current.submit();
+            if (!result) return; // validation failed or API failed
+
+            message.success("Batch updated successfully");
+            setIsBatchDetailsDrawerOpen(false);
+            // Optionally refresh batch details
+            if (batchId) {
+              dispatch(getBatchDetailsById(batchId));
+            }
+          } else {
+            message.error("Failed to submit batch form");
+          }
+        }}
+      >
+        <CreateBatchPayment ref={batchFormRef} />
+      </MyDrawer>
     </div>
   );
 }
