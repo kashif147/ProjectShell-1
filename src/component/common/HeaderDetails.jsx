@@ -1,5 +1,5 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
-import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio, Select } from "antd";
+import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio, Select, Drawer, Switch } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
@@ -17,6 +17,7 @@ import {
   SearchOutlined,
   LoadingOutlined,
   UploadOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
@@ -69,6 +70,7 @@ import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
+import { useCasesEdit } from "../../context/CasesEditContext";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -108,6 +110,70 @@ function HeaderDetails() {
     setValue(val); // val is a dayjs or null
   };
   const { selectedIds, setSelectedIds } = useSelectedIds();
+  const {
+    editFieldsDrawerOpen,
+    setEditFieldsDrawerOpen,
+    selectedCaseRows,
+    applyCasesUpdateRef,
+  } = useCasesEdit();
+
+  const casesCategories = ["Compliance", "Risk", "Legal", "General"];
+  const casesTypes = ["Compliance", "Risk", "Legal", "General"];
+  const casesStatuses = ["Open", "Pending", "Review", "Closed"];
+  const casesPriorities = ["Critical", "High", "Medium", "Low"];
+  const casesAssignees = ["Legal Team", "Support Team", "HR Team", "IT Team"];
+  const [editCasesDraft, setEditCasesDraft] = useState({
+    incidentDate: null,
+    location: "",
+    category: "Compliance",
+    caseType: "Compliance",
+    status: "Open",
+    priority: "High",
+    dueDate: null,
+    pertinentToFileReview: false,
+    fileNumber: "",
+    assignee: "Legal Team",
+    relatedMembers: "",
+  });
+
+  useEffect(() => {
+    if (editFieldsDrawerOpen && selectedCaseRows.length > 0) {
+      const first = selectedCaseRows[0];
+      setEditCasesDraft({
+        incidentDate: first["Incident Date"] ? dayjs(first["Incident Date"], "YYYY-MM-DD") : null,
+        location: first.Location || "",
+        category: first.Category || "Compliance",
+        caseType: first["Case Type"] || "Compliance",
+        status: first.Status || "Open",
+        priority: first.Priority || "High",
+        dueDate: first["Due Date"] ? dayjs(first["Due Date"], "YYYY-MM-DD") : null,
+        pertinentToFileReview: !!first["Pertinent to File Review"],
+        fileNumber: first["File Number"] || "",
+        assignee: first.Assignee || "Legal Team",
+        relatedMembers: first["Related Member(s)"] || "",
+      });
+    }
+  }, [editFieldsDrawerOpen, selectedCaseRows]);
+
+  const handleSaveEditCases = () => {
+    const keys = selectedCaseRows.map((r) => r.key);
+    const payload = {
+      "Incident Date": editCasesDraft.incidentDate ? editCasesDraft.incidentDate.format("YYYY-MM-DD") : "",
+      Location: editCasesDraft.location,
+      Category: editCasesDraft.category,
+      "Case Type": editCasesDraft.caseType,
+      Status: editCasesDraft.status,
+      Priority: editCasesDraft.priority,
+      "Due Date": editCasesDraft.dueDate ? editCasesDraft.dueDate.format("YYYY-MM-DD") : "",
+      "Pertinent to File Review": editCasesDraft.pertinentToFileReview,
+      "File Number": editCasesDraft.fileNumber,
+      Assignee: editCasesDraft.assignee,
+      "Related Member(s)": editCasesDraft.relatedMembers,
+    };
+    if (applyCasesUpdateRef.current) applyCasesUpdateRef.current(keys, payload);
+    setEditFieldsDrawerOpen(false);
+  };
+
   const handleSortChange = (value) => {
     setSortOption(value);
   };
@@ -173,11 +239,10 @@ function HeaderDetails() {
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
 
-  const menuItems = [
+  const defaultMenuItems = [
     { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds) },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
     { label: "Send Notification", onClick: (e) => handleAction("Bulk Changes", e) },
-
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
       label: "Generate Bulk NFC Tag",
@@ -193,6 +258,17 @@ function HeaderDetails() {
       },
     },
   ];
+
+  const casesMenuItems = [
+    {
+      label: "Edit fields",
+      key: "edit-fields",
+      icon: <EditOutlined />,
+      onClick: () => setEditFieldsDrawerOpen(true),
+    },
+  ];
+
+  const menuItems = nav === "/CasesSummary" ? casesMenuItems : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -1401,6 +1477,126 @@ function HeaderDetails() {
         open={eventDrawerOpen}
         onClose={() => setEventDrawerOpen(false)}
       />
+      {nav === "/CasesSummary" && (
+        <Drawer
+          title="Issue Details"
+          placement="right"
+          width={480}
+          open={editFieldsDrawerOpen}
+          onClose={() => setEditFieldsDrawerOpen(false)}
+          footer={
+            <div style={{ textAlign: "right" }}>
+              <Button onClick={() => setEditFieldsDrawerOpen(false)} style={{ marginRight: 8 }}>
+                Cancel
+              </Button>
+              <Button type="primary" onClick={handleSaveEditCases}>
+                Save (apply to {selectedCaseRows.length} case{selectedCaseRows.length !== 1 ? "s" : ""})
+              </Button>
+            </div>
+          }
+        >
+          {selectedCaseRows.length === 0 ? (
+            <p style={{ color: "#8c8c8c" }}>Select one or more cases from the table to edit.</p>
+          ) : (
+            <div style={{ display: "flex", flexDirection: "column", gap: 16 }}>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Incident Date</span>
+                <DatePicker
+                  value={editCasesDraft.incidentDate}
+                  onChange={(d) => setEditCasesDraft((prev) => ({ ...prev, incidentDate: d }))}
+                  format="YYYY-MM-DD"
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Location</span>
+                <Input
+                  value={editCasesDraft.location}
+                  onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, location: e.target.value }))}
+                  placeholder="Location"
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Category</span>
+                <Select
+                  value={editCasesDraft.category}
+                  onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, category: v }))}
+                  style={{ width: "100%" }}
+                  options={casesCategories.map((c) => ({ value: c, label: c }))}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Case Type</span>
+                <Select
+                  value={editCasesDraft.caseType}
+                  onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, caseType: v }))}
+                  style={{ width: "100%" }}
+                  options={casesTypes.map((t) => ({ value: t, label: t }))}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Status</span>
+                <Select
+                  value={editCasesDraft.status}
+                  onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, status: v }))}
+                  style={{ width: "100%" }}
+                  options={casesStatuses.map((s) => ({ value: s, label: s }))}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Priority</span>
+                <Select
+                  value={editCasesDraft.priority}
+                  onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, priority: v }))}
+                  style={{ width: "100%" }}
+                  options={casesPriorities.map((p) => ({ value: p, label: p }))}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Due Date</span>
+                <DatePicker
+                  value={editCasesDraft.dueDate}
+                  onChange={(d) => setEditCasesDraft((prev) => ({ ...prev, dueDate: d }))}
+                  format="YYYY-MM-DD"
+                  style={{ width: "100%" }}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Pertinent to File Review</span>
+                <Switch
+                  checked={editCasesDraft.pertinentToFileReview}
+                  onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, pertinentToFileReview: v }))}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>File Number</span>
+                <Input
+                  value={editCasesDraft.fileNumber}
+                  onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, fileNumber: e.target.value }))}
+                  placeholder="e.g. CFN-88210"
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Assignee</span>
+                <Select
+                  value={editCasesDraft.assignee}
+                  onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, assignee: v }))}
+                  style={{ width: "100%" }}
+                  options={casesAssignees.map((a) => ({ value: a, label: a }))}
+                />
+              </div>
+              <div>
+                <span style={{ display: "block", marginBottom: 4, fontSize: 14, color: "#595959" }}>Related Member(s)</span>
+                <Input
+                  value={editCasesDraft.relatedMembers}
+                  onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, relatedMembers: e.target.value }))}
+                  placeholder="e.g. Sarah C., Michael S."
+                />
+              </div>
+            </div>
+          )}
+        </Drawer>
+      )}
       {/* <MyDrawer
         title="Refund Entry Drawer"
 

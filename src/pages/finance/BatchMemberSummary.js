@@ -936,6 +936,89 @@ function BatchMemberSummary() {
         </div>
       </div>
 
+      {/* Batch info strip - all batch fields */}
+      <div
+        style={{
+          display: "flex",
+          alignItems: "center",
+          flexWrap: "wrap",
+          backgroundColor: "#ffffff",
+          borderRadius: "8px",
+          padding: "10px 16px",
+          marginBottom: "8px",
+          border: "1px solid #e2e8f0",
+          minHeight: "56px",
+          overflowX: "auto",
+          gap: "0",
+        }}
+      >
+        {/* Batch Name */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "160px" }}>
+          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Batch Name</div>
+          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "140px" }}>
+            {batchInfo.name || batchInfo.description || "-"}
+          </div>
+        </div>
+        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        {/* Batch Ref */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "140px" }}>
+          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Batch Ref</div>
+          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.referenceNumber || "-"}</div>
+        </div>
+        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        {/* Type */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
+          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Type</div>
+          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.type || "-"}</div>
+        </div>
+        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        {/* Payment Date */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
+          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Payment Date</div>
+          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+            {displayBatchDate ? displayBatchDate.format("MM/YYYY") : "-"}
+          </div>
+        </div>
+        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        {/* Work Location */}
+        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
+          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Work Location</div>
+          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.workLocation || "-"}</div>
+        </div>
+        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        {/* Comments (if present) */}
+        {(batchInfo.comments != null && batchInfo.comments !== "") && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px", maxWidth: "200px" }}>
+              <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Comments</div>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{batchInfo.comments}</div>
+            </div>
+            <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+          </>
+        )}
+        {/* Status (if present) */}
+        {(batchInfo.batchStatus != null && batchInfo.batchStatus !== "") && (
+          <>
+            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "100px" }}>
+              <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Status</div>
+              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.batchStatus}</div>
+            </div>
+            <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+          </>
+        )}
+        {/* Created (if present) */}
+        {(batchInfo.createdAt || batchInfo.createdBy) && (
+          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "160px", marginLeft: "auto" }}>
+            <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Created</div>
+            <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+              {batchInfo.createdAt ? getSafeDate(batchInfo.createdAt).format("DD/MM/YYYY HH:mm") : ""}
+              {batchInfo.createdAt && batchInfo.createdBy ? " · " : ""}
+              {batchInfo.createdBy || ""}
+            </div>
+          </div>
+        )}
+      </div>
+
       {/* Compact KPI Strip */}
       <div
         style={{

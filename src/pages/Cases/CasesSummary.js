@@ -1,14 +1,13 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Row, Col, Card, Statistic, Tag, Switch } from "antd";
 import { useNavigate } from "react-router-dom";
 import dayjs from "dayjs";
 import MyTable from "../../component/common/MyTable";
+import { useCasesEdit } from "../../context/CasesEditContext";
+import { useSelectedIds } from "../../context/SelectedIdsContext";
 
-function CasesSummary() {
-  const navigate = useNavigate();
-
-  const gridData = [
+const initialGridData = [
     {
       key: "1",
       "Issue ID": "C-001",
@@ -74,6 +73,27 @@ function CasesSummary() {
       "Related Member(s)": "Michael S., David W., Emma W.",
     },
   ];
+
+function CasesSummary() {
+  const navigate = useNavigate();
+  const [gridData, setGridData] = useState(initialGridData);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const { setSelectedCaseRows, applyCasesUpdateRef } = useCasesEdit();
+  const { setSelectedIds } = useSelectedIds();
+
+  useEffect(() => {
+    applyCasesUpdateRef.current = (keys, payload) => {
+      setGridData((prev) =>
+        prev.map((row) => (keys.includes(row.key) ? { ...row, ...payload } : row))
+      );
+    };
+  }, [applyCasesUpdateRef]);
+
+  const handleSelectionChange = (keys, rows) => {
+    setSelectedRowKeys(keys);
+    setSelectedCaseRows(rows);
+    setSelectedIds(keys);
+  };
 
   // Status tag colors matching existing application style
   const getStatusTag = (status) => {
@@ -290,6 +310,11 @@ function CasesSummary() {
       <MyTable
         dataSource={gridData}
         columns={columns}
+        selection={true}
+        rowSelection={{
+          selectedRowKeys,
+          onChange: handleSelectionChange,
+        }}
         onRowClick={(record) =>
           navigate("/CasesDetails", { state: { caseId: record["Issue ID"] } })
         }

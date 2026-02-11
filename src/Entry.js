@@ -8,6 +8,7 @@ import MyFooter from "./component/common/MyFooter";
 import CornGrideSummary from "./pages/cornmarket/CornGrideSummary";
 import ProtectedRoute from "./Navigation/ProtectedRoute";
 import { AuthorizationProvider } from "./context/AuthorizationContext";
+import { CasesEditProvider } from "./context/CasesEditContext";
 import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
@@ -287,11 +288,12 @@ function Entry() {
               overflow: "hidden",
             }}
           >
-            {/* Header Details */}
-            {showHeaderDetails && <HeaderDetails />}
+            <CasesEditProvider>
+              {/* Header Details */}
+              {showHeaderDetails && <HeaderDetails />}
 
-            {/* Content area + resizable section */}
-            <div style={{ flex: 1, display: "flex" }}>
+              {/* Content area + resizable section */}
+              <div style={{ flex: 1, display: "flex" }}>
               <div
                 style={{
                   flex: 1,
@@ -1083,6 +1085,7 @@ function Entry() {
                 <ResizableComp />
               )}
             </div>
+            </CasesEditProvider>
           </div>
         </div>
 
