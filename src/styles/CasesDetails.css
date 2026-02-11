@@ -3,7 +3,7 @@
   flex-direction: column;
   height: 80vh;
   min-height: 80vh;
-  background-color: var(--background-primary);
+  background-color: #f5f5f5;
   overflow: hidden;
   /* Hide outer scroll */
   font-family: var(--font-family);
@@ -452,30 +452,21 @@
 }
 
 .section-container {
-  padding-top: 20px;
-  margin-bottom: 24px;
+  padding: 20px;
+  margin-bottom: 12px;
   scroll-margin-top: 80px;
-  /* Offset for sticky header */
   position: relative;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .section-header-collapsible {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 8px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
+  padding: 8px 0;
   margin-bottom: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-  user-select: none;
-}
-
-.section-header-collapsible:hover {
-  background: transparent;
-  border: none;
 }
 
 .section-header-collapsible h3 {
@@ -485,10 +476,67 @@
   color: var(--font-color);
 }
 
-.section-header-collapsible .anticon {
+.section-header-collapsible h3 .section-count,
+.section-header-collapsible h3 .section-preview-inline {
+  font-weight: 500;
+  color: #8c8c8c;
+  font-size: 14px;
+}
+
+.section-header-collapsible h3 .section-preview-inline {
+  white-space: normal;
+  word-break: break-word;
+}
+
+.section-preview {
+  font-size: 13px;
+  color: #595959;
+  line-height: 1.5;
+  margin-top: -8px;
+  margin-bottom: 12px;
+  padding: 8px 0;
+}
+
+.section-preview-activity {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.section-preview-meta {
+  font-size: 12px;
+  color: #8c8c8c;
+}
+
+.section-preview-text {
+  color: #595959;
+}
+
+.section-header-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.section-toggle-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
   color: var(--primary-blue);
   font-size: 14px;
-  transition: transform 0.3s;
+  transition: background 0.2s, color 0.2s;
+}
+
+.section-toggle-btn:hover {
+  background: var(--info-bg);
+}
+
+.section-header-collapsible .section-toggle-btn .anticon {
+  color: inherit;
 }
 
 /* Hide old tabs styles if needed, or keep for reference */
@@ -518,6 +566,31 @@
   flex-direction: column;
 }
 
+.summary-title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 12px;
+}
+
+.summary-title-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.summary-expand-collapse-btn.ant-btn-link {
+  padding: 0 4px;
+  font-size: 13px;
+  color: var(--primary-blue);
+}
+
+.summary-expand-collapse-btn.ant-btn-link:hover {
+  color: var(--primary-blue-dark);
+}
+
 .summary-left-column {
   display: flex;
   flex-direction: column;
@@ -542,6 +615,26 @@
   position: relative;
 }
 
+.issue-details-actions-trigger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 6px 8px;
+  color: #262626;
+  font-size: 18px;
+  border-radius: 6px;
+  border: 1px solid #d9d9d9;
+  background: #fafafa;
+  transition: background 0.2s, border-color 0.2s, color 0.2s;
+}
+
+.issue-details-actions-trigger:hover {
+  color: var(--primary-blue);
+  border-color: var(--primary-blue);
+  background: var(--info-bg);
+}
+
 .team-members-panel {
   width: 100%;
   position: relative;
@@ -552,9 +645,10 @@
   display: flex;
   flex-direction: column;
   gap: 4px;
-  background-color: var(--background-primary);
-  padding: 8px;
+  padding: 16px;
+  background-color: #fff;
   border-radius: 8px;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
 }
 
 .summary-field-single {
@@ -580,6 +674,12 @@
   flex-shrink: 0;
   flex-grow: 0;
   align-self: center;
+}
+
+.summary-title-row .summary-title-wrapper {
+  margin-bottom: 0;
+  min-width: 0;
+  flex: 1;
 }
 
 .summary-title-wrapper {
@@ -675,38 +775,6 @@
   margin-top: 6px;
 }
 
-.description-header-collapsible {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  padding: 8px;
-  background: transparent;
-  border: none;
-  border-radius: 8px;
-  margin-bottom: 20px;
-  cursor: pointer;
-  transition: all 0.3s;
-  user-select: none;
-}
-
-.description-header-collapsible:hover {
-  background: transparent;
-  border: none;
-}
-
-.description-header-collapsible h3 {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 700;
-  color: var(--font-color);
-}
-
-.description-header-collapsible .anticon {
-  color: var(--primary-blue);
-  font-size: 14px;
-  transition: transform 0.3s;
-}
-
 .section-title-static {
   margin-bottom: 10px;
   font-size: 16px;
@@ -715,25 +783,18 @@
 }
 
 .description-box {
-  background: #f8faff;
-  padding: 10px;
-  border-radius: 12px;
+  padding: 10px 0;
   margin-top: 8px;
   color: #595959;
   font-size: 14px;
   line-height: 1.6;
-  border: 1px solid #f0f0f0;
 }
 
 /* Card like Sections */
 .team-member-section,
 .section-container.activity-section {
-  background: #fff;
-  border: 1px solid #f0f0f0;
-  border-radius: 12px;
-  padding: 24px;
-  margin-top: 24px;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.02);
+  padding: 20px;
+  margin-top: 0;
 }
 
 .section-title {
@@ -893,7 +954,6 @@
 .history-tab-content {
   display: flex;
   flex-direction: column;
-  background-color: white;
 }
 
 .history-header {
@@ -1123,13 +1183,28 @@
 
 /* Attachments Tab Content */
 .attachments-tab-content {
-  background-color: white;
 }
 
 .attachments-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+}
+
+.attachments-download-all-btn.ant-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  padding: 0;
+  background: transparent !important;
+  border: none !important;
+  color: #595959;
+}
+
+.attachments-download-all-btn.ant-btn:hover:not(:disabled) {
+  color: var(--primary-blue);
+  background: transparent !important;
 }
 
 .header-actions-left {
@@ -1303,6 +1378,31 @@
   white-space: nowrap;
 }
 
+.attachment-item-actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  margin-top: 6px;
+}
+
+.attachment-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  color: #595959;
+  cursor: pointer;
+  transition: color 0.2s, background 0.2s;
+}
+
+.attachment-action-btn:hover {
+  color: var(--primary-blue);
+  background: var(--info-bg);
+}
+
 .attachment-item {
   display: flex;
   justify-content: space-between;
@@ -1366,4 +1466,200 @@
 
 .attachment-actions .anticon:hover {
   color: #1890ff !important;
+}
+
+/* Print-only area: hidden on screen */
+.issue-print-area {
+  display: none;
+}
+
+/* Print-friendly layout: hide app chrome, show only issue content */
+@media print {
+  @page {
+    margin: 20mm;
+  }
+
+  html,
+  body {
+    height: auto !important;
+    min-height: auto !important;
+    overflow: visible !important;
+  }
+
+  body * {
+    visibility: hidden;
+  }
+
+  .cases-details-container,
+  .cases-details-container .issue-print-area,
+  .cases-details-container .issue-print-area * {
+    visibility: visible;
+  }
+
+  .cases-details-container {
+    position: absolute !important;
+    left: 0 !important;
+    top: 0 !important;
+    width: 100% !important;
+    height: auto !important;
+    min-height: 0 !important;
+    overflow: visible !important;
+    background: #fff !important;
+  }
+
+  .cases-details-container > *:not(.issue-print-area) {
+    display: none !important;
+  }
+
+  .issue-print-area {
+    display: block !important;
+    padding: 24px 24px 24px 40px;
+    max-width: 100%;
+    min-height: 0;
+    overflow: visible;
+    color: #000;
+    background: #fff;
+    box-sizing: border-box;
+  }
+
+  .issue-print-header {
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 2px solid #000;
+    page-break-after: avoid;
+  }
+
+  .issue-print-id {
+    font-size: 12px;
+    color: #595959;
+    margin-bottom: 0.25rem;
+  }
+
+  .issue-print-title {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: #000;
+  }
+
+  .issue-print-section {
+    margin-bottom: 1.5rem;
+    page-break-inside: auto;
+  }
+
+  .issue-print-section-title {
+    font-size: 14px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    margin: 0 0 0.5rem 0;
+    color: #000;
+    page-break-after: avoid;
+  }
+
+  .issue-print-details-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.35rem 1.25rem;
+    font-size: 12px;
+  }
+
+  .issue-print-detail-item {
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+  }
+
+  .issue-print-detail-item .issue-print-label {
+    color: #595959;
+    font-size: 11px;
+  }
+
+  .issue-print-detail-item .issue-print-value {
+    color: #000;
+  }
+
+  .issue-print-description {
+    font-size: 13px;
+    line-height: 1.5;
+    color: #000;
+  }
+
+  .issue-print-attachment-doc {
+    margin-bottom: 1.25rem;
+    page-break-inside: avoid;
+  }
+
+  .issue-print-attachment-header {
+    font-size: 13px;
+    margin-bottom: 0.5rem;
+  }
+
+  .issue-print-attachment-header strong {
+    color: #000;
+  }
+
+  .issue-print-attachment-image {
+    margin: 0.5rem 0;
+  }
+
+  .issue-print-attachment-image img {
+    max-width: 100%;
+    height: auto;
+    display: block;
+    border: 1px solid #e8e8e8;
+  }
+
+  .issue-print-attachment-content {
+    font-size: 12px;
+    line-height: 1.5;
+    color: #000;
+    margin-top: 0.25rem;
+    padding: 0.5rem 0;
+    border-left: 3px solid #e8e8e8;
+    padding-left: 0.75rem;
+  }
+
+  .issue-print-attachment-content p {
+    margin: 0 0 0.35rem 0;
+  }
+
+  .issue-print-attachment-content p:last-child {
+    margin-bottom: 0;
+  }
+
+  .issue-print-meta {
+    color: #595959;
+    font-size: 12px;
+  }
+
+  .issue-print-comments {
+    font-size: 13px;
+  }
+
+  .issue-print-comment {
+    margin-bottom: 1rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid #e8e8e8;
+    page-break-inside: avoid; /* keep each comment block together, but comments section can span pages */
+  }
+
+  .issue-print-comment:last-child {
+    border-bottom: none;
+  }
+
+  .issue-print-comment-header {
+    margin-bottom: 0.25rem;
+  }
+
+  .issue-print-comment-time {
+    color: #595959;
+    font-size: 12px;
+    margin-left: 0.5rem;
+  }
+
+  .issue-print-comment-text {
+    line-height: 1.5;
+    color: #000;
+  }
 }

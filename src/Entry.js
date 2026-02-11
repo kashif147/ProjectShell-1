@@ -24,7 +24,7 @@ const lazyWithRetry = (componentImport) => {
         error?.name === "ChunkLoadError" ||
         error?.message?.includes("Loading chunk") ||
         error?.message?.includes(
-          "Failed to fetch dynamically imported module"
+          "Failed to fetch dynamically imported module",
         ) ||
         error?.message?.includes("ChunkLoadError")
       ) {
@@ -56,98 +56,104 @@ const lazyWithRetry = (componentImport) => {
 // Lazy loaded components with retry
 const Dummy = lazyWithRetry(() => import("./component/common/Dummy"));
 const Configuratin = lazyWithRetry(() => import("./pages/Configuratin"));
-const ProfileDetails = lazyWithRetry(() =>
-  import("./pages/Profiles/ProfileDetails")
+const ProfileDetails = lazyWithRetry(
+  () => import("./pages/Profiles/ProfileDetails"),
 );
-const ProfileSummary = lazyWithRetry(() =>
-  import("./pages/Profiles/ProfileSummary")
+const ProfileSummary = lazyWithRetry(
+  () => import("./pages/Profiles/ProfileSummary"),
 );
 
 const CasesSummary = lazyWithRetry(() => import("./pages/Cases/CasesSummary"));
 const CasesDetails = lazyWithRetry(() => import("./pages/Cases/CasesDetails"));
 const ClaimSummary = lazyWithRetry(() => import("./pages/Claims/ClaimSummary"));
-const ClaimsDetails = lazyWithRetry(() =>
-  import("./pages/Claims/ClaimsDetails")
+const ClaimsDetails = lazyWithRetry(
+  () => import("./pages/Claims/ClaimsDetails"),
 );
 const ClaimsById = lazyWithRetry(() => import("./pages/Claims/ClaimsById"));
 const CasesById = lazyWithRetry(() => import("./pages/Cases/CasesById"));
 const Filter = lazyWithRetry(() => import("./pages/Filters/Filter"));
-const TransferSummary = lazyWithRetry(() =>
-  import("./pages/Transfers/TransferSummary")
+const TransferSummary = lazyWithRetry(
+  () => import("./pages/Transfers/TransferSummary"),
 );
-const CorrespondencesSummary = lazyWithRetry(() =>
-  import("./pages/Correspondences/CorrespondencesSummary")
+const CorrespondencesSummary = lazyWithRetry(
+  () => import("./pages/Correspondences/CorrespondencesSummary"),
 );
-const CorrespondenceDashboard = lazy(() =>
-  import("./pages/Correspondences/CorrespondenceDashboard")
+const CorrespondenceDashboard = lazy(
+  () => import("./pages/Correspondences/CorrespondenceDashboard"),
 );
-const CommunicationBatchDetail = lazy(() =>
-  import("./pages/Correspondences/CommunicationBatchDetail")
+const CommunicationBatchDetail = lazy(
+  () => import("./pages/Correspondences/CommunicationBatchDetail"),
 );
-const InAppNotifications = lazy(() =>
-  import("./pages/Correspondences/InAppNotifications")
+const InAppNotifications = lazy(
+  () => import("./pages/Correspondences/InAppNotifications"),
 );
-const AddNewProfile = lazyWithRetry(() =>
-  import("./pages/Profiles/AddNewProfile")
+const AddNewProfile = lazyWithRetry(
+  () => import("./pages/Profiles/AddNewProfile"),
 );
 const AddClaims = lazyWithRetry(() => import("./pages/Claims/AddClaims"));
 const Login = lazyWithRetry(() => import("./pages/auth/Login"));
 const LandingPage = lazyWithRetry(() => import("./component/msft/LandingPage"));
 const Reports = lazyWithRetry(() => import("./pages/reports/Reports"));
-const TempletsSummary = lazyWithRetry(() =>
-  import("./pages/templete/TempletsSummary")
+const TempletsSummary = lazyWithRetry(
+  () => import("./pages/templete/TempletsSummary"),
 );
-const TempleteConfig = lazyWithRetry(() =>
-  import("./pages/templete/TemplateConfiguration")
+const TempleteConfig = lazyWithRetry(
+  () => import("./pages/templete/TemplateConfiguration"),
 );
-const CorspndncDetail = lazyWithRetry(() =>
-  import("./pages/Correspondences/CorspndncDetail")
+const CorspndncDetail = lazyWithRetry(
+  () => import("./pages/Correspondences/CorspndncDetail"),
 );
-const IncomeProtectionTooltip = lazyWithRetry(() => import("./component/profile/IncomeProtectionTooltip"));
+const IncomeProtectionTooltip = lazyWithRetry(
+  () => import("./component/profile/IncomeProtectionTooltip"),
+);
 const Doucmnets = lazyWithRetry(() => import("./pages/Doucmnets"));
-const RosterDetails = lazyWithRetry(() =>
-  import("./pages/roster/RosterDetails")
+const RosterDetails = lazyWithRetry(
+  () => import("./pages/roster/RosterDetails"),
 );
-const RusterSummary = lazyWithRetry(() =>
-  import("./pages/roster/RusterSummary")
+const RusterSummary = lazyWithRetry(
+  () => import("./pages/roster/RusterSummary"),
 );
-const MembershipApplication = lazyWithRetry(() =>
-  import("./pages/application/MembershipApplication")
+const MembershipApplication = lazyWithRetry(
+  () => import("./pages/application/MembershipApplication"),
 );
-const ApplicationMgt = lazyWithRetry(() =>
-  import("./component/applications/ApplicationMgtDrawer")
+const ApplicationMgt = lazyWithRetry(
+  () => import("./component/applications/ApplicationMgtDrawer"),
 );
-const ApproveMembership = lazyWithRetry(() =>
-  import("./pages/application/ApproveMembership")
+const ApproveMembership = lazyWithRetry(
+  () => import("./pages/application/ApproveMembership"),
 );
-const ChangCateSumm = lazyWithRetry(() =>
-  import("./pages/Category/ChangCateSumm")
+const ChangCateSumm = lazyWithRetry(
+  () => import("./pages/Category/ChangCateSumm"),
 );
 const CateById = lazyWithRetry(() => import("./pages/Category/CateById"));
-const RemindersSummary = lazyWithRetry(() =>
-  import("./pages/reminders/RemindersSummary")
+const RemindersSummary = lazyWithRetry(
+  () => import("./pages/reminders/RemindersSummary"),
 );
 const Cancallation = lazyWithRetry(() => import("./pages/Cancallation"));
-const CancellationDetail = lazyWithRetry(() =>
-  import("./pages/cancellation/CancellationDetail")
+const CancellationDetail = lazyWithRetry(
+  () => import("./pages/cancellation/CancellationDetail"),
 );
 const Batches = lazyWithRetry(() => import("./pages/finance/Batches"));
 const Import = lazyWithRetry(() => import("./pages/finance/Import"));
 const Cheque = lazyWithRetry(() => import("./pages/finance/Cheque"));
-const StandingOrders = lazyWithRetry(() => import("./pages/finance/StandingOrders"));
-const Subscriptions = lazyWithRetry(() => import("./pages/subscription/Memebers"));
-const BatchMemberSummary = lazyWithRetry(() =>
-  import("./pages/finance/BatchMemberSummary")
+const StandingOrders = lazyWithRetry(
+  () => import("./pages/finance/StandingOrders"),
 );
-const SimpleBatchMemberSummary = lazyWithRetry(() =>
-  import("./pages/membership/SimpleBatchMemberSummary")
+const Subscriptions = lazyWithRetry(
+  () => import("./pages/subscription/Memebers"),
+);
+const BatchMemberSummary = lazyWithRetry(
+  () => import("./pages/finance/BatchMemberSummary"),
+);
+const SimpleBatchMemberSummary = lazyWithRetry(
+  () => import("./pages/membership/SimpleBatchMemberSummary"),
 );
 const Deductions = lazyWithRetry(() => import("./pages/finance/Deductions"));
-const Reconciliation = lazyWithRetry(() =>
-  import("./pages/finance/Reconciliation")
+const Reconciliation = lazyWithRetry(
+  () => import("./pages/finance/Reconciliation"),
 );
-const DirectDebitAuthorization = lazyWithRetry(() =>
-  import("./pages/finance/DirectDebitAuthorization")
+const DirectDebitAuthorization = lazyWithRetry(
+  () => import("./pages/finance/DirectDebitAuthorization"),
 );
 const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
@@ -155,83 +161,91 @@ const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
 const Popout = lazyWithRetry(() => import("../src/component/common/PopOut"));
 const Members = lazyWithRetry(() => import("./pages/membership/Members"));
-const RemindersDetails = lazyWithRetry(() =>
-  import("./pages/reminders/RemindersDetails")
+const RemindersDetails = lazyWithRetry(
+  () => import("./pages/reminders/RemindersDetails"),
 );
-const MembershipDashboard = lazyWithRetry(() =>
-  import("./pages/membership/MembershipDashboard")
+const MembershipDashboard = lazyWithRetry(
+  () => import("./pages/membership/MembershipDashboard"),
 );
-const TenantManagement = lazyWithRetry(() =>
-  import("./pages/tenant-management/TenantManagement")
+const TenantManagement = lazyWithRetry(
+  () => import("./pages/tenant-management/TenantManagement"),
 );
-const RoleManagement = lazyWithRetry(() =>
-  import("./pages/role-management/RoleManagement")
+const RoleManagement = lazyWithRetry(
+  () => import("./pages/role-management/RoleManagement"),
 );
-const UserManagement = lazyWithRetry(() =>
-  import("./pages/user-management/UserManagement")
+const UserManagement = lazyWithRetry(
+  () => import("./pages/user-management/UserManagement"),
 );
-const PermissionManagement = lazyWithRetry(() =>
-  import("./pages/permission-management/PermissionManagement")
+const PermissionManagement = lazyWithRetry(
+  () => import("./pages/permission-management/PermissionManagement"),
 );
-const CancelledMembersReport = lazyWithRetry(() =>
-  import("./features/reports/cancelled-members/CancelledMembersReport")
+const CancelledMembersReport = lazyWithRetry(
+  () => import("./features/reports/cancelled-members/CancelledMembersReport"),
 );
-const SuspendedMembersReport = lazyWithRetry(() =>
-  import("./pages/reports/SuspendedMembersReport")
+const SuspendedMembersReport = lazyWithRetry(
+  () => import("./pages/reports/SuspendedMembersReport"),
 );
-const ResignedMembersReport = lazyWithRetry(() =>
-  import("./pages/reports/ResignedMembersReport")
+const ResignedMembersReport = lazyWithRetry(
+  () => import("./pages/reports/ResignedMembersReport"),
 );
-const NewMembersReport = lazyWithRetry(() =>
-  import("./pages/reports/NewMembersReport")
+const NewMembersReport = lazyWithRetry(
+  () => import("./pages/reports/NewMembersReport"),
 );
-const LeaversReport = lazyWithRetry(() =>
-  import("./pages/reports/LeaversReport")
+const LeaversReport = lazyWithRetry(
+  () => import("./pages/reports/LeaversReport"),
 );
-const JoinersReport = lazyWithRetry(() =>
-  import("./pages/reports/JoinersReport")
+const JoinersReport = lazyWithRetry(
+  () => import("./pages/reports/JoinersReport"),
 );
-const ReportViewerDemo = lazyWithRetry(() =>
-  import("./features/reports/report-viewer/ReportViewerDemo")
+const ReportViewerDemo = lazyWithRetry(
+  () => import("./features/reports/report-viewer/ReportViewerDemo"),
 );
-const ReportsIndex = lazyWithRetry(() =>
-  import("./features/reports/ReportsIndex")
+const ReportsIndex = lazyWithRetry(
+  () => import("./features/reports/ReportsIndex"),
 );
-const DashboardPage = lazyWithRetry(() =>
-  import("./features/dashboards/membership/DashboardPage")
+const DashboardPage = lazyWithRetry(
+  () => import("./features/dashboards/membership/DashboardPage"),
 );
-const AuthorizationExample = lazyWithRetry(() =>
-  import("./pages/AuthorizationExample")
+const AuthorizationExample = lazyWithRetry(
+  () => import("./pages/AuthorizationExample"),
 );
-const DynamicPermissionsExample = lazyWithRetry(() =>
-  import("./pages/DynamicPermissionsExample")
+const DynamicPermissionsExample = lazyWithRetry(
+  () => import("./pages/DynamicPermissionsExample"),
 );
-const DynamicRoutePermissionsExample = lazyWithRetry(() =>
-  import("./pages/DynamicRoutePermissionsExample")
+const DynamicRoutePermissionsExample = lazyWithRetry(
+  () => import("./pages/DynamicRoutePermissionsExample"),
 );
-const PolicyClientExample = lazyWithRetry(() =>
-  import("./pages/PolicyClientExample")
+const PolicyClientExample = lazyWithRetry(
+  () => import("./pages/PolicyClientExample"),
 );
-const ProductTypesManagement = lazyWithRetry(() =>
-  import("./pages/product-management/ProductTypesManagement")
+const ProductTypesManagement = lazyWithRetry(
+  () => import("./pages/product-management/ProductTypesManagement"),
 );
-const ProductManagementDemo = lazyWithRetry(() =>
-  import("./pages/product-management/ProductManagementDemo")
+const ProductManagementDemo = lazyWithRetry(
+  () => import("./pages/product-management/ProductManagementDemo"),
 );
-const NewGraduate = lazyWithRetry(() => import("./pages/membership/NewGraduate"));
+const NewGraduate = lazyWithRetry(
+  () => import("./pages/membership/NewGraduate"),
+);
 const NewlyJoint = lazyWithRetry(() => import("./pages/membership/NewlyJoint"));
-const RecruitAFriend = lazyWithRetry(() =>
-  import("./pages/membership/RecruitAFriend")
+const RecruitAFriend = lazyWithRetry(
+  () => import("./pages/membership/RecruitAFriend"),
 );
-const DirectDebitSummary = lazyWithRetry(() =>
-  import("./pages/finance/DirectDebitSummary")
+const DirectDebitSummary = lazyWithRetry(
+  () => import("./pages/finance/DirectDebitSummary"),
 );
-const RefundsSummary = lazyWithRetry(() => import("./pages/finance/RefundsSummary"));
-const WriteOffsSummary = lazyWithRetry(() => import("./pages/finance/WriteOffsSummary"));
-const DirectDebitBatchDetails = lazyWithRetry(() =>
-  import("./pages/finance/DirectDebitBatchDetails")
+const RefundsSummary = lazyWithRetry(
+  () => import("./pages/finance/RefundsSummary"),
 );
-const EventsSummary = lazyWithRetry(() => import("./pages/events/EventsSummary"));
+const WriteOffsSummary = lazyWithRetry(
+  () => import("./pages/finance/WriteOffsSummary"),
+);
+const DirectDebitBatchDetails = lazyWithRetry(
+  () => import("./pages/finance/DirectDebitBatchDetails"),
+);
+const EventsSummary = lazyWithRetry(
+  () => import("./pages/events/EventsSummary"),
+);
 const EventDetails = lazyWithRetry(() => import("./pages/events/EventDetails"));
 
 function Entry() {
@@ -241,7 +255,7 @@ function Entry() {
   const noSidebarRoutes = [
     "/", // login page
     "/rewards/insurance",
-    "/rewards/rewards"
+    "/rewards/rewards",
   ];
 
   const showSidebar = !noSidebarRoutes.includes(location.pathname);
@@ -294,797 +308,798 @@ function Entry() {
 
               {/* Content area + resizable section */}
               <div style={{ flex: 1, display: "flex" }}>
-              <div
-                style={{
-                  flex: 1,
-                  scrollbarWidth: location.pathname === "/CasesDetails" ? "auto" : "none"
-                }}
-                className={`main-main ${location.pathname === "/CasesDetails" ? "enable-vertical-scroll" : ""}`}
-              >
-                <Suspense
-                  fallback={
-                    <div
-                      style={{
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center",
-                        height: "100vh", // full screen height
-                        width: "100%", // full width
-                      }}
-                    >
-                      <Spin size="large" />
-                    </div>
-                  }
+                <div
+                  style={{
+                    flex: 1,
+                    scrollbarWidth:
+                      location.pathname === "/CasesDetails" ? "auto" : "none",
+                  }}
+                  className={`main-main ${location.pathname === "/CasesDetails" ? "enable-vertical-scroll" : ""}`}
                 >
-                  <Routes>
-                    <Route path="/" element={<Login />} />
+                  <Suspense
+                    fallback={
+                      <div
+                        style={{
+                          display: "flex",
+                          justifyContent: "center",
+                          alignItems: "center",
+                          height: "100vh", // full screen height
+                          width: "100%", // full width
+                        }}
+                      >
+                        <Spin size="large" />
+                      </div>
+                    }
+                  >
+                    <Routes>
+                      <Route path="/" element={<Login />} />
 
-                    {/* Protected Routes with Authorization */}
-                    <Route
-                      path="Dummy"
-                      element={
-                        <ProtectedRoute>
-                          <Dummy />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Details"
-                      element={
-                        <RoutePermissionWrapper path="/Details">
+                      {/* Protected Routes with Authorization */}
+                      <Route
+                        path="Dummy"
+                        element={
                           <ProtectedRoute>
-                            <ProfileDetails />
+                            <Dummy />
                           </ProtectedRoute>
-                        </RoutePermissionWrapper>
-                      }
-                    />
+                        }
+                      />
 
-                    <Route
-                      path="Summary"
-                      element={
-                        <RoutePermissionWrapper path="/Summary">
+                      <Route
+                        path="Details"
+                        element={
+                          <RoutePermissionWrapper path="/Details">
+                            <ProtectedRoute>
+                              <ProfileDetails />
+                            </ProtectedRoute>
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
+                        path="Summary"
+                        element={
+                          <RoutePermissionWrapper path="/Summary">
+                            <ProtectedRoute>
+                              <ProfileSummary />
+                            </ProtectedRoute>
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
+                        path="CasesDetails"
+                        element={
                           <ProtectedRoute>
-                            <ProfileSummary />
+                            <CasesDetails />
                           </ProtectedRoute>
-                        </RoutePermissionWrapper>
-                      }
-                    />
+                        }
+                      />
 
-                    <Route
-                      path="CasesDetails"
-                      element={
-                        <ProtectedRoute>
-                          <CasesDetails />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="CasesById"
-                      element={
-                        <ProtectedRoute>
-                          <CasesById />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="CasesSummary"
-                      element={
-                        <ProtectedRoute>
-                          <CasesSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    {/* InmoRewards routes - these will have no sidebar */}
-                    <Route
-                      path="rewards/insurance"
-                      element={
-                        <ProtectedRoute>
-                          <IncomeProtectionTooltip />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="rewards/rewards"
-                      element={
-                        <ProtectedRoute>
-                          <IncomeProtectionTooltip />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="templeteSummary"
-                      element={
-                        <ProtectedRoute>
-                          <TempletsSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="templeteConfig"
-                      element={
-                        <ProtectedRoute>
-                          <TempleteConfig />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="ClaimSummary"
-                      element={
-                        <ProtectedRoute>
-                          <ClaimSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="ClaimsDetails"
-                      element={
-                        <ProtectedRoute>
-                          <ClaimsDetails />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Configuratin"
-                      element={
-                        <ProtectedRoute>
-                          <Configuratin />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Filters"
-                      element={
-                        <ProtectedRoute>
-                          <Filter />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="ClaimsById"
-                      element={
-                        <ProtectedRoute>
-                          <ClaimsById />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="AddNewProfile"
-                      element={
-                        <ProtectedRoute>
-                          <AddNewProfile />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Transfers"
-                      element={
-                        <ProtectedRoute>
-                          <TransferSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="AddClaims"
-                      element={
-                        <ProtectedRoute>
-                          <AddClaims />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="CorrespondencesSummary"
-                      element={
-                        <ProtectedRoute>
-                          <CorrespondencesSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="InAppNotifications"
-                      element={
-                        <ProtectedRoute>
-                          <InAppNotifications />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="CorrespondenceDashboard"
-                      element={
-                        <ProtectedRoute>
-                          <CorrespondenceDashboard />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="CommunicationBatchDetail"
-                      element={
-                        <ProtectedRoute>
-                          <CommunicationBatchDetail />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="LandingPage"
-                      element={
-                        <ProtectedRoute>
-                          <LandingPage />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Reports"
-                      element={
-                        <ProtectedRoute>
-                          <ReportsIndex />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="ReportsDashboard"
-                      element={
-                        <ProtectedRoute>
-                          <DashboardPage />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="CorspndncDetail"
-                      element={
-                        <ProtectedRoute>
-                          <CorspndncDetail />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="EventsSummary"
-                      element={
-                        <ProtectedRoute>
-                          <EventsSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="EventDetails"
-                      element={
-                        <ProtectedRoute>
-                          <EventDetails />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="RosterSummary"
-                      element={
-                        <ProtectedRoute>
-                          <RusterSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Doucmnets"
-                      element={
-                        <ProtectedRoute>
-                          <Doucmnets />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Roster"
-                      element={
-                        <ProtectedRoute>
-                          <RosterDetails />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Applications"
-                      element={
-                        <ProtectedRoute>
-                          <MembershipApplication />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="applicationMgt"
-                      element={
-                        <ProtectedRoute>
-                          <ApplicationMgt />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="AproveMembersip"
-                      element={
-                        <ProtectedRoute>
-                          <ApproveMembership />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="ChangCateSumm"
-                      element={
-                        <ProtectedRoute>
-                          <ChangCateSumm />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="ChangeCatById"
-                      element={
-                        <ProtectedRoute>
-                          <CateById />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="RemindersSummary"
-                      element={
-                        <ProtectedRoute>
-                          <RemindersSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Cancallation"
-                      element={
-                        <ProtectedRoute>
-                          <Cancallation />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Batches"
-                      element={
-                        <ProtectedRoute>
-                          <Batches />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Import"
-                      element={
-                        <ProtectedRoute>
-                          <Import />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Deductions"
-                      element={
-                        <ProtectedRoute>
-                          <Deductions />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="StandingOrders"
-                      element={
-                        <ProtectedRoute>
-                          <StandingOrders />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Cheque"
-                      element={
-                        <ProtectedRoute>
-                          <Cheque />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Reconciliation"
-                      element={
-                        <ProtectedRoute>
-                          <Reconciliation />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="DirectDebitAuthorization"
-                      element={
-                        <ProtectedRoute>
-                          <DirectDebitAuthorization />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="Members"
-                      element={
-                        <ProtectedRoute>
-                          <Subscriptions />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="onlinePayment"
-                      element={
-                        <ProtectedRoute>
-                          <OnlinePayment />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="BatchMemberSummary/:batchId?"
-                      element={
-                        <ProtectedRoute>
-                          <BatchMemberSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="DirectDebit"
-                      element={
-                        <ProtectedRoute>
-                          <DirectDebitSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Refunds"
-                      element={
-                        <ProtectedRoute>
-                          <RefundsSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="write-offs"
-                      element={
-                        <ProtectedRoute>
-                          <WriteOffsSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="Batch/:id"
-                      element={
-                        <ProtectedRoute>
-                          <SimpleBatchMemberSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="SimpleBatchMemberSummary"
-                      element={
-                        <ProtectedRoute>
-                          <SimpleBatchMemberSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="DirectDebitBatchDetails"
-                      element={
-                        <ProtectedRoute>
-                          <DirectDebitBatchDetails />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="NotDesignedYet"
-                      element={
-                        <ProtectedRoute>
-                          <NotDesignedYet />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Email"
-                      element={
-                        <ProtectedRoute>
-                          <Email />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Sms"
-                      element={
-                        <ProtectedRoute>
-                          <Sms />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Notes"
-                      element={
-                        <ProtectedRoute>
-                          <Notes />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="CornMarket"
-                      element={
-                        <ProtectedRoute>
-                          <CornGrideSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="Popout"
-                      element={
-                        <ProtectedRoute>
-                          <Popout />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="DirectDebit"
-                      element={
-                        <ProtectedRoute>
-                          <DirectDebitSummary />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="members"
-                      element={
-                        <ProtectedRoute>
-                          <Members />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="RemindersDetails"
-                      element={
-                        <ProtectedRoute>
-                          <RemindersDetails />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="CancellationDetail"
-                      element={
-                        <ProtectedRoute>
-                          <CancellationDetail />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="MembershipDashboard"
-                      element={
-                        <RoutePermissionWrapper path="/MembershipDashboard">
+                      <Route
+                        path="CasesById"
+                        element={
                           <ProtectedRoute>
-                            <MembershipDashboard />
+                            <CasesById />
                           </ProtectedRoute>
-                        </RoutePermissionWrapper>
-                      }
-                    />
+                        }
+                      />
 
-                    <Route
-                      path="TenantManagement"
-                      element={
-                        <ProtectedRoute>
-                          <TenantManagement />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="CancelledMembersReport"
-                      element={
-                        <ProtectedRoute>
-                          <CancelledMembersReport />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="SuspendedMembersReport"
-                      element={
-                        <ProtectedRoute>
-                          <SuspendedMembersReport />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="ResignedMembersReport"
-                      element={
-                        <ProtectedRoute>
-                          <ResignedMembersReport />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="NewMembersReport"
-                      element={
-                        <ProtectedRoute>
-                          <NewMembersReport />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="LeaversReport"
-                      element={
-                        <ProtectedRoute>
-                          <LeaversReport />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="JoinersReport"
-                      element={
-                        <ProtectedRoute>
-                          <JoinersReport />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="RoleManagement"
-                      element={
-                        <ProtectedRoute>
-                          <RoleManagement />
-                        </ProtectedRoute>
-                      }
-                    />
-
-                    <Route
-                      path="UserManagement"
-                      element={
-                        <RoutePermissionWrapper path="/UserManagement">
+                      <Route
+                        path="CasesSummary"
+                        element={
                           <ProtectedRoute>
-                            <UserManagement />
+                            <CasesSummary />
                           </ProtectedRoute>
-                        </RoutePermissionWrapper>
-                      }
-                    />
+                        }
+                      />
 
-                    <Route
-                      path="PermissionManagement"
-                      element={
-                        <ProtectedRoute>
-                          <PermissionManagement />
-                        </ProtectedRoute>
-                      }
-                    />
+                      {/* InmoRewards routes - these will have no sidebar */}
+                      <Route
+                        path="rewards/insurance"
+                        element={
+                          <ProtectedRoute>
+                            <IncomeProtectionTooltip />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="rewards/rewards"
+                        element={
+                          <ProtectedRoute>
+                            <IncomeProtectionTooltip />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="ProductTypesManagement"
-                      element={
-                        <ProtectedRoute>
-                          <ProductTypesManagement />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="templeteSummary"
+                        element={
+                          <ProtectedRoute>
+                            <TempletsSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="templeteConfig"
+                        element={
+                          <ProtectedRoute>
+                            <TempleteConfig />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="CancelledMembersReport"
-                      element={
-                        <ProtectedRoute>
-                          <CancelledMembersReport />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="ClaimSummary"
+                        element={
+                          <ProtectedRoute>
+                            <ClaimSummary />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="ReportViewerDemo"
-                      element={
-                        <ProtectedRoute>
-                          <ReportViewerDemo />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="ClaimsDetails"
+                        element={
+                          <ProtectedRoute>
+                            <ClaimsDetails />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="AuthorizationExample"
-                      element={
-                        <ProtectedRoute>
-                          <AuthorizationExample />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="Configuratin"
+                        element={
+                          <ProtectedRoute>
+                            <Configuratin />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="DynamicPermissionsExample"
-                      element={
-                        <ProtectedRoute>
-                          <DynamicPermissionsExample />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="Filters"
+                        element={
+                          <ProtectedRoute>
+                            <Filter />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="DynamicRoutePermissionsExample"
-                      element={
-                        <ProtectedRoute>
-                          <DynamicRoutePermissionsExample />
-                        </ProtectedRoute>
-                      }
-                    />
+                      <Route
+                        path="ClaimsById"
+                        element={
+                          <ProtectedRoute>
+                            <ClaimsById />
+                          </ProtectedRoute>
+                        }
+                      />
 
-                    <Route
-                      path="PolicyClientExample"
-                      element={
-                        <ProtectedRoute>
-                          <PolicyClientExample />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="ProductManagementDemo"
-                      element={
-                        <ProtectedRoute>
-                          <ProductManagementDemo />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="NewGraduate"
-                      element={
-                        <ProtectedRoute>
-                          <NewGraduate />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="CornMarketRewards"
-                      element={
-                        <ProtectedRoute>
-                          <NewlyJoint />
-                        </ProtectedRoute>
-                      }
-                    />
-                    <Route
-                      path="RecruitAFriend"
-                      element={
-                        <ProtectedRoute>
-                          <RecruitAFriend />
-                        </ProtectedRoute>
-                      }
-                    />
-                  </Routes>
-                </Suspense>
+                      <Route
+                        path="AddNewProfile"
+                        element={
+                          <ProtectedRoute>
+                            <AddNewProfile />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Transfers"
+                        element={
+                          <ProtectedRoute>
+                            <TransferSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="AddClaims"
+                        element={
+                          <ProtectedRoute>
+                            <AddClaims />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="CorrespondencesSummary"
+                        element={
+                          <ProtectedRoute>
+                            <CorrespondencesSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="InAppNotifications"
+                        element={
+                          <ProtectedRoute>
+                            <InAppNotifications />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="CorrespondenceDashboard"
+                        element={
+                          <ProtectedRoute>
+                            <CorrespondenceDashboard />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="CommunicationBatchDetail"
+                        element={
+                          <ProtectedRoute>
+                            <CommunicationBatchDetail />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="LandingPage"
+                        element={
+                          <ProtectedRoute>
+                            <LandingPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Reports"
+                        element={
+                          <ProtectedRoute>
+                            <ReportsIndex />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="ReportsDashboard"
+                        element={
+                          <ProtectedRoute>
+                            <DashboardPage />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="CorspndncDetail"
+                        element={
+                          <ProtectedRoute>
+                            <CorspndncDetail />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="EventsSummary"
+                        element={
+                          <ProtectedRoute>
+                            <EventsSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="EventDetails"
+                        element={
+                          <ProtectedRoute>
+                            <EventDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="RosterSummary"
+                        element={
+                          <ProtectedRoute>
+                            <RusterSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Doucmnets"
+                        element={
+                          <ProtectedRoute>
+                            <Doucmnets />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Roster"
+                        element={
+                          <ProtectedRoute>
+                            <RosterDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Applications"
+                        element={
+                          <ProtectedRoute>
+                            <MembershipApplication />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="applicationMgt"
+                        element={
+                          <ProtectedRoute>
+                            <ApplicationMgt />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="AproveMembersip"
+                        element={
+                          <ProtectedRoute>
+                            <ApproveMembership />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="ChangCateSumm"
+                        element={
+                          <ProtectedRoute>
+                            <ChangCateSumm />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="ChangeCatById"
+                        element={
+                          <ProtectedRoute>
+                            <CateById />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="RemindersSummary"
+                        element={
+                          <ProtectedRoute>
+                            <RemindersSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Cancallation"
+                        element={
+                          <ProtectedRoute>
+                            <Cancallation />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Batches"
+                        element={
+                          <ProtectedRoute>
+                            <Batches />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Import"
+                        element={
+                          <ProtectedRoute>
+                            <Import />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Deductions"
+                        element={
+                          <ProtectedRoute>
+                            <Deductions />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="StandingOrders"
+                        element={
+                          <ProtectedRoute>
+                            <StandingOrders />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Cheque"
+                        element={
+                          <ProtectedRoute>
+                            <Cheque />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Reconciliation"
+                        element={
+                          <ProtectedRoute>
+                            <Reconciliation />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="DirectDebitAuthorization"
+                        element={
+                          <ProtectedRoute>
+                            <DirectDebitAuthorization />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="Members"
+                        element={
+                          <ProtectedRoute>
+                            <Subscriptions />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="onlinePayment"
+                        element={
+                          <ProtectedRoute>
+                            <OnlinePayment />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="BatchMemberSummary/:batchId?"
+                        element={
+                          <ProtectedRoute>
+                            <BatchMemberSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="DirectDebit"
+                        element={
+                          <ProtectedRoute>
+                            <DirectDebitSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Refunds"
+                        element={
+                          <ProtectedRoute>
+                            <RefundsSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="write-offs"
+                        element={
+                          <ProtectedRoute>
+                            <WriteOffsSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="Batch/:id"
+                        element={
+                          <ProtectedRoute>
+                            <SimpleBatchMemberSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="SimpleBatchMemberSummary"
+                        element={
+                          <ProtectedRoute>
+                            <SimpleBatchMemberSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="DirectDebitBatchDetails"
+                        element={
+                          <ProtectedRoute>
+                            <DirectDebitBatchDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="NotDesignedYet"
+                        element={
+                          <ProtectedRoute>
+                            <NotDesignedYet />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Email"
+                        element={
+                          <ProtectedRoute>
+                            <Email />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Sms"
+                        element={
+                          <ProtectedRoute>
+                            <Sms />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Notes"
+                        element={
+                          <ProtectedRoute>
+                            <Notes />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="CornMarket"
+                        element={
+                          <ProtectedRoute>
+                            <CornGrideSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="Popout"
+                        element={
+                          <ProtectedRoute>
+                            <Popout />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="DirectDebit"
+                        element={
+                          <ProtectedRoute>
+                            <DirectDebitSummary />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="members"
+                        element={
+                          <ProtectedRoute>
+                            <Members />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="RemindersDetails"
+                        element={
+                          <ProtectedRoute>
+                            <RemindersDetails />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="CancellationDetail"
+                        element={
+                          <ProtectedRoute>
+                            <CancellationDetail />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="MembershipDashboard"
+                        element={
+                          <RoutePermissionWrapper path="/MembershipDashboard">
+                            <ProtectedRoute>
+                              <MembershipDashboard />
+                            </ProtectedRoute>
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
+                        path="TenantManagement"
+                        element={
+                          <ProtectedRoute>
+                            <TenantManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="CancelledMembersReport"
+                        element={
+                          <ProtectedRoute>
+                            <CancelledMembersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="SuspendedMembersReport"
+                        element={
+                          <ProtectedRoute>
+                            <SuspendedMembersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="ResignedMembersReport"
+                        element={
+                          <ProtectedRoute>
+                            <ResignedMembersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="NewMembersReport"
+                        element={
+                          <ProtectedRoute>
+                            <NewMembersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="LeaversReport"
+                        element={
+                          <ProtectedRoute>
+                            <LeaversReport />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="JoinersReport"
+                        element={
+                          <ProtectedRoute>
+                            <JoinersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="RoleManagement"
+                        element={
+                          <ProtectedRoute>
+                            <RoleManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="UserManagement"
+                        element={
+                          <RoutePermissionWrapper path="/UserManagement">
+                            <ProtectedRoute>
+                              <UserManagement />
+                            </ProtectedRoute>
+                          </RoutePermissionWrapper>
+                        }
+                      />
+
+                      <Route
+                        path="PermissionManagement"
+                        element={
+                          <ProtectedRoute>
+                            <PermissionManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="ProductTypesManagement"
+                        element={
+                          <ProtectedRoute>
+                            <ProductTypesManagement />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="CancelledMembersReport"
+                        element={
+                          <ProtectedRoute>
+                            <CancelledMembersReport />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="ReportViewerDemo"
+                        element={
+                          <ProtectedRoute>
+                            <ReportViewerDemo />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="AuthorizationExample"
+                        element={
+                          <ProtectedRoute>
+                            <AuthorizationExample />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="DynamicPermissionsExample"
+                        element={
+                          <ProtectedRoute>
+                            <DynamicPermissionsExample />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="DynamicRoutePermissionsExample"
+                        element={
+                          <ProtectedRoute>
+                            <DynamicRoutePermissionsExample />
+                          </ProtectedRoute>
+                        }
+                      />
+
+                      <Route
+                        path="PolicyClientExample"
+                        element={
+                          <ProtectedRoute>
+                            <PolicyClientExample />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="ProductManagementDemo"
+                        element={
+                          <ProtectedRoute>
+                            <ProductManagementDemo />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="NewGraduate"
+                        element={
+                          <ProtectedRoute>
+                            <NewGraduate />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="CornMarketRewards"
+                        element={
+                          <ProtectedRoute>
+                            <NewlyJoint />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="RecruitAFriend"
+                        element={
+                          <ProtectedRoute>
+                            <RecruitAFriend />
+                          </ProtectedRoute>
+                        }
+                      />
+                    </Routes>
+                  </Suspense>
+                </div>
+
+                {/* Optional right-side component */}
+                {showResizableCompRoutes.includes(location.pathname) && (
+                  <ResizableComp />
+                )}
               </div>
-
-              {/* Optional right-side component */}
-              {showResizableCompRoutes.includes(location.pathname) && (
-                <ResizableComp />
-              )}
-            </div>
             </CasesEditProvider>
           </div>
         </div>

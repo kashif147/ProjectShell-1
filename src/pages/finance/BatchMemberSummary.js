@@ -109,7 +109,7 @@ function BatchMemberSummary() {
   const dispatch = useDispatch();
 
   const { data: batchDetails, loading } = useSelector(
-    (state) => state.batchDetails
+    (state) => state.batchDetails,
   );
 
   // Fetch batch details if batchId is available
@@ -135,21 +135,21 @@ function BatchMemberSummary() {
   const members = useMemo(
     () =>
       Array.isArray(batchInfo?.batchPayments) ? batchInfo.batchPayments : [],
-    [batchInfo?.batchPayments]
+    [batchInfo?.batchPayments],
   );
   const exceptions = useMemo(
     () =>
       Array.isArray(batchInfo?.batchExceptions)
         ? batchInfo.batchExceptions
         : [],
-    [batchInfo?.batchExceptions]
+    [batchInfo?.batchExceptions],
   );
 
   const onSelectAll = (checked) => {
     const dataSource = activeKey === "1" ? members : exceptions;
     if (checked) {
       const allKeys = dataSource.map(
-        (item, index) => item._id || item.id || index
+        (item, index) => item._id || item.id || index,
       );
       setSelectedRowKeys(allKeys);
     } else {
@@ -162,7 +162,7 @@ function BatchMemberSummary() {
       setSelectedRowKeys((prev) => [...prev, record._id || record.id]);
     } else {
       setSelectedRowKeys((prev) =>
-        prev.filter((key) => key !== (record._id || record.id))
+        prev.filter((key) => key !== (record._id || record.id)),
       );
     }
   };
@@ -217,7 +217,7 @@ function BatchMemberSummary() {
     const [searchText, setSearchText] = useState("");
     const uniqueValues = getUniqueFilterValues(dataSource, getValue);
     const filteredOptions = uniqueValues.filter((option) =>
-      option.text.toLowerCase().includes(searchText.toLowerCase())
+      option.text.toLowerCase().includes(searchText.toLowerCase()),
     );
 
     const handleReset = () => {
@@ -327,7 +327,7 @@ function BatchMemberSummary() {
         render: (text, record) => text || record["Membership No"] || "-",
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record["Membership No"]
+          (record) => record["Membership No"],
         ),
         onFilter: (value, record) => {
           const recordValue = record["Membership No"] || "";
@@ -421,7 +421,7 @@ function BatchMemberSummary() {
                     key={range.value}
                     onClick={() => {
                       const newSelectedKeys = selectedKeys?.includes(
-                        range.value
+                        range.value,
                       )
                         ? selectedKeys.filter((key) => key !== range.value)
                         : [...(selectedKeys || []), range.value];
@@ -491,7 +491,7 @@ function BatchMemberSummary() {
         sortDirections: ["ascend", "descend"],
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record.membershipNumber
+          (record) => record.membershipNumber,
         ),
         onFilter: (value, record) => {
           const recordValue = (record.membershipNumber || "").toString();
@@ -515,7 +515,7 @@ function BatchMemberSummary() {
         sortDirections: ["ascend", "descend"],
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record["Payroll No"]
+          (record) => record["Payroll No"],
         ),
         onFilter: (value, record) => {
           const recordValue = (record["Payroll No"] || "").toString();
@@ -559,7 +559,7 @@ function BatchMemberSummary() {
         sortDirections: ["ascend", "descend"],
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record.membershipNumber
+          (record) => record.membershipNumber,
         ),
         onFilter: (value, record) => {
           const recordValue = (record.membershipNumber || "").toString();
@@ -583,7 +583,7 @@ function BatchMemberSummary() {
         sortDirections: ["ascend", "descend"],
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record.fullName
+          (record) => record.fullName,
         ),
         onFilter: (value, record) => {
           const recordValue = (record.fullName || "").toString();
@@ -607,7 +607,7 @@ function BatchMemberSummary() {
         sortDirections: ["ascend", "descend"],
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record["Payroll No"]
+          (record) => record["Payroll No"],
         ),
         onFilter: (value, record) => {
           const recordValue = (record["Payroll No"] || "").toString();
@@ -657,7 +657,7 @@ function BatchMemberSummary() {
                     key={range.value}
                     onClick={() => {
                       const newSelectedKeys = selectedKeys?.includes(
-                        range.value
+                        range.value,
                       )
                         ? selectedKeys.filter((key) => key !== range.value)
                         : [...(selectedKeys || []), range.value];
@@ -731,7 +731,7 @@ function BatchMemberSummary() {
   // Pagination state
   const rawDataSource = useMemo(
     () => (activeKey === "1" ? members : exceptions),
-    [activeKey, members, exceptions]
+    [activeKey, members, exceptions],
   );
   const defaultPageSize = getDefaultPageSize(rawDataSource.length);
   const [currentPage, setCurrentPage] = useState(1);
@@ -747,11 +747,11 @@ function BatchMemberSummary() {
       const filterValues = filteredInfo[key];
       if (filterValues && filterValues.length > 0) {
         const column = (activeKey === "1" ? columns : exceptionColumns).find(
-          (col) => col.dataIndex === key || col.key === key
+          (col) => col.dataIndex === key || col.key === key,
         );
         if (column && column.onFilter) {
           data = data.filter((record) =>
-            filterValues.some((value) => column.onFilter(value, record))
+            filterValues.some((value) => column.onFilter(value, record)),
           );
         }
       }
@@ -760,7 +760,7 @@ function BatchMemberSummary() {
     // Apply sorting
     if (sortedInfo.columnKey && sortedInfo.order) {
       const column = (activeKey === "1" ? columns : exceptionColumns).find(
-        (col) => col.key === sortedInfo.columnKey
+        (col) => col.key === sortedInfo.columnKey,
       );
       if (column && column.sorter) {
         data.sort((a, b) => {
@@ -856,7 +856,7 @@ function BatchMemberSummary() {
       message.error(
         error.response?.data?.message ||
           error.message ||
-          "Failed to download file"
+          "Failed to download file",
       );
       console.error("Download error:", error);
     }
@@ -870,11 +870,11 @@ function BatchMemberSummary() {
   // Calculate totals strictly from the Redux lists
   const calcTotalCurrent = members.reduce(
     (sum, m) => sum + (parseFloat(m.amount) || 0),
-    0
+    0,
   );
   const calcTotalExceptions = exceptions.reduce(
     (sum, e) => sum + (parseFloat(e.valueForPeriodSelected) || 0),
-    0
+    0,
   );
   const calcTotalRecords = members.length + exceptions.length;
 
@@ -953,65 +953,298 @@ function BatchMemberSummary() {
         }}
       >
         {/* Batch Name */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "160px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Batch Name</div>
-          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap", maxWidth: "140px" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "160px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#64748b",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Batch Name
+          </div>
+          <div
+            style={{
+              fontSize: "13px",
+              fontWeight: "600",
+              color: "#0f172a",
+              overflow: "hidden",
+              textOverflow: "ellipsis",
+              whiteSpace: "nowrap",
+              maxWidth: "140px",
+            }}
+          >
             {batchInfo.name || batchInfo.description || "-"}
           </div>
         </div>
-        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        <div
+          style={{
+            width: "1px",
+            height: "28px",
+            backgroundColor: "#e2e8f0",
+            margin: "0 12px",
+            flexShrink: 0,
+          }}
+        />
         {/* Batch Ref */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "140px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Batch Ref</div>
-          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.referenceNumber || "-"}</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "140px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#64748b",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Batch Ref
+          </div>
+          <div
+            style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
+          >
+            {batchInfo.referenceNumber || "-"}
+          </div>
         </div>
-        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        <div
+          style={{
+            width: "1px",
+            height: "28px",
+            backgroundColor: "#e2e8f0",
+            margin: "0 12px",
+            flexShrink: 0,
+          }}
+        />
         {/* Type */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Type</div>
-          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.type || "-"}</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "120px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#64748b",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Type
+          </div>
+          <div
+            style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
+          >
+            {batchInfo.type || "-"}
+          </div>
         </div>
-        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        <div
+          style={{
+            width: "1px",
+            height: "28px",
+            backgroundColor: "#e2e8f0",
+            margin: "0 12px",
+            flexShrink: 0,
+          }}
+        />
         {/* Payment Date */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Payment Date</div>
-          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "120px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#64748b",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Payment Date
+          </div>
+          <div
+            style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
+          >
             {displayBatchDate ? displayBatchDate.format("MM/YYYY") : "-"}
           </div>
         </div>
-        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        <div
+          style={{
+            width: "1px",
+            height: "28px",
+            backgroundColor: "#e2e8f0",
+            margin: "0 12px",
+            flexShrink: 0,
+          }}
+        />
         {/* Work Location */}
-        <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px" }}>
-          <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Work Location</div>
-          <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.workLocation || "-"}</div>
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "120px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#64748b",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Work Location
+          </div>
+          <div
+            style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
+          >
+            {batchInfo.workLocation || "-"}
+          </div>
         </div>
-        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+        <div
+          style={{
+            width: "1px",
+            height: "28px",
+            backgroundColor: "#e2e8f0",
+            margin: "0 12px",
+            flexShrink: 0,
+          }}
+        />
         {/* Comments (if present) */}
-        {(batchInfo.comments != null && batchInfo.comments !== "") && (
+        {batchInfo.comments != null && batchInfo.comments !== "" && (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "120px", maxWidth: "200px" }}>
-              <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Comments</div>
-              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a", overflow: "hidden", textOverflow: "ellipsis", whiteSpace: "nowrap" }}>{batchInfo.comments}</div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                minWidth: "120px",
+                maxWidth: "200px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#64748b",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Comments
+              </div>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#0f172a",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                {batchInfo.comments}
+              </div>
             </div>
-            <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+            <div
+              style={{
+                width: "1px",
+                height: "28px",
+                backgroundColor: "#e2e8f0",
+                margin: "0 12px",
+                flexShrink: 0,
+              }}
+            />
           </>
         )}
         {/* Status (if present) */}
-        {(batchInfo.batchStatus != null && batchInfo.batchStatus !== "") && (
+        {batchInfo.batchStatus != null && batchInfo.batchStatus !== "" && (
           <>
-            <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "100px" }}>
-              <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Status</div>
-              <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>{batchInfo.batchStatus}</div>
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                gap: "8px",
+                minWidth: "100px",
+              }}
+            >
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#64748b",
+                  fontWeight: "500",
+                  whiteSpace: "nowrap",
+                }}
+              >
+                Status
+              </div>
+              <div
+                style={{
+                  fontSize: "13px",
+                  fontWeight: "600",
+                  color: "#0f172a",
+                }}
+              >
+                {batchInfo.batchStatus}
+              </div>
             </div>
-            <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
+            <div
+              style={{
+                width: "1px",
+                height: "28px",
+                backgroundColor: "#e2e8f0",
+                margin: "0 12px",
+                flexShrink: 0,
+              }}
+            />
           </>
         )}
         {/* Created (if present) */}
         {(batchInfo.createdAt || batchInfo.createdBy) && (
-          <div style={{ display: "flex", alignItems: "center", gap: "8px", minWidth: "160px", marginLeft: "auto" }}>
-            <div style={{ fontSize: "11px", color: "#64748b", fontWeight: "500", whiteSpace: "nowrap" }}>Created</div>
-            <div style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}>
-              {batchInfo.createdAt ? getSafeDate(batchInfo.createdAt).format("DD/MM/YYYY HH:mm") : ""}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              minWidth: "160px",
+              marginLeft: "auto",
+            }}
+          >
+            <div
+              style={{
+                fontSize: "11px",
+                color: "#64748b",
+                fontWeight: "500",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Created
+            </div>
+            <div
+              style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
+            >
+              {batchInfo.createdAt
+                ? getSafeDate(batchInfo.createdAt).format("DD/MM/YYYY HH:mm")
+                : ""}
               {batchInfo.createdAt && batchInfo.createdBy ? " · " : ""}
               {batchInfo.createdBy || ""}
             </div>

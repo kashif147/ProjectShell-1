@@ -18,7 +18,6 @@ import {
   ShareAltOutlined,
   EllipsisOutlined,
   PlusOutlined,
-  EditOutlined,
   FileTextOutlined,
   DownloadOutlined,
   MessageOutlined,
@@ -27,6 +26,8 @@ import {
   FolderOpenOutlined,
   DownOutlined,
   UpOutlined,
+  PrinterOutlined,
+  EyeOutlined,
 } from "@ant-design/icons";
 import "../../styles/CasesDetails.css";
 import ReactQuill from "react-quill";
@@ -225,27 +226,83 @@ function CasesDetails() {
   const [pertinentToFileReview, setPertinentToFileReview] = useState(true);
   const [stakeholders, setStakeholders] = useState(["Emma W.", "James B."]);
 
+  const issueDescription =
+    "Initial flagged transaction originating from region 4. Potential anti-money laundering (AML) indicators detected. Requires manual cross-verification with external vendor logs.";
+
+  const getFirstNWords = (text, n) => {
+    if (!text || !n) return "";
+    const stripped = String(text).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const words = stripped.split(/\s+/).filter(Boolean);
+    const slice = words.slice(0, n).join(" ");
+    return words.length > n ? `${slice}...` : slice;
+  };
+
+  const stripHtml = (html) => {
+    if (!html) return "";
+    const tmp = document.createElement("div");
+    tmp.innerHTML = html;
+    return (tmp.textContent || tmp.innerText || "").replace(/\s+/g, " ").trim();
+  };
+
+  const handlePrint = () => window.print();
+
+  const allSectionsCollapsed =
+    descriptionCollapsed &&
+    collapsedSections.Attachments &&
+    collapsedSections.Activities &&
+    collapsedSections.History;
+
+  const handleCollapseExpandToggle = () => {
+    if (allSectionsCollapsed) {
+      setDescriptionCollapsed(false);
+      setCollapsedSections({ Attachments: false, Activities: false, History: false });
+    } else {
+      setDescriptionCollapsed(true);
+      setCollapsedSections({ Attachments: true, Activities: true, History: true });
+    }
+  };
+
   const renderSummary = () => (
     <div className="summary-content">
       <div className="summary-title-description-full">
-        <div className="summary-title-wrapper">
-          <h2 className="summary-title">{caseTitle}</h2>
+        <div className="summary-title-row">
+          <div className="summary-title-wrapper">
+            <h2 className="summary-title">{caseTitle}</h2>
+          </div>
+          <div className="summary-title-actions">
+            <Button
+              type="link"
+              onClick={handleCollapseExpandToggle}
+              className="summary-expand-collapse-btn"
+            >
+              {allSectionsCollapsed ? "Expand all" : "Collapse all"}
+            </Button>
+          </div>
         </div>
 
         <div className="description-section">
-          <div
-            className="description-header-collapsible"
-            onClick={() => setDescriptionCollapsed(!descriptionCollapsed)}
-          >
-            <h3>Description</h3>
-            {descriptionCollapsed ? <DownOutlined /> : <UpOutlined />}
+          <div className="section-header-collapsible">
+            <h3>
+              Description
+              {descriptionCollapsed && (
+                <span className="section-preview-inline"> — {getFirstNWords(issueDescription, 20)}</span>
+              )}
+            </h3>
+            <div className="section-header-actions">
+              <span
+                className="section-toggle-btn"
+                onClick={() => setDescriptionCollapsed(!descriptionCollapsed)}
+                role="button"
+                tabIndex={0}
+                onKeyDown={(e) => e.key === "Enter" && setDescriptionCollapsed((c) => !c)}
+                aria-expanded={!descriptionCollapsed}
+              >
+                {descriptionCollapsed ? <DownOutlined /> : <UpOutlined />}
+              </span>
+            </div>
           </div>
           {!descriptionCollapsed && (
-            <div className="description-box">
-              Initial flagged transaction originating from region 4. Potential
-              anti-money laundering (AML) indicators detected. Requires manual
-              cross-verification with external vendor logs.
-            </div>
+            <div className="description-box">{issueDescription}</div>
           )}
         </div>
       </div>
@@ -321,6 +378,7 @@ function CasesDetails() {
       modifiedBy: "J. DOE",
       type: "pdf",
       icon: <FileTextOutlined style={{ color: "#ff4d4f" }} />,
+      printContent: "Case Summary – Region 4 AML Indicator\n\nInitial assessment dated Oct 24, 2023. This document summarizes the flagged transaction and recommended actions. Key findings: potential AML indicators detected; cross-verification with external vendor logs required. Status: Under review. Prepared by J. DOE.",
     },
     {
       name: "Witness_Testimony_Correspondence.msg",
@@ -330,6 +388,7 @@ function CasesDetails() {
       modifiedBy: "R. SMITH",
       type: "msg",
       icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
+      printContent: "Subject: Witness Testimony – Case Reference\nFrom: R. SMITH\nDate: Oct 22, 2023\n\nSummary of correspondence regarding witness testimony. Key points documented for case file. Follow-up required with legal team.",
     },
     {
       name: "Evidence_Photo_001.jpg",
@@ -349,17 +408,12 @@ function CasesDetails() {
       modifiedBy: "M. LEGAL",
       type: "doc",
       icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
+      printContent: "Internal Review Notes\n\nReview completed by M. LEGAL. Recommendations: proceed with cross-verification; escalate if further indicators found. Next steps documented in case workflow.",
     },
   ];
 
   const renderAttachments = () => (
     <div className="attachments-tab-content">
-      <div className="attachments-header">
-        <div className="header-actions-left">
-          {/* Global Buttons Removed */}
-        </div>
-      </div>
-
       <div className="attachments-icons-grid">
         {attachmentsData.map((file, index) => (
           <div key={index} className="attachment-icon-item" title={file.name}>
@@ -382,6 +436,30 @@ function CasesDetails() {
             <div className="file-name-tooltip">{file.name}</div>
             <div className="file-upload-date">
               {file.date} {file.time}
+            </div>
+            <div className="attachment-item-actions">
+              <Tooltip title="View">
+                <span
+                  className="attachment-action-btn"
+                  onClick={(e) => { e.stopPropagation(); handleViewFile(file); }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && handleViewFile(file)}
+                >
+                  <EyeOutlined />
+                </span>
+              </Tooltip>
+              <Tooltip title="Download">
+                <span
+                  className="attachment-action-btn"
+                  onClick={(e) => { e.stopPropagation(); handleDownloadFile(file); }}
+                  role="button"
+                  tabIndex={0}
+                  onKeyDown={(e) => e.key === "Enter" && handleDownloadFile(file)}
+                >
+                  <DownloadOutlined />
+                </span>
+              </Tooltip>
             </div>
           </div>
         ))}
@@ -592,17 +670,39 @@ function CasesDetails() {
   };
 
   const handleUploadFile = () => {
-    // Create a file input element
     const input = document.createElement("input");
     input.type = "file";
     input.multiple = true;
     input.onchange = (e) => {
       const files = Array.from(e.target.files);
-      // Handle file upload logic here
       console.log("Files selected:", files);
-      // You can add file upload logic here, e.g., upload to server, add to attachmentsData, etc.
     };
     input.click();
+  };
+
+  const handleDownloadFile = (file) => {
+    const blob = new Blob([`Placeholder content for ${file.name}`], { type: "application/octet-stream" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = file.name;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const handleViewFile = (file) => {
+    if (file.thumb && (file.type === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))) {
+      window.open(file.thumb, "_blank");
+    } else {
+      const w = window.open("", "_blank");
+      if (w) w.document.write(`<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type. Use Download to save.</p></body></html>`);
+    }
+  };
+
+  const handleDownloadAll = () => {
+    attachmentsData.forEach((file, i) => {
+      setTimeout(() => handleDownloadFile(file), i * 200);
+    });
   };
 
   const renderIssueNotes = () => (
@@ -715,8 +815,6 @@ function CasesDetails() {
 
   return (
     <div className="cases-details-container">
-      {/* Header */}
-
       {/* Scrollable Content Body */}
       <div className="cases-content-body">
         <div className="sections-wrapper">
@@ -727,46 +825,111 @@ function CasesDetails() {
               </div>
 
               <div className="section-container" ref={attachmentsRef}>
-                <div
-                  className="section-header-collapsible"
-                  onClick={() => toggleSection("Attachments")}
-                >
-                  <h3>Attachments</h3>
-                  {collapsedSections.Attachments ? (
-                    <DownOutlined />
-                  ) : (
-                    <UpOutlined />
-                  )}
+                <div className="section-header-collapsible">
+                  <h3>
+                    Attachments
+                    {collapsedSections.Attachments && attachmentsData.length > 0 && (
+                      <span className="section-count"> ({attachmentsData.length} document{attachmentsData.length !== 1 ? "s" : ""})</span>
+                    )}
+                  </h3>
+                  <div className="section-header-actions">
+                    <Tooltip title="Download all">
+                      <Button
+                        type="text"
+                        icon={<DownloadOutlined />}
+                        onClick={handleDownloadAll}
+                        size="small"
+                        disabled={attachmentsData.length === 0}
+                        className="attachments-download-all-btn"
+                      />
+                    </Tooltip>
+                    <span
+                      className="section-toggle-btn"
+                      onClick={() => toggleSection("Attachments")}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && toggleSection("Attachments")}
+                      aria-expanded={!collapsedSections.Attachments}
+                    >
+                      {collapsedSections.Attachments ? (
+                        <DownOutlined />
+                      ) : (
+                        <UpOutlined />
+                      )}
+                    </span>
+                  </div>
                 </div>
                 {!collapsedSections.Attachments && renderAttachments()}
               </div>
 
               <div className="section-container" ref={notesRef}>
-                <div
-                  className="section-header-collapsible"
-                  onClick={() => toggleSection("Activities")}
-                >
-                  <h3>Activities</h3>
-                  {collapsedSections.Activities ? (
-                    <DownOutlined />
-                  ) : (
-                    <UpOutlined />
-                  )}
+                <div className="section-header-collapsible">
+                  <h3>
+                    Activities
+                    {collapsedSections.Activities && notes.length > 0 && (() => {
+                      const latest = notes[notes.length - 1];
+                      const previewText = stripHtml(latest.text);
+                      const short = previewText.length > 60 ? `${previewText.slice(0, 60)}...` : previewText;
+                      return (
+                        <span className="section-preview-inline"> — {latest.user} · {latest.time}: {short}</span>
+                      );
+                    })()}
+                  </h3>
+                  <div className="section-header-actions">
+                  <span
+                    className="section-toggle-btn"
+                    onClick={() => toggleSection("Activities")}
+                    role="button"
+                    tabIndex={0}
+                    onKeyDown={(e) => e.key === "Enter" && toggleSection("Activities")}
+                    aria-expanded={!collapsedSections.Activities}
+                  >
+                    {collapsedSections.Activities ? (
+                      <DownOutlined />
+                    ) : (
+                      <UpOutlined />
+                    )}
+                  </span>
+                  </div>
                 </div>
                 {!collapsedSections.Activities && renderIssueNotes()}
               </div>
 
               <div className="section-container" ref={historyRef}>
-                <div
-                  className="section-header-collapsible"
-                  onClick={() => toggleSection("History")}
-                >
-                  <h3>History</h3>
-                  {collapsedSections.History ? (
-                    <DownOutlined />
-                  ) : (
-                    <UpOutlined />
-                  )}
+                <div className="section-header-collapsible">
+                  <h3>
+                    History
+                    {collapsedSections.History && historyData.length > 0 && (
+                      <>
+                        <span className="section-count"> ({historyData.length} record{historyData.length !== 1 ? "s" : ""})</span>
+                        {historyData[0] && (() => {
+                          const recent = historyData[0];
+                          const labelShort = recent.label.length > 50 ? `${recent.label.slice(0, 50)}...` : recent.label;
+                          return (
+                            <span className="section-preview-inline">
+                              {" "}— {recent.actor.name} · {recent.time}: {labelShort}
+                            </span>
+                          );
+                        })()}
+                      </>
+                    )}
+                  </h3>
+                  <div className="section-header-actions">
+                    <span
+                      className="section-toggle-btn"
+                      onClick={() => toggleSection("History")}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) => e.key === "Enter" && toggleSection("History")}
+                      aria-expanded={!collapsedSections.History}
+                    >
+                      {collapsedSections.History ? (
+                        <DownOutlined />
+                      ) : (
+                        <UpOutlined />
+                      )}
+                    </span>
+                  </div>
                 </div>
                 {!collapsedSections.History && renderHistory()}
               </div>
@@ -774,7 +937,36 @@ function CasesDetails() {
 
             <div className="right-column-panels">
               <div className="section-container issue-details-section">
-                <h3 className="section-title-static">Issue Details</h3>
+                <div
+                  style={{
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "space-between",
+                    marginBottom: 16,
+                  }}
+                >
+                  <h3 className="section-title-static" style={{ margin: 0 }}>
+                    Issue Details
+                  </h3>
+                  <Dropdown
+                    menu={{
+                      items: [
+                        {
+                          key: "print",
+                          icon: <PrinterOutlined />,
+                          label: "Print",
+                          onClick: handlePrint,
+                        },
+                      ],
+                    }}
+                    trigger={["click"]}
+                    placement="bottomRight"
+                  >
+                    <span className="issue-details-actions-trigger">
+                      <EllipsisOutlined />
+                    </span>
+                  </Dropdown>
+                </div>
                 <div className="summary-right-column-sticky">
                   <div className="summary-field-single">
                     <span className="summary-label">Incident Date</span>
@@ -987,16 +1179,77 @@ function CasesDetails() {
         </div>
       </div>
 
-      {/* Floating Action Button */}
-      <div className="fab-btn">
-        <EditOutlined />
-      </div>
+      {/* Print-only content: Issue ID + Title, Issue details, Description, Attachments, Comments */}
+      <div className="issue-print-area" aria-hidden="true">
+        <div className="issue-print-header">
+          <div className="issue-print-id">Issue ID: {caseId}</div>
+          <h1 className="issue-print-title">{caseTitle}</h1>
+        </div>
 
-      {/* Page Progress Indicator dots at the bottom */}
-      <div className="bottom-dots">
-        <div className="dot"></div>
-        <div className="dot-active"></div>
-        <div className="dot"></div>
+        <section className="issue-print-section">
+          <h2 className="issue-print-section-title">Issue Details</h2>
+          <div className="issue-print-details-grid">
+            <div className="issue-print-detail-item"><span className="issue-print-label">Incident Date</span><span className="issue-print-value">{caseDate ? dayjs(caseDate).format("MMM DD, YYYY") : "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Location</span><span className="issue-print-value">{caseLocation || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Category</span><span className="issue-print-value">{caseCategory || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Case Type</span><span className="issue-print-value">{caseType || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Status</span><span className="issue-print-value">{caseStatus || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Priority</span><span className="issue-print-value">{casePriority || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Due Date</span><span className="issue-print-value">{caseDeadline ? dayjs(caseDeadline).format("MMM DD, YYYY") : "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Pertinent to File Review</span><span className="issue-print-value">{pertinentToFileReview ? "Yes" : "No"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">File Number</span><span className="issue-print-value">{fileNumber || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Assignee</span><span className="issue-print-value">{assignee?.name || "—"}</span></div>
+            <div className="issue-print-detail-item"><span className="issue-print-label">Related Member(s)</span><span className="issue-print-value">{Array.isArray(stakeholders) ? stakeholders.join(", ") : "—"}</span></div>
+          </div>
+        </section>
+
+        <section className="issue-print-section">
+          <h2 className="issue-print-section-title">Description</h2>
+          <div className="issue-print-description">{issueDescription}</div>
+        </section>
+
+        <section className="issue-print-section">
+          <h2 className="issue-print-section-title">Attachments</h2>
+          {attachmentsData.map((file, index) => (
+            <div key={index} className="issue-print-attachment-doc">
+              <div className="issue-print-attachment-header">
+                <strong>{file.name}</strong>
+                {file.date && file.time && (
+                  <span className="issue-print-meta"> — {file.date} {file.time}</span>
+                )}
+                {file.modifiedBy && (
+                  <span className="issue-print-meta"> · {file.modifiedBy}</span>
+                )}
+              </div>
+              {file.thumb && (file.type === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) ? (
+                <div className="issue-print-attachment-image">
+                  <img src={file.thumb} alt={file.name} />
+                </div>
+              ) : file.printContent ? (
+                <div className="issue-print-attachment-content">
+                  {file.printContent.split("\n").map((line, i) => (
+                    <p key={i}>{line || " "}</p>
+                  ))}
+                </div>
+              ) : null}
+            </div>
+          ))}
+        </section>
+
+        <section className="issue-print-section">
+          <h2 className="issue-print-section-title">Comments</h2>
+          <div className="issue-print-comments">
+            {notes.map((note) => (
+              <div key={note.id} className="issue-print-comment">
+                <div className="issue-print-comment-header">
+                  <strong>{note.user}</strong>
+                  <span className="issue-print-comment-time">{note.time}</span>
+                </div>
+                <div className="issue-print-comment-text" dangerouslySetInnerHTML={{ __html: note.text }} />
+              </div>
+            ))}
+          </div>
+        </section>
       </div>
     </div>
   );

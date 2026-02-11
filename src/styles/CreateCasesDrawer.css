@@ -377,6 +377,20 @@
   margin-bottom: 8px !important;
 }
 
+/* Edit cases drawer – same styling as create case with extra left padding */
+.edit-cases-drawer.ant-drawer .ant-drawer-body {
+  background-color: #f6f9fc !important;
+  padding: 24px 24px 24px 32px !important;
+}
+
+.edit-cases-drawer .ant-drawer-title {
+  color: #000000 !important;
+}
+
+.edit-cases-drawer .edit-cases-drawer-content {
+  padding-left: 0.75rem;
+}
+
 /* Override container height for textarea - target by ID for reliability */
 .create-case-drawer .form-section #incidentDescription {
   height: auto !important;
