@@ -836,33 +836,42 @@ function BatchMemberSummary() {
       // Show loading message
       const hide = message.loading("Downloading file...", 0);
 
-      const response = await axios.get(fileUrl, {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-        responseType: "blob",
-      });
+      // If it's a direct Azure blob URL, don't send the Authorization header
+      // as it causes 403 Forbidden or CORS issues.
+      const isAzureUrl = fileUrl.includes("blob.core.windows.net");
 
-      // Create blob and download
-      const blob = new Blob([response.data]);
-      const url = window.URL.createObjectURL(blob);
-      const link = document.createElement("a");
-      link.href = url;
-      link.download = batchInfo.fileName;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
+      try {
+        const response = await axios.get(fileUrl, {
+          headers: isAzureUrl ? {} : {
+            Authorization: `Bearer ${token}`,
+          },
+          responseType: "blob",
+        });
 
-      hide();
-      message.success("File downloaded successfully");
-    } catch (error) {
-      message.error(
-        error.response?.data?.message ||
-        error.message ||
-        "Failed to download file",
-      );
-      console.error("Download error:", error);
+        // Create blob and download
+        const blob = new Blob([response.data]);
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = batchInfo.fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+
+        hide();
+        message.success("File downloaded successfully");
+      } catch (error) {
+        hide();
+        message.error(
+          error.response?.data?.message ||
+          error.message ||
+          "Failed to download file",
+        );
+        console.error("Download error:", error);
+      }
+    } catch (outerError) {
+      console.error("Outer error in download:", outerError);
     }
   };
 

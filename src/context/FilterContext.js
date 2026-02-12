@@ -35,11 +35,27 @@ export const FilterProvider = ({ children }) => {
     workLocationError
   } = useSelector((state) => state.lookupsWorkLocation);
 
-  // 🔹 Store hierarchical data by work location ID
-  const [hierarchicalData, setHierarchicalData] = useState({});
-  const [selectedWorkLocationId, setSelectedWorkLocationId] = useState(null);
-  const [regionOptionsForLocation, setRegionOptionsForLocation] = useState([]);
-  const [branchOptionsForLocation, setBranchOptionsForLocation] = useState([]);
+  // 🔹 Use hierarchical lookups from localStorage
+  const [allHierarchicalData, setAllHierarchicalData] = useState([]);
+  const [filteredWLOptions, setFilteredWLOptions] = useState([]);
+  const [filteredRegionOptions, setFilteredRegionOptions] = useState([]);
+  const [filteredBranchOptions, setFilteredBranchOptions] = useState([]);
+
+  // 🔹 Load hierarchy data from localStorage on mount
+  useEffect(() => {
+    try {
+      const stored = localStorage.getItem("hierarchicalLookups");
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          setAllHierarchicalData(parsed);
+          console.log("✅ FilterContext: Loaded hierarchical lookups from localStorage", parsed.length);
+        }
+      }
+    } catch (error) {
+      console.error("❌ FilterContext: Error loading hierarchy from localStorage", error);
+    }
+  }, []);
 
   // 🔹 Store filter states for each screen
   const [screenFilterStates, setScreenFilterStates] = useState({
@@ -94,106 +110,178 @@ export const FilterProvider = ({ children }) => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, [dispatch]);
 
-  // 🔹 Extract region and branch from hierarchyData
-  const extractRegionAndBranchFromHierarchy = useCallback((hierarchyData) => {
-    console.log("Extracting from hierarchy data:", hierarchyData);
+  // 🔹 Remove old API-based extraction helper
 
-    let regions = [];
-    let branches = [];
+  // 🔹 Multi-way dependent filtering logic (Final Robust version)
+  useEffect(() => {
+    if (!allHierarchicalData || allHierarchicalData.length === 0) return;
 
-    // Method 1: Check if hierarchyData has hierarchy array
-    if (hierarchyData?.hierarchy && Array.isArray(hierarchyData.hierarchy)) {
-      hierarchyData.hierarchy.forEach((item) => {
-        if (item.lookuptypeId?.lookuptype === "Region") {
-          const regionName = item.DisplayName || item.lookupname;
-          if (regionName) regions.push(regionName);
+    const selectedWL = filtersState["Work Location"]?.selectedValues || [];
+    const selectedRegion = filtersState["Region"]?.selectedValues || [];
+    const selectedBranch = filtersState["Branch"]?.selectedValues || [];
+
+    // Helper to extract identifier names from data item for a specific type
+    const getNamesForItem = (item, type) => {
+      const names = new Set();
+
+      // 1. Direct property (e.g. item.region, item.branch, item.lookup)
+      const propName = type === "Work Location" ? "lookup" : type.toLowerCase();
+      const direct = item[propName];
+      if (direct) {
+        const name = direct.DisplayName || direct.lookupname || direct.label || (typeof direct === 'string' ? direct : null);
+        if (name && typeof name === 'string') names.add(name);
+        else if (typeof direct === 'string') {
+          // Resolve ID if string
+          const optionsMap = { 'Region': regionOptions, 'Branch': branchOptions, 'Work Location': workLocationOptions };
+          const found = optionsMap[type]?.find(opt => opt.value === direct || opt.id === direct || opt._id === direct);
+          if (found?.label) names.add(found.label);
         }
-        if (item.lookuptypeId?.lookuptype === "Branch") {
-          const branchName = item.DisplayName || item.lookupname;
-          if (branchName) branches.push(branchName);
+      }
+
+      // 2. Hierarchy array
+      item.hierarchy?.forEach(h => {
+        const hType = h.lookuptypeId?.lookuptype?.toLowerCase();
+        // Handle "workLocation" camelCase from JSON vs "Work Location"
+        const isMatch = (type === "Work Location" && (hType === "worklocation" || hType === "workloc")) ||
+          (hType === type.toLowerCase());
+
+        if (isMatch) {
+          const name = h.DisplayName || h.lookupname || h.label;
+          if (name) names.add(name);
         }
       });
+
+      return Array.from(names);
+    };
+
+    // Helper to filter data based on selections EXCEPT the one we are calculating options for
+    const getFilteredSubset = (excludeType) => {
+      let data = allHierarchicalData;
+
+      if (excludeType !== "Work Location" && selectedWL.length > 0) {
+        data = data.filter(item => {
+          const itemWLs = getNamesForItem(item, "Work Location");
+          return itemWLs.some(wl => selectedWL.includes(wl));
+        });
+      }
+
+      if (excludeType !== "Region" && selectedRegion.length > 0) {
+        data = data.filter(item => {
+          const itemRegions = getNamesForItem(item, "Region");
+          return itemRegions.some(reg => selectedRegion.includes(reg));
+        });
+      }
+
+      if (excludeType !== "Branch" && selectedBranch.length > 0) {
+        data = data.filter(item => {
+          const itemBranches = getNamesForItem(item, "Branch");
+          return itemBranches.some(br => selectedBranch.includes(br));
+        });
+      }
+
+      return data;
+    };
+
+    // Calculate available options
+    const newWL = new Set();
+    const newRegions = new Set();
+    const newBranches = new Set();
+
+    getFilteredSubset("Work Location").forEach(item => {
+      getNamesForItem(item, "Work Location").forEach(n => newWL.add(n));
+    });
+
+    getFilteredSubset("Region").forEach(item => {
+      getNamesForItem(item, "Region").forEach(n => newRegions.add(n));
+    });
+
+    getFilteredSubset("Branch").forEach(item => {
+      getNamesForItem(item, "Branch").forEach(n => newBranches.add(n));
+    });
+
+    const finalWLs = Array.from(newWL).sort();
+    const finalRegions = Array.from(newRegions).sort();
+    const finalBranches = Array.from(newBranches).sort();
+
+    setFilteredWLOptions(finalWLs);
+    setFilteredRegionOptions(finalRegions);
+    setFilteredBranchOptions(finalBranches);
+
+    // 🛡️ AUTO-CLEAR: If current selection is no longer in valid options, clear it
+    let needsStateSync = false;
+    const syncedFiltersState = { ...filtersState };
+
+    // Helper to extract labels from lookup options
+    const getLookupOptions = (options) => options.map(opt => opt.label);
+
+    const checkAndPrune = (type, validOptions, baseOptions) => {
+      const current = filtersState[type]?.selectedValues || [];
+      if (current.length === 0) return;
+
+      // Determine the true "valid" set based on current filter context
+      // If no OTHER filters are active, use base Redux lookups as the validity source
+      const otherWL = type !== "Work Location" && selectedWL.length > 0;
+      const otherReg = type !== "Region" && selectedRegion.length > 0;
+      const otherBr = type !== "Branch" && selectedBranch.length > 0;
+
+      const isRestricted = (type === "Work Location" && (otherReg || otherBr)) ||
+        (type === "Region" && (otherWL || otherBr)) ||
+        (type === "Branch" && (otherWL || otherReg));
+
+      const sourceOfTruth = isRestricted ? validOptions : baseOptions;
+
+      // If sourceOfTruth is empty (e.g. data still loading), don't prune yet
+      if (!sourceOfTruth || sourceOfTruth.length === 0) return;
+
+      const stillValid = current.filter(val => sourceOfTruth.includes(val));
+      if (stillValid.length !== current.length) {
+        syncedFiltersState[type] = { ...filtersState[type], selectedValues: stillValid };
+        needsStateSync = true;
+      }
+    };
+
+    // We only auto-prune if some selections actually exist
+    if (selectedWL.length > 0 || selectedRegion.length > 0 || selectedBranch.length > 0) {
+      checkAndPrune("Work Location", finalWLs, getLookupOptions(workLocationOptions || []));
+      checkAndPrune("Region", finalRegions, getLookupOptions(regionOptions || []));
+      checkAndPrune("Branch", finalBranches, getLookupOptions(branchOptions || []));
     }
 
-    // Method 2: Check for direct region/branch objects
-    if (hierarchyData?.region) {
-      const regionName = hierarchyData.region.DisplayName || hierarchyData.region.lookupname;
-      if (regionName && !regions.includes(regionName)) regions.push(regionName);
+    if (needsStateSync) {
+      console.log("🛡️ FilterContext: Auto-cleared invalid selections for integrity (synced with dropdown context)");
+      setFiltersState(syncedFiltersState);
     }
 
-    if (hierarchyData?.branch) {
-      const branchName = hierarchyData.branch.DisplayName || hierarchyData.branch.lookupname;
-      if (branchName && !branches.includes(branchName)) branches.push(branchName);
+  }, [filtersState, allHierarchicalData, regionOptions, branchOptions, workLocationOptions]);
+
+  // 🛡️ EFFECT: Periodically prune junk from filtersState (null, undefined, non-strings, etc.)
+  useEffect(() => {
+    let changed = false;
+    const newState = { ...filtersState };
+
+    Object.keys(newState).forEach(key => {
+      const filter = newState[key];
+      if (filter?.selectedValues) {
+        // Only allow non-empty strings
+        const cleaned = filter.selectedValues.filter(v =>
+          v !== null &&
+          v !== undefined &&
+          typeof v === 'string' &&
+          v.trim() !== ""
+        );
+
+        if (cleaned.length !== filter.selectedValues.length) {
+          newState[key] = { ...filter, selectedValues: cleaned };
+          changed = true;
+        }
+      }
+    });
+
+    if (changed) {
+      console.log("🛡️ FilterContext: Pruned invalid values from state (enforced string-only)");
+      setFiltersState(newState);
     }
-
-    // Method 3: Check if hierarchyData itself has region/branch properties
-    if (hierarchyData?.region && typeof hierarchyData.region === "string") {
-      if (!regions.includes(hierarchyData.region)) regions.push(hierarchyData.region);
-    }
-
-    if (hierarchyData?.branch && typeof hierarchyData.branch === "string") {
-      if (!branches.includes(hierarchyData.branch)) branches.push(hierarchyData.branch);
-    }
-
-    console.log("Extracted regions:", regions, "branches:", branches);
-    return { regions, branches };
-  }, []);
-
-  // 🔹 Function to load hierarchical data
-  const loadWorkLocationHierarchy = useCallback(async (workLocationId, workLocationLabel, currentFilters) => {
-    if (!workLocationId) {
-      // Clear everything when no work location is selected
-      setSelectedWorkLocationId(null);
-      setRegionOptionsForLocation([]);
-      setBranchOptionsForLocation([]);
-
-      // Also clear region and branch filters
-      updateFilter("Region", "==", [], currentFilters);
-      updateFilter("Branch", "==", [], currentFilters);
-      return;
-    }
-
-    console.log(`Loading hierarchical data for Work Location: ${workLocationLabel} (ID: ${workLocationId})`);
-    setSelectedWorkLocationId(workLocationId);
-
-    try {
-      // Fetch hierarchical data from API
-      const data = await dispatch(getWorkLocationHierarchy(workLocationId)).unwrap();
-
-      // Store the hierarchical data
-      setHierarchicalData(prev => ({
-        ...prev,
-        [workLocationId]: data
-      }));
-
-      // Extract region and branch options
-      const { regions, branches } = extractRegionAndBranchFromHierarchy(data);
-
-      // Update available options
-      setRegionOptionsForLocation(regions);
-      setBranchOptionsForLocation(branches);
-
-      console.log("Successfully loaded hierarchical data:", {
-        workLocationId,
-        regions,
-        branches,
-        data
-      });
-
-      // Clear region and branch filters when work location changes
-      updateFilter("Region", "==", [], currentFilters);
-      updateFilter("Branch", "==", [], currentFilters);
-
-    } catch (error) {
-      console.error("Error loading work location hierarchy:", error);
-      setRegionOptionsForLocation([]);
-      setBranchOptionsForLocation([]);
-
-      // Clear filters on error
-      updateFilter("Region", "==", [], currentFilters);
-      updateFilter("Branch", "==", [], currentFilters);
-    }
-  }, [dispatch, extractRegionAndBranchFromHierarchy]);
+  }, [filtersState]);
 
   // 🔹 Helper to get screen from path
   const getScreenFromPath = () => {
@@ -588,85 +676,81 @@ export const FilterProvider = ({ children }) => {
     }
   }, [activeScreen]);
 
-  // 🔹 Effect to handle Work Location filter changes
-  useEffect(() => {
-    const currentWorkLocation = filtersState["Work Location"]?.selectedValues?.[0];
+  // 🔹 Removing old API-based effect
 
-    if (currentWorkLocation) {
-      // Get the lookup ID for the selected work location
-      const workLocationId = getLookupIdFromLabel("Work Location", currentWorkLocation);
-
-      if (workLocationId && workLocationId !== selectedWorkLocationId) {
-        // Load hierarchical data for the selected work location
-        loadWorkLocationHierarchy(workLocationId, currentWorkLocation, filtersState);
-      }
-    } else {
-      // No work location selected, clear everything
-      loadWorkLocationHierarchy(null, null, filtersState);
-    }
-  }, [filtersState["Work Location"], workLocationOptions]);
-
-  // 🔹 Helper to convert lookup options to filter format
+  // 🔹 Helper to convert lookup options to filter format (Sanitized & Unique)
   const getLookupOptions = (lookupArray) => {
     if (!lookupArray || !Array.isArray(lookupArray)) {
-      return [""];
+      return [];
     }
+    const options = lookupArray
+      .map(item => item.label || item.DisplayName || item.lookupname || (typeof item === 'string' ? item : ""))
+      .filter(label => label && typeof label === 'string' && label.trim() !== "");
 
-    const options = lookupArray.map(item => item.label);
-    return ["", ...options];
+    return [...new Set(options)].sort();
   };
 
   // 🔹 Helper to get hierarchical region options
   const getHierarchicalRegionOptions = () => {
-    // If no work location selected, return warning message
-    if (!selectedWorkLocationId) {
-      return ["⚠️ Please select Work Location first"];
+    const selectedWL = filtersState["Work Location"]?.selectedValues || [];
+    const selectedBranch = filtersState["Branch"]?.selectedValues || [];
+
+    // ONLY show filtered subset if OTHER dependent filters are active
+    if (selectedWL.length === 0 && selectedBranch.length === 0) {
+      return getLookupOptions(regionOptions || []);
     }
 
-    // If loading, show loading message
-    if (workLocationLoading) {
-      return ["Loading..."];
+    if (!filteredRegionOptions || filteredRegionOptions.length === 0) {
+      return ["⚠️ No regions matching current selections"];
     }
 
-    // Use cached region options
-    if (regionOptionsForLocation.length === 0) {
-      return ["No regions found for this location"];
-    }
-
-    return ["", ...regionOptionsForLocation];
+    return filteredRegionOptions;
   };
 
   // 🔹 Helper to get hierarchical branch options
   const getHierarchicalBranchOptions = () => {
-    // If no work location selected, return warning message
-    if (!selectedWorkLocationId) {
-      return ["⚠️ Please select Work Location first"];
+    const selectedWL = filtersState["Work Location"]?.selectedValues || [];
+    const selectedRegion = filtersState["Region"]?.selectedValues || [];
+
+    // ONLY show filtered subset if OTHER dependent filters are active
+    if (selectedWL.length === 0 && selectedRegion.length === 0) {
+      return getLookupOptions(branchOptions || []);
     }
 
-    // If loading, show loading message
-    if (workLocationLoading) {
-      return ["Loading..."];
+    if (!filteredBranchOptions || filteredBranchOptions.length === 0) {
+      return ["⚠️ No branches matching current selections"];
     }
 
-    // Use cached branch options
-    if (branchOptionsForLocation.length === 0) {
-      return ["No branches found for this location"];
-    }
-
-    return ["", ...branchOptionsForLocation];
+    return filteredBranchOptions;
   };
 
-  // 🔹 Helper to get category options
-  const getCategoryOptions = () => {
-    if (!categoryData || !Array.isArray(categoryData)) {
-      return [""];
+  // 🔹 Helper to get hierarchical work location options
+  const getHierarchicalWLOptions = () => {
+    const selectedRegion = filtersState["Region"]?.selectedValues || [];
+    const selectedBranch = filtersState["Branch"]?.selectedValues || [];
+
+    // ONLY show filtered subset if OTHER dependent filters are active
+    if (selectedRegion.length === 0 && selectedBranch.length === 0) {
+      return getLookupOptions(workLocationOptions || []);
     }
 
-    const options = categoryData.map(item => {
-      return item.label || item.name || item.lookupname || "";
-    }).filter(label => label);
+    if (!filteredWLOptions || filteredWLOptions.length === 0) {
+      return ["⚠️ No locations matching current selections"];
+    }
 
-    return ["", ...options];
+    return filteredWLOptions;
+  };
+
+  // 🔹 Helper to get category options (Unique & Sorted)
+  const getCategoryOptions = () => {
+    if (!categoryData || !Array.isArray(categoryData)) {
+      return [];
+    }
+    const options = categoryData
+      .map(item => item.label || item.DisplayName || item.lookupname || item.name || "")
+      .filter(label => label && typeof label === 'string' && label.trim() !== "");
+
+    return [...new Set(options)].sort();
   };
 
   // 🔹 Helper to get lookup ID from label
@@ -714,8 +798,8 @@ export const FilterProvider = ({ children }) => {
       // 🔹 CATEGORY FILTER
       "Membership Category": getCategoryOptions(),
 
-      // 🔹 WORK LOCATION - from Redux lookups
-      "Work Location": getLookupOptions(workLocationOptions || []),
+      // 🔹 WORK LOCATION - hierarchical loading
+      "Work Location": getHierarchicalWLOptions(),
 
       // 🔹 REGION - hierarchical loading
       "Region": getHierarchicalRegionOptions(),
@@ -791,10 +875,9 @@ export const FilterProvider = ({ children }) => {
     paymentTypeOptions,
     genderOptions,
     sectionOptions,
-    selectedWorkLocationId,
-    regionOptionsForLocation,
-    branchOptionsForLocation,
-    workLocationLoading,
+    filteredWLOptions,
+    filteredRegionOptions,
+    filteredBranchOptions,
   ]);
 
   // 🔹 Helper functions
@@ -822,12 +905,6 @@ export const FilterProvider = ({ children }) => {
     setVisibleFilters(resetVisibleFilters);
     setFiltersState(resetFilterValues);
 
-    // Clear hierarchical data
-    setSelectedWorkLocationId(null);
-    setRegionOptionsForLocation([]);
-    setBranchOptionsForLocation([]);
-    setHierarchicalData({});
-
     setScreenFilterStates(prev => ({
       ...prev,
       [activePage]: {
@@ -847,11 +924,16 @@ export const FilterProvider = ({ children }) => {
       currentFilters: currentState
     });
 
+    // 🛡️ Sanitize selectedValues (strictly non-empty strings)
+    const sanitizedValues = (selectedValues || []).filter(v =>
+      v !== null && v !== undefined && typeof v === 'string' && v.trim() !== ""
+    );
+
     const newFilterState = {
       ...currentState,
       [filter]: {
         operator,
-        selectedValues,
+        selectedValues: sanitizedValues,
       },
     };
 
@@ -859,14 +941,12 @@ export const FilterProvider = ({ children }) => {
     if (filter === "Work Location" && (!selectedValues || selectedValues.length === 0)) {
       newFilterState["Region"] = { operator: "==", selectedValues: [] };
       newFilterState["Branch"] = { operator: "==", selectedValues: [] };
-      loadWorkLocationHierarchy(null, null, newFilterState);
     }
 
     // If Region is being cleared, also clear Branch
     if (filter === "Region" && (!selectedValues || selectedValues.length === 0)) {
       newFilterState["Branch"] = { operator: "==", selectedValues: [] };
     }
-
     // Only update state if we're not using a custom filters state
     if (!customFiltersState) {
       setFiltersState(newFilterState);
@@ -933,11 +1013,9 @@ export const FilterProvider = ({ children }) => {
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,
         getLookupIdFromLabel,
-        workLocationLoading,
-        selectedWorkLocationId,
-        regionOptionsForLocation,
-        branchOptionsForLocation,
-        loadWorkLocationHierarchy,
+        filteredWLOptions,
+        filteredRegionOptions,
+        filteredBranchOptions,
       }}
     >
       {children}

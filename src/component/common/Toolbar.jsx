@@ -178,10 +178,10 @@ const Toolbar = () => {
           const operator = filterState?.operator || "==";
           const options = filterOptions[label] || [];
 
-          // Only show filter if it has options or is a text filter
+          // Only show filter if it has options or is a text filter/hierarchical filter
           if (
             options.length === 0 &&
-            !["Email", "Membership No"].includes(label)
+            !["Email", "Membership No", "Work Location", "Region", "Branch"].includes(label)
           ) {
             return null;
           }

@@ -1379,7 +1379,9 @@ function HeaderDetails() {
                     ? "Cancellation Batch"
                     : nav === "/CornMarket"
                       ? "Corn Market Batch"
-                      : ""
+                      : nav === "/StandingOrders"
+                        ? "Standing Orders Batch"
+                        : ""
           }`}
         open={isBatchOpen}
         onClose={() => {

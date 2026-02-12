@@ -22,20 +22,20 @@ const MultiFilterDropdown = ({
   // Check if this is a warning/empty state
   const isEmptyWarning = options[0] && options[0].startsWith("⚠️");
   const warningMessage = isEmptyWarning ? options[0] : "";
-  
+
   // Check if it's loading
   const isLoading = options.length === 1 && options[0] === "Loading...";
-  
+
   // Check if there are no REAL options (just empty string or loading)
   // We have options if: array length > 1 OR (length = 1 and not empty string/loading/warning)
-  const hasRealOptions = options.length > 1 || 
+  const hasRealOptions = options.length > 1 ||
     (options.length === 1 && options[0] !== "" && options[0] !== "Loading..." && !options[0].startsWith("⚠️"));
 
   const handleCheckboxChange = (value) => {
     const newSelectedValues = selectedValues.includes(value)
       ? selectedValues.filter((v) => v !== value)
       : [...selectedValues, value];
-    console.log(newSelectedValues,"new")
+    console.log(newSelectedValues, "new")
     onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
   };
 
@@ -97,8 +97,8 @@ const MultiFilterDropdown = ({
                   {warningMessage.replace("⚠️ ", "")}
                 </div>
                 <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
-                  {label === "Region" || label === "Branch" 
-                    ? "Please select a Work Location first to see available options." 
+                  {label === "Region" || label === "Branch"
+                    ? "Please select a Work Location first to see available options."
                     : "No data available for the selected criteria."}
                 </div>
               </div>
@@ -110,7 +110,7 @@ const MultiFilterDropdown = ({
         </div>
       );
     }
-    
+
     if (isLoading) {
       return (
         <div
@@ -129,12 +129,12 @@ const MultiFilterDropdown = ({
         </div>
       );
     }
-    
+
     // Check for empty options (no data from API)
     // This happens when options = [""] and it's Region or Branch filter
     const isRegionOrBranch = label === "Region" || label === "Branch";
     const isEmptyApiResponse = isRegionOrBranch && options.length === 1 && options[0] === "";
-    
+
     if (isEmptyApiResponse) {
       return (
         <div
@@ -148,7 +148,7 @@ const MultiFilterDropdown = ({
             description={
               <div style={{ marginTop: "8px" }}>
                 <div style={{ marginBottom: "8px" }}>
-                  {label === "Branch" 
+                  {label === "Branch"
                     ? "No branches available for the selected Work Location and Region."
                     : "No regions available for the selected Work Location."}
                 </div>
@@ -188,14 +188,13 @@ const MultiFilterDropdown = ({
         <Divider style={{ margin: "8px 0" }} />
 
         <div className="checkbox-list">
-          {options.map((option) => (
+          {options.filter(opt => opt && opt.trim() !== "").map((option) => (
             <Checkbox
               key={option}
               checked={selectedValues.includes(option)}
               onChange={() => handleCheckboxChange(option)}
-              disabled={option === ""} // Disable empty option
             >
-              {option === "" ? <span style={{ color: "#bfbfbf" }}>-- Select --</span> : option}
+              {option}
             </Checkbox>
           ))}
         </div>
@@ -218,13 +217,13 @@ const MultiFilterDropdown = ({
 
   const renderButtonContent = () => {
     // For empty/warning/loading states, show normal button but with disabled styling
-    const isDisabledState = isEmptyWarning || isLoading || 
+    const isDisabledState = isEmptyWarning || isLoading ||
       ((label === "Region" || label === "Branch") && options.length === 1 && options[0] === "");
-    
+
     return (
-      <div 
+      <div
         className={`filter-button1 ${badgeCount > 0 ? "active" : ""} ${isDisabledState ? "disabled-state" : ""}`}
-        style={isDisabledState ? { 
+        style={isDisabledState ? {
           opacity: 0.7,
           backgroundColor: badgeCount > 0 ? "rgba(9, 30, 66, 0.08)" : "rgba(9, 30, 66, 0.04)",
           cursor: "pointer"

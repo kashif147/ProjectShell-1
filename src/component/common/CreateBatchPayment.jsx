@@ -50,7 +50,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch(); // Initialize Redux dispatch
-  const { workLocationOptions } = useSelector((state) => state.lookups);
+  const { workLocationOptions, branchOptions } = useSelector((state) => state.lookups);
 
   const memberData = [
     {
@@ -111,7 +111,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         isSpecial = true;
         break;
       case "/Deductions":
-        batchType = "Deduction";
+        batchType = "deduction";
         isSpecial = true;
         break;
       case "/onlinePayment":
@@ -456,12 +456,12 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
               <div className="w-100 mb-3">
                 <CustomSelect
-                  label="Work Location"
+                  label={location.pathname === "/StandingOrders" ? "Bank Name" : "Work Location"}
                   name="workLocation"
                   required
                   hasError={!!formErrors.workLocation}
-                  errorMessage="Please select work location"
-                  options={workLocationOptions}
+                  errorMessage={`Please select ${location.pathname === "/StandingOrders" ? "bank name" : "work location"}`}
+                  options={location.pathname === "/StandingOrders" ? branchOptions : workLocationOptions}
                   value={formValues.workLocation}
                   onChange={(e) => setField("workLocation", e.target.value)}
                 />
