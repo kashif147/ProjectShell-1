@@ -726,6 +726,8 @@ function ApplicationMgtDrawer({
       payrollNo: "Payroll Number",
       otherSecondarySection: "Other Secondary Section",
       nmbiNumber: "NMBI Number",
+      region: "Region",
+      branch: "Branch",
     };
 
     const fieldMap = {
@@ -2409,7 +2411,7 @@ function ApplicationMgtDrawer({
                   name="mobile"
                   type="mobile"
                   value={InfData.contactInfo?.mobileNumber}
-                  require
+                  required
                   hasError={!!errors?.mobileNumber}
                   disabled={isDisable}
                   onChange={(e) =>
@@ -2502,7 +2504,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                   onBlur={handleEmailBlur} // Add this
-                  hasError={!!errors?.email}
+                  hasError={!!errors?.personalEmail}
                 />
               </Col>
 
@@ -2660,6 +2662,7 @@ function ApplicationMgtDrawer({
                           required
                           disabled={isDisable}
                           value={InfData?.professionalDetails?.startDate}
+                          hasError={!!errors?.startDate}
                         />
                       </Col>
                       <Col xs={24} md={8}>
@@ -2746,6 +2749,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                   options={branchOptions}
+                  hasError={!!errors?.branch}
                 />
               </Col>
 
@@ -2765,6 +2769,7 @@ function ApplicationMgtDrawer({
                     )
                   }
                   options={regionOptions}
+                  hasError={!!errors?.region}
                 />
               </Col>
               <Col xs={24} md={12}>
@@ -2885,6 +2890,7 @@ function ApplicationMgtDrawer({
                       e.target.value
                     )
                   }
+                  hasError={!!errors?.nmbiNumber}
                 />
               </Col>
 
@@ -3019,7 +3025,7 @@ function ApplicationMgtDrawer({
                   <MyDatePicker1
                     className="w-100"
                     label="Submission Date"
-                    name="SubmissionDate"
+                    name="submissionDate"
                     value={InfData?.subscriptionDetails?.submissionDate}
                     disabled={isDisable || isEdit}
                     onChange={(date, dateString) => {
@@ -3029,8 +3035,8 @@ function ApplicationMgtDrawer({
                         date
                       );
                     }}
-                    hasError={!!errors?.dateJoined}
-                    errorMessage={errors?.dateJoined || "Required"}
+                    hasError={!!errors?.submissionDate}
+                    errorMessage={errors?.submissionDate || "Required"}
                   />
                 </div>
               </Col>
@@ -3595,7 +3601,7 @@ function ApplicationMgtDrawer({
                   disabled={
                     InfData?.subscriptionDetails?.primarySection !== "Other"
                   }
-                  hasError={!!errors?.otherSecondarySection}
+                  hasError={!!errors?.otherPrimarySection}
                 />
               </Col>
 
