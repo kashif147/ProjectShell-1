@@ -690,6 +690,44 @@ function ApplicationMgtDrawer({
       "nursingAdaptationProgramme",
     ];
 
+    const fieldLabels = {
+      title: "Title",
+      forename: "Forename",
+      surname: "Surname",
+      dateOfBirth: "Date of Birth",
+      gender: "Gender",
+      buildingOrHouse: "Building or House",
+      countyCityOrPostCode: "County/City or PostCode",
+      country: "Country",
+      mobileNumber: "Mobile Number",
+      preferredEmail: "Preferred Email",
+      membershipCategory: "Membership Category",
+      workLocation: "Work Location",
+      grade: "Grade",
+      paymentType: "Payment Type",
+      termsAndConditions: "Terms and Conditions",
+      preferredAddress: "Preferred Address",
+      countryPrimaryQualification: "Country Primary Qualification",
+      otherIrishTradeUnion: "Other Irish Trade Union",
+      otherScheme: "Other Scheme",
+      nurseType: "Nurse Type",
+      membershipStatus: "Membership Status",
+      nursingAdaptationProgramme: "Nursing Adaptation Programme",
+      personalEmail: "Personal Email",
+      workEmail: "Work Email",
+      otherWorkLocation: "Other Work Location",
+      otherPrimarySection: "Other Primary Section",
+      otherIrishTradeUnionName: "Union Name",
+      retiredDate: "Retired Date",
+      pensionNo: "Pension Number",
+      studyLocation: "Study Location",
+      graduationDate: "Graduation Date",
+      startDate: "Start Date",
+      payrollNo: "Payroll Number",
+      otherSecondarySection: "Other Secondary Section",
+      nmbiNumber: "NMBI Number",
+    };
+
     const fieldMap = {
       title: ["personalInfo", "title"],
       forename: ["personalInfo", "forename"],
@@ -729,6 +767,7 @@ function ApplicationMgtDrawer({
     };
 
     const newErrors = {};
+    const missingFieldNames = [];
 
     requiredFields.forEach((field) => {
       const [section, key] = fieldMap[field] || [];
@@ -743,34 +782,40 @@ function ApplicationMgtDrawer({
         (typeof value === "boolean" && value === false && !booleanAllowed.includes(field))
       ) {
         newErrors[field] = "This field is required";
+        missingFieldNames.push(fieldLabels[field] || field);
       }
     });
 
     if (InfData.contactInfo.preferredEmail === "personal") {
       if (!InfData.contactInfo.personalEmail?.trim()) {
         newErrors.personalEmail = "Personal Email is required";
+        missingFieldNames.push(fieldLabels.personalEmail);
       }
     }
     if (InfData.contactInfo.preferredEmail === "work") {
       if (!InfData.contactInfo.workEmail?.trim()) {
         newErrors.workEmail = "Work Email is required";
+        missingFieldNames.push(fieldLabels.workEmail);
       }
     }
 
     if (InfData.professionalDetails?.workLocation === "Other") {
       if (!InfData.professionalDetails.otherWorkLocation?.trim()) {
         newErrors.otherWorkLocation = "Other work location is required";
+        missingFieldNames.push(fieldLabels.otherWorkLocation);
       }
     }
 
     if (InfData.subscriptionDetails.primarySection === "Other") {
       if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
         newErrors.otherPrimarySection = "Other primary section is required";
+        missingFieldNames.push(fieldLabels.otherPrimarySection);
       }
     }
     if (InfData.subscriptionDetails?.otherIrishTradeUnion === true) {
       if (!InfData.subscriptionDetails?.otherIrishTradeUnionName?.trim()) {
         newErrors.otherIrishTradeUnionName = "Union name is required when 'Yes' is selected";
+        missingFieldNames.push(fieldLabels.otherIrishTradeUnionName);
       }
     }
 
@@ -780,9 +825,11 @@ function ApplicationMgtDrawer({
     ) {
       if (!InfData.professionalDetails?.retiredDate) {
         newErrors.retiredDate = "Retired date is required";
+        missingFieldNames.push(fieldLabels.retiredDate);
       }
       if (!InfData.professionalDetails?.pensionNo?.trim()) {
         newErrors.pensionNo = "Pension number is required";
+        missingFieldNames.push(fieldLabels.pensionNo);
       }
     }
 
@@ -792,34 +839,57 @@ function ApplicationMgtDrawer({
     ) {
       if (!InfData.professionalDetails?.studyLocation?.trim()) {
         newErrors.studyLocation = "Study location is required";
+        missingFieldNames.push(fieldLabels.studyLocation);
       }
       if (!InfData.professionalDetails?.graduationDate) {
         newErrors.graduationDate = "Graduation date is required";
+        missingFieldNames.push(fieldLabels.graduationDate);
       }
       if (!InfData.professionalDetails?.startDate) {
         newErrors.startDate = "Start date is required";
+        missingFieldNames.push(fieldLabels.startDate);
       }
     }
 
     if (InfData.subscriptionDetails.paymentType === "Salary Deduction") {
       if (!InfData.subscriptionDetails.payrollNo?.trim()) {
         newErrors.payrollNo = "Payroll number is required";
+        missingFieldNames.push(fieldLabels.payrollNo);
       }
     }
 
     if (InfData.subscriptionDetails.secondarySection === "Other") {
       if (!InfData.subscriptionDetails.otherSecondarySection?.trim()) {
         newErrors.otherSecondarySection = "Other secondary section is required";
+        missingFieldNames.push(fieldLabels.otherSecondarySection);
       }
     }
     if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
+        missingFieldNames.push(fieldLabels.nmbiNumber);
       }
     }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
-      MyAlert("error", "Validation Error", "Please fill in all required fields.");
+
+      // Unique names to avoid duplicates if multiple checks hit the same field
+      const uniqueMissing = [...new Set(missingFieldNames)];
+      let errorDescription = "Please fill in all required fields.";
+
+      if (uniqueMissing.length > 0) {
+        const lastTwo = uniqueMissing.slice(-2);
+        if (uniqueMissing.length === 1) {
+          errorDescription = `${uniqueMissing[0]} field is missing.`;
+        } else if (uniqueMissing.length === 2) {
+          errorDescription = `${uniqueMissing[0]} and ${uniqueMissing[1]} fields are missing.`;
+        } else {
+          errorDescription = `Multiple fields are missing, including ${lastTwo[0]} and ${lastTwo[1]}.`;
+        }
+      }
+
+      MyAlert("error", "Validation Error", errorDescription);
       return false;
     }
 
