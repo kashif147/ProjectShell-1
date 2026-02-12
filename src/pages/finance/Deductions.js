@@ -1,4 +1,4 @@
-import React, { useEffect, useMemo } from "react";
+import React, { useEffect, useMemo, useRef } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
 import MyTable from "../../component/common/MyTable";
@@ -75,8 +75,13 @@ const Deductions = () => {
     (state) => state.batchDetails,
   );
 
+  const hasFetchedRef = useRef(false);
+
   useEffect(() => {
-    dispatch(getAllBatchDetails());
+    if (!hasFetchedRef.current) {
+      dispatch(getAllBatchDetails());
+      hasFetchedRef.current = true;
+    }
   }, [dispatch]);
 
   const formattedData = useMemo(

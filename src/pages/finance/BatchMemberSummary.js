@@ -112,13 +112,17 @@ function BatchMemberSummary() {
     (state) => state.batchDetails,
   );
 
+  const hasFetchedRef = useRef(null);
+
   // Fetch batch details if batchId is available
   useEffect(() => {
-    if (batchId) {
+    if (batchId && hasFetchedRef.current !== batchId) {
       dispatch(getBatchDetailsById(batchId));
+      hasFetchedRef.current = batchId;
     }
     return () => {
-      dispatch(clearBatchDetails());
+      // Cleanup is handled by new instance creation; ref reset is removed 
+      // to support React 18's StrictMode double-mount simulation.
     };
   }, [batchId, dispatch]);
 
@@ -855,8 +859,8 @@ function BatchMemberSummary() {
     } catch (error) {
       message.error(
         error.response?.data?.message ||
-          error.message ||
-          "Failed to download file",
+        error.message ||
+        "Failed to download file",
       );
       console.error("Download error:", error);
     }
