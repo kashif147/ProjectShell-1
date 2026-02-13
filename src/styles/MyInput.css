@@ -21,6 +21,12 @@
   display: flex;
   align-items: center;
   width: 100%;
+  border: none !important;
+}
+
+.my-input-container:has(.mobile-input-group) {
+  border: none !important;
+  background: transparent !important;
 }
 
 .bg-lb .ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
