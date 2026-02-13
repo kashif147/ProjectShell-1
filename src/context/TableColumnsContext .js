@@ -5005,6 +5005,36 @@ export const TableColumnsProvider = ({ children }) => {
     [lookupsForSelect]
   );
 
+  const applyTemplate = useCallback((screenName, templateColumns) => {
+    if (!screenName || !templateColumns) return;
+
+    setColumns((prevColumns) => {
+      const currentScreenColumns = prevColumns[screenName];
+      if (!currentScreenColumns) return prevColumns;
+
+      const updatedScreenColumns = currentScreenColumns.map((col) => {
+        // Handle dataIndex as array or string
+        const dataIndexString = Array.isArray(col.dataIndex)
+          ? col.dataIndex.join(".")
+          : col.dataIndex;
+
+        // Check if this column exists in the template's columns array
+        const isVisible = templateColumns.includes(dataIndexString);
+
+        return {
+          ...col,
+          isGride: isVisible,
+          isVisible: isVisible,
+        };
+      });
+
+      return {
+        ...prevColumns,
+        [screenName]: updatedScreenColumns,
+      };
+    });
+  }, []);
+
   useEffect(() => {
     updateSearchFilters("Ranks", "Grade");
     updateSearchFilters("Duties", "Work Location");
@@ -5033,6 +5063,7 @@ export const TableColumnsProvider = ({ children }) => {
   const contextValue = useMemo(
     () => ({
       columns,
+      applyTemplate,
       updateColumns: () => { },
       state: { selectedOption: "!=", checkboxes: {} },
       setState: () => { },

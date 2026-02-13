@@ -876,7 +876,8 @@ function BatchMemberSummary() {
   };
 
   // Get display values from Redux state
-  const displayBatchDate = getSafeDate(batchInfo.date);
+  const displayBatchDate = getSafeDate(batchInfo.batchDate);
+  const displayPaymentDate = getSafeDate(batchInfo.paymentDate);
   const displayPaymentType = batchInfo.type;
   const displayComments = batchInfo.comments;
 
@@ -1075,6 +1076,40 @@ function BatchMemberSummary() {
             flexShrink: 0,
           }}
         />
+        {/* Batch Date */}
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+            minWidth: "120px",
+          }}
+        >
+          <div
+            style={{
+              fontSize: "11px",
+              color: "#64748b",
+              fontWeight: "500",
+              whiteSpace: "nowrap",
+            }}
+          >
+            Batch Date
+          </div>
+          <div
+            style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
+          >
+            {displayBatchDate ? displayBatchDate.format("MM/YYYY") : "-"}
+          </div>
+        </div>
+        <div
+          style={{
+            width: "1px",
+            height: "28px",
+            backgroundColor: "#e2e8f0",
+            margin: "0 12px",
+            flexShrink: 0,
+          }}
+        />
         {/* Payment Date */}
         <div
           style={{
@@ -1097,7 +1132,7 @@ function BatchMemberSummary() {
           <div
             style={{ fontSize: "13px", fontWeight: "600", color: "#0f172a" }}
           >
-            {displayBatchDate ? displayBatchDate.format("MM/YYYY") : "-"}
+            {displayPaymentDate ? displayPaymentDate.format("DD/MM/YYYY") : "-"}
           </div>
         </div>
         <div

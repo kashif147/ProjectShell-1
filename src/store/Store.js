@@ -45,6 +45,7 @@ import getCornMarketBatchByIdReducer from "../features/profiles/CornMarketBatchB
 import accountReducer from "../features/AccountSlice";
 import notificationReducer from "../features/NotificationSlice";
 import batchDetailsReducer from "../features/profiles/BatchDetailsSlice";
+import templetefiltrsclumnapiReducer from "../features/templete/templetefiltrsclumnapi";
 
 const store = configureStore({
   reducer: {
@@ -91,6 +92,7 @@ const store = configureStore({
     getTemplate: getTemplateReducer,
     templeteDetails: templeteDetailsReducer,
     transferRequestHistory: transferRequestHistoryReducer,
+    templetefiltrsclumnapi: templetefiltrsclumnapiReducer,
 
   },
 });

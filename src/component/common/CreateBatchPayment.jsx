@@ -281,11 +281,14 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     };
 
     // If it's a deduction batch, call the API
-    if (formValues.batchType === "Deduction") {
+    if (formValues.batchType?.toLowerCase() === "deduction") {
       try {
         const formData = new FormData();
         formData.append("type", "deduction");
         formData.append("date", formValues.paymentDate);
+        formData.append("batchDate", formValues.batchDate);
+        formData.append("paymentDate", formValues.paymentDate);
+        formData.append("workLocation", formValues.workLocation);
         formData.append("referenceNumber", formValues.batchRef);
         formData.append("description", formValues.description);
         formData.append("comments", formValues.comments || "");
