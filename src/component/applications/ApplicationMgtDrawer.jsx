@@ -881,13 +881,13 @@ function ApplicationMgtDrawer({
       let errorDescription = "Please fill in all required fields.";
 
       if (uniqueMissing.length > 0) {
-        const lastTwo = uniqueMissing.slice(-2);
+        const firstTwo = uniqueMissing.slice(0, 2);
         if (uniqueMissing.length === 1) {
           errorDescription = `${uniqueMissing[0]} field is missing.`;
         } else if (uniqueMissing.length === 2) {
           errorDescription = `${uniqueMissing[0]} and ${uniqueMissing[1]} fields are missing.`;
         } else {
-          errorDescription = `Multiple fields are missing, including ${lastTwo[0]} and ${lastTwo[1]}.`;
+          errorDescription = `Multiple fields are missing, including ${firstTwo[0]} and ${firstTwo[1]}.`;
         }
       }
 
