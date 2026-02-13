@@ -68,8 +68,30 @@
 }
 
 input:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   color: #212529 !important;
+  background-color: #fafafa !important;
+}
+
+/* All disabled form fields */
+.ant-input[disabled],
+.ant-input-disabled,
+.ant-input-affix-wrapper-disabled,
+.ant-input-affix-wrapper-disabled .ant-input,
+.ant-select-disabled .ant-select-selector,
+.ant-picker-disabled,
+.ant-picker-disabled .ant-picker-input > input,
+.my-input-container.disabled,
+.my-input-container.disabled .my-input-field,
+.my-input-field:disabled,
+.my-input-field-select:disabled,
+.my-input-field-select.disabled-select {
+  background-color: #fafafa !important;
+}
+
+.my-input-field-select {
+  border-color: #d9d9d900 !important;
 }
 
 .radio-text {
