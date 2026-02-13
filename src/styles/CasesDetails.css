@@ -287,6 +287,27 @@
   resize: vertical !important;
 }
 
+/* Activities comment input (ReactQuill) – match case-input-container */
+.rich-text-editor-wrapper .ql-toolbar.ql-snow {
+  border: 1px solid #d9d9d9 !important;
+  border-radius: 4px 4px 0 0 !important;
+  background: #fff !important;
+}
+.rich-text-editor-wrapper .ql-container.ql-snow {
+  border: 1px solid #d9d9d9 !important;
+  border-top: none !important;
+  border-radius: 0 0 4px 4px !important;
+  background: #fff !important;
+}
+.rich-text-editor-wrapper:focus-within {
+  box-shadow: 0 0 0 2px rgba(24, 144, 255, 0.1);
+  border-radius: 4px;
+}
+.rich-text-editor-wrapper:focus-within .ql-toolbar.ql-snow,
+.rich-text-editor-wrapper:focus-within .ql-container.ql-snow {
+  border-color: var(--primary-blue) !important;
+}
+
 /* Stakeholders Tags */
 .stakeholders-container {
   display: flex;

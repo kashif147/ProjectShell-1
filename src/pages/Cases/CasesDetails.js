@@ -231,7 +231,10 @@ function CasesDetails() {
 
   const getFirstNWords = (text, n) => {
     if (!text || !n) return "";
-    const stripped = String(text).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+    const stripped = String(text)
+      .replace(/<[^>]+>/g, " ")
+      .replace(/\s+/g, " ")
+      .trim();
     const words = stripped.split(/\s+/).filter(Boolean);
     const slice = words.slice(0, n).join(" ");
     return words.length > n ? `${slice}...` : slice;
@@ -255,10 +258,18 @@ function CasesDetails() {
   const handleCollapseExpandToggle = () => {
     if (allSectionsCollapsed) {
       setDescriptionCollapsed(false);
-      setCollapsedSections({ Attachments: false, Activities: false, History: false });
+      setCollapsedSections({
+        Attachments: false,
+        Activities: false,
+        History: false,
+      });
     } else {
       setDescriptionCollapsed(true);
-      setCollapsedSections({ Attachments: true, Activities: true, History: true });
+      setCollapsedSections({
+        Attachments: true,
+        Activities: true,
+        History: true,
+      });
     }
   };
 
@@ -285,7 +296,10 @@ function CasesDetails() {
             <h3>
               Description
               {descriptionCollapsed && (
-                <span className="section-preview-inline"> — {getFirstNWords(issueDescription, 20)}</span>
+                <span className="section-preview-inline">
+                  {" "}
+                  — {getFirstNWords(issueDescription, 20)}
+                </span>
               )}
             </h3>
             <div className="section-header-actions">
@@ -294,7 +308,9 @@ function CasesDetails() {
                 onClick={() => setDescriptionCollapsed(!descriptionCollapsed)}
                 role="button"
                 tabIndex={0}
-                onKeyDown={(e) => e.key === "Enter" && setDescriptionCollapsed((c) => !c)}
+                onKeyDown={(e) =>
+                  e.key === "Enter" && setDescriptionCollapsed((c) => !c)
+                }
                 aria-expanded={!descriptionCollapsed}
               >
                 {descriptionCollapsed ? <DownOutlined /> : <UpOutlined />}
@@ -378,7 +394,8 @@ function CasesDetails() {
       modifiedBy: "J. DOE",
       type: "pdf",
       icon: <FileTextOutlined style={{ color: "#ff4d4f" }} />,
-      printContent: "Case Summary – Region 4 AML Indicator\n\nInitial assessment dated Oct 24, 2023. This document summarizes the flagged transaction and recommended actions. Key findings: potential AML indicators detected; cross-verification with external vendor logs required. Status: Under review. Prepared by J. DOE.",
+      printContent:
+        "Case Summary – Region 4 AML Indicator\n\nInitial assessment dated Oct 24, 2023. This document summarizes the flagged transaction and recommended actions. Key findings: potential AML indicators detected; cross-verification with external vendor logs required. Status: Under review. Prepared by J. DOE.",
     },
     {
       name: "Witness_Testimony_Correspondence.msg",
@@ -388,7 +405,8 @@ function CasesDetails() {
       modifiedBy: "R. SMITH",
       type: "msg",
       icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
-      printContent: "Subject: Witness Testimony – Case Reference\nFrom: R. SMITH\nDate: Oct 22, 2023\n\nSummary of correspondence regarding witness testimony. Key points documented for case file. Follow-up required with legal team.",
+      printContent:
+        "Subject: Witness Testimony – Case Reference\nFrom: R. SMITH\nDate: Oct 22, 2023\n\nSummary of correspondence regarding witness testimony. Key points documented for case file. Follow-up required with legal team.",
     },
     {
       name: "Evidence_Photo_001.jpg",
@@ -408,7 +426,8 @@ function CasesDetails() {
       modifiedBy: "M. LEGAL",
       type: "doc",
       icon: <FileTextOutlined style={{ color: "#1890ff" }} />,
-      printContent: "Internal Review Notes\n\nReview completed by M. LEGAL. Recommendations: proceed with cross-verification; escalate if further indicators found. Next steps documented in case workflow.",
+      printContent:
+        "Internal Review Notes\n\nReview completed by M. LEGAL. Recommendations: proceed with cross-verification; escalate if further indicators found. Next steps documented in case workflow.",
     },
   ];
 
@@ -441,7 +460,10 @@ function CasesDetails() {
               <Tooltip title="View">
                 <span
                   className="attachment-action-btn"
-                  onClick={(e) => { e.stopPropagation(); handleViewFile(file); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleViewFile(file);
+                  }}
                   role="button"
                   tabIndex={0}
                   onKeyDown={(e) => e.key === "Enter" && handleViewFile(file)}
@@ -452,10 +474,15 @@ function CasesDetails() {
               <Tooltip title="Download">
                 <span
                   className="attachment-action-btn"
-                  onClick={(e) => { e.stopPropagation(); handleDownloadFile(file); }}
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    handleDownloadFile(file);
+                  }}
                   role="button"
                   tabIndex={0}
-                  onKeyDown={(e) => e.key === "Enter" && handleDownloadFile(file)}
+                  onKeyDown={(e) =>
+                    e.key === "Enter" && handleDownloadFile(file)
+                  }
                 >
                   <DownloadOutlined />
                 </span>
@@ -681,7 +708,9 @@ function CasesDetails() {
   };
 
   const handleDownloadFile = (file) => {
-    const blob = new Blob([`Placeholder content for ${file.name}`], { type: "application/octet-stream" });
+    const blob = new Blob([`Placeholder content for ${file.name}`], {
+      type: "application/octet-stream",
+    });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
@@ -691,11 +720,17 @@ function CasesDetails() {
   };
 
   const handleViewFile = (file) => {
-    if (file.thumb && (file.type === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))) {
+    if (
+      file.thumb &&
+      (file.type === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name))
+    ) {
       window.open(file.thumb, "_blank");
     } else {
       const w = window.open("", "_blank");
-      if (w) w.document.write(`<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type. Use Download to save.</p></body></html>`);
+      if (w)
+        w.document.write(
+          `<html><body style="font-family:sans-serif;padding:24px"><h2>${file.name}</h2><p>Preview not available for this file type. Use Download to save.</p></body></html>`,
+        );
     }
   };
 
@@ -734,10 +769,7 @@ function CasesDetails() {
                   ["clean"],
                 ],
               }}
-              style={{
-                borderRadius: "8px",
-                background: "#fff",
-              }}
+            
             />
           </div>
           <button
@@ -828,9 +860,14 @@ function CasesDetails() {
                 <div className="section-header-collapsible">
                   <h3>
                     Attachments
-                    {collapsedSections.Attachments && attachmentsData.length > 0 && (
-                      <span className="section-count"> ({attachmentsData.length} document{attachmentsData.length !== 1 ? "s" : ""})</span>
-                    )}
+                    {collapsedSections.Attachments &&
+                      attachmentsData.length > 0 && (
+                        <span className="section-count">
+                          {" "}
+                          ({attachmentsData.length} document
+                          {attachmentsData.length !== 1 ? "s" : ""})
+                        </span>
+                      )}
                   </h3>
                   <div className="section-header-actions">
                     <Tooltip title="Download all">
@@ -848,7 +885,9 @@ function CasesDetails() {
                       onClick={() => toggleSection("Attachments")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && toggleSection("Attachments")}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && toggleSection("Attachments")
+                      }
                       aria-expanded={!collapsedSections.Attachments}
                     >
                       {collapsedSections.Attachments ? (
@@ -866,30 +905,40 @@ function CasesDetails() {
                 <div className="section-header-collapsible">
                   <h3>
                     Activities
-                    {collapsedSections.Activities && notes.length > 0 && (() => {
-                      const latest = notes[notes.length - 1];
-                      const previewText = stripHtml(latest.text);
-                      const short = previewText.length > 60 ? `${previewText.slice(0, 60)}...` : previewText;
-                      return (
-                        <span className="section-preview-inline"> — {latest.user} · {latest.time}: {short}</span>
-                      );
-                    })()}
+                    {collapsedSections.Activities &&
+                      notes.length > 0 &&
+                      (() => {
+                        const latest = notes[notes.length - 1];
+                        const previewText = stripHtml(latest.text);
+                        const short =
+                          previewText.length > 60
+                            ? `${previewText.slice(0, 60)}...`
+                            : previewText;
+                        return (
+                          <span className="section-preview-inline">
+                            {" "}
+                            — {latest.user} · {latest.time}: {short}
+                          </span>
+                        );
+                      })()}
                   </h3>
                   <div className="section-header-actions">
-                  <span
-                    className="section-toggle-btn"
-                    onClick={() => toggleSection("Activities")}
-                    role="button"
-                    tabIndex={0}
-                    onKeyDown={(e) => e.key === "Enter" && toggleSection("Activities")}
-                    aria-expanded={!collapsedSections.Activities}
-                  >
-                    {collapsedSections.Activities ? (
-                      <DownOutlined />
-                    ) : (
-                      <UpOutlined />
-                    )}
-                  </span>
+                    <span
+                      className="section-toggle-btn"
+                      onClick={() => toggleSection("Activities")}
+                      role="button"
+                      tabIndex={0}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && toggleSection("Activities")
+                      }
+                      aria-expanded={!collapsedSections.Activities}
+                    >
+                      {collapsedSections.Activities ? (
+                        <DownOutlined />
+                      ) : (
+                        <UpOutlined />
+                      )}
+                    </span>
                   </div>
                 </div>
                 {!collapsedSections.Activities && renderIssueNotes()}
@@ -901,16 +950,26 @@ function CasesDetails() {
                     History
                     {collapsedSections.History && historyData.length > 0 && (
                       <>
-                        <span className="section-count"> ({historyData.length} record{historyData.length !== 1 ? "s" : ""})</span>
-                        {historyData[0] && (() => {
-                          const recent = historyData[0];
-                          const labelShort = recent.label.length > 50 ? `${recent.label.slice(0, 50)}...` : recent.label;
-                          return (
-                            <span className="section-preview-inline">
-                              {" "}— {recent.actor.name} · {recent.time}: {labelShort}
-                            </span>
-                          );
-                        })()}
+                        <span className="section-count">
+                          {" "}
+                          ({historyData.length} record
+                          {historyData.length !== 1 ? "s" : ""})
+                        </span>
+                        {historyData[0] &&
+                          (() => {
+                            const recent = historyData[0];
+                            const labelShort =
+                              recent.label.length > 50
+                                ? `${recent.label.slice(0, 50)}...`
+                                : recent.label;
+                            return (
+                              <span className="section-preview-inline">
+                                {" "}
+                                — {recent.actor.name} · {recent.time}:{" "}
+                                {labelShort}
+                              </span>
+                            );
+                          })()}
                       </>
                     )}
                   </h3>
@@ -920,7 +979,9 @@ function CasesDetails() {
                       onClick={() => toggleSection("History")}
                       role="button"
                       tabIndex={0}
-                      onKeyDown={(e) => e.key === "Enter" && toggleSection("History")}
+                      onKeyDown={(e) =>
+                        e.key === "Enter" && toggleSection("History")
+                      }
                       aria-expanded={!collapsedSections.History}
                     >
                       {collapsedSections.History ? (
@@ -1114,7 +1175,7 @@ function CasesDetails() {
                       value={assignee.name}
                       onChange={(value) => {
                         const selected = availableAssignees.find(
-                          (a) => a.name === value
+                          (a) => a.name === value,
                         );
                         if (selected) setAssignee(selected);
                       }}
@@ -1189,17 +1250,62 @@ function CasesDetails() {
         <section className="issue-print-section">
           <h2 className="issue-print-section-title">Issue Details</h2>
           <div className="issue-print-details-grid">
-            <div className="issue-print-detail-item"><span className="issue-print-label">Incident Date</span><span className="issue-print-value">{caseDate ? dayjs(caseDate).format("MMM DD, YYYY") : "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Location</span><span className="issue-print-value">{caseLocation || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Category</span><span className="issue-print-value">{caseCategory || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Case Type</span><span className="issue-print-value">{caseType || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Status</span><span className="issue-print-value">{caseStatus || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Priority</span><span className="issue-print-value">{casePriority || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Due Date</span><span className="issue-print-value">{caseDeadline ? dayjs(caseDeadline).format("MMM DD, YYYY") : "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Pertinent to File Review</span><span className="issue-print-value">{pertinentToFileReview ? "Yes" : "No"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">File Number</span><span className="issue-print-value">{fileNumber || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Assignee</span><span className="issue-print-value">{assignee?.name || "—"}</span></div>
-            <div className="issue-print-detail-item"><span className="issue-print-label">Related Member(s)</span><span className="issue-print-value">{Array.isArray(stakeholders) ? stakeholders.join(", ") : "—"}</span></div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Incident Date</span>
+              <span className="issue-print-value">
+                {caseDate ? dayjs(caseDate).format("MMM DD, YYYY") : "—"}
+              </span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Location</span>
+              <span className="issue-print-value">{caseLocation || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Category</span>
+              <span className="issue-print-value">{caseCategory || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Case Type</span>
+              <span className="issue-print-value">{caseType || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Status</span>
+              <span className="issue-print-value">{caseStatus || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Priority</span>
+              <span className="issue-print-value">{casePriority || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Due Date</span>
+              <span className="issue-print-value">
+                {caseDeadline
+                  ? dayjs(caseDeadline).format("MMM DD, YYYY")
+                  : "—"}
+              </span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">
+                Pertinent to File Review
+              </span>
+              <span className="issue-print-value">
+                {pertinentToFileReview ? "Yes" : "No"}
+              </span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">File Number</span>
+              <span className="issue-print-value">{fileNumber || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Assignee</span>
+              <span className="issue-print-value">{assignee?.name || "—"}</span>
+            </div>
+            <div className="issue-print-detail-item">
+              <span className="issue-print-label">Related Member(s)</span>
+              <span className="issue-print-value">
+                {Array.isArray(stakeholders) ? stakeholders.join(", ") : "—"}
+              </span>
+            </div>
           </div>
         </section>
 
@@ -1215,13 +1321,18 @@ function CasesDetails() {
               <div className="issue-print-attachment-header">
                 <strong>{file.name}</strong>
                 {file.date && file.time && (
-                  <span className="issue-print-meta"> — {file.date} {file.time}</span>
+                  <span className="issue-print-meta">
+                    {" "}
+                    — {file.date} {file.time}
+                  </span>
                 )}
                 {file.modifiedBy && (
                   <span className="issue-print-meta"> · {file.modifiedBy}</span>
                 )}
               </div>
-              {file.thumb && (file.type === "image" || /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) ? (
+              {file.thumb &&
+              (file.type === "image" ||
+                /\.(jpg|jpeg|png|gif|webp)$/i.test(file.name)) ? (
                 <div className="issue-print-attachment-image">
                   <img src={file.thumb} alt={file.name} />
                 </div>
@@ -1245,7 +1356,10 @@ function CasesDetails() {
                   <strong>{note.user}</strong>
                   <span className="issue-print-comment-time">{note.time}</span>
                 </div>
-                <div className="issue-print-comment-text" dangerouslySetInnerHTML={{ __html: note.text }} />
+                <div
+                  className="issue-print-comment-text"
+                  dangerouslySetInnerHTML={{ __html: note.text }}
+                />
               </div>
             ))}
           </div>
