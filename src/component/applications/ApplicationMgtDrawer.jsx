@@ -3363,7 +3363,7 @@ function ApplicationMgtDrawer({
 
               <Col xs={24} md={12}>
                 <div
-                  className="d-flex flex-column p-3"
+                  className="p-3 bg-lb"
                   style={{
                     backgroundColor: "#1173d41a",
                     border: errors?.otherIrishTradeUnion ? "1px solid #ff4d4f" : "1px solid #97c5efff",
