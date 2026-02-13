@@ -21,6 +21,12 @@
   display: flex;
   align-items: center;
   width: 100%;
+  border: none !important;
+}
+
+.my-input-container:has(.mobile-input-group) {
+  border: none !important;
+  background: transparent !important;
 }
 
 .bg-lb .ant-radio-wrapper .ant-radio-checked .ant-radio-inner {
@@ -56,8 +62,9 @@
 }
 
 .country-code-select:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 1px #1677ff;
+  background-color: #f0f8ff;
+  border-color: #40a9ff;
+  outline: none;
 }
 
 .mobile-input-group {
@@ -85,8 +92,9 @@
 }
 
 .country-code-select:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 1px #1677ff;
+  background-color: #f0f8ff;
+  border-color: #40a9ff;
+  outline: none;
 }
 
 /* Mobile number input (takes remaining width) */
@@ -103,8 +111,9 @@
 }
 
 .mobile-number-input:focus {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 1px #1677ff;
+  background-color: #f0f8ff;
+  border-color: #40a9ff;
+  outline: none;
 }
 
 .mobile-number-input:disabled,
@@ -203,8 +212,13 @@
 }
 
 .my-input-container.focused {
-  border-color: #0d6efd;
-  box-shadow: 0 0 0 4px rgba(13, 110, 253, 0.1);
+  background-color: #f0f8ff;
+  border-color: #40a9ff;
+  outline: none;
+  box-shadow: none;
+}
+.my-input-container.focused .my-input-field {
+  background: transparent !important;
 }
 
 .my-input-container.error {

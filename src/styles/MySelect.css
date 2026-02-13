@@ -127,9 +127,14 @@
   border-radius: 6px !important;
 }
 
+.my-input-container.focused .my-input-field-select {
+  background-color: #f0f8ff;
+  border-color: #40a9ff !important;
+  outline: none;
+}
 .my-input-container.focused .my-input-field {
-  border-color: #1677ff;
-  box-shadow: 0 0 0 2px rgba(22, 119, 255, 0.2);
+  border-color: #40a9ff;
+  box-shadow: none;
 }
 
 .my-input-container.error .my-input-field {

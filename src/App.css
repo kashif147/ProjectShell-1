@@ -68,8 +68,30 @@
 }
 
 input:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   color: #212529 !important;
+  background-color: #fafafa !important;
+}
+
+/* All disabled form fields */
+.ant-input[disabled],
+.ant-input-disabled,
+.ant-input-affix-wrapper-disabled,
+.ant-input-affix-wrapper-disabled .ant-input,
+.ant-select-disabled .ant-select-selector,
+.ant-picker-disabled,
+.ant-picker-disabled .ant-picker-input > input,
+.my-input-container.disabled,
+.my-input-container.disabled .my-input-field,
+.my-input-field:disabled,
+.my-input-field-select:disabled,
+.my-input-field-select.disabled-select {
+  background-color: #fafafa !important;
+}
+
+.my-input-field-select {
+  border-color: #d9d9d900 !important;
 }
 
 .radio-text {
@@ -160,11 +182,37 @@ select:disabled {
   background: transparent !important;
 }
 
+input:focus,
+textarea:focus,
 .ant-input:focus,
 .ant-textarea:focus,
-.ant-select:focus .ant-btn:focus {
-  background-color: #edf1fd;
-  border: 1.5px solid var(--mainBlue);
+.form-input:focus {
+  background-color: #f0f8ff;
+  border-color: #40a9ff !important;
+  outline: none;
+}
+
+/* Ant Design wrappers: one focus ring, inner input transparent to avoid double box */
+.ant-input-affix-wrapper-focused {
+  background-color: #f0f8ff !important;
+  border-color: #40a9ff !important;
+  outline: none;
+  box-shadow: none !important;
+}
+.ant-input-affix-wrapper-focused .ant-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ant-select-focused .ant-select-selector {
+  background-color: #f0f8ff !important;
+  border-color: #40a9ff !important;
+  outline: none;
+}
+.ant-picker-focused {
+  background-color: #f0f8ff !important;
+  border-color: #40a9ff !important;
   outline: none;
 }
 
@@ -277,7 +325,7 @@ select {
 }
 
 .ant-input-focused {
-  background-color: #ebf1fd;
+  background-color: #f0f8ff;
 }
 
 .ant-select-dropdown {
@@ -1146,14 +1194,6 @@ tr {
   outline: none !important;
 }
 
-.ant-input:focus {
-  background-color: #f0f8ff;
-  /* Change this to your desired background color */
-  outline: none;
-  /* Optional: Remove the default outline */
-  border-color: 2px #40a9ff !important;
-  /* Optional: Change border color on focus */
-}
 
 .transparent-bg:hover,
 .transparent-bg:focus,
