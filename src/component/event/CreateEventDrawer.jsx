@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import {
   Button,
   Row,
@@ -43,22 +43,11 @@ const CreateEventDrawer = ({ open, onClose }) => {
     {
       id: 1,
       day: "Day 1",
-      date: dayjs("04/12/2024", "DD/MM/YYYY"),
-      location: "Commercial Unit, 20 Ringrose",
+      date: null,
+      location: "",
       zoomLink: "",
       isOnline: false,
-      startTime: null,
-      endTime: null,
-    },
-    {
-      id: 2,
-      day: "Day 2",
-      date: dayjs("05/12/2024", "DD/MM/YYYY"),
-      location: "Commercial Unit, 20 Ringrose",
-      zoomLink: "",
-      isOnline: false,
-      startTime: null,
-      endTime: null,
+      sessions: [{ id: 1, startTime: null, endTime: null }],
     },
   ]);
 
@@ -66,6 +55,17 @@ const CreateEventDrawer = ({ open, onClose }) => {
     { id: 1, name: "Venue Rental", amount: "2500" },
     { id: 2, name: "Catering Service", amount: "1200" },
   ]);
+
+  useEffect(() => {
+    setScheduleData((prev) =>
+      prev.length >= 1
+        ? [{ ...prev[0], date: eventDate != null ? eventDate : prev[0].date }, ...prev.slice(1)]
+        : prev
+    );
+  }, [eventDate]);
+
+  const totalSessionCount = scheduleData.reduce((sum, d) => sum + (d.sessions?.length ?? 0), 0);
+  const dayCount = scheduleData.length;
 
   const handleScheduleClick = (e) => {
     e.preventDefault();
@@ -93,29 +93,159 @@ const CreateEventDrawer = ({ open, onClose }) => {
     setIsCostsDrawerVisible(false);
   };
 
+  const getAllSessionIds = () =>
+    scheduleData.flatMap((d) => (d.sessions || []).map((s) => s.id));
+
   const handleScheduleAddDay = () => {
-    const newId =
-      scheduleData.length > 0
-        ? Math.max(...scheduleData.map((s) => s.id)) + 1
-        : 1;
+    const newDayId =
+      scheduleData.length > 0 ? Math.max(...scheduleData.map((d) => d.id)) + 1 : 1;
+    const newSessionId =
+      getAllSessionIds().length > 0 ? Math.max(...getAllSessionIds()) + 1 : 1;
     const newDayNum = scheduleData.length + 1;
+    const lastDay = scheduleData[scheduleData.length - 1];
+    const nextDate = lastDay?.date ? dayjs(lastDay.date).add(1, "day") : dayjs();
     setScheduleData([
       ...scheduleData,
       {
-        id: newId,
+        id: newDayId,
         day: `Day ${newDayNum}`,
-        date: dayjs(),
+        date: nextDate,
         location: "",
         zoomLink: "",
         isOnline: false,
-        startTime: null,
-        endTime: null,
+        sessions: [{ id: newSessionId, startTime: null, endTime: null }],
       },
     ]);
   };
 
-  const handleScheduleRemoveDay = (id) => {
-    setScheduleData(scheduleData.filter((session) => session.id !== id));
+  const handleScheduleRemoveDay = (dayId) => {
+    const removedIndex = scheduleData.findIndex((d) => d.id === dayId);
+    const newData = scheduleData
+      .filter((d) => d.id !== dayId)
+      .map((day, index) => {
+        const wasAfterRemoved = index >= removedIndex;
+        const adjustedDate =
+          wasAfterRemoved && day.date
+            ? dayjs(day.date).subtract(1, "day")
+            : day.date;
+        return {
+          ...day,
+          date: adjustedDate,
+          day: `Day ${index + 1}`,
+        };
+      });
+    setScheduleData(newData);
+  };
+
+  const handleDayChange = (dayId, field, value) => {
+    setScheduleData((prev) =>
+      prev.map((d) => (d.id === dayId ? { ...d, [field]: value } : d))
+    );
+  };
+
+  const SESSION_GAP_MINUTES = 15;
+
+  const handleSessionTimeChange = (dayId, sessionId, field, value) => {
+    setScheduleData((prev) =>
+      prev.map((d) => {
+        if (d.id !== dayId) return d;
+        const sessions = [...(d.sessions || [])];
+        const idx = sessions.findIndex((s) => s.id === sessionId);
+        if (idx < 0) return d;
+
+        const apply = (arr, i, updates) => {
+          const next = [...arr];
+          next[i] = { ...next[i], ...updates };
+          return next;
+        };
+
+        if (field === "startTime") {
+          let newStart = value;
+          let newSessions = sessions.map((s, i) => (i === idx ? { ...s, startTime: newStart } : { ...s }));
+
+          if (newStart && newSessions[idx].endTime) {
+            const end = dayjs(newSessions[idx].endTime);
+            if (!dayjs(newStart).isBefore(end, "minute")) {
+              newSessions[idx].endTime = dayjs(newStart).add(SESSION_GAP_MINUTES, "minute");
+            }
+          }
+          if (idx > 0 && newStart && newSessions[idx - 1].endTime) {
+            const prevEnd = dayjs(newSessions[idx - 1].endTime);
+            if (!dayjs(newStart).isAfter(prevEnd, "minute")) {
+              let prevNewEnd = dayjs(newStart).subtract(SESSION_GAP_MINUTES, "minute");
+              const prevStart = newSessions[idx - 1].startTime && dayjs(newSessions[idx - 1].startTime);
+              if (prevStart && !prevNewEnd.isAfter(prevStart)) {
+                prevNewEnd = prevStart.add(SESSION_GAP_MINUTES, "minute");
+              }
+              newSessions[idx - 1].endTime = prevNewEnd;
+            }
+          }
+          return { ...d, sessions: newSessions };
+        }
+
+        if (field === "endTime") {
+          let newEnd = value;
+          let newSessions = sessions.map((s, i) => (i === idx ? { ...s, endTime: newEnd } : { ...s }));
+
+          if (newEnd && newSessions[idx].startTime) {
+            const start = dayjs(newSessions[idx].startTime);
+            if (!dayjs(newEnd).isAfter(start, "minute")) {
+              newSessions[idx].endTime = dayjs(start).add(SESSION_GAP_MINUTES, "minute");
+              newEnd = newSessions[idx].endTime;
+            }
+          }
+          if (idx < newSessions.length - 1 && newEnd && newSessions[idx + 1].startTime) {
+            const nextStart = dayjs(newSessions[idx + 1].startTime);
+            if (!dayjs(newEnd).isBefore(nextStart, "minute")) {
+              newSessions[idx + 1].startTime = dayjs(newEnd).add(SESSION_GAP_MINUTES, "minute");
+            }
+          }
+          return { ...d, sessions: newSessions };
+        }
+
+        return { ...d, sessions: apply(sessions, idx, { [field]: value }) };
+      })
+    );
+  };
+
+  const handleAddSessionToDay = (dayId) => {
+    const newSessionId =
+      getAllSessionIds().length > 0 ? Math.max(...getAllSessionIds()) + 1 : 1;
+    setScheduleData((prev) =>
+      prev.map((d) =>
+        d.id === dayId
+          ? {
+              ...d,
+              sessions: [
+                ...(d.sessions || []),
+                { id: newSessionId, startTime: null, endTime: null },
+              ],
+            }
+          : d
+      )
+    );
+  };
+
+  const handleRemoveSession = (dayId, sessionId) => {
+    setScheduleData((prev) => {
+      const removedDayIndex = prev.findIndex((d) => d.id === dayId);
+      const dayHadOneSession = (prev[removedDayIndex]?.sessions?.length ?? 0) === 1;
+      const afterRemoval = prev.map((d) => {
+        if (d.id !== dayId) return d;
+        const sessions = (d.sessions || []).filter((s) => s.id !== sessionId);
+        return { ...d, sessions };
+      });
+      const filtered = afterRemoval.filter((d) => d.sessions?.length > 0);
+      return filtered.map((day, index) => {
+        const wasAfterRemoved =
+          dayHadOneSession && removedDayIndex >= 0 && index >= removedDayIndex;
+        const adjustedDate =
+          wasAfterRemoved && day.date
+            ? dayjs(day.date).subtract(1, "day")
+            : day.date;
+        return { ...day, date: adjustedDate, day: `Day ${index + 1}` };
+      });
+    });
   };
 
   const handleAddCost = () => {
@@ -134,13 +264,6 @@ const CreateEventDrawer = ({ open, onClose }) => {
     );
   };
 
-  const handleSessionChange = (id, field, value) => {
-    setScheduleData((prevData) =>
-      prevData.map((session) =>
-        session.id === id ? { ...session, [field]: value } : session
-      )
-    );
-  };
 
   const handleSave = () => {
     console.log({
@@ -234,18 +357,13 @@ const CreateEventDrawer = ({ open, onClose }) => {
                   />
                 </Col>
                 <Col xs={24} sm={12}>
-                  <CustomSelect
+                  <MyInput
                     label="Seat Limit"
                     name="seatLimit"
+                    type="number"
                     value={seatLimit}
                     onChange={(e) => setSeatLimit(e.target.value)}
-                    placeholder="1000000"
-                    options={[
-                      { label: "100", value: "100" },
-                      { label: "500", value: "500" },
-                      { label: "1000", value: "1000" },
-                      { label: "1000000", value: "1000000" },
-                    ]}
+                    placeholder="e.g. 100"
                   />
                 </Col>
               </Row>
@@ -386,7 +504,8 @@ const CreateEventDrawer = ({ open, onClose }) => {
               <div className="sidebar-card-icon">📅</div>
               <h5 className="sidebar-card-title">Schedule</h5>
               <p className="text-sm text-slate-500">
-                {scheduleData.length} Days, {scheduleData.length * 4} Sessions
+                {dayCount} {dayCount === 1 ? "Day" : "Days"}, {totalSessionCount}{" "}
+                {totalSessionCount === 1 ? "Session" : "Sessions"}
               </p>
               <a
                 href="#/"
@@ -445,9 +564,13 @@ const CreateEventDrawer = ({ open, onClose }) => {
         onClose={handleScheduleDrawerClose}
         onSave={handleScheduleSubmit}
         scheduleData={scheduleData}
-        onSessionChange={handleSessionChange}
+        onDayChange={handleDayChange}
+        onSessionTimeChange={handleSessionTimeChange}
         onAddDay={handleScheduleAddDay}
         onRemoveDay={handleScheduleRemoveDay}
+        onAddSessionToDay={handleAddSessionToDay}
+        onRemoveSession={handleRemoveSession}
+        allowAddDay={bookingOnMultipleDays}
       />
 
       <CostsFeesDrawer
