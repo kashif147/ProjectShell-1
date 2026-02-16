@@ -227,21 +227,52 @@
   margin-top: -1px !important;
 }
 
-/* Hide scrollbars for common-table - keep scroll functionality */
+/* Virtual Scroll UI: Hide scrollbars by default, show on hover */
 .common-table .ant-table-body,
 .common-table .ant-table-container,
 .common-table .ant-table-content {
-  scrollbar-width: none !important;
-  /* Firefox */
-  -ms-overflow-style: none !important;
-  /* IE and Edge */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
+}
+
+.common-table:hover .ant-table-body,
+.common-table:hover .ant-table-container,
+.common-table:hover .ant-table-content {
+  scrollbar-color: #c1c1c1 #f5f5f5;
 }
 
 .common-table .ant-table-body::-webkit-scrollbar,
 .common-table .ant-table-container::-webkit-scrollbar,
 .common-table .ant-table-content::-webkit-scrollbar {
-  display: none !important;
-  /* Chrome, Safari, Opera */
+  width: 8px;
+  height: 8px;
+}
+
+.common-table .ant-table-body::-webkit-scrollbar-thumb,
+.common-table .ant-table-container::-webkit-scrollbar-thumb,
+.common-table .ant-table-content::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 4px;
+  transition: background-color 0.3s ease;
+}
+
+.common-table:hover .ant-table-body::-webkit-scrollbar-thumb,
+.common-table:hover .ant-table-container::-webkit-scrollbar-thumb,
+.common-table:hover .ant-table-content::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+}
+
+.common-table .ant-table-body::-webkit-scrollbar-track,
+.common-table .ant-table-container::-webkit-scrollbar-track,
+.common-table .ant-table-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.common-table:hover .ant-table-body::-webkit-scrollbar-track,
+.common-table:hover .ant-table-container::-webkit-scrollbar-track,
+.common-table:hover .ant-table-content::-webkit-scrollbar-track {
+  background: #f5f5f5;
 }
 
 /* Remove gap by using negative margin on tbody if first row is empty */
@@ -340,23 +371,52 @@
   height: 0 !important;
 }
 
-/* Hide scrollbars for drawer-tbl - keep scroll functionality */
-.drawer-tbl,
+/* Repeat for drawer-tbl */
 .drawer-tbl .ant-table-body,
 .drawer-tbl .ant-table-container,
 .drawer-tbl .ant-table-content {
-  scrollbar-width: none !important;
-  /* Firefox */
-  -ms-overflow-style: none !important;
-  /* IE and Edge */
+  scrollbar-width: thin;
+  scrollbar-color: transparent transparent;
+  transition: scrollbar-color 0.3s ease;
 }
 
-.drawer-tbl::-webkit-scrollbar,
+.drawer-tbl:hover .ant-table-body,
+.drawer-tbl:hover .ant-table-container,
+.drawer-tbl:hover .ant-table-content {
+  scrollbar-color: #c1c1c1 #f5f5f5;
+}
+
 .drawer-tbl .ant-table-body::-webkit-scrollbar,
 .drawer-tbl .ant-table-container::-webkit-scrollbar,
 .drawer-tbl .ant-table-content::-webkit-scrollbar {
-  display: none !important;
-  /* Chrome, Safari, Opera */
+  width: 6px;
+  height: 6px;
+}
+
+.drawer-tbl .ant-table-body::-webkit-scrollbar-thumb,
+.drawer-tbl .ant-table-container::-webkit-scrollbar-thumb,
+.drawer-tbl .ant-table-content::-webkit-scrollbar-thumb {
+  background-color: transparent;
+  border-radius: 3px;
+  transition: background-color 0.3s ease;
+}
+
+.drawer-tbl:hover .ant-table-body::-webkit-scrollbar-thumb,
+.drawer-tbl:hover .ant-table-container::-webkit-scrollbar-thumb,
+.drawer-tbl:hover .ant-table-content::-webkit-scrollbar-thumb {
+  background-color: #c1c1c1;
+}
+
+.drawer-tbl .ant-table-body::-webkit-scrollbar-track,
+.drawer-tbl .ant-table-container::-webkit-scrollbar-track,
+.drawer-tbl .ant-table-content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.drawer-tbl:hover .ant-table-body::-webkit-scrollbar-track,
+.drawer-tbl:hover .ant-table-container::-webkit-scrollbar-track,
+.drawer-tbl:hover .ant-table-content::-webkit-scrollbar-track {
+  background: #f5f5f5;
 }
 
 .status-item.active {

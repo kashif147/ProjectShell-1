@@ -308,20 +308,29 @@ const TableComponent = ({
       }))
   );
 
-  // **NEW: Sync columns when screenName or global columns change**
+  // **Sync columns when screenName or global columns change**
   useEffect(() => {
-    const screenColumns = columns?.[screenName]
+    // All available columns for the selection menu
+    const menuColumns = columns?.[screenName]?.map((item, index) => ({
+      ...item,
+      key: `${index}`,
+      isVisible: item.isVisible !== false, // Ensure visibility flag exists
+    }));
+
+    // Only visible columns for the actual table grid
+    const gridColumns = menuColumns
       ?.filter((item) => item?.isGride)
-      ?.map((item, index) => ({
+      ?.map((item) => ({
         ...item,
-        key: `${index}`,
-        onHeaderCell: () => ({ id: `${index}` }),
-        onCell: () => ({ id: `${index}` }),
+        onHeaderCell: () => ({ id: item.key }),
+        onCell: () => ({ id: item.key }),
       }));
 
-    if (screenColumns) {
-      setColumnsDragbe(screenColumns);
-      setColumnsForFilter(screenColumns);
+    if (menuColumns) {
+      setColumnsForFilter(menuColumns);
+    }
+    if (gridColumns) {
+      setColumnsDragbe(gridColumns);
     }
   }, [screenName, columns]);
 
@@ -513,6 +522,10 @@ const TableComponent = ({
         ? col.render
         : (text, record, index) => {
 
+          const currentPath = location.pathname.toLowerCase();
+          const isApplicationsPage = currentPath.includes('/applications');
+          const isMembersPage = currentPath.includes('/members');
+
           switch (col.title) {
             case "Full Name":
               return (
@@ -526,10 +539,11 @@ const TableComponent = ({
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    dispatch(getProfileDetailsById(record?._id));
+                    const idToUse = isMembersPage ? (record?.profileId || record?._id) : record?._id;
+                    dispatch(getProfileDetailsById(idToUse));
                     dispatch(
                       getSubscriptionByProfileId({
-                        profileId: record?._id,
+                        profileId: idToUse,
                         isCurrent: true,
                       })
                     );
@@ -618,12 +632,6 @@ const TableComponent = ({
               );
 
             case "Membership Category":
-              // console.log("DEBUG: Membership Category Case Hit");
-              const currentPath = location.pathname.toLowerCase();
-              // console.log("DEBUG: Path:", location.pathname, "Lower:", currentPath, "Screen:", screenName);
-
-              const isApplicationsPage = currentPath.includes('/applications');
-              const isMembersPage = currentPath.includes('/members');
               const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
 
               let content;
@@ -635,7 +643,6 @@ const TableComponent = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       const { applicationStatus } = record || {};
-                      // Robust ID retrieval
                       const id = record?.applicationId || record?._id || record?.id;
 
                       if (applicationStatus === "Draft") {
@@ -665,28 +672,7 @@ const TableComponent = ({
                 );
               } else if (isMembersPage) {
                 content = (
-                  <Link
-                    to="/Details"
-                    state={{
-                      search: screenName,
-                      name: record?.user?.userFullName || record?.fullName,
-                      code: record?.personalDetails?.membershipNo || record?.regNo,
-                      memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
-                    }}
-                    onClick={() => {
-                      handleRowClick(record, index);
-                      dispatch(getProfileDetailsById(record?.profileId));
-                      dispatch(
-                        getSubscriptionByProfileId({
-                          profileId: record?.profileId,
-                          isCurrent: true,
-                        })
-                      );
-                    }}
-                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
-                  </Link>
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                 );
               } else {
                 content = (

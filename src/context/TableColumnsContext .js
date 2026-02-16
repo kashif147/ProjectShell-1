@@ -1131,7 +1131,7 @@ const staticColumns = {
 
     // 🔹 Approval Info
     {
-      dataIndex: ["personalDetails", "approvalDetails", "approvedBy"],
+      dataIndex: ["approvalDetails", "approvedBy"],
       title: "Approved By",
       ellipsis: true,
       isGride: true,
@@ -1140,7 +1140,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: ["personalDetails", "approvalDetails", "approvedAt"],
+      dataIndex: ["approvalDetails", "approvedAt"],
       title: "Approved At",
       ellipsis: true,
       isGride: true,
@@ -4667,8 +4667,7 @@ export const TableColumnsProvider = ({ children }) => {
   );
 
   const handleCheckboxFilterChange = useCallback(
-    (key, isChecked, screenName, width, e) => {
-      e.stopPropagation();
+    (key, isChecked, screenName, width) => {
       setColumns((prevColumns) => ({
         ...prevColumns,
         [screenName]: prevColumns[screenName].map((column) =>

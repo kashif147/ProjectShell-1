@@ -14,6 +14,7 @@ import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice";
 import menuLblReducer from "../features/MenuLblSlice";
 import applicationReducer from "../features/ApplicationSlice";
+import applicationWithFilterReducer from "../features/applicationwithfilterslice";
 import applicationDetailsReducer from "../features/ApplicationDetailsSlice";
 import tenantReducer from "../features/TenantSlice";
 import userReducer from "../features/UserSlice";
@@ -72,6 +73,7 @@ const store = configureStore({
     contact: contactReducer,
     menuLbl: menuLblReducer,
     applications: applicationReducer,
+    applicationWithFilter: applicationWithFilterReducer,
     applicationDetails: applicationDetailsReducer,
     hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
     tenants: tenantReducer,

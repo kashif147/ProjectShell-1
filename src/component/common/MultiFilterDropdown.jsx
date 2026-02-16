@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button, Alert } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 
@@ -17,7 +17,13 @@ const MultiFilterDropdown = ({
   onApply,
 }) => {
   const [open, setOpen] = useState(false);
+  const [tempSelectedValues, setTempSelectedValues] = useState(selectedValues);
   const hoverTimer = useRef(null);
+
+  // Sync tempSelectedValues when prop selectedValues changes (e.g. on load or reset)
+  useEffect(() => {
+    setTempSelectedValues(selectedValues);
+  }, [selectedValues]);
 
   // Check if this is a warning/empty state
   const isEmptyWarning = options[0] && options[0].startsWith("⚠️");
@@ -32,11 +38,10 @@ const MultiFilterDropdown = ({
     (options.length === 1 && options[0] !== "" && options[0] !== "Loading..." && !options[0].startsWith("⚠️"));
 
   const handleCheckboxChange = (value) => {
-    const newSelectedValues = selectedValues.includes(value)
-      ? selectedValues.filter((v) => v !== value)
-      : [...selectedValues, value];
-    console.log(newSelectedValues, "new")
-    onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
+    const newSelectedValues = tempSelectedValues.includes(value)
+      ? tempSelectedValues.filter((v) => v !== value)
+      : [...tempSelectedValues, value];
+    setTempSelectedValues(newSelectedValues);
   };
 
   const handleReset = () => {
@@ -47,17 +52,13 @@ const MultiFilterDropdown = ({
     console.log("🎯 APPLY BUTTON CLICKED - Selected Filters:", {
       filterLabel: label,
       operator: propOperator,
-      selectedValues: selectedValues,
-      selectedCount: selectedValues.length,
+      selectedValues: tempSelectedValues,
+      selectedCount: tempSelectedValues.length,
       totalOptions: options.length,
-      isAllSelected: selectedValues.length === options.length
+      isAllSelected: tempSelectedValues.length === options.length
     });
 
-    if (selectedValues.length === options.length) {
-      console.log("✅ ALL FILTERS ARE SELECTED for:", label);
-      console.log("📋 Selected values:", selectedValues);
-    }
-
+    onApply?.({ label, operator: propOperator, selectedValues: tempSelectedValues });
     setOpen(false);
   };
 
@@ -191,7 +192,7 @@ const MultiFilterDropdown = ({
           {options.filter(opt => opt && opt.trim() !== "").map((option) => (
             <Checkbox
               key={option}
-              checked={selectedValues.includes(option)}
+              checked={tempSelectedValues.includes(option)}
               onChange={() => handleCheckboxChange(option)}
             >
               {option}

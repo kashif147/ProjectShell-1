@@ -4,12 +4,14 @@ import { useLocation } from "react-router-dom";
 import SimpleMenu from "./SimpleMenu";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import { Button, Input } from "antd";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getApplicationsWithFilter, setTemplateId } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 
 const Toolbar = () => {
   const dispatch = useDispatch();
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const {
     visibleFilters,
     filterOptions,
@@ -43,11 +45,18 @@ const Toolbar = () => {
 
     console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
 
-    if (Object.keys(cleanedFilters).length > 0) {
-      dispatch(getAllApplications(cleanedFilters));
+    const isApplicationsPage = location.pathname === "/applications";
+
+    if (isApplicationsPage) {
+      // MembershipApplication will react to filtersState changes
+      console.log("🔍 Filters updated, MembershipApplication should re-fetch");
     } else {
-      console.log("⚠️ No filters selected, fetching all applications");
-      dispatch(getAllApplications({}));
+      if (Object.keys(cleanedFilters).length > 0) {
+        dispatch(getAllApplications(cleanedFilters));
+      } else {
+        console.log("⚠️ No filters selected, fetching all applications");
+        dispatch(getAllApplications({}));
+      }
     }
   };
 
@@ -75,9 +84,13 @@ const Toolbar = () => {
   };
 
   const handleReset = () => {
-    console.log("🔄 Resetting all filters");
     resetFilters();
-    dispatch(getAllApplications({}));
+    if (location.pathname === "/applications") {
+      // MembershipApplication will react to filtersState reset
+      dispatch(setTemplateId("")); // Also reset template ID on full reset
+    } else {
+      dispatch(getAllApplications({}));
+    }
   };
 
   const activeScreenName = location?.pathname;

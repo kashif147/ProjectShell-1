@@ -467,7 +467,7 @@ export const FilterProvider = ({ children }) => {
     Applications: {
       "Application Status": {
         operator: "==",
-        selectedValues: ["Draft", "Submitted"]
+        selectedValues: ["Submitted"]
       },
       "Membership Category": {
         operator: "==",
@@ -791,7 +791,7 @@ export const FilterProvider = ({ children }) => {
   const filterOptions = useMemo(() => {
     return {
       // 🔹 CUSTOM FILTERS
-      "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted", "Draft"],
+      "Application Status": ["", "In-Progress", "Approved", "Rejected", "Submitted"],
       "Membership Status": ["", "Active", "Inactive", "Pending", "Cancelled"],
       "Subscription Status": ["", "Active", "Cancelled", "Expired", "Pending"],
 
@@ -994,6 +994,27 @@ export const FilterProvider = ({ children }) => {
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
 
+  const applyTemplateFilters = (templateFilters) => {
+    if (!templateFilters) return;
+
+    // We merge with default values for the current screen to ensure consistency
+    const baseFilters = defaultFilterValues[activePage] || {};
+    const newFiltersState = { ...baseFilters, ...templateFilters };
+
+    setFiltersState(newFiltersState);
+    setScreenFilterStates(prev => ({
+      ...prev,
+      [activePage]: {
+        ...prev[activePage],
+        filtersState: newFiltersState
+      }
+    }));
+
+    // Also ensure all filters in the template are visible
+    const newVisible = [...new Set([...visibleFilters, ...Object.keys(templateFilters)])];
+    setVisibleFilters(newVisible);
+  };
+
   return (
     <FilterContext.Provider
       value={{
@@ -1009,6 +1030,7 @@ export const FilterProvider = ({ children }) => {
         updateFilter,
         updateFilterValues,
         updateFilterOperator,
+        applyTemplateFilters,
         COMMON_FILTERS,
         getDefaultVisibleFilters,
         screenSpecificDefaultFilters,
