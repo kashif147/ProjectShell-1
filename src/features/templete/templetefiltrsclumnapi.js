@@ -59,6 +59,26 @@ export const saveGridTemplate = createAsyncThunk(
     }
 );
 
+// Async thunk to update a template
+export const updateGridTemplate = createAsyncThunk(
+    "templetefiltrsclumnapi/updateGridTemplate",
+    async ({ id, payload }, { rejectWithValue, dispatch }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates/${id}`;
+            const response = await axios.put(URL, payload, {
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                },
+            });
+            dispatch(getGridTemplates()); // Refresh list
+            return response.data;
+        } catch (error) {
+            return rejectWithValue(error.response?.data || error.message);
+        }
+    }
+);
+
 // Async thunk to pin a template
 export const pinGridTemplate = createAsyncThunk(
     "templetefiltrsclumnapi/pinGridTemplate",
@@ -132,6 +152,16 @@ const templetefiltrsclumnapi = createSlice({
                 state.loading = false;
             })
             .addCase(pinGridTemplate.rejected, (state, action) => {
+                state.loading = false;
+                state.error = action.payload;
+            })
+            .addCase(updateGridTemplate.pending, (state) => {
+                state.loading = true;
+            })
+            .addCase(updateGridTemplate.fulfilled, (state) => {
+                state.loading = false;
+            })
+            .addCase(updateGridTemplate.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             });

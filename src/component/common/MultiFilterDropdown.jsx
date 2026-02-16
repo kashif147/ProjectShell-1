@@ -25,6 +25,13 @@ const MultiFilterDropdown = ({
     setTempSelectedValues(selectedValues);
   }, [selectedValues]);
 
+  // Also reset tempSelectedValues when the dropdown is CLOSED without applying
+  useEffect(() => {
+    if (!open) {
+      setTempSelectedValues(selectedValues);
+    }
+  }, [open, selectedValues]);
+
   // Check if this is a warning/empty state
   const isEmptyWarning = options[0] && options[0].startsWith("⚠️");
   const warningMessage = isEmptyWarning ? options[0] : "";
@@ -50,28 +57,18 @@ const MultiFilterDropdown = ({
       : [...currentSelected, value];
 
     setTempSelectedValues(newSelectedValues);
+
+    // Immediate Apply: Notify parent of the change right away
+    onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
   };
 
   const handleReset = () => {
     onApply?.({ label, operator: "==", selectedValues: [] });
-  };
-
-  const handleApply = () => {
-    console.log("🎯 APPLY BUTTON CLICKED - Selected Filters:", {
-      filterLabel: label,
-      operator: propOperator,
-      selectedValues: tempSelectedValues,
-      selectedCount: tempSelectedValues.length,
-      totalOptions: options.length,
-      isAllSelected: tempSelectedValues.length === options.length
-    });
-
-    onApply?.({ label, operator: propOperator, selectedValues: tempSelectedValues });
-    setOpen(false);
+    setTempSelectedValues([]);
   };
 
   const handleOperatorChange = (value) => {
-    onApply?.({ label, operator: value, selectedValues });
+    onApply?.({ label, operator: value, selectedValues: tempSelectedValues });
   };
 
   // 🧭 Hover behavior
@@ -86,7 +83,7 @@ const MultiFilterDropdown = ({
     }, 150);
   };
 
-  const badgeCount = selectedValues.length;
+  const badgeCount = Array.isArray(tempSelectedValues) ? tempSelectedValues.length : 0;
 
   // Warning/Empty Menu Content
   const getMenuContent = () => {
@@ -215,15 +212,8 @@ const MultiFilterDropdown = ({
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-3 mb-1">
-          <Button size="small" onClick={handleReset}>
-            Reset
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            onClick={handleApply}
-          >
-            Apply
+          <Button size="small" onClick={handleReset} style={{ width: "100%" }}>
+            Reset Filters
           </Button>
         </div>
       </div>

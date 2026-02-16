@@ -8,10 +8,14 @@ import { useDispatch, useSelector } from "react-redux";
 import { getApplicationsWithFilter, setTemplateId } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { transformFiltersForApi } from "../../utils/filterUtils";
+import { updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import MyAlert from "./MyAlert";
+import { message } from "antd";
 
 const Toolbar = () => {
   const dispatch = useDispatch();
-  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const {
     visibleFilters,
     filterOptions,
@@ -20,8 +24,61 @@ const Toolbar = () => {
     resetFilters,
   } = useFilters();
 
+  const { columns } = useTableColumns();
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
   const location = useLocation();
   const [batchName, setBatchName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Helper to compare current filters with active template filters
+  const hasFilterChanges = () => {
+    if (!currentTemplateId || !templates) {
+      return false;
+    }
+
+    // Find the active template
+    const allTemplates = [
+      ...(templates.userTemplates || []),
+      ...(templates.systemDefault ? [templates.systemDefault] : [])
+    ];
+    const activeTemplate = allTemplates.find(t => t._id === currentTemplateId);
+    if (!activeTemplate) {
+      return false;
+    }
+
+    // Transform current filters to API format for comparison
+    const currentApiFilters = transformFiltersForApi(filtersState, columns[getScreenFromPath()] || []);
+
+    // Get template filters
+    const templateFilters = activeTemplate.filters || {};
+
+    // Robust comparison: sort keys and values to be order-insensitive
+    const normalize = (obj) => {
+      const normalized = {};
+      Object.keys(obj).sort().forEach(key => {
+        const val = obj[key] || {};
+        normalized[key] = {
+          operator: val.operator || "equal_to",
+          values: Array.isArray(val.values) ? [...val.values].map(v => String(v)).sort() : []
+        };
+      });
+      return JSON.stringify(normalized);
+    };
+
+    const currentNorm = normalize(currentApiFilters);
+    const templateNorm = normalize(templateFilters);
+    const changed = currentNorm !== templateNorm;
+
+    if (changed) {
+      console.log("🛠️ Save button check: Changes detected", {
+        current: currentApiFilters,
+        template: templateFilters
+      });
+    }
+
+    return changed;
+  };
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
@@ -106,6 +163,28 @@ const Toolbar = () => {
     return pathMap[activeScreenName] || "Applications";
   };
 
+  const handleSave = async () => {
+    if (!currentTemplateId) return;
+
+    setIsSaving(true);
+    try {
+      const activeScreen = getScreenFromPath();
+      const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreen] || []);
+
+      const payload = {
+        filters: currentApiFilters
+      };
+
+      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      MyAlert("success", "Success", "Template updated successfully");
+    } catch (error) {
+      console.error("Error updating template:", error);
+      MyAlert("error", "Error", error?.message || "Failed to update template");
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   const activeScreen = getScreenFromPath();
   const specialRoutes = [
     "/RecruitAFriend",
@@ -166,7 +245,7 @@ const Toolbar = () => {
     >
       <div className="d-flex align-items-center flex-wrap gap-2">
         {/* Search input */}
-        <div style={{ flex: "0: 0 250px" }}>
+        <div style={{ flex: "0 0 250px" }}>
           <Input
             className="my-input-field"
             placeholder={
@@ -230,6 +309,22 @@ const Toolbar = () => {
         >
           Search
         </Button>
+        {hasFilterChanges() && (
+          <Button
+            onClick={handleSave}
+            loading={isSaving}
+            style={{
+              backgroundColor: "#E6F7FF",
+              borderRadius: "4px",
+              border: "1px solid #91D5FF",
+              height: "32px",
+              fontWeight: "500",
+              color: "#1890FF",
+            }}
+          >
+            Save
+          </Button>
+        )}
       </div>
     </div>
   );
