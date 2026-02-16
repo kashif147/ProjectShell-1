@@ -34,6 +34,11 @@ const Toolbar = () => {
   // Helper to compare current filters with active template filters
   const hasFilterChanges = () => {
     if (!currentTemplateId || !templates) {
+      // Logic: No Save button if no active template.
+      // Saving new templates is handled via SaveViewMenu.
+      if (location.pathname.toLowerCase() === "/applications") {
+        console.log("🛠️ Save button check: No active template or templates data missing", { currentTemplateId, hasTemplates: !!templates });
+      }
       return false;
     }
 
@@ -44,11 +49,13 @@ const Toolbar = () => {
     ];
     const activeTemplate = allTemplates.find(t => t._id === currentTemplateId);
     if (!activeTemplate) {
+      console.log("🛠️ Save button check: Active template not found", { currentTemplateId });
       return false;
     }
 
     // Transform current filters to API format for comparison
-    const currentApiFilters = transformFiltersForApi(filtersState, columns[getScreenFromPath()] || []);
+    const activeScreen = getScreenFromPath();
+    const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreen] || []);
 
     // Get template filters
     const templateFilters = activeTemplate.filters || {};
@@ -72,6 +79,7 @@ const Toolbar = () => {
 
     if (changed) {
       console.log("🛠️ Save button check: Changes detected", {
+        activeScreen,
         current: currentApiFilters,
         template: templateFilters
       });
@@ -309,7 +317,7 @@ const Toolbar = () => {
         >
           Search
         </Button>
-        {hasFilterChanges() && (
+        {location.pathname.toLowerCase() === "/applications" && hasFilterChanges() && (
           <Button
             onClick={handleSave}
             loading={isSaving}
