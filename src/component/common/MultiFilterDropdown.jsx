@@ -38,9 +38,17 @@ const MultiFilterDropdown = ({
     (options.length === 1 && options[0] !== "" && options[0] !== "Loading..." && !options[0].startsWith("⚠️"));
 
   const handleCheckboxChange = (value) => {
-    const newSelectedValues = tempSelectedValues.includes(value)
-      ? tempSelectedValues.filter((v) => v !== value)
-      : [...tempSelectedValues, value];
+    // Ensure we are working with an array
+    const currentSelected = Array.isArray(tempSelectedValues) ? tempSelectedValues : [];
+
+    // Robust comparison (stringified)
+    const stringValue = String(value);
+    const exists = currentSelected.some(v => String(v) === stringValue);
+
+    const newSelectedValues = exists
+      ? currentSelected.filter((v) => String(v) !== stringValue)
+      : [...currentSelected, value];
+
     setTempSelectedValues(newSelectedValues);
   };
 
@@ -189,15 +197,21 @@ const MultiFilterDropdown = ({
         <Divider style={{ margin: "8px 0" }} />
 
         <div className="checkbox-list">
-          {options.filter(opt => opt && opt.trim() !== "").map((option) => (
-            <Checkbox
-              key={option}
-              checked={tempSelectedValues.includes(option)}
-              onChange={() => handleCheckboxChange(option)}
-            >
-              {option}
-            </Checkbox>
-          ))}
+          {options.filter(opt => opt && String(opt).trim() !== "").map((option) => {
+            const stringOption = String(option);
+            const isChecked = Array.isArray(tempSelectedValues) &&
+              tempSelectedValues.some(v => String(v) === stringOption);
+
+            return (
+              <Checkbox
+                key={stringOption}
+                checked={isChecked}
+                onChange={() => handleCheckboxChange(option)}
+              >
+                {option}
+              </Checkbox>
+            );
+          })}
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-3 mb-1">

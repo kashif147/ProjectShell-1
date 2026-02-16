@@ -925,9 +925,11 @@ export const FilterProvider = ({ children }) => {
     });
 
     // 🛡️ Sanitize selectedValues (strictly non-empty strings)
-    const sanitizedValues = (selectedValues || []).filter(v =>
-      v !== null && v !== undefined && typeof v === 'string' && v.trim() !== ""
-    );
+    const sanitize = (values) => (values || [])
+      .map(v => String(v))
+      .filter(v => v !== null && v !== undefined && v.trim() !== "");
+
+    const sanitizedValues = sanitize(selectedValues);
 
     const newFilterState = {
       ...currentState,
@@ -981,25 +983,33 @@ export const FilterProvider = ({ children }) => {
 
   // 🔹 Function to get filters in correct order
   const getOrderedVisibleFilters = () => {
-    const screenSpecific = screenSpecificDefaultFilters[activePage] || [];
-    const visibleCommonFilters = COMMON_FILTERS.filter(filter =>
-      visibleFilters.includes(filter)
-    );
-    const otherFilters = visibleFilters.filter(filter =>
-      !screenSpecific.includes(filter) && !COMMON_FILTERS.includes(filter)
-    );
-
-    return [...screenSpecific, ...visibleCommonFilters, ...otherFilters];
+    // Simply return the visibleFilters in the order they appear in viewFilters config
+    // This allows users to untick any filter, including "default" ones.
+    const configOrder = viewFilters[activePage] || [];
+    return configOrder.filter(filter => visibleFilters.includes(filter));
   };
 
   const orderedVisibleFilters = getOrderedVisibleFilters();
 
   const applyTemplateFilters = (templateFilters) => {
-    if (!templateFilters) return;
+    // 🛡️ Sanitize selectedValues (strictly non-empty strings)
+    const sanitize = (values) => (values || [])
+      .map(v => String(v))
+      .filter(v => v !== null && v !== undefined && v.trim() !== "");
 
     // We merge with default values for the current screen to ensure consistency
     const baseFilters = defaultFilterValues[activePage] || {};
-    const newFiltersState = { ...baseFilters, ...templateFilters };
+
+    // Sanitize incoming template filters
+    const sanitizedTemplateFilters = {};
+    Object.keys(templateFilters).forEach(key => {
+      sanitizedTemplateFilters[key] = {
+        ...templateFilters[key],
+        selectedValues: sanitize(templateFilters[key]?.selectedValues)
+      };
+    });
+
+    const newFiltersState = { ...baseFilters, ...sanitizedTemplateFilters };
 
     setFiltersState(newFiltersState);
     setScreenFilterStates(prev => ({
