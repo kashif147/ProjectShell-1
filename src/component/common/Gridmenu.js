@@ -100,13 +100,19 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         />
       </Menu.Item>
       <Divider style={{ margin: "4px 0" }} />
-      <div style={{ maxHeight: "250px", overflowY: "auto", padding: '0 12px' }}>
+      <div style={{ maxHeight: "250px", overflowY: "auto", overflowX: "hidden", padding: '4px 12px' }}>
         <Row>
           {columnsForFilter?.map((col) =>
             col.isVisible !== false && (
               <Col span={24} key={col.key || col.title || col.dataIndex}>
                 <Checkbox
-                  style={{ marginBottom: "8px", width: '100%' }}
+                  style={{
+                    marginBottom: "8px",
+                    width: '100%',
+                    fontSize: '13px',
+                    fontWeight: 500,
+                    color: '#444'
+                  }}
                   onChange={(e) => {
                     handleChange(
                       col?.title,
@@ -126,9 +132,9 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         </Row>
       </div>
       <Divider style={{ margin: "4px 0" }} />
-      <div style={{ padding: '8px 12px' }}>
+      <div style={{ padding: '12px' }}>
         <Button
-          type="primary"
+          className="butn primary-btn"
           icon={<SaveOutlined />}
           loading={isUpdating}
           onClick={(e) => {
@@ -136,7 +142,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
             handleUpdateTemplate();
           }}
           disabled={!currentTemplateId}
-          style={{ width: '100%', borderRadius: '4px' }}
+          style={{ width: '100%', height: '36px' }}
         >
           Update Template
         </Button>
@@ -147,8 +153,14 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     <Dropdown
       overlay={menu}
       trigger={["click"]}
-      placement="bottomLeft"
-      overlayStyle={{ width: 200, padding: "0px" }}
+      placement="bottomRight"
+      overlayStyle={{
+        width: 220,
+        padding: "0px",
+        boxShadow: "0 4px 12px rgba(0,0,0,0.15)",
+        borderRadius: '8px',
+        overflow: 'hidden'
+      }}
     >
       <Button className="transparent-bg">{title}</Button>
     </Dropdown>

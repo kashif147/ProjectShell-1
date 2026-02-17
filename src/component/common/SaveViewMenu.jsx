@@ -55,6 +55,7 @@ const SaveViewMenu = () => {
   const screenMapping = {
     'applications': 'application',
     'members': 'member',
+    'summary': 'Profile',
     // add more mappings as needed
   };
 

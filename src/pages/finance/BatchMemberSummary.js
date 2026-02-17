@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo, useRef } from "react";
+import { useState, useEffect, useMemo, useRef, useCallback } from "react";
 import {
   Row,
   Col,
@@ -49,6 +49,7 @@ import {
   FolderOpenOutlined,
   CalculatorOutlined,
   DownloadOutlined,
+  LoadingOutlined, // Added
 } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 
@@ -103,6 +104,67 @@ const SummaryCard = ({ title, value, icon, color, iconBg }) => (
   </Card>
 );
 
+const MembershipNoResolver = ({ batchId, exceptionId, exceptionMembershipNumber, onResolved }) => {
+  const [value, setValue] = useState("");
+  const [loading, setLoading] = useState(false);
+
+  const handleResolve = async () => {
+    if (!value.trim()) return;
+    setLoading(true);
+    try {
+      const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
+      const token = localStorage.getItem("token");
+
+      // 1. Search for the member
+      const searchRes = await axios.get(`${baseUrl}/profile/search?q=${value}`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+
+      const member = searchRes.data.data?.results?.[0];
+      if (!member) {
+        message.error("No member found with this ID");
+        return;
+      }
+
+      // 2. Resolve the exception
+      await axios.post(
+        `${baseUrl}/batch-details/resolve-exception/${batchId}`,
+        {
+          membershipNumber: member.membershipNumber,
+          exceptionMembershipNumber: exceptionMembershipNumber
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        },
+      );
+
+      message.success("Exception resolved successfully");
+      setValue(""); // Clear input on success
+      if (onResolved) onResolved();
+    } catch (error) {
+      console.error("Resolution error:", error);
+      message.error(error.response?.data?.message || "Failed to resolve exception");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  return (
+    <AntInput
+      placeholder="Enter No..."
+      value={value}
+      onChange={(e) => setValue(e.target.value)}
+      onPressEnter={handleResolve}
+      disabled={loading}
+      suffix={loading ? <LoadingOutlined spin /> : <SearchOutlined onClick={handleResolve} style={{ cursor: 'pointer' }} />}
+      style={{ width: '100%' }}
+    />
+  );
+};
+
 function BatchMemberSummary() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const { batchId } = useParams();
@@ -124,6 +186,12 @@ function BatchMemberSummary() {
       // Cleanup is handled by new instance creation; ref reset is removed 
       // to support React 18's StrictMode double-mount simulation.
     };
+  }, [batchId, dispatch]);
+
+  const refreshData = useCallback(() => {
+    if (batchId) {
+      dispatch(getBatchDetailsById(batchId));
+    }
   }, [batchId, dispatch]);
 
   // Strict Data Source: Only use data from Redux
@@ -387,18 +455,19 @@ function BatchMemberSummary() {
       },
       {
         title: "AMOUNT",
-        dataIndex: "amount", // Updated to match API field
-        key: "amount",
+        dataIndex: ["fileRow", "valueForPeriodSelected"], // Corrected path
+        key: "valueForPeriodSelected",
         ellipsis: true,
         width: 120,
         align: "right",
         sorter: (a, b) => {
-          const aVal = parseFloat(a.amount) || 0;
-          const bVal = parseFloat(b.amount) || 0;
+          const aVal = parseFloat(a.fileRow?.valueForPeriodSelected) || 0;
+          const bVal = parseFloat(b.fileRow?.valueForPeriodSelected) || 0;
           return aVal - bVal;
+
         },
         sortDirections: ["ascend", "descend"],
-        render: (value) => formatCurrency(value || 0),
+        render: (value) => formatCurrency((value || 0) / 100),
         filterDropdown: ({
           setSelectedKeys,
           selectedKeys,
@@ -470,7 +539,7 @@ function BatchMemberSummary() {
           );
         },
         onFilter: (value, record) => {
-          const amount = parseFloat(record.amount) || 0;
+          const amount = parseFloat(record.fileRow?.valueForPeriodSelected) || 0;
           if (value === "0-100") return amount >= 0 && amount < 100;
           if (value === "100-500") return amount >= 100 && amount < 500;
           if (value === "500-1000") return amount >= 500 && amount < 1000;
@@ -549,6 +618,19 @@ function BatchMemberSummary() {
   const exceptionColumns = useMemo(() => {
     const dataSource = exceptions;
     return [
+      {
+        title: "MEMBERSHIP NO",
+        key: "resolution",
+        width: 160,
+        render: (_, record) => (
+          <MembershipNoResolver
+            batchId={batchId}
+            exceptionId={record?._id}
+            exceptionMembershipNumber={record?.membershipNumber}
+            onResolved={refreshData}
+          />
+        ),
+      },
       {
         title: "FILE REF NO",
         dataIndex: "membershipNumber",
@@ -634,7 +716,7 @@ function BatchMemberSummary() {
           return aVal - bVal;
         },
         sortDirections: ["ascend", "descend"],
-        render: (value) => formatCurrency(value || 0),
+        render: (value) => formatCurrency((value || 0) / 100),
         filterDropdown: ({
           setSelectedKeys,
           selectedKeys,
@@ -730,7 +812,7 @@ function BatchMemberSummary() {
         render: () => batchInfo.description || "",
       },
     ];
-  }, [batchInfo.referenceNumber, batchInfo.description, exceptions]);
+  }, [batchInfo.referenceNumber, batchInfo.description, exceptions, refreshData]);
 
   // Pagination state
   const rawDataSource = useMemo(
@@ -883,22 +965,22 @@ function BatchMemberSummary() {
 
   // Calculate totals strictly from the Redux lists
   const calcTotalCurrent = members.reduce(
-    (sum, m) => sum + (parseFloat(m.amount) || 0),
+    (sum, m) => sum + (parseFloat(m.fileRow?.valueForPeriodSelected) || 0) / 100,
     0,
   );
   const calcTotalExceptions = exceptions.reduce(
-    (sum, e) => sum + (parseFloat(e.valueForPeriodSelected) || 0),
+    (sum, e) => sum + (parseFloat(e.valueForPeriodSelected) || 0) / 100,
     0,
   );
   const calcTotalRecords = members.length + exceptions.length;
 
   const displayArrears = 0;
   const displayAdvance = 0; // Resetting/fallback for now as not in API schema
-  const displayTotalCurrent = calcTotalExceptions;
+  const displayTotalCurrent = calcTotalCurrent;
   const displayTotal = displayTotalCurrent + displayArrears;
-  const displayRecords = calcTotalRecords;
+  const displayRecords = members.length;
 
-  if (loading) {
+  if (loading && !batchDetails) {
     return (
       <div
         style={{
@@ -1843,6 +1925,7 @@ function BatchMemberSummary() {
           }}
         >
           <Table
+            loading={loading}
             bordered={true}
             rowClassName={() => ""}
             scroll={{ x: 1200, y: "calc(100vh - 440px)" }}
@@ -1963,6 +2046,8 @@ function BatchMemberSummary() {
       <ManualPaymentEntryDrawer
         open={manualPayment}
         onClose={() => setManualPayment(!manualPayment)}
+        batchId={batchId}
+        onSuccess={refreshData}
         batchSummryData={{
           PaymentType: displayPaymentType,
           total: displayTotalCurrent,

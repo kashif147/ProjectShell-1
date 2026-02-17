@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime, formatDateOnly } from "../utils/Utilities";
+import { convertToLocalTime, formatDateOnly, formatCurrency } from "../utils/Utilities";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
@@ -85,11 +85,14 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      align: "right",
       render: (entries) => {
-        if (!Array.isArray(entries)) return "-";
-        const bankEntry = entries.find(e => e.accountCode === "1220" && e.dc === "D");
-        return bankEntry ? bankEntry.amount : "-";
-      }
+        if (!Array.isArray(entries)) return formatCurrency(0);
+        const bankEntry = entries.find(
+          (e) => e.accountCode === "1220" && e.dc === "D"
+        );
+        return bankEntry ? formatCurrency(bankEntry.amount) : formatCurrency(0);
+      },
     },
     {
       title: "Payment Date",
