@@ -11,6 +11,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "./features/LookupsSlice";
 import { getHierarchicalLookups } from "./features/GetLocationWithHierarky";
 import "antd/dist/reset.css";
+import { NotificationProvider } from "./context/NotificationContext";
 
 function App() {
   const dispatch = useDispatch();
@@ -24,7 +25,7 @@ function App() {
   } = useSelector((state) => state.hierarchicalLookups);
 
   const { lookups, loading: lookupsLoading } = useSelector(
-    (state) => state.lookups
+    (state) => state.lookups,
   );
 
   // Make AntD notification globally available for MyAlert.js
@@ -69,7 +70,7 @@ function App() {
           // Check if worklet.addModule is available
           if (window.sharedStorage?.worklet?.addModule) {
             await window.sharedStorage.worklet.addModule(
-              "/shared-storage-worklet.js"
+              "/shared-storage-worklet.js",
             );
             console.log("✅ Shared Storage worklet loaded");
           }
@@ -87,11 +88,13 @@ function App() {
       {contextHolder}
       <AuthProvider>
         <FCMProvider>
-          <ChatbotProvider>
-            <div className="App">
-              <Entry />
-            </div>
-          </ChatbotProvider>
+          <NotificationProvider>
+            <ChatbotProvider>
+              <div className="App">
+                <Entry />
+              </div>
+            </ChatbotProvider>
+          </NotificationProvider>
         </FCMProvider>
       </AuthProvider>
     </AntApp>

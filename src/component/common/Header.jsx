@@ -33,6 +33,8 @@ import { clearAuth } from "../../features/AuthSlice";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
 import MemberSearch from "../profile/MemberSearch";
+import { Badge } from "antd";
+import { useNotifications } from "../../context/NotificationContext";
 
 const AppLauncherMenu = ({ closeDropdown }) => {
   const dispatch = useDispatch();
@@ -46,13 +48,13 @@ const AppLauncherMenu = ({ closeDropdown }) => {
 
   const handleUpdate = (key, value, appName) => {
     const routeMap = {
-      "Membership": "/MembershipDashboard",
-      "Finance": "/onlinePayment",
-      "Correspondence": "/Email",
-      "Configuration": "/Configuratin",
-      "Events": "/EventsSummary",
-      "Reports": "/Reports",
-      "Settings": "/Settings",
+      Membership: "/MembershipDashboard",
+      Finance: "/onlinePayment",
+      Correspondence: "/Email",
+      Configuration: "/Configuratin",
+      Events: "/EventsSummary",
+      Reports: "/Reports",
+      Settings: "/Settings",
       "Issues Management": "/CasesSummary",
     };
 
@@ -157,7 +159,7 @@ const AppLauncherMenu = ({ closeDropdown }) => {
   });
 
   const filteredItems = accessibleApps.filter((app) =>
-    app.name.toLowerCase().includes(searchTerm.toLowerCase())
+    app.name.toLowerCase().includes(searchTerm.toLowerCase()),
   );
 
   return (
@@ -273,11 +275,11 @@ function Header() {
   const navigate = useNavigate();
   const { clearAuth: clearAuthContext } = useAuthorization();
 
-  const {
-    ProfileDetails,
-    ReportsTitle,
-  } = useTableColumns();
+  const { ProfileDetails, ReportsTitle } = useTableColumns();
   const location = useLocation();
+
+  const { badge } = useNotifications();
+  const [notificationOpen, setNotificationOpen] = useState(false);
 
   const reportLink =
     ReportsTitle?.map((i, index) => {
@@ -330,7 +332,7 @@ function Header() {
             },
             signal: controller.signal,
             timeout: logoutTimeout,
-          }
+          },
         )
         .then(() => {
           console.log("Logout API call successful");
@@ -388,8 +390,8 @@ function Header() {
           /> */}
           <MemberSearch
             headerStyle={true}
-          // onSelectBehavior="navigate" (default)
-          // navigateTo="/Details" (default)
+            // onSelectBehavior="navigate" (default)
+            // navigateTo="/Details" (default)
           />
         </div>
 
@@ -405,14 +407,20 @@ function Header() {
               })
             }
           />
+
           <Popover
-            content={<NotificationPopover />}
+            content={<NotificationPopover isOpen={notificationOpen} />}
             trigger="click"
             placement="bottomRight"
+            open={notificationOpen}
+            onOpenChange={(open) => setNotificationOpen(open)}
             styles={{ body: { padding: 0 } }}
           >
-            <BellOutlined className="top-icon" />
+            <Badge count={badge} size="small">
+              <BellOutlined className="top-icon" />
+            </Badge>
           </Popover>
+
           <QuestionCircleOutlined className="top-icon" />
           <SettingOutlined className="top-icon" />
           <UserOutlined className="top-icon" />

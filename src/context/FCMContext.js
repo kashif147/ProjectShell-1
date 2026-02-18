@@ -26,12 +26,22 @@ export const useFCM = () => {
 
 export const FCMProvider = ({ children }) => {
   const [fcmToken, setFcmToken] = useState(
-    localStorage.getItem("fcmToken") || null
+    localStorage.getItem("fcmToken") || null,
   );
   const [pushAvailable, setPushAvailable] = useState(false);
   const initializationRef = React.useRef(false);
   const tokenRetrievalRef = React.useRef(false);
   const authTokenRef = React.useRef(localStorage.getItem("token"));
+
+  /* -----------------------------------------------------------
+     ALL YOUR SERVICE WORKER + TOKEN LOGIC REMAINS UNCHANGED
+     (intentionally omitted here for brevity)
+  ------------------------------------------------------------ */
+
+  /* -----------------------------------------------------------
+     🔹 UPDATED FOREGROUND MESSAGE LISTENER
+     Prevent duplicate toast if Socket.IO already handled it
+  ------------------------------------------------------------ */
 
   useEffect(() => {
     // Prevent double execution in StrictMode
@@ -53,7 +63,7 @@ export const FCMProvider = ({ children }) => {
     const handleControllerChange = () => {
       if (navigator.serviceWorker.controller) {
         console.log(
-          "✅ Service Worker controller changed - now controlling the page"
+          "✅ Service Worker controller changed - now controlling the page",
         );
         setPushAvailable(true);
         sessionStorage.removeItem("sw-reload-scheduled");
@@ -63,7 +73,7 @@ export const FCMProvider = ({ children }) => {
 
     navigator.serviceWorker.addEventListener(
       "controllerchange",
-      handleControllerChange
+      handleControllerChange,
     );
 
     const registerServiceWorker = async () => {
@@ -76,7 +86,7 @@ export const FCMProvider = ({ children }) => {
         // Check if service worker is already controlling - if so, we're done
         if (navigator.serviceWorker.controller) {
           console.log(
-            "✅ Service Worker already controlling the page - skipping registration"
+            "✅ Service Worker already controlling the page - skipping registration",
           );
           setPushAvailable(true);
           sessionStorage.removeItem("sw-reload-scheduled");
@@ -89,7 +99,7 @@ export const FCMProvider = ({ children }) => {
         const reloadScheduled = sessionStorage.getItem("sw-reload-scheduled");
         if (reloadScheduled) {
           console.log(
-            "⏳ Reload already scheduled - periodic check will handle completion"
+            "⏳ Reload already scheduled - periodic check will handle completion",
           );
           // Don't block, just let the periodic check handle it
         }
@@ -104,12 +114,12 @@ export const FCMProvider = ({ children }) => {
               (!reg.active && !reg.waiting && !reg.installing)
             ) {
               console.log(
-                `🗑️ Cleaning up redundant service worker at scope: ${reg.scope}`
+                `🗑️ Cleaning up redundant service worker at scope: ${reg.scope}`,
               );
               await reg.unregister().catch((err) => {
                 console.warn(
                   `⚠️ Could not unregister service worker at ${reg.scope}:`,
-                  err
+                  err,
                 );
               });
             }
@@ -117,7 +127,7 @@ export const FCMProvider = ({ children }) => {
         } catch (error) {
           console.warn(
             "⚠️ Error checking all service worker registrations:",
-            error
+            error,
           );
         }
 
@@ -140,7 +150,7 @@ export const FCMProvider = ({ children }) => {
               !registration.installing)
           ) {
             console.log(
-              "🗑️ Service Worker is redundant or invalid, unregistering..."
+              "🗑️ Service Worker is redundant or invalid, unregistering...",
             );
             try {
               await registration.unregister();
@@ -155,16 +165,16 @@ export const FCMProvider = ({ children }) => {
         if (!registration) {
           // Step 2: Register service worker at root scope (Firebase requirement)
           registration = await navigator.serviceWorker.register(
-            "/firebase-messaging-sw.js"
+            "/firebase-messaging-sw.js",
           );
           console.log(
             "✅ Service Worker registered at root scope:",
-            registration.scope
+            registration.scope,
           );
         } else {
           console.log(
             "✅ Service Worker already registered:",
-            registration.scope
+            registration.scope,
           );
 
           // Double-check that the registration is valid
@@ -174,16 +184,16 @@ export const FCMProvider = ({ children }) => {
             !registration.installing
           ) {
             console.log(
-              "⚠️ Registration exists but has no active/waiting/installing worker, re-registering..."
+              "⚠️ Registration exists but has no active/waiting/installing worker, re-registering...",
             );
             try {
               await registration.unregister();
               registration = await navigator.serviceWorker.register(
-                "/firebase-messaging-sw.js"
+                "/firebase-messaging-sw.js",
               );
               console.log(
                 "✅ Service Worker re-registered at root scope:",
-                registration.scope
+                registration.scope,
               );
             } catch (error) {
               console.error("❌ Error re-registering service worker:", error);
@@ -209,7 +219,7 @@ export const FCMProvider = ({ children }) => {
             return;
           } else {
             console.log(
-              "🔄 Service Worker activated but not controlling yet, will reload..."
+              "🔄 Service Worker activated but not controlling yet, will reload...",
             );
             if (!sessionStorage.getItem("sw-reload-scheduled")) {
               sessionStorage.setItem("sw-reload-scheduled", "true");
@@ -249,7 +259,7 @@ export const FCMProvider = ({ children }) => {
 
                     if (!navigator.serviceWorker.controller) {
                       console.log(
-                        "🔄 Reloading page to activate service worker..."
+                        "🔄 Reloading page to activate service worker...",
                       );
                       if (!sessionStorage.getItem("sw-reload-scheduled")) {
                         sessionStorage.setItem("sw-reload-scheduled", "true");
@@ -263,7 +273,7 @@ export const FCMProvider = ({ children }) => {
 
                 if (navigator.serviceWorker.controller) {
                   console.log(
-                    "✅ Service Worker now controlling after installation"
+                    "✅ Service Worker now controlling after installation",
                   );
                   setPushAvailable(true);
                   sessionStorage.removeItem("sw-reload-scheduled");
@@ -274,14 +284,14 @@ export const FCMProvider = ({ children }) => {
 
             registration.installing.addEventListener(
               "statechange",
-              handleStateChange
+              handleStateChange,
             );
 
             // Timeout fallback
             setTimeout(() => {
               registration.installing?.removeEventListener(
                 "statechange",
-                handleStateChange
+                handleStateChange,
               );
               resolve();
             }, 10000);
@@ -293,9 +303,8 @@ export const FCMProvider = ({ children }) => {
         console.log("✅ Service Worker is ready");
 
         // Step 6: Check registration state (using root scope)
-        const finalRegistration = await navigator.serviceWorker.getRegistration(
-          "/"
-        );
+        const finalRegistration =
+          await navigator.serviceWorker.getRegistration("/");
 
         if (finalRegistration) {
           console.log("📊 Service Worker Registration State:", {
@@ -333,13 +342,13 @@ export const FCMProvider = ({ children }) => {
             "   Waiting:",
             hasWaiting,
             "State:",
-            activeRegistration.waiting?.state
+            activeRegistration.waiting?.state,
           );
 
           // If there's a waiting service worker, try to activate it
           if (activeRegistration.waiting) {
             console.log(
-              "🔄 Found waiting service worker, sending skipWaiting..."
+              "🔄 Found waiting service worker, sending skipWaiting...",
             );
             try {
               activeRegistration.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -349,7 +358,7 @@ export const FCMProvider = ({ children }) => {
               // Check if controller appeared
               if (navigator.serviceWorker.controller) {
                 console.log(
-                  "✅ Service Worker now controlling after skipWaiting"
+                  "✅ Service Worker now controlling after skipWaiting",
                 );
                 setPushAvailable(true);
                 sessionStorage.removeItem("sw-reload-scheduled");
@@ -366,18 +375,18 @@ export const FCMProvider = ({ children }) => {
           // the current page until after a reload
           if (hasActive && activeState === "activated") {
             const reloadAttempted = sessionStorage.getItem(
-              "sw-reload-attempted"
+              "sw-reload-attempted",
             );
             const reloadScheduled = sessionStorage.getItem(
-              "sw-reload-scheduled"
+              "sw-reload-scheduled",
             );
 
             if (!reloadScheduled && !reloadAttempted) {
               console.log(
-                "🔄 Service Worker is activated but not controlling - reload required"
+                "🔄 Service Worker is activated but not controlling - reload required",
               );
               console.log(
-                "💡 This is normal for first-time registration. Reloading page..."
+                "💡 This is normal for first-time registration. Reloading page...",
               );
               sessionStorage.setItem("sw-reload-scheduled", "true");
               sessionStorage.setItem("sw-reload-attempted", "true");
@@ -391,7 +400,7 @@ export const FCMProvider = ({ children }) => {
             } else if (reloadAttempted && !navigator.serviceWorker.controller) {
               // Already reloaded once but still not controlling - try again after clearing flag
               console.warn(
-                "⚠️ Service worker still not controlling after reload. This may indicate an issue."
+                "⚠️ Service worker still not controlling after reload. This may indicate an issue.",
               );
               // Clear the flag and try one more time after a longer delay
               sessionStorage.removeItem("sw-reload-attempted");
@@ -411,7 +420,7 @@ export const FCMProvider = ({ children }) => {
           } else {
             // Service worker exists but in unexpected state
             console.warn(
-              "⚠️ Service worker in unexpected state - may need manual reload"
+              "⚠️ Service worker in unexpected state - may need manual reload",
             );
             if (!sessionStorage.getItem("sw-reload-scheduled")) {
               sessionStorage.setItem("sw-reload-scheduled", "true");
@@ -458,7 +467,7 @@ export const FCMProvider = ({ children }) => {
       if (checkCount >= 3) {
         // Use ready to get the active registration (root scope)
         const registration = await navigator.serviceWorker.ready.catch(
-          () => null
+          () => null,
         );
 
         if (registration && !navigator.serviceWorker.controller) {
@@ -468,7 +477,7 @@ export const FCMProvider = ({ children }) => {
           // Try to activate waiting service worker first
           if (registration.waiting) {
             console.log(
-              "🔄 Periodic check: Found waiting service worker, activating..."
+              "🔄 Periodic check: Found waiting service worker, activating...",
             );
             try {
               registration.waiting.postMessage({ type: "SKIP_WAITING" });
@@ -483,7 +492,7 @@ export const FCMProvider = ({ children }) => {
             } catch (error) {
               console.warn(
                 "⚠️ Periodic check: Error activating service worker:",
-                error
+                error,
               );
             }
           }
@@ -495,7 +504,7 @@ export const FCMProvider = ({ children }) => {
           ) {
             if (!reloadScheduled && !reloadAttempted) {
               console.log(
-                "🔄 Periodic check: Service worker active but not controlling, reloading..."
+                "🔄 Periodic check: Service worker active but not controlling, reloading...",
               );
               sessionStorage.setItem("sw-reload-scheduled", "true");
               sessionStorage.setItem("sw-reload-attempted", "true");
@@ -517,7 +526,7 @@ export const FCMProvider = ({ children }) => {
           console.warn(
             "⚠️ Periodic check: Service worker still not controlling after",
             maxChecks,
-            "seconds"
+            "seconds",
           );
           console.warn("💡 You may need to manually reload the page");
         }
@@ -529,16 +538,27 @@ export const FCMProvider = ({ children }) => {
       clearInterval(checkInterval);
       navigator.serviceWorker.removeEventListener(
         "controllerchange",
-        handleControllerChange
+        handleControllerChange,
       );
     };
   }, []);
 
   useEffect(() => {
-    // Set up message listener when we have a token
     if (!fcmToken) return;
 
     setupMessageListener((payload) => {
+      const notificationId = payload?.data?.notificationId;
+
+      // 🔹 Prevent duplicate toast if Socket already handled it
+      if (
+        notificationId &&
+        typeof window !== "undefined" &&
+        window.recentNotificationIds &&
+        window.recentNotificationIds.has(notificationId)
+      ) {
+        return;
+      }
+
       notification.info({
         message: payload.notification?.title || "New Notification",
         description: payload.notification?.body || "",
@@ -562,7 +582,7 @@ export const FCMProvider = ({ children }) => {
     // Only request if permission is default
     if (permission !== "default") {
       console.log(
-        `📱 Notification permission is already "${permission}" - skipping request`
+        `📱 Notification permission is already "${permission}" - skipping request`,
       );
       // If permission is already granted, still try to get token if service worker is ready
       if (
@@ -593,14 +613,14 @@ export const FCMProvider = ({ children }) => {
     // Check if we've already requested in this session
     if (sessionStorage.getItem("fcm-permission-requested")) {
       console.log(
-        "📱 Notification permission already requested in this session"
+        "📱 Notification permission already requested in this session",
       );
       return;
     }
 
     try {
       console.log(
-        "🔔 Requesting notification permission immediately after Microsoft login..."
+        "🔔 Requesting notification permission immediately after Microsoft login...",
       );
       sessionStorage.setItem("fcm-permission-requested", "true");
 
@@ -621,7 +641,7 @@ export const FCMProvider = ({ children }) => {
         while (!registration && retries < maxRetries) {
           try {
             registration = await navigator.serviceWorker.ready.catch(
-              () => null
+              () => null,
             );
             if (registration && navigator.serviceWorker.controller) {
               break;
@@ -633,7 +653,7 @@ export const FCMProvider = ({ children }) => {
             console.warn(
               `⚠️ Service worker not ready yet (attempt ${
                 retries + 1
-              }/${maxRetries})`
+              }/${maxRetries})`,
             );
             await new Promise((resolve) => setTimeout(resolve, 200));
             retries++;
@@ -656,7 +676,7 @@ export const FCMProvider = ({ children }) => {
           const messaging = await initializeMessaging(readyRegistration);
           if (messaging) {
             console.log(
-              "✅ Firebase messaging initialized, getting FCM token..."
+              "✅ Firebase messaging initialized, getting FCM token...",
             );
             // Wait a bit more before getting token to ensure everything is set up
             await new Promise((resolve) => setTimeout(resolve, 200));
@@ -669,14 +689,14 @@ export const FCMProvider = ({ children }) => {
               tokenRetrievalRef.current = true;
               console.log(
                 "✅ FCM Token saved after login:",
-                result.fcmToken.substring(0, 50) + "..."
+                result.fcmToken.substring(0, 50) + "...",
               );
               if (result.registrationResult?.success) {
                 console.log("✅ FCM Token registered with backend");
               } else {
                 console.warn(
                   "⚠️ FCM Token generated but registration with backend failed:",
-                  result.registrationResult?.error
+                  result.registrationResult?.error,
                 );
               }
             } else {
@@ -687,14 +707,14 @@ export const FCMProvider = ({ children }) => {
           }
         } else {
           console.warn(
-            "⚠️ Service worker not ready after permission granted. Token will be retrieved when service worker is ready."
+            "⚠️ Service worker not ready after permission granted. Token will be retrieved when service worker is ready.",
           );
           // The existing useEffect will handle getting the token when service worker is ready
         }
       } else if (newPermission === "denied") {
         console.warn("❌ Notification permission denied by user");
         console.warn(
-          "💡 User can enable notifications later via browser settings"
+          "💡 User can enable notifications later via browser settings",
         );
       } else {
         console.log(`📱 Notification permission: "${newPermission}"`);
@@ -793,7 +813,7 @@ export const FCMProvider = ({ children }) => {
         try {
           tokenRetrievalRef.current = true;
           console.log(
-            "🔄 Auto-retrieving FCM token (permission already granted)..."
+            "🔄 Auto-retrieving FCM token (permission already granted)...",
           );
 
           // Wait for service worker to be ready
@@ -819,14 +839,14 @@ export const FCMProvider = ({ children }) => {
             localStorage.setItem("fcmToken", result.fcmToken);
             console.log(
               "✅ FCM Token auto-retrieved and saved:",
-              result.fcmToken.substring(0, 50) + "..."
+              result.fcmToken.substring(0, 50) + "...",
             );
             if (result.registrationResult?.success) {
               console.log("✅ FCM Token registered with backend");
             } else {
               console.warn(
                 "⚠️ FCM Token generated but registration failed:",
-                result.registrationResult?.error
+                result.registrationResult?.error,
               );
             }
           } else {
@@ -842,18 +862,18 @@ export const FCMProvider = ({ children }) => {
       else if (permission === "default") {
         // Check if we've already attempted to request permission in this session
         const permissionRequested = sessionStorage.getItem(
-          "fcm-permission-requested"
+          "fcm-permission-requested",
         );
         if (permissionRequested) {
           console.log(
-            "📱 Notification permission already requested in this session"
+            "📱 Notification permission already requested in this session",
           );
           return;
         }
 
         try {
           console.log(
-            "🔔 User is authenticated. Requesting notification permission..."
+            "🔔 User is authenticated. Requesting notification permission...",
           );
           sessionStorage.setItem("fcm-permission-requested", "true");
 
@@ -884,20 +904,20 @@ export const FCMProvider = ({ children }) => {
               tokenRetrievalRef.current = true;
               console.log(
                 "✅ FCM Token saved:",
-                result.fcmToken.substring(0, 50) + "..."
+                result.fcmToken.substring(0, 50) + "...",
               );
               if (result.registrationResult?.success) {
                 console.log("✅ FCM Token registered with backend");
               } else {
                 console.warn(
                   "⚠️ FCM Token generated but registration failed:",
-                  result.registrationResult?.error
+                  result.registrationResult?.error,
                 );
               }
             }
           } else {
             console.log(
-              `📱 Notification permission "${newPermission}". User can enable later via settings.`
+              `📱 Notification permission "${newPermission}". User can enable later via settings.`,
             );
           }
         } catch (error) {
@@ -908,7 +928,7 @@ export const FCMProvider = ({ children }) => {
       // Case 3: Permission denied - don't do anything
       else {
         console.log(
-          `📱 Notification permission is "${permission}". Token will be retrieved after user grants permission.`
+          `📱 Notification permission is "${permission}". Token will be retrieved after user grants permission.`,
         );
       }
     };
@@ -927,10 +947,10 @@ export const FCMProvider = ({ children }) => {
     // Verify service worker is controlling the page
     if (!navigator.serviceWorker.controller) {
       console.error(
-        "❌ Service Worker is not controlling the page. Push will fail."
+        "❌ Service Worker is not controlling the page. Push will fail.",
       );
       console.error(
-        "💡 Reload the page to allow the service worker to take control."
+        "💡 Reload the page to allow the service worker to take control.",
       );
       return null;
     }
@@ -968,7 +988,7 @@ export const FCMProvider = ({ children }) => {
         } else {
           console.warn(
             "⚠️ FCM Token generated but registration failed:",
-            result.registrationResult?.error
+            result.registrationResult?.error,
           );
         }
         return result.fcmToken;
@@ -997,7 +1017,7 @@ export const FCMProvider = ({ children }) => {
       } else {
         console.warn(
           "⚠️ FCM Token refreshed but registration failed:",
-          result.registrationResult?.error
+          result.registrationResult?.error,
         );
       }
       return result.fcmToken;
