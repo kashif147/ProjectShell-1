@@ -32,7 +32,7 @@ export const NotificationProvider = ({ children }) => {
       return;
     }
 
-    socket = io(process.env.REACT_APP_NOTIFICATION_URL, {
+    socket = io(process.env.REACT_APP_NOTIFICATION_SERVICE_URL, {
       auth: { token },
       transports: ["websocket"],
     });
