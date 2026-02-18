@@ -5,6 +5,8 @@ import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import SubTableComp from "../common/SubTableComp";
+// import axios from "axios";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 
 const { Option } = Select;
 const { RangePicker } = DatePicker;
@@ -22,6 +24,7 @@ const TransactionHistory = () => {
 
   const [loading, setLoading] = useState(false);
   const [data, setData] = useState([]);
+  const { ProfileDetails } = useTableColumns();
   const [searchText, setSearchText] = useState("");
   const [transactionType, setTransactionType] = useState("All");
   const [dateRange, setDateRange] = useState([]);
@@ -46,20 +49,46 @@ const TransactionHistory = () => {
         }
       );
 
-      // Extract data safely, checking multiple common patterns
-      let ledgerData = [];
-      if (Array.isArray(response.data)) {
-        ledgerData = response.data;
-      } else if (response.data?.data && Array.isArray(response.data.data)) {
-        ledgerData = response.data.data;
-      } else if (response.data?.results && Array.isArray(response.data.results)) {
-        ledgerData = response.data.results;
-      }
+      // Extract data safely
+      const rawData = response.data?.data?.items || [];
 
-      setData(ledgerData);
+      // Normalize memberId for comparison
+      const targetId = String(memberId).trim().toLowerCase();
+
+      // Show only data that has entries for the specific memberId
+      const filteredRawData = rawData.filter((item) =>
+        item.entries?.some((e) => String(e.memberId).trim().toLowerCase() === targetId)
+      );
+
+      // Sort chronologically for correct running balance calculation
+      const sortedData = [...filteredRawData].sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
+
+      let cumulativeBalance = 0;
+      const ledgerData = sortedData.map((item, index) => {
+        // Find the entry that specifically matches this memberId
+        const memberEntry = item.entries?.find((e) => String(e.memberId).trim().toLowerCase() === targetId);
+
+        const debit = memberEntry?.dc === "D" ? memberEntry.amount : 0;
+        const credit = memberEntry?.dc === "C" ? memberEntry.amount : 0;
+
+        cumulativeBalance += (credit - debit);
+
+        return {
+          ...item,
+          key: item._id || `ledger-${index}`,
+          description: item.memo || "-",
+          reference: item.docNo || "-",
+          debit: debit,
+          credit: credit,
+          balance: cumulativeBalance,
+        };
+      });
+
+      // Show newest first in the table
+      setData([...ledgerData].reverse());
     } catch (error) {
       console.error("Error fetching ledger data:", error);
-      setData([]); // Ensure data is reset to empty array on error
+      setData([]);
     } finally {
       setLoading(false);
     }
@@ -101,11 +130,13 @@ const TransactionHistory = () => {
   const filteredData = useMemo(() => {
     if (!Array.isArray(data)) return [];
 
+    const searchLower = searchText.trim().toLowerCase();
+
     return data.filter((d) => {
       // Search text (description or reference)
-      const matchesSearch =
-        (d.description?.toLowerCase().includes(searchText.toLowerCase()) || false) ||
-        (d.reference?.toLowerCase().includes(searchText.toLowerCase()) || false);
+      const matchesSearch = !searchLower ||
+        (d.description?.toLowerCase().includes(searchLower)) ||
+        (d.reference?.toLowerCase().includes(searchLower));
 
       // Transaction type (debit/credit/all)
       const matchesType =
@@ -115,7 +146,7 @@ const TransactionHistory = () => {
 
       // Date range filter
       const matchesDate =
-        !dateRange.length ||
+        !dateRange || !dateRange.length ||
         (dayjs(d.date).isAfter(dateRange[0].startOf("day")) &&
           dayjs(d.date).isBefore(dateRange[1].endOf("day")));
 

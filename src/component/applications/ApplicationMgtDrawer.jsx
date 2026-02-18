@@ -690,6 +690,46 @@ function ApplicationMgtDrawer({
       "nursingAdaptationProgramme",
     ];
 
+    const fieldLabels = {
+      title: "Title",
+      forename: "Forename",
+      surname: "Surname",
+      dateOfBirth: "Date of Birth",
+      gender: "Gender",
+      buildingOrHouse: "Building or House",
+      countyCityOrPostCode: "County/City or PostCode",
+      country: "Country",
+      mobileNumber: "Mobile Number",
+      preferredEmail: "Preferred Email",
+      membershipCategory: "Membership Category",
+      workLocation: "Work Location",
+      grade: "Grade",
+      paymentType: "Payment Type",
+      termsAndConditions: "Terms and Conditions",
+      preferredAddress: "Preferred Address",
+      countryPrimaryQualification: "Country Primary Qualification",
+      otherIrishTradeUnion: "Other Irish Trade Union",
+      otherScheme: "Other Scheme",
+      nurseType: "Nurse Type",
+      membershipStatus: "Membership Status",
+      nursingAdaptationProgramme: "Nursing Adaptation Programme",
+      personalEmail: "Personal Email",
+      workEmail: "Work Email",
+      otherWorkLocation: "Other Work Location",
+      otherPrimarySection: "Other Primary Section",
+      otherIrishTradeUnionName: "Union Name",
+      retiredDate: "Retired Date",
+      pensionNo: "Pension Number",
+      studyLocation: "Study Location",
+      graduationDate: "Graduation Date",
+      startDate: "Start Date",
+      payrollNo: "Payroll Number",
+      otherSecondarySection: "Other Secondary Section",
+      nmbiNumber: "NMBI Number",
+      region: "Region",
+      branch: "Branch",
+    };
+
     const fieldMap = {
       title: ["personalInfo", "title"],
       forename: ["personalInfo", "forename"],
@@ -729,6 +769,7 @@ function ApplicationMgtDrawer({
     };
 
     const newErrors = {};
+    const missingFieldNames = [];
 
     requiredFields.forEach((field) => {
       const [section, key] = fieldMap[field] || [];
@@ -743,34 +784,40 @@ function ApplicationMgtDrawer({
         (typeof value === "boolean" && value === false && !booleanAllowed.includes(field))
       ) {
         newErrors[field] = "This field is required";
+        missingFieldNames.push(fieldLabels[field] || field);
       }
     });
 
     if (InfData.contactInfo.preferredEmail === "personal") {
       if (!InfData.contactInfo.personalEmail?.trim()) {
         newErrors.personalEmail = "Personal Email is required";
+        missingFieldNames.push(fieldLabels.personalEmail);
       }
     }
     if (InfData.contactInfo.preferredEmail === "work") {
       if (!InfData.contactInfo.workEmail?.trim()) {
         newErrors.workEmail = "Work Email is required";
+        missingFieldNames.push(fieldLabels.workEmail);
       }
     }
 
     if (InfData.professionalDetails?.workLocation === "Other") {
       if (!InfData.professionalDetails.otherWorkLocation?.trim()) {
         newErrors.otherWorkLocation = "Other work location is required";
+        missingFieldNames.push(fieldLabels.otherWorkLocation);
       }
     }
 
     if (InfData.subscriptionDetails.primarySection === "Other") {
       if (!InfData.subscriptionDetails.otherPrimarySection?.trim()) {
         newErrors.otherPrimarySection = "Other primary section is required";
+        missingFieldNames.push(fieldLabels.otherPrimarySection);
       }
     }
     if (InfData.subscriptionDetails?.otherIrishTradeUnion === true) {
       if (!InfData.subscriptionDetails?.otherIrishTradeUnionName?.trim()) {
         newErrors.otherIrishTradeUnionName = "Union name is required when 'Yes' is selected";
+        missingFieldNames.push(fieldLabels.otherIrishTradeUnionName);
       }
     }
 
@@ -780,9 +827,11 @@ function ApplicationMgtDrawer({
     ) {
       if (!InfData.professionalDetails?.retiredDate) {
         newErrors.retiredDate = "Retired date is required";
+        missingFieldNames.push(fieldLabels.retiredDate);
       }
       if (!InfData.professionalDetails?.pensionNo?.trim()) {
         newErrors.pensionNo = "Pension number is required";
+        missingFieldNames.push(fieldLabels.pensionNo);
       }
     }
 
@@ -792,33 +841,57 @@ function ApplicationMgtDrawer({
     ) {
       if (!InfData.professionalDetails?.studyLocation?.trim()) {
         newErrors.studyLocation = "Study location is required";
+        missingFieldNames.push(fieldLabels.studyLocation);
       }
       if (!InfData.professionalDetails?.graduationDate) {
         newErrors.graduationDate = "Graduation date is required";
+        missingFieldNames.push(fieldLabels.graduationDate);
       }
       if (!InfData.professionalDetails?.startDate) {
         newErrors.startDate = "Start date is required";
+        missingFieldNames.push(fieldLabels.startDate);
       }
     }
 
     if (InfData.subscriptionDetails.paymentType === "Salary Deduction") {
       if (!InfData.subscriptionDetails.payrollNo?.trim()) {
         newErrors.payrollNo = "Payroll number is required";
+        missingFieldNames.push(fieldLabels.payrollNo);
       }
     }
 
     if (InfData.subscriptionDetails.secondarySection === "Other") {
       if (!InfData.subscriptionDetails.otherSecondarySection?.trim()) {
         newErrors.otherSecondarySection = "Other secondary section is required";
+        missingFieldNames.push(fieldLabels.otherSecondarySection);
       }
     }
     if (InfData.professionalDetails?.nursingAdaptationProgramme === true) {
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
+        missingFieldNames.push(fieldLabels.nmbiNumber);
       }
     }
+
     if (Object.keys(newErrors).length > 0) {
       setErrors(newErrors);
+
+      // Unique names to avoid duplicates if multiple checks hit the same field
+      const uniqueMissing = [...new Set(missingFieldNames)];
+      let errorDescription = "Please fill in all required fields.";
+
+      if (uniqueMissing.length > 0) {
+        const firstTwo = uniqueMissing.slice(0, 2);
+        if (uniqueMissing.length === 1) {
+          errorDescription = `${uniqueMissing[0]} field is missing.`;
+        } else if (uniqueMissing.length === 2) {
+          errorDescription = `${uniqueMissing[0]} and ${uniqueMissing[1]} fields are missing.`;
+        } else {
+          errorDescription = `Multiple fields are missing, including ${firstTwo[0]} and ${firstTwo[1]}.`;
+        }
+      }
+
+      MyAlert("error", "Validation Error", errorDescription);
       return false;
     }
 
@@ -1152,7 +1225,7 @@ function ApplicationMgtDrawer({
 
   // Add this state
   const [emailConflictData, setEmailConflictData] = useState(null);
-console.log(emailConflictData, "emailConflictData");
+  console.log(emailConflictData, "emailConflictData");
   const hasSubscriptionDetailsChanged = (current, original) => {
     const currentSub = current.subscriptionDetails || {};
     const originalSub = original.subscriptionDetails || {};
@@ -1810,7 +1883,7 @@ console.log(emailConflictData, "emailConflictData");
     if (emailToCheck) {
       await checkEmailConflict(emailToCheck);
     }
-    else{
+    else {
       setEmailConflictData(null);
     }
   };
@@ -2338,7 +2411,7 @@ console.log(emailConflictData, "emailConflictData");
                   name="mobile"
                   type="mobile"
                   value={InfData.contactInfo?.mobileNumber}
-                  require
+                  required
                   hasError={!!errors?.mobileNumber}
                   disabled={isDisable}
                   onChange={(e) =>
@@ -2431,7 +2504,7 @@ console.log(emailConflictData, "emailConflictData");
                     )
                   }
                   onBlur={handleEmailBlur} // Add this
-                  hasError={!!errors?.email}
+                  hasError={!!errors?.personalEmail}
                 />
               </Col>
 
@@ -2589,6 +2662,7 @@ console.log(emailConflictData, "emailConflictData");
                           required
                           disabled={isDisable}
                           value={InfData?.professionalDetails?.startDate}
+                          hasError={!!errors?.startDate}
                         />
                       </Col>
                       <Col xs={24} md={8}>
@@ -2675,6 +2749,7 @@ console.log(emailConflictData, "emailConflictData");
                     )
                   }
                   options={branchOptions}
+                  hasError={!!errors?.branch}
                 />
               </Col>
 
@@ -2694,6 +2769,7 @@ console.log(emailConflictData, "emailConflictData");
                     )
                   }
                   options={regionOptions}
+                  hasError={!!errors?.region}
                 />
               </Col>
               <Col xs={24} md={12}>
@@ -2814,6 +2890,7 @@ console.log(emailConflictData, "emailConflictData");
                       e.target.value
                     )
                   }
+                  hasError={!!errors?.nmbiNumber}
                 />
               </Col>
 
@@ -2948,7 +3025,7 @@ console.log(emailConflictData, "emailConflictData");
                   <MyDatePicker1
                     className="w-100"
                     label="Submission Date"
-                    name="SubmissionDate"
+                    name="submissionDate"
                     value={InfData?.subscriptionDetails?.submissionDate}
                     disabled={isDisable || isEdit}
                     onChange={(date, dateString) => {
@@ -2958,8 +3035,8 @@ console.log(emailConflictData, "emailConflictData");
                         date
                       );
                     }}
-                    hasError={!!errors?.dateJoined}
-                    errorMessage={errors?.dateJoined || "Required"}
+                    hasError={!!errors?.submissionDate}
+                    errorMessage={errors?.submissionDate || "Required"}
                   />
                 </div>
               </Col>
@@ -3286,7 +3363,7 @@ console.log(emailConflictData, "emailConflictData");
 
               <Col xs={24} md={12}>
                 <div
-                  className="d-flex flex-column p-3"
+                  className="p-3 bg-lb"
                   style={{
                     backgroundColor: "#1173d41a",
                     border: errors?.otherIrishTradeUnion ? "1px solid #ff4d4f" : "1px solid #97c5efff",
@@ -3524,7 +3601,7 @@ console.log(emailConflictData, "emailConflictData");
                   disabled={
                     InfData?.subscriptionDetails?.primarySection !== "Other"
                   }
-                  hasError={!!errors?.otherSecondarySection}
+                  hasError={!!errors?.otherPrimarySection}
                 />
               </Col>
 

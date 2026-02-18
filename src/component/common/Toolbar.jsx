@@ -4,9 +4,15 @@ import { useLocation } from "react-router-dom";
 import SimpleMenu from "./SimpleMenu";
 import MultiFilterDropdown from "./MultiFilterDropdown";
 import { Button, Input } from "antd";
-import { useDispatch } from "react-redux";
+import { useDispatch, useSelector } from "react-redux";
+import { getApplicationsWithFilter, setTemplateId } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { transformFiltersForApi } from "../../utils/filterUtils";
+import { updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import MyAlert from "./MyAlert";
+import { message } from "antd";
 
 const Toolbar = () => {
   const dispatch = useDispatch();
@@ -18,8 +24,69 @@ const Toolbar = () => {
     resetFilters,
   } = useFilters();
 
+  const { columns } = useTableColumns();
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
   const location = useLocation();
   const [batchName, setBatchName] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
+
+  // Helper to compare current filters with active template filters
+  const hasFilterChanges = () => {
+    if (!currentTemplateId || !templates) {
+      // Logic: No Save button if no active template.
+      // Saving new templates is handled via SaveViewMenu.
+      if (location.pathname.toLowerCase() === "/applications") {
+        console.log("🛠️ Save button check: No active template or templates data missing", { currentTemplateId, hasTemplates: !!templates });
+      }
+      return false;
+    }
+
+    // Find the active template
+    const allTemplates = [
+      ...(templates.userTemplates || []),
+      ...(templates.systemDefault ? [templates.systemDefault] : [])
+    ];
+    const activeTemplate = allTemplates.find(t => t._id === currentTemplateId);
+    if (!activeTemplate) {
+      console.log("🛠️ Save button check: Active template not found", { currentTemplateId });
+      return false;
+    }
+
+    // Transform current filters to API format for comparison
+    const activeScreen = getScreenFromPath();
+    const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreen] || []);
+
+    // Get template filters
+    const templateFilters = activeTemplate.filters || {};
+
+    // Robust comparison: sort keys and values to be order-insensitive
+    const normalize = (obj) => {
+      const normalized = {};
+      Object.keys(obj).sort().forEach(key => {
+        const val = obj[key] || {};
+        normalized[key] = {
+          operator: val.operator || "equal_to",
+          values: Array.isArray(val.values) ? [...val.values].map(v => String(v)).sort() : []
+        };
+      });
+      return JSON.stringify(normalized);
+    };
+
+    const currentNorm = normalize(currentApiFilters);
+    const templateNorm = normalize(templateFilters);
+    const changed = currentNorm !== templateNorm;
+
+    if (changed) {
+      console.log("🛠️ Save button check: Changes detected", {
+        activeScreen,
+        current: currentApiFilters,
+        template: templateFilters
+      });
+    }
+
+    return changed;
+  };
 
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
@@ -43,11 +110,18 @@ const Toolbar = () => {
 
     console.log("🔍 Dispatching with cleaned filters:", cleanedFilters);
 
-    if (Object.keys(cleanedFilters).length > 0) {
-      dispatch(getAllApplications(cleanedFilters));
+    const isApplicationsPage = location.pathname === "/applications";
+
+    if (isApplicationsPage) {
+      // MembershipApplication will react to filtersState changes
+      console.log("🔍 Filters updated, MembershipApplication should re-fetch");
     } else {
-      console.log("⚠️ No filters selected, fetching all applications");
-      dispatch(getAllApplications({}));
+      if (Object.keys(cleanedFilters).length > 0) {
+        dispatch(getAllApplications(cleanedFilters));
+      } else {
+        console.log("⚠️ No filters selected, fetching all applications");
+        dispatch(getAllApplications({}));
+      }
     }
   };
 
@@ -75,9 +149,13 @@ const Toolbar = () => {
   };
 
   const handleReset = () => {
-    console.log("🔄 Resetting all filters");
     resetFilters();
-    dispatch(getAllApplications({}));
+    if (location.pathname === "/applications") {
+      // MembershipApplication will react to filtersState reset
+      dispatch(setTemplateId("")); // Also reset template ID on full reset
+    } else {
+      dispatch(getAllApplications({}));
+    }
   };
 
   const activeScreenName = location?.pathname;
@@ -91,6 +169,28 @@ const Toolbar = () => {
       "/CommunicationBatchDetail": "Communication",
     };
     return pathMap[activeScreenName] || "Applications";
+  };
+
+  const handleSave = async () => {
+    if (!currentTemplateId) return;
+
+    setIsSaving(true);
+    try {
+      const activeScreen = getScreenFromPath();
+      const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreen] || []);
+
+      const payload = {
+        filters: currentApiFilters
+      };
+
+      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      MyAlert("success", "Success", "Template updated successfully");
+    } catch (error) {
+      console.error("Error updating template:", error);
+      MyAlert("error", "Error", error?.message || "Failed to update template");
+    } finally {
+      setIsSaving(false);
+    }
   };
 
   const activeScreen = getScreenFromPath();
@@ -153,10 +253,16 @@ const Toolbar = () => {
     >
       <div className="d-flex align-items-center flex-wrap gap-2">
         {/* Search input */}
-        <div style={{ flex: "0: 0 250px" }}>
+        <div style={{ flex: "0 0 250px" }}>
           <Input
             className="my-input-field"
-            placeholder="Membership No or Surname"
+            placeholder={
+              location.pathname === "/CasesSummary"
+                ? "Search Case ID, team, or stakeholder"
+                : location.pathname === "/EventsSummary"
+                  ? "Search Event ID or Name"
+                  : "Membership No or Surname"
+            }
             style={{
               height: "30px",
               borderRadius: "4px",
@@ -172,14 +278,7 @@ const Toolbar = () => {
           const operator = filterState?.operator || "==";
           const options = filterOptions[label] || [];
 
-          // Only show filter if it has options or is a text filter
-          if (
-            options.length === 0 &&
-            !["Email", "Membership No"].includes(label)
-          ) {
-            return null;
-          }
-
+          // Show all filters that are in visibleFilters
           return (
             <MultiFilterDropdown
               key={label}
@@ -191,9 +290,7 @@ const Toolbar = () => {
             />
           );
         })}
-
         <SimpleMenu title="More" />
-
         <Button
           onClick={handleReset}
           style={{
@@ -220,6 +317,22 @@ const Toolbar = () => {
         >
           Search
         </Button>
+        {location.pathname.toLowerCase() === "/applications" && hasFilterChanges() && (
+          <Button
+            onClick={handleSave}
+            loading={isSaving}
+            style={{
+              backgroundColor: "#E6F7FF",
+              borderRadius: "4px",
+              border: "1px solid #91D5FF",
+              height: "32px",
+              fontWeight: "500",
+              color: "#1890FF",
+            }}
+          >
+            Save
+          </Button>
+        )}
       </div>
     </div>
   );

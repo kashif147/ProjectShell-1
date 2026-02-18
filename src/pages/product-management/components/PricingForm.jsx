@@ -1,7 +1,8 @@
 
 
 import React, { useEffect, useState } from "react";
-import { Drawer, Button, Space, Divider, Table, Switch } from "antd";
+import { Drawer, Button, Space, Divider, Table, Switch, Tag, Tooltip } from "antd";
+import { CopyOutlined } from "@ant-design/icons";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
@@ -22,30 +23,88 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
     price: "",
   });
   const [loading, setLoading] = useState(false);
+  const [isEditMode, setIsEditMode] = useState(false);
+  const [editingPricingId, setEditingPricingId] = useState(null);
+  // Helper function to format prices
+  const formatToTwoDecimals = (value) => {
+    if (value === null || value === undefined || value === "") return "";
+    const num = Number(value);
+    return isNaN(num) ? "" : num.toFixed(2);
+  };
+
+  // Reset form when drawer closes
   useEffect(() => {
-    if (product?.currentPricing) {
-      const formatToTwoDecimals = (value) => {
-        if (value === null || value === undefined || value === "") return "";
-        const num = Number(value);
-        return isNaN(num) ? "" : num.toFixed(2);
-      };
-
-      const pricing = product.currentPricing;
-
+    if (!open) {
       setFormData({
-        currency: (pricing.currency || "").toUpperCase(),
-        memberPrice: pricing.memberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.memberPrice)) : "",
-        nonMemberPrice: pricing.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(pricing.nonMemberPrice)) : "",
-        effectiveFrom: pricing.effectiveFrom ? dayjs(pricing.effectiveFrom) : null,
-        effectiveTo: pricing.effectiveTo ? dayjs(pricing.effectiveTo) : null,
-        status: pricing.status || "Active",
-        productId: product._id,
-        price: pricing.price ? formatToTwoDecimals(convertSandToEuro(pricing.price)) : "",
+        currency: "",
+        memberPrice: "",
+        nonMemberPrice: "",
+        effectiveFrom: null,
+        effectiveTo: null,
+        status: "Active",
+        price: "",
       });
+      setIsEditMode(false);
+      setEditingPricingId(null);
+      setHasCloned(false);
     }
-  }, [product]);
+  }, [open]);
   const handleChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
+  };
+
+  const [hasCloned, setHasCloned] = useState(false);
+
+  // Handle cloning logic for the top button
+  const handleCloneLastActive = () => {
+    // 1. Find Current Active Pricing
+    const currentActive = product?.currentPricing;
+
+    if (!currentActive) {
+      MyAlert("warning", "No active pricing found to clone!");
+      return;
+    }
+
+    // 2. Calculate Dates
+    let newEffectiveFrom = dayjs();
+    let newEffectiveTo = dayjs().add(1, 'year');
+
+    if (currentActive.effectiveTo) {
+      const lastEndDate = dayjs(currentActive.effectiveTo);
+      newEffectiveFrom = lastEndDate.add(1, 'day');
+      newEffectiveTo = newEffectiveFrom.add(1, 'year');
+    }
+
+    // 3. Populate Form
+    setFormData({
+      currency: (currentActive.currency || "").toUpperCase(),
+      memberPrice: currentActive.memberPrice ? formatToTwoDecimals(convertSandToEuro(currentActive.memberPrice)) : "",
+      nonMemberPrice: currentActive.nonMemberPrice ? formatToTwoDecimals(convertSandToEuro(currentActive.nonMemberPrice)) : "",
+      effectiveFrom: newEffectiveFrom,
+      effectiveTo: newEffectiveTo,
+      status: "Active",
+      price: currentActive.price ? formatToTwoDecimals(convertSandToEuro(currentActive.price)) : "",
+    });
+
+    // 4. Update State to show "Create" button
+    setHasCloned(true);
+    setIsEditMode(false);
+    setEditingPricingId(null);
+  };
+
+  // Handle canceling edit mode
+  const handleCancel = () => {
+    setIsEditMode(false);
+    setEditingPricingId(null);
+    setFormData({
+      currency: "",
+      memberPrice: "",
+      nonMemberPrice: "",
+      effectiveFrom: null,
+      effectiveTo: null,
+      status: "Active",
+      price: "",
+    });
   };
 
   const getCurrencySymbol = () => {
@@ -67,89 +126,137 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         effectiveFrom: formData.effectiveFrom,
         effectiveTo: formData.effectiveTo,
         status: formData.status,
-        price: productType?.name === "Membership" ? convertEuroToSand(formData.price) : undefined,
-        memberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.memberPrice),
-        nonMemberPrice: productType?.name === "Membership" ? undefined : convertEuroToSand(formData.nonMemberPrice),
       };
 
-      // Get the pricing ID from product's currentPricing
-      const pricingId = product?.currentPricing?._id;
-
-      if (!pricingId) {
-        // message.error("Pricing ID not found");
-        return;
+      // Add price fields based on product type
+      if (productType?.name === "Membership") {
+        requestData.price = convertEuroToSand(formData.price);
+      } else {
+        requestData.memberPrice = convertEuroToSand(formData.memberPrice);
+        requestData.nonMemberPrice = convertEuroToSand(formData.nonMemberPrice);
       }
 
-      // Construct the endpoint URL
-      const endpoint = `${process.env.REACT_APP_POLICY_SERVICE_URL || ''}/pricing/${pricingId}`;
+      // Add productId for CREATE mode
+      if (!isEditMode) {
+        requestData.productId = product._id;
+      }
 
-      // Make the update call
-      const response = await updateFtn(
-        process.env.REACT_APP_POLICY_SERVICE_URL,
-        `/pricing/${pricingId}`,
-        requestData,
-        async () => {
-          try {
-            // Reset form data first
-            setFormData({
-              currency: "",
-              memberPrice: "",
-              nonMemberPrice: "",
-              effectiveFrom: null,
-              effectiveTo: null,
-              status: "Active",
-              price: "",
-            });
-
-            // Refresh product data
+      if (isEditMode) {
+        // UPDATE existing pricing
+        await updateFtn(
+          process.env.REACT_APP_POLICY_SERVICE_URL,
+          `/pricing/${editingPricingId}`,
+          requestData,
+          async () => {
+            handleCancel();
             if (onSubmit) await onSubmit();
-
-            // Close last
             onClose();
-          } catch (err) {
-            console.error("Error in update callback:", err);
+          },
+          "Pricing Updated Successfully"
+        );
+      } else {
+        // CREATE new pricing
+        await insertDataFtn(
+          process.env.REACT_APP_POLICY_SERVICE_URL,
+          `/pricing`,
+          requestData,
+          "Pricing Created Successfully",
+          "Failed to create pricing",
+          async () => {
+            handleCancel();
+            if (onSubmit) await onSubmit();
+            onClose();
           }
-        },
-        "Updated Successfully"
-      );
+        );
+      }
 
     } catch (error) {
-      MyAlert("error", "Failed to update pricing");
+      MyAlert("error", isEditMode ? "Failed to update pricing" : "Failed to create pricing");
     } finally {
       setLoading(false);
     }
   };
 
-  // History table
-  const historyColumns = [
-    { title: "Currency", dataIndex: "currency", key: "currency" },
-    { title: "Member Price", dataIndex: "memberPrice", key: "memberPrice" },
-    { title: "Non-Member Price", dataIndex: "nonMemberPrice", key: "nonMemberPrice" },
-    { title: "Effective From", dataIndex: "effectiveFrom", key: "effectiveFrom" },
-    { title: "Effective To", dataIndex: "effectiveTo", key: "effectiveTo" },
-    { title: "Status", dataIndex: "status", key: "status" },
-  ];
+  // History table columns with formatting
+  const getHistoryColumns = () => {
+    const baseColumns = [
+      {
+        title: "Currency",
+        dataIndex: "currency",
+        key: "currency",
+        render: (currency) => currency?.toUpperCase() || "-"
+      },
+      // ... (Price columns logic is same as before, see next block)
+    ];
 
-  const historyData = [
-    {
-      key: "1",
-      currency: "USD",
-      memberPrice: 2000,
-      nonMemberPrice: 3500,
-      effectiveFrom: "2024-01-01",
-      effectiveTo: "2024-12-31",
-      status: "Inactive",
-    },
-    {
-      key: "2",
-      currency: "EUR",
-      memberPrice: 3000,
-      nonMemberPrice: 5000,
-      effectiveFrom: "2025-01-01",
-      effectiveTo: "2028-10-11",
-      status: "Active",
-    },
-  ];
+    // Add price columns based on product type
+    if (productType?.name === "Membership") {
+      baseColumns.push({
+        title: "Price",
+        dataIndex: "price",
+        key: "price",
+        render: (price, record) => {
+          if (!price) return "-";
+          const formattedPrice = convertSandToEuro(price);
+          const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+          return `${symbol}${formattedPrice}.00`;
+        }
+      });
+    } else {
+      baseColumns.push(
+        {
+          title: "Member Price",
+          dataIndex: "memberPrice",
+          key: "memberPrice",
+          render: (price, record) => {
+            if (!price) return "-";
+            const formattedPrice = convertSandToEuro(price);
+            const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+            return `${symbol}${formattedPrice}.00`;
+          }
+        },
+        {
+          title: "Non-Member Price",
+          dataIndex: "nonMemberPrice",
+          key: "nonMemberPrice",
+          render: (price, record) => {
+            if (!price) return "-";
+            const formattedPrice = convertSandToEuro(price);
+            const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+            return `${symbol}${formattedPrice}.00`;
+          }
+        }
+      );
+    }
+
+    // Add date and status columns
+    baseColumns.push(
+      {
+        title: "Effective From",
+        dataIndex: "effectiveFrom",
+        key: "effectiveFrom",
+        render: (date) => date ? new Date(date).toLocaleDateString() : "-"
+      },
+      {
+        title: "Effective To",
+        dataIndex: "effectiveTo",
+        key: "effectiveTo",
+        render: (date) => date ? new Date(date).toLocaleDateString() : "-"
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (status) => (
+          <Tag color={status === "Active" ? "green" : "red"}>
+            {status}
+          </Tag>
+        )
+      }
+    );
+
+    return baseColumns;
+  };
 
   return (
     <Drawer
@@ -159,10 +266,24 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
       width={800}
       extra={
         <Space>
-          {/* <Button onClick={onClose}>Cancel</Button> */}
-          <Button type="primary" className="butn primary-btn" onClick={handleSave} loading={loading}>
-            update
-          </Button>
+          {!isEditMode && product?.currentPricing && !hasCloned ? (
+            <Button
+              type="primary"
+              className="butn primary-btn"
+              onClick={handleCloneLastActive}
+            >
+              Clone Last Active
+            </Button>
+          ) : (
+            <Button
+              type="primary"
+              className="butn primary-btn"
+              onClick={handleSave}
+              loading={loading}
+            >
+              {isEditMode ? "Update" : "Create"}
+            </Button>
+          )}
         </Space>
       }
     >
@@ -253,13 +374,37 @@ const PricingDrawer = ({ open, onClose, product, productType, onSubmit }) => {
         </div>
 
         {/* Pricing History */}
-        {/* <Divider orientation="left">Pricing History</Divider> */}
-        {/* <Table
-          columns={historyColumns}
-          dataSource={historyData}
-          size="small"   
-          pagination={false}
-        /> */}
+        <>
+          <Divider orientation="left">Pricing History</Divider>
+          <Table
+            columns={getHistoryColumns()}
+            dataSource={product?.pricingHistory || []}
+            rowKey="_id"
+            size="small"
+            pagination={false}
+            scroll={{ x: "max-content" }}
+            components={{
+              header: {
+                cell: (props) => {
+                  const { children, ...restProps } = props;
+                  return (
+                    <th
+                      {...restProps}
+                      style={{
+                        backgroundColor: '#215e97',
+                        ...restProps.style
+                      }}
+                    >
+                      <div style={{ color: '#fff' }}>
+                        {children}
+                      </div>
+                    </th>
+                  );
+                },
+              },
+            }}
+          />
+        </>
 
       </div>
     </Drawer>

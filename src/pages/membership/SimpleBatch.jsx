@@ -43,7 +43,10 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       determinedType = "recruit-friend";
     } else if (path.toLowerCase().includes("directdebit")) {
       determinedType = "direct-debit";
-    } else if (path.toLowerCase().includes("inappnotifications") || path.toLowerCase().includes("communicationbatchdetail")) {
+    } else if (
+      path.toLowerCase().includes("inappnotifications") ||
+      path.toLowerCase().includes("communicationbatchdetail")
+    ) {
       determinedType = "communication";
     } else {
       determinedType = "";
@@ -54,9 +57,6 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     // Update both state and ref
     setBatchType(determinedType);
     batchTypeRef.current = determinedType;
-
-    // Force a re-render to ensure UI updates
-    setFormData(prev => ({ ...prev }));
   }, [location.pathname]);
 
   // Debug log when batchType changes
@@ -91,7 +91,11 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     if (!currentType) {
       console.error("❌ Batch type could not be determined from URL");
       newErrors.batchType = "Could not determine batch type";
-      MyAlert("error", "Configuration Error", "Could not determine batch type from URL");
+      MyAlert(
+        "error",
+        "Configuration Error",
+        "Could not determine batch type from URL"
+      );
       return false;
     }
 
@@ -130,7 +134,11 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
     console.log("🎯 Hardcoded type from path analysis:", hardcodedType);
 
     if (!validateForm()) {
-      MyAlert("error", "Validation Error", "Please fix the form errors before submitting");
+      MyAlert(
+        "error",
+        "Validation Error",
+        "Please fix the form errors before submitting"
+      );
       return;
     }
 
@@ -163,12 +171,17 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       date: formattedDate,
     };
 
-    const token = localStorage.getItem("accessToken") ||
+    const token =
+      localStorage.getItem("accessToken") ||
       localStorage.getItem("token") ||
       localStorage.getItem("authToken");
 
     if (!token) {
-      MyAlert("error", "Authentication Failed", "Authentication token not found. Please login again.");
+      MyAlert(
+        "error",
+        "Authentication Failed",
+        "Authentication token not found. Please login again."
+      );
       return;
     }
 
@@ -181,13 +194,13 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         {
           headers: {
             "Content-Type": "application/json",
-            "Authorization": `Bearer ${token}`,
+            Authorization: `Bearer ${token}`,
           },
           timeout: 30000,
         }
       );
 
-      if (onSubmit && typeof onSubmit === 'function') {
+      if (onSubmit && typeof onSubmit === "function") {
         onSubmit(response.data);
       }
 
@@ -201,7 +214,7 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
       });
       setErrors({});
 
-      if (onClose && typeof onClose === 'function') {
+      if (onClose && typeof onClose === "function") {
         onClose();
       }
     } catch (error) {
@@ -219,7 +232,9 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
           errorDescription = "Your session has expired. Please login again.";
         } else if (error.response.status === 400) {
           errorMessage = "Invalid data";
-          errorDescription = error.response.data?.message || "Please check the information you entered";
+          errorDescription =
+            error.response.data?.message ||
+            "Please check the information you entered";
         } else if (error.response.status === 409) {
           errorMessage = "Duplicate entry";
           errorDescription = "Batch with this name already exists";
@@ -231,12 +246,14 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
           errorDescription = "Internal server error. Please try again later.";
         } else {
           errorMessage = `Server error: ${error.response.status}`;
-          errorDescription = error.response.data?.message || "Please contact support";
+          errorDescription =
+            error.response.data?.message || "Please contact support";
         }
       } else if (error.request) {
         errorMessage = "Network error";
-        errorDescription = "Unable to connect to server. Please check your internet connection.";
-      } else if (error.code === 'ECONNABORTED') {
+        errorDescription =
+          "Unable to connect to server. Please check your internet connection.";
+      } else if (error.code === "ECONNABORTED") {
         errorMessage = "Request timeout";
         errorDescription = "The request took too long. Please try again.";
       } else {
@@ -299,18 +316,23 @@ const SimpleBatch = ({ open, onClose, onSubmit }) => {
         </Space>
       }
     >
-      <div className="drawer-main-container" style={{
-        padding: "16px",
-        backgroundColor: "#f6f9fc",
-        height: "100%"
-      }}>
-        <div style={{
-          marginBottom: "24px",
+      <div
+        className="drawer-main-container"
+        style={{
           padding: "16px",
-          backgroundColor: "white",
-          borderRadius: "8px",
-          border: "1px solid #e8e8e8"
-        }}>
+          backgroundColor: "#f6f9fc",
+          height: "100%",
+        }}
+      >
+        <div
+          style={{
+            marginBottom: "24px",
+            padding: "16px",
+            backgroundColor: "white",
+            borderRadius: "8px",
+            border: "1px solid #e8e8e8",
+          }}
+        >
           <Row gutter={[16, 16]}>
             <Col span={24}>
               <MyInput

@@ -94,6 +94,8 @@ const InAppNotifications = () => {
             key: '1',
             batchId: '#NOT-2023-001',
             batchName: 'System Maintenance Alert',
+            title: 'System Maintenance Scheduled',
+            message: 'We will be performing scheduled maintenance on Sunday, August 25th from 2:00 AM to 4:00 AM UTC. Services may be intermittent.',
             createdDate: '2023-08-20T10:00:00',
             recipientCount: 15420,
             status: 'Completed'
@@ -102,6 +104,8 @@ const InAppNotifications = () => {
             key: '2',
             batchId: '#NOT-2023-002',
             batchName: 'New Feature Announcement',
+            title: 'Introducing Dark Mode!',
+            message: 'You asked, we listened. Dark mode is now available in your settings. Try it out today for a better viewing experience at night.',
             createdDate: '2023-08-18T14:30:00',
             recipientCount: 12500,
             status: 'Completed'
@@ -110,6 +114,8 @@ const InAppNotifications = () => {
             key: '3',
             batchId: '#NOT-2023-003',
             batchName: 'Policy Update Reminder',
+            title: 'Action Required: Policy Updates',
+            message: 'We have updated our terms of service. Please review the changes and accept the new terms by September 1st to continue using our services.',
             createdDate: '2023-08-15T09:15:00',
             recipientCount: 8900,
             status: 'In Progress'
@@ -118,6 +124,8 @@ const InAppNotifications = () => {
             key: '4',
             batchId: '#NOT-2023-004',
             batchName: 'Welcome Series - Group A',
+            title: 'Welcome to Our Community!',
+            message: 'Thanks for joining! Here are a few tips to get you started and make the most out of your new membership.',
             createdDate: '2023-08-12T11:45:00',
             recipientCount: 340,
             status: 'Draft'
@@ -126,6 +134,8 @@ const InAppNotifications = () => {
             key: '5',
             batchId: '#NOT-2023-005',
             batchName: 'Monthly Newsletter',
+            title: 'August Newsletter: Top Trends',
+            message: 'Check out the top trends for this month, upcoming events, and member highlights in our latest newsletter.',
             createdDate: '2023-08-10T16:20:00',
             recipientCount: 14200,
             status: 'Completed'
@@ -141,7 +151,14 @@ const InAppNotifications = () => {
                 pagination={{ pageSize: 10 }}
                 loading={false}
                 onRowClick={(record) => {
-                    navigate("/CommunicationBatchDetail", { state: { batchId: record.batchId, batchName: record.batchName } });
+                    navigate("/CommunicationBatchDetail", {
+                        state: {
+                            batchId: record.batchId,
+                            batchName: record.batchName,
+                            title: record.title,
+                            message: record.message
+                        }
+                    });
                 }}
             />
         </div>

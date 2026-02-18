@@ -1,204 +1,206 @@
 .create-batch-container {
-    padding: 20px;
-    background-color: #f4faf8;
-  }
-  .ant-input[disabled], 
-  .ant-input-disabled {
-    color: rgba(0, 0, 0, 0.45) !important;
-  }
-  
-  .header {
-    margin-bottom: 8px;
-  }
-  
-  .page-title {
-    margin-bottom: 4px;
-  }
-  
-  .section-title {
-    margin-bottom: 24px;
-  }
-  
-  .batch-card {
-    border-radius: 12px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
-  }
-  
-  .custom-input,
-  .custom-input .ant-select-selector,
-  .custom-input .ant-picker {
-    height: 40px !important;
-    border-radius: 6px !important;
-  }
-  
-  .custom-input textarea {
-    height: auto;
-    min-height: 80px;
-  }
-  
-  .custom-file {
-    border: 1px solid #d9d9d9;
-    padding: 6px 12px;
-    border-radius: 6px;
-    width: 100%;
-  }
-  
-  .cancel-button,
-  .create-button {
-    height: 40px;
-    border-radius: 6px;
-    padding: 0 20px;
-  }
-  
-  .summary-line {
-    display: flex;
-    justify-content: space-between;
-    margin-bottom: 8px;
-  }
-  
-  .total {
-    font-size: 16px;
-    margin-top: 12px;
-  }
-  /* payment manual */
-  .payment-container {
-    padding: 20px;
-    max-width: 1200px;
-    margin: 0 auto;
-  }
-  
-  .payment-card {
-    border-radius: 10px;
-    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  }
-  
-  .card-header {
-    display: flex;
-    align-items: center;
-    font-size: 18px;
-    font-weight: 500;
-  }
-  
-  .header-icon {
-    margin-right: 10px;
-    color: #1890ff;
-  }
-  
-  .section-container {
-    background: #f9f9f9;
-    padding: 20px;
-    border-radius: 8px;
-    margin-bottom: 20px;
-    border-left: 4px solid #1890ff;
-  }
-  
-  .section-title {
-    display: flex;
-    align-items: center;
-    margin-bottom: 16px;
-    font-weight: 500;
-    color: #333;
-  }
-  
-  .section-icon {
-    margin-right: 8px;
-    color: #1890ff;
-  }
-  
-  .member-nav {
-    display: flex;
-    align-items: center;
-    justify-content: flex-end;
-  }
-  
-  .nav-btn {
-    width: 32px;
-    height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    margin: 0 5px;
-  }
-  
-  .member-id {
-    font-weight: 500;
-    min-width: 60px;
-    text-align: center;
-  }
-  
-  .member-details {
-    margin-top: 8px;
-  }
-  
-  .detail-item {
-    padding-bottom: 5px ;
-  }
-  
-  .detail-value {
-    font-size: 15px;
-    font-weight: 500;
-    color: #333;
-  }
-  
-  .outstanding-value {
-    font-size: 15px;
-    font-weight: 500;
-    color: #fa8c16;
-  }
-  
-  .custom-select .ant-select-selector,
-  .custom-input .ant-input,
-  .amount-input .ant-input,
-  .custom-textarea .ant-input {
-    border-radius: 6px !important;
-  }
-  
-  .amount-input .ant-input-prefix {
-    color: #1890ff;
-  }
-  
-  .summary-container {
-    background: #f0f9ff;
-    padding: 16px;
-    border-radius: 8px;
-    margin: 20px 0;
-  }
-  
-  .summary-item {
-    display: flex;
-    justify-content: space-between;
-    padding: 8px 0;
-    border-bottom: 1px solid #e8e8e8;
-  }
-  
-  .summary-value {
-    color: rgba(0, 0, 0, 0.45);
-  }
-  
-  .action-buttons {
-    display: flex;
-    justify-content: flex-end;
-    gap: 16px;
-    margin-top: 24px;
-  }
-  
-  .cancel-btn {
-    width: 120px;
-  }
-  
-  .submit-btn {
-    width: 160px;
-    background: #1890ff;
-    border-color: #1890ff;
-  }
-  
-  /* Hover effects */
-  .nav-btn:hover {
-    color: #1890ff;
-    border-color: #1890ff;
-  }
-  
-  .submit-btn:hover {
-    background: #40a9ff;
-    border-color: #40a9ff;
-  }
+  padding: 20px;
+  background-color: #f4faf8;
+}
+
+.ant-input[disabled],
+.ant-input-disabled {
+  color: rgba(0, 0, 0, 0.45) !important;
+}
+
+.header {
+  margin-bottom: 8px;
+}
+
+.page-title {
+  margin-bottom: 4px;
+}
+
+.section-title {
+  margin-bottom: 24px;
+}
+
+.batch-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+}
+
+.custom-input,
+.custom-input .ant-select-selector,
+.custom-input .ant-picker {
+  height: 40px !important;
+  border-radius: 6px !important;
+}
+
+.custom-input textarea {
+  height: auto;
+  min-height: 80px;
+}
+
+.custom-file {
+  border: 1px solid #d9d9d9;
+  padding: 6px 12px;
+  border-radius: 6px;
+  width: 100%;
+}
+
+.cancel-button,
+.create-button {
+  height: 40px;
+  border-radius: 6px;
+  padding: 0 20px;
+}
+
+.summary-line {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.total {
+  font-size: 16px;
+  margin-top: 12px;
+}
+
+/* payment manual */
+.payment-container {
+  padding: 20px;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.payment-card {
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.card-header {
+  display: flex;
+  align-items: center;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.header-icon {
+  margin-right: 10px;
+  color: #1890ff;
+}
+
+.section-container {
+  background: #f9f9f9;
+  padding: 20px;
+  border-radius: 8px;
+  margin-bottom: 20px;
+  /* border-left: 4px solid #1890ff; */
+}
+
+.section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 16px;
+  font-weight: 500;
+  color: #333;
+}
+
+.section-icon {
+  margin-right: 8px;
+  color: #1890ff;
+}
+
+.member-nav {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+}
+
+.nav-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 5px;
+}
+
+.member-id {
+  font-weight: 500;
+  min-width: 60px;
+  text-align: center;
+}
+
+.member-details {
+  margin-top: 8px;
+}
+
+.detail-item {
+  padding-bottom: 5px;
+}
+
+.detail-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #333;
+}
+
+.outstanding-value {
+  font-size: 15px;
+  font-weight: 500;
+  color: #fa8c16;
+}
+
+.custom-select .ant-select-selector,
+.custom-input .ant-input,
+.amount-input .ant-input,
+.custom-textarea .ant-input {
+  border-radius: 6px !important;
+}
+
+.amount-input .ant-input-prefix {
+  color: #1890ff;
+}
+
+.summary-container {
+  background: #f0f9ff;
+  padding: 16px;
+  border-radius: 8px;
+  margin: 20px 0;
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e8e8e8;
+}
+
+.summary-value {
+  color: rgba(0, 0, 0, 0.45);
+}
+
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  margin-top: 24px;
+}
+
+.cancel-btn {
+  width: 120px;
+}
+
+.submit-btn {
+  width: 160px;
+  background: #1890ff;
+  border-color: #1890ff;
+}
+
+/* Hover effects */
+.nav-btn:hover {
+  color: #1890ff;
+  border-color: #1890ff;
+}
+
+.submit-btn:hover {
+  background: #40a9ff;
+  border-color: #40a9ff;
+}

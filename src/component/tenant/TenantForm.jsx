@@ -209,6 +209,7 @@ const TenantForm = ({ tenant, onClose }) => {
 
   return (
     <Drawer
+      className="tenant-form-drawer"
       title={tenant ? "Edit Tenant" : "Add New Tenant"}
       width={1000}
       open={true}
@@ -273,7 +274,7 @@ const TenantForm = ({ tenant, onClose }) => {
               </Row>
 
               <Row gutter={16} align="middle">
-                <Col span={8}>
+                <Col span={12}>
                   <MyInput
                     label="Domain"
                     value={iData.domain}
@@ -294,12 +295,15 @@ const TenantForm = ({ tenant, onClose }) => {
           ]}
         />
       </Col> */}
-                <Col span={8} className="flex items-center gap-2 flex-row">
-                  <label className="switch-label">Active</label>
-                  <Switch
-                    checked={iData.isActive}
-                    onChange={(val) => handleChange("isActive", val)}
-                  />
+                <Col span={12}>
+                  <div className="switch-field">
+                    <label className="my-input-label">Active</label>
+                    <Switch
+                      className="tenant-active-switch"
+                      checked={iData.isActive}
+                      onChange={(val) => handleChange("isActive", val)}
+                    />
+                  </div>
                 </Col>
               </Row>
 
@@ -390,313 +394,313 @@ const TenantForm = ({ tenant, onClose }) => {
 
           {/* 2️⃣ Settings & Subscription */}
           <TabPane tab="Settings & Subscription" key="settings">
-            <Row gutter={[16, 8]}>
-              <Col span={8}>
-                <MyInput
-                  label="Max Users"
-                  type="number"
-                  value={iData.settings.maxUsers}
-                  onChange={(e) =>
-                    handleChange("settings", "maxUsers", e.target.value, null)
-                  }
-                />
-              </Col>
-              <Col span={8}>
-                <label>Allow Self Registration</label>
-                <Switch
-                  checked={iData.settings.allowSelfRegistration}
-                  onChange={(val) =>
-                    handleChange("settings", "allowSelfRegistration", val, null)
-                  }
-                />
-              </Col>
-              <Col span={8}>
-                <MyInput
-                  label="Session Timeout (hrs)"
-                  type="number"
-                  value={iData.settings.sessionTimeout}
-                  onChange={(e) =>
-                    handleChange("settings", "sessionTimeout", e.target.value)
-                  }
-                />
-              </Col>
-            </Row>
+            <div className="drawer-tab-content pt-2">
+              <Row gutter={[16, 8]}>
+                <Col span={8}>
+                  <MyInput
+                    label="Max Users"
+                    type="number"
+                    value={iData.settings.maxUsers}
+                    onChange={(e) =>
+                      handleChange("settings", "maxUsers", e.target.value, null)
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <label className="switch-label">
+                    Allow Self Registration{" "}
+                    <Switch
+                      checked={iData.settings.allowSelfRegistration}
+                      onChange={(val) =>
+                        handleChange("settings", "allowSelfRegistration", val, null)
+                      }
+                    />
+                  </label>
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="Session Timeout (hrs)"
+                    type="number"
+                    value={iData.settings.sessionTimeout}
+                    onChange={(e) =>
+                      handleChange("settings", "sessionTimeout", e.target.value)
+                    }
+                  />
+                </Col>
+              </Row>
 
-            <Divider>Password Policy</Divider>
-            <Row gutter={[16, 8]}>
-              <Col span={6}>
-                <MyInput
-                  label="Min Length"
-                  type="number"
-                  value={iData.settings.passwordPolicy.minLength}
-                  onChange={(e) =>
-                    setIData((prev) => ({
-                      ...prev,
-                      settings: {
-                        ...prev.settings,
-                        passwordPolicy: {
-                          ...prev.settings.passwordPolicy,
-                          minLength: e.target.value,
-                        },
-                      },
-                    }))
-                  }
-                />
-              </Col>
-              <Col span={18} style={{ display: "flex", gap: 20 }}>
-                <label>
-                  Uppercase{" "}
-                  <Switch
-                    checked={iData.settings.passwordPolicy.requireUppercase}
-                    onChange={(val) =>
+              <Divider>Password Policy</Divider>
+              <Row gutter={[16, 8]}>
+                <Col span={6}>
+                  <MyInput
+                    label="Min Length"
+                    type="number"
+                    value={iData.settings.passwordPolicy.minLength}
+                    onChange={(e) =>
                       setIData((prev) => ({
                         ...prev,
                         settings: {
                           ...prev.settings,
                           passwordPolicy: {
                             ...prev.settings.passwordPolicy,
-                            requireUppercase: val,
+                            minLength: e.target.value,
                           },
                         },
                       }))
                     }
                   />
-                </label>
-                <label>
-                  Lowercase{" "}
-                  <Switch
-                    checked={iData.settings.passwordPolicy.requireLowercase}
-                    onChange={(val) =>
-                      setIData((prev) => ({
-                        ...prev,
-                        settings: {
-                          ...prev.settings,
-                          passwordPolicy: {
-                            ...prev.settings.passwordPolicy,
-                            requireLowercase: val,
+                </Col>
+                <Col span={18} className="switch-inline-group">
+                  <label className="switch-label">
+                    Uppercase{" "}
+                    <Switch
+                      checked={iData.settings.passwordPolicy.requireUppercase}
+                      onChange={(val) =>
+                        setIData((prev) => ({
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            passwordPolicy: {
+                              ...prev.settings.passwordPolicy,
+                              requireUppercase: val,
+                            },
                           },
-                        },
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Numbers{" "}
-                  <Switch
-                    checked={iData.settings.passwordPolicy.requireNumbers}
-                    onChange={(val) =>
-                      setIData((prev) => ({
-                        ...prev,
-                        settings: {
-                          ...prev.settings,
-                          passwordPolicy: {
-                            ...prev.settings.passwordPolicy,
-                            requireNumbers: val,
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="switch-label">
+                    Lowercase{" "}
+                    <Switch
+                      checked={iData.settings.passwordPolicy.requireLowercase}
+                      onChange={(val) =>
+                        setIData((prev) => ({
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            passwordPolicy: {
+                              ...prev.settings.passwordPolicy,
+                              requireLowercase: val,
+                            },
                           },
-                        },
-                      }))
-                    }
-                  />
-                </label>
-                <label>
-                  Special Chars{" "}
-                  <Switch
-                    checked={iData.settings.passwordPolicy.requireSpecialChars}
-                    onChange={(val) =>
-                      setIData((prev) => ({
-                        ...prev,
-                        settings: {
-                          ...prev.settings,
-                          passwordPolicy: {
-                            ...prev.settings.passwordPolicy,
-                            requireSpecialChars: val,
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="switch-label">
+                    Numbers{" "}
+                    <Switch
+                      checked={iData.settings.passwordPolicy.requireNumbers}
+                      onChange={(val) =>
+                        setIData((prev) => ({
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            passwordPolicy: {
+                              ...prev.settings.passwordPolicy,
+                              requireNumbers: val,
+                            },
                           },
-                        },
-                      }))
-                    }
-                  />
-                </label>
-              </Col>
-            </Row>
+                        }))
+                      }
+                    />
+                  </label>
+                  <label className="switch-label">
+                    Special Chars{" "}
+                    <Switch
+                      checked={iData.settings.passwordPolicy.requireSpecialChars}
+                      onChange={(val) =>
+                        setIData((prev) => ({
+                          ...prev,
+                          settings: {
+                            ...prev.settings,
+                            passwordPolicy: {
+                              ...prev.settings.passwordPolicy,
+                              requireSpecialChars: val,
+                            },
+                          },
+                        }))
+                      }
+                    />
+                  </label>
+                </Col>
+              </Row>
 
-            <Divider>Subscription</Divider>
-            <Row gutter={[16, 8]}>
-              <Col span={8}>
-                <CustomSelect
-                  label="Plan"
-                  value={iData.subscription.plan}
-                  onChange={(val) =>
-                    handleChange("subscription", "plan", val?.target.value)
-                  }
-                  options={[
-                    { value: "FREE", label: "Free" },
-                    { value: "PRO", label: "Pro" },
-                    { value: "ENTERPRISE", label: "Enterprise" },
-                  ]}
-                  error={errors.subscriptionPlan}
-                  required
-                />
-              </Col>
-              <Col span={8}>
-                <MyInput
-                  label="Start Date"
-                  type="date"
-                  value={iData.subscription.startDate}
-                  onChange={(e) =>
-                    handleChange("subscription", "startDate", e.target.value)
-                  }
-                />
-              </Col>
-              <Col span={8}>
-                <MyInput
-                  label="End Date"
-                  type="date"
-                  value={iData.subscription.endDate}
-                  onChange={(e) =>
-                    handleChange("subscription", "endDate", e.target.value)
-                  }
-                />
-              </Col>
-            </Row>
-            <Row>
-              <Col span={8}>
-                <label>Auto Renew</label>
-                <Switch
-                  checked={iData.subscription.autoRenew}
-                  onChange={(val) =>
-                    handleChange("subscription", "autoRenew", val)
-                  }
-                />
-              </Col>
-            </Row>
+              <Divider>Subscription</Divider>
+              <Row gutter={[16, 8]}>
+                <Col span={8}>
+                  <CustomSelect
+                    label="Plan"
+                    value={iData.subscription.plan}
+                    onChange={(val) =>
+                      handleChange("subscription", "plan", val?.target.value)
+                    }
+                    options={[
+                      { value: "FREE", label: "Free" },
+                      { value: "PRO", label: "Pro" },
+                      { value: "ENTERPRISE", label: "Enterprise" },
+                    ]}
+                    error={errors.subscriptionPlan}
+                    required
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="Start Date"
+                    type="date"
+                    value={iData.subscription.startDate}
+                    onChange={(e) =>
+                      handleChange("subscription", "startDate", e.target.value)
+                    }
+                  />
+                </Col>
+                <Col span={8}>
+                  <MyInput
+                    label="End Date"
+                    type="date"
+                    value={iData.subscription.endDate}
+                    onChange={(e) =>
+                      handleChange("subscription", "endDate", e.target.value)
+                    }
+                  />
+                </Col>
+              </Row>
+              <Row>
+                <Col span={8}>
+                  <label className="switch-label">
+                    Auto Renew{" "}
+                    <Switch
+                      checked={iData.subscription.autoRenew}
+                      onChange={(val) =>
+                        handleChange("subscription", "autoRenew", val)
+                      }
+                    />
+                  </label>
+                </Col>
+              </Row>
+            </div>
           </TabPane>
 
           {/* 3️⃣ Auth Connections */}
           <TabPane tab="Auth Connections" key="auth">
-            <Button
-              type="dashed"
-              icon={<PlusOutlined />}
-              onClick={() =>
-                setIData((prev) => ({
-                  ...prev,
-                  authenticationConnections: [
-                    ...(prev.authenticationConnections || []),
-                    { connectionType: "", issuerUrl: "", directoryId: "", audience: "", isActive: true },
-                  ],
-                }))
-              }
-              style={{ marginBottom: 12 }}
-            >
-              Add Connection
-            </Button>
+            <div className="drawer-tab-content pt-2">
+              <Button
+                type="dashed"
+                icon={<PlusOutlined />}
+                onClick={() =>
+                  setIData((prev) => ({
+                    ...prev,
+                    authenticationConnections: [
+                      ...(prev.authenticationConnections || []),
+                      { connectionType: "", issuerUrl: "", directoryId: "", audience: "", isActive: true },
+                    ],
+                  }))
+                }
+                className="tenant-add-connection-btn"
+              >
+                Add Connection
+              </Button>
 
-            {(iData.authenticationConnections?.length ? iData.authenticationConnections : [{}]).map((conn, idx) => {
-              const connection = {
-                connectionType: "",
-                issuerUrl: "",
-                directoryId: "",
-                audience: "",
-                isActive: true,
-                ...conn,
-              };
+              {(iData.authenticationConnections?.length ? iData.authenticationConnections : [{}]).map((conn, idx) => {
+                const connection = {
+                  connectionType: "",
+                  issuerUrl: "",
+                  directoryId: "",
+                  audience: "",
+                  isActive: true,
+                  ...conn,
+                };
 
-              return (
-                <div
-                  key={idx}
-                  style={{
-                    border: "1px solid #ddd",
-                    padding: 12,
-                    marginTop: 12,
-                    borderRadius: 6,
-                  }}
-                >
+                return (
                   <div
-                    className="d-flex justify-content-end align-items-center mb-2"
-                    style={{ gap: "8px" }}
+                    key={idx}
+                    className="auth-connection-card"
                   >
-                    {iData.authenticationConnections?.length > 0 && (
-                      <Button
-                        danger
-                        icon={<MinusCircleOutlined />}
-                        onClick={() =>
-                          setIData((prev) => ({
-                            ...prev,
-                            authenticationConnections: prev.authenticationConnections.filter((_, i) => i !== idx),
-                          }))
-                        }
-                      >
-                        Remove
-                      </Button>
-                    )}
+                    <div className="d-flex justify-content-end align-items-center mb-2 auth-connection-actions">
+                      {iData.authenticationConnections?.length > 0 && (
+                        <Button
+                          danger
+                          icon={<MinusCircleOutlined />}
+                          onClick={() =>
+                            setIData((prev) => ({
+                              ...prev,
+                              authenticationConnections: prev.authenticationConnections.filter((_, i) => i !== idx),
+                            }))
+                          }
+                        >
+                          Remove
+                        </Button>
+                      )}
 
-                    <Switch
-                      checked={connection.isActive}
-                      onChange={(val) => {
-                        const newCons = [...(iData.authenticationConnections || [])];
-                        newCons[idx] = { ...connection, isActive: val };
-                        setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
-                      }}
-                    />
+                      <Switch
+                        checked={connection.isActive}
+                        onChange={(val) => {
+                          const newCons = [...(iData.authenticationConnections || [])];
+                          newCons[idx] = { ...connection, isActive: val };
+                          setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                        }}
+                      />
+                    </div>
+
+                    <Row gutter={[16, 8]}>
+                      <Col span={12}>
+                        <CustomSelect
+                          label="Connection Type"
+                          value={connection.connectionType}
+                          onChange={(value) => {
+                            const newCons = [...(iData.authenticationConnections || [])];
+                            newCons[idx] = { ...connection, connectionType: value?.target.value };
+                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                          }}
+                          options={[
+                            { label: "Entra ID (Azure AD)", value: "Entra ID (Azure AD)" },
+                            { label: "Azure B2C", value: "Azure B2C" },
+                          ]}
+                        />
+                      </Col>
+
+                      <Col span={12}>
+                        <MyInput
+                          label="Issuer URL"
+                          placeholder="https://login.microsoftonline.com/{tid}/v2.0"
+                          value={connection.issuerUrl}
+                          onChange={(e) => {
+                            const newCons = [...(iData.authenticationConnections || [])];
+                            newCons[idx] = { ...connection, issuerUrl: e.target.value };
+                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                          }}
+                        />
+                      </Col>
+
+                      <Col span={12}>
+                        <MyInput
+                          label="Directory Id"
+                          value={connection.directoryId}
+                          onChange={(e) => {
+                            const newCons = [...(iData.authenticationConnections || [])];
+                            newCons[idx] = { ...connection, directoryId: e.target.value };
+                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                          }}
+                        />
+                      </Col>
+
+                      <Col span={12}>
+                        <MyInput
+                          label="Audience"
+                          value={connection.audience}
+                          placeholder="{clientId}"
+                          onChange={(e) => {
+                            const newCons = [...(iData.authenticationConnections || [])];
+                            newCons[idx] = { ...connection, audience: e.target.value };
+                            setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
+                          }}
+                        />
+                      </Col>
+                    </Row>
                   </div>
-
-                  <Row gutter={[16, 8]}>
-                    <Col span={12}>
-                      <CustomSelect
-                        label="Connection Type"
-                        value={connection.connectionType}
-                        onChange={(value) => {
-                          const newCons = [...(iData.authenticationConnections || [])];
-                          newCons[idx] = { ...connection, connectionType: value?.target.value };
-                          setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
-                        }}
-                        options={[
-                          { label: "Entra ID (Azure AD)", value: "Entra ID (Azure AD)" },
-                          { label: "Azure B2C", value: "Azure B2C" },
-                        ]}
-                      />
-                    </Col>
-
-                    <Col span={12}>
-                      <MyInput
-                        label="Issuer URL"
-                        placeholder="https://login.microsoftonline.com/{tid}/v2.0"
-                        value={connection.issuerUrl}
-                        onChange={(e) => {
-                          const newCons = [...(iData.authenticationConnections || [])];
-                          newCons[idx] = { ...connection, issuerUrl: e.target.value };
-                          setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
-                        }}
-                      />
-                    </Col>
-
-                    <Col span={12}>
-                      <MyInput
-                        label="Directory Id"
-                        value={connection.directoryId}
-                        onChange={(e) => {
-                          const newCons = [...(iData.authenticationConnections || [])];
-                          newCons[idx] = { ...connection, directoryId: e.target.value };
-                          setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
-                        }}
-                      />
-                    </Col>
-
-                    <Col span={12}>
-                      <MyInput
-                        label="Audience"
-                        value={connection.audience}
-                        placeholder="{clientId}"
-                        onChange={(e) => {
-                          const newCons = [...(iData.authenticationConnections || [])];
-                          newCons[idx] = { ...connection, audience: e.target.value };
-                          setIData((prev) => ({ ...prev, authenticationConnections: newCons }));
-                        }}
-                      />
-                    </Col>
-                  </Row>
-                </div>
-              );
-            })}
+                );
+              })}
+            </div>
           </TabPane>
 
         </Tabs>

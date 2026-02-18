@@ -1,0 +1,163 @@
+.costs-fees-container {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+}
+
+.costs-list {
+    padding: 1.5rem;
+    background-color: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+    margin: 1.5rem;
+    max-height: 80.5vh;
+    height: 80.5vh;
+    overflow-y: auto;
+}
+
+.costs-list::-webkit-scrollbar {
+    display: none;
+    /* Chrome, Safari and Opera */
+}
+
+.cost-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 12px 16px;
+    margin-bottom: 12px;
+    border: 1px solid #f1f5f9;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.02);
+    transition: all 0.3s ease;
+}
+
+.cost-card:hover {
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+    border-color: #e2e8f0;
+}
+
+/* Override MyInput styles for a more compact look in cards if needed */
+.cost-card .my-input-wrapper {
+    margin-bottom: 0;
+}
+
+.cost-card .my-input-label {
+    font-size: 10px;
+    letter-spacing: 0.08em;
+    text-transform: none;
+}
+
+/* Rely on standard MyInput styles for cleaner look and feel */
+.cost-card .my-input-container {
+    background: #f8fafc;
+}
+
+.input-group {
+    display: flex;
+    flex-direction: column;
+}
+
+.cost-input-label {
+    font-size: 10px;
+    font-weight: 700;
+    color: #94a3b8;
+    margin-bottom: 2px;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+}
+
+.cost-name-input {
+    font-size: 15px;
+    font-weight: 600;
+    color: #1a1a1a;
+    padding: 0;
+    height: 24px;
+}
+
+.currency-symbol {
+    font-size: 18px;
+    font-weight: 700;
+    color: #215E97;
+    margin-right: 1px;
+}
+
+.cost-amount-input {
+    font-size: 18px;
+    font-weight: 700;
+    color: #215E97;
+    text-align: right;
+    padding: 0;
+    width: auto;
+    max-width: 120px;
+    height: 24px;
+}
+
+.delete-icon-col {
+    display: flex;
+    justify-content: center;
+    padding-top: 30px;
+    /* Aligned with standard input field vertical center when label is present */
+}
+
+.cost-delete-icon {
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+}
+
+.cost-delete-icon:hover {
+    color: #ff4d4f;
+    transform: scale(1.1);
+}
+
+.euro-label {
+    font-weight: 700;
+    color: #215E97;
+    margin-left: 8px;
+    font-size: 16px;
+}
+
+.empty-costs-state {
+    padding: 60px 0;
+    text-align: center;
+}
+
+.empty-text {
+    color: #94a3b8;
+    font-weight: 600;
+    font-size: 15px;
+}
+
+.costs-footer {
+    padding: 12px 16px;
+    /* Match cost-card padding */
+    margin-top: auto;
+    border-top: 1px solid #f1f5f9;
+}
+
+.total-cost-column {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 4px;
+}
+
+.total-label {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1a1a1a;
+}
+
+.costs-footer .amount-col {
+    display: flex;
+    justify-content: flex-end;
+}
+
+.total-amount {
+    font-size: 18px;
+    font-weight: 800;
+    color: #1a1a1a;
+}
+
+.text-right {
+    text-align: right;
+}

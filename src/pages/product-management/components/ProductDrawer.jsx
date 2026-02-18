@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from "react";
-import { Button, Space, Switch, Divider } from "antd";
-import { SaveOutlined, CloseOutlined, PlusOutlined } from "@ant-design/icons";
+import { Button, Space, Switch, Divider, Table, Tag } from "antd";
+import { SaveOutlined, CloseOutlined, PlusOutlined, EditOutlined } from "@ant-design/icons";
 import MyInput from "../../../component/common/MyInput";
 import CustomSelect from "../../../component/common/CustomSelect";
 import MyDatePicker from "../../../component/common/MyDatePicker";
 import { convertSandToEuro } from "../../../utils/Utilities";
+import dayjs from "dayjs";
 
 const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) => {
   const initialFormState = {
@@ -53,8 +54,8 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
             : "",
         nonMemberPrice: product.currentPricing?.nonMemberPrice ? convertSandToEuro(product.currentPricing.nonMemberPrice) : "",
         currency: product.currentPricing?.currency || "",
-        effectiveFrom: product.currentPricing?.effectiveFrom || null,
-        effectiveTo: product.currentPricing?.effectiveTo || null,
+        effectiveFrom: product.currentPricing?.effectiveFrom ? dayjs(product.currentPricing.effectiveFrom) : null,
+        effectiveTo: product.currentPricing?.effectiveTo ? dayjs(product.currentPricing.effectiveTo) : null,
       });
     } else if (isProduct) {
       // Set default values for new product
@@ -96,6 +97,86 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
       case "GBP": return "£";
       default: return "";
     }
+  };
+
+  // History table columns with formatting
+  const getHistoryColumns = () => {
+    const baseColumns = [
+      {
+        title: "Currency",
+        dataIndex: "currency",
+        key: "currency",
+        render: (currency) => currency?.toUpperCase() || "-"
+      },
+    ];
+
+    // Add price columns based on product type
+    if (productType?.name === "Membership") {
+      baseColumns.push({
+        title: "Price",
+        dataIndex: "price",
+        key: "price",
+        render: (price, record) => {
+          if (!price) return "-";
+          const formattedPrice = convertSandToEuro(price);
+          const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+          return `${symbol}${formattedPrice}.00`;
+        }
+      });
+    } else {
+      baseColumns.push(
+        {
+          title: "Member Price",
+          dataIndex: "memberPrice",
+          key: "memberPrice",
+          render: (price, record) => {
+            if (!price) return "-";
+            const formattedPrice = convertSandToEuro(price);
+            const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+            return `${symbol}${formattedPrice}.00`;
+          }
+        },
+        {
+          title: "Non-Member Price",
+          dataIndex: "nonMemberPrice",
+          key: "nonMemberPrice",
+          render: (price, record) => {
+            if (!price) return "-";
+            const formattedPrice = convertSandToEuro(price);
+            const symbol = record.currency === "EUR" ? "€" : record.currency === "USD" ? "$" : "";
+            return `${symbol}${formattedPrice}.00`;
+          }
+        }
+      );
+    }
+
+    // Add date and status columns
+    baseColumns.push(
+      {
+        title: "Effective From",
+        dataIndex: "effectiveFrom",
+        key: "effectiveFrom",
+        render: (date) => date ? new Date(date).toLocaleDateString() : "-"
+      },
+      {
+        title: "Effective To",
+        dataIndex: "effectiveTo",
+        key: "effectiveTo",
+        render: (date) => date ? new Date(date).toLocaleDateString() : "-"
+      },
+      {
+        title: "Status",
+        dataIndex: "status",
+        key: "status",
+        render: (status) => (
+          <Tag color={status === "Active" ? "green" : "red"}>
+            {status}
+          </Tag>
+        )
+      }
+    );
+
+    return baseColumns;
   };
 
   const validate = (e) => {
@@ -349,6 +430,41 @@ const ProductForm = ({ product, productType, onClose, onSubmit, hidePricing }) =
           </span>
         </div>
       </div>
+
+      {/* Pricing History - only show for products with pricing */}
+      {isProduct && product?.pricingHistory && (
+        <>
+          <Divider orientation="left">Pricing History</Divider>
+          <Table
+            columns={getHistoryColumns()}
+            dataSource={product?.pricingHistory || []}
+            rowKey="_id"
+            size="small"
+            pagination={false}
+            scroll={{ x: "max-content" }}
+            components={{
+              header: {
+                cell: (props) => {
+                  const { children, ...restProps } = props;
+                  return (
+                    <th
+                      {...restProps}
+                      style={{
+                        backgroundColor: '#215e97',
+                        ...restProps.style
+                      }}
+                    >
+                      <div style={{ color: '#fff' }}>
+                        {children}
+                      </div>
+                    </th>
+                  );
+                },
+              },
+            }}
+          />
+        </>
+      )}
     </form>
   );
 };

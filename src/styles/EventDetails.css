@@ -1,0 +1,135 @@
+.event-details-page {
+    padding: 24px;
+    background-color: #f5f5f5;
+    height: calc(100vh - 64px);
+    overflow-y: auto;
+}
+
+.event-details-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 8px;
+}
+
+.back-link {
+    color: #215E97;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-weight: 500;
+}
+
+/* Attendee Section */
+.attendee-section {
+    background-color: #ffffff;
+    border-radius: 8px;
+    padding: 24px 0;
+    margin-top: 16px;
+    margin-left: 34px;
+    margin-right: 34px;
+    box-shadow: 0 2px 6px rgba(0, 0, 0, 0.04);
+}
+
+.form-section.compact {
+    padding: 16px !important;
+    margin-bottom: 16px !important;
+}
+
+.form-section.compact .section-title {
+    margin-bottom: 12px !important;
+}
+
+.attendee-filters {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 16px;
+    /* Reduced from 20px */
+    gap: 16px;
+    padding: 0 34px;
+}
+
+.filter-group {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.search-input {
+    width: 300px;
+}
+
+/* Attendee Info Column */
+.attendee-info-cell {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+}
+
+.attendee-avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    background-color: #f0f0f0;
+}
+
+.attendee-name {
+    font-weight: 600;
+    color: #262626;
+}
+
+/* CPD Info Column */
+.cpd-info-cell {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.cpd-eligible-icon {
+    color: #52c41a;
+    font-size: 16px;
+}
+
+.cpd-status {
+    font-size: 12px;
+    font-weight: 500;
+}
+
+.cpd-status.earned {
+    color: #52c41a;
+}
+
+.cpd-status.pending {
+    color: #faad14;
+}
+
+/* Attendance Columns */
+.attendance-header {
+    text-align: center;
+    font-size: 11px;
+    color: #8c8c8c;
+}
+
+.attendance-checkbox {
+    display: flex;
+    justify-content: center;
+}
+
+.action-buttons-group {
+    display: flex;
+    gap: 12px;
+}
+
+.hide-scrollbar::-webkit-scrollbar,
+.hide-scroll-webkit::-webkit-scrollbar {
+    display: none;
+}
+
+.hide-scrollbar,
+.hide-scroll-webkit {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+}

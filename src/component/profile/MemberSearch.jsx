@@ -569,7 +569,7 @@ const MemberSearch = ({
         onSelect={handleSelect}
         value={searchValue}
         onChange={handleInputChange}
-        dropdownMatchSelectWidth={true}
+        popupMatchSelectWidth={true}
         notFoundContent={null}
         dropdownStyle={{
           maxHeight: "400px",

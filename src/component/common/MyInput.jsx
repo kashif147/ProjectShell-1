@@ -18,6 +18,7 @@ const MyInput = ({
   extra = null,
   onBlur,
   maxLength,
+  prefix,
 }) => {
   const dispatch = useDispatch();
   const { countriesData, loadingC } = useSelector((state) => state.countries);
@@ -82,7 +83,7 @@ const MyInput = ({
   };
 
   const showError = hasError || internalError;
-  
+
   useEffect(() => {
     if (type === "mobile") {
       if (!value) {
@@ -130,7 +131,7 @@ const MyInput = ({
       setMobileNumber(number);
     }
   }, [type, value]);
-  
+
   return (
     <div className="my-input-wrapper">
       <div className="d-flex justify-content-between">
@@ -151,8 +152,9 @@ const MyInput = ({
 
       <div
         className={`my-input-container ${showError ? "error" : ""} ${isFocused ? "focused" : ""
-          }`}
+          } ${disabled ? "disabled" : ""} ${type === "textarea" ? "textarea-container" : ""}`}
       >
+        {prefix && <div className="my-input-prefix">{prefix}</div>}
         {type === "textarea" ? (
           <textarea {...commonProps} rows={rows} />
         ) : type === "mobile" ? (

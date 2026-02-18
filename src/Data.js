@@ -5896,7 +5896,7 @@ export const paymentTypes = [
   { label: "Cheque", value: "Cheque" },
   { label: "Bank Transfer", value: "Bank Transfer" },
   { label: "Standing Order", value: "Standing Order" },
-  { label: "Deduction", value: "Deduction" },
+  { label: "deduction", value: "deduction" },
   { label: "Demand Draft", value: "Demand Draft" },
   { label: "Direct Debit", value: "Direct Debit" },
   { label: "Online Payment", value: "Online Payment" },

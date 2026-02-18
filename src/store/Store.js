@@ -14,6 +14,7 @@ import contactTypeReducer from "../features/ContactTypeSlice";
 import contactReducer from "../features/ContactSlice";
 import menuLblReducer from "../features/MenuLblSlice";
 import applicationReducer from "../features/ApplicationSlice";
+import applicationWithFilterReducer from "../features/applicationwithfilterslice";
 import applicationDetailsReducer from "../features/ApplicationDetailsSlice";
 import tenantReducer from "../features/TenantSlice";
 import userReducer from "../features/UserSlice";
@@ -43,11 +44,16 @@ import profileSubscriptionReducer from "../features/subscription/profileSubscrip
 import batchMemberReducer from '../features/profiles/batchMemberSlice';
 import getCornMarketBatchByIdReducer from "../features/profiles/CornMarketBatchByIdSlice";
 import accountReducer from "../features/AccountSlice";
+import notificationReducer from "../features/NotificationSlice";
+import batchDetailsReducer from "../features/profiles/BatchDetailsSlice";
+import templetefiltrsclumnapiReducer from "../features/templete/templetefiltrsclumnapi";
 
 const store = configureStore({
   reducer: {
     subscription: subscriptionReducer,
     account: accountReducer,
+    notification: notificationReducer,
+    batchDetails: batchDetailsReducer,
     cornMarketBatchById: getCornMarketBatchByIdReducer,
     profileSubscription: profileSubscriptionReducer,
     auth: authReducer, // Authentication state
@@ -67,6 +73,7 @@ const store = configureStore({
     contact: contactReducer,
     menuLbl: menuLblReducer,
     applications: applicationReducer,
+    applicationWithFilter: applicationWithFilterReducer,
     applicationDetails: applicationDetailsReducer,
     hierarchicalDataByLocation: hierarchicalDataByLocationReducer,
     tenants: tenantReducer,
@@ -87,6 +94,7 @@ const store = configureStore({
     getTemplate: getTemplateReducer,
     templeteDetails: templeteDetailsReducer,
     transferRequestHistory: transferRequestHistoryReducer,
+    templetefiltrsclumnapi: templetefiltrsclumnapiReducer,
 
   },
 });

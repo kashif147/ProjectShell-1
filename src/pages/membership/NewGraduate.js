@@ -17,7 +17,7 @@ function NewGraduate() {
 
   const { columns } = useTableColumns();
   // const tableColumns = columns["NewGraduate"];
- const tableColumnsRaw = columns["CornMarketRewards"];
+  const tableColumnsRaw = columns["CornMarketRewards"];
 
   const tableColumns = tableColumnsRaw.map(col => {
     if (col.title === "Batch Name") {
@@ -32,11 +32,12 @@ function NewGraduate() {
                 batchName: text,
                 batchId: record?.key,
                 batchStatus: record?.batchStatus,
+                search: "NewGraduate",
               }}
               style={{ color: "inherit", textDecoration: "none" }}
               onClick={() => {
                 if (record?._original?._id) {
-                    dispatch(getCornMarketBatchById(record._original._id));
+                  dispatch(getCornMarketBatchById(record._original._id));
                 }
               }}
             >
@@ -60,7 +61,7 @@ function NewGraduate() {
   }, [dispatch]);
   useEffect(() => {
     let data = batchesData?.data?.batches?.results
-    
+
   }, [batchesData])
   // Format the batches data for the table
   const formatTableData = () => {

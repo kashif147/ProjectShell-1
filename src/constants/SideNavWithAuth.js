@@ -470,28 +470,101 @@ export const reportItems = [
   ),
 ];
 
-export const issuesItems = [
+export const casesItems = [
   createMenuItem(
-    "Issues",
-    <FaExclamationTriangle />,
-    "Issues",
+    "Dashboard",
+    <FaChartPie />,
+    "Dashboard",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
   createMenuItem(
-    "Cases",
+    "All cases",
     <FaFolderOpen />,
-    "Cases",
-    ["crm:member:read", "crm:member:list"],
+    "All cases",
+    ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Assigned to me",
+    <FaUserShield />,
+    "Assigned to me",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Reports setting",
+    <FaWrench />,
+    "Reports setting",
+    ["role:read", "role:write"],
+    ["SU", "GS"]
+  ),
+];
+
+export const issuesItems = [
+  createMenuItem(
+    "Dashboard",
+    <FaChartPie />,
+    "Dashboard",
+    [], // No permission restrictions
+    [] // No role restrictions
+  ),
+  createMenuItem(
+    "All Issues",
+    <FaFolderOpen />,
+    "All Issues",
+    [], // No permission restrictions
+    [] // No role restrictions
+  ),
+  createMenuItem(
+    "Assigned to me",
+    <FaUserShield />,
+    "Assigned to me",
+    [], // No permission restrictions
+    [] // No role restrictions
+  ),
+  createMenuItem(
+    "Reports setting",
+    <FaWrench />,
+    "Reports setting",
+    [], // No permission restrictions
+    [] // No role restrictions
   ),
 ];
 
 export const eventsItems = [
   createMenuItem(
-    "Manage Events",
+    "Dashboard",
+    <FaChartPie />,
+    "Dashboard",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Events",
     <FaCalendarAlt />,
-    "Manage Events",
+    "Events",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Attendees",
+    <FaUsers />,
+    "Attendees",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Reporting",
+    <FaChartLine />,
+    "Reporting",
+    ["crm:access"],
+    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+  ),
+  createMenuItem(
+    "Settings",
+    <FaWrench />,
+    "Settings",
     ["crm:access"],
     ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   ),
@@ -546,6 +619,7 @@ const SideNavWithAuth = {
   subscriptionItems,
   configurationItems,
   reportItems,
+  casesItems,
   issuesItems,
   eventsItems,
   filterMenuItemsByAuth,

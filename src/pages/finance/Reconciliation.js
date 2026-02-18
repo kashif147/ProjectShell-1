@@ -104,11 +104,13 @@ const Reconciliation = () => {
             width: "100%",
             transition: "all 0.3s ease",
           }}
-          bodyStyle={{
-            display: "flex",
-            justifyContent: "space-between",
-            alignItems: "center",
-            padding: "16px 18px",
+          styles={{
+            body: {
+              display: "flex",
+              justifyContent: "space-between",
+              alignItems: "center",
+              padding: "16px 18px",
+            },
           }}
         >
           <div>

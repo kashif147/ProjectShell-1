@@ -97,7 +97,7 @@ import { getBookmarks } from "../features/templete/BookmarkActions";
 function Configuratin() {
   const dispatch = useDispatch();
   const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
-    (state) => state.bookmarks
+    (state) => state.bookmarks,
   );
   const insertDataFtn = async (
     url,
@@ -105,13 +105,14 @@ function Configuratin() {
     successNotification,
     failureNotification,
     callback,
-    isCoum
+    isCoum,
   ) => {
     const token = localStorage.getItem("token");
     debugger;
     const baseUrl = isCoum ? process.env.REACT_APP_CUMM : baseURL;
 
     try {
+      setButtonLoading((prev) => ({ ...prev, insert: true }));
       const response = await axios.post(`${baseUrl}${url}`, data, {
         headers: {
           "Content-Type": "application/json",
@@ -141,6 +142,8 @@ function Configuratin() {
       // ✅ Trigger failure alert properly
       MyAlert("error", failureNotification, errMsg); // Remove return here
       return null; // Always return something
+    } finally {
+      setButtonLoading((prev) => ({ ...prev, insert: false }));
     }
   };
   useEffect(() => {
@@ -220,6 +223,7 @@ function Configuratin() {
           <AiFillDelete
             size={16}
             style={{ cursor: "pointer" }}
+            spin={buttonLoading.delete}
             onClick={() =>
               MyConfirm({
                 title: "Confirm Deletion",
@@ -243,7 +247,7 @@ function Configuratin() {
     data1,
     callback,
     msg = "updated successfully",
-    isCoum = false
+    isCoum = false,
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -255,6 +259,7 @@ function Configuratin() {
       // const { id, ...finalData } = data1;
       debugger;
 
+      setButtonLoading((prev) => ({ ...prev, update: true }));
       const response = await axios.put(`${baseUrl}${finalEndPoint}`, data1, {
         headers: {
           Authorization: `Bearer ${token}`,
@@ -279,9 +284,11 @@ function Configuratin() {
       MyAlert(
         "error",
         "Update failed",
-        error.response?.data?.message || error.message
+        error.response?.data?.message || error.message,
       );
       return null; // ← Add this
+    } finally {
+      setButtonLoading((prev) => ({ ...prev, update: false }));
     }
   };
   const updateCountiesFtn = async (
@@ -289,7 +296,7 @@ function Configuratin() {
     endPoint,
     data1,
     callback,
-    msg = "updated successfully"
+    msg = "updated successfully",
   ) => {
     try {
       const token = localStorage.getItem("token");
@@ -309,7 +316,7 @@ function Configuratin() {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
       console.log("Update Response:", response);
       if (response?.status === 200) {
@@ -332,7 +339,7 @@ function Configuratin() {
     callback,
     showAlert = true,
     isCoum = false,
-    refreshData = true // New parameter
+    refreshData = true, // New parameter
   ) => {
     const token = localStorage.getItem("token");
 
@@ -353,6 +360,7 @@ function Configuratin() {
     if (body) config.data = JSON.stringify(body);
 
     try {
+      setButtonLoading((prev) => ({ ...prev, delete: true }));
       console.log("Making DELETE request...");
       const response = await axios.request(config);
       console.log("DELETE successful");
@@ -390,6 +398,7 @@ function Configuratin() {
 
       return null;
     } finally {
+      setButtonLoading((prev) => ({ ...prev, delete: false }));
       // ✅ Ensure modal is always destroyed (double safety)
       setTimeout(() => Modal.destroyAll(), 100);
     }
@@ -476,6 +485,7 @@ function Configuratin() {
           />
           <AiFillDelete
             size={16}
+            spin={buttonLoading.delete}
             onClick={() =>
               MyConfirm({
                 title: "Confirm Deletion",
@@ -486,7 +496,7 @@ function Configuratin() {
                     null, // No body needed when using URL parameter
                     () => dispatch(getBookmarks()), // Fixed callback - pass function reference
                     true, // showAlert
-                    true // isCoum
+                    true, // isCoum
                   );
                 },
               })
@@ -505,7 +515,7 @@ function Configuratin() {
 
     return bookmarks.filter(
       (b) =>
-        b.key?.toLowerCase().includes(s) || b.label?.toLowerCase().includes(s)
+        b.key?.toLowerCase().includes(s) || b.label?.toLowerCase().includes(s),
     );
   }, [bookmarkSearch, bookmarks]);
 
@@ -593,17 +603,17 @@ function Configuratin() {
   const { countriesData } = useSelector((state) => state.countries);
 
   const { lookupsTypes, lookupsTypesloading } = useSelector(
-    (state) => state.lookupsTypes
+    (state) => state.lookupsTypes,
   );
   const { regionTypes, regionTypesLoading } = useSelector(
-    (state) => state.regionTypes
+    (state) => state.regionTypes,
   );
   const { contactTypes, contactTypesloading, error } = useSelector(
-    (state) => state.contactType
+    (state) => state.contactType,
   );
   const { contacts, contactsLoading } = useSelector((state) => state.contact);
   const { loadingC: countriesLoading } = useSelector(
-    (state) => state.countries
+    (state) => state.countries,
   );
   const [contactTypelookup, setcontactTypelookup] = useState([]);
   useEffect(() => {
@@ -695,6 +705,11 @@ function Configuratin() {
     Sections: false,
     Bookmarks: false,
   });
+  const [buttonLoading, setButtonLoading] = useState({
+    insert: false,
+    update: false,
+    delete: false,
+  });
   function transformData(originalData) {
     return originalData.map((item) => ({
       id: item._id,
@@ -753,7 +768,7 @@ function Configuratin() {
       setdata((prevState) => ({
         ...prevState,
         Solicitors: contacts.filter(
-          (item) => item?.contactTypeId?.contactType === "Solicitors"
+          (item) => item?.contactTypeId?.contactType === "Solicitors",
         ),
       }));
     }
@@ -799,7 +814,7 @@ function Configuratin() {
 
     const filteredData = lookupKeys.reduce((acc, key) => {
       acc[key] = lookups.filter(
-        (item) => item?.lookuptypeId?.key === key // ✅ filter by key instead of ID
+        (item) => item?.lookuptypeId?.key === key, // ✅ filter by key instead of ID
       );
       return acc;
     }, {});
@@ -838,7 +853,7 @@ function Configuratin() {
       setdata((prevState) => ({
         ...prevState,
         Stations: regions.filter(
-          (item) => item.RegionTypeID === "671822c6a0072a28aab883e9"
+          (item) => item.RegionTypeID === "671822c6a0072a28aab883e9",
         ),
       }));
     }
@@ -1306,7 +1321,7 @@ function Configuratin() {
         }
         return acc;
       },
-      {}
+      {},
     );
 
     setdrawerIpnuts((prev) => ({
@@ -1346,7 +1361,7 @@ function Configuratin() {
   const lookupsTypesSelect = sortArray(
     transformLookupTypes(lookupsTypes),
     "label",
-    "asc"
+    "asc",
   );
   const resetCounteries = (drawer, callback) => {
     setdrawerIpnuts((prevState) => ({
@@ -1397,7 +1412,7 @@ function Configuratin() {
     }));
   };
   const addIdKeyToLookup = (idValue, drawer) => {
-    disableFtn(false)
+    disableFtn(false);
     setdrawerIpnuts((prev) => {
       if (!prev?.[drawer]) return prev; // Ensure the key exists in state
 
@@ -1548,7 +1563,7 @@ function Configuratin() {
                   await deleteFtn(
                     `countries/${record?._id}`,
                     null,
-                    () => dispatch(getAllLookups()) // Use getAllLookups to refresh
+                    () => dispatch(getAllLookups()), // Use getAllLookups to refresh
                   );
                 },
               });
@@ -1620,7 +1635,7 @@ function Configuratin() {
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
                   await deleteFtn(`countries/${record?._id}`, () =>
-                    dispatch(fetchCountries())
+                    dispatch(fetchCountries()),
                   );
                 },
               });
@@ -1954,7 +1969,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                   dispatch(getAllLookups());
                 },
@@ -2022,7 +2037,7 @@ function Configuratin() {
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
                   await deleteFtn(`contact-types/${record?._id}`, null, () =>
-                    dispatch(getContactTypes())
+                    dispatch(getContactTypes()),
                   );
                 },
               });
@@ -2155,7 +2170,7 @@ function Configuratin() {
                 message: "Do You Want To Delete This Item?",
                 onConfirm: async () => {
                   await deleteFtn(`${baseURL}/RegionType`, record?._id, () =>
-                    dispatch(getAllRegionTypes())
+                    dispatch(getAllRegionTypes()),
                   );
                 },
               })
@@ -2188,8 +2203,8 @@ function Configuratin() {
         new Set(
           (lookups || [])
             .map((item) => item?.lookuptypeId?.lookuptype)
-            .filter(Boolean)
-        )
+            .filter(Boolean),
+        ),
       ).map((value) => ({ text: value, value })),
 
       // Perform case-insensitive filtering
@@ -2369,7 +2384,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2446,7 +2461,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2513,7 +2528,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2579,7 +2594,7 @@ function Configuratin() {
               IsUpdateFtn(
                 "SpokenLanguages",
                 !IsUpdateFtn?.SpokenLanguages,
-                record
+                record,
               );
               addIdKeyToLookup(record?._id, "SpokenLanguages");
             }}
@@ -2594,7 +2609,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2671,7 +2686,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2748,7 +2763,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2825,7 +2840,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2900,7 +2915,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -2964,7 +2979,7 @@ function Configuratin() {
               IsUpdateFtn(
                 "CorrespondenceType",
                 !IsUpdateFtn?.CorrespondenceType,
-                record
+                record,
               );
               addIdKeyToLookup(record?._id, "CorrespondenceType");
             }}
@@ -2979,7 +2994,7 @@ function Configuratin() {
                   deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   ),
               })
             }
@@ -3062,7 +3077,7 @@ function Configuratin() {
                   deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -3146,7 +3161,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -3226,7 +3241,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -3309,7 +3324,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -3384,7 +3399,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -3459,7 +3474,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -3716,7 +3731,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -4008,7 +4023,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -4212,7 +4227,7 @@ function Configuratin() {
                   await deleteFtn(
                     `lookup/`,
                     { id: record?._id },
-                    dispatch(getAllLookups())
+                    dispatch(getAllLookups()),
                   );
                 },
               })
@@ -4468,7 +4483,7 @@ function Configuratin() {
           item.Parentlookup.lookupname.toLowerCase().includes(searchValue)) ||
           (item.Parentlookup.DisplayName &&
             item.Parentlookup.DisplayName.toLowerCase().includes(
-              searchValue
+              searchValue,
             )) ||
           (item.Parentlookupid &&
             item.Parentlookupid.toString()
@@ -4493,11 +4508,11 @@ function Configuratin() {
   const getRegionNameForBranch = useCallback(
     (parentLookupId) => {
       const region = groupedLookups?.Region?.find(
-        (r) => r._id === parentLookupId
+        (r) => r._id === parentLookupId,
       );
       return region ? region.lookupname : "No Region";
     },
-    [groupedLookups?.Region]
+    [groupedLookups?.Region],
   );
 
   // Use useEffect to update branchesWithRegionData when groupedLookups changes
@@ -4523,7 +4538,7 @@ function Configuratin() {
         branch.lookupname?.toLowerCase().includes(searchTerm) ||
         branch.code?.toLowerCase().includes(searchTerm) ||
         branch.DisplayName?.toLowerCase().includes(searchTerm) ||
-        branch.regionName?.toLowerCase().includes(searchTerm)
+        branch.regionName?.toLowerCase().includes(searchTerm),
     );
   }, [branchesWithRegionData, searchTermBranch]);
 
@@ -4544,8 +4559,8 @@ function Configuratin() {
       new Set(
         branchesWithRegionData
           .map((item) => item.regionName)
-          .filter((name) => name)
-      )
+          .filter((name) => name),
+      ),
     );
   }, [branchesWithRegionData]);
 
@@ -4621,7 +4636,7 @@ function Configuratin() {
             const allItems = sections.flatMap((section) => section.items);
             const filteredItems = allItems
               .filter((item) =>
-                item.label.toLowerCase().includes(searchQuery.toLowerCase())
+                item.label.toLowerCase().includes(searchQuery.toLowerCase()),
               )
               .sort((a, b) => a.label.localeCompare(b.label));
 
@@ -5372,17 +5387,19 @@ function Configuratin() {
             drawerIpnuts?.counties,
             "Data inserted successfully:",
             "Data did not insert:",
-            () => resetCounteries("counties", dispatch(getAllLookups()))
+            () => resetCounteries("counties", dispatch(getAllLookups())),
           );
         }}
         update={async () => {
           if (!validateForm("counties")) return;
           await updateFtn("/lookup", drawerIpnuts?.counties, () =>
-            resetCounteries("counties", () => dispatch(getAllLookups()))
+            resetCounteries("counties", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("counties", false);
         }}
+        addLoading={buttonLoading.insert}
+        updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
@@ -5508,7 +5525,7 @@ function Configuratin() {
               drawerIpnuts?.Provinces,
               "Province added successfully!",
               "Failed to add province",
-              null
+              null,
             );
             resetCounteries("Provinces", () => dispatch(getAllLookups()));
           } catch (error) {
@@ -5520,7 +5537,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Provinces")) return;
           await updateFtn("/lookup", drawerIpnuts?.Provinces, () =>
-            resetCounteries("Provinces", () => dispatch(getAllLookups()))
+            resetCounteries("Provinces", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Provinces", false);
@@ -5635,21 +5652,21 @@ function Configuratin() {
             drawerIpnuts?.Countries,
             "Data inserted successfully:",
             "Data did not insert:",
-            () => resetCounteries("Countries", dispatch(fetchCountries()))
+            () => resetCounteries("Countries", dispatch(fetchCountries())),
           );
         }}
         width="1100px"
         isEdit={isUpdateRec?.Countries}
         update={async () => {
           if (!validateForm("Countries")) return;
-          await updateCountiesFtn(
-            `/countries`,
-            drawerIpnuts?.Countries,
-            () => resetCounteries("Countries", () => dispatch(getAllLookups()))
+          await updateCountiesFtn(`/countries`, drawerIpnuts?.Countries, () =>
+            resetCounteries("Countries", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Countries", false);
         }}
+        addLoading={buttonLoading.insert}
+        updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <Row>
@@ -5778,18 +5795,20 @@ function Configuratin() {
             () => {
               resetCounteries("Cities");
               dispatch(getAllLookups());
-            }
+            },
           );
           dispatch(getAllLookups());
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
           await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
-            resetCounteries("Cities", () => dispatch(getAllLookups()))
+            resetCounteries("Cities", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Cities", false);
         }}
+        addLoading={buttonLoading.insert}
+        updateLoading={buttonLoading.update}
       >
         <div className="drawer-main-cntainer">
           <div className="mb-4 pb-4">
@@ -5949,14 +5968,14 @@ function Configuratin() {
             drawerIpnuts?.PostCode,
             "Data inserted successfully:",
             "Data did not insert:",
-            () => resetCounteries("PostCode", () => dispatch(getAllLookups()))
+            () => resetCounteries("PostCode", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
         update={async () => {
           if (!validateForm("PostCode")) return;
           await updateFtn("/lookup", drawerIpnuts?.PostCode, () =>
-            resetCounteries("PostCode", () => dispatch(getAllLookups()))
+            resetCounteries("PostCode", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("PostCode", false);
@@ -6092,7 +6111,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Districts")) return;
           await updateFtn("/lookup", drawerIpnuts?.Districts, () =>
-            resetCounteries("Districts", () => dispatch(getAllLookups()))
+            resetCounteries("Districts", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Districts", false);
@@ -6107,7 +6126,7 @@ function Configuratin() {
             () => {
               resetCounteries("Districts");
               dispatch(getAllLookups());
-            }
+            },
           );
         }}
       >
@@ -6189,7 +6208,7 @@ function Configuratin() {
                       drawrInptChng(
                         "Districts",
                         "Parentlookupid",
-                        val.target.value
+                        val.target.value,
                       );
                     }}
                   />
@@ -6276,7 +6295,7 @@ function Configuratin() {
               () => {
                 resetCounteries("Divisions");
                 refreshLookups();
-              }
+              },
             );
           }}
           update={async () => {
@@ -6423,7 +6442,7 @@ function Configuratin() {
             () => {
               resetCounteries("Divisions");
               refreshLookups();
-            }
+            },
           );
         }}
         update={async () => {
@@ -6551,7 +6570,7 @@ function Configuratin() {
             "Data did not insert:",
             () => {
               resetCounteries("Station", () => dispatch(getAllLookups()));
-            }
+            },
           );
           dispatch(getAllLookups());
         }}
@@ -6559,7 +6578,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Station")) return;
           await updateFtn("/lookup", drawerIpnuts?.Station, () =>
-            resetCounteries("Station", () => dispatch(getAllLookups()))
+            resetCounteries("Station", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Station", false);
@@ -6728,7 +6747,7 @@ function Configuratin() {
             "Data did not insert:",
             () => {
               resetCounteries("Station", () => dispatch(getAllLookups()));
-            }
+            },
           );
           dispatch(getAllLookups());
         }}
@@ -6736,7 +6755,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Station")) return;
           await updateFtn("/lookup", drawerIpnuts?.Station, () =>
-            resetCounteries("Station", () => dispatch(getAllLookups()))
+            resetCounteries("Station", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Station", false);
@@ -6905,7 +6924,7 @@ function Configuratin() {
             () => {
               resetCounteries("ContactType", () => dispatch(getContactTypes()));
               dispatch(getContactTypes());
-            }
+            },
           );
         }}
         isEdit={isUpdateRec?.ContactType}
@@ -6915,7 +6934,7 @@ function Configuratin() {
             `/contact-types/${drawerIpnuts?.ContactType?.id}`,
             drawerIpnuts?.ContactType,
             () =>
-              resetCounteries("ContactType", () => dispatch(getContactTypes()))
+              resetCounteries("ContactType", () => dispatch(getContactTypes())),
           );
           dispatch(getContactTypes());
           // dispatch(getAllLookups());
@@ -6948,7 +6967,7 @@ function Configuratin() {
                     drawrInptChng(
                       "ContactType",
                       "contactType",
-                      val.target.value
+                      val.target.value,
                     )
                   }
                   disabled={isDisable}
@@ -6968,7 +6987,7 @@ function Configuratin() {
                     drawrInptChng(
                       "ContactType",
                       "displayName",
-                      val.target.value
+                      val.target.value,
                     )
                   }
                   disabled={isDisable}
@@ -7029,7 +7048,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.LookupType}
         update={async () => {
           await updateFtn("/lookuptype", drawerIpnuts?.LookupType, () =>
-            resetCounteries("LookupType")
+            resetCounteries("LookupType"),
           );
           dispatch(getLookupTypes());
           IsUpdateFtn("LookupType", false);
@@ -7041,7 +7060,7 @@ function Configuratin() {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("Lookup Type", () => dispatch(getLookupTypes()))
+              resetCounteries("Lookup Type", () => dispatch(getLookupTypes())),
           );
           dispatch(getLookupTypes());
         }}
@@ -7157,7 +7176,7 @@ function Configuratin() {
         isEdit={isUpdateRec?.RegionType}
         update={async () => {
           await updateFtn("/regiontype", drawerIpnuts?.RegionType, () =>
-            dispatch(getAllRegionTypes())
+            dispatch(getAllRegionTypes()),
           );
           IsUpdateFtn("regiontype", false);
         }}
@@ -7173,7 +7192,7 @@ function Configuratin() {
             () => {
               resetCounteries("RegionType");
               dispatch(getAllRegionTypes());
-            }
+            },
             // Pass a function reference
           );
           // dispatch(getLookupTypes())
@@ -7217,7 +7236,7 @@ function Configuratin() {
                       drawrInptChng(
                         "RegionType",
                         "RegionType",
-                        value.target.value
+                        value.target.value,
                       )
                     }
                     value={drawerIpnuts?.RegionType?.RegionType}
@@ -7241,7 +7260,7 @@ function Configuratin() {
                       drawrInptChng(
                         "RegionType",
                         "DisplayName",
-                        value.target.value
+                        value.target.value,
                       )
                     }
                     value={drawerIpnuts?.RegionType?.DisplayName}
@@ -7310,14 +7329,14 @@ function Configuratin() {
             drawerIpnuts?.Lookup,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Lookup", () => dispatch(getAllLookups()))
+            () => resetCounteries("Lookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Lookup}
         update={async () => {
           await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
-            resetCounteries("Lookup", () => dispatch(getAllLookups()))
+            resetCounteries("Lookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
@@ -7339,7 +7358,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Lookup",
                     "lookuptypeId",
-                    String(value.target.value)
+                    String(value.target.value),
                   );
                   // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
@@ -7407,7 +7426,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Lookup",
                     "Parentlookupid",
-                    String(value.target.value)
+                    String(value.target.value),
                   );
                   // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
@@ -7483,7 +7502,7 @@ function Configuratin() {
               dispatch(getAllLookups());
             },
             "updated successfully",
-            true // isCoum
+            true, // isCoum
           );
           IsUpdateFtn("Bookmarks", false);
         }}
@@ -7504,7 +7523,7 @@ function Configuratin() {
               // Test without resetCounteries first
               resetCounteries("Bookmarks", dispatch(getBookmarks()));
             },
-            true
+            true,
           );
           // dispatch(getAllLookups());
         }}
@@ -7629,7 +7648,7 @@ function Configuratin() {
             drawerIpnuts?.Gender,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Gender", () => dispatch(getAllLookups()))
+            () => resetCounteries("Gender", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -7637,7 +7656,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Gender")) return;
           await updateFtn("/lookup", drawerIpnuts?.Gender, () =>
-            resetCounteries("Gender", () => dispatch(getAllLookups()))
+            resetCounteries("Gender", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Gender", false);
@@ -7763,14 +7782,14 @@ function Configuratin() {
             drawerIpnuts?.Cities,
             "Data inserted successfully:",
             "Data did not insert:",
-            () => resetCounteries("Cities", () => dispatch(getAllLookups()))
+            () => resetCounteries("Cities", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
         update={async () => {
           if (!validateForm("Cities")) return;
           await updateFtn("/lookup", drawerIpnuts?.Cities, () =>
-            resetCounteries("Cities", () => dispatch(getAllLookups()))
+            resetCounteries("Cities", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Cities", false);
@@ -7914,7 +7933,7 @@ function Configuratin() {
             drawerIpnuts?.Title,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Title", () => dispatch(getAllLookups()))
+            () => resetCounteries("Title", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -7922,7 +7941,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Title")) return;
           await updateFtn("/lookup", drawerIpnuts?.Title, () =>
-            resetCounteries("Title", () => dispatch(getAllLookups()))
+            resetCounteries("Title", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Title", false);
@@ -8043,7 +8062,8 @@ function Configuratin() {
             drawerIpnuts?.RosterType,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("RosterType", () => dispatch(getAllLookups()))
+            () =>
+              resetCounteries("RosterType", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -8051,7 +8071,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("RosterType")) return;
           await updateFtn("/lookup", drawerIpnuts?.RosterType, () =>
-            resetCounteries("RosterType", () => dispatch(getAllLookups()))
+            resetCounteries("RosterType", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("RosterType", false);
@@ -8172,7 +8192,7 @@ function Configuratin() {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("MaritalStatus", () => dispatch(getAllLookups()))
+              resetCounteries("MaritalStatus", () => dispatch(getAllLookups())),
           );
         }}
         isEdit={isUpdateRec?.MaritalStatus}
@@ -8182,7 +8202,7 @@ function Configuratin() {
             `${baseURL}/lookup`,
             drawerIpnuts?.MaritalStatus,
             () =>
-              resetCounteries("MaritalStatus", () => dispatch(getAllLookups()))
+              resetCounteries("MaritalStatus", () => dispatch(getAllLookups())),
           );
           IsUpdateFtn("MaritalStatus", false);
         }}
@@ -8298,7 +8318,7 @@ function Configuratin() {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("ProjectTypes", () => dispatch(getAllLookups()))
+              resetCounteries("ProjectTypes", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -8306,7 +8326,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("ProjectTypes")) return;
           await updateFtn("/lookup", drawerIpnuts?.ProjectTypes, () =>
-            resetCounteries("ProjectTypes", () => dispatch(getAllLookups()))
+            resetCounteries("ProjectTypes", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("ProjectTypes", false);
@@ -8434,7 +8454,7 @@ function Configuratin() {
             () => {
               resetCounteries("Trainings");
               refreshLookups();
-            }
+            },
           );
         }}
         isEdit={isUpdateRec?.Trainings}
@@ -8562,7 +8582,7 @@ function Configuratin() {
             "Data inserted successfully",
             "Data did not insert",
             () =>
-              resetCounteries("DocumentType", () => dispatch(getAllLookups()))
+              resetCounteries("DocumentType", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -8570,7 +8590,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("DocumentType")) return;
           await updateFtn("/lookup", drawerIpnuts?.DocumentType, () =>
-            resetCounteries("DocumentType", () => dispatch(getAllLookups()))
+            resetCounteries("DocumentType", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("DocumentType", false);
@@ -8695,7 +8715,7 @@ function Configuratin() {
             `/lookup`,
             drawerIpnuts?.ClaimType,
             "Data inserted successfully",
-            "Data did not insert"
+            "Data did not insert",
           );
           resetCounteries("ClaimType", () => dispatch(getAllLookups()));
         }}
@@ -8703,7 +8723,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("ClaimType")) return;
           await updateFtn("/lookup", drawerIpnuts?.ClaimType, () =>
-            resetCounteries("ClaimType", () => dispatch(getAllLookups()))
+            resetCounteries("ClaimType", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("ClaimType", false);
@@ -8822,14 +8842,14 @@ function Configuratin() {
             drawerIpnuts?.Schemes,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Schemes", () => dispatch(getAllLookups()))
+            () => resetCounteries("Schemes", () => dispatch(getAllLookups())),
           );
         }}
         isEdit={isUpdateRec?.Schemes}
         update={async () => {
           if (!validateForm("Schemes")) return;
           await updateFtn("/lookup", drawerIpnuts?.Schemes, () =>
-            resetCounteries("Schemes", () => dispatch(getAllLookups()))
+            resetCounteries("Schemes", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Schemes", false);
@@ -8948,7 +8968,7 @@ function Configuratin() {
             drawerIpnuts?.Reasons,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Reasons", () => dispatch(getAllLookups()))
+            () => resetCounteries("Reasons", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -8956,7 +8976,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Reasons")) return;
           await updateFtn("/lookup", drawerIpnuts?.Reasons, () =>
-            resetCounteries("Reasons", () => dispatch(getAllLookups()))
+            resetCounteries("Reasons", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Reasons", false);
@@ -9150,7 +9170,7 @@ function Configuratin() {
             drawerIpnuts?.Duties,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Duties", () => dispatch(getAllLookups()))
+            () => resetCounteries("Duties", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -9158,7 +9178,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Duties")) return;
           await updateFtn("/lookup", drawerIpnuts?.Duties, () =>
-            resetCounteries("Duties", () => dispatch(getAllLookups()))
+            resetCounteries("Duties", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Duties", false);
@@ -9277,7 +9297,7 @@ function Configuratin() {
             drawerIpnuts?.Ranks,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Ranks", () => dispatch(getAllLookups()))
+            () => resetCounteries("Ranks", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -9285,7 +9305,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Ranks")) return;
           await updateFtn("/lookup", drawerIpnuts?.Ranks, () =>
-            resetCounteries("Ranks", () => dispatch(getAllLookups()))
+            resetCounteries("Ranks", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Ranks", false);
@@ -9402,14 +9422,14 @@ function Configuratin() {
             drawerIpnuts?.Boards,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Boards", () => dispatch(getAllLookups()))
+            () => resetCounteries("Boards", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
         update={async () => {
           if (!validateForm("Boards")) return;
           await updateFtn("/lookup", drawerIpnuts?.Boards, () =>
-            resetCounteries("Boards", () => dispatch(getAllLookups()))
+            resetCounteries("Boards", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Boards", false);
@@ -9534,7 +9554,7 @@ function Configuratin() {
             drawerIpnuts?.Councils,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Councils", () => dispatch(getAllLookups()))
+            () => resetCounteries("Councils", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -9542,7 +9562,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Councils")) return;
           await updateFtn("/lookup", drawerIpnuts?.Councils, () =>
-            resetCounteries("Councils", () => dispatch(getAllLookups()))
+            resetCounteries("Councils", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Councils", false);
@@ -9669,8 +9689,8 @@ function Configuratin() {
             "Data did not insert",
             () =>
               resetCounteries("CorrespondenceType", () =>
-                dispatch(getAllLookups())
-              )
+                dispatch(getAllLookups()),
+              ),
           );
           dispatch(getAllLookups());
         }}
@@ -9679,8 +9699,8 @@ function Configuratin() {
           if (!validateForm("CorrespondenceType")) return;
           await updateFtn("/lookup", drawerIpnuts?.CorrespondenceType, () =>
             resetCounteries("CorrespondenceType", () =>
-              dispatch(getAllLookups())
-            )
+              dispatch(getAllLookups()),
+            ),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("CorrespondenceType", false);
@@ -9733,7 +9753,7 @@ function Configuratin() {
                   drawrInptChng(
                     "CorrespondenceType",
                     "lookupname",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 placeholder="Enter correspondence type"
@@ -9755,7 +9775,7 @@ function Configuratin() {
                   drawrInptChng(
                     "CorrespondenceType",
                     "DisplayName",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 placeholder="Enter display name"
@@ -9770,7 +9790,7 @@ function Configuratin() {
                   drawrInptChng(
                     "CorrespondenceType",
                     "isactive",
-                    e.target.checked
+                    e.target.checked,
                   )
                 }
                 checked={drawerIpnuts?.CorrespondenceType?.isactive}
@@ -9824,8 +9844,8 @@ function Configuratin() {
             "Data did not insert",
             () =>
               resetCounteries("SpokenLanguages", () =>
-                dispatch(getAllLookups())
-              )
+                dispatch(getAllLookups()),
+              ),
           );
           dispatch(getAllLookups());
         }}
@@ -9833,7 +9853,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("SpokenLanguages")) return;
           await updateFtn("/lookup", drawerIpnuts?.SpokenLanguages, () =>
-            resetCounteries("SpokenLanguages", () => dispatch(getAllLookups()))
+            resetCounteries("SpokenLanguages", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("SpokenLanguages", false);
@@ -9901,7 +9921,7 @@ function Configuratin() {
                   drawrInptChng(
                     "SpokenLanguages",
                     "DisplayName",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 placeholder="Enter display name"
@@ -9964,7 +9984,7 @@ function Configuratin() {
             () => {
               resetCounteries("Solicitors", () => dispatch(getContacts()));
               dispatch(getContacts());
-            }
+            },
           );
         }}
         update={async () => {
@@ -9973,7 +9993,7 @@ function Configuratin() {
           await updateFtn(
             `/contacts/${drawerIpnuts?.Solicitors?.id}`,
             simplified,
-            () => resetCounteries("Solicitors", () => dispatch(getContacts()))
+            () => resetCounteries("Solicitors", () => dispatch(getContacts())),
           );
           // dispatch(getAllLookups());
           // IsUpdateFtn("Solicitors", false);
@@ -10081,7 +10101,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Solicitors",
                     "contactAddress.buildingOrHouse",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 disabled={isDisable}
@@ -10098,7 +10118,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Solicitors",
                     "contactAddress.streetOrRoad",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 disabled={isDisable}
@@ -10113,7 +10133,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Solicitors",
                     "contactAddress.areaOrTown",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 disabled={isDisable}
@@ -10132,7 +10152,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Solicitors",
                     "contactAddress.cityCountyOrPostCode",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 disabled={isDisable}
@@ -10147,7 +10167,7 @@ function Configuratin() {
                   drawrInptChng(
                     "Solicitors",
                     "contactAddress.eircode",
-                    e.target.value
+                    e.target.value,
                   )
                 }
                 disabled={isDisable}
@@ -10194,14 +10214,14 @@ function Configuratin() {
             { region: drawerIpnuts?.Committees },
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Lookup", () => dispatch(getAllLookups()))
+            () => resetCounteries("Lookup", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Committees}
         update={async () => {
           await updateFtn("/lookup", drawerIpnuts?.Lookup, () =>
-            resetCounteries("Committees", () => dispatch(getAllLookups()))
+            resetCounteries("Committees", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
@@ -10352,7 +10372,7 @@ function Configuratin() {
             drawerIpnuts?.Sections,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Sections", () => dispatch(getAllLookups()))
+            () => resetCounteries("Sections", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}
@@ -10360,7 +10380,7 @@ function Configuratin() {
         update={async () => {
           if (!validateForm("Sections")) return;
           await updateFtn("/lookup", drawerIpnuts?.Sections, () =>
-            resetCounteries("Sections", () => dispatch(getAllLookups()))
+            resetCounteries("Sections", () => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
           IsUpdateFtn("Sections", false);

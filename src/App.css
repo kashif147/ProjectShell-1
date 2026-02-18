@@ -22,6 +22,7 @@
 .ql-container.ql-snow {
   border: none !important;
 }
+
 .full-width-radio-group-no-gap {
   display: flex !important;
   width: 100% !important;
@@ -67,8 +68,30 @@
 }
 
 input:disabled,
-select:disabled {
+select:disabled,
+textarea:disabled {
   color: #212529 !important;
+  background-color: #fafafa !important;
+}
+
+/* All disabled form fields */
+.ant-input[disabled],
+.ant-input-disabled,
+.ant-input-affix-wrapper-disabled,
+.ant-input-affix-wrapper-disabled .ant-input,
+.ant-select-disabled .ant-select-selector,
+.ant-picker-disabled,
+.ant-picker-disabled .ant-picker-input > input,
+.my-input-container.disabled,
+.my-input-container.disabled .my-input-field,
+.my-input-field:disabled,
+.my-input-field-select:disabled,
+.my-input-field-select.disabled-select {
+  background-color: #fafafa !important;
+}
+
+.my-input-field-select {
+  border-color: #d9d9d900 !important;
 }
 
 .radio-text {
@@ -88,12 +111,39 @@ select:disabled {
   /* Chrome, Safari, Opera */
 }
 
+/* Enable vertical scroll for specific views */
+.enable-vertical-scroll {
+  overflow-y: auto !important;
+  scrollbar-width: auto !important;
+  /* Firefox */
+  -ms-overflow-style: auto !important;
+  /* IE and Edge */
+}
+
+.enable-vertical-scroll::-webkit-scrollbar {
+  display: block !important;
+  width: 8px !important;
+}
+
+.enable-vertical-scroll::-webkit-scrollbar-track {
+  background: #f1f1f1 !important;
+  border-radius: 4px;
+}
+
+.enable-vertical-scroll::-webkit-scrollbar-thumb {
+  background: #c1c1c1 !important;
+  border-radius: 4px;
+}
+
+.enable-vertical-scroll::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8 !important;
+}
+
 .h-auto {
   height: auto !important;
 }
 
-.input-container {
-}
+.input-container {}
 
 .custom-icon {
   width: 60px;
@@ -132,11 +182,37 @@ select:disabled {
   background: transparent !important;
 }
 
+input:focus,
+textarea:focus,
 .ant-input:focus,
 .ant-textarea:focus,
-.ant-select:focus .ant-btn:focus {
-  background-color: #edf1fd;
-  border: 1.5px solid var(--mainBlue);
+.form-input:focus {
+  background-color: #f0f8ff;
+  border-color: #40a9ff !important;
+  outline: none;
+}
+
+/* Ant Design wrappers: one focus ring, inner input transparent to avoid double box */
+.ant-input-affix-wrapper-focused {
+  background-color: #f0f8ff !important;
+  border-color: #40a9ff !important;
+  outline: none;
+  box-shadow: none !important;
+}
+.ant-input-affix-wrapper-focused .ant-input {
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+}
+
+.ant-select-focused .ant-select-selector {
+  background-color: #f0f8ff !important;
+  border-color: #40a9ff !important;
+  outline: none;
+}
+.ant-picker-focused {
+  background-color: #f0f8ff !important;
+  border-color: #40a9ff !important;
   outline: none;
 }
 
@@ -238,9 +314,7 @@ select {
   color: var(--mainBlue) !important;
 }
 
-.ant-select-single:not(.ant-select-customize-input)
-  .ant-select-selector
-  .ant-select-selection-placeholder {
+.ant-select-single:not(.ant-select-customize-input) .ant-select-selector .ant-select-selection-placeholder {
   color: var(--labelColor) !important;
   opacity: 1;
 }
@@ -251,7 +325,7 @@ select {
 }
 
 .ant-input-focused {
-  background-color: #ebf1fd;
+  background-color: #f0f8ff;
 }
 
 .ant-select-dropdown {
@@ -374,7 +448,7 @@ body {
   box-sizing: border-box;
 }
 
-.details-header > div {
+.details-header>div {
   min-width: 0;
   width: 100%;
 }
@@ -397,7 +471,7 @@ body {
   text-overflow: ellipsis;
 }
 
-.search-main .title > .d-flex {
+.search-main .title>.d-flex {
   flex-shrink: 0;
   flex-wrap: wrap;
   gap: 8px;
@@ -437,19 +511,16 @@ body {
   margin-top: 0 !important;
 }
 
-.common-table .ant-table-body .ant-table-tbody > tr:first-child:empty {
+.common-table .ant-table-body .ant-table-tbody>tr:first-child:empty {
   display: none !important;
   height: 0 !important;
   line-height: 0 !important;
 }
 
-.title {
-}
+.title {}
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
-  .ant-input-prefix,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper
-  .ant-input-suffix {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper .ant-input-prefix,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-input-affix-wrapper .ant-input-suffix {
   display: flex;
   flex: none;
   justify-content: flex-end !important;
@@ -462,7 +533,7 @@ body {
   box-sizing: border-box;
 }
 
-.search-fliters > .d-flex {
+.search-fliters>.d-flex {
   min-width: 0;
   flex-wrap: wrap;
   gap: 8px;
@@ -521,17 +592,10 @@ body {
   /* Show input on hover */
 }
 
-.sid-nav-main
-  :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
-  .ant-menu-item
-  .ant-menu-item-icon,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
-  .ant-menu-submenu-title
-  .ant-menu-item-icon,
+.sid-nav-main :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-item .ant-menu-item-icon,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-submenu-title .ant-menu-item-icon,
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-item .anticon,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu
-  .ant-menu-submenu-title
-  .anticon {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu .ant-menu-submenu-title .anticon {
   font-size: 22px !important;
   color: #fff;
 }
@@ -543,18 +607,14 @@ body {
   color: white !important;
 }
 
-.label-nav .ant-menu-item-icon {
-}
+.label-nav .ant-menu-item-icon {}
 
 .sid-nav-main .ant-menu-item.specific-icon .ant-menu-item-icon svg {
   color: white !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  .ant-menu-item:first-child.ant-menu-item-selected,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  > .ant-menu
-  .ant-menu-item:first-child.ant-menu-item-selected {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item:first-child.ant-menu-item-selected,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item:first-child.ant-menu-item-selected {
   background-color: transparent !important;
   padding-top: 15px !important;
 }
@@ -603,15 +663,10 @@ body {
   height: 50px !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline > .ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical
-  > .ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline>.ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical>.ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-inline>.ant-menu-submenu>.ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-vertical>.ant-menu-submenu>.ant-menu-submenu-title {
   height: 50px !important;
 }
 
@@ -619,15 +674,12 @@ body {
   background-color: var(--mainBlue) !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  .ant-menu-item-selected,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  > .ant-menu
-  .ant-menu-item-selected {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item-selected,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item-selected {
   background-color: rebeccapurple !important;
 }
 
-.ant-table-thead > tr > th {
+.ant-table-thead>tr>th {
   /* padding: 6px 10px !important;  Adjust the value as needed */
   padding: 4px 8px !important;
   white-space: nowrap;
@@ -639,7 +691,7 @@ body {
   color: var(--FontsColor);
 }
 
-.ant-table-tbody > tr > td {
+.ant-table-tbody>tr>td {
   /* padding-top: 5px !important; */
   /* padding-bottom: 5px !important;  */
   overflow: hidden;
@@ -649,10 +701,7 @@ body {
   font-weight: 600;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(
-    .ant-select-customize-input
-  )
-  .ant-select-selector {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-select-outlined:not(.ant-select-customize-input) .ant-select-selector {
   border: none !important;
   border-radius: 3px !important;
   font-weight: bold;
@@ -688,14 +737,9 @@ body {
 }
 
 :where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  > .ant-menu
-  .ant-menu-item,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  .ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark
-  > .ant-menu
-  .ant-menu-submenu-title {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-item,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark .ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-menu-dark>.ant-menu .ant-menu-submenu-title {
   color: #fff !important;
   font-family: var(--fontFamily) !important;
 }
@@ -790,15 +834,12 @@ body {
   padding: 0px !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination
-  .ant-pagination-item-active {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination .ant-pagination-item-active {
   background-color: #215e97 !important;
   border-color: #215e97 !important;
 }
 
-:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination
-  .ant-pagination-item-active
-  a {
+:where(.css-dev-only-do-not-override-1uq9j6g).ant-pagination .ant-pagination-item-active a {
   color: white !important;
 }
 
@@ -811,7 +852,7 @@ body {
   border: 1px solid #d9d9d9 !important;
 }
 
-.Project-table .ant-table-tbody > tr > td {
+.Project-table .ant-table-tbody>tr>td {
   border-bottom: 1px solid #d9d9d9 !important;
 
   /* Add border to table rows */
@@ -838,12 +879,15 @@ body {
 
 .ant-table-wrapper {
   overflow-x: auto;
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
 }
 
 .ant-table-wrapper::-webkit-scrollbar {
-  display: none !important; /* Chrome, Safari, Opera */
+  display: none !important;
+  /* Chrome, Safari, Opera */
 }
 
 .ant-table {
@@ -853,7 +897,7 @@ body {
   /* Ensures that corners are rounded properly */
 }
 
-.ant-table-thead > tr > th {
+.ant-table-thead>tr>th {
   border-radius: 0;
   /* Removes border radius from top corners */
 }
@@ -996,14 +1040,13 @@ tr {
   width: 100%;
 }
 
-.last-chalid-search-filter {
-}
+.last-chalid-search-filter {}
 
 .configuration-main {
   margin-top: 0.5rem;
 }
 
-.sid-nav-main .ant-menu > li:first-child {
+.sid-nav-main .ant-menu>li:first-child {
   background-color: transparent;
 }
 
@@ -1041,7 +1084,7 @@ tr {
   cursor: pointer;
 }
 
-.drawer-tbl .ant-table-thead > tr > th {
+.drawer-tbl .ant-table-thead>tr>th {
   background-color: #45669d !important;
   color: #ffffff !important;
   font-weight: bold;
@@ -1072,7 +1115,7 @@ tr {
   border-radius: 3px !important;
 }
 
-.Project-table .ant-table-thead > tr > th {
+.Project-table .ant-table-thead>tr>th {
   background-color: var(--mainBlue) !important;
   color: white !important;
   font-size: 14px !important;
@@ -1083,26 +1126,19 @@ tr {
   border: 1px solid #c0b9e7 !important;
 }
 
-.activ-link {
-}
+.activ-link {}
 
 .link {
   text-decoration: none !important;
   font-weight: 500;
 }
 
-.sid-nav-activ
-  :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
-  .ant-menu-item-selected,
-.sid-nav-activ
-  :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark
-  > .ant-menu
-  .ant-menu-item-selected {
+.sid-nav-activ :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark .ant-menu-item-selected,
+.sid-nav-activ :where(.css-dev-only-do-not-override-d2lrxs).ant-menu-dark>.ant-menu .ant-menu-item-selected {
   background-color: red !important;
 }
 
-:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed
-  > .ant-menu-item {
+:where(.css-dev-only-do-not-override-d2lrxs).ant-menu-inline-collapsed>.ant-menu-item {
   padding-inline: 0;
 }
 
@@ -1158,14 +1194,6 @@ tr {
   outline: none !important;
 }
 
-.ant-input:focus {
-  background-color: #f0f8ff;
-  /* Change this to your desired background color */
-  outline: none;
-  /* Optional: Remove the default outline */
-  border-color: 2px #40a9ff !important;
-  /* Optional: Change border color on focus */
-}
 
 .transparent-bg:hover,
 .transparent-bg:focus,
@@ -1254,30 +1282,19 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   z-index: 300;
 }
 
-.common-table .ant-table-thead > tr > th {
+.common-table .ant-table-thead>tr>th {
   background-color: #45669d;
   color: white !important;
   font-family: var(--fontFamily) !important;
   font-weight: 480;
 }
 
-.details-header {
-}
+.details-header {}
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item-group
-  > .ant-menu-item-group-list
-  > .ant-menu-item,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item-group
-  > .ant-menu-item-group-list
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title {
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-submenu>.ant-menu-submenu-title {
   text-align: center;
   padding-inline: 0;
   /* Optional: remove padding if needed */
@@ -1307,50 +1324,14 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
   /* Center the icons */
 }
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item
-  .ant-menu-item-icon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item-group
-  > .ant-menu-item-group-list
-  > .ant-menu-item
-  .ant-menu-item-icon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item-group
-  > .ant-menu-item-group-list
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title
-  .ant-menu-item-icon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title
-  .ant-menu-item-icon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item
-  .anticon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item-group
-  > .ant-menu-item-group-list
-  > .ant-menu-item
-  .anticon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-item-group
-  > .ant-menu-item-group-list
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title
-  .anticon
-  + span,
-:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed
-  > .ant-menu-submenu
-  > .ant-menu-submenu-title
-  .anticon
-  + span {
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item .ant-menu-item-icon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .ant-menu-item-icon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-submenu>.ant-menu-submenu-title .ant-menu-item-icon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item .anticon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-item .anticon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-item-group>.ant-menu-item-group-list>.ant-menu-submenu>.ant-menu-submenu-title .anticon+span,
+:where(.css-dev-only-do-not-override-11lehqq).ant-menu-inline-collapsed>.ant-menu-submenu>.ant-menu-submenu-title .anticon+span {
   display: none !important;
 }
 
@@ -1376,136 +1357,72 @@ th.ant-table-cell.ant-table-cell-fix-left.ant-table-cell-fix-left-last {
 
 /* Global even/odd row styling for all tables */
 /* Ant Design tables - base styles */
-.ant-table-tbody > tr:nth-child(even) > td {
+.ant-table-tbody>tr:nth-child(even)>td {
   background-color: var(--table-row) !important;
 }
 
-.ant-table-tbody > tr:nth-child(odd) > td {
+.ant-table-tbody>tr:nth-child(odd)>td {
   background-color: #ffffff !important;
 }
 
 /* Apply even/odd row styling to fixed columns */
-.ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
-.ant-table-tbody > tr:nth-child(even) > td.ant-table-selection-column {
+.ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column {
   background-color: var(--table-row) !important;
 }
 
-.ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
-.ant-table-tbody > tr:nth-child(odd) > td.ant-table-selection-column {
+.ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column {
   background-color: #ffffff !important;
 }
 
 /* Ant Design tables in specific containers */
-.main-table-scroll-container .ant-table-tbody > tr:nth-child(even) > td,
-.table-scroll-container .ant-table-tbody > tr:nth-child(even) > td,
-.drawer-tbl .ant-table-tbody > tr:nth-child(even) > td,
-.report-table .ant-table-tbody > tr:nth-child(even) > td,
-.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(even) > td,
-.claims-table .ant-table-tbody > tr:nth-child(even) > td {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(even)>td,
+.table-scroll-container .ant-table-tbody>tr:nth-child(even)>td,
+.drawer-tbl .ant-table-tbody>tr:nth-child(even)>td,
+.report-table .ant-table-tbody>tr:nth-child(even)>td,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(even)>td,
+.claims-table .ant-table-tbody>tr:nth-child(even)>td {
   background-color: var(--table-row) !important;
 }
 
-.main-table-scroll-container .ant-table-tbody > tr:nth-child(odd) > td,
-.table-scroll-container .ant-table-tbody > tr:nth-child(odd) > td,
-.drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td,
-.report-table .ant-table-tbody > tr:nth-child(odd) > td,
-.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td,
-.claims-table .ant-table-tbody > tr:nth-child(odd) > td {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(odd)>td,
+.table-scroll-container .ant-table-tbody>tr:nth-child(odd)>td,
+.drawer-tbl .ant-table-tbody>tr:nth-child(odd)>td,
+.report-table .ant-table-tbody>tr:nth-child(odd)>td,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(odd)>td,
+.claims-table .ant-table-tbody>tr:nth-child(odd)>td {
   background-color: #ffffff !important;
 }
 
 /* Apply even/odd row styling to fixed columns and checkbox columns in specific containers */
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-cell-fix-left,
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-cell-fix-left,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column,
-.drawer-tbl .ant-table-tbody > tr:nth-child(even) > td.ant-table-cell-fix-left,
-.drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-cell-fix-left,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-cell-fix-left,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-cell-fix-left,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column,
+.report-table .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column,
+.claims-table .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column {
   background-color: var(--table-row) !important;
 }
 
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-cell-fix-left,
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-cell-fix-left,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column,
-.drawer-tbl .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
-.drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column,
-.report-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-cell-fix-left,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column,
-.claims-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column,
+.report-table .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column,
+.claims-table .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column {
   background-color: #ffffff !important;
 }
 
@@ -1521,166 +1438,77 @@ table tbody tr:nth-child(odd) td {
 }
 
 /* Apply even/odd row styling to fixed columns and checkbox columns in common-table */
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-cell-fix-left,
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(even)
-  > td.ant-table-selection-column {
+.common-table .ant-table-tbody>tr:nth-child(even)>td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody>tr:nth-child(even)>td.ant-table-selection-column {
   background-color: var(--table-row) !important;
 }
 
-.common-table .ant-table-tbody > tr:nth-child(odd) > td.ant-table-cell-fix-left,
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(odd)
-  > td.ant-table-selection-column {
+.common-table .ant-table-tbody>tr:nth-child(odd)>td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody>tr:nth-child(odd)>td.ant-table-selection-column {
   background-color: #ffffff !important;
 }
 
 /* Maintain hover effects on even rows - base */
-.ant-table-tbody > tr:nth-child(even):hover > td {
+.ant-table-tbody>tr:nth-child(even):hover>td {
   background-color: var(--btn-hover) !important;
 }
 
-.ant-table-tbody > tr:nth-child(odd):hover > td {
+.ant-table-tbody>tr:nth-child(odd):hover>td {
   background-color: var(--btn-hover) !important;
 }
 
 /* Apply hover effects to fixed columns and checkbox columns */
-.ant-table-tbody > tr:nth-child(even):hover > td.ant-table-cell-fix-left,
-.ant-table-tbody > tr:nth-child(even):hover > td.ant-table-selection-column,
-.ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-cell-fix-left,
-.ant-table-tbody > tr:nth-child(odd):hover > td.ant-table-selection-column {
+.ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column {
   background-color: var(--btn-hover) !important;
 }
 
 /* Maintain hover effects in specific containers */
-.main-table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td,
-.table-scroll-container .ant-table-tbody > tr:nth-child(even):hover > td,
-.drawer-tbl .ant-table-tbody > tr:nth-child(even):hover > td,
-.report-table .ant-table-tbody > tr:nth-child(even):hover > td,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td,
-.claims-table .ant-table-tbody > tr:nth-child(even):hover > td {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(even):hover>td,
+.table-scroll-container .ant-table-tbody>tr:nth-child(even):hover>td,
+.drawer-tbl .ant-table-tbody>tr:nth-child(even):hover>td,
+.report-table .ant-table-tbody>tr:nth-child(even):hover>td,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(even):hover>td,
+.claims-table .ant-table-tbody>tr:nth-child(even):hover>td {
   background-color: var(--btn-hover) !important;
 }
 
-.main-table-scroll-container .ant-table-tbody > tr:nth-child(odd):hover > td,
-.table-scroll-container .ant-table-tbody > tr:nth-child(odd):hover > td,
-.drawer-tbl .ant-table-tbody > tr:nth-child(odd):hover > td,
-.report-table .ant-table-tbody > tr:nth-child(odd):hover > td,
-.configuration-main .drawer-tbl .ant-table-tbody > tr:nth-child(odd):hover > td,
-.claims-table .ant-table-tbody > tr:nth-child(odd):hover > td {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(odd):hover>td,
+.table-scroll-container .ant-table-tbody>tr:nth-child(odd):hover>td,
+.drawer-tbl .ant-table-tbody>tr:nth-child(odd):hover>td,
+.report-table .ant-table-tbody>tr:nth-child(odd):hover>td,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(odd):hover>td,
+.claims-table .ant-table-tbody>tr:nth-child(odd):hover>td {
   background-color: var(--btn-hover) !important;
 }
 
 /* Apply hover effects to fixed columns and checkbox columns in specific containers */
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.main-table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.table-scroll-container
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column,
-.drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.report-table
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.configuration-main
-  .drawer-tbl
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.claims-table
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column {
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.report-table .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.claims-table .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.main-table-scroll-container .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column,
+.table-scroll-container .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.table-scroll-container .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column,
+.drawer-tbl .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.drawer-tbl .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column,
+.report-table .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.report-table .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.configuration-main .drawer-tbl .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column,
+.claims-table .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.claims-table .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column {
   background-color: var(--btn-hover) !important;
 }
 
@@ -1695,22 +1523,10 @@ table tbody tr:nth-child(odd):hover td {
 }
 
 /* Apply hover effects to fixed columns and checkbox columns in common-table */
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-cell-fix-left,
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(even):hover
-  > td.ant-table-selection-column,
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-cell-fix-left,
-.common-table
-  .ant-table-tbody
-  > tr:nth-child(odd):hover
-  > td.ant-table-selection-column {
+.common-table .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody>tr:nth-child(even):hover>td.ant-table-selection-column,
+.common-table .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-cell-fix-left,
+.common-table .ant-table-tbody>tr:nth-child(odd):hover>td.ant-table-selection-column {
   background-color: var(--btn-hover) !important;
 }
 
@@ -1794,9 +1610,7 @@ table tbody tr:nth-child(odd):hover td {
   color: #215e97 !important;
 }
 
-.ant-pagination
-  .ant-select:not(.ant-select-disabled):hover
-  .ant-select-selector {
+.ant-pagination .ant-select:not(.ant-select-disabled):hover .ant-select-selector {
   border-color: #215e97 !important;
 }
 
@@ -1805,9 +1619,7 @@ table tbody tr:nth-child(odd):hover td {
   box-shadow: 0 0 0 2px rgba(33, 94, 151, 0.2) !important;
 }
 
-.ant-pagination
-  .ant-pagination-options
-  .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
+.ant-pagination .ant-pagination-options .ant-select-item-option-selected:not(.ant-select-item-option-disabled) {
   background-color: #215e97 !important;
   color: white !important;
 }
@@ -1855,8 +1667,7 @@ table tbody tr:nth-child(odd):hover td {
   /* Background color for the header */
 }
 
-.custom-grid .ag-header-cell {
-}
+.custom-grid .ag-header-cell {}
 
 .custom-grid .ag-cell {
   border-right: 0.5px solid var(--borderColor) !important;
@@ -1914,7 +1725,7 @@ table tbody tr:nth-child(odd):hover td {
 } */
 
 /* claims table */
-.claims-table .ant-table-thead > tr > th {
+.claims-table .ant-table-thead>tr>th {
   background-color: #45669d;
   color: white !important;
   font-family: var(--fontFamily) !important;
@@ -1924,12 +1735,12 @@ table tbody tr:nth-child(odd):hover td {
   line-height: 40px !important;
 }
 
-.claims-table .ant-table-tbody > tr > td {
+.claims-table .ant-table-tbody>tr>td {
   height: 40px !important;
   line-height: 40px !important;
 }
 
-.heading-tbl .ant-table-thead > tr > th {
+.heading-tbl .ant-table-thead>tr>th {
   background-color: #45669d !important;
   color: white !important;
   font-family: var(--fontFamily) !important;
@@ -1939,7 +1750,7 @@ table tbody tr:nth-child(odd):hover td {
   line-height: 40px !important;
 }
 
-.heading-tbl .ant-table-tbody > tr > td {
+.heading-tbl .ant-table-tbody>tr>td {
   height: 40px !important;
   line-height: 40px !important;
 }
@@ -1959,8 +1770,10 @@ table tbody tr:nth-child(odd):hover td {
 .heading-tbl,
 .heading-tbl .ant-table-body,
 .heading-tbl .ant-table-container {
-  scrollbar-width: none !important; /* Firefox */
-  -ms-overflow-style: none !important; /* IE and Edge */
+  scrollbar-width: none !important;
+  /* Firefox */
+  -ms-overflow-style: none !important;
+  /* IE and Edge */
 }
 
 .claims-table::-webkit-scrollbar,
@@ -1969,7 +1782,8 @@ table tbody tr:nth-child(odd):hover td {
 .heading-tbl::-webkit-scrollbar,
 .heading-tbl .ant-table-body::-webkit-scrollbar,
 .heading-tbl .ant-table-container::-webkit-scrollbar {
-  display: none !important; /* Chrome, Safari, Opera */
+  display: none !important;
+  /* Chrome, Safari, Opera */
 }
 
 .form-section {
@@ -2026,10 +1840,8 @@ table tbody tr:nth-child(odd):hover td {
   /* Consistent font size for buttons */
 }
 
-:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper
-  .ant-table-cell-fix-left,
-:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper
-  .ant-table-cell-fix-right {
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-left,
+:where(.css-dev-only-do-not-override-11lehqq).ant-table-wrapper .ant-table-cell-fix-right {
   z-index: 300;
 }
 

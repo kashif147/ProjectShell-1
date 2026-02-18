@@ -13,7 +13,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime, formatDateOnly } from "../utils/Utilities";
+import { convertToLocalTime, formatDateOnly, formatCurrency } from "../utils/Utilities";
+import { Triangle } from "lucide-react";
+import { Tooltip } from "antd";
 
 const TableColumnsContext = createContext();
 
@@ -22,12 +24,18 @@ const staticColumns = {
   onlinePayment: [
     {
       title: "Member No",
-      dataIndex: "memberId",
+      dataIndex: "Member No",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 150,
+      width: 250,
       sorter: true,
+      // render: (memo) => {
+      //   if (!memo) return "-";
+      //   const memberMatch = memo.match(/member\s+([a-f0-9]+)/i);
+      //   const appMatch = memo.match(/Application\s+([a-z0-9-]+)/i);
+      //   return memberMatch ? memberMatch[1] : (appMatch ? appMatch[1] : memo);
+      // }
     },
     {
       title: "Category",
@@ -64,7 +72,7 @@ const staticColumns = {
     },
     {
       title: "Transaction ID",
-      dataIndex: "transactionId",
+      dataIndex: "docNo",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -72,23 +80,32 @@ const staticColumns = {
     },
     {
       title: "Paid Amount",
-      dataIndex: "paidAmount",
+      dataIndex: "entries",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      align: "right",
+      render: (entries) => {
+        if (!Array.isArray(entries)) return formatCurrency(0);
+        const bankEntry = entries.find(
+          (e) => e.accountCode === "1220" && e.dc === "D"
+        );
+        return bankEntry ? formatCurrency(bankEntry.amount) : formatCurrency(0);
+      },
     },
     {
       title: "Payment Date",
-      dataIndex: "paymentDate",
+      dataIndex: "date",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (date) => formatDateOnly(date)
     },
     {
       title: "Payment Method",
-      dataIndex: "paymentMethod",
+      dataIndex: ["settlement", "provider"],
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -96,7 +113,7 @@ const staticColumns = {
     },
     {
       title: "Payment Status",
-      dataIndex: "paymentStatus",
+      dataIndex: ["settlement", "status"],
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -893,12 +910,13 @@ const staticColumns = {
   Applications: [
     // 🔹 Top-Level Fields
     {
-      dataIndex: ["subscriptionDetails", "membershipCategory",],
+      dataIndex: ["subscriptionDetails", "membershipCategory"],
       title: "Membership Category",
       ellipsis: true,
       isGride: true,
       isVisible: true,
-      width: 200,
+      width: 250,
+      width: 250,
       editable: false,
     },
     {
@@ -1116,7 +1134,7 @@ const staticColumns = {
 
     // 🔹 Approval Info
     {
-      dataIndex: ["personalDetails", "approvalDetails", "approvedBy"],
+      dataIndex: ["approvalDetails", "approvedBy"],
       title: "Approved By",
       ellipsis: true,
       isGride: true,
@@ -1125,7 +1143,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: ["personalDetails", "approvalDetails", "approvedAt"],
+      dataIndex: ["approvalDetails", "approvedAt"],
       title: "Approved At",
       ellipsis: true,
       isGride: true,
@@ -2536,7 +2554,7 @@ const staticColumns = {
   ],
   Members: [
     {
-      dataIndex: "membershipNo",
+      dataIndex: ["personalDetails", "membershipNo"],
       title: "Membership No",
       ellipsis: true,
       isGride: true,
@@ -2545,7 +2563,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "FullName",
+      dataIndex: ["user", "userFullName"],
       title: "Full Name",
       ellipsis: true,
       isGride: true,
@@ -2572,7 +2590,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "Email",
+      dataIndex: ["user", "userEmail"],
       title: "Email",
       ellipsis: true,
       isGride: true,
@@ -2581,7 +2599,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "MobileNo",
+      dataIndex: ["personalDetails", "mobileNo"],
       title: "Mobile No",
       ellipsis: true,
       isGride: true,
@@ -2590,7 +2608,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "workLocation",
+      dataIndex: ["professionalDetails", "workLocation"],
       title: "Work Location",
       ellipsis: true,
       isGride: true,
@@ -2599,7 +2617,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "Branch",
+      dataIndex: ["professionalDetails", "branch"],
       title: "branch",
       ellipsis: true,
       isGride: true,
@@ -2608,7 +2626,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "Region",
+      dataIndex: ["professionalDetails", "region"],
       title: "Region",
       ellipsis: true,
       isGride: true,
@@ -2617,7 +2635,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "Grade",
+      dataIndex: ["professionalDetails", "grade"],
       title: "Grade",
       ellipsis: true,
       isGride: true,
@@ -2626,7 +2644,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "SectionPrimary",
+      dataIndex: ["professionalDetails", "primarySection"],
       title: "Section (Primary)",
       ellipsis: true,
       isGride: true,
@@ -2635,7 +2653,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "joiningDate",
+      dataIndex: "startDate",
       title: "Joining Date",
       ellipsis: true,
       isGride: true,
@@ -2644,7 +2662,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "expiryDate",
+      dataIndex: "endDate",
       title: "Expiry Date",
       ellipsis: true,
       isGride: true,
@@ -2653,7 +2671,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "lastPaymentAmount",
+      dataIndex: ["financialDetails", "lastPaymentAmount"],
       title: "Last Payment Amount",
       ellipsis: true,
       isGride: true,
@@ -2662,7 +2680,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "lastPaymentDate",
+      dataIndex: ["financialDetails", "lastPaymentDate"],
       title: "Last Payment Date",
       ellipsis: true,
       isGride: true,
@@ -2671,7 +2689,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "membershipFee",
+      dataIndex: ["financialDetails", "membershipFee"],
       title: "Membership Fee",
       ellipsis: true,
       isGride: true,
@@ -2680,7 +2698,7 @@ const staticColumns = {
       editable: false,
     },
     {
-      dataIndex: "outstandingBalance",
+      dataIndex: ["financialDetails", "outstandingBalance"],
       title: "Outstanding Balance",
       ellipsis: true,
       isGride: true,
@@ -4652,8 +4670,7 @@ export const TableColumnsProvider = ({ children }) => {
   );
 
   const handleCheckboxFilterChange = useCallback(
-    (key, isChecked, screenName, width, e) => {
-      e.stopPropagation();
+    (key, isChecked, screenName, width) => {
       setColumns((prevColumns) => ({
         ...prevColumns,
         [screenName]: prevColumns[screenName].map((column) =>
@@ -4990,6 +5007,36 @@ export const TableColumnsProvider = ({ children }) => {
     [lookupsForSelect]
   );
 
+  const applyTemplate = useCallback((screenName, templateColumns) => {
+    if (!screenName || !templateColumns) return;
+
+    setColumns((prevColumns) => {
+      const currentScreenColumns = prevColumns[screenName];
+      if (!currentScreenColumns) return prevColumns;
+
+      const updatedScreenColumns = currentScreenColumns.map((col) => {
+        // Handle dataIndex as array or string
+        const dataIndexString = Array.isArray(col.dataIndex)
+          ? col.dataIndex.join(".")
+          : col.dataIndex;
+
+        // Check if this column exists in the template's columns array
+        const isVisible = templateColumns.includes(dataIndexString);
+
+        return {
+          ...col,
+          isGride: isVisible,
+          isVisible: isVisible,
+        };
+      });
+
+      return {
+        ...prevColumns,
+        [screenName]: updatedScreenColumns,
+      };
+    });
+  }, []);
+
   useEffect(() => {
     updateSearchFilters("Ranks", "Grade");
     updateSearchFilters("Duties", "Work Location");
@@ -5018,6 +5065,7 @@ export const TableColumnsProvider = ({ children }) => {
   const contextValue = useMemo(
     () => ({
       columns,
+      applyTemplate,
       updateColumns: () => { },
       state: { selectedOption: "!=", checkboxes: {} },
       setState: () => { },

@@ -17,6 +17,8 @@ import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import { Triangle, AlertCircle } from "lucide-react";
+import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
 import {
   filterTransferById,
@@ -306,6 +308,32 @@ const TableComponent = ({
       }))
   );
 
+  // **Sync columns when screenName or global columns change**
+  useEffect(() => {
+    // All available columns for the selection menu
+    const menuColumns = columns?.[screenName]?.map((item, index) => ({
+      ...item,
+      key: `${index}`,
+      isVisible: item.isVisible !== false, // Ensure visibility flag exists
+    }));
+
+    // Only visible columns for the actual table grid
+    const gridColumns = menuColumns
+      ?.filter((item) => item?.isGride)
+      ?.map((item) => ({
+        ...item,
+        onHeaderCell: () => ({ id: item.key }),
+        onCell: () => ({ id: item.key }),
+      }));
+
+    if (menuColumns) {
+      setColumnsForFilter(menuColumns);
+    }
+    if (gridColumns) {
+      setColumnsDragbe(gridColumns);
+    }
+  }, [screenName, columns]);
+
   const [dragIndex, setDragIndex] = useState({ active: null, over: null });
 
   // Handle drag and drop
@@ -494,6 +522,10 @@ const TableComponent = ({
         ? col.render
         : (text, record, index) => {
 
+          const currentPath = location.pathname.toLowerCase();
+          const isApplicationsPage = currentPath.includes('/applications');
+          const isMembersPage = currentPath.includes('/members');
+
           switch (col.title) {
             case "Full Name":
               return (
@@ -501,16 +533,17 @@ const TableComponent = ({
                   to="/Details"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    memberId: record?.membershipNumber,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    dispatch(getProfileDetailsById(record?._id));
+                    const idToUse = isMembersPage ? (record?.profileId || record?._id) : record?._id;
+                    dispatch(getProfileDetailsById(idToUse));
                     dispatch(
                       getSubscriptionByProfileId({
-                        profileId: record?._id,
+                        profileId: idToUse,
                         isCurrent: true,
                       })
                     );
@@ -527,9 +560,9 @@ const TableComponent = ({
                   to="/Details"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    memberId: record?.membershipNumber || record?.regNo || record?._id,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
@@ -558,11 +591,11 @@ const TableComponent = ({
                   to="/ClaimsById"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -581,11 +614,11 @@ const TableComponent = ({
                   to="/Roster"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -599,43 +632,81 @@ const TableComponent = ({
               );
 
             case "Membership Category":
-              const isApplicationsPage = location.pathname === '/Applications';
+              const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+
+              let content;
 
               if (isApplicationsPage) {
-                return (
+                content = (
                   <span
                     style={{ color: "blue", cursor: "pointer", textDecoration: "underline" }}
                     onClick={(e) => {
                       e.stopPropagation();
-                      const { applicationStatus, applicationId } = record || {};
+                      const { applicationStatus } = record || {};
+                      const id = record?.applicationId || record?._id || record?.id;
+
                       if (applicationStatus === "Draft") {
                         dispatch(
                           getApplicationById({
                             id: "draft",
-                            draftId: applicationId,
+                            draftId: id,
                           })
                         );
                         navigate("/applicationMgt", {
                           state: { isEdit: true },
                         });
                       } else {
-                        dispatch(getApplicationById({ id: applicationId }));
-                        navigate("/applicationMgt", {
-                          state: { isEdit: true },
-                        });
+                        if (id) {
+                          dispatch(getApplicationById({ id: id }));
+                          navigate("/applicationMgt", {
+                            state: { isEdit: true },
+                          });
+                        } else {
+                          console.error("No valid application ID found in record:", record);
+                        }
                       }
                     }}
                   >
                     <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                   </span>
                 );
+              } else if (isMembersPage) {
+                content = (
+                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                );
               } else {
-                return (
+                content = (
                   <span style={{ textOverflow: "ellipsis" }}>
                     {text}
                   </span>
                 );
               }
+
+              return (
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  {content}
+                  {isPotentialDuplicate && (
+                    <Tooltip title="Potential Duplicate Detected">
+                      <div
+                        style={{
+                          display: "flex",
+                          alignItems: "center",
+                          justifyContent: "center",
+                          width: "22px",
+                          height: "22px",
+                          backgroundColor: "#fff1f0", // Soft red background (Ant red-1)
+                          border: "1px solid #ffa39e", // Soft red border (Ant red-3)
+                          borderRadius: "4px",
+                          color: "#f5222d", // Ant red-6
+                          flexShrink: 0
+                        }}
+                      >
+                        <AlertCircle size={14} fill="#f5222d" fillOpacity={0.1} />
+                      </div>
+                    </Tooltip>
+                  )}
+                </div>
+              );
 
             case "Change To":
               return (
@@ -643,11 +714,11 @@ const TableComponent = ({
                   to="/ChangeCatById"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -706,11 +777,11 @@ const TableComponent = ({
                   to="/CorspndncDetail"
                   state={{
                     search: screenName,
-                    name: record?.fullName,
-                    code: record?.regNo,
-                    Forename: record?.forename,
-                    Fullname: record?.surname,
-                    DateOfBirth: record?.dateOfBirth,
+                    name: record?.user?.userFullName || record?.fullName,
+                    code: record?.personalDetails?.membershipNo || record?.regNo,
+                    Forename: record?.user?.userFullName || record?.forename,
+                    Fullname: record?.user?.userFullName || record?.surname,
+                    DateOfBirth: record?.personalDetails?.dateOfBirth || record?.dateOfBirth,
                   }}
                   onClick={(e) => {
                     e.preventDefault();
@@ -911,16 +982,14 @@ const TableComponent = ({
     return Math.max(baseWidth, 80); // Minimum 80px
   }, []);
 
-  // Remove width from all non-fixed columns but add minWidth based on header text
+  // Ensure columns retain their widths and set minWidth for those without it
   const processedColumns = useMemo(() => editableColumns.map((col) => {
-    if (!col.fixed) {
-      const { width, ...rest } = col;
-      return {
-        ...rest,
-        minWidth: calculateMinWidth(col.title),
-      };
-    }
-    return col; // Keep width for fixed columns (checkbox, actions)
+    const minWidth = calculateMinWidth(col.title);
+    return {
+      ...col,
+      width: col.width || (col.fixed ? undefined : minWidth),
+      minWidth: minWidth,
+    };
   }), [editableColumns, calculateMinWidth]);
 
   return (
@@ -944,7 +1013,7 @@ const TableComponent = ({
           }}
         >
           <Table
-            rowKey={(record, index) => record.key || record.id || index}
+            rowKey={(record) => record.key || record.id}
             rowClassName={() => ""}
             loading={isGrideLoading}
             components={components}
@@ -955,6 +1024,8 @@ const TableComponent = ({
             pagination={false}
             style={{}}
             bordered
+            tableLayout="fixed"
+            sticky
             scroll={{ x: "max-content", y: 590 }}
             size="middle"
             locale={{

@@ -14,6 +14,7 @@ export const ExcelProvider = ({ children }) => {
     advance: 0,
     total: 0,
     records: 0,
+    exceptionTotal: 0,
   });
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isCreatePayment, setIsCreatePayment] = useState(false); // ✅ New state added

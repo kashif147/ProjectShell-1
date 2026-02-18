@@ -1,16 +1,17 @@
 import { useState, useContext, useEffect } from "react";
-import { Form, Row, Col, Typography, Drawer, Button } from "antd";
+import { Form, Row, Col, Typography, Drawer, Button, message } from "antd";
+import axios from "axios";
 import "../../styles/CreateBatchPayment.css";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-// import { ExcelContext } from "../../context/ExcelContext";
 import { ExcelContext } from "../../context/ExcelContext";
 import MyInput from "../common/MyInput";
 import CustomSelect from "../common/CustomSelect";
 import { paymentTypes } from "../../Data";
+import MemberSearch from "../profile/MemberSearch";
 
 const { Text } = Typography;
 
-const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
+const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess }) => {
   const [form] = Form.useForm();
   const { ProfileDetails } = useTableColumns();
   const { batchTotals } = useContext(ExcelContext);
@@ -39,23 +40,27 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
   const [selectedMember, setSelectedMember] = useState(null);
   const [formData, setFormData] = useState({
     memberNo: "",
+    membershipNumber: "", // Added
+    memberName: "", // Added
     arrears: "",
     current: "",
     advance: "",
     comments: "",
-    totalAmount: ""
+    totalAmount: "",
   });
 
   const [loading, setLoading] = useState(false);
 
   console.log('select', selectedMember);
 
-  const handleMemberChange = (value) => {
-    const found = memberData.find((m) => m.membershipNumber === value.target.value);
-    setSelectedMember(found || null);
-    setFormData(prev => ({
+  const handleMemberSelect = (memberData) => {
+    setSelectedMember(memberData);
+    setFormData((prev) => ({
       ...prev,
-      memberNo: value.target.value
+      memberNo: memberData.membershipNumber,
+      membershipNumber: memberData.membershipNumber,
+      memberName: `${memberData.personalInfo?.forename || ""} ${memberData.personalInfo?.surname || ""
+        }`.trim(),
     }));
   };
 
@@ -75,9 +80,9 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
     const arrearsValue = parseFloat(changedField === 'arrears' ? changedValue : formData.arrears) || 0;
     const currentValue = parseFloat(changedField === 'current' ? changedValue : formData.current) || 0;
     const advanceValue = parseFloat(changedField === 'advance' ? changedValue : formData.advance) || 0;
-    
+
     const total = arrearsValue + currentValue + advanceValue;
-    
+
     setFormData(prev => ({
       ...prev,
       totalAmount: total > 0 ? total.toString() : ""
@@ -87,43 +92,54 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
   const handleSubmit = async () => {
     try {
       setLoading(true);
-      
-      // Validate required fields
-      // if (!formData.memberNo) {
-      //   console.error("Member No is required");
-      //   return;
-      // }
 
-      const submissionData = {
-        ...formData,
-        memberName: selectedMember?.name || "",
-        bankAccount: selectedMember?.accountNumber || "",
-        payrollNo: selectedMember?.payrollNo || "",
-        batchRefNo: "B001",
-        paymentType: batchSummryData?.PaymentType || ""
+      const payload = {
+        membershipNumber: formData.membershipNumber,
+        memberName: formData.memberName,
+        badgeReferenceNumber: batchSummryData?.batchRef || "",
+        amount: parseFloat(formData.totalAmount) * 100, // Convert to cents as per requirement
       };
-      
-      console.log("Form Submitted:", submissionData);
-      
-      // Simulate API call
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-      
+
+      console.log("Form Submitted Payload:", payload);
+
+      const token = localStorage.getItem("token");
+      await axios.post(
+        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details/add-profile/${batchId}`,
+        payload,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+
+      message.success("Payment added successfully");
+
+      if (onSuccess) {
+        onSuccess();
+      }
+
       // Reset form after successful submission
       setFormData({
         memberNo: "",
+        membershipNumber: "",
+        memberName: "",
         arrears: "",
         current: "",
         advance: "",
         comments: "",
-        totalAmount: ""
+        totalAmount: "",
       });
       setSelectedMember(null);
-      
+
       // Close drawer
       onClose();
-      
     } catch (error) {
       console.error("Submission error:", error);
+      message.error(
+        error.response?.data?.message || "Failed to add payment entry"
+      );
     } finally {
       setLoading(false);
     }
@@ -148,188 +164,190 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData }) => {
       open={open}
       onClose={handleClose}
       title={
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%' }}>
-          <span>Manual Payment Entry</span>
-          <Button 
-            className="btn primary-btn" 
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', width: '100%', padding: '4px 0' }}>
+          <span style={{ fontSize: '18px', fontWeight: '600', color: '#0f172a' }}>Manual Payment Entry</span>
+          <Button
+            className="btn primary-btn"
             onClick={handleSubmit}
             loading={loading}
-            disabled={!formData.memberNo || !formData.totalAmount}
+            style={{ height: '36px', borderRadius: '6px' }}
           >
             Submit
           </Button>
         </div>
       }
-      width={800}
-      headerStyle={{ padding: '16px 24px' }}
+      width={720}
+      styles={{
+        header: { borderBottom: '1px solid #e2e8f0', padding: '16px 24px' },
+        body: { padding: '0', backgroundColor: '#ffffff' }
+      }}
     >
-      <div className="drawer-main-cntainer p-4 me-2 ms-2">
+      <div className="p-4">
         <Form layout="vertical" form={form}>
           {/* Member Selection */}
-          <Row gutter={16}>
-            <Col span={24}>
-              <CustomSelect
-                label="Member No"
-                value={formData.memberNo}
-                placeholder="Select Member"
-                options={memberData.map((m) => ({
-                  value: m.membershipNumber,
-                  label: m.membershipNumber,
-                }))}
-                onChange={(val) => handleMemberChange(val)}
-              />
-            </Col>
-          </Row>
+          <div style={{ marginBottom: '24px' }}>
+            <MemberSearch
+              key={open ? (selectedMember?._id || "open") : "closed"}
+              fullWidth
+              onSelectBehavior="callback"
+              onSelectCallback={handleMemberSelect}
+              onClear={() => {
+                setSelectedMember(null);
+                setFormData(prev => ({
+                  ...prev,
+                  memberNo: "",
+                  membershipNumber: "",
+                  memberName: ""
+                }));
+              }}
+            />
+          </div>
 
-          {/* Auto populated fields */}
-          <Row gutter={16}>
+          {/* Member Details Card */}
+          <div style={{
+            backgroundColor: '#f8fafc',
+            border: '1px solid #e2e8f0',
+            borderRadius: '12px',
+            padding: '20px',
+            marginBottom: '24px'
+          }}>
+            <Row gutter={16}>
+              <Col span={8}>
+                <MyInput
+                  label="Member Name"
+                  name="memberName"
+                  value={formData.memberName}
+                  placeholder="Member Name"
+                  disabled
+                />
+              </Col>
+              <Col span={8}>
+                <MyInput
+                  label="Member No"
+                  name="memberNo"
+                  value={formData.membershipNumber}
+                  placeholder="B00000"
+                  disabled
+                />
+              </Col>
+              <Col span={8}>
+                <MyInput
+                  label="Payroll No"
+                  name="payrollNo"
+                  placeholder="Enter payroll number"
+                  value={selectedMember?.professionalDetails?.payrollNo}
+                  disabled
+                />
+              </Col>
+            </Row>
+          </div>
+
+          {/* Batch & Payment Info */}
+          <Row gutter={24} style={{ marginBottom: '24px' }}>
             <Col span={12}>
               <MyInput
-                label="Member Name"
-                name="memberName"
-                value={selectedMember?.name}
+                label="Batch Ref No"
+                name="batchRefNo"
+                value={batchSummryData?.batchRef || "BATCH-000"}
                 disabled
+                prefix={<div style={{ width: '8px', height: '8px', borderRadius: '50%', backgroundColor: '#3b82f6', marginRight: '10px' }} />}
               />
             </Col>
             <Col span={12}>
-              <MyInput
-                label="Bank Account"
-                name="bankAccount"
-                value={selectedMember?.accountNumber}
-                disabled
-              />
-            </Col>
-          </Row>
-
-          <Row gutter={16}>
-            <Col span={12}>
-              <MyInput
-                label="Payroll No"
-                name="payrollNo"
-                value={selectedMember?.payrollNo}
-                disabled
-              />
-            </Col>
-          </Row>
-
-          {/* Batch Ref */}
-          <Row>
-            <Col span={24}>
-              <div className="detail-item" style={{ marginTop: "20px" }}>
-                <Text strong>Batch Ref No</Text>
-              </div>
-              <MyInput value="B001" disabled />
-            </Col>
-          </Row>
-
-          {/* Payment Type */}
-          <Row gutter={16}>
-            <Col span={24}>
-              <div
-                className="detail-item"
-                style={{
-                  marginTop: "16px",
-                  display: "flex",
-                  justifyContent: "space-between",
-                }}
-              >
-                <label style={{ fontWeight: 500 }}></label>
-              </div>
               <CustomSelect
                 label="Payment Type"
-                value={batchSummryData?.PaymentType || ""}
-                options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
+                value={batchSummryData?.PaymentType || "Deduction"}
+                options={[{ value: "Deduction", label: "Deduction" }]}
                 disabled
               />
             </Col>
           </Row>
 
-          {/* Amounts */}
-          <Row gutter={16} style={{ marginTop: "16px" }}>
+          <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '24px' }} />
+
+          {/* Amounts Section */}
+          <Row gutter={24} style={{ marginBottom: '24px' }}>
             <Col span={8}>
-              <MyInput 
-                label="Arrears (€)" 
+              <MyInput
+                label="Arrears (€)"
                 value={formData.arrears}
+                placeholder="0.00"
                 onChange={(e) => handleInputChange("arrears", e.target.value)}
               />
             </Col>
             <Col span={8}>
-              <MyInput 
-                label="Current (€)" 
+              <MyInput
+                label="Current (€)"
                 value={formData.current}
+                placeholder="0.00"
                 onChange={(e) => handleInputChange("current", e.target.value)}
               />
             </Col>
             <Col span={8}>
-              <MyInput 
-                label="Advance (€)" 
+              <MyInput
+                label="Advance (€)"
                 value={formData.advance}
+                placeholder="0.00"
                 onChange={(e) => handleInputChange("advance", e.target.value)}
               />
             </Col>
           </Row>
 
-          <Row>
-            <Col span={12}>
-              <MyInput 
-                label="Total Amount (€)" 
-                value={formData.totalAmount}
-                disabled
-              />
-            </Col>
-          </Row>
+          {/* Total Amount Display Center */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            marginBottom: '32px'
+          }}>
+            <div style={{
+              backgroundColor: '#f1f5f9',
+              borderRadius: '12px',
+              padding: '20px 60px',
+              textAlign: 'center',
+              border: '1px solid #e2e8f0',
+              minWidth: '320px'
+            }}>
+              <div style={{ fontSize: '12px', fontWeight: '800', color: '#3b82f6', letterSpacing: '1px', marginBottom: '8px' }}>TOTAL AMOUNT (€)</div>
+              <div style={{ fontSize: '36px', fontWeight: '700', color: '#3b82f6' }}>{parseFloat(formData.totalAmount || 0).toFixed(2)}</div>
+            </div>
+          </div>
 
           {/* Comments */}
-          <Row gutter={16} style={{ marginBottom: "30px" }}>
-            <Col span={24}>
-              <MyInput
-                label="Comments"
-                type="textarea"
-                placeholder="Enter comments here..."
-                value={formData.comments}
-                onChange={(e) => handleInputChange("comments", e.target.value)}
-              />
-            </Col>
-          </Row>
+          <div style={{ marginBottom: '32px' }}>
+            <MyInput
+              label="Comments / Remarks"
+              type="textarea"
+              placeholder="Add any additional notes here..."
+              value={formData.comments}
+              onChange={(e) => handleInputChange("comments", e.target.value)}
+            />
+          </div>
 
-          {/* Totals */}
-          <Row gutter={16}>
-            <Col span={12}>
-              <div className="summary-item">
-                <Text>Batch Total:</Text>
-                <Text strong className="summary-value">
-                  €{batchSummryData?.total?.toLocaleString() || "0.00"}
-                </Text>
-              </div>
-            </Col>
-            <Col span={12}>
-              <div className="summary-item">
-                <Text>Total Arrears:</Text>
-                <Text strong className="summary-value">
-                  €{batchTotals?.arrears || "0.00"}
-                </Text>
-              </div>
-            </Col>
-          </Row>
+          <div style={{ borderBottom: '1px solid #f1f5f9', marginBottom: '24px' }} />
 
-          <Row gutter={16}>
-            <Col span={12}>
-              <div className="summary-item">
-                <Text>Total Current:</Text>
-                <Text strong className="summary-value">
-                  €{batchSummryData?.total?.toLocaleString() || "0.00"}
-                </Text>
-              </div>
-            </Col>
-            <Col span={12}>
-              <div className="summary-item">
-                <Text>Total Advance:</Text>
-                <Text strong className="summary-value">
-                  €{batchTotals?.advance || "0.00"}
-                </Text>
-              </div>
-            </Col>
-          </Row>
+          {/* Bottom KPIs */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0 8px'
+          }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase' }}>Batch Total</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#0f172a' }}>€{batchSummryData?.total?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase' }}>Total Arrears</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#ef4444' }}>€{batchTotals?.arrears || "0.00"}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase' }}>Total Current</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#10b981' }}>€{batchSummryData?.total?.toLocaleString(undefined, { minimumFractionDigits: 2 }) || "0.00"}</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: '10px', fontWeight: '700', color: '#94a3b8', marginBottom: '4px', textTransform: 'uppercase' }}>Total Advance</div>
+              <div style={{ fontSize: '18px', fontWeight: '700', color: '#3b82f6' }}>€{batchTotals?.advance || "0.00"}</div>
+            </div>
+          </div>
         </Form>
       </div>
     </Drawer>

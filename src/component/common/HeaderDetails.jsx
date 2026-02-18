@@ -1,5 +1,5 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
-import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio, Select } from "antd";
+import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio, Select, Drawer, Switch } from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
@@ -17,6 +17,7 @@ import {
   SearchOutlined,
   LoadingOutlined,
   UploadOutlined,
+  EditOutlined,
 } from "@ant-design/icons";
 import ContactDrawer from "./ContactDrawer";
 import JiraLikeMenu from "./JiraLikeMenu";
@@ -67,6 +68,10 @@ import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer"
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
+import CreateCasesDrawer from "../cases/CreateCasesDrawer";
+import CreateEventDrawer from "../event/CreateEventDrawer";
+import { useCasesEdit } from "../../context/CasesEditContext";
+import "../../styles/CreateCasesDrawer.css";
 
 function HeaderDetails() {
   const { Search } = Input;
@@ -97,6 +102,8 @@ function HeaderDetails() {
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
+  const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
+  const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
 
 
@@ -104,6 +111,66 @@ function HeaderDetails() {
     setValue(val); // val is a dayjs or null
   };
   const { selectedIds, setSelectedIds } = useSelectedIds();
+  const {
+    editFieldsDrawerOpen,
+    setEditFieldsDrawerOpen,
+    selectedCaseRows,
+    applyCasesUpdateRef,
+  } = useCasesEdit();
+
+  const KEEP_AS_IS = "__KEEP_AS_IS__";
+  const casesCategories = ["Compliance", "Risk", "Legal", "General"];
+  const casesTypes = ["Compliance", "Risk", "Legal", "General"];
+  const casesStatuses = ["Open", "Pending", "Review", "Closed"];
+  const casesPriorities = ["Critical", "High", "Medium", "Low"];
+  const casesAssignees = ["Legal Team", "Support Team", "HR Team", "IT Team"];
+  const defaultEditDraft = () => ({
+    incidentDate: null,
+    location: KEEP_AS_IS,
+    category: KEEP_AS_IS,
+    caseType: KEEP_AS_IS,
+    status: KEEP_AS_IS,
+    priority: KEEP_AS_IS,
+    dueDate: null,
+    pertinentToFileReview: KEEP_AS_IS,
+    fileNumber: KEEP_AS_IS,
+    assignee: KEEP_AS_IS,
+    relatedMembers: KEEP_AS_IS,
+  });
+  const [editCasesDraft, setEditCasesDraft] = useState(defaultEditDraft());
+
+  useEffect(() => {
+    if (editFieldsDrawerOpen) {
+      setEditCasesDraft(defaultEditDraft());
+    }
+  }, [editFieldsDrawerOpen]);
+
+  const handleSaveEditCases = () => {
+    const keys = selectedCaseRows.map((r) => r.key);
+    const payload = {};
+    if (editCasesDraft.incidentDate != null) {
+      payload["Incident Date"] = editCasesDraft.incidentDate.format("YYYY-MM-DD");
+    }
+    if (editCasesDraft.location !== KEEP_AS_IS) payload.Location = editCasesDraft.location;
+    if (editCasesDraft.category !== KEEP_AS_IS) payload.Category = editCasesDraft.category;
+    if (editCasesDraft.caseType !== KEEP_AS_IS) payload["Case Type"] = editCasesDraft.caseType;
+    if (editCasesDraft.status !== KEEP_AS_IS) payload.Status = editCasesDraft.status;
+    if (editCasesDraft.priority !== KEEP_AS_IS) payload.Priority = editCasesDraft.priority;
+    if (editCasesDraft.dueDate != null) {
+      payload["Due Date"] = editCasesDraft.dueDate.format("YYYY-MM-DD");
+    }
+    if (editCasesDraft.pertinentToFileReview !== KEEP_AS_IS) {
+      payload["Pertinent to File Review"] = editCasesDraft.pertinentToFileReview === true || editCasesDraft.pertinentToFileReview === "true";
+    }
+    if (editCasesDraft.fileNumber !== KEEP_AS_IS) payload["File Number"] = editCasesDraft.fileNumber;
+    if (editCasesDraft.assignee !== KEEP_AS_IS) payload.Assignee = editCasesDraft.assignee;
+    if (editCasesDraft.relatedMembers !== KEEP_AS_IS) payload["Related Member(s)"] = editCasesDraft.relatedMembers;
+    if (Object.keys(payload).length > 0 && applyCasesUpdateRef.current) {
+      applyCasesUpdateRef.current(keys, payload);
+    }
+    setEditFieldsDrawerOpen(false);
+  };
+
   const handleSortChange = (value) => {
     setSortOption(value);
   };
@@ -169,11 +236,10 @@ function HeaderDetails() {
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
 
-  const menuItems = [
+  const defaultMenuItems = [
     { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds) },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
     { label: "Send Notification", onClick: (e) => handleAction("Bulk Changes", e) },
-
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
       label: "Generate Bulk NFC Tag",
@@ -189,6 +255,18 @@ function HeaderDetails() {
       },
     },
   ];
+
+  const editCasesItem = {
+    label: "Edit Issues",
+    key: "edit-issues",
+    icon: <EditOutlined />,
+    onClick: () => setEditFieldsDrawerOpen(true),
+  };
+
+  const menuItems =
+    nav === "/CasesSummary"
+      ? [...defaultMenuItems, editCasesItem]
+      : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -647,6 +725,7 @@ function HeaderDetails() {
           location?.pathname === "/CorrespondencesSummary" ||
           location?.pathname === "/Transfers" ||
           location?.pathname === "/RosterSummary" ||
+          location?.pathname === "/EventsSummary" ||
           location?.pathname === "/CasesSummary") && (
             <FaClipboardList
               style={{
@@ -676,6 +755,9 @@ function HeaderDetails() {
       {
         location?.pathname !== "/applicationMgt" &&
         location?.pathname !== "/CommunicationBatchDetail" &&
+        !location?.pathname?.startsWith("/BatchMemberSummary") &&
+        !location?.pathname?.startsWith("/Batch/") &&
+        !location?.pathname?.startsWith("/SimpleBatchMemberSummary") &&
         <Breadcrumb />
       }
 
@@ -773,6 +855,7 @@ function HeaderDetails() {
             location?.pathname == "/CorrespondencesSummary" ||
             location?.pathname == "/Reports" ||
             location?.pathname == "/RosterSummary" ||
+            location?.pathname == "/EventsSummary" ||
             location?.pathname == "/ChangCateSumm" ||
             location?.pathname == "/RemindersSummary" ||
             location?.pathname == "/Cancallation" ||
@@ -872,6 +955,10 @@ function HeaderDetails() {
                                   setRefundDrawerOpen(true);
                                 } else if (nav === "/write-offs") {
                                   setWriteOffDrawerOpen(true);
+                                } else if (nav === "/CasesSummary") {
+                                  setCasesDrawerOpen(true);
+                                } else if (nav === "/EventsSummary") {
+                                  setEventDrawerOpen(true);
                                 }
                               }}
                               style={{
@@ -943,7 +1030,11 @@ function HeaderDetails() {
                           inputReadOnly={false} // allow typing
                           allowClear={false} // keep a value always; set true if you want clear
                           style={{ width: 220 }} // compact width for year
-                          placeholder="Select year"
+                          placeholder={
+                            nav === "/CasesSummary"
+                              ? "Search Issue ID, team, or stakeholder"
+                              : "Search anything..."
+                          }
                         />
                       </Col>
                       {nav == "/RemindersSummary" && (
@@ -989,7 +1080,7 @@ function HeaderDetails() {
       </div>
       <MyDrawer
         title={`${nav === "/CasesById"
-          ? "Enter Cases"
+          ? "Enter Issue"
           : nav == "/ClaimSummary"
             ? "Enter Claims"
             : nav === "/ClaimsById"
@@ -1290,22 +1381,29 @@ function HeaderDetails() {
                     ? "Cancellation Batch"
                     : nav === "/CornMarket"
                       ? "Corn Market Batch"
-                      : ""
+                      : nav === "/StandingOrders"
+                        ? "Standing Orders Batch"
+                        : ""
           }`}
         open={isBatchOpen}
         onClose={() => {
           setIsBatchOpen(!isBatchOpen);
         }}
-        add={() => {
+        add={async () => {
           // Try to submit the batch form inside drawer first
           if (batchFormRef && batchFormRef.current && typeof batchFormRef.current.submit === 'function') {
-            const result = batchFormRef.current.submit();
-            if (!result) return; // validation failed inside form
+            const result = await batchFormRef.current.submit();
+            if (!result) return; // validation failed or API failed
+
+            navigate("/BatchMemberSummary", {
+              state: {
+                search: "BatchMemberSummary",
+                batchId: result._id || result.id, // Fallback for safety
+                batchData: result
+              },
+            });
+            setIsBatchOpen(!isBatchOpen);
           }
-          navigate("/BatchMemberSummary", {
-            state: { search: "BatchMemberSummary" },
-          });
-          setIsBatchOpen(!isBatchOpen);
         }}
       >
         {nav === "/Batches" || nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque" || nav === "/onlinePayment" ? (
@@ -1373,6 +1471,157 @@ function HeaderDetails() {
         open={writeOffDrawerOpen}
         onClose={() => setWriteOffDrawerOpen(false)}
       />
+      <CreateCasesDrawer
+        open={casesDrawerOpen}
+        onClose={() => setCasesDrawerOpen(false)}
+      />
+      <CreateEventDrawer
+        open={eventDrawerOpen}
+        onClose={() => setEventDrawerOpen(false)}
+      />
+      {nav === "/CasesSummary" && (
+        <Drawer
+          title="Edit Issues"
+          placement="right"
+          width={480}
+          open={editFieldsDrawerOpen}
+          onClose={() => setEditFieldsDrawerOpen(false)}
+          className="create-case-drawer edit-cases-drawer"
+          footer={
+            <div className="case-drawer-header-actions">
+              <Button
+                className="header-discard-btn"
+                onClick={() => setEditFieldsDrawerOpen(false)}
+              >
+                Cancel
+              </Button>
+              <Button
+                className="header-finalize-btn"
+                type="primary"
+                onClick={handleSaveEditCases}
+              >
+                Save (apply to {selectedCaseRows.length} issue{selectedCaseRows.length !== 1 ? "s" : ""})
+              </Button>
+            </div>
+          }
+        >
+          {selectedCaseRows.length === 0 ? (
+            <div className="create-case-drawer-content">
+              <p style={{ color: "#8c8c8c" }}>Select one or more cases from the table to edit.</p>
+            </div>
+          ) : (
+            <div className="create-case-drawer-content edit-cases-drawer-content">
+              <div className="form-section">
+                <h3 className="section-title">Issue Details</h3>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Incident Date</span>
+                  <DatePicker
+                    value={editCasesDraft.incidentDate}
+                    onChange={(d) => setEditCasesDraft((prev) => ({ ...prev, incidentDate: d }))}
+                    format="YYYY-MM-DD"
+                    style={{ width: "100%" }}
+                    placeholder="Keep As Is"
+                    allowClear
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Location</span>
+                  <Input
+                    value={editCasesDraft.location === KEEP_AS_IS ? "" : editCasesDraft.location}
+                    onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, location: e.target.value.trim() === "" ? KEEP_AS_IS : e.target.value }))}
+                    placeholder="Keep As Is"
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Category</span>
+                  <Select
+                    value={editCasesDraft.category}
+                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, category: v }))}
+                    style={{ width: "100%" }}
+                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesCategories.map((c) => ({ value: c, label: c }))]}
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Case Type</span>
+                  <Select
+                    value={editCasesDraft.caseType}
+                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, caseType: v }))}
+                    style={{ width: "100%" }}
+                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesTypes.map((t) => ({ value: t, label: t }))]}
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Status</span>
+                  <Select
+                    value={editCasesDraft.status}
+                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, status: v }))}
+                    style={{ width: "100%" }}
+                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesStatuses.map((s) => ({ value: s, label: s }))]}
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Priority</span>
+                  <Select
+                    value={editCasesDraft.priority}
+                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, priority: v }))}
+                    style={{ width: "100%" }}
+                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesPriorities.map((p) => ({ value: p, label: p }))]}
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Due Date</span>
+                  <DatePicker
+                    value={editCasesDraft.dueDate}
+                    onChange={(d) => setEditCasesDraft((prev) => ({ ...prev, dueDate: d }))}
+                    format="YYYY-MM-DD"
+                    style={{ width: "100%" }}
+                    placeholder="Keep As Is"
+                    allowClear
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Pertinent to File Review</span>
+                  <Select
+                    value={editCasesDraft.pertinentToFileReview}
+                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, pertinentToFileReview: v }))}
+                    style={{ width: "100%" }}
+                    options={[
+                      { value: KEEP_AS_IS, label: "Keep As Is" },
+                      { value: "true", label: "Yes" },
+                      { value: "false", label: "No" },
+                    ]}
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">File Number</span>
+                  <Input
+                    value={editCasesDraft.fileNumber === KEEP_AS_IS ? "" : editCasesDraft.fileNumber}
+                    onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, fileNumber: e.target.value.trim() === "" ? KEEP_AS_IS : e.target.value }))}
+                    placeholder="Keep As Is"
+                  />
+                </div>
+                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                  <span className="form-label">Assignee</span>
+                  <Select
+                    value={editCasesDraft.assignee}
+                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, assignee: v }))}
+                    style={{ width: "100%" }}
+                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesAssignees.map((a) => ({ value: a, label: a }))]}
+                  />
+                </div>
+                <div className="case-input-container">
+                  <span className="form-label">Related Member(s)</span>
+                  <Input
+                    value={editCasesDraft.relatedMembers === KEEP_AS_IS ? "" : editCasesDraft.relatedMembers}
+                    onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, relatedMembers: e.target.value.trim() === "" ? KEEP_AS_IS : e.target.value }))}
+                    placeholder="Keep As Is"
+                  />
+                </div>
+              </div>
+            </div>
+          )}
+        </Drawer>
+      )}
       {/* <MyDrawer
         title="Refund Entry Drawer"
 

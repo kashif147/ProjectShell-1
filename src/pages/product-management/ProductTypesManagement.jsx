@@ -210,6 +210,7 @@ const ProductTypesManagement = () => {
       dataIndex: "products",
       key: "productsCount",
       render: (products) => products?.length || 0,
+      width: 150,
     },
     {
       title: "Created",
@@ -314,9 +315,18 @@ const ProductTypesManagement = () => {
           currency: data?.currency,
           productId: prodid,
           productId: prodid,
-          memberPrice: selectedProductType?.name === "Membership" ? undefined : data?.memberPrice,
-          nonMemberPrice: selectedProductType?.name === "Membership" ? undefined : data?.nonMemberPrice,
-          price: selectedProductType?.name === "Membership" ? data?.memberPrice : undefined,
+          memberPrice:
+            selectedProductType?.name === "Membership"
+              ? undefined
+              : data?.memberPrice,
+          nonMemberPrice:
+            selectedProductType?.name === "Membership"
+              ? undefined
+              : data?.nonMemberPrice,
+          price:
+            selectedProductType?.name === "Membership"
+              ? data?.memberPrice
+              : undefined,
         },
         {
           headers: { Authorization: `Bearer ${token}` },
@@ -360,10 +370,21 @@ const ProductTypesManagement = () => {
           `${process.env.REACT_APP_POLICY_SERVICE_URL}/pricing/${product.currentPricing._id}`,
           {
             currency: data?.currency,
+            effectiveFrom: data?.effectiveFrom,
+            effectiveTo: data?.effectiveTo,
             status: data?.status,
-            price: selectedProductType?.name === "Membership" ? data?.memberPrice : undefined,
-            memberPrice: selectedProductType?.name === "Membership" ? undefined : data?.memberPrice,
-            nonMemberPrice: selectedProductType?.name === "Membership" ? undefined : data?.nonMemberPrice,
+            price:
+              selectedProductType?.name === "Membership"
+                ? data?.memberPrice
+                : undefined,
+            memberPrice:
+              selectedProductType?.name === "Membership"
+                ? undefined
+                : data?.memberPrice,
+            nonMemberPrice:
+              selectedProductType?.name === "Membership"
+                ? undefined
+                : data?.nonMemberPrice,
           },
           { headers: { Authorization: `Bearer ${token}` } }
         );
@@ -394,11 +415,13 @@ const ProductTypesManagement = () => {
             <div className="text-muted small">{record?.description}</div>
           </div>
         ),
+        sorter: (a, b) => (a.name || "").localeCompare(b.name || ""),
       },
       {
         title: "Code",
         dataIndex: "code",
         key: "code",
+        sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
       },
       {
         title: "Status",
@@ -409,6 +432,11 @@ const ProductTypesManagement = () => {
             {status ? "Active" : "Inactive"}
           </Tag>
         ),
+        sorter: (a, b) => {
+          const aStatus = a.status ? 1 : 0;
+          const bStatus = b.status ? 1 : 0;
+          return aStatus - bStatus;
+        },
       },
     ];
 
@@ -427,6 +455,11 @@ const ProductTypesManagement = () => {
             currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
           return price != null ? `${symbol}${price}.00` : "-";
         },
+        sorter: (a, b) => {
+          const aPrice = convertSandToEuro(a?.currentPricing?.price) || 0;
+          const bPrice = convertSandToEuro(b?.currentPricing?.price) || 0;
+          return aPrice - bPrice;
+        },
       });
     } else {
       baseColumns.push(
@@ -443,6 +476,13 @@ const ProductTypesManagement = () => {
               currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
             return price != null ? `${symbol}${price}.00` : "-";
           },
+          sorter: (a, b) => {
+            const aPrice =
+              convertSandToEuro(a?.currentPricing?.memberPrice) || 0;
+            const bPrice =
+              convertSandToEuro(b?.currentPricing?.memberPrice) || 0;
+            return aPrice - bPrice;
+          },
         },
         {
           title: "Non-Member Price",
@@ -457,6 +497,13 @@ const ProductTypesManagement = () => {
               currencyStr === "EUR" ? "€" : currencyStr === "USD" ? "€" : "";
 
             return price != null ? `${symbol}${price}.00` : "-";
+          },
+          sorter: (a, b) => {
+            const aPrice =
+              convertSandToEuro(a?.currentPricing?.nonMemberPrice) || 0;
+            const bPrice =
+              convertSandToEuro(b?.currentPricing?.nonMemberPrice) || 0;
+            return aPrice - bPrice;
           },
         }
       );
@@ -522,7 +569,6 @@ const ProductTypesManagement = () => {
           locale={{
             emptyText: "No Data",
           }}
-
           // Add this components prop to customize the header
           components={{
             header: {
@@ -532,13 +578,11 @@ const ProductTypesManagement = () => {
                   <th
                     {...restProps}
                     style={{
-                      backgroundColor: '#215e97',
-                      ...restProps.style
+                      backgroundColor: "#215e97",
+                      ...restProps.style,
                     }}
                   >
-                    <div style={{ color: '#fff', }}>
-                      {children}
-                    </div>
+                    <div style={{ color: "#fff" }}>{children}</div>
                   </th>
                 );
               },
@@ -555,7 +599,7 @@ const ProductTypesManagement = () => {
                     render:
                       col.title === "Actions"
                         ? (text, productRecord) =>
-                          col.render(text, productRecord, null, record)
+                            col.render(text, productRecord, null, record)
                         : col.render,
                   }))}
                   dataSource={record?.products || []}
@@ -563,7 +607,9 @@ const ProductTypesManagement = () => {
                   pagination={false}
                   size="small"
                   scroll={
-                    record?.products?.length > 0 ? { x: "max-content" } : undefined
+                    record?.products?.length > 0
+                      ? { x: "max-content" }
+                      : undefined
                   }
                   // Also apply to the inner table if needed
                   components={{
@@ -572,9 +618,9 @@ const ProductTypesManagement = () => {
                         <th
                           {...props}
                           style={{
-                            backgroundColor: '#215e97',
-                            color: 'white',
-                            ...props.style
+                            backgroundColor: "#215e97",
+                            color: "white",
+                            ...props.style,
                           }}
                         />
                       ),

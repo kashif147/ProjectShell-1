@@ -17,17 +17,50 @@ import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { Space } from "antd";
 import Toolbar from "../../component/common/Toolbar";
 
+import { useDispatch, useSelector } from "react-redux";
+import { useEffect } from "react";
+import { getNotificationTokens, sendNotification, clearNotificationState } from "../../features/NotificationSlice";
+import MyAlert from "../../component/common/MyAlert";
+
 const { Option } = Select;
 
 const CommunicationBatchDetail = () => {
     const location = useLocation();
     const navigate = useNavigate();
+    const dispatch = useDispatch();
+    const { tokens, loading, sending, successMessage, error } = useSelector((state) => state.notification);
+    const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+    const [selectedRows, setSelectedRows] = useState([]);
+
+    useEffect(() => {
+        if (successMessage) {
+            MyAlert("success", "Success", successMessage);
+            dispatch(clearNotificationState());
+            setSelectedRowKeys([]);
+            setSelectedRows([]);
+        }
+        if (error) {
+            MyAlert("error", "Error", typeof error === 'string' ? error : "Failed to send notifications");
+            dispatch(clearNotificationState());
+        }
+    }, [successMessage, error, dispatch]);
+
+    useEffect(() => {
+        dispatch(getNotificationTokens());
+    }, [dispatch]);
     // Fallback to static values if no state is passed, but keep it simple
     const batchName = location.state?.batchName || "August Newsletter - Email";
     const batchId = location.state?.batchId || "#BTH-2023-08-15";
+    const notificationTitle = location.state?.title || "Notification Title";
+    const notificationMessage = location.state?.message || "This is the content of the notification message.";
 
     // Static Columns Definition
     const tableColumns = useMemo(() => [
+        {
+            dataIndex: "userId",
+            title: "User ID",
+            width: 150,
+        },
         {
             dataIndex: "memberName",
             title: "Mbbember",
@@ -95,14 +128,14 @@ const CommunicationBatchDetail = () => {
                 );
             }
         },
-        {
-            title: "Actions",
-            key: "actions",
-            width: 100,
-            render: () => (
-                <Button type="text" icon={<MoreOutlined />} />
-            )
-        }
+        // {
+        //     title: "Actions",
+        //     key: "actions",
+        //     width: 100,
+        //     render: () => (
+        //         <Button type="text" icon={<MoreOutlined />} />
+        //     )
+        // }
     ], []);
 
     // Static Stats Data
@@ -118,17 +151,42 @@ const CommunicationBatchDetail = () => {
     };
 
     // Static Table Data
-    const data = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
-        key: i,
-        memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
-        memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
-        initials: i % 2 === 0 ? "AS" : "BJ",
-        avatarColor: i % 2 === 0 ? "#1890ff" : "#fa8c16",
-        channel: "Email",
-        recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
-        timestamp: "Aug 15, 11:02 AM",
-        status: i % 3 === 0 ? "Failed" : i % 2 === 0 ? "Read" : "Delivered"
-    })), []);
+    // const data = useMemo(() => Array.from({ length: 15 }).map((_, i) => ({
+    //     key: i,
+    //     memberName: i % 2 === 0 ? "Alex Smith" : "Bonnie Johnson",
+    //     memberId: i % 2 === 0 ? "#MEM-00124" : "#MEM-00982",
+    //     initials: i % 2 === 0 ? "AS" : "BJ",
+    //     avatarColor: i % 2 === 0 ? "#1890ff" : "#fa8c16",
+    //     channel: "Email",
+    //     recipientDetail: i % 2 === 0 ? "alex.smith@example.com" : "bonnie.j@invalid-domain",
+    //     timestamp: "Aug 15, 11:02 AM",
+    //     status: i % 3 === 0 ? "Failed" : i % 2 === 0 ? "Read" : "Delivered"
+    // })), []);
+
+    const data = useMemo(() => {
+        let tokenList = [];
+        if (Array.isArray(tokens)) {
+            tokenList = tokens;
+        } else if (tokens?.data?.tokens && Array.isArray(tokens.data.tokens)) {
+            tokenList = tokens.data.tokens;
+        } else if (Array.isArray(tokens?.data)) {
+            tokenList = tokens.data;
+        }
+
+        return tokenList.map((token, index) => ({
+            key: index,
+            userId: token.userId || "N/A",
+            memberName: token.profile?.name || "Unknown",
+            memberId: token.memberId || "N/A",
+            initials: "MB",
+            avatarColor: "#1890ff",
+            channel: token.platform || "Unknown",
+            recipientDetail: token.fcmToken ? `${token.fcmToken.substring(0, 20)}...` : "N/A",
+            timestamp: token.createdAt ? new Date(token.createdAt).toLocaleString() : "N/A",
+            status: token.isActive ? "Active" : "Inactive",
+            tenantId: token.tenantId // Ensure tenantId is passed
+        }));
+    }, [tokens]);
 
     const navyButtonStyle = {
         backgroundColor: "#1d5b95",
@@ -172,6 +230,22 @@ const CommunicationBatchDetail = () => {
         gap: "8px"
     };
 
+    const handleSendNotification = () => {
+        if (selectedRows.length === 0) {
+            MyAlert("warning", "Selection Required", "Please select at least one user to send notification.");
+            return;
+        }
+
+        const payload = {
+            title: notificationTitle,
+            body: notificationMessage,
+            userId: selectedRows.map(row => row.userId),
+            tenantId: selectedRows.map(row => row.tenantId || "68cbf7806080b4621d469d34")
+        };
+
+        dispatch(sendNotification(payload));
+    };
+
     return (
         <div style={{ padding: "0", minHeight: '100vh', backgroundColor: '#f5f7fa' }}>
             <div style={{ padding: "16px 24px 0 24px" }}>
@@ -192,13 +266,42 @@ const CommunicationBatchDetail = () => {
                             </h1>
                             <Tag color="blue" style={{ borderRadius: '4px', margin: 0, fontWeight: 'bold' }}>ACTIVE</Tag>
                         </div>
-                        <div style={{ color: '#8c8c8c', marginTop: '4px', fontSize: '13px' }}>
+                        <div style={{ color: '#8c8c8c', marginTop: '4px', fontSize: '13px', marginBottom: '16px' }}>
                             Batch ID: {batchId} • Created on Aug 15, 2023 at 10:45 AM
+                        </div>
+
+                        <div style={{ backgroundColor: '#fff', padding: '16px', borderRadius: '8px', border: '1px solid #f0f0f0', maxWidth: '800px' }}>
+                            <div style={{ marginBottom: '8px' }}>
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#8c8c8c', textTransform: 'uppercase', marginRight: '8px' }}>
+                                    Subject:
+                                </span>
+                                <span style={{ fontWeight: '500', color: '#262626', fontSize: '15px' }}>
+                                    {notificationTitle}
+                                </span>
+                            </div>
+                            <div>
+                                <span style={{ fontSize: '12px', fontWeight: '600', color: '#8c8c8c', textTransform: 'uppercase', marginRight: '8px', verticalAlign: 'top' }}>
+                                    Message:
+                                </span>
+                                <span style={{ color: '#595959', fontSize: '14px', lineHeight: '1.5' }}>
+                                    {notificationMessage}
+                                </span>
+                            </div>
                         </div>
                     </div>
                     <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                        <CommonPopConfirm title="Are you sure you want to trigger notifications for all members in this batch?">
-                            <Button style={retryButtonStyle} icon={<SendOutlined />}>Trigger Notifications</Button>
+                        <CommonPopConfirm
+                            title={`Are you sure you want to send notifications to ${selectedRows.length} selected members?`}
+                            onConfirm={handleSendNotification}
+                        >
+                            <Button
+                                style={retryButtonStyle}
+                                icon={<SendOutlined />}
+                                loading={sending}
+                                disabled={selectedRows.length === 0}
+                            >
+                                Send Notification
+                            </Button>
                         </CommonPopConfirm>
                         <Button style={navyButtonStyle}>Include</Button>
                         <CommonPopConfirm title="Are you sure you want to exclude members?">
@@ -263,6 +366,12 @@ const CommunicationBatchDetail = () => {
                 columns={tableColumns}
                 onRowClick={(record) => {
                     navigate("/Details", { state: { id: record.memberId, ...record } });
+                }}
+                selection={true}
+                rowSelection={{ selectedRowKeys }}
+                onSelectionChange={(selectedKeys, selectedRows) => {
+                    setSelectedRowKeys(selectedKeys);
+                    setSelectedRows(selectedRows);
                 }}
             />
         </div>

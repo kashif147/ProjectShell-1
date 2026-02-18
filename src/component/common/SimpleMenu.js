@@ -81,9 +81,15 @@ function SimpleMenu({
     filtersState
   } = useFilters();
 
-  const { applications, applicationsLoading } = useSelector(
+  const { applications: oldApplications } = useSelector(
     (state) => state.applications
   );
+  const { applications: filteredApplications } = useSelector(
+    (state) => state.applicationWithFilter
+  );
+
+  const isNewApplicationsPage = location.pathname.toLowerCase() === "/applications";
+  const applications = isNewApplicationsPage ? filteredApplications : oldApplications;
 
   // Function to format dates in the application data (matching MembershipApplication.jsx)
   const formatApplicationDates = (applicationData) => {
@@ -194,10 +200,11 @@ function SimpleMenu({
   };
 
   useEffect(() => {
-    if (location.pathname === "/Applications" && !record) {
+    // Redundant: MembershipApplication is now the driver for /applications
+    if (location.pathname === "/Applications" && !record && !isNewApplicationsPage) {
       dispatch(getAllApplications(filtersState));
     }
-  }, [location.pathname, filtersState, dispatch, record]);
+  }, [location.pathname, filtersState, dispatch, record, isNewApplicationsPage]);
 
   useEffect(() => {
     if (location.pathname === "/Applications" && applications && applications.length > 0) {

@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { Dropdown, Checkbox, Badge, Space, Select, Divider, Button, Alert } from "antd";
 import { DownOutlined } from "@ant-design/icons";
 
@@ -17,52 +17,58 @@ const MultiFilterDropdown = ({
   onApply,
 }) => {
   const [open, setOpen] = useState(false);
+  const [tempSelectedValues, setTempSelectedValues] = useState(selectedValues);
   const hoverTimer = useRef(null);
+
+  // Sync tempSelectedValues when prop selectedValues changes (e.g. on load or reset)
+  useEffect(() => {
+    setTempSelectedValues(selectedValues);
+  }, [selectedValues]);
+
+  // Also reset tempSelectedValues when the dropdown is CLOSED without applying
+  useEffect(() => {
+    if (!open) {
+      setTempSelectedValues(selectedValues);
+    }
+  }, [open, selectedValues]);
 
   // Check if this is a warning/empty state
   const isEmptyWarning = options[0] && options[0].startsWith("⚠️");
   const warningMessage = isEmptyWarning ? options[0] : "";
-  
+
   // Check if it's loading
   const isLoading = options.length === 1 && options[0] === "Loading...";
-  
+
   // Check if there are no REAL options (just empty string or loading)
   // We have options if: array length > 1 OR (length = 1 and not empty string/loading/warning)
-  const hasRealOptions = options.length > 1 || 
+  const hasRealOptions = options.length > 1 ||
     (options.length === 1 && options[0] !== "" && options[0] !== "Loading..." && !options[0].startsWith("⚠️"));
 
   const handleCheckboxChange = (value) => {
-    const newSelectedValues = selectedValues.includes(value)
-      ? selectedValues.filter((v) => v !== value)
-      : [...selectedValues, value];
-    console.log(newSelectedValues,"new")
+    // Ensure we are working with an array
+    const currentSelected = Array.isArray(tempSelectedValues) ? tempSelectedValues : [];
+
+    // Robust comparison (stringified)
+    const stringValue = String(value);
+    const exists = currentSelected.some(v => String(v) === stringValue);
+
+    const newSelectedValues = exists
+      ? currentSelected.filter((v) => String(v) !== stringValue)
+      : [...currentSelected, value];
+
+    setTempSelectedValues(newSelectedValues);
+
+    // Immediate Apply: Notify parent of the change right away
     onApply?.({ label, operator: propOperator, selectedValues: newSelectedValues });
   };
 
   const handleReset = () => {
     onApply?.({ label, operator: "==", selectedValues: [] });
-  };
-
-  const handleApply = () => {
-    console.log("🎯 APPLY BUTTON CLICKED - Selected Filters:", {
-      filterLabel: label,
-      operator: propOperator,
-      selectedValues: selectedValues,
-      selectedCount: selectedValues.length,
-      totalOptions: options.length,
-      isAllSelected: selectedValues.length === options.length
-    });
-
-    if (selectedValues.length === options.length) {
-      console.log("✅ ALL FILTERS ARE SELECTED for:", label);
-      console.log("📋 Selected values:", selectedValues);
-    }
-
-    setOpen(false);
+    setTempSelectedValues([]);
   };
 
   const handleOperatorChange = (value) => {
-    onApply?.({ label, operator: value, selectedValues });
+    onApply?.({ label, operator: value, selectedValues: tempSelectedValues });
   };
 
   // 🧭 Hover behavior
@@ -77,7 +83,7 @@ const MultiFilterDropdown = ({
     }, 150);
   };
 
-  const badgeCount = selectedValues.length;
+  const badgeCount = Array.isArray(tempSelectedValues) ? tempSelectedValues.length : 0;
 
   // Warning/Empty Menu Content
   const getMenuContent = () => {
@@ -97,8 +103,8 @@ const MultiFilterDropdown = ({
                   {warningMessage.replace("⚠️ ", "")}
                 </div>
                 <div style={{ fontSize: "12px", color: "#8c8c8c", fontStyle: "italic" }}>
-                  {label === "Region" || label === "Branch" 
-                    ? "Please select a Work Location first to see available options." 
+                  {label === "Region" || label === "Branch"
+                    ? "Please select a Work Location first to see available options."
                     : "No data available for the selected criteria."}
                 </div>
               </div>
@@ -110,7 +116,7 @@ const MultiFilterDropdown = ({
         </div>
       );
     }
-    
+
     if (isLoading) {
       return (
         <div
@@ -129,12 +135,12 @@ const MultiFilterDropdown = ({
         </div>
       );
     }
-    
+
     // Check for empty options (no data from API)
     // This happens when options = [""] and it's Region or Branch filter
     const isRegionOrBranch = label === "Region" || label === "Branch";
     const isEmptyApiResponse = isRegionOrBranch && options.length === 1 && options[0] === "";
-    
+
     if (isEmptyApiResponse) {
       return (
         <div
@@ -148,7 +154,7 @@ const MultiFilterDropdown = ({
             description={
               <div style={{ marginTop: "8px" }}>
                 <div style={{ marginBottom: "8px" }}>
-                  {label === "Branch" 
+                  {label === "Branch"
                     ? "No branches available for the selected Work Location and Region."
                     : "No regions available for the selected Work Location."}
                 </div>
@@ -188,28 +194,26 @@ const MultiFilterDropdown = ({
         <Divider style={{ margin: "8px 0" }} />
 
         <div className="checkbox-list">
-          {options.map((option) => (
-            <Checkbox
-              key={option}
-              checked={selectedValues.includes(option)}
-              onChange={() => handleCheckboxChange(option)}
-              disabled={option === ""} // Disable empty option
-            >
-              {option === "" ? <span style={{ color: "#bfbfbf" }}>-- Select --</span> : option}
-            </Checkbox>
-          ))}
+          {options.filter(opt => opt && String(opt).trim() !== "").map((option) => {
+            const stringOption = String(option);
+            const isChecked = Array.isArray(tempSelectedValues) &&
+              tempSelectedValues.some(v => String(v) === stringOption);
+
+            return (
+              <Checkbox
+                key={stringOption}
+                checked={isChecked}
+                onChange={() => handleCheckboxChange(option)}
+              >
+                {option}
+              </Checkbox>
+            );
+          })}
         </div>
 
         <div className="d-flex justify-content-end gap-2 mt-3 mb-1">
-          <Button size="small" onClick={handleReset}>
-            Reset
-          </Button>
-          <Button
-            type="primary"
-            size="small"
-            onClick={handleApply}
-          >
-            Apply
+          <Button size="small" onClick={handleReset} style={{ width: "100%" }}>
+            Reset Filters
           </Button>
         </div>
       </div>
@@ -218,13 +222,13 @@ const MultiFilterDropdown = ({
 
   const renderButtonContent = () => {
     // For empty/warning/loading states, show normal button but with disabled styling
-    const isDisabledState = isEmptyWarning || isLoading || 
+    const isDisabledState = isEmptyWarning || isLoading ||
       ((label === "Region" || label === "Branch") && options.length === 1 && options[0] === "");
-    
+
     return (
-      <div 
+      <div
         className={`filter-button1 ${badgeCount > 0 ? "active" : ""} ${isDisabledState ? "disabled-state" : ""}`}
-        style={isDisabledState ? { 
+        style={isDisabledState ? {
           opacity: 0.7,
           backgroundColor: badgeCount > 0 ? "rgba(9, 30, 66, 0.08)" : "rgba(9, 30, 66, 0.04)",
           cursor: "pointer"

@@ -5,6 +5,7 @@ import {
   financeItems,
   correspondenceItems,
   configurationItems,
+  casesItems,
   profileItems,
   reportItems,
   issuesItems,
@@ -44,7 +45,8 @@ const Sidebar = () => {
       Configuration: configurationItems,
       Profiles: profileItems,
       Reports: reportItems,
-      "Issue Management": issuesItems,
+      "Issues Management": issuesItems,
+      Cases: casesItems,
       Events: eventsItems,
     }),
     []
@@ -111,6 +113,10 @@ const Sidebar = () => {
       "/Transfers": "Transfer Requests",
       "/Configuratin": "System Configuration",
       "/RosterSummary": "Roster",
+      "/EventsSummary": "Events",
+      "/Attendees": "Attendees",
+      "/Reporting": "Reporting",
+      "/EventsSettings": "Settings",
       "/Batches": "Batches",
       "/Applications": "Applications",
       "/RemindersSummary": "Reminders",
@@ -118,11 +124,14 @@ const Sidebar = () => {
       "/ChangCateSumm": "Change Category",
       "/Import": "Imports",
       "/Deductions": "Deductions",
-      "/Reconciliation": "Reconciliation",
+      "/Reconciliation": "Reconciliations",
       "/StandingOrders": "Standing Orders",
-      "/Cheque": "Cheques",
+      "/Cheque": "Cheque",
+      "/Refunds": "Refunds",
+      "/onlinePayment": "Online Payments",
       "/Email": "Email",
       "/Sms": "SMS",
+      "/InAppNotifications": "InAppNotifications",
       "/Notes": "Notes & Letters",
       "/Letters": "Notes & Letters",
       "/CorspndncDetail": "Communication History",
@@ -132,6 +141,9 @@ const Sidebar = () => {
       "/RoleManagement": "Role Management",
       "/UserManagement": "User Management",
       "/PermissionManagement": "Permission Management",
+      "/ProductTypesManagement": "Product Management",
+      "/templeteSummary": "Templetes",
+      "/templeteConfig": "Templetes",
       "/CancelledMembersReport": "Cancelled Members Report",
       "/PolicyClientExample": "Policy Client Example",
       "/NewGraduate": "CornMarket New Graduate",
@@ -146,13 +158,47 @@ const Sidebar = () => {
       "/LeaversReport": "Leavers Report",
       "/JoinersReport": "Joiners Report",
       "/CorrespondenceDashboard": "Dashboard",
+      "/ReportsSettings": "Reports setting",
     };
 
     const currentPath = Object.keys(routeKeyMap).find((route) =>
       location.pathname.startsWith(route)
     );
+    
+    if (!currentPath) return "";
+    
+    // Handle context-specific mappings
+    if (currentPath === "/EventsSummary" && activeKey === "Events") {
+      return "Dashboard";
+    }
+    if (currentPath === "/CasesSummary" && activeKey === "Cases") {
+      return "Dashboard";
+    }
+    if (currentPath === "/CasesSummary" && activeKey === "Issues Management") {
+      // Check location state to determine if it's "All Issues" or "Assigned to me"
+      const searchState = location.state?.search;
+      if (searchState === "All Issues") {
+        return "All Issues";
+      }
+      if (searchState === "Assigned to me") {
+        return "Assigned to me";
+      }
+      // Default to "All Issues" for Issues Management context
+      return "All Issues";
+    }
+    if (currentPath === "/CasesSummary" && activeKey === "Cases") {
+      // Check location state for Cases context
+      const searchState = location.state?.search;
+      if (searchState === "Assigned to me") {
+        return "Assigned to me";
+      }
+      if (searchState === "Reports setting") {
+        return "Reports setting";
+      }
+    }
+    
     return routeKeyMap[currentPath] || "";
-  }, [location.pathname]);
+  }, [location.pathname, activeKey, location.state]);
 
   const handleClick = ({ key }) => {
     switch (key) {
@@ -163,13 +209,39 @@ const Sidebar = () => {
         navigate("/ClaimSummary", { state: { search: "Claims" } });
         break;
       case "Cases":
-        navigate("/CasesSummary", { state: { search: "Cases" } });
+        navigate("/CasesSummary", { state: { search: "All Issues" } });
+        break;
+      case "All Issues":
+      case "All cases":
+        navigate("/CasesSummary", { state: { search: "All Issues" } });
+        break;
+      case "Assigned to me":
+        navigate("/CasesSummary", { state: { search: "Assigned to me" } });
         break;
       case "Correspondences":
         navigate("/CorrespondenceDashboard", { state: { search: "" } });
         break;
       case "Dashboard":
-        navigate("/CorrespondenceDashboard", { state: { search: "" } });
+        if (activeKey === "Cases") {
+          navigate("/CasesSummary", { state: { search: "" } });
+        } else if (activeKey === "Events") {
+          navigate("/EventsSummary", { state: { search: "" } });
+        } else {
+          navigate("/CorrespondenceDashboard", { state: { search: "" } });
+        }
+        break;
+      case "Attendees":
+        navigate("/Attendees", { state: { search: "Attendees" } });
+        break;
+      case "Reporting":
+        navigate("/Reporting", { state: { search: "Reporting" } });
+        break;
+      case "Settings":
+        if (activeKey === "Events") {
+          navigate("/EventsSettings", { state: { search: "Settings" } });
+        } else {
+          navigate("/Settings", { state: { search: "Settings" } });
+        }
         break;
       case "Transfer Requests":
         navigate("/Transfers", { state: { search: "Transfers" } });
@@ -179,6 +251,9 @@ const Sidebar = () => {
         break;
       case "Roster":
         navigate("/RosterSummary", { state: { search: "Rosters" } });
+        break;
+      case "Events":
+        navigate("/EventsSummary", { state: { search: "Events" } });
         break;
       case "Batches":
         navigate("/Batches", { state: { search: "Batches" } });
@@ -320,15 +395,6 @@ const Sidebar = () => {
         navigate("/PolicyClientExample", {
           state: { search: "Policy Client Example" },
         });
-      case "Templetes":
-        navigate("/templeteSummary", {
-          state: { search: "Templetes" },
-        });
-        break;
-      case "Membership":
-        navigate("/Members", {
-          state: { search: "Membership" },
-        });
         break;
       case "Templetes":
         navigate("/templeteSummary", {
@@ -343,6 +409,9 @@ const Sidebar = () => {
         break;
       case "Recruit a Friend":
         navigate("/RecruitAFriend", { state: { search: "Recruit a Friend" } });
+        break;
+      case "Reports setting":
+        navigate("/ReportsSettings", { state: { search: "Reports setting" } });
         break;
       default:
         navigate("/NotDesignedYet");

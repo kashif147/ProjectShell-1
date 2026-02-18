@@ -20,7 +20,7 @@ const Breadcrumb = () => {
     Membership: { icon: "👤", route: "/Summary" },
     Finance: { icon: "💰", route: "/Batches" },
     Correspondence: { icon: "📧", route: "/CorrespondencesSummary" },
-    Events: { icon: "📅", route: "/RosterSummary" },
+    Events: { icon: "📅", route: "/EventsSummary" },
     Configuration: { icon: "⚙️", route: "/Configuratin" },
     Reports: { icon: "📊", route: "/Reports" },
     Settings: { icon: "⚙️", route: "/Configuratin" },
@@ -80,15 +80,21 @@ const Breadcrumb = () => {
 
     // Cases Pages
     "/CasesSummary": {
-      module: "Issue Management",
-      page: "Cases Summary",
+      module: "Issues Management",
+      page: "Issues Summary",
       icon: "📋",
     },
     "/CasesById": {
-      module: "Issue Management",
-      page: "Case Details",
+      module: "Issues Management",
+      page: "Issue Details",
       icon: "📋",
       recordIdField: "code",
+    },
+    "/CasesDetails": {
+      module: "Issues Management",
+      page: "Case Details",
+      icon: "📋",
+      recordIdField: "caseId",
     },
 
     // Claims Pages
@@ -281,7 +287,19 @@ const Breadcrumb = () => {
       recordIdField: "code",
     },
 
-    // Roster Pages
+    // Events Pages
+    "/EventsSummary": {
+      module: "Events",
+      page: "Events Summary",
+      icon: "📅",
+    },
+    "/EventDetails": {
+      module: "Events",
+      page: "Event Details",
+      icon: "📅",
+      recordIdField: "eventId",
+    },
+    // Roster Pages (Legacy)
     "/RosterSummary": {
       module: "Events",
       page: "Roster Summary",
@@ -399,10 +417,17 @@ const Breadcrumb = () => {
     },
   };
 
+  const { data: batchDetails } = useSelector((state) => state.batchDetails);
+
   // Get breadcrumb data for current route
   const getBreadcrumbData = () => {
     const currentPath = location.pathname;
-    const breadcrumbData = routeBreadcrumbMap[currentPath];
+    // Handle dynamic routes with IDs
+    const matchedPath = Object.keys(routeBreadcrumbMap).find(path =>
+      currentPath.startsWith(path)
+    );
+
+    const breadcrumbData = routeBreadcrumbMap[matchedPath || currentPath];
 
     if (!breadcrumbData) {
       return null;
@@ -429,17 +454,23 @@ const Breadcrumb = () => {
 
   // Get record ID from location state or params
   const getRecordId = () => {
-    if (!breadcrumbData.recordIdField) return null;
-
     // Try to get from location state first
-    if (location.state && location.state[breadcrumbData.recordIdField]) {
+    if (location.state && breadcrumbData.recordIdField && location.state[breadcrumbData.recordIdField]) {
       return location.state[breadcrumbData.recordIdField];
+    }
+
+    // Fallback for BatchMemberSummary from Redux
+    if (location.pathname.includes("BatchMemberSummary") && batchDetails?.description) {
+      return batchDetails.description;
     }
 
     // Try to get from location state with different field names
     const commonIdFields = [
       "id",
       "memberNo",
+      "membershipNumber",
+      "membershipNo",
+      "memberId",
       "regNo",
       "code",
       "caseId",
@@ -461,10 +492,14 @@ const Breadcrumb = () => {
       }
     }
 
-    // Try to get from URL params
-    const pathSegments = location.pathname.split("/");
+    // Try to get from URL params (last segment)
+    const pathSegments = location.pathname.split("/").filter(Boolean);
     if (pathSegments.length > 1) {
-      return pathSegments[pathSegments.length - 1];
+      const lastSegment = pathSegments[pathSegments.length - 1];
+      // Simple check to see if it looks like an ID (not a word like "Summary")
+      if (lastSegment && (lastSegment.length > 10 || /\d/.test(lastSegment))) {
+        return lastSegment;
+      }
     }
 
     return null;
@@ -495,11 +530,11 @@ const Breadcrumb = () => {
     const moduleRoutes = {
       Configuration: "/Configuratin",
       "Subscriptions & Rewards": "/Summary",
-      "Issue Management": "/CasesSummary",
+      "Issues Management": "/CasesSummary",
       Correspondence: "/CorrespondencesSummary",
       Finance: "/Batches",
       Reports: "/Reports",
-      Events: "/RosterSummary",
+      Events: "/EventsSummary",
       Settings: "/Configuratin",
       Courses: "/Courses",
       "Professional Development": "/ProfessionalDevelopment",
@@ -559,22 +594,24 @@ const Breadcrumb = () => {
     onClick: handleModuleClick,
   });
 
-  // Add page item
-  breadcrumbItems.push({
-    title: (
-      <span style={{ display: "flex", alignItems: "center" }}>
-        <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
-        {breadcrumbData.page}
-      </span>
-    ),
-    onClick: handlePageClick,
-  });
+  // Add page item only if page title is present
+  if (breadcrumbData.page) {
+    breadcrumbItems.push({
+      title: (
+        <span style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
+          {breadcrumbData.page}
+        </span>
+      ),
+      onClick: handlePageClick,
+    });
+  }
 
   // Add record level if we have a record ID
   if (recordId) {
     const isBatchPage = location.pathname.includes("BatchMemberSummary") || location.pathname.includes("DirectDebitBatchDetails");
-    const batchId = location.state?.batchId;
-    const batchStatus = location.state?.batchStatus;
+    const batchId = location.state?.batchId || (location.pathname.includes("BatchMemberSummary") ? batchDetails?._id : null);
+    const batchStatus = location.state?.batchStatus || (location.pathname.includes("BatchMemberSummary") ? batchDetails?.batchStatus : null);
 
     breadcrumbItems.push({
       title: (
@@ -582,17 +619,17 @@ const Breadcrumb = () => {
           <span style={{ marginRight: 4 }}>📄</span>
           <span style={{ fontWeight: 600 }}>{recordId}</span>
           {isBatchPage && batchId && (
-            <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId})</span>
+            <span style={{ color: "#64748b", fontSize: "12px" }}>({batchId.slice(-6).toUpperCase()})</span>
           )}
           {isBatchPage && batchStatus && (
             <span style={{
               fontSize: "10px",
               padding: "2px 8px",
               borderRadius: "10px",
-              backgroundColor: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#f0fdf4" : "#eff6ff",
-              color: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#166534" : "#1e40af",
+              backgroundColor: batchStatus === "Completed" || batchStatus === "Acknowledged" || batchStatus === "Done" ? "#f0fdf4" : "#eff6ff",
+              color: batchStatus === "Completed" || batchStatus === "Acknowledged" || batchStatus === "Done" ? "#166534" : "#1e40af",
               border: "1px solid",
-              borderColor: batchStatus === "Completed" || batchStatus === "Acknowledged" ? "#bbf7d0" : "#bfdbfe",
+              borderColor: batchStatus === "Completed" || batchStatus === "Acknowledged" || batchStatus === "Done" ? "#bbf7d0" : "#bfdbfe",
               textTransform: "uppercase",
               fontWeight: "700"
             }}>
@@ -625,7 +662,7 @@ const Breadcrumb = () => {
   }
 
   return (
-    <div className="bred-cram-main" style={{ padding: "8px 16px" }}>
+    <div className="bred-cram-main" style={{ padding: "0" }}>
       <AntBreadcrumb
         items={breadcrumbItems}
         separator=">"

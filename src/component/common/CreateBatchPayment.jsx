@@ -1,18 +1,37 @@
-import { useState, useContext, forwardRef, useImperativeHandle, useEffect } from 'react';
-import { Form, Input, Select, DatePicker, Row, Col, Card, Typography, Divider, message, Button } from 'antd';
-import * as XLSX from 'xlsx';
-import { ExcelContext } from '../../context/ExcelContext';
-import { UploadOutlined } from '@ant-design/icons';
-import { paymentTypes } from '../../Data';
-import '../../styles/CreateBatchPayment.css';
-import MyDatePicker from './MyDatePicker';
-import MyInput from './MyInput';
-import CustomSelect from './CustomSelect';
-import { useLocation } from 'react-router-dom';
-import { useDispatch } from 'react-redux';
-import { addBatchWithMember } from '../../features/BatchesSlice'; // Import the Redux action
-import { useNavigate } from 'react-router-dom';
-import moment from 'moment';
+import {
+  useState,
+  useContext,
+  forwardRef,
+  useImperativeHandle,
+  useEffect,
+} from "react";
+import axios from "axios";
+import { useSelector, useDispatch } from "react-redux";
+import {
+  Form,
+  Input,
+  Select,
+  DatePicker,
+  Row,
+  Col,
+  Card,
+  Typography,
+  Divider,
+  message,
+  Button,
+} from "antd";
+import * as XLSX from "xlsx";
+import { ExcelContext } from "../../context/ExcelContext";
+import { UploadOutlined } from "@ant-design/icons";
+import { paymentTypes } from "../../Data";
+import "../../styles/CreateBatchPayment.css";
+import MyDatePicker from "./MyDatePicker";
+import MyInput from "./MyInput";
+import CustomSelect from "./CustomSelect";
+import { useLocation } from "react-router-dom";
+import { addBatchWithMember } from "../../features/BatchesSlice"; // Import the Redux action
+import { useNavigate } from "react-router-dom";
+import moment from "moment";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
@@ -24,13 +43,14 @@ const requiredColumns = [
   "Arrears",
   "Comments",
   "Advance",
-  "Total Amount"
+  "Total Amount",
 ];
 
 const CreateBatchPayment = forwardRef((props, ref) => {
   const location = useLocation();
-  const navigate = useNavigate()
+  const navigate = useNavigate();
   const dispatch = useDispatch(); // Initialize Redux dispatch
+  const { workLocationOptions, branchOptions } = useSelector((state) => state.lookups);
 
   const memberData = [
     {
@@ -54,18 +74,27 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   ];
 
   const [form] = Form.useForm();
-  const { excelData, setExcelData, setBatchTotals, batchTotals, setUploadedFile, uploadedFile } = useContext(ExcelContext);
+  const {
+    excelData,
+    setExcelData,
+    setBatchTotals,
+    batchTotals,
+    setUploadedFile,
+    uploadedFile,
+  } = useContext(ExcelContext);
   console.log("uploadedFile", excelData);
 
   const [isSpecialPath, setIsSpecialPath] = useState(false);
-  const [autoBatchType, setAutoBatchType] = useState('');
+  const [autoBatchType, setAutoBatchType] = useState("");
 
   const [formValues, setFormValues] = useState({
-    batchType: '',
-    batchDate: '',
-    batchRef: '',
-    description: '',
-    comments: '',
+    batchType: "",
+    batchDate: "",
+    paymentDate: "",
+    batchRef: "",
+    description: "",
+    comments: "",
+    workLocation: "",
   });
 
   const [formErrors, setFormErrors] = useState({});
@@ -73,28 +102,28 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   // Check current path and set batch type accordingly
   useEffect(() => {
     const currentPath = location.pathname;
-    let batchType = '';
+    let batchType = "";
     let isSpecial = false;
 
     switch (currentPath) {
       case "/StandingOrders":
-        batchType = 'Standing Order';
+        batchType = "Standing Order";
         isSpecial = true;
         break;
       case "/Deductions":
-        batchType = 'Deductions';
+        batchType = "deduction";
         isSpecial = true;
         break;
       case "/onlinePayment":
-        batchType = 'Online Payment';
+        batchType = "Online Payment";
         isSpecial = true;
         break;
       case "/Cheque":
-        batchType = 'Cheque';
+        batchType = "Cheque";
         isSpecial = true;
         break;
       default:
-        batchType = '';
+        batchType = "";
         isSpecial = false;
     }
 
@@ -103,20 +132,20 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
     // If it's a special path, automatically set batchType
     if (isSpecial && batchType) {
-      setFormValues(prev => ({
+      setFormValues((prev) => ({
         ...prev,
-        batchType: batchType
+        batchType: batchType,
       }));
     }
 
     // Cleanup function - reset form values when component unmounts
     return () => {
       setFormValues({
-        batchType: '',
-        batchDate: '',
-        batchRef: '',
-        description: '',
-        comments: '',
+        batchType: "",
+        batchDate: "",
+        batchRef: "",
+        description: "",
+        comments: "",
       });
       setFormErrors({});
       // Also clear Excel context data if needed
@@ -140,7 +169,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
     reader.onload = (e) => {
       const data = new Uint8Array(e.target.result);
-      const workbook = XLSX.read(data, { type: 'array' });
+      const workbook = XLSX.read(data, { type: "array" });
 
       const sheetName = workbook.SheetNames[0];
       const worksheet = workbook.Sheets[sheetName];
@@ -152,14 +181,20 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         return;
       }
 
-      const requiredColumns = ['Membership No', 'Last name', 'First name', 'Full name', 'Value for Periods Selected'];
+      const requiredColumns = [
+        "Membership No",
+        "Last name",
+        "First name",
+        "Full name",
+        "Value for Periods Selected",
+      ];
       const uploadedColumns = Object.keys(json[0]);
       const missingColumns = requiredColumns.filter(
         (col) => !uploadedColumns.includes(col)
       );
 
       if (missingColumns.length > 0) {
-        message.error(`Missing required columns: ${missingColumns.join(', ')}`);
+        message.error(`Missing required columns: ${missingColumns.join(", ")}`);
       } else {
         message.success("All required columns are present.");
         setExcelData(json);
@@ -185,6 +220,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
           totalCurrent,
           total: batchTotal,
           records: json.length,
+          exceptionTotal: 0,
         });
       }
     };
@@ -194,7 +230,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
   const setField = (name, value) => {
     // Don't allow changing batchType if it's a special path
-    if (name === 'batchType' && isSpecialPath) {
+    if (name === "batchType" && isSpecialPath) {
       return;
     }
 
@@ -202,18 +238,24 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     setFormErrors((prev) => ({ ...prev, [name]: false }));
   };
 
-  const handleSubmit = () => {
-    const required = ['batchType', 'batchDate', 'batchRef'];
+  const handleSubmit = async () => {
+    const required = [
+      "batchType",
+      "batchDate",
+      "paymentDate",
+      "batchRef",
+      "workLocation",
+    ];
     const nextErrors = {};
     required.forEach((key) => {
-      if (!formValues[key] || String(formValues[key]).trim() === '') {
+      if (!formValues[key] || String(formValues[key]).trim() === "") {
         nextErrors[key] = true;
       }
     });
     setFormErrors(nextErrors);
 
     if (Object.keys(nextErrors).length > 0) {
-      message.error('Please fill all required fields.');
+      message.error("Please fill all required fields.");
       return null;
     }
 
@@ -230,27 +272,73 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       batchType: formValues.batchType,
       batchDate: formValues.batchDate,
       batchRef: formValues.batchRef,
+      workLocation: formValues.workLocation,
       description: formValues.description,
-      batchStatus: 'Pending',
+      batchStatus: "Pending",
       comments: formValues.comments,
       createdBy: "Super User",
       members: members,
     };
 
+    // If it's a deduction batch, call the API
+    if (formValues.batchType?.toLowerCase() === "deduction") {
+      try {
+        const formData = new FormData();
+        formData.append("type", "deduction");
+        formData.append("date", formValues.paymentDate);
+        formData.append("batchDate", formValues.batchDate);
+        formData.append("paymentDate", formValues.paymentDate);
+        formData.append("workLocation", formValues.workLocation);
+        formData.append("referenceNumber", formValues.batchRef);
+        formData.append("description", formValues.description);
+        formData.append("comments", formValues.comments || "");
+        if (uploadedFile) {
+          formData.append("file", uploadedFile);
+        }
+
+        const token = localStorage.getItem("token");
+        const response = await axios.post(
+          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details`,
+          formData,
+          {
+            headers: {
+              "Content-Type": "multipart/form-data",
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        if (response.status === 200 || response.status === 201) {
+          message.success(
+            "Deduction batch created successfully in profile service"
+          );
+          const batchId = response?.data?.data?._id;
+          // Merge the API response ID into the batch object if needed
+          const finalBatchObject = { ...batchObject, _id: batchId };
+          setExcelData(finalBatchObject);
+          return finalBatchObject;
+        }
+      } catch (error) {
+        console.error("Error creating deduction batch:", error);
+        message.error("Failed to create deduction batch in profile service");
+        return null; // Stop navigation if API call fails
+      }
+    }
+
     setExcelData(batchObject);
-    message.success('Batch data prepared successfully');
+    message.success("Batch data prepared successfully");
     return batchObject;
   };
-
 
   // Add a reset function that can be called from parent
   const resetForm = () => {
     setFormValues({
-      batchType: '',
-      batchDate: '',
-      batchRef: '',
-      description: '',
-      comments: '',
+      batchType: "",
+      batchDate: "",
+      paymentDate: "",
+      batchRef: "",
+      description: "",
+      comments: "",
     });
     setFormErrors({});
     setExcelData([]);
@@ -266,7 +354,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     // Also reset the file input
     const fileInput = document.querySelector('input[type="file"]');
     if (fileInput) {
-      fileInput.value = '';
+      fileInput.value = "";
     }
   };
 
@@ -310,19 +398,23 @@ const CreateBatchPayment = forwardRef((props, ref) => {
   };
 
   return (
-    <div className="create-batch-container">
+    <div className="create-batch-container drwer-bg-clr">
       <div className="header">
-        <Title level={3} className="page-title">{getPageTitle()}</Title>
+        <Title level={3} className="page-title">
+          {getPageTitle()}
+        </Title>
         <Text type="secondary">{getBreadcrumbText()}</Text>
       </div>
 
       <Row gutter={24} style={{ marginTop: 24 }}>
         <Col span={14}>
-          <Card className="batch-card" bodyStyle={{ padding: '24px' }}>
-            <Title level={4} className="section-title">Batch Details</Title>
+          <Card className="batch-card" styles={{ body: { padding: "24px" } }}>
+            <Title level={4} className="section-title">
+              Batch Details
+            </Title>
             <Form layout="vertical" form={form} requiredMark={false}>
-              <div className='d-flex w-100' style={{ gap: '5px' }}>
-                <div className='w-50'>
+              <div className="d-flex w-100" style={{ gap: "5px" }}>
+                <div className="w-50">
                   <CustomSelect
                     label="Batch Type"
                     name="batchType"
@@ -330,27 +422,52 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                     disabled={isSpecialPath} // Disable if special path
                     hasError={!!formErrors.batchType}
                     errorMessage="Please select batch type"
-                    options={(paymentTypes || []).map((p) => ({ value: p.value || p, label: p.label || p }))}
+                    options={(paymentTypes || []).map((p) => ({
+                      value: p.value || p,
+                      label: p.label || p,
+                    }))}
                     value={formValues.batchType}
-                    onChange={(e) => setField('batchType', e.target.value)}
+                    onChange={(e) => setField("batchType", e.target.value)}
                   />
-                  {isSpecialPath && (
-                    <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
-                      Payment type is automatically set to {autoBatchType}
-                    </Text>
-                  )}
                 </div>
-                <div className='w-50'>
+                <div className="w-50">
                   <MyDatePicker
                     label="Batch Date"
                     name="batchDate"
                     required
                     hasError={!!formErrors.batchDate}
-                    errorMessage="Please select batch date"
+                    errorMessage="Please select payment date"
                     value={formValues.batchDate}
                     onChange={(dateString) => setField("batchDate", dateString)}
+                    picker="month"
+                    format="MM/YYYY"
                   />
                 </div>
+              </div>
+              <div className="w-100">
+                <MyDatePicker
+                  label="Payment Date"
+                  name="paymentDate"
+                  required
+                  hasError={!!formErrors.paymentDate}
+                  errorMessage="Please select payment date"
+                  value={formValues.paymentDate}
+                  onChange={(dateString) => setField("paymentDate", dateString)}
+                  format="DD/MM/YYYY"
+                />
+              </div>
+
+              <div className="w-100 mb-3">
+                <CustomSelect
+                  label={location.pathname === "/StandingOrders" ? "Bank Name" : "Work Location"}
+                  name="workLocation"
+                  required
+                  hasError={!!formErrors.workLocation}
+                  errorMessage={`Please select ${location.pathname === "/StandingOrders" ? "bank name" : "work location"}`}
+                  options={location.pathname === "/StandingOrders" ? branchOptions : workLocationOptions}
+                  value={formValues.workLocation}
+                  onChange={(e) => setField("workLocation", e.target.value)}
+                />
               </div>
 
               <MyInput
@@ -360,7 +477,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 hasError={!!formErrors.batchRef}
                 errorMessage="Please enter batch reference number"
                 value={formValues.batchRef}
-                onChange={(e) => setField('batchRef', e.target.value)}
+                onChange={(e) => setField("batchRef", e.target.value)}
               />
 
               <MyInput
@@ -372,7 +489,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 type="textarea"
                 rows={3}
                 value={formValues.description}
-                onChange={(e) => setField('description', e.target.value)}
+                onChange={(e) => setField("description", e.target.value)}
               />
 
               <MyInput
@@ -381,7 +498,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 type="textarea"
                 rows={3}
                 value={formValues.comments}
-                onChange={(e) => setField('comments', e.target.value)}
+                onChange={(e) => setField("comments", e.target.value)}
               />
 
               <MyInput
@@ -395,8 +512,12 @@ const CreateBatchPayment = forwardRef((props, ref) => {
                 onChange={handleFileUpload}
               />
               {window.location.pathname !== "/Import" && (
-                <Text type="secondary" style={{ fontSize: '12px', marginTop: '4px' }}>
-                  Excel file is optional. If no file is uploaded, an empty batch will be created.
+                <Text
+                  type="secondary"
+                  style={{ fontSize: "12px", marginTop: "4px" }}
+                >
+                  Excel file is optional. If no file is uploaded, an empty batch
+                  will be created.
                 </Text>
               )}
             </Form>
@@ -404,25 +525,37 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         </Col>
 
         <Col span={10}>
-          <Card className="batch-card" bodyStyle={{ padding: '24px' }}>
-            <Title level={4} className="section-title">Batch Summary</Title>
+          <Card className="batch-card" styles={{ body: { padding: "24px" } }}>
+            <Title level={4} className="section-title">
+              Batch Summary
+            </Title>
             <div className="summary-line">
-              <Text>Total Arrears (€):</Text> <Text strong>€{batchTotals?.arrears?.toLocaleString()}</Text>
+              <Text>Total Arrears (€):</Text>{" "}
+              <Text strong>€{batchTotals?.arrears?.toLocaleString()}</Text>
             </div>
             <div className="summary-line">
-              <Text>Total Current (€):</Text> <Text strong>€{batchTotals?.totalCurrent?.toLocaleString()}</Text>
+              <Text>Total Current (€):</Text>{" "}
+              <Text strong>€{batchTotals?.totalCurrent?.toLocaleString()}</Text>
             </div>
             <div className="summary-line">
-              <Text>Total Advance (€):</Text> <Text strong>€{batchTotals?.advance?.toLocaleString()}</Text>
+              <Text>Total Advance (€):</Text>{" "}
+              <Text strong>€{batchTotals?.advance?.toLocaleString()}</Text>
             </div>
+            {/* <div className="summary-line">
+              <Text>Exception Total :</Text> <Text strong>{batchTotals?.exceptionTotal?.toLocaleString()}</Text>
+            </div> */}
 
-            <Divider style={{ margin: '16px 0' }} />
+            <Divider style={{ margin: "16px 0" }} />
 
             <div className="summary-line total">
-              <Text strong>Batch Total (€):</Text> <Text strong style={{ color: '#1677ff' }}>€{batchTotals?.totalCurrent?.toLocaleString()}</Text>
+              <Text strong>Batch Total (€):</Text>{" "}
+              <Text strong style={{ color: "#1677ff" }}>
+                €{batchTotals?.totalCurrent?.toLocaleString()}
+              </Text>
             </div>
             <div className="summary-line">
-              <Text strong>Total Records:</Text> <Text>{batchTotals?.records}</Text>
+              <Text strong>Total Records:</Text>{" "}
+              <Text>{batchTotals?.records}</Text>
             </div>
           </Card>
         </Col>

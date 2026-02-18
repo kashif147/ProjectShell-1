@@ -32,11 +32,12 @@ function RecruitAFriend() {
                 batchName: text,
                 batchId: record?.key,
                 batchStatus: record?.batchStatus,
+                search: "RecruitAFriend",
               }}
               style={{ color: "inherit", textDecoration: "none" }}
               onClick={() => {
                 if (record?._original?._id) {
-                    dispatch(getCornMarketBatchById(record._original._id));
+                  dispatch(getCornMarketBatchById(record._original._id));
                 }
               }}
             >
@@ -60,7 +61,7 @@ function RecruitAFriend() {
   }, [dispatch]);
   useEffect(() => {
     let data = batchesData?.data?.batches?.results
-    
+
   }, [batchesData])
   // Format the batches data for the table
   const formatTableData = () => {
