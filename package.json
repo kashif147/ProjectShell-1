@@ -53,6 +53,7 @@
     "react-scripts": "^5.0.1",
     "react-to-pdf": "^2.0.3",
     "recharts": "^3.1.2",
+    "socket.io-client": "^4.8.3",
     "to": "^0.2.9",
     "web-vitals": "^2.1.4",
     "xlsx": "^0.18.5",
