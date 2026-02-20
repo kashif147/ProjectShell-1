@@ -475,8 +475,8 @@ export const generateAndRegisterFCMToken = async () => {
     );
 
     if (!fcmToken) {
-      console.warn(
-        "⚠️ generateAndRegisterFCMToken: Failed to generate FCM token"
+      console.debug(
+        "generateAndRegisterFCMToken: Failed to generate FCM token (e.g. permission denied or SW not ready)"
       );
       return { success: false, error: "Failed to generate FCM token" };
     }
