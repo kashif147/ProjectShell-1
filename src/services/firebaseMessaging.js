@@ -187,21 +187,12 @@ export const getFCMToken = async () => {
     try {
       token = await getToken(messaging, { vapidKey });
     } catch (tokenError) {
-      console.error("❌ getFCMToken: Error calling getToken():", tokenError);
-      console.error("❌ Error code:", tokenError.code);
-      console.error("❌ Error message:", tokenError.message);
-      console.error("❌ Error name:", tokenError.name);
-      console.error("❌ Full error:", tokenError);
-
-      // Check for specific Firebase error codes
-      if (tokenError.code === "messaging/token-subscribe-failed") {
-        console.error("❌ This usually means:");
-        console.error("   - Service worker registration doesn't match");
-        console.error("   - VAPID key is incorrect");
-        console.error("   - Service worker scope mismatch");
-      }
-
-      throw tokenError; // Re-throw to be caught by outer catch
+      console.debug(
+        "getFCMToken: getToken failed",
+        tokenError?.code,
+        tokenError?.message || tokenError
+      );
+      throw tokenError;
     }
 
     console.log("📝 getFCMToken: getToken returned:", token);
@@ -226,14 +217,11 @@ export const getFCMToken = async () => {
       return null;
     }
   } catch (error) {
-    console.error("❌ Error getting FCM token:", error);
-    console.error("❌ Error code:", error?.code);
-    console.error("❌ Error message:", error?.message);
-    console.error("❌ Error name:", error?.name);
-    console.error("❌ Full error object:", error);
-    if (error?.stack) {
-      console.error("❌ Error stack:", error.stack);
-    }
+    console.debug(
+      "getFCMToken failed:",
+      error?.code,
+      error?.message || error
+    );
     return null;
   }
 };
