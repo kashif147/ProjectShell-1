@@ -43,6 +43,15 @@ const applicationWithFilterSlice = createSlice({
         setInitialized: (state, action) => {
             state.isInitialized = action.payload;
         },
+        initializeWithTemplate: (state, action) => {
+            state.currentTemplateId = action.payload;
+            state.isInitialized = true;
+        },
+        resetInitialization: (state) => {
+            state.currentTemplateId = "";
+            state.isInitialized = false;
+            state.applications = []; // Also clear applications on reset
+        },
     },
     extraReducers: (builder) => {
         builder
@@ -65,5 +74,5 @@ const applicationWithFilterSlice = createSlice({
     },
 });
 
-export const { clearApplications, setTemplateId, setInitialized } = applicationWithFilterSlice.actions;
+export const { clearApplications, setTemplateId, setInitialized, initializeWithTemplate, resetInitialization } = applicationWithFilterSlice.actions;
 export default applicationWithFilterSlice.reducer;

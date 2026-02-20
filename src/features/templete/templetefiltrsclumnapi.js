@@ -79,16 +79,16 @@ export const updateGridTemplate = createAsyncThunk(
     }
 );
 
-// Async thunk to pin a template
-export const pinGridTemplate = createAsyncThunk(
-    "templetefiltrsclumnapi/pinGridTemplate",
+// Async thunk to set a template as default
+export const setDefaultGridTemplate = createAsyncThunk(
+    "templetefiltrsclumnapi/setDefaultGridTemplate",
     async (id, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
             const URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates/${id}`;
             await axios.put(
                 URL,
-                { pinned: true },
+                { isDefault: true },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -145,13 +145,13 @@ const templetefiltrsclumnapi = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(pinGridTemplate.pending, (state) => {
+            .addCase(setDefaultGridTemplate.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(pinGridTemplate.fulfilled, (state) => {
+            .addCase(setDefaultGridTemplate.fulfilled, (state) => {
                 state.loading = false;
             })
-            .addCase(pinGridTemplate.rejected, (state, action) => {
+            .addCase(setDefaultGridTemplate.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

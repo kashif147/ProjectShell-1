@@ -8,7 +8,7 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { getGridTemplates, deleteGridTemplate, pinGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getGridTemplates, deleteGridTemplate, setDefaultGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFilters } from "../../context/FilterContext";
@@ -17,7 +17,7 @@ import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
 import { getLabelToKeyMap, transformFiltersForApi } from "../../utils/filterUtils";
-import { setTemplateId, setInitialized } from "../../features/applicationwithfilterslice";
+import { setTemplateId, setInitialized, initializeWithTemplate } from "../../features/applicationwithfilterslice";
 
 const SaveViewMenu = () => {
   const dispatch = useDispatch();
@@ -100,21 +100,20 @@ const SaveViewMenu = () => {
           (t) => t.templateType === targetTemplateType
         ) || [];
 
-      const pinnedView = userViews.find((t) => t.pinned);
+      const defaultView = userViews.find((t) => t.isDefault);
 
-      if (pinnedView) {
-        handleApplyView(pinnedView);
+      if (defaultView) {
+        handleApplyView(defaultView);
       } else if (systemView) {
         handleApplyView(systemView);
       } else {
         setActiveView("No View in this Screen");
         // Update Redux state even if no template ID to trigger load
         if (location.pathname === "/applications") {
-          dispatch(setTemplateId(""));
+          dispatch(initializeWithTemplate(""));
         }
       }
-      // Signal that initial view determination is complete
-      dispatch(setInitialized(true));
+      // Note: isInitialized is handled via initializeWithTemplate or within handleApplyView
     }
   }, [templates, loading, targetTemplateType]);
 
@@ -129,17 +128,17 @@ const SaveViewMenu = () => {
     setActiveView(template.name);
     setCurrentTemplateId(template._id);
 
-    // Update Redux state so MembershipApplication can react
-    dispatch(setTemplateId(template._id || ""));
+    // Update Redux state with a single dispatch
+    dispatch(initializeWithTemplate(template._id || ""));
   };
 
-  const handlePinView = (templateId) => {
-    dispatch(pinGridTemplate(templateId))
+  const handleSetDefaultView = (templateId) => {
+    dispatch(setDefaultGridTemplate(templateId))
       .unwrap()
-      .then(() => MyAlert("success", "Success", "View pinned successfully"))
+      .then(() => MyAlert("success", "Success", "Default view set successfully"))
       .catch((error) => {
-        console.error("Error pinning view:", error);
-        MyAlert("error", "Error", error?.message || "Failed to pin view");
+        console.error("Error setting default view:", error);
+        MyAlert("error", "Error", error?.message || "Failed to set default view");
       });
   };
 
@@ -178,7 +177,7 @@ const SaveViewMenu = () => {
         templateType: targetTemplateType,
         filters: activeFilters,
         columns: visibleColumns,
-        pinned: false,
+        isDefault: false,
       };
 
       const token = localStorage.getItem("token");
@@ -231,7 +230,7 @@ const SaveViewMenu = () => {
         ) : (
           <StarOutlined
             style={{ color: "#555", fontSize: 16, cursor: "pointer" }}
-            onClick={() => handlePinView(template._id)}
+            onClick={() => handleSetDefaultView(template._id)}
           />
         )}
         {!template.systemDefault && (
@@ -263,7 +262,7 @@ const SaveViewMenu = () => {
 
           {/* System Default */}
           {templates?.systemDefault && templates.systemDefault.templateType === targetTemplateType &&
-            renderTemplateItem(templates.systemDefault, templates.systemDefault.pinned)
+            renderTemplateItem(templates.systemDefault, templates.systemDefault.isDefault)
           }
 
           <Divider style={{ margin: "4px 0" }} />
@@ -290,7 +289,7 @@ const SaveViewMenu = () => {
 
           {/* User Templates */}
           {templates?.userTemplates?.filter(t => t.templateType === targetTemplateType).map(template =>
-            renderTemplateItem(template, template.pinned)
+            renderTemplateItem(template, template.isDefault)
           )}
         </>
       )}

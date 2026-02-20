@@ -88,19 +88,13 @@ const Deductions = () => {
     () =>
       allBatches.map((item) => {
         const payments = item.batchPayments || [];
-        const exceptions = item.batchExceptions || [];
-        const totalFromPayments = payments.reduce(
-          (sum, m) => sum + (parseFloat(m.amount) || 0),
-          0
-        );
-        const totalFromExceptions = exceptions.reduce(
-          (sum, e) => sum + (parseFloat(e.valueForPeriodSelected) || 0),
-          0
-        );
         const totalArrears = 0;
-        const totalCurrent = totalFromPayments + totalFromExceptions;
+        const totalCurrent = payments.reduce(
+          (sum, m) => sum + (parseFloat(m.fileRow?.valueForPeriodSelected) || 0) / 100,
+          0
+        );
         const totalAdvance = 0;
-        const totalRecords = payments.length + exceptions.length;
+        const totalRecords = payments.length;
         const batchTotal = totalCurrent + totalArrears + totalAdvance;
 
         return {

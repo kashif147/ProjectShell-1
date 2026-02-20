@@ -49,9 +49,10 @@ import {
   FolderOpenOutlined,
   CalculatorOutlined,
   DownloadOutlined,
-  LoadingOutlined, // Added
+  LoadingOutlined,
 } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
+import { AlertCircle } from "lucide-react";
 
 const cardStyle = {
   borderRadius: "12px",
@@ -1621,6 +1622,65 @@ function BatchMemberSummary() {
                 }}
               >
                 {formatCurrency(displayTotal)}
+              </div>
+            </div>
+          </div>
+
+          <div
+            style={{
+              width: "1px",
+              height: "32px",
+              backgroundColor: "#e2e8f0",
+              margin: "0 16px",
+              flexShrink: 0,
+            }}
+          />
+
+          {/* Exception Total */}
+          <div
+            style={{
+              display: "flex",
+              alignItems: "center",
+              gap: "8px",
+              minWidth: "140px",
+            }}
+          >
+            <div
+              style={{
+                width: "24px",
+                height: "24px",
+                borderRadius: "6px",
+                backgroundColor: exceptions.length > 0 ? "#fee2e2" : "#f1f5f9",
+                display: "flex",
+                justifyContent: "center",
+                alignItems: "center",
+                color: exceptions.length > 0 ? "#ef4444" : "#94a3b8",
+                fontSize: "14px",
+                flexShrink: 0,
+              }}
+            >
+              <AlertCircle size={14} />
+            </div>
+            <div>
+              <div
+                style={{
+                  fontSize: "11px",
+                  color: "#64748b",
+                  fontWeight: "500",
+                  lineHeight: "1.2",
+                }}
+              >
+                Exception Total
+              </div>
+              <div
+                style={{
+                  fontSize: "16px",
+                  fontWeight: "700",
+                  color: exceptions.length > 0 ? "#ef4444" : "#0f172a",
+                  lineHeight: "1.2",
+                }}
+              >
+                {formatCurrency(calcTotalExceptions)}
               </div>
             </div>
           </div>

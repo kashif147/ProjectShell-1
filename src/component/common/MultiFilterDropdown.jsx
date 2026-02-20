@@ -48,12 +48,12 @@ const MultiFilterDropdown = ({
     // Ensure we are working with an array
     const currentSelected = Array.isArray(tempSelectedValues) ? tempSelectedValues : [];
 
-    // Robust comparison (stringified)
-    const stringValue = String(value);
-    const exists = currentSelected.some(v => String(v) === stringValue);
+    // Case-insensitive comparison
+    const stringValue = String(value).toLowerCase();
+    const exists = currentSelected.some(v => String(v).toLowerCase() === stringValue);
 
     const newSelectedValues = exists
-      ? currentSelected.filter((v) => String(v) !== stringValue)
+      ? currentSelected.filter((v) => String(v).toLowerCase() !== stringValue)
       : [...currentSelected, value];
 
     setTempSelectedValues(newSelectedValues);
@@ -197,7 +197,7 @@ const MultiFilterDropdown = ({
           {options.filter(opt => opt && String(opt).trim() !== "").map((option) => {
             const stringOption = String(option);
             const isChecked = Array.isArray(tempSelectedValues) &&
-              tempSelectedValues.some(v => String(v) === stringOption);
+              tempSelectedValues.some(v => String(v).toLowerCase() === stringOption.toLowerCase());
 
             return (
               <Checkbox

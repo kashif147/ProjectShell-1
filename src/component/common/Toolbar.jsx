@@ -67,7 +67,7 @@ const Toolbar = () => {
         const val = obj[key] || {};
         normalized[key] = {
           operator: val.operator || "equal_to",
-          values: Array.isArray(val.values) ? [...val.values].map(v => String(v)).sort() : []
+          values: Array.isArray(val.values) ? [...val.values].map(v => String(v).toLowerCase()).sort() : []
         };
       });
       return JSON.stringify(normalized);

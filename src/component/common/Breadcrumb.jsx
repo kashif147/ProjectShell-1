@@ -203,6 +203,11 @@ const Breadcrumb = () => {
       page: "Online Payments",
       icon: "📥",
     },
+    "/write-offs": {
+      module: "Finance",
+      page: "Write-offs",
+      icon: "💰",
+    },
     "/BatchMemberSummary": {
       module: "Finance",
       page: "Batch Member Summary",

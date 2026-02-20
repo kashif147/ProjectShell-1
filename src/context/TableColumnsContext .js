@@ -5021,12 +5021,13 @@ export const TableColumnsProvider = ({ children }) => {
           : col.dataIndex;
 
         // Check if this column exists in the template's columns array
-        const isVisible = templateColumns.includes(dataIndexString);
+        const isGride = templateColumns.includes(dataIndexString);
 
         return {
           ...col,
-          isGride: isVisible,
-          isVisible: isVisible,
+          isGride: isGride,
+          // 🛡️ Keep isVisible: true so other columns remain in the "add/remove" menu
+          isVisible: true,
         };
       });
 

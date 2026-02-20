@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
+import { resetInitialization } from "../features/applicationwithfilterslice";
 
 const FilterContext = createContext();
 
@@ -233,7 +234,10 @@ export const FilterProvider = ({ children }) => {
       // If sourceOfTruth is empty (e.g. data still loading), don't prune yet
       if (!sourceOfTruth || sourceOfTruth.length === 0) return;
 
-      const stillValid = current.filter(val => sourceOfTruth.includes(val));
+      const stillValid = current.filter(val => {
+        const stringVal = String(val).toLowerCase();
+        return sourceOfTruth.some(opt => String(opt).toLowerCase() === stringVal);
+      });
       if (stillValid.length !== current.length) {
         syncedFiltersState[type] = { ...filtersState[type], selectedValues: stillValid };
         needsStateSync = true;
@@ -666,6 +670,10 @@ export const FilterProvider = ({ children }) => {
 
     // Load new screen's saved state
     const savedState = screenFilterStates[activeScreen];
+
+    // 🛡️ Always reset initialization on screen change to prevent stale data fetches
+    dispatch(resetInitialization());
+
     if (savedState && Object.keys(savedState.filtersState).length > 0) {
       setVisibleFilters(savedState.visibleFilters);
       setFiltersState(savedState.filtersState);

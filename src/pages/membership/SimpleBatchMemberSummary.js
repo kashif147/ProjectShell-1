@@ -219,7 +219,8 @@ function SimpleBatchMemberSummary() {
     if (apiData) {
       return {
         ...apiData,
-        profiles: normalizeProfiles(apiData.profiles),
+        profiles: normalizeProfiles(apiData.profiles || []),
+        exceptions: normalizeProfiles(apiData.exceptions || apiData.batchExceptions || []),
       };
     }
 
@@ -252,11 +253,25 @@ function SimpleBatchMemberSummary() {
             mobileNumber: "0867654321",
           },
         ]),
+        exceptions: [],
       };
     }
 
     return null;
   }, [apiData, search, batchId, batchName]);
+
+  // KPI Calculations
+  const metrics = useMemo(() => {
+    const profiles = data?.profiles || [];
+    const exceptions = data?.exceptions || [];
+
+    return {
+      totalMembers: profiles.length,
+      totalExceptions: exceptions.length,
+      // Sum amounts if they exist (sometimes members have an amount field)
+      totalAmount: profiles.reduce((sum, p) => sum + (parseFloat(p.amount) || 0), 0)
+    };
+  }, [data]);
 
   console.log("btch", data?.profiles)
   console.log("btch1", apiData?.profiles)
@@ -368,8 +383,8 @@ function SimpleBatchMemberSummary() {
           <Table
             columns={columns}
             className="mt-2"
-            dataSource={data?.profiles}
-            rowKey={(record) => record.id || record["Membership No"]}
+            dataSource={data?.exceptions}
+            rowKey={(record) => record.id || record.membershipNo || record.key}
             pagination={getUnifiedPaginationConfig({
               itemName: "items",
             })}
@@ -510,9 +525,38 @@ function SimpleBatchMemberSummary() {
             {data?.createdBy || "N/A"}
           </div>
         </div>
-        <div style={{ width: "1px", height: "28px", backgroundColor: "#e2e8f0", margin: "0 12px", flexShrink: 0 }} />
-
       </div>
+
+      {/* KPI Cards Strip */}
+      <Row gutter={[12, 12]} style={{ marginBottom: "8px" }}>
+        <Col span={6}>
+          <SummaryCard
+            title="Total Members"
+            value={metrics.totalMembers}
+            icon={<UnorderedListOutlined />}
+            color="#3b82f6"
+            iconBg="#dbeafe"
+          />
+        </Col>
+        <Col span={6}>
+          <SummaryCard
+            title="Batch Total"
+            value={formatCurrency(metrics.totalAmount)}
+            icon={<ThunderboltFilled />}
+            color="#22c55e"
+            iconBg="#dcfce7"
+          />
+        </Col>
+        <Col span={6}>
+          <SummaryCard
+            title="Exception Total"
+            value={metrics.totalExceptions}
+            icon={<MinusCircleOutlined />}
+            color={metrics.totalExceptions > 0 ? "#ef4444" : "#94a3b8"}
+            iconBg={metrics.totalExceptions > 0 ? "#fee2e2" : "#f1f5f9"}
+          />
+        </Col>
+      </Row>
 
 
       {/* Unified Action Bar, Tabs and Table section */}
