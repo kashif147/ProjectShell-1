@@ -20,7 +20,7 @@ const iconMap = {
 };
 
 const NotificationPopover = ({ isOpen }) => {
-  const { notifications, setNotifications, markAsRead, markAllAsRead } =
+  const { notifications, setNotifications, setBadge, markAsRead, markAllAsRead } =
     useNotifications();
 
   const fetchNotifications = async () => {
@@ -33,8 +33,9 @@ const NotificationPopover = ({ isOpen }) => {
           },
         },
       );
-
-      setNotifications(res.data || []);
+      const { notifications: list, unreadCount } = res.data?.data ?? res.data ?? {};
+      if (Array.isArray(list)) setNotifications(list);
+      if (typeof unreadCount === "number") setBadge(unreadCount);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     }
