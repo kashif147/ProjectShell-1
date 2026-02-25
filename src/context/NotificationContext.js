@@ -4,9 +4,11 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useCallback,
 } from "react";
 import { io } from "socket.io-client";
 import { notification } from "antd";
+import axios from "axios";
 
 const NotificationContext = createContext();
 
@@ -66,12 +68,18 @@ export const NotificationProvider = ({ children }) => {
       });
     });
 
-    socket.on("badgeIncrement", () => {
-      setBadge((prev) => prev + 1);
+    socket.on("badgeIncrement", (data) => {
+      setBadge((prev) =>
+        typeof data?.count === "number" ? data.count : prev + 1
+      );
     });
 
-    socket.on("badgeDecrement", () => {
-      setBadge((prev) => Math.max(prev - 1, 0));
+    socket.on("badgeDecrement", (data) => {
+      setBadge((prev) =>
+        typeof data?.count === "number"
+          ? data.count
+          : Math.max(prev - 1, 0)
+      );
     });
 
     socket.on("badgeReset", () => {
@@ -85,6 +93,35 @@ export const NotificationProvider = ({ children }) => {
       }
     };
   }, []);
+
+  const fetchUnreadCount = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    try {
+      const res = await axios.get(
+        `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/notifications?limit=1`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const { unreadCount } = res.data?.data ?? res.data ?? {};
+      if (typeof unreadCount === "number") setBadge(unreadCount);
+    } catch {
+      // ignore
+    }
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) fetchUnreadCount();
+  }, [fetchUnreadCount]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchUnreadCount();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [fetchUnreadCount]);
 
   // Cross-tab logout sync
   useEffect(() => {
@@ -125,6 +162,7 @@ export const NotificationProvider = ({ children }) => {
     <NotificationContext.Provider
       value={{
         badge,
+        setBadge,
         notifications,
         setNotifications,
         markAsRead,

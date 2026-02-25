@@ -119,6 +119,7 @@
 .mobile-number-input:disabled,
 .country-code-select:disabled {
   background-color: #f5f5f5;
+  color: #212529;
 }
 
 
@@ -275,15 +276,13 @@
 
 .my-input-container.disabled {
   background-color: #f5f5f5 !important;
-  /* light gray */
-  color: #a0a0a0 !important;
   border-color: #d9d9d9 !important;
   cursor: not-allowed !important;
 }
 
 .my-input-container.disabled .my-input-field,
 .my-input-container.disabled .my-input-prefix {
-  color: #a0a0a0 !important;
+  color: #212529 !important;
   cursor: not-allowed !important;
 }
 
@@ -296,8 +295,7 @@
 
 .my-input-field-select.disabled-select {
   background-color: #f5f5f5;
-  /* light gray like input[disabled] */
-  color: #a0a0a0;
+  color: #212529;
   cursor: not-allowed;
   border-color: #d9d9d9;
 }

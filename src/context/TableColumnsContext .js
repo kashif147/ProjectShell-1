@@ -91,7 +91,8 @@ const staticColumns = {
         const bankEntry = entries.find(
           (e) => e.accountCode === "1220" && e.dc === "D"
         );
-        return bankEntry ? formatCurrency(bankEntry.amount) : formatCurrency(0);
+        const amountInEuros = bankEntry ? bankEntry.amount / 100 : 0;
+        return formatCurrency(amountInEuros);
       },
     },
     {
