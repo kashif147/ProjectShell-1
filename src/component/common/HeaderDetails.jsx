@@ -56,6 +56,7 @@ import SaveViewMenu from "./SaveViewMenu";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
+import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
@@ -199,6 +200,8 @@ function HeaderDetails() {
     resetFtn,
     globleFilters,
   } = useTableColumns();
+
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
 
   const plainOptions = ["Approve", "Reject"];
   const screenName = location?.state?.search;
@@ -410,11 +413,11 @@ function HeaderDetails() {
         }
 
         try {
-          const applicationIds = selectedApplications.map(app => app.id || app.applicationId);
+          const applicationIds = selectedApplications; // It's already an array of IDs
           const formattedDate = dayjs(selectedDate).format('YYYY-MM-DD');
 
           const requestData = {
-            applicationIds: selectedApplications,
+            applicationIds: applicationIds,
             processingDate: formattedDate
           };
 
@@ -451,7 +454,21 @@ function HeaderDetails() {
               'Approval Successful',
               `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format('DD/MM/YYYY')}!`
             );
-            dispatch(getAllApplications());
+
+            // Clear selected IDs context
+            setSelectedIds([]);
+
+            // Refresh the grid
+            if (location.pathname === "/applicationMgt" || location.pathname === "/Applications") {
+              dispatch(getApplicationsWithFilter({
+                templateId: currentTemplateId || "",
+                page: 1,
+                limit: 10
+              }));
+            } else {
+              dispatch(getAllApplications());
+            }
+
             Modal.destroyAll();
             return Promise.resolve();
           } else {

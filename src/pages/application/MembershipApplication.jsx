@@ -48,18 +48,9 @@ function MembershipApplication() {
   }, [applications]);
 
   const shouldDisableRow = useCallback((record) => {
-    const status = record?.applicationStatus ||
-      console.log("Checking row status:", status, "for record:", record);
-    const enabledStatuses = ["rejected", "submitted"];
-    const disabledStatuses = ["in-Progress", "approved", "Draft"];
-
-    // Check if status exists and is in disabled statuses
-    if (!status) return false; // If no status, don't disable
-
-    // Return true to DISABLE if status is NOT in enabled statuses
-    // OR if status IS in disabled statuses
-    return !enabledStatuses.includes(status) ||
-      disabledStatuses.includes(status);
+    const status = record?.applicationStatus;
+    // Return true to DISABLE if status is NOT "submitted"
+    return status !== "submitted";
   }, []);
 
   const [selectedKeys, setSelectedKeys] = useState([]);
@@ -76,6 +67,14 @@ function MembershipApplication() {
   const handleRowClick = useCallback((record, index) => {
     console.log("Row clicked12:", record?.applicationId,);
   }, []);
+
+  // Synchronize local selection with global context (to handle clear selection)
+  useEffect(() => {
+    if (selectedIds.length === 0) {
+      setSelectedKeys([]);
+    }
+  }, [selectedIds]);
+
   return (
     <div className="" style={{ width: "100%" }}>
       {/* <TableComponent

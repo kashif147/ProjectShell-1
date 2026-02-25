@@ -175,6 +175,7 @@ const TableComponent = ({
   enableRowSelection = true,
   onRowClick: externalOnRowClick = null,
   disableDefaultRowClick = false,
+  disableRowFn = null,
   ...props
 }) => {
   const navigate = useNavigate();
@@ -222,7 +223,7 @@ const TableComponent = ({
         (key) =>
           data &&
           data.some((item) => {
-            const itemKey = item.key || item.id || item._id;
+            const itemKey = item.applicationId || item.key || item.id || item._id;
             return itemKey === key || String(itemKey) === String(key);
           })
       );
@@ -407,8 +408,8 @@ const TableComponent = ({
         setSelectedRowData([record]);
         setSelectedRowIndex(
           dataSource.findIndex((r) => {
-            const rKey = r.key || r.id || r._id;
-            const recordKey = record.key || record.id || record._id;
+            const rKey = r.applicationId || r.key || r.id || r._id;
+            const recordKey = record.applicationId || record.key || record.id || record._id;
             return rKey === recordKey || String(rKey) === String(recordKey);
           })
         );
@@ -421,6 +422,9 @@ const TableComponent = ({
       fixed: true,
       // Optional: align checkbox properly
       columnStyle: { padding: "0 10px", verticalAlign: "middle" },
+      getCheckboxProps: (record) => ({
+        disabled: disableRowFn ? disableRowFn(record) : false,
+      }),
     };
 
     // Remove dropdown menu in header
@@ -435,6 +439,7 @@ const TableComponent = ({
     selectionType,
     handleSelectionChange,
     dataSource,
+    disableRowFn
   ]);
 
   // Build columns
@@ -816,7 +821,7 @@ const TableComponent = ({
               return (
                 <span
                   style={{ textOverflow: "ellipsis" }}
-                  onClick={() => handleRowClick(record, index)}
+                  onClick={() => !disableDefaultRowClick && handleRowClick(record, index)}
                 >
                   {formatDateOnly(text)}
                 </span>
@@ -826,7 +831,7 @@ const TableComponent = ({
               return (
                 <span
                   style={{ textOverflow: "ellipsis" }}
-                  onClick={() => handleRowClick(record, index)}
+                  onClick={() => !disableDefaultRowClick && handleRowClick(record, index)}
                 >
                   {text}
                 </span>
@@ -1013,7 +1018,7 @@ const TableComponent = ({
           }}
         >
           <Table
-            rowKey={(record) => record.key || record.id}
+            rowKey={(record) => record.applicationId || record.key || record.id || record._id}
             rowClassName={() => ""}
             loading={isGrideLoading}
             components={components}
@@ -1033,7 +1038,7 @@ const TableComponent = ({
             }}
             // **UPDATED: Row click handler uses the prop-controlled function**
             onRow={(record, index) => ({
-              onClick: () => handleRowClick(record, index),
+              onClick: () => !disableDefaultRowClick && handleRowClick(record, index),
             })}
           />
           <div
