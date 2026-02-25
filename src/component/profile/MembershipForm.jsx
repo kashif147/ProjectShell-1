@@ -104,6 +104,8 @@ const MembershipForm = ({
         reinstated: subscription.cancellation?.reinstated || false,
         yearendProcessed: subscription.yearend?.processed || false,
         membershipCategory: subscription.membershipCategory || "",
+        primarySection: subscription.professionalDetails?.primarySection || "",
+        secondarySection: subscription.professionalDetails?.secondarySection || "",
       };
     }
     return null;
@@ -114,7 +116,7 @@ const MembershipForm = ({
     const searchAoiRes = profileSearchData?.results?.[0] || null;
     // Choose source dynamically
     const source = profileDetails || searchAoiRes;
-
+    debugger
     if (!source) return;
 
     // Initialize form data from profile API
@@ -167,6 +169,8 @@ const MembershipForm = ({
         ? "Yes"
         : "No",
       nursingSpecialization: source.professionalDetails?.nurseType || "",
+      primarySection: source.professionalDetails?.primarySection || source.professionalDetails?.nurseType || "",
+      secondarySection: source.professionalDetails?.secondarySection || "",
 
       // Membership Info
       membershipNumber: source.membershipNumber || "",
@@ -183,7 +187,7 @@ const MembershipForm = ({
       exclusiveDiscountsOffers: source.cornMarket?.exclusiveDiscountsAndOffers,
 
       // Additional Information
-      memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion,
+      memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion === true ? "Yes" : "No",
       otherUnionName:
         source.additionalInformation?.otherIrishTradeUnionName || "",
       otherUnionScheme: source.additionalInformation?.otherScheme
@@ -206,7 +210,7 @@ const MembershipForm = ({
         // Subscription Details
         subscriptionStatus: subscriptionData.subscriptionStatus || "",
         membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
-        paymentType: subscriptionData.paymentType || prev.paymentType || "",
+        paymentType: subscriptionData.paymentType,
         payrollNumber: subscriptionData.payrollNo || prev.payrollNumber || "",
 
         // Subscription Dates
@@ -225,6 +229,8 @@ const MembershipForm = ({
         reinstated: subscriptionData.reinstated || false,
         yearendProcessed: subscriptionData.yearendProcessed || false,
         subscriptionYear: subscriptionData.subscriptionYear || null,
+        primarySection: subscriptionData.primarySection || prev.primarySection || "",
+        secondarySection: subscriptionData.secondarySection || prev.secondarySection || "",
       }));
     } else {
       // If no subscription data, just set profile data
@@ -500,14 +506,14 @@ const MembershipForm = ({
   };
 
   const NursingSpecializationSelectOptn = [
-    { label: "General Nurse", value: "general-nurse" },
-    { label: "Public Health Nurse", value: "public-health-nurse" },
-    { label: "Mental Health Nurse", value: "mental-health-nurse" },
+    { label: "General Nursing", value: "generalNursing" },
+    { label: "Public Health Nurse", value: "publicHealthNurse" },
+    { label: "Mental Health Nurse", value: "mentalHealth" },
     { label: "Midwife", value: "midwife" },
-    { label: "Sick Children's Nurse", value: "sick-children-nurse" },
+    { label: "Sick Children's Nurse", value: "sickChildrenNurse" },
     {
       label: "Registered Nurse for Intellectual Disability",
-      value: "intellectual-disability-nurse",
+      value: "intellectualDisability",
     },
   ];
 
@@ -1140,18 +1146,84 @@ const MembershipForm = ({
                 value={formData.nmbiNumber}
                 onChange={(e) => handleChange("nmbiNumber", e.target.value)}
               />
-              <div style={{ marginBottom: "16px" }}>
-                <label className="my-input-label">Primary Nurse Type</label>
+              <div
+                className="ps-3 pe-3 pt-2 pb-3 bg-ly"
+                style={{
+                  backgroundColor: "#f0fdf4",
+                  borderRadius: "4px",
+                  border: "1px solid #a4e3ba",
+                }}
+              >
+                <label
+                  className="my-input-label mb-1"
+                  style={{ color: "#14532d" }}
+                >
+                  Primary Nurse Type <span className="text-danger">*</span>
+                </label>
+
                 <Radio.Group
+                  name="nursingSpecialization"
                   value={formData.nursingSpecialization}
                   onChange={(e) =>
                     handleChange("nursingSpecialization", e.target.value)
                   }
                   disabled={isFormReadOnly}
+                  style={{
+                    color: "#14532d",
+                    width: "100%",
+                  }}
                 >
-                  <Radio value="generalNursing">General Nurse</Radio>
-                  <Radio value="public-health-nurse">Public Health Nurse</Radio>
-                  <Radio value="mental-health-nurse">Mental Health Nurse</Radio>
+                  <div
+                    className="d-flex justify-content-between align-items-baseline flex-wrap"
+                    style={{ gap: "8px" }}
+                  >
+                    <Radio
+                      value="generalNursing"
+                      style={{ color: "#14532d", width: "14%" }}
+                    >
+                      General Nursing
+                    </Radio>
+
+                    <Radio
+                      value="publicHealthNurse"
+                      style={{ color: "#14532d", width: "14%" }}
+                    >
+                      Public Health Nurse
+                    </Radio>
+
+                    <Radio
+                      value="mentalHealth"
+                      style={{ color: "#14532d", width: "14%" }}
+                    >
+                      Mental Health Nurse
+                    </Radio>
+
+                    <Radio
+                      value="midwife"
+                      style={{ color: "#14532d", width: "16%" }}
+                    >
+                      Midwife
+                    </Radio>
+
+                    <Radio
+                      value="sickChildrenNurse"
+                      style={{ color: "#14532d", width: "14%" }}
+                    >
+                      Sick Children's Nurse
+                    </Radio>
+
+                    <Radio
+                      value="intellectualDisability"
+                      style={{
+                        color: "#14532d",
+                        width: "20%",
+                        whiteSpace: "normal",
+                        lineHeight: "1.2",
+                      }}
+                    >
+                      Registered Nurse for Intellectual Disability
+                    </Radio>
+                  </div>
                 </Radio.Group>
               </div>
             </Card>
@@ -1402,15 +1474,16 @@ const MembershipForm = ({
               <CustomSelect
                 label="Payment Type"
                 placeholder="Select Payment Type"
-                options={[
-                  { value: "Salary Deduction", label: "Salary Deduction" },
-                  { value: "Credit Card", label: "Credit Card" },
-                  // { value: "Direct Debit", label: "Direct Debit" },
-                ]}
+                // options={[
+                //   { value: "Salary Deduction", label: "Salary Deduction" },
+                //   { value: "Credit Card", label: "Credit Card" },
+                // ]}
                 value={formData.paymentType}
                 onChange={(e) => handleChange("paymentType", e.target.value)}
                 disabled={isFormReadOnly}
                 required={true}
+                isIDs={false}
+                options={paymentTypeOptions}
               />
               <MyInput
                 label="Payroll No."

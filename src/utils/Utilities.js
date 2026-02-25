@@ -235,7 +235,6 @@ export const cleanPayload = (obj) => {
 };
 
 export function convertToLocalTime(utcDateString) {
-  console.log(utcDateString, "ity");
   return moment.utc(utcDateString).local().format("DD/MM/YYYY HH:mm");
 }
 
@@ -253,6 +252,43 @@ export function formatDateOnly(dateString) {
   // Handle date strings (ISO, timestamp, etc.) - most common case
   const date = moment(dateString);
   return date.isValid() ? date.format("DD/MM/YYYY") : "";
+}
+
+export function formatMobileNumber(value) {
+  if (!value) return "-";
+
+  // Clean the string - keep only digits and +
+  let cleaned = value.toString().replace(/[^\d+]/g, "");
+
+  // Normalize international format
+  if (cleaned.startsWith("00")) {
+    cleaned = "+" + cleaned.substring(2);
+  }
+
+  // If it's a local Irish number starting with 0 followed by 2 digits then more
+  // (e.g., 0871234567 or 0761234567)
+  if (cleaned.startsWith("0") && !cleaned.startsWith("00")) {
+    cleaned = "+353" + cleaned.substring(1);
+  }
+
+  // If it starts with 353 but no +, add one
+  if (cleaned.startsWith("353")) {
+    cleaned = "+" + cleaned;
+  }
+
+  // Handle +3530... cases (strip the extra 0)
+  if (cleaned.startsWith("+3530")) {
+    cleaned = "+353" + cleaned.substring(5);
+  }
+
+  // Check if it matches the expected Irish format: +353 followed by 9 digits
+  const irishMatch = cleaned.match(/^\+353(\d{2})(\d{3})(\d{4})$/);
+  if (irishMatch) {
+    return `+353 ${irishMatch[1]} ${irishMatch[2]} ${irishMatch[3]}`;
+  }
+
+  // If no match, return cleaned or original if it's already mostly okay
+  return cleaned.startsWith("+") ? cleaned : value;
 }
 
 function base64URLEncode(buffer) {
@@ -346,9 +382,9 @@ export function generatePatch(original = {}, updated = {}, path = "") {
 }
 const policy = new PolicyClient(
   process.env.REACT_APP_POLICY_SERVICE_URL ||
-    (process.env.NODE_ENV === "development"
-      ? "http://localhost:3000"
-      : "https://project-shell-crm.vercel.app"),
+  (process.env.NODE_ENV === "development"
+    ? "http://localhost:3000"
+    : "https://project-shell-crm.vercel.app"),
   {
     onTokenExpired: () => {
       // Redirect to login when token expires

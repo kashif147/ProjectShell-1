@@ -11,14 +11,14 @@ const getAuthHeaders = () => ({
 // Sort utility function
 const sortArray = (array, key, order = 'asc') => {
   if (!Array.isArray(array)) return [];
-  
+
   return [...array].sort((a, b) => {
     const aValue = a[key] || '';
     const bValue = b[key] || '';
-    
+
     const comparison = String(aValue).toLowerCase()
       .localeCompare(String(bValue).toLowerCase());
-    
+
     return order === 'desc' ? -comparison : comparison;
   });
 };
@@ -56,7 +56,7 @@ const lookupsSlice = createSlice({
     regionOptions: [],
     secondarySectionOptions: [],
     countryOptions: [],
-    provincesOption:[],
+    provincesOption: [],
 
     // Raw API response (optional - remove if not needed)
     lookups: [],
@@ -96,7 +96,7 @@ const lookupsSlice = createSlice({
         state.error = null;
         state.lastErrorTime = null;
         state.lookups = payload;
-        
+
         // Reset all arrays
         state.titleOptions = [];
         state.genderOptions = [];
@@ -138,7 +138,7 @@ const lookupsSlice = createSlice({
               case "MembershipCategory":
                 state.membershipCategoryOptions.push(optionItem);
                 break;
-              case "PaymentType":
+              case "Payment Type":
                 state.paymentTypeOptions.push(optionItem);
                 break;
               case "Branch":

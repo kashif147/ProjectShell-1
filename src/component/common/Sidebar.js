@@ -14,7 +14,7 @@ import {
 } from "../../constants/SideNavWithAuth.js";
 import { useSelector } from "react-redux";
 import "../../styles/Sidebar.css";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
 // import policy from "../../utils/react-policy-client";
@@ -74,33 +74,249 @@ const Sidebar = () => {
     return filtered;
   }, [itemsMap, activeKey, permissions, roles]);
 
+  const getNavLinkData = (key) => {
+    switch (key) {
+      case "Profiles":
+        return { path: "/Summary", state: { search: "Profile" } };
+      case "Claims":
+        return { path: "/ClaimSummary", state: { search: "Claims" } };
+      case "Cases":
+      case "All Issues":
+      case "All cases":
+        return { path: "/CasesSummary", state: { search: "All Issues" } };
+      case "Assigned to me":
+        return { path: "/CasesSummary", state: { search: "Assigned to me" } };
+      case "Correspondences":
+        return { path: "/CorrespondenceDashboard", state: { search: "" } };
+      case "Dashboard":
+        if (activeKey === "Cases") {
+          return { path: "/CasesSummary", state: { search: "" } };
+        } else if (activeKey === "Events") {
+          return { path: "/EventsSummary", state: { search: "" } };
+        } else {
+          return { path: "/CorrespondenceDashboard", state: { search: "" } };
+        }
+      case "Attendees":
+        return { path: "/Attendees", state: { search: "Attendees" } };
+      case "Reporting":
+        return { path: "/Reporting", state: { search: "Reporting" } };
+      case "Settings":
+        if (activeKey === "Events") {
+          return { path: "/EventsSettings", state: { search: "Settings" } };
+        } else {
+          return { path: "/Settings", state: { search: "Settings" } };
+        }
+      case "Transfer Requests":
+        return { path: "/Transfers", state: { search: "Transfers" } };
+      case "System Configuration":
+        return { path: "/Configuratin", state: { search: "" } };
+      case "Roster":
+        return { path: "/RosterSummary", state: { search: "Rosters" } };
+      case "Events":
+        return { path: "/EventsSummary", state: { search: "Events" } };
+      case "Batches":
+        return { path: "/Batches", state: { search: "Batches" } };
+      case "Applications":
+        return { path: "/Applications", state: { search: "Applications" } };
+      case "Membership":
+        return { path: "/members", state: { search: "Members" } };
+      case "MembershipDashboard":
+        return {
+          path: "/MembershipDashboard",
+          state: { search: "Membership Dashboard" },
+        };
+      case "Reminders":
+        return { path: "/RemindersSummary", state: { search: "Reminders" } };
+      case "Cancellations":
+        return { path: "/Cancallation", state: { search: "Cancallation" } };
+      case "Change Category":
+        return {
+          path: "/ChangCateSumm",
+          state: { search: "Change Category Summary" },
+        };
+      case "Imports":
+        return { path: "/Import", state: { search: "Imports" } };
+      case "Deductions":
+        return { path: "/Deductions", state: { search: "Deductions" } };
+      case "Reconciliation":
+      case "Reconciliations":
+        return { path: "/Reconciliation", state: { search: "Reconciliation" } };
+      case "Standing Orders":
+        return { path: "/StandingOrders", state: { search: "Standing Orders" } };
+      case "Cheque":
+        return { path: "/Cheque", state: { search: "Cheques" } };
+      case "Refunds":
+        return { path: "/Refunds", state: { search: "Refunds" } };
+      case "Write-offs":
+        return { path: "/write-offs", state: { search: "Write-offs" } };
+      case "DD Authorisations":
+        return {
+          path: "/DirectDebitAuthorization",
+          state: { search: "Direct Debit Authorization" },
+        };
+      case "Direct Debit":
+        return { path: "/DirectDebit", state: { search: "Direct Debit" } };
+      case "Online Payments":
+        return { path: "/onlinePayment", state: { search: "Online Payment" } };
+      case "Email":
+        return { path: "/Email", state: { search: "Email" } };
+      case "SMS":
+        return { path: "/Sms", state: { search: "Sms" } };
+      case "InAppNotifications":
+        return {
+          path: "/InAppNotifications",
+          state: { search: "In-App Notifications" },
+        };
+      case "Notes & Letters":
+        return { path: "/Notes", state: { search: "Notes" } };
+      case "Communication History":
+        return {
+          path: "/CorrespondencesSummary",
+          state: { search: "CorrespondencesSummary" },
+        };
+      case "CornMarket":
+        return { path: "/CornMarket", state: { search: "CornMarket" } };
+      case "Tenant Management":
+        return {
+          path: "/TenantManagement",
+          state: { search: "TenantManagement" },
+        };
+      case "Role Management":
+        return {
+          path: "/RoleManagement",
+          state: { search: "RoleManagement" },
+        };
+      case "User Management":
+        return {
+          path: "/UserManagement",
+          state: { search: "UserManagement" },
+        };
+      case "Permission Management":
+        return {
+          path: "/PermissionManagement",
+          state: { search: "PermissionManagement" },
+        };
+      case "Product Management":
+        return {
+          path: "/ProductTypesManagement",
+          state: { search: "Product Management" },
+        };
+      case "Cancelled Members Report":
+        return {
+          path: "/CancelledMembersReport",
+          state: { search: "Cancelled Members Report" },
+        };
+      case "Suspended Members Report":
+        return {
+          path: "/SuspendedMembersReport",
+          state: { search: "Suspended Members Report" },
+        };
+      case "Resigned Members Report":
+        return {
+          path: "/ResignedMembersReport",
+          state: { search: "Resigned Members Report" },
+        };
+      case "New Members Report":
+        return {
+          path: "/NewMembersReport",
+          state: { search: "New Members Report" },
+        };
+      case "Leavers Report":
+        return {
+          path: "/LeaversReport",
+          state: { search: "Leavers Report" },
+        };
+      case "Joiners Report":
+        return {
+          path: "/JoinersReport",
+          state: { search: "Joiners Report" },
+        };
+      case "Policy Client Example":
+        return {
+          path: "/PolicyClientExample",
+          state: { search: "Policy Client Example" },
+        };
+      case "Templetes":
+        return {
+          path: "/templeteSummary",
+          state: { search: "Templetes" },
+        };
+      case "CornMarket New Graduate":
+        return {
+          path: "/NewGraduate",
+          state: { search: "CornMarket New Graduate" },
+        };
+      case "CornMarket Rewards":
+        return {
+          path: "/CornMarketRewards",
+          state: { search: "CornMarket Rewards" },
+        };
+      case "Recruit a Friend":
+        return { path: "/RecruitAFriend", state: { search: "Recruit a Friend" } };
+      case "Reports setting":
+        return { path: "/ReportsSettings", state: { search: "Reports setting" } };
+      default:
+        return { path: "/NotDesignedYet" };
+    }
+  };
+
   // Transform menu items for collapsed/expanded view
   const transformedMenuItems = useMemo(() => {
-
     const transformed = menuItems.map((item) => {
+      const navData = getNavLinkData(item.key);
+      const labelText = item.label.props.children;
+
       if (isPinned) {
         // Collapsed view: show only icon with tooltip
         return {
           ...item,
           icon: (
             <Tooltip
-              title={item.label.props.children}
+              title={labelText}
               placement="right"
-            // overlayClassName="sidebar-tooltip"
             >
-              <div className="icon-only-item">{item.icon}</div>
+              <Link
+                to={navData.path}
+                state={navData.state}
+                className="sidebar-link-wrapper"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="icon-only-item">{item.icon}</div>
+              </Link>
             </Tooltip>
           ),
           label: null, // Hide label in collapsed state
         };
       } else {
         // Expanded view: show icon with label
-        return item;
+        return {
+          ...item,
+          label: (
+            <Link
+              to={navData.path}
+              state={navData.state}
+              className="sidebar-link-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              {item.label}
+            </Link>
+          ),
+          icon: (
+            <Link
+              to={navData.path}
+              state={navData.state}
+              className="sidebar-link-wrapper"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <div className="icon">{item.icon}</div>
+            </Link>
+          ),
+        };
       }
     });
 
     return transformed;
-  }, [menuItems, isPinned]);
+  }, [menuItems, isPinned, activeKey]);
 
   const selectedKey = useMemo(() => {
     const routeKeyMap = {
@@ -164,9 +380,9 @@ const Sidebar = () => {
     const currentPath = Object.keys(routeKeyMap).find((route) =>
       location.pathname.startsWith(route)
     );
-    
+
     if (!currentPath) return "";
-    
+
     // Handle context-specific mappings
     if (currentPath === "/EventsSummary" && activeKey === "Events") {
       return "Dashboard";
@@ -196,225 +412,19 @@ const Sidebar = () => {
         return "Reports setting";
       }
     }
-    
+
     return routeKeyMap[currentPath] || "";
   }, [location.pathname, activeKey, location.state]);
 
   const handleClick = ({ key }) => {
-    switch (key) {
-      case "Profiles":
-        navigate("/Summary", { state: { search: "Profile" } });
-        break;
-      case "Claims":
-        navigate("/ClaimSummary", { state: { search: "Claims" } });
-        break;
-      case "Cases":
-        navigate("/CasesSummary", { state: { search: "All Issues" } });
-        break;
-      case "All Issues":
-      case "All cases":
-        navigate("/CasesSummary", { state: { search: "All Issues" } });
-        break;
-      case "Assigned to me":
-        navigate("/CasesSummary", { state: { search: "Assigned to me" } });
-        break;
-      case "Correspondences":
-        navigate("/CorrespondenceDashboard", { state: { search: "" } });
-        break;
-      case "Dashboard":
-        if (activeKey === "Cases") {
-          navigate("/CasesSummary", { state: { search: "" } });
-        } else if (activeKey === "Events") {
-          navigate("/EventsSummary", { state: { search: "" } });
-        } else {
-          navigate("/CorrespondenceDashboard", { state: { search: "" } });
-        }
-        break;
-      case "Attendees":
-        navigate("/Attendees", { state: { search: "Attendees" } });
-        break;
-      case "Reporting":
-        navigate("/Reporting", { state: { search: "Reporting" } });
-        break;
-      case "Settings":
-        if (activeKey === "Events") {
-          navigate("/EventsSettings", { state: { search: "Settings" } });
-        } else {
-          navigate("/Settings", { state: { search: "Settings" } });
-        }
-        break;
-      case "Transfer Requests":
-        navigate("/Transfers", { state: { search: "Transfers" } });
-        break;
-      case "System Configuration":
-        navigate("/Configuratin", { state: { search: "" } });
-        break;
-      case "Roster":
-        navigate("/RosterSummary", { state: { search: "Rosters" } });
-        break;
-      case "Events":
-        navigate("/EventsSummary", { state: { search: "Events" } });
-        break;
-      case "Batches":
-        navigate("/Batches", { state: { search: "Batches" } });
-        break;
-      case "Applications":
-        navigate("/Applications", { state: { search: "Applications" } });
-        break;
-      case "Membership":
-        navigate("/members", { state: { search: "Members" } });
-        break;
-      case "MembershipDashboard":
-        navigate("/MembershipDashboard", {
-          state: { search: "Membership Dashboard" },
-        });
-        break;
-      case "Reminders":
-        navigate("/RemindersSummary", { state: { search: "Reminders" } });
-        break;
-      case "Cancellations":
-        navigate("/Cancallation", { state: { search: "Cancallation" } });
-        break;
-      case "Trainings":
-        alert("Trainings clicked");
-        break;
-      case "Change Category":
-        navigate("/ChangCateSumm", {
-          state: { search: "Change Category Summary" },
-        });
-        break;
-      case "Imports":
-        navigate("/Import", { state: { search: "Imports" } });
-        break;
-      case "Deductions":
-        navigate("/Deductions", { state: { search: "Deductions" } });
-        break;
-      case "Reconciliation":
-        navigate("/Reconciliation", { state: { search: "Reconciliation" } });
-        break;
-      case "Standing Orders":
-        navigate("/StandingOrders", { state: { search: "Standing Orders" } });
-        break;
-      case "Cheque":
-        navigate("/Cheque", { state: { search: "Cheques" } });
-        break;
-      case "Reconciliations":
-        navigate("/Reconciliation", { state: { search: "Reconciliation" } });
-        break;
-      case "Refunds":
-        navigate("/Refunds", { state: { search: "Refunds" } });
-        break;
-      case "Write-offs":
-        navigate("/write-offs", { state: { search: "Write-offs" } });
-        break;
-      case "DD Authorisations":
-        navigate("/DirectDebitAuthorization", { state: { search: "Direct Debit Authorization" } });
-        break;
-      case "Direct Debit":
-        navigate("/DirectDebit", { state: { search: "Direct Debit" } });
-        break;
-      case "Online Payments":
-        navigate("/onlinePayment", { state: { search: "Online Payment" } });
-        break;
-      case "Email":
-        navigate("/Email", { state: { search: "Email" } });
-        break;
-      case "SMS":
-        navigate("/Sms", { state: { search: "Sms" } });
-        break;
-      case "InAppNotifications":
-        navigate("/InAppNotifications", { state: { search: "In-App Notifications" } });
-        break;
-      case "Notes & Letters":
-        navigate("/Notes", { state: { search: "Notes" } });
-        break;
-      case "Communication History":
-        navigate("/CorrespondencesSummary", {
-          state: { search: "CorrespondencesSummary" },
-        });
-        break;
-      case "CornMarket":
-        navigate("/CornMarket", { state: { search: "CornMarket" } });
-        break;
-      case "Tenant Management":
-        navigate("/TenantManagement", {
-          state: { search: "TenantManagement" },
-        });
-        break;
-      case "Role Management":
-        navigate("/RoleManagement", {
-          state: { search: "RoleManagement" },
-        });
-        break;
-      case "User Management":
-        navigate("/UserManagement", {
-          state: { search: "UserManagement" },
-        });
-        break;
-      case "Permission Management":
-        navigate("/PermissionManagement", {
-          state: { search: "PermissionManagement" },
-        });
-        break;
-      case "Product Management":
-        navigate("/ProductTypesManagement", {
-          state: { search: "Product Management" },
-        });
-        break;
-      case "Cancelled Members Report":
-        navigate("/CancelledMembersReport", {
-          state: { search: "Cancelled Members Report" },
-        });
-        break;
-      case "Suspended Members Report":
-        navigate("/SuspendedMembersReport", {
-          state: { search: "Suspended Members Report" },
-        });
-        break;
-      case "Resigned Members Report":
-        navigate("/ResignedMembersReport", {
-          state: { search: "Resigned Members Report" },
-        });
-        break;
-      case "New Members Report":
-        navigate("/NewMembersReport", {
-          state: { search: "New Members Report" },
-        });
-        break;
-      case "Leavers Report":
-        navigate("/LeaversReport", {
-          state: { search: "Leavers Report" },
-        });
-        break;
-      case "Joiners Report":
-        navigate("/JoinersReport", {
-          state: { search: "Joiners Report" },
-        });
-        break;
-      case "Policy Client Example":
-        navigate("/PolicyClientExample", {
-          state: { search: "Policy Client Example" },
-        });
-        break;
-      case "Templetes":
-        navigate("/templeteSummary", {
-          state: { search: "Templetes" },
-        });
-        break;
-      case "CornMarket New Graduate":
-        navigate("/NewGraduate", { state: { search: "CornMarket New Graduate" } });
-        break;
-      case "CornMarket Rewards":
-        navigate("/CornMarketRewards", { state: { search: "CornMarket Rewards" } });
-        break;
-      case "Recruit a Friend":
-        navigate("/RecruitAFriend", { state: { search: "Recruit a Friend" } });
-        break;
-      case "Reports setting":
-        navigate("/ReportsSettings", { state: { search: "Reports setting" } });
-        break;
-      default:
-        navigate("/NotDesignedYet");
+    // We can keep this for any special handling if needed, 
+    // but the Link component will handle standard navigation.
+    // However, since we're using Ant Design Menu, it still calls onClick.
+    // If we want to prevent double navigation or issues, we can check if it's already handled.
+    console.log("Menu item clicked:", key);
+    // If we want to specifically handle training alert which was a special case
+    if (key === "Trainings") {
+      alert("Trainings clicked");
     }
   };
 

@@ -17,16 +17,16 @@ import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
 import { getLabelToKeyMap, transformFiltersForApi } from "../../utils/filterUtils";
-import { setTemplateId, setInitialized, initializeWithTemplate } from "../../features/applicationwithfilterslice";
+import { setTemplateId, setInitialized, initializeWithTemplate, resetInitialization } from "../../features/applicationwithfilterslice";
 
 const SaveViewMenu = () => {
   const dispatch = useDispatch();
   const location = useLocation();
   const { templates, loading } = useSelector((state) => state.templetefiltrsclumnapi);
-  const { columns, applyTemplate } = useTableColumns();
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { columns, applyTemplate, selectedTemplates, updateSelectedTemplate } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
   const [activeView, setActiveView] = useState("Default View");
-  const [currentTemplateId, setCurrentTemplateId] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [viewName, setViewName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -82,15 +82,27 @@ const SaveViewMenu = () => {
     return transformed;
   };
 
-
-
   useEffect(() => {
     dispatch(getGridTemplates());
   }, [dispatch]);
 
+  // Reset initialization when screen changes to prevent data loading with wrong/old templateId
+  useEffect(() => {
+    dispatch(resetInitialization());
+  }, [dispatch, targetTemplateType]);
+
   // Set initial active view from system default when templates load
   useEffect(() => {
     if (!loading && templates) {
+      // 1. Check if we have a persisted view in context for this screen
+      const persistedTemplate = selectedTemplates[targetTemplateType];
+
+      if (persistedTemplate) {
+        handleApplyView(persistedTemplate, false); // false to avoid redundant context update
+        return;
+      }
+
+      // 2. Fall back to user default or system default
       const systemView =
         templates.systemDefault?.templateType === targetTemplateType
           ? templates.systemDefault
@@ -108,27 +120,26 @@ const SaveViewMenu = () => {
         handleApplyView(systemView);
       } else {
         setActiveView("No View in this Screen");
-        // Update Redux state even if no template ID to trigger load
         if (location.pathname === "/applications") {
           dispatch(initializeWithTemplate(""));
         }
       }
-      // Note: isInitialized is handled via initializeWithTemplate or within handleApplyView
     }
   }, [templates, loading, targetTemplateType]);
 
-  const handleApplyView = (template) => {
-    // Map FilterContext screen names to TableColumnsContext keys if different
+  const handleApplyView = (template, shouldPersist = true) => {
     const colScreen = activeScreen;
-
     const transformedFilters = transformFiltersForApply(template.filters || {});
 
     applyTemplate(colScreen, template.columns);
     applyTemplateFilters(transformedFilters);
     setActiveView(template.name);
-    setCurrentTemplateId(template._id);
 
-    // Update Redux state with a single dispatch
+    // Update context persistence
+    if (shouldPersist) {
+      updateSelectedTemplate(targetTemplateType, template);
+    }
+
     dispatch(initializeWithTemplate(template._id || ""));
   };
 
@@ -325,18 +336,19 @@ const SaveViewMenu = () => {
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
             Cancel
           </Button>,
-          <Button key="submit" className="butn primary-btn" onClick={handleSaveView} loading={saving}>
+          <Button className="butn primary-btn" style={{ marginRight: 4 }} onClick={handleSaveView} loading={saving}>
             Save
           </Button>,
         ]}
       >
-        <div style={{ margin: 4 }}>
-          <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>View Name</label>
+        <div style={{ margin: 16 }}>
+          {/* <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>View Name</label>
           <Input
             placeholder="Enter view name"
             value={viewName}
             onChange={(e) => setViewName(e.target.value)}
-          />
+          /> */}
+          <MyInput label="View Name" value={viewName} onChange={(e) => setViewName(e.target.value)} />
 
         </div>
       </Modal>

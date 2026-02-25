@@ -13,7 +13,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime, formatDateOnly, formatCurrency } from "../utils/Utilities";
+import { convertToLocalTime, formatDateOnly, formatCurrency, formatMobileNumber } from "../utils/Utilities";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
@@ -142,6 +142,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatMobileNumber(value),
     },
     {
       title: "Join Date",
@@ -399,6 +400,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatMobileNumber(value),
     },
 
     {
@@ -489,6 +491,14 @@ const staticColumns = {
     {
       dataIndex: ["professionalDetails", "nurseType"],
       title: "Section (Primary)",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: ["professionalDetails", "secondarySection"],
+      title: "Secondary Section",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -802,7 +812,7 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: "dob",
+      dataIndex: "dateOfBirth",
       title: "Date Of Birth",
       ellipsis: true,
       isGride: false,
@@ -849,6 +859,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: "pensionNo",
@@ -947,6 +958,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
+      render: (value) => (value ? convertToLocalTime(value) : "-"),
     },
     {
       dataIndex: "updatedAt",
@@ -956,7 +968,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      // render: (value) => value ? convertToLocalTime(value) : "-",
+      render: (value) => (value ? convertToLocalTime(value) : "-"),
     },
 
     // 🔹 Personal Info
@@ -1092,6 +1104,7 @@ const staticColumns = {
       isVisible: true,
       width: 150,
       editable: true,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"],
@@ -1101,6 +1114,7 @@ const staticColumns = {
       isVisible: true,
       width: 150,
       editable: true,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: ["personalDetails", "contactInfo", "personalEmail"],
@@ -1150,7 +1164,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      // render: (value) => value ? convertToLocalTime(value) : "-",
+      render: (value) => (value ? convertToLocalTime(value) : "-"),
     },
   ],
   members: [
@@ -1192,7 +1206,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      // render: (value) => value ? convertToLocalTime(value) : "-"
+      render: (value) => formatDateOnly(value),
     },
 
     {
@@ -1203,6 +1217,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "isCurrent",
@@ -1222,6 +1237,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
 
     // 🔹 Membership Info
@@ -2606,6 +2622,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: ["professionalDetails", "workLocation"],
@@ -2653,6 +2670,15 @@ const staticColumns = {
       editable: false,
     },
     {
+      dataIndex: ["professionalDetails", "secondarySection"],
+      title: "Secondary Section",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
       dataIndex: "startDate",
       title: "Joining Date",
       ellipsis: true,
@@ -2660,6 +2686,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "endDate",
@@ -2669,6 +2696,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: ["financialDetails", "lastPaymentAmount"],
@@ -2687,6 +2715,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: ["financialDetails", "membershipFee"],
@@ -2723,6 +2752,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "CancellationFlag",
@@ -4490,6 +4520,15 @@ export const TableColumnsProvider = ({ children }) => {
     }));
   }, []);
 
+  const [selectedTemplates, setSelectedTemplates] = useState({});
+
+  const updateSelectedTemplate = useCallback((screen, template) => {
+    setSelectedTemplates((prev) => ({
+      ...prev,
+      [screen]: template,
+    }));
+  }, []);
+
   const [report, setReport] = useState(null);
   const [isSave, setIsSave] = useState(false);
   const [ProfileDetails, setProfileDetails] = useState([]);
@@ -5106,6 +5145,8 @@ export const TableColumnsProvider = ({ children }) => {
       resetFtn,
       menuLbl,
       updateMenuLbl,
+      selectedTemplates,
+      updateSelectedTemplate,
     }),
     [
       columns,
@@ -5142,6 +5183,8 @@ export const TableColumnsProvider = ({ children }) => {
       resetFtn,
       menuLbl,
       updateMenuLbl,
+      selectedTemplates,
+      updateSelectedTemplate,
       addColumnToSection,
     ]
   );

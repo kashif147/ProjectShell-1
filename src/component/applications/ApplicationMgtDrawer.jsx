@@ -3053,10 +3053,7 @@ function ApplicationMgtDrawer({
                     label="Payment Type"
                     name="paymentType"
                     required
-                    options={[
-                      { value: "Salary Deduction", label: "Salary Deduction" },
-                      { value: "Credit Card", label: "Credit Card" },
-                    ]}
+                    options={paymentTypeOptions}
                     disabled={isDisable}
                     onChange={(e) =>
                       handleInputChange(

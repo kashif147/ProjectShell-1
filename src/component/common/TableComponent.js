@@ -643,8 +643,8 @@ const TableComponent = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       const { applicationStatus } = record || {};
-                      const id = record?.applicationId || record?._id || record?.id;
-
+                      const id = record?.applicationId;
+                      debugger
                       if (applicationStatus === "Draft") {
                         dispatch(
                           getApplicationById({
