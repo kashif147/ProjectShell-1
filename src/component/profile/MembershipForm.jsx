@@ -180,6 +180,7 @@ const MembershipForm = ({
 
       // Preferences
       consent: source.preferences?.consent,
+      valueAddedServices: source.preferences?.valueAddedServices,
 
       // Corn Market
       joinINMOIncomeProtection: source.cornMarket?.incomeProtectionScheme,
@@ -202,7 +203,7 @@ const MembershipForm = ({
 
     // Override with subscription data if available
     if (subscriptionData) {
-      debugger
+
       setFormData(prev => ({
         ...prev,
         ...initialFormData,
@@ -306,7 +307,7 @@ const MembershipForm = ({
     joinINMOIncomeProtection: false,
     joinRewards: false,
     exclusiveDiscountsOffers: false,
-    allowPartnerContact: false,
+    valueAddedServices: false,
     agreeDataProtection: false,
     recruitedBy: "",
     recruitedByMembershipNo: "",
@@ -953,9 +954,9 @@ const MembershipForm = ({
                   Additional Service and Terms
                 </h4>
                 <Checkbox
-                  checked={formData.allowPartnerContact}
+                  checked={formData.valueAddedServices}
                   onChange={(e) =>
-                    handleChange("allowPartnerContact", e.target.checked)
+                    handleChange("valueAddedServices", e.target.checked)
                   }
                   style={{
                     display: "flex",
@@ -1146,18 +1147,8 @@ const MembershipForm = ({
                 value={formData.nmbiNumber}
                 onChange={(e) => handleChange("nmbiNumber", e.target.value)}
               />
-              <div
-                className="ps-3 pe-3 pt-2 pb-3 bg-ly"
-                style={{
-                  backgroundColor: "#f0fdf4",
-                  borderRadius: "4px",
-                  border: "1px solid #a4e3ba",
-                }}
-              >
-                <label
-                  className="my-input-label mb-1"
-                  style={{ color: "#14532d" }}
-                >
+              <div style={{ marginBottom: "16px" }}>
+                <label className="my-input-label mb-1">
                   Primary Nurse Type <span className="text-danger">*</span>
                 </label>
 
@@ -1168,62 +1159,26 @@ const MembershipForm = ({
                     handleChange("nursingSpecialization", e.target.value)
                   }
                   disabled={isFormReadOnly}
-                  style={{
-                    color: "#14532d",
-                    width: "100%",
-                  }}
+                  className="w-100"
                 >
-                  <div
-                    className="d-flex justify-content-between align-items-baseline flex-wrap"
-                    style={{ gap: "8px" }}
-                  >
-                    <Radio
-                      value="generalNursing"
-                      style={{ color: "#14532d", width: "14%" }}
-                    >
-                      General Nursing
-                    </Radio>
-
-                    <Radio
-                      value="publicHealthNurse"
-                      style={{ color: "#14532d", width: "14%" }}
-                    >
-                      Public Health Nurse
-                    </Radio>
-
-                    <Radio
-                      value="mentalHealth"
-                      style={{ color: "#14532d", width: "14%" }}
-                    >
-                      Mental Health Nurse
-                    </Radio>
-
-                    <Radio
-                      value="midwife"
-                      style={{ color: "#14532d", width: "16%" }}
-                    >
-                      Midwife
-                    </Radio>
-
-                    <Radio
-                      value="sickChildrenNurse"
-                      style={{ color: "#14532d", width: "14%" }}
-                    >
-                      Sick Children's Nurse
-                    </Radio>
-
-                    <Radio
-                      value="intellectualDisability"
-                      style={{
-                        color: "#14532d",
-                        width: "20%",
-                        whiteSpace: "normal",
-                        lineHeight: "1.2",
-                      }}
-                    >
-                      Registered Nurse for Intellectual Disability
-                    </Radio>
-                  </div>
+                  <Row gutter={[16, 8]}>
+                    {NursingSpecializationSelectOptn.map((option) => (
+                      <Col key={option.value} xs={24} sm={12}>
+                        <Radio
+                          value={option.value}
+                          style={{
+                            whiteSpace: "normal",
+                            display: "flex",
+                            alignItems: "center",
+                            height: "100%",
+                            color: "#212529"
+                          }}
+                        >
+                          {option.label}
+                        </Radio>
+                      </Col>
+                    ))}
+                  </Row>
                 </Radio.Group>
               </div>
             </Card>
