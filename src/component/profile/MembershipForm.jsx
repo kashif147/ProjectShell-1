@@ -1100,7 +1100,7 @@ const MembershipForm = ({
               <MyDatePicker
                 label="Start Date"
                 placeholder="Select start date (Optional)"
-                value={formData.startDate}
+                // value={formData.startDate}
                 onChange={(date) => handleChange("startDate", date)}
                 disabled={isFormReadOnly}
               />
