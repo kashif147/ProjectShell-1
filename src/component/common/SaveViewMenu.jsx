@@ -10,13 +10,14 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, deleteGridTemplate, setDefaultGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getAllApplications } from "../../features/ApplicationSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
-import { getLabelToKeyMap, transformFiltersForApi } from "../../utils/filterUtils";
+import { getLabelToKeyMap, transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
 import { setTemplateId, setInitialized, initializeWithTemplate, resetInitialization } from "../../features/applicationwithfilterslice";
 
 const SaveViewMenu = () => {
@@ -63,69 +64,64 @@ const SaveViewMenu = () => {
   const targetTemplateType = screenMapping[screenNameForApi] || screenNameForApi;
 
   const transformFiltersForApply = (apiFilters) => {
-    const labelMap = getLabelToKeyMap(columns[activeScreen] || []);
-    // Reverse the map for loading
-    const keyToLabel = {};
-    Object.keys(labelMap).forEach(label => {
-      keyToLabel[labelMap[label]] = label;
-    });
-
-    const transformed = {};
-    Object.keys(apiFilters).forEach(key => {
-      const filter = apiFilters[key];
-      const label = keyToLabel[key] || key;
-      transformed[label] = {
-        operator: filter.operator === 'equal_to' ? '==' : '!=',
-        selectedValues: filter.values || filter.selectedValues || []
-      };
-    });
-    return transformed;
+    return transformFiltersFromApi(apiFilters, columns[activeScreen] || []);
   };
 
   useEffect(() => {
     dispatch(getGridTemplates());
   }, [dispatch]);
 
-  // Reset initialization when screen changes to prevent data loading with wrong/old templateId
+  // Consolidate Initialization Logic: Reset and Apply Template on Screen Change
+  const lastScreen = React.useRef(null);
   useEffect(() => {
-    dispatch(resetInitialization());
-  }, [dispatch, targetTemplateType]);
-
-  // Set initial active view from system default when templates load
-  useEffect(() => {
-    if (!loading && templates) {
-      // 1. Check if we have a persisted view in context for this screen
-      const persistedTemplate = selectedTemplates[targetTemplateType];
-
-      if (persistedTemplate) {
-        handleApplyView(persistedTemplate, false); // false to avoid redundant context update
-        return;
-      }
-
-      // 2. Fall back to user default or system default
-      const systemView =
-        templates.systemDefault?.templateType === targetTemplateType
-          ? templates.systemDefault
-          : null;
-      const userViews =
-        templates.userTemplates?.filter(
-          (t) => t.templateType === targetTemplateType
-        ) || [];
-
-      const defaultView = userViews.find((t) => t.isDefault);
-
-      if (defaultView) {
-        handleApplyView(defaultView);
-      } else if (systemView) {
-        handleApplyView(systemView);
-      } else {
-        setActiveView("No View in this Screen");
-        if (location.pathname === "/applications") {
-          dispatch(initializeWithTemplate(""));
-        }
-      }
+    // 🛡️ Always reset immediately IF AND ONLY IF the screen actually changed
+    if (lastScreen.current !== targetTemplateType) {
+      console.log("🔄 SaveViewMenu: Screen change detected, resetting initialization:", targetTemplateType);
+      dispatch(resetInitialization());
+      lastScreen.current = targetTemplateType;
     }
-  }, [templates, loading, targetTemplateType]);
+
+    // 🛡️ Guard: Wait until templates are loaded and ready
+    if (loading || !templates) {
+      console.log("⏳ SaveViewMenu: Waiting for templates to load for screen:", targetTemplateType);
+      return;
+    }
+
+    console.log("🚀 SaveViewMenu: Initializing view for screen:", targetTemplateType);
+
+    // 1. Check if we have a persisted view in context for this screen
+    const persistedTemplate = selectedTemplates[targetTemplateType];
+
+    if (persistedTemplate) {
+      handleApplyView(persistedTemplate, false); // false to avoid redundant context update
+      return;
+    }
+
+    // 2. Fall back to user default or system default
+    const systemView =
+      templates.systemDefault?.templateType === targetTemplateType
+        ? templates.systemDefault
+        : templates.userTemplates?.find(
+          (t) => t.systemDefault && t.templateType === targetTemplateType
+        ) || null;
+
+    const userViews =
+      templates.userTemplates?.filter(
+        (t) => t.templateType === targetTemplateType
+      ) || [];
+
+    const defaultView = userViews.find((t) => t.isDefault);
+
+    if (defaultView) {
+      handleApplyView(defaultView);
+    } else if (systemView) {
+      handleApplyView(systemView);
+    } else {
+      setActiveView("System Template");
+      // Always initialize data loading even if no explicitly saved view exists
+      dispatch(initializeWithTemplate(""));
+    }
+  }, [dispatch, targetTemplateType, templates, loading]);
 
   const handleApplyView = (template, shouldPersist = true) => {
     const colScreen = activeScreen;
@@ -143,10 +139,14 @@ const SaveViewMenu = () => {
     dispatch(initializeWithTemplate(template._id || ""));
   };
 
-  const handleSetDefaultView = (templateId) => {
-    dispatch(setDefaultGridTemplate(templateId))
+  const handleSetDefaultView = (template) => {
+    dispatch(setDefaultGridTemplate(template._id))
       .unwrap()
-      .then(() => MyAlert("success", "Success", "Default view set successfully"))
+      .then(() => {
+        MyAlert("success", "Success", "Default view set successfully");
+        handleApplyView(template); // Apply the view immediately
+        dispatch(getGridTemplates()); // Refresh the list to show new default star
+      })
       .catch((error) => {
         console.error("Error setting default view:", error);
         MyAlert("error", "Error", error?.message || "Failed to set default view");
@@ -203,7 +203,27 @@ const SaveViewMenu = () => {
       MyAlert("success", "Success", `View "${viewName}" saved successfully`);
       setIsModalVisible(false);
       setViewName("");
-      dispatch(getGridTemplates()); // Refresh the list
+
+      // 1. Refresh the templates list first and WAIT for it
+      const templatesResponse = await dispatch(getGridTemplates()).unwrap();
+
+      // 2. Find the newly saved template in the refreshed list
+      const savedTemplate = templatesResponse.userTemplates?.find(t => t.name === viewName && t.templateType === targetTemplateType);
+
+      if (savedTemplate) {
+        handleApplyView(savedTemplate); // This will update context and filters
+      }
+
+      // 3. Refresh the grid data
+      if (location.pathname.toLowerCase() === "/applications") {
+        dispatch(getApplicationsWithFilter({
+          templateId: savedTemplate?._id || currentTemplateId || "",
+          page: 1,
+          limit: 10
+        }));
+      } else {
+        dispatch(getAllApplications());
+      }
     } catch (error) {
       console.error("Error saving template:", error);
       MyAlert(
@@ -241,7 +261,7 @@ const SaveViewMenu = () => {
         ) : (
           <StarOutlined
             style={{ color: "#555", fontSize: 16, cursor: "pointer" }}
-            onClick={() => handleSetDefaultView(template._id)}
+            onClick={() => handleSetDefaultView(template)}
           />
         )}
         {!template.systemDefault && (

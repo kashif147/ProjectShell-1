@@ -1,13 +1,33 @@
 export const getLabelToKeyMap = (screenCols) => {
     const mapping = {};
 
-    // Default manual overrides for common mismatches
+    // Default manual overrides for common mismatches across screens
     const overrides = {
         'Application Status': 'applicationStatus',
         'Membership Status': 'membershipStatus',
         'Membership Category': 'membershipCategory',
         'Work Location': 'workLocation',
+        'Grade': 'grade',
+        'Region': 'region',
+        'Branch': 'branch',
         'Department': 'department',
+        'Gender': 'gender',
+        'Email': 'email',
+        'Mobile No': 'mobileNumber',
+        'Mobile': 'mobileNumber',
+        'Forename': 'firstName',
+        'Surname': 'lastName',
+        'Membership No': 'membershipNumber',
+        'Membership Number': 'membershipNumber',
+        'Section (Primary)': 'nurseType',
+        'Section (Primary Section)': 'nurseType',
+        'Category': 'category',
+        'Payment Type': 'paymentType',
+        'Country of Qualification': 'countryPrimaryQualification',
+        'Preferred Address': 'preferredAddress',
+        'Personal Email': 'personalEmail',
+        'Work Email': 'workEmail',
+        'Rank': 'grade', // Sometimes labeled as Rank but mapped to grade
     };
 
     if (screenCols && Array.isArray(screenCols)) {
@@ -33,6 +53,26 @@ export const transformFiltersForApi = (filters, screenCols) => {
                 values: filter.selectedValues
             };
         }
+    });
+    return transformed;
+};
+
+export const transformFiltersFromApi = (apiFilters, screenCols) => {
+    const labelMap = getLabelToKeyMap(screenCols);
+    // Reverse the map for loading
+    const keyToLabel = {};
+    Object.keys(labelMap).forEach(label => {
+        keyToLabel[labelMap[label]] = label;
+    });
+
+    const transformed = {};
+    Object.keys(apiFilters || {}).forEach(key => {
+        const filter = apiFilters[key];
+        const label = keyToLabel[key] || key;
+        transformed[label] = {
+            operator: filter.operator === 'equal_to' ? '==' : '!=',
+            selectedValues: filter.values || filter.selectedValues || []
+        };
     });
     return transformed;
 };

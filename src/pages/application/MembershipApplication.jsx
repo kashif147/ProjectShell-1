@@ -29,15 +29,15 @@ function MembershipApplication() {
   console.log(selectedRows, "selected rows data");
 
   useEffect(() => {
-    // Only fetch if initial view determination is complete
-    if (!isInitialized) return;
+    // Only fetch if initial view determination is complete and templates are NOT currently loading
+    if (!isInitialized || templatesLoading) return;
 
     dispatch(getApplicationsWithFilter({
       templateId: currentTemplateId || "",
       page: 1,
       limit: 10
     }));
-  }, [dispatch, currentTemplateId, isInitialized]);
+  }, [dispatch, currentTemplateId, isInitialized, templatesLoading]);
 
   useEffect(() => {
     if (applications && applications.length > 0) {
@@ -75,20 +75,16 @@ function MembershipApplication() {
     }
   }, [selectedIds]);
 
+  if (!isInitialized || templatesLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
+        <Spin tip="Initializing Template..." />
+      </div>
+    );
+  }
+
   return (
     <div className="" style={{ width: "100%" }}>
-      {/* <TableComponent
-      data={formattedApplications}
-      screenName="Applications"
-      isGrideLoading={applicationsLoading}
-      selectedRowKeys={selectedKeys}
-      onSelectionChange={handleSelectionChange}
-      selectionType="checkbox"
-      enableRowSelection={true}
-      disableDefaultRowClick={true}
-      disableRowFn={shouldDisableRow} // Pass the disable function
-    /> */}
-
       <TableComponent
         data={formattedApplications}
         screenName="Applications"

@@ -671,9 +671,6 @@ export const FilterProvider = ({ children }) => {
     // Load new screen's saved state
     const savedState = screenFilterStates[activeScreen];
 
-    // 🛡️ Always reset initialization on screen change to prevent stale data fetches
-    dispatch(resetInitialization());
-
     if (savedState && Object.keys(savedState.filtersState).length > 0) {
       setVisibleFilters(savedState.visibleFilters);
       setFiltersState(savedState.filtersState);

@@ -385,7 +385,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
     },
-    
+
 
     {
       dataIndex: ["contactInfo", "personalEmail"],
@@ -5024,7 +5024,7 @@ export const TableColumnsProvider = ({ children }) => {
     if (searchFilters) {
       setGridData(filterData());
     }
-  }, [searchFilters, location?.pathname, filterData]);
+  }, [searchFilters, filterData]);
 
   // Update search filters when lookups change
   const updateSearchFilters = useCallback(

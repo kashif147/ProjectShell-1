@@ -1,17 +1,21 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button, Divider, message } from "antd";
 import { SearchOutlined, SaveOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
-import { updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getAllApplications } from "../../features/ApplicationSlice";
 import { useFilters } from "../../context/FilterContext";
-import { transformFiltersForApi } from "../../utils/filterUtils";
+import { transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
-  const { columns, updateColumns, handleCheckboxFilterChange } = useTableColumns();
-  const { filtersState } = useFilters();
+  const location = useLocation(); // Add location to check route
+  const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate } = useTableColumns();
+  const { filtersState, applyTemplateFilters } = useFilters();
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -36,8 +40,43 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         filters: currentApiFilters
       };
 
-      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      const response = await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+
+      // SUCCESS BLOCK: Only run if unwrap() succeeds
       MyAlert("success", "Success", "Template updated successfully");
+
+      // 1. Re-fetch all templates from the server to get the processed "Global Truth"
+      const refreshedTemplates = await dispatch(getGridTemplates()).unwrap();
+
+      // 2. Find the current template in the refreshed results
+      const allTemplates = [
+        ...(refreshedTemplates.userTemplates || []),
+        ...(refreshedTemplates.systemDefault ? [refreshedTemplates.systemDefault] : [])
+      ];
+      const primarySourceTemplate = allTemplates.find(t => t._id === currentTemplateId);
+
+      if (primarySourceTemplate) {
+        // 3. Apply filters from the official primary source
+        const transformedFilters = transformFiltersFromApi(primarySourceTemplate.filters, columns[screenName] || []);
+        applyTemplateFilters(transformedFilters);
+
+        // 4. Update the selected template in context
+        updateSelectedTemplate(screenName.toLowerCase(), primarySourceTemplate);
+      } else {
+        console.warn("⚠️ Could not find updated template in refreshed list, falling back to payload sync.");
+        const transformedFilters = transformFiltersFromApi(payload.filters, columns[screenName] || []);
+        applyTemplateFilters(transformedFilters);
+      }
+
+      if (location.pathname.toLowerCase() === "/applications") {
+        dispatch(getApplicationsWithFilter({
+          templateId: currentTemplateId || "",
+          page: 1,
+          limit: 10
+        }));
+      } else {
+        dispatch(getAllApplications());
+      }
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
