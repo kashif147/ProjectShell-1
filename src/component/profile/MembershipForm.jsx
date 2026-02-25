@@ -111,6 +111,23 @@ const MembershipForm = ({
     return null;
   }, [ProfileSubData]);
 
+  const memoizedPaymentTypeOptions = useMemo(() => {
+    if (!paymentTypeOptions) return [];
+    const hasPayrollDeduction = paymentTypeOptions.some(
+      (opt) => opt.label === "Payroll Deduction" || opt.value === "Payroll Deduction"
+    );
+    if (hasPayrollDeduction) return paymentTypeOptions;
+
+    return [
+      ...paymentTypeOptions,
+      {
+        id: "Payroll Deduction",
+        value: "Payroll Deduction",
+        label: "Payroll Deduction",
+      },
+    ];
+  }, [paymentTypeOptions]);
+
   useEffect(() => {
     // FIXED: Safely access profileSearchData results
     const searchAoiRes = profileSearchData?.results?.[0] || null;
@@ -1438,7 +1455,7 @@ const MembershipForm = ({
                 disabled={isFormReadOnly}
                 required={true}
                 isIDs={false}
-                options={paymentTypeOptions}
+                options={memoizedPaymentTypeOptions}
               />
               <MyInput
                 label="Payroll No."

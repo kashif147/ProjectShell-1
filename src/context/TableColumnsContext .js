@@ -378,12 +378,14 @@ const staticColumns = {
 
     {
       dataIndex: ["personalInfo", "forename"],
+      // dataIndex: ["user", "userFullName"],
       title: "Full Name",
       ellipsis: true,
       isGride: true,
       isVisible: true,
       width: 200,
     },
+    
 
     {
       dataIndex: ["contactInfo", "personalEmail"],
