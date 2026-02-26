@@ -4,7 +4,8 @@ import dayjs from "dayjs";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
-import SubTableComp from "../common/SubTableComp";
+import MyTable from "../common/MyTable";
+import { centsToEuro } from "../../utils/Utilities";
 // import axios from "axios";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
@@ -57,7 +58,9 @@ const TransactionHistory = () => {
 
       // Show only data that has entries for the specific memberId
       const filteredRawData = rawData.filter((item) =>
-        item.entries?.some((e) => String(e.memberId).trim().toLowerCase() === targetId)
+        item.entries?.some((e) =>
+          String(e.memberId).trim().toLowerCase() === targetId
+        )
       );
 
       // Sort chronologically for correct running balance calculation
@@ -65,23 +68,37 @@ const TransactionHistory = () => {
 
       let cumulativeBalance = 0;
       const ledgerData = sortedData.map((item, index) => {
-        // Find the entry that specifically matches this memberId
-        const memberEntry = item.entries?.find((e) => String(e.memberId).trim().toLowerCase() === targetId);
+        // Collect ALL entries for this specific member in this transaction
+        const memberEntries = item.entries?.filter((e) =>
+          String(e.memberId).trim().toLowerCase() === targetId
+        ) || [];
 
-        const debit = memberEntry?.dc === "D" ? memberEntry.amount : 0;
-        const credit = memberEntry?.dc === "C" ? memberEntry.amount : 0;
+        // Aggregate amounts (handles split entries in a single transaction)
+        let totalDebit = 0;
+        let totalCredit = 0;
 
-        cumulativeBalance += (credit - debit);
+        memberEntries.forEach(e => {
+          const amt = Number(e.amount) || 0;
+          if (e.dc === "D") totalDebit += amt;
+          if (e.dc === "C") totalCredit += amt;
+        });
+
+        cumulativeBalance += (totalCredit - totalDebit);
 
         return {
           ...item,
-          key: item._id || `ledger-${index}`,
-          description: item.memo || "-",
-          reference: item.docNo || "-",
-          debit: debit,
-          credit: credit,
+          key: item._id || `ledger-${index}-${item.date}-${cumulativeBalance}`,
+          description: (item.memo || item.description || "-").trim(),
+          reference: (item.docNo || item.reference || "-").trim(),
+          debit: totalDebit,
+          credit: totalCredit,
           balance: cumulativeBalance,
         };
+      }).filter(item => {
+        // Strict Filter: Only show rows with a valid date AND a non-zero financial impact
+        const hasDate = item.date && dayjs(item.date).isValid();
+        const hasAmount = Math.abs(item.debit) > 0.001 || Math.abs(item.credit) > 0.001;
+        return hasDate && hasAmount;
       });
 
       // Show newest first in the table
@@ -99,29 +116,38 @@ const TransactionHistory = () => {
       title: "Date",
       dataIndex: "date",
       key: "date",
+      width: 120, // Set explicit widths
       sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
       render: (text) => text ? dayjs(text).format("DD/MM/YYYY") : "-",
     },
-    { title: "Description", dataIndex: "description", key: "description" },
-    { title: "Reference", dataIndex: "reference", key: "reference" },
+    { title: "Description", dataIndex: "description", key: "description", width: 150 },
+    { title: "Reference", dataIndex: "reference", key: "reference", width: 200 },
     {
       title: "Debit",
       dataIndex: "debit",
       key: "debit",
-      render: (value) => value ? <span style={{ color: "red" }}>€{value.toLocaleString()}</span> : "-",
+      width: 50,
+      align: 'right',
+      render: (value) => value ? <span style={{ color: "red" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
     },
     {
       title: "Credit",
       dataIndex: "credit",
       key: "credit",
-      render: (value) => value ? <span style={{ color: "green" }}>€{value.toLocaleString()}</span> : "-",
+      width: 50,
+      align: 'right',
+      render: (value) => value ? <span style={{ color: "green" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
     },
     {
       title: "Running Balance",
       dataIndex: "balance",
       key: "balance",
+      width: 50,
+      align: 'right',
       render: (value) => (
-        <span style={{ color: value < 0 ? "red" : "green" }}>€{value?.toLocaleString() || 0}</span>
+        <span style={{ color: value < 0 ? "red" : "green" }}>
+          €{Math.abs(centsToEuro(value || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+        </span>
       ),
     },
   ], []);
@@ -224,18 +250,15 @@ const TransactionHistory = () => {
       </Card>
 
       {/* Table */}
-      <Card bodyStyle={{ padding: 0 }}>
-        {loading ? (
-          <div style={{ padding: "50px", textAlign: "center" }}>
-            <Spin size="large" />
-          </div>
-        ) : (
-          <SubTableComp
-            columns={columns}
-            dataSource={filteredData}
-          />
-        )}
-      </Card>
+      {/* <Card bodyStyle={{ padding: 0 }}> */}
+      <MyTable
+        columns={columns}
+        dataSource={filteredData}
+        loading={loading}
+        selection={false}
+        tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
+      />
+      {/* </Card> */}
     </div>
   );
 };

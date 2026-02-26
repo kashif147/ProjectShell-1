@@ -1,4 +1,7 @@
 import { useState, Suspense, lazy } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, useLocation } from "react-router-dom";
+import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { Tabs, Spin, Drawer } from "antd";
 import {
   FaFolder,
@@ -30,6 +33,12 @@ const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 const staticTabKeys = ["1", "15", "2", "4", "5", "6", "7"];
 
 function AppTabs() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+
+  const { profileDetails } = useSelector((state) => state.profileDetails || {});
+
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
   const [TransferDrawer, setTransferDrawer] = useState(false);
@@ -140,6 +149,28 @@ function AppTabs() {
       label: "Reminders",
       icon: <FaHistory />,
       onClick: () => setIsReminder(true),
+    },
+    {
+      key: "application",
+      label: "Application",
+      icon: <FaFileAlt />,
+      onClick: () => {
+        // Use applicationId from location state if available, 
+        // fallback to profileDetails properties, then finally profileId
+        const applicationId = location.state?.applicationId ||
+          profileDetails?.applicationId ||
+          profileDetails?.ApplicationId;
+
+        const queryParams = new URLSearchParams(location.search);
+        const profileId = queryParams.get("profileId") || profileDetails?._id || profileDetails?.id;
+
+        const targetId = applicationId || profileId;
+
+        if (targetId) {
+          dispatch(getApplicationById({ id: targetId }));
+          navigate("/applicationMgt", { state: { isEdit: true, applicationId: applicationId } });
+        }
+      },
     },
   ];
   const historyData = [

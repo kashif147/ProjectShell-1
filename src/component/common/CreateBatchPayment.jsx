@@ -36,14 +36,9 @@ import moment from "moment";
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
-const requiredColumns = [
-  "Member Name",
-  "Bank Account",
-  "Payroll No",
-  "Arrears",
-  "Comments",
-  "Advance",
-  "Total Amount",
+const requiredBatchColumns = [
+  "Membership No",
+  "Value for Periods Selected",
 ];
 
 const CreateBatchPayment = forwardRef((props, ref) => {
@@ -178,25 +173,24 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
       if (json.length === 0) {
         message.error("Excel file is empty.");
+        if (event.target) event.target.value = "";
         return;
       }
 
-      const requiredColumns = [
-        "Membership No",
-        "Last name",
-        "First name",
-        "Full name",
-        "Value for Periods Selected",
-      ];
       const uploadedColumns = Object.keys(json[0]);
-      const missingColumns = requiredColumns.filter(
+      const missingColumns = requiredBatchColumns.filter(
         (col) => !uploadedColumns.includes(col)
       );
 
       if (missingColumns.length > 0) {
         message.error(`Missing required columns: ${missingColumns.join(", ")}`);
+        // Reset the input so the user can try again after fixing the file
+        if (event.target) event.target.value = "";
+        setUploadedFile(null);
+        setExcelData([]);
       } else {
         message.success("All required columns are present.");
+        setUploadedFile(file); // Only set file on success
         setExcelData(json);
 
         // Utility function to clean and parse dollar values
@@ -206,11 +200,12 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         };
 
         const totalCurrent = json.reduce((sum, row) => {
-          return sum + cleanValue(row["Value for Periods Selected"]);
+          // Use specific column name from user template if present for calculations
+          return sum + cleanValue(row["Value for Periods Selected"] || row["Amount"] || 0);
         }, 0);
 
         const totalAdvance = json.reduce((sum, row) => {
-          return sum + cleanValue(row["Advance"]);
+          return sum + cleanValue(row["Advance"] || 0);
         }, 0);
 
         const batchTotal = totalCurrent;

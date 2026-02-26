@@ -55,8 +55,10 @@ const Toolbar = () => {
       const normalized = {};
       Object.keys(obj).sort().forEach(key => {
         const val = obj[key] || {};
-        const values = Array.isArray(val.values)
-          ? [...val.values].map(v => String(v).toLowerCase()).sort()
+        // Combine values and selectedValues to handle different API response formats
+        const rawValues = val.values || val.selectedValues || [];
+        const values = Array.isArray(rawValues)
+          ? [...rawValues].map(v => String(v).toLowerCase()).sort()
           : [];
 
         // Only include if there are values selected
@@ -223,17 +225,8 @@ const Toolbar = () => {
         applyTemplateFilters(transformedFilters);
       }
 
-      // Refresh list and grid
-
-      if (location.pathname.toLowerCase() === "/applications") {
-        dispatch(getApplicationsWithFilter({
-          templateId: currentTemplateId || "",
-          page: 1,
-          limit: 10
-        }));
-      } else {
-        // dispatch(getAllApplications());
-      }
+      // 5. Final grid refresh REMOVED - MembershipApplication.jsx handles this automatically
+      // via the loading state of getGridTemplates(). This prevents multiple refreshes.
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");

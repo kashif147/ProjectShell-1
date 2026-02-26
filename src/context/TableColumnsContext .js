@@ -375,7 +375,6 @@ const staticColumns = {
       isVisible: true,
       width: 150,
     },
-
     {
       dataIndex: ["personalInfo", "forename"],
       // dataIndex: ["user", "userFullName"],
@@ -388,7 +387,8 @@ const staticColumns = {
 
 
     {
-      dataIndex: ["contactInfo", "personalEmail"],
+      // dataIndex: ["contactInfo", "normalizedEmail"],
+      dataIndex: "normalizedEmail",
       title: "Email",
       ellipsis: true,
       isGride: true,

@@ -1403,6 +1403,7 @@ function HeaderDetails() {
                         : ""
           }`}
         open={isBatchOpen}
+        isDisable={false}
         onClose={() => {
           setIsBatchOpen(!isBatchOpen);
         }}
@@ -1412,11 +1413,9 @@ function HeaderDetails() {
             const result = await batchFormRef.current.submit();
             if (!result) return; // validation failed or API failed
 
-            navigate("/BatchMemberSummary", {
+            navigate(`/BatchMemberSummary/${result._id || result.id}`, {
               state: {
-                search: "BatchMemberSummary",
-                batchId: result._id || result.id, // Fallback for safety
-                batchData: result
+                batchName: result.description,
               },
             });
             setIsBatchOpen(!isBatchOpen);

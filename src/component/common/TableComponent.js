@@ -541,6 +541,7 @@ const TableComponent = ({
                     name: record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
+                    applicationId: record?.applicationId || record?.ApplicationId,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
@@ -568,6 +569,7 @@ const TableComponent = ({
                     name: record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
+                    applicationId: record?.applicationId || record?.ApplicationId,
                   }}
                   onClick={() => {
                     handleRowClick(record, index);

@@ -86,14 +86,17 @@ function MyDrawer({
   extra,
   className,
   rootClassName,
+  isDisable: isDisableProp, // Added prop override
 }) {
   const {
     selectLokups,
     lookupsForSelect,
     // contactTypes,
     disableFtn,
-    isDisable,
+    isDisable: isDisableContext, // Renamed context variable
   } = useTableColumns();
+
+  const isDisable = isDisableProp !== undefined ? isDisableProp : isDisableContext;
   const { excelData, selectedRowIndex, selectedRowData } =
     useContext(ExcelContext);
   const dispatch = useDispatch();

@@ -333,6 +333,13 @@ export function convertSandToEuro(sandAmount) {
   return sand / 100; // Convert back to euros
 }
 
+export const centsToEuro = (cents) => {
+  if (typeof cents !== "number" || isNaN(cents)) {
+    return 0;
+  }
+  return cents / 100;
+};
+
 export function generatePatch(original = {}, updated = {}, path = "") {
   let patches = [];
 

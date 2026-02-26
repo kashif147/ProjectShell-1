@@ -68,15 +68,8 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         applyTemplateFilters(transformedFilters);
       }
 
-      if (location.pathname.toLowerCase() === "/applications") {
-        dispatch(getApplicationsWithFilter({
-          templateId: currentTemplateId || "",
-          page: 1,
-          limit: 10
-        }));
-      } else {
-        dispatch(getAllApplications());
-      }
+      // Final grid refresh REMOVED - MembershipApplication.jsx handles this automatically
+      // via the loading state of getGridTemplates(). This prevents multiple refreshes.
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
