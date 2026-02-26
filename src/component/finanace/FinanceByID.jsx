@@ -200,12 +200,26 @@ const TransactionHistory = () => {
   }
 
   return (
-    <div className="mt-4">
+    <div
+      className="mt-2 pe-4 pb-4 mb-2"
+      style={{
+        height: "calc(92vh - 120px - 4vh)",
+        maxHeight: "calc(100vh - 120px - 4vh)",
+        overflowY: "auto",
+        overflowX: "hidden",
+        position: "relative",
+        scrollBehavior: "smooth",
+        paddingRight: "12px",
+        paddingBottom: "200px",
+        width: '100%'
+      }}
+    >
       {/* Filters */}
       <Card className="mb-3">
         <Row gutter={16} align="middle">
           <Col xs={24} md={6}>
             <Input
+              size="large"
               placeholder="Search transactions"
               value={searchText}
               onChange={(e) => setSearchText(e.target.value)}
@@ -213,6 +227,7 @@ const TransactionHistory = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
+              size="large"
               value={transactionType}
               onChange={(v) => setTransactionType(v)}
               style={{ width: "100%" }}
@@ -224,6 +239,7 @@ const TransactionHistory = () => {
           </Col>
           <Col xs={24} md={6}>
             <RangePicker
+              size="large"
               style={{ width: "100%" }}
               value={dateRange}
               onChange={(val) => setDateRange(val || [])}
@@ -231,6 +247,7 @@ const TransactionHistory = () => {
           </Col>
           <Col xs={24} md={4}>
             <Select
+              size="large"
               value={amountRange}
               onChange={(v) => setAmountRange(v)}
               style={{ width: "100%" }}
@@ -242,7 +259,7 @@ const TransactionHistory = () => {
             </Select>
           </Col>
           <Col xs={24} md={4}>
-            <Button block onClick={handleReset}>
+            <Button size="large" block onClick={handleReset}>
               Reset
             </Button>
           </Col>
