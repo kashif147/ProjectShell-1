@@ -19,6 +19,7 @@ import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberD
 import "../../styles/ManualEntry.css";
 import ManualPaymentEntryDrawer from "../../component/finanace/ManualPaymentEntryDrawer";
 import MyDrawer from "../../component/common/MyDrawer";
+import MemberSearch from "../../component/profile/MemberSearch";
 import CreateBatchPayment from "../../component/common/CreateBatchPayment";
 import CommonPopConfirm from "../../component/common/CommonPopConfirm";
 import { formatCurrency } from "../../utils/Utilities";
@@ -105,63 +106,58 @@ const SummaryCard = ({ title, value, icon, color, iconBg }) => (
   </Card>
 );
 
-const MembershipNoResolver = ({ batchId, exceptionId, exceptionMembershipNumber, onResolved }) => {
-  const [value, setValue] = useState("");
+const MembershipNoResolver = ({
+  batchId,
+  exceptionId,
+  exceptionMembershipNumber,
+  onResolved,
+}) => {
   const [loading, setLoading] = useState(false);
 
-  const handleResolve = async () => {
-    if (!value.trim()) return;
+  const handleResolve = async (memberData) => {
+    if (!memberData?.membershipNumber) return;
     setLoading(true);
     try {
       const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
       const token = localStorage.getItem("token");
 
-      // 1. Search for the member
-      const searchRes = await axios.get(`${baseUrl}/profile/search?q=${value}`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
-
-      const member = searchRes.data.data?.results?.[0];
-      if (!member) {
-        message.error("No member found with this ID");
-        return;
-      }
-
-      // 2. Resolve the exception
+      // Resolve the exception directly with selected member info
       await axios.post(
         `${baseUrl}/batch-details/resolve-exception/${batchId}`,
         {
-          membershipNumber: member.membershipNumber,
-          exceptionMembershipNumber: exceptionMembershipNumber
+          membershipNumber: memberData.membershipNumber,
+          exceptionMembershipNumber: exceptionMembershipNumber,
         },
         {
           headers: {
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        },
+        }
       );
 
       message.success("Exception resolved successfully");
-      setValue(""); // Clear input on success
       if (onResolved) onResolved();
     } catch (error) {
       console.error("Resolution error:", error);
-      message.error(error.response?.data?.message || "Failed to resolve exception");
+      message.error(
+        error.response?.data?.message || "Failed to resolve exception"
+      );
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <AntInput
-      placeholder="Enter No..."
-      value={value}
-      onChange={(e) => setValue(e.target.value)}
-      onPressEnter={handleResolve}
-      disabled={loading}
-      suffix={loading ? <LoadingOutlined spin /> : <SearchOutlined onClick={handleResolve} style={{ cursor: 'pointer' }} />}
-      style={{ width: '100%' }}
+    <MemberSearch
+      headerStyle={true}
+      fullWidth={true}
+      disable={loading}
+      showStatus={false}
+      onSelectBehavior="callback"
+      onSelectCallback={(memberData) => handleResolve(memberData)}
+      getPopupContainer={() => document.body}
+      style={{ minWidth: "150px" }}
     />
   );
 };
@@ -556,7 +552,7 @@ function BatchMemberSummary() {
         dataIndex: "membershipNumber",
         key: "membershipNumber",
         ellipsis: true,
-        width: 180,
+        width: 250,
         sorter: (a, b) => {
           const aVal = (a.membershipNumber || "").toString();
           const bVal = (b.membershipNumber || "").toString();
@@ -622,7 +618,7 @@ function BatchMemberSummary() {
       {
         title: "MEMBERSHIP NO",
         key: "resolution",
-        width: 160,
+        width: 250,
         render: (_, record) => (
           <MembershipNoResolver
             batchId={batchId}

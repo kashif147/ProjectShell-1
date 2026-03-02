@@ -7,7 +7,7 @@ import { CatOptions } from '../../Data';
 import MyDatePicker from '../common/MyDatePicker';
 import dayjs from 'dayjs';
 import moment from 'moment';
-import SubTableComp from '../common/SubTableComp';
+import MyTable from '../common/MyTable';
 const { Search } = Input;
 
 function CategoryChangeRequest({
@@ -159,19 +159,11 @@ function CategoryChangeRequest({
         {/* History Table */}
         {columnHistory && (
           <div className="mt-4">
-            {/* <Table
-              pagination={false}
+            <MyTable
               columns={columnHistory}
               dataSource={historyData}
-              className="drawer-tbl"
-              rowClassName={(record, index) =>
-                index % 2 !== 0 ? 'odd-row' : 'even-row'
-              }
-              bordered
-            /> */}
-            <SubTableComp columns={columnHistory}
-              dataSource={historyData} />
-
+              selection={false}
+            />
           </div>
         )}
       </div>

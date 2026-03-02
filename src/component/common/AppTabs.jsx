@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { Tabs, Spin, Drawer } from "antd";
+import MyTable from "./MyTable";
 import {
   FaFolder,
   FaFileAlt,
@@ -10,6 +11,7 @@ import {
   FaBook,
   FaHistory,
 } from "react-icons/fa";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 import TransferRequests from "../TransferRequests";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
 import Reminder from "../profile/Reminder";
@@ -47,6 +49,38 @@ function AppTabs() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
+  const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
+
+  const { columns } = useTableColumns();
+  const userApplications = useSelector((state) => state.userApplications?.applications || []);
+
+  const applicationColumns = columns?.Applications?.map((col) => {
+    // Correctly check if it's the Membership Category column
+    const isCategoryColumn = Array.isArray(col.dataIndex)
+      ? col.dataIndex.includes("membershipCategory")
+      : col.dataIndex === "membershipCategory";
+
+    if (isCategoryColumn) {
+      return {
+        ...col,
+        render: (text, record) => (
+          <a
+            style={{ color: "#1890ff", fontWeight: "500" }}
+            onClick={() => {
+              dispatch(getApplicationById({ id: record._id || record.id }));
+              navigate("/applicationMgt", {
+                state: { isEdit: true, applicationId: record.id || record._id },
+              });
+              setIsApplicationDrawerOpen(false);
+            }}
+          >
+            {text || "View Application"}
+          </a>
+        ),
+      };
+    }
+    return col;
+  }) || [];
 
   const allItems = [
     {
@@ -155,21 +189,7 @@ function AppTabs() {
       label: "Application",
       icon: <FaFileAlt />,
       onClick: () => {
-        // Use applicationId from location state if available, 
-        // fallback to profileDetails properties, then finally profileId
-        const applicationId = location.state?.applicationId ||
-          profileDetails?.applicationId ||
-          profileDetails?.ApplicationId;
-
-        const queryParams = new URLSearchParams(location.search);
-        const profileId = queryParams.get("profileId") || profileDetails?._id || profileDetails?.id;
-
-        const targetId = applicationId || profileId;
-
-        if (targetId) {
-          dispatch(getApplicationById({ id: targetId }));
-          navigate("/applicationMgt", { state: { isEdit: true, applicationId: applicationId } });
-        }
+        setIsApplicationDrawerOpen(true);
       },
     },
   ];
@@ -296,6 +316,20 @@ function AppTabs() {
         styles={{ body: { padding: 0 } }}
       >
         <DuplicateMembers />
+      </Drawer>
+
+      <Drawer
+        title="Member Applications"
+        open={isApplicationDrawerOpen}
+        onClose={() => setIsApplicationDrawerOpen(false)}
+        width={1000}
+        styles={{ body: { padding: "20px" } }}
+      >
+        <MyTable
+          columns={applicationColumns}
+          dataSource={userApplications}
+          selection={false}
+        />
       </Drawer>
     </div>
   );

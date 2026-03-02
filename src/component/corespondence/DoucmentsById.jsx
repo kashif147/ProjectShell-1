@@ -1,7 +1,6 @@
 import React from 'react';
-import { Table } from 'antd';
 import { FaFilePdf, FaFileWord, FaFileExcel } from 'react-icons/fa';
-import SubTableComp from '../common/SubTableComp';
+import MyTable from '../common/MyTable';
 
 // Example dataSource for documents
 const documentsData = [
@@ -71,5 +70,5 @@ const columns = [
 ];
 
 export default function DoucmentsById() {
-  return <SubTableComp dataSource={documentsData} columns={columns} />;
+  return <MyTable dataSource={documentsData} columns={columns} selection={false} />;
 }

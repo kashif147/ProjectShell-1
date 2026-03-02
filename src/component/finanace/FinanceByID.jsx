@@ -116,17 +116,17 @@ const TransactionHistory = () => {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      width: 120, // Set explicit widths
+      width: 110,
       sorter: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
       render: (text) => text ? dayjs(text).format("DD/MM/YYYY") : "-",
     },
-    { title: "Description", dataIndex: "description", key: "description", width: 150 },
-    { title: "Reference", dataIndex: "reference", key: "reference", width: 200 },
+    { title: "Description", dataIndex: "description", key: "description", width: 250, ellipsis: true },
+    { title: "Reference", dataIndex: "reference", key: "reference", width: 180, ellipsis: true },
     {
       title: "Debit",
       dataIndex: "debit",
       key: "debit",
-      width: 50,
+      width: 110,
       align: 'right',
       render: (value) => value ? <span style={{ color: "red" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
     },
@@ -134,7 +134,7 @@ const TransactionHistory = () => {
       title: "Credit",
       dataIndex: "credit",
       key: "credit",
-      width: 50,
+      width: 110,
       align: 'right',
       render: (value) => value ? <span style={{ color: "green" }}>€{centsToEuro(value).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span> : "",
     },
@@ -142,7 +142,7 @@ const TransactionHistory = () => {
       title: "Running Balance",
       dataIndex: "balance",
       key: "balance",
-      width: 50,
+      width: 140,
       align: 'right',
       render: (value) => (
         <span style={{ color: value < 0 ? "red" : "green" }}>
@@ -217,7 +217,7 @@ const TransactionHistory = () => {
       {/* Filters */}
       <Card className="mb-3">
         <Row gutter={16} align="middle">
-          <Col xs={24} md={6}>
+          <Col xs={24} md={5}>
             <Input
               size="large"
               placeholder="Search transactions"
@@ -237,7 +237,7 @@ const TransactionHistory = () => {
               <Option value="credit">Credit</Option>
             </Select>
           </Col>
-          <Col xs={24} md={6}>
+          <Col xs={24} md={7}>
             <RangePicker
               size="large"
               style={{ width: "100%" }}

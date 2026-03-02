@@ -47,6 +47,7 @@ import accountReducer from "../features/AccountSlice";
 import notificationReducer from "../features/NotificationSlice";
 import batchDetailsReducer from "../features/profiles/BatchDetailsSlice";
 import templetefiltrsclumnapiReducer from "../features/templete/templetefiltrsclumnapi";
+import userApplicationsReducer from "../features/UserApplicationsSlice";
 
 const store = configureStore({
   reducer: {
@@ -95,6 +96,7 @@ const store = configureStore({
     templeteDetails: templeteDetailsReducer,
     transferRequestHistory: transferRequestHistoryReducer,
     templetefiltrsclumnapi: templetefiltrsclumnapiReducer,
+    userApplications: userApplicationsReducer,
 
   },
 });
