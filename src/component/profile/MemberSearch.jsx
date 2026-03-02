@@ -3,6 +3,7 @@ import { AutoComplete, Input, Button, message, Spin } from "antd";
 import { SearchOutlined, LoadingOutlined, UserAddOutlined } from "@ant-design/icons";
 import { useDispatch } from "react-redux";
 import { useNavigate } from "react-router-dom";
+import dayjs from "dayjs";
 import axios from "axios";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
@@ -38,23 +39,27 @@ const MemberSearch = ({
   // Add member functionality
   onAddMember = null, // Callback function when "Add Member" button is clicked
   addMemberLabel = "Add Member", // Label for the add member button
-  
+
   // Search props
   searchType = "profiles", // "profiles", "subscriptions", or "both"
   searchContext = null, // Context for subscription search
-  
+
   // NEW: Controlled input props
   value: externalValue = undefined, // External control value
   onChange: externalOnChange = null, // External onChange handler
   onClear: externalOnClear = null, // Optional external clear callback
+
+  // NEW: Layout control props
+  showStatus = true, // Whether to show "Searching..." and "Found X members" text
+  getPopupContainer = null, // Custom popup container function
 }) => {
   // Internal state for backward compatibility
   const [internalValue, setInternalValue] = useState("");
-  
+
   // Determine if component is controlled or uncontrolled
   const isControlled = externalValue !== undefined;
   const searchValue = isControlled ? externalValue : internalValue;
-  
+
   const [options, setOptions] = useState([]);
   const [loading, setLoading] = useState(false);
   const [apiError, setApiError] = useState(null);
@@ -184,7 +189,7 @@ const MemberSearch = ({
                   {/* Row 3: Additional Info */}
                   <div style={{ fontSize: "13px", marginTop: "2px" }}>
                     <span>👤 {member.additionalInformation?.membershipStatus || 'Unknown'}</span> •{" "}
-                    <span>🎂 {member.personalInfo?.dateOfBirth ? new Date(member.personalInfo.dateOfBirth).toLocaleDateString() : 'No DOB'}</span> •{" "}
+                    <span>🎂 {member.personalInfo?.dateOfBirth ? dayjs(member.personalInfo.dateOfBirth).format("DD/MM/YYYY") : 'No DOB'}</span> •{" "}
                     <span>💼 {member.professionalDetails?.grade || 'No grade'}</span>
                   </div>
                 </div>
@@ -273,12 +278,12 @@ const MemberSearch = ({
     console.log('Selected value:', value);
     console.log('Selected option:', option);
     console.log('onSelectBehavior:', onSelectBehavior);
-    
+
     // Check if this is a "no match" option with Add Member button
     if (value === "__no_match__") {
       return;
     }
-    
+
     try {
       // Parse the stringified value to get member data
       const parsedValue = JSON.parse(value);
@@ -299,7 +304,7 @@ const MemberSearch = ({
           case "navigate":
             // First clear the search input immediately
             handleClear();
-            
+
             // Use Redux for BOTH subscription AND profile search when selecting
             try {
               // Dispatch searchProfiles to update Redux state
@@ -337,10 +342,10 @@ const MemberSearch = ({
               // DON'T clear search value - keep it visible in the input!
               // The search value should show the selected member's name or membership number
               const displayValue = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
-              
+
               // Update the value to show selected member
               handleInputChange(displayValue);
-              
+
               // Clear options dropdown
               setOptions([]);
 
@@ -416,7 +421,7 @@ const MemberSearch = ({
             const displayValueNone = `${memberData.personalInfo?.forename || ''} ${memberData.personalInfo?.surname || ''} (${memberData.membershipNumber || ''})`.trim();
             handleInputChange(displayValueNone); // Keep value visible
             setOptions([]); // Clear dropdown
-            
+
             message.success(`Member ${memberData.membershipNumber} selected`);
 
             // Still dispatch Redux actions even for "none" behavior
@@ -479,7 +484,7 @@ const MemberSearch = ({
       console.error("Error handling selection:", error);
       message.error(`Error: ${error.message || 'Unknown error'}. Please try again or contact support.`);
       setApiError(error.message || 'Failed to handle selection');
-      
+
       handleClear();
     } finally {
       setLoading(false);
@@ -489,14 +494,14 @@ const MemberSearch = ({
   // Handle input change (for typing)
   const handleInputChange = (value) => {
     console.log('Input changed to:', value);
-    
+
     // Update value based on control mode
     if (isControlled && externalOnChange) {
       externalOnChange(value); // Call external onChange
     } else {
       setInternalValue(value); // Use internal state
     }
-    
+
     setSelectedOption(null);
 
     if (value === "") {
@@ -512,7 +517,7 @@ const MemberSearch = ({
     } else {
       setInternalValue(""); // Clear internal value
     }
-    
+
     // Clear all other states
     setOptions([]);
     setApiError(null);
@@ -521,7 +526,7 @@ const MemberSearch = ({
     setShowNoMatchOption(false);
     setIsSearchTriggered(false);
     setIsManualSearch(false);
-    
+
     // Call external clear callback if provided
     if (externalOnClear) {
       externalOnClear();
@@ -544,7 +549,7 @@ const MemberSearch = ({
         handleSelect(firstOption.value, firstOption);
       }
     }
-    
+
     // Clear on Escape
     if (e.key === 'Escape' && searchValue) {
       handleClear();
@@ -569,21 +574,21 @@ const MemberSearch = ({
         onSelect={handleSelect}
         value={searchValue}
         onChange={handleInputChange}
-        popupMatchSelectWidth={true}
+        popupMatchSelectWidth={false}
         notFoundContent={null}
+        defaultActiveFirstOption={false}
+        backfill={false}
+        getPopupContainer={getPopupContainer || (trigger => trigger.parentNode)}
         dropdownStyle={{
           maxHeight: "400px",
           overflowY: "auto",
           borderRadius: "4px",
           boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
           padding: "0",
+          backgroundColor: "#ffffff",
           position: "absolute",
           zIndex: 1050
         }}
-        filterOption={false}
-        defaultActiveFirstOption={false}
-        backfill={false}
-        getPopupContainer={trigger => trigger.parentNode}
       >
         <Input
           disabled={disable || loading}
@@ -646,8 +651,8 @@ const MemberSearch = ({
         />
       </AutoComplete>
 
-      {/* Show search status - ONLY when actively searching */}
-      {isSearchTriggered && searchValue && searchValue.length >= 2 && !showNoMatchOption && (
+      {/* Show search status - ONLY when actively searching AND showStatus is true */}
+      {showStatus && isSearchTriggered && searchValue && searchValue.length >= 2 && !showNoMatchOption && (
         <div style={{
           position: "absolute",
           top: "100%",
@@ -669,8 +674,8 @@ const MemberSearch = ({
         </div>
       )}
 
-      {/* Show "no results" status with add member option */}
-      {showNoMatchOption && !loading && (
+      {/* Show "no results" status with add member option - ONLY if showStatus is true */}
+      {showStatus && showNoMatchOption && !loading && (
         <div style={{
           position: "absolute",
           top: "100%",
