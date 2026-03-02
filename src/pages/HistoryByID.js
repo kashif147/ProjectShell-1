@@ -1,5 +1,5 @@
-
-import SubTableComp from '../component/common/SubTableComp';
+import React from 'react';
+import MyTable from '../component/common/MyTable';
 
 function HistoryByID() {
   const columns = [
@@ -61,10 +61,10 @@ function HistoryByID() {
 
   return (
     <div className='cases-main'>
-      <SubTableComp
+      <MyTable
         columns={columns}
         dataSource={dataSource}
-        className='claims-table'
+        selection={false}
       />
     </div>
   );
