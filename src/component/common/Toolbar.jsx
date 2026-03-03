@@ -9,7 +9,7 @@ import { getApplicationsWithFilter, setTemplateId } from "../../features/applica
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { transformFiltersForApi } from "../../utils/filterUtils";
+import { transformFiltersForApi, transformFiltersFromApi, areFiltersEqual } from "../../utils/filterUtils";
 import { updateGridTemplate, getGridTemplates } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
 import MyAlert from "./MyAlert";
@@ -34,6 +34,7 @@ const Toolbar = () => {
   const { columns, updateSelectedTemplate, selectedTemplates } = useTableColumns();
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
+  const { selectedView } = useSelector((state) => state.viewById);
   const [isSaving, setIsSaving] = useState(false);
   const screenChanges = useSelector(state => state.screenFilter.screenFilterChanged);
   // const activeScreen = getScreenFromPath();
@@ -52,6 +53,27 @@ const Toolbar = () => {
   const activeScreen = getScreenFromPath();
   const hasChanges = screenChanges[activeScreen.toLowerCase()] === true;
 
+  // Reactively update screen change state based on deep equality
+  React.useEffect(() => {
+    if (!selectedView) {
+      // If no template selected, we can either assume no changes or check against defaults
+      // For now, let's assume no changes until a template is active
+      if (hasChanges) {
+        dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
+      }
+      return;
+    }
+
+    const originalFilters = transformFiltersFromApi(selectedView.filters || {}, columns[activeScreen] || []);
+    const isEqual = areFiltersEqual(filtersState, originalFilters);
+
+    if (isEqual && hasChanges) {
+      dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
+    } else if (!isEqual && !hasChanges) {
+      dispatch(markScreenChanged({ screen: activeScreen }));
+    }
+  }, [filtersState, selectedView, activeScreen, columns, dispatch, hasChanges]);
+
   const [batchName, setBatchName] = useState("");
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
@@ -63,8 +85,7 @@ const Toolbar = () => {
     });
 
     updateFilter(label, operator, selectedValues);
-    // Always mark screen as changed
-    dispatch(markScreenChanged({ screen: activeScreen }));
+    // Manual markScreenChanged removed - handled by useEffect above
   };
 
   const handleSearch = () => {

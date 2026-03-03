@@ -76,3 +76,46 @@ export const transformFiltersFromApi = (apiFilters, screenCols) => {
     });
     return transformed;
 };
+
+/**
+ * Performs a deep comparison between two filter states.
+ * Considers operator and selectedValues (order-independent).
+ * Treats null/undefined/empty filters as equal.
+ */
+export const areFiltersEqual = (filtersA, filtersB) => {
+    const normalize = (filters) => {
+        const normalized = {};
+        if (!filters) return normalized;
+
+        Object.keys(filters).forEach(key => {
+            const filter = filters[key];
+            const values = (filter?.selectedValues || [])
+                .map(v => String(v))
+                .filter(v => v.trim() !== "")
+                .sort();
+
+            if (values.length > 0) {
+                normalized[key] = {
+                    operator: filter.operator || "==",
+                    values: values
+                };
+            }
+        });
+        return normalized;
+    };
+
+    const normA = normalize(filtersA);
+    const normB = normalize(filtersB);
+
+    const keysA = Object.keys(normA);
+    const keysB = Object.keys(normB);
+
+    if (keysA.length !== keysB.length) return false;
+
+    return keysA.every(key => {
+        if (!normB[key]) return false;
+        if (normA[key].operator !== normB[key].operator) return false;
+        if (normA[key].values.length !== normB[key].values.length) return false;
+        return normA[key].values.every((v, i) => v === normB[key].values[i]);
+    });
+};
