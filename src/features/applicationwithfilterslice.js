@@ -29,6 +29,7 @@ const applicationWithFilterSlice = createSlice({
     initialState: {
         applications: [],
         currentTemplateId: "",
+        activeTemplateId: "",
         isInitialized: false,
         loading: false,
         error: null,
@@ -39,16 +40,19 @@ const applicationWithFilterSlice = createSlice({
         },
         setTemplateId: (state, action) => {
             state.currentTemplateId = action.payload;
+            state.activeTemplateId = action.payload;
         },
         setInitialized: (state, action) => {
             state.isInitialized = action.payload;
         },
         initializeWithTemplate: (state, action) => {
             state.currentTemplateId = action.payload;
+            state.activeTemplateId = action.payload;
             state.isInitialized = true;
         },
         resetInitialization: (state) => {
             state.currentTemplateId = "";
+            state.activeTemplateId = "";
             state.isInitialized = false;
             state.applications = []; // Also clear applications on reset
         },
@@ -65,6 +69,7 @@ const applicationWithFilterSlice = createSlice({
                 // Update currentTemplateId from the arg passed to thunk if available
                 if (action.meta.arg && action.meta.arg.templateId !== undefined) {
                     state.currentTemplateId = action.meta.arg.templateId;
+                    state.activeTemplateId = action.meta.arg.templateId;
                 }
             })
             .addCase(getApplicationsWithFilter.rejected, (state, action) => {

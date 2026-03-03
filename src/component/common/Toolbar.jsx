@@ -9,13 +9,19 @@ import { getApplicationsWithFilter, setTemplateId } from "../../features/applica
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
+import { transformFiltersForApi } from "../../utils/filterUtils";
 import { updateGridTemplate, getGridTemplates } from "../../features/templete/templetefiltrsclumnapi";
+import { getViewById } from "../../features/views/ViewByIdSlice";
 import MyAlert from "./MyAlert";
+import { markScreenChanged, resetScreenChanged } from '../../features/views/ScreenFilterChangSlice';
 import { message } from "antd";
 
+
 const Toolbar = () => {
+  const location = useLocation();
   const dispatch = useDispatch();
+
+
   const {
     visibleFilters,
     filterOptions,
@@ -29,76 +35,23 @@ const Toolbar = () => {
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
   const [isSaving, setIsSaving] = useState(false);
+  const screenChanges = useSelector(state => state.screenFilter.screenFilterChanged);
+  // const activeScreen = getScreenFromPath();
 
-  // Helper to compare current filters with active template filters
-  const hasFilterChanges = () => {
-    if (!currentTemplateId || !templates) return false;
-
-    const activeScreenForMapping = getScreenFromPath();
-    let activeTemplate = selectedTemplates[activeScreenForMapping.toLowerCase()];
-
-    // Fallback to Redux templates if context hasn't been synced yet
-    if (!activeTemplate && templates) {
-      const allTemplates = [
-        ...(templates.userTemplates || []),
-        ...(templates.systemDefault ? [templates.systemDefault] : [])
-      ];
-      activeTemplate = allTemplates.find(t => t._id === currentTemplateId);
-    }
-
-    if (!activeTemplate) return false;
-
-    const currentApiFilters = transformFiltersForApi(filtersState, columns[activeScreenForMapping] || []);
-    const templateFilters = activeTemplate.filters || {};
-
-    const normalize = (obj) => {
-      const normalized = {};
-      Object.keys(obj).sort().forEach(key => {
-        const val = obj[key] || {};
-        // Combine values and selectedValues to handle different API response formats
-        const rawValues = val.values || val.selectedValues || [];
-        const values = Array.isArray(rawValues)
-          ? [...rawValues].map(v => String(v).toLowerCase()).sort()
-          : [];
-
-        // Only include if there are values selected
-        if (values.length > 0) {
-          // Standardize operator naming
-          let op = val.operator || "equal_to";
-          if (op === "==") op = "equal_to";
-          if (op === "!=") op = "not_equal";
-
-          normalized[key] = {
-            operator: op,
-            values
-          };
-        }
-      });
-      return JSON.stringify(normalized);
+  const getScreenFromPath = () => {
+    const pathMap = {
+      "/applications": "Applications",
+      "/Applications": "Applications",
+      "/Summary": "Profile",
+      "/membership": "Membership",
+      "/Members": "Members",
+      "/CommunicationBatchDetail": "Communication",
     };
-
-    const currentNorm = normalize(currentApiFilters);
-    const templateNorm = normalize(templateFilters);
-    const changed = currentNorm !== templateNorm;
-
-    if (changed) {
-      // Find the specific difference for precise logging
-      const cur = JSON.parse(currentNorm);
-      const temp = JSON.parse(templateNorm);
-      const allKeys = Array.from(new Set([...Object.keys(cur), ...Object.keys(temp)]));
-      const differences = allKeys.filter(k => JSON.stringify(cur[k]) !== JSON.stringify(temp[k]));
-
-      console.log("🛠️ Save button check: Changes detected", {
-        activeScreen: activeScreenForMapping,
-        differences,
-        current: cur,
-        template: temp
-      });
-    }
-
-    return changed;
+    return pathMap[location.pathname] || "";
   };
-  const location = useLocation();
+  const activeScreen = getScreenFromPath();
+  const hasChanges = screenChanges[activeScreen.toLowerCase()] === true;
+
   const [batchName, setBatchName] = useState("");
   const handleFilterApply = (filterData) => {
     const { label, operator, selectedValues } = filterData;
@@ -110,6 +63,8 @@ const Toolbar = () => {
     });
 
     updateFilter(label, operator, selectedValues);
+    // Always mark screen as changed
+    dispatch(markScreenChanged({ screen: activeScreen }));
   };
 
   const handleSearch = () => {
@@ -170,17 +125,7 @@ const Toolbar = () => {
     }
   };
 
-  const getScreenFromPath = () => {
-    const pathMap = {
-      "/applications": "Applications",
-      "/Applications": "Applications",
-      "/Summary": "Profile",
-      "/membership": "Membership",
-      "/Members": "Members",
-      "/CommunicationBatchDetail": "Communication",
-    };
-    return pathMap[location.pathname] || "Applications";
-  };
+
 
   const handleSave = async () => {
     if (!currentTemplateId) return;
@@ -194,39 +139,21 @@ const Toolbar = () => {
         filters: currentApiFilters
       };
 
-      const response = await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
       MyAlert("success", "Success", "Template updated successfully");
 
-      // SUCCESS BLOCK: Implement Robust Re-Fetch Synchronization
-      console.log("✅ Update successful, performing robust re-fetch...");
+      console.log("✅ Update successful, resetting change state and re-fetching details...");
 
-      // 1. Re-fetch all templates from the server to get the processed "Global Truth"
-      const refreshedTemplates = await dispatch(getGridTemplates()).unwrap();
+      // 1. Reset the "dirty" state for this screen
+      dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
 
-      // 2. Find the current template in the refreshed results
-      const allTemplates = [
-        ...(refreshedTemplates.userTemplates || []),
-        ...(refreshedTemplates.systemDefault ? [refreshedTemplates.systemDefault] : [])
-      ];
-      const primarySourceTemplate = allTemplates.find(t => t._id === currentTemplateId);
+      // 2. Refresh the specific view details in Redux
+      // This will trigger the useEffect in SaveViewMenu.jsx to re-apply filters if needed
+      dispatch(getViewById(currentTemplateId));
 
-      if (primarySourceTemplate) {
-        console.log("🔄 Syncing UI with re-fetched template data:", primarySourceTemplate);
+      // 3. Refresh the template list to ensure anything else using it (like the dropdown) is current
+      dispatch(getGridTemplates());
 
-        // 3. Apply filters from the official primary source
-        const transformedFilters = transformFiltersFromApi(primarySourceTemplate.filters, columns[activeScreenName] || []);
-        applyTemplateFilters(transformedFilters);
-
-        // 4. Update the selected template in context
-        updateSelectedTemplate(activeScreenName.toLowerCase(), primarySourceTemplate);
-      } else {
-        console.warn("⚠️ Could not find updated template in refreshed list, falling back to payload sync.");
-        const transformedFilters = transformFiltersFromApi(payload.filters, columns[activeScreenName] || []);
-        applyTemplateFilters(transformedFilters);
-      }
-
-      // 5. Final grid refresh REMOVED - MembershipApplication.jsx handles this automatically
-      // via the loading state of getGridTemplates(). This prevents multiple refreshes.
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
@@ -235,7 +162,7 @@ const Toolbar = () => {
     }
   };
 
-  const activeScreen = getScreenFromPath();
+
   const specialRoutes = [
     "/RecruitAFriend",
     "/CornMarketRewards",
@@ -359,7 +286,7 @@ const Toolbar = () => {
         >
           Search
         </Button>
-        {location.pathname.toLowerCase() === "/applications" && hasFilterChanges() && (
+        {hasChanges && (
           <Button
             onClick={handleSave}
             loading={isSaving}

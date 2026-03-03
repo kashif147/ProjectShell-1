@@ -9,6 +9,8 @@ import {
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, deleteGridTemplate, setDefaultGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getViewById } from "../../features/views/ViewByIdSlice";
+import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -25,6 +27,8 @@ const SaveViewMenu = () => {
   const location = useLocation();
   const { templates, loading } = useSelector((state) => state.templetefiltrsclumnapi);
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { selectedView, loading: viewLoading } = useSelector((state) => state.viewById);
   const { columns, applyTemplate, selectedTemplates, updateSelectedTemplate } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
   const [activeView, setActiveView] = useState("Default View");
@@ -113,30 +117,50 @@ const SaveViewMenu = () => {
     const defaultView = userViews.find((t) => t.isDefault);
 
     if (defaultView) {
+      dispatch(setActiveTemplateId(defaultView._id));
       handleApplyView(defaultView);
     } else if (systemView) {
+      dispatch(setActiveTemplateId(systemView._id));
       handleApplyView(systemView);
     } else {
       setActiveView("System Template");
+      dispatch(setActiveTemplateId(null));
       // Always initialize data loading even if no explicitly saved view exists
       dispatch(initializeWithTemplate(""));
     }
   }, [dispatch, targetTemplateType, templates, loading]);
 
-  const handleApplyView = (template, shouldPersist = true) => {
-    const colScreen = activeScreen;
-    const transformedFilters = transformFiltersForApply(template.filters || {});
+  useEffect(() => {
+    if (activeTemplateId) {
+      dispatch(getViewById(activeTemplateId));
+    }
+  }, [dispatch, activeTemplateId]);
 
-    applyTemplate(colScreen, template.columns);
-    applyTemplateFilters(transformedFilters);
-    setActiveView(template.name);
+  // Apply template settings when view details are fetched
+  useEffect(() => {
+    if (selectedView && selectedView._id === activeTemplateId) {
+      console.log("✅ SaveViewMenu: Applying view details from viewById slice:", selectedView.name);
+
+      const colScreen = activeScreen;
+      const transformedFilters = transformFiltersForApply(selectedView.filters || {});
+
+      applyTemplate(colScreen, selectedView.columns);
+      applyTemplateFilters(transformedFilters);
+      setActiveView(selectedView.name);
+
+      // Initialize data loading with the template
+      dispatch(initializeWithTemplate(selectedView._id || ""));
+    }
+  }, [selectedView, activeTemplateId]);
+
+  const handleApplyView = (template, shouldPersist = true) => {
+    // Just set the active ID; the useEffect above will handle the application of details
+    dispatch(setActiveTemplateId(template._id || null));
 
     // Update context persistence
     if (shouldPersist) {
       updateSelectedTemplate(targetTemplateType, template);
     }
-
-    dispatch(initializeWithTemplate(template._id || ""));
   };
 
   const handleSetDefaultView = (template) => {

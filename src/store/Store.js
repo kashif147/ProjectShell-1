@@ -48,6 +48,9 @@ import notificationReducer from "../features/NotificationSlice";
 import batchDetailsReducer from "../features/profiles/BatchDetailsSlice";
 import templetefiltrsclumnapiReducer from "../features/templete/templetefiltrsclumnapi";
 import userApplicationsReducer from "../features/UserApplicationsSlice";
+import screenFilterChangReducer from "../features/views/ScreenFilterChangSlice";
+import viewByIdReducer from "../features/views/ViewByIdSlice";
+import activeTemplateReducer from "../features/views/ActiveTemplateSlice";
 
 const store = configureStore({
   reducer: {
@@ -97,6 +100,9 @@ const store = configureStore({
     transferRequestHistory: transferRequestHistoryReducer,
     templetefiltrsclumnapi: templetefiltrsclumnapiReducer,
     userApplications: userApplicationsReducer,
+    screenFilter: screenFilterChangReducer,
+    viewById: viewByIdReducer,
+    activeTemplate: activeTemplateReducer,
 
   },
 });

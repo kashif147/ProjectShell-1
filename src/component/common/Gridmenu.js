@@ -5,10 +5,11 @@ import { SearchOutlined, SaveOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getViewById } from "../../features/views/ViewByIdSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { useFilters } from "../../context/FilterContext";
-import { transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
+import { transformFiltersForApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
@@ -40,36 +41,19 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
         filters: currentApiFilters
       };
 
-      const response = await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+      await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
 
-      // SUCCESS BLOCK: Only run if unwrap() succeeds
       MyAlert("success", "Success", "Template updated successfully");
 
-      // 1. Re-fetch all templates from the server to get the processed "Global Truth"
-      const refreshedTemplates = await dispatch(getGridTemplates()).unwrap();
+      console.log("✅ Update successful, re-fetching details via viewById slice...");
 
-      // 2. Find the current template in the refreshed results
-      const allTemplates = [
-        ...(refreshedTemplates.userTemplates || []),
-        ...(refreshedTemplates.systemDefault ? [refreshedTemplates.systemDefault] : [])
-      ];
-      const primarySourceTemplate = allTemplates.find(t => t._id === currentTemplateId);
+      // 1. Refresh the specific view details in Redux
+      // This will trigger the global synchronization via SaveViewMenu's observers
+      dispatch(getViewById(currentTemplateId));
 
-      if (primarySourceTemplate) {
-        // 3. Apply filters from the official primary source
-        const transformedFilters = transformFiltersFromApi(primarySourceTemplate.filters, columns[screenName] || []);
-        applyTemplateFilters(transformedFilters);
+      // 2. Refresh the overall list
+      dispatch(getGridTemplates());
 
-        // 4. Update the selected template in context
-        updateSelectedTemplate(screenName.toLowerCase(), primarySourceTemplate);
-      } else {
-        console.warn("⚠️ Could not find updated template in refreshed list, falling back to payload sync.");
-        const transformedFilters = transformFiltersFromApi(payload.filters, columns[screenName] || []);
-        applyTemplateFilters(transformedFilters);
-      }
-
-      // Final grid refresh REMOVED - MembershipApplication.jsx handles this automatically
-      // via the loading state of getGridTemplates(). This prevents multiple refreshes.
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
