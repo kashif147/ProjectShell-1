@@ -176,6 +176,16 @@ const Toolbar = () => {
       // 3. Refresh the template list to ensure anything else using it (like the dropdown) is current
       dispatch(getGridTemplates());
 
+      // 4. Reload the filtered applications if on the applications page
+      if (location.pathname.toLowerCase() === "/applications") {
+        console.log("🔄 Reloading applications after save with templateId:", currentTemplateId);
+        dispatch(getApplicationsWithFilter({
+          templateId: currentTemplateId,
+          page: 1,
+          limit: 10
+        }));
+      }
+
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");
