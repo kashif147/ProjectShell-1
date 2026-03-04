@@ -3,6 +3,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
 import { getSubscriptionHistoryByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
 import { Tabs, Spin, Drawer } from "antd";
 import MyTable from "./MyTable";
 import {
@@ -57,6 +58,7 @@ function AppTabs() {
   const { columns } = useTableColumns();
   const userApplications = useSelector((state) => state.userApplications?.applications || []);
   const { ProfileSubHistory, ProfileSubHistoryLoading } = useSelector((state) => state.profileSubscription || {});
+  const { profileApplications, loading: profileApplicationsLoading } = useSelector((state) => state.profileApplications || {});
 
   const applicationColumns = columns?.Applications?.map((col) => {
     // Correctly check if it's the Membership Category column
@@ -102,9 +104,44 @@ function AppTabs() {
       key: "endDate",
       render: (date) => formatDateOnly(date),
     },
-    { title: "Payment Type", dataIndex: "paymentType", key: "paymentType" },
     { title: "Frequency", dataIndex: "paymentFrequency", key: "paymentFrequency" },
     { title: "Movement", dataIndex: "membershipMovement", key: "membershipMovement" },
+  ];
+
+  const profileApplicationColumns = [
+    {
+      title: "Category",
+      dataIndex: "membershipCategory",
+      key: "membershipCategory",
+      render: (text, record) => (
+        <a
+          style={{ color: "#1890ff", fontWeight: "500" }}
+          onClick={() => {
+            dispatch(getApplicationById({ id: record.applicationId }));
+            navigate("/applicationMgt", {
+              state: { isEdit: true, applicationId: record.applicationId },
+            });
+            setIsApplicationDrawerOpen(false);
+          }}
+        >
+          {text || "View Application"}
+        </a>
+      ),
+    },
+    {
+      title: "Submission Date",
+      dataIndex: "submissionDate",
+      key: "submissionDate",
+      render: (date) => formatDateOnly(date),
+    },
+    {
+      title: "Approval Date",
+      dataIndex: "approvalDate",
+      key: "approvalDate",
+      render: (date) => formatDateOnly(date),
+    },
+    { title: "Approved By", dataIndex: "approvedBy", key: "approvedBy" },
+    { title: "Status", dataIndex: "applicationStatus", key: "applicationStatus" },
   ];
 
   const allItems = [
@@ -214,6 +251,9 @@ function AppTabs() {
       label: "Application",
       icon: <FaFileAlt />,
       onClick: () => {
+        if (profileDetails?._id) {
+          dispatch(getProfileApplications({ profileId: profileDetails._id }));
+        }
         setIsApplicationDrawerOpen(true);
       },
     },
@@ -362,8 +402,9 @@ function AppTabs() {
         styles={{ body: { padding: "20px" } }}
       >
         <MyTable
-          columns={applicationColumns}
-          dataSource={userApplications}
+          columns={profileApplicationColumns}
+          dataSource={profileApplications}
+          loading={profileApplicationsLoading}
           selection={false}
         />
       </Drawer>

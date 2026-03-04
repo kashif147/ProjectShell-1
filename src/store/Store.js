@@ -52,6 +52,8 @@ import screenFilterChangReducer from "../features/views/ScreenFilterChangSlice";
 import viewByIdReducer from "../features/views/ViewByIdSlice";
 import activeTemplateReducer from "../features/views/ActiveTemplateSlice";
 
+import profileApplicationsReducer from "../features/profiles/profileApplicationsSlice";
+
 const store = configureStore({
   reducer: {
     subscription: subscriptionReducer,
@@ -103,6 +105,7 @@ const store = configureStore({
     screenFilter: screenFilterChangReducer,
     viewById: viewByIdReducer,
     activeTemplate: activeTemplateReducer,
+    profileApplications: profileApplicationsReducer,
 
   },
 });
