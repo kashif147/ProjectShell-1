@@ -15,6 +15,7 @@ import { getViewById } from "../../features/views/ViewByIdSlice";
 import MyAlert from "./MyAlert";
 import { markScreenChanged, resetScreenChanged } from '../../features/views/ScreenFilterChangSlice';
 import { message } from "antd";
+import DateRang from "./DateRang";
 
 
 const Toolbar = () => {
@@ -267,6 +268,20 @@ const Toolbar = () => {
           const selectedValues = filterState?.selectedValues || [];
           const operator = filterState?.operator || "==";
           const options = filterOptions[label] || [];
+
+          const isDateField = label.toLowerCase().includes("date");
+
+          if (isDateField) {
+            return (
+              <DateRang
+                key={label}
+                label={label}
+                selectedValues={selectedValues}
+                operator={operator}
+                onApply={handleFilterApply}
+              />
+            );
+          }
 
           // Show all filters that are in visibleFilters
           return (

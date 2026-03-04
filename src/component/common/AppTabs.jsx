@@ -2,6 +2,7 @@ import { useState, Suspense, lazy } from "react";
 import { useSelector, useDispatch } from "react-redux";
 import { useNavigate, useLocation } from "react-router-dom";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import { getSubscriptionHistoryByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import { Tabs, Spin, Drawer } from "antd";
 import MyTable from "./MyTable";
 import {
@@ -15,6 +16,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import TransferRequests from "../TransferRequests";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
 import Reminder from "../profile/Reminder";
+import { formatDateOnly } from "../../utils/Utilities";
 
 const { TabPane } = Tabs;
 
@@ -50,9 +52,11 @@ function AppTabs() {
   const [isDeceased, setIsDeceased] = useState(false);
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
   const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
+  const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] = useState(false);
 
   const { columns } = useTableColumns();
   const userApplications = useSelector((state) => state.userApplications?.applications || []);
+  const { ProfileSubHistory, ProfileSubHistoryLoading } = useSelector((state) => state.profileSubscription || {});
 
   const applicationColumns = columns?.Applications?.map((col) => {
     // Correctly check if it's the Membership Category column
@@ -81,6 +85,27 @@ function AppTabs() {
     }
     return col;
   }) || [];
+
+  const subscriptionHistoryColumns = [
+    { title: "Category", dataIndex: "membershipCategory", key: "membershipCategory" },
+    { title: "Status", dataIndex: "subscriptionStatus", key: "subscriptionStatus" },
+    { title: "Year", dataIndex: "subscriptionYear", key: "subscriptionYear" },
+    {
+      title: "Start Date",
+      dataIndex: "startDate",
+      key: "startDate",
+      render: (date) => formatDateOnly(date),
+    },
+    {
+      title: "End Date",
+      dataIndex: "endDate",
+      key: "endDate",
+      render: (date) => formatDateOnly(date),
+    },
+    { title: "Payment Type", dataIndex: "paymentType", key: "paymentType" },
+    { title: "Frequency", dataIndex: "paymentFrequency", key: "paymentFrequency" },
+    { title: "Movement", dataIndex: "membershipMovement", key: "membershipMovement" },
+  ];
 
   const allItems = [
     {
@@ -190,6 +215,17 @@ function AppTabs() {
       icon: <FaFileAlt />,
       onClick: () => {
         setIsApplicationDrawerOpen(true);
+      },
+    },
+    {
+      key: "subscriptionhistory",
+      label: "Subscription History",
+      icon: <FaHistory />,
+      onClick: () => {
+        if (profileDetails?._id) {
+          dispatch(getSubscriptionHistoryByProfileId({ profileId: profileDetails._id }));
+        }
+        setIsSubscriptionDrawerOpen(true);
       },
     },
   ];
@@ -328,6 +364,21 @@ function AppTabs() {
         <MyTable
           columns={applicationColumns}
           dataSource={userApplications}
+          selection={false}
+        />
+      </Drawer>
+
+      <Drawer
+        title="Subscription History"
+        open={isSubscriptionDrawerOpen}
+        onClose={() => setIsSubscriptionDrawerOpen(false)}
+        width={1000}
+        styles={{ body: { padding: "20px" } }}
+      >
+        <MyTable
+          columns={subscriptionHistoryColumns}
+          dataSource={ProfileSubHistory}
+          loading={ProfileSubHistoryLoading}
           selection={false}
         />
       </Drawer>

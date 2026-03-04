@@ -1,4 +1,5 @@
-import React, { useState, useMemo } from "react";
+import React, { useState, useMemo, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Modal, Button, message, Dropdown } from "antd";
 import {
   FaMapMarkerAlt,
@@ -24,6 +25,7 @@ import { useSelector } from "react-redux";
 import axios from "axios";
 import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
+import { centsToEuro } from "../../utils/Utilities";
 
 function ProfileHeader({
   isEditMode = false,
@@ -35,11 +37,16 @@ function ProfileHeader({
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
+  const location = useLocation();
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ledgerBalance, setLedgerBalance] = useState(0);
+  const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
+  const [lastPaymentDate, setLastPaymentDate] = useState(null);
+  const [ledgerLoading, setLedgerLoading] = useState(false);
 
   // Get data from Redux store
   const { profileDetails, loading, error } = useSelector(
@@ -155,6 +162,86 @@ function ProfileHeader({
     return null;
   }, [ProfileSubData]);
 
+  const memberIdForLedger = useMemo(() => {
+    return (
+      location.state?.memberId ||
+      source?.membershipNumber ||
+      source?.regNo ||
+      source?.id ||
+      source?._id
+    );
+  }, [source, location]);
+
+  useEffect(() => {
+    const fetchLedgerData = async () => {
+      if (!memberIdForLedger || !token) return;
+
+      setLedgerLoading(true);
+      try {
+        const response = await axios.get(
+          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/ledger`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+            },
+          }
+        );
+
+        const rawData = response.data?.data?.items || [];
+        const targetId = String(memberIdForLedger).trim().toLowerCase();
+
+        // Filter and sort like in FinanceByID.jsx
+        const filteredRawData = rawData.filter((item) =>
+          item.entries?.some((e) =>
+            String(e.memberId).trim().toLowerCase() === targetId
+          )
+        );
+
+        const sortedData = [...filteredRawData].sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
+
+        let cumulativeBalance = 0;
+        let lastDate = null;
+        let lastAmt = 0;
+
+        sortedData.forEach((item) => {
+          const memberEntries = item.entries?.filter((e) =>
+            String(e.memberId).trim().toLowerCase() === targetId
+          ) || [];
+
+          let totalDebit = 0;
+          let totalCredit = 0;
+
+          memberEntries.forEach(e => {
+            const amt = Number(e.amount) || 0;
+            if (e.dc === "D") totalDebit += amt;
+            if (e.dc === "C") totalCredit += amt;
+          });
+
+          cumulativeBalance += (totalCredit - totalDebit);
+          // Update lastDate to the most recent transaction date
+          if (item.date) {
+            lastDate = item.date;
+          }
+
+          // If there was any credit in this transaction, it's considered a payment
+          if (totalCredit > 0) {
+            lastAmt = totalCredit;
+          }
+        });
+
+        setLedgerBalance(cumulativeBalance);
+        setLastPaymentDate(lastDate);
+        setLastPaymentAmount(lastAmt);
+      } catch (error) {
+        console.error("Error fetching ledger data in ProfileHeader:", error);
+      } finally {
+        setLedgerLoading(false);
+      }
+    };
+
+    fetchLedgerData();
+  }, [memberIdForLedger, token]);
+
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
     // Direct array empty
@@ -189,10 +276,10 @@ function ProfileHeader({
     // Personal Info
     const name = source
       ? `${getSafe(source, "personalInfo.forename", "")} ${getSafe(
-          source,
-          "personalInfo.surname",
-          ""
-        )}`.trim()
+        source,
+        "personalInfo.surname",
+        ""
+      )}`.trim()
       : "";
     const dob = formatDOB(getSafe(source, "personalInfo.dateOfBirth"));
     const gender = getSafe(source, "personalInfo.gender", "M")
@@ -227,11 +314,11 @@ function ProfileHeader({
     // Contact Info
     const address = source?.contactInfo
       ? `${getSafe(source, "contactInfo.buildingOrHouse", "")} ${getSafe(
-          source,
-          "contactInfo.streetOrRoad",
-          ""
-        )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
-        "123 Main Street, New York"
+        source,
+        "contactInfo.streetOrRoad",
+        ""
+      )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
+      "123 Main Street, New York"
       : "123 Main Street, New York";
 
     const email =
@@ -249,21 +336,20 @@ function ProfileHeader({
     const paymentType = subscriptionData?.paymentType || "Salary Deduction";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
-    // Financial Info - These would likely come from a different API endpoint
-    const balance = "€200";
-    const lastPayment = "€74.7";
+    // Financial Info - Now using fetched ledger data
+    const balance = `€${Math.abs(centsToEuro(ledgerBalance || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Use subscription start date for payment date if available - format as date-time
+    // Use latest ledger date for payment date if available, fallback to subscription/submission
     const paymentDateRaw =
-      subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
+      lastPaymentDate || subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
     const paymentDate = paymentDateRaw
-      ? formatDateTime(paymentDateRaw)
-      : "1/02/2025";
+      ? formatDate(paymentDateRaw)
+      : "N/A";
 
     // Include subscription year in payment code if available
-    const paymentCode = `MB-${
-      subscriptionData?.subscriptionYear || dayjs().year()
-    }-${getSafe(source, "membershipNumber", "001")}`;
+    const paymentCode = `MB-${subscriptionData?.subscriptionYear || dayjs().year()
+      }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
       // Personal Info
@@ -305,7 +391,10 @@ function ProfileHeader({
     isDeceased,
     isSubscriptionEmpty,
     ProfileSubLoading,
-  ]); // Now recalculates when source OR subscriptionData changes
+    ledgerBalance,
+    lastPaymentAmount,
+    lastPaymentDate,
+  ]); // Now recalculates when source OR subscriptionData OR ledger data changes
 
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
@@ -473,9 +562,8 @@ function ProfileHeader({
               {memberData.dob} ({memberData.gender}) {memberData.age}
             </p>
             <span
-              className={`member-status-badge ${
-                isDeceased ? "member-status-deceased" : ""
-              }`}
+              className={`member-status-badge ${isDeceased ? "member-status-deceased" : ""
+                }`}
             >
               {memberData.status}
               {subscriptionData?.isCurrent && " (Current)"}
@@ -545,7 +633,7 @@ function ProfileHeader({
             <FaClock className="detail-icon" />
             <div className="detail-content">
               <span className="detail-label">Last Payment:</span>
-              <span className="detail-value">{memberData.lastPayment}</span>
+              <span className="detail-value">€74.00</span>
             </div>
           </div>
           <div className="detail-row">
@@ -589,9 +677,8 @@ function ProfileHeader({
 
         {/* Grade and Category Section - on blue background */}
         <div
-          className={`member-grade-section-blue ${
-            isDeceased ? "member-deceased" : ""
-          }`}
+          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""
+            }`}
         >
           <div className="grade-row-blue">
             <span className="grade-label-blue">Category:</span>

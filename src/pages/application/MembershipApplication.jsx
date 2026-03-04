@@ -26,18 +26,19 @@ function MembershipApplication() {
   const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
   const [formattedApplications, setFormattedApplications] = useState([]);
   const [selectedRows, setSelectedRows] = useState(null)
-  console.log(selectedRows, "selected rows data");
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
   useEffect(() => {
     // Only fetch if initial view determination is complete and templates are NOT currently loading
-    if (!isInitialized || templatesLoading) return;
+    if (!activeTemplateId) return;
 
     dispatch(getApplicationsWithFilter({
-      templateId: currentTemplateId || "",
+      templateId: activeTemplateId || "",
       page: 1,
       limit: 10
     }));
-  }, [dispatch, currentTemplateId, isInitialized, templatesLoading]);
+  }, [activeTemplateId]);
 
   useEffect(() => {
     if (applications && applications.length > 0) {
