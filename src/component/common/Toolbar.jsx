@@ -12,6 +12,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { transformFiltersForApi, transformFiltersFromApi, areFiltersEqual } from "../../utils/filterUtils";
 import { updateGridTemplate, getGridTemplates } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
+import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import MyAlert from "./MyAlert";
 import { markScreenChanged, resetScreenChanged } from '../../features/views/ScreenFilterChangSlice';
 import { message } from "antd";
@@ -34,8 +35,9 @@ const Toolbar = () => {
 
   const { columns, updateSelectedTemplate, selectedTemplates } = useTableColumns();
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
-  const { templates } = useSelector((state) => state.templetefiltrsclumnapi);
-  const { selectedView } = useSelector((state) => state.viewById);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { templates, loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
+  const { selectedView, loading: viewLoading } = useSelector((state) => state.viewById);
   const [isSaving, setIsSaving] = useState(false);
   const screenChanges = useSelector(state => state.screenFilter.screenFilterChanged);
   // const activeScreen = getScreenFromPath();
@@ -56,9 +58,7 @@ const Toolbar = () => {
 
   // Reactively update screen change state based on deep equality
   React.useEffect(() => {
-    if (!selectedView) {
-      // If no template selected, we can either assume no changes or check against defaults
-      // For now, let's assume no changes until a template is active
+    if (!selectedView || !activeTemplateId || selectedView._id !== activeTemplateId) {
       if (hasChanges) {
         dispatch(resetScreenChanged({ screen: activeScreen.toLowerCase() }));
       }
@@ -332,13 +332,13 @@ const Toolbar = () => {
         >
           Search
         </Button>
-        {hasChanges && (
+        {hasChanges && !templatesLoading && !viewLoading && (
           <Button
             onClick={handleSave}
             loading={isSaving}
             style={{
               backgroundColor: "#E6F7FF",
-              borderRadius: "4px",
+              borderRadius: "#4px",
               border: "1px solid #91D5FF",
               height: "32px",
               fontWeight: "500",

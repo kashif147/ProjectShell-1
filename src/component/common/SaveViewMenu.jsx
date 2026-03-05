@@ -10,7 +10,7 @@ import {
 import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, deleteGridTemplate, setDefaultGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
 import { getViewById } from "../../features/views/ViewByIdSlice";
-import { setActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
+import { setActiveTemplateId, clearActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { getAllApplications } from "../../features/ApplicationSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
@@ -82,6 +82,7 @@ const SaveViewMenu = () => {
     if (lastScreen.current !== targetTemplateType) {
       console.log("🔄 SaveViewMenu: Screen change detected, resetting initialization:", targetTemplateType);
       dispatch(resetInitialization());
+      dispatch(clearActiveTemplateId()); // 🛡️ Clear any active template from the previous screen
       lastScreen.current = targetTemplateType;
     }
 
@@ -182,6 +183,14 @@ const SaveViewMenu = () => {
       .unwrap()
       .then(() => {
         MyAlert("success", "Success", "View deleted successfully");
+
+        // If the deleted view was active, we need to clear it so initialization can reset to system default
+        if (id === activeTemplateId) {
+          dispatch(setActiveTemplateId(null));
+          updateSelectedTemplate(targetTemplateType, null);
+        }
+
+        dispatch(getGridTemplates()); // This will trigger the useEffect initialization
       })
       .catch((error) => {
         console.error("Error deleting view:", error);
@@ -316,9 +325,13 @@ const SaveViewMenu = () => {
           </div>
 
           {/* System Default */}
-          {templates?.systemDefault && templates.systemDefault.templateType === targetTemplateType &&
-            renderTemplateItem(templates.systemDefault, templates.systemDefault.isDefault)
-          }
+          {(() => {
+            const userViews = templates?.userTemplates?.filter(t => t.templateType === targetTemplateType) || [];
+            const hasUserDefault = userViews.some(t => t.isDefault);
+
+            return templates?.systemDefault && templates.systemDefault.templateType === targetTemplateType &&
+              renderTemplateItem(templates.systemDefault, templates.systemDefault.isDefault || !hasUserDefault);
+          })()}
 
           <Divider style={{ margin: "4px 0" }} />
 
