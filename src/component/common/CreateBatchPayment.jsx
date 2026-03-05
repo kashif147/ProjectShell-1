@@ -21,6 +21,7 @@ import {
   Button,
 } from "antd";
 import * as XLSX from "xlsx";
+import dayjs from "dayjs";
 import { ExcelContext } from "../../context/ExcelContext";
 import { UploadOutlined } from "@ant-design/icons";
 import { paymentTypes } from "../../Data";
@@ -275,15 +276,32 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       members: members,
     };
 
-    // If it's a deduction batch, call the API
-    if (formValues.batchType?.toLowerCase() === "deduction") {
+    // If it's a deduction or standing order batch, call the API
+    if (
+      formValues.batchType?.toLowerCase() === "deduction" ||
+      formValues.batchType?.toLowerCase() === "standing order"
+    ) {
       try {
         const formData = new FormData();
-        formData.append("type", "deduction");
-        formData.append("date", formValues.paymentDate);
-        formData.append("batchDate", formValues.batchDate);
-        formData.append("paymentDate", formValues.paymentDate);
-        formData.append("workLocation", formValues.workLocation);
+        const isStandingOrder = formValues.batchType?.toLowerCase() === "standing order";
+        const apiType = isStandingOrder ? "Standing Order" : "deduction";
+
+        // Format dates to YYYY-MM-DD for API using dayjs
+        // MyDatePicker handles values as dayjs objects or strings
+        const formattedBatchDate = dayjs(formValues.batchDate, "MM/YYYY").format("YYYY-MM-DD");
+        const formattedPaymentDate = dayjs(formValues.paymentDate, "DD/MM/YYYY").format("YYYY-MM-DD");
+
+        formData.append("type", apiType);
+        formData.append("date", formattedPaymentDate);
+        formData.append("batchDate", formattedBatchDate);
+        formData.append("paymentDate", formattedPaymentDate);
+
+        if (isStandingOrder) {
+          formData.append("bankName", formValues.workLocation);
+        } else {
+          formData.append("workLocation", formValues.workLocation);
+        }
+
         formData.append("referenceNumber", formValues.batchRef);
         formData.append("description", formValues.description);
         formData.append("comments", formValues.comments || "");
@@ -305,7 +323,8 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
         if (response.status === 200 || response.status === 201) {
           message.success(
-            "Deduction batch created successfully in profile service"
+            `${apiType === "standing order" ? "Standing Order" : "Deduction"
+            } batch created successfully`
           );
           const batchId = response?.data?.data?._id;
           // Merge the API response ID into the batch object if needed
@@ -314,8 +333,13 @@ const CreateBatchPayment = forwardRef((props, ref) => {
           return finalBatchObject;
         }
       } catch (error) {
-        console.error("Error creating deduction batch:", error);
-        message.error("Failed to create deduction batch in profile service");
+        console.error("Error creating batch:", error);
+        message.error(
+          `Failed to create ${formValues.batchType?.toLowerCase() === "standing order"
+            ? "Standing Order"
+            : "Deduction"
+          } batch`
+        );
         return null; // Stop navigation if API call fails
       }
     }

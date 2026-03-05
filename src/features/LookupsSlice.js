@@ -162,6 +162,25 @@ const lookupsSlice = createSlice({
           });
         }
 
+        // Add standard Irish banks to branchOptions (used as Bank Name in Standing Orders)
+        const irishBanks = [
+          { value: "Allied Irish Banks (AIB)", label: "Allied Irish Banks (AIB)", key: "AIB" },
+          { value: "Bank of Ireland", label: "Bank of Ireland", key: "BOI" },
+          { value: "Permanent TSB", label: "Permanent TSB", key: "PTSB" },
+          { value: "Ulster Bank", label: "Ulster Bank", key: "Ulster" },
+          { value: "EBS", label: "EBS", key: "EBS" },
+          { value: "KBC Bank Ireland", label: "KBC Bank Ireland", key: "KBC" },
+          { value: "Danske Bank", label: "Danske Bank", key: "Danske" },
+          { value: "An Post Money", label: "An Post Money", key: "AnPost" },
+          { value: "Revolut", label: "Revolut", key: "Revolut" },
+        ];
+
+        irishBanks.forEach(bank => {
+          if (!state.branchOptions.find(b => b.label === bank.label)) {
+            state.branchOptions.push(bank);
+          }
+        });
+
         const otherOption = {
           id: "Other",
           value: "Other",
