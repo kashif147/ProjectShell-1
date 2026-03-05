@@ -240,14 +240,14 @@ const TableComponent = ({
   const [transferreq, settransferreq] = useState(false);
 
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
-    columns?.[screenName]
+    (columns?.[screenName] || [])
       ?.filter((item) => item?.isGride)
       ?.map((item, index) => ({
         ...item,
         key: `${index}`,
         onHeaderCell: () => ({ id: `${index}` }),
         onCell: () => ({ id: `${index}` }),
-      }))
+      })) || []
   );
 
   const dispatch = useDispatch();
@@ -299,27 +299,27 @@ const TableComponent = ({
   };
 
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
-    columns?.[screenName]
+    (columns?.[screenName] || [])
       ?.filter((item) => item?.isGride)
       ?.map((item, index) => ({
         ...item,
         key: `${index}`,
         onHeaderCell: () => ({ id: `${index}` }),
         onCell: () => ({ id: `${index}` }),
-      }))
+      })) || []
   );
 
   // **Sync columns when screenName or global columns change**
   useEffect(() => {
     // All available columns for the selection menu
-    const menuColumns = columns?.[screenName]?.map((item, index) => ({
+    const menuColumns = (columns?.[screenName] || [])?.map((item, index) => ({
       ...item,
       key: `${index}`,
       isVisible: item.isVisible !== false, // Ensure visibility flag exists
     }));
 
     // Only visible columns for the actual table grid
-    const gridColumns = menuColumns
+    const gridColumns = (menuColumns || [])
       ?.filter((item) => item?.isGride)
       ?.map((item) => ({
         ...item,
