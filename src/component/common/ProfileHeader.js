@@ -562,7 +562,7 @@ function ProfileHeader({
               {memberData.dob} ({memberData.gender}) {memberData.age}
             </p>
             <span
-              className={`member-status-badge ${isDeceased ? "member-status-deceased" : ""
+              className={`member-status-badge ${isDeceased ? "member-status-deceased" : memberData.status === "Resigned" ? "member-status-resigned" : ""
                 }`}
             >
               {memberData.status}

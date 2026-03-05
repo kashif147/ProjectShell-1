@@ -110,6 +110,11 @@
   color: #ad6800;
 }
 
+.member-status-badge.member-status-resigned {
+  background-color: #ff4d4f;
+  color: white;
+}
+
 /* Contact Information Section - on blue background */
 .member-contact-section-blue {
   padding: 8px 0 0 0;
@@ -452,9 +457,7 @@
   border-color: #ff4d4f;
 }
 
-.cancel-membership-modal
-  .ant-modal-footer
-  .ant-btn-primary:hover:not(:disabled) {
+.cancel-membership-modal .ant-modal-footer .ant-btn-primary:hover:not(:disabled) {
   background-color: #ff7875;
   border-color: #ff7875;
 }
