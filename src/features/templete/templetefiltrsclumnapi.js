@@ -82,13 +82,13 @@ export const updateGridTemplate = createAsyncThunk(
 // Async thunk to set a template as default
 export const setDefaultGridTemplate = createAsyncThunk(
     "templetefiltrsclumnapi/setDefaultGridTemplate",
-    async (id, { rejectWithValue, dispatch }) => {
+    async ({ id, isDefault }, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
             const URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates/${id}`;
             await axios.put(
                 URL,
-                { isDefault: true },
+                { isDefault },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -96,7 +96,7 @@ export const setDefaultGridTemplate = createAsyncThunk(
                 }
             );
             dispatch(getGridTemplates()); // Refresh list
-            return id;
+            return { id, isDefault };
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }

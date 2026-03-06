@@ -164,17 +164,16 @@ const SaveViewMenu = () => {
     }
   };
 
-  const handleSetDefaultView = (template) => {
-    dispatch(setDefaultGridTemplate(template._id))
+  const handleSetDefaultView = (id, isDefault) => {
+    dispatch(setDefaultGridTemplate({ id, isDefault }))
       .unwrap()
       .then(() => {
-        MyAlert("success", "Success", "Default view set successfully");
-        handleApplyView(template); // Apply the view immediately
+        MyAlert("success", "Success", `Default view ${isDefault ? "set" : "removed"} successfully`);
         dispatch(getGridTemplates()); // Refresh the list to show new default star
       })
       .catch((error) => {
         console.error("Error setting default view:", error);
-        MyAlert("error", "Error", error?.message || "Failed to set default view");
+        MyAlert("error", "Error", error?.message || "Failed to update default view");
       });
   };
 
@@ -290,11 +289,12 @@ const SaveViewMenu = () => {
         {isPinned ? (
           <StarFilled
             style={{ color: "#1890ff", fontSize: 16, cursor: "pointer" }}
+            onClick={() => handleSetDefaultView(template._id, false)}
           />
         ) : (
           <StarOutlined
             style={{ color: "#555", fontSize: 16, cursor: "pointer" }}
-            onClick={() => handleSetDefaultView(template)}
+            onClick={() => handleSetDefaultView(template._id, true)}
           />
         )}
         {!template.systemDefault && (

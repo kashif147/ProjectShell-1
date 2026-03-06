@@ -62,13 +62,13 @@ export const assignRolesToUser = createAsyncThunk(
   async ({ userId, roleIds }, { rejectWithValue }) => {
     try {
       const token = localStorage.getItem("token");
-      const response = await fetch(`${baseURL}/users/${userId}/roles`, {
+      const response = await fetch(`${baseURL}/users/assign-role`, {
         method: "POST",
         headers: {
           Authorization: `Bearer ${token}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ roleIds }),
+        body: JSON.stringify({ userId, roleIds }),
       });
 
       if (!response.ok) {
