@@ -8,7 +8,10 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import { useNotifications } from "../../context/NotificationContext";
+import {
+  useNotifications,
+  getNotificationServiceUrl,
+} from "../../context/NotificationContext";
 
 const { Text, Title } = Typography;
 
@@ -26,7 +29,7 @@ const NotificationPopover = ({ isOpen }) => {
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/notifications?limit=20`,
+        `${getNotificationServiceUrl()}/notifications?limit=20`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,

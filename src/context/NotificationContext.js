@@ -12,6 +12,15 @@ import axios from "axios";
 
 const NotificationContext = createContext();
 
+const NOTIFICATION_SERVICE_FALLBACK =
+  "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
+
+export const getNotificationServiceUrl = () =>
+  (
+    process.env.REACT_APP_NOTIFICATION_SERVICE_URL ||
+    NOTIFICATION_SERVICE_FALLBACK
+  ).trim();
+
 let socket = null;
 
 export const NotificationProvider = ({ children }) => {
@@ -34,7 +43,8 @@ export const NotificationProvider = ({ children }) => {
       return;
     }
 
-    socket = io(process.env.REACT_APP_NOTIFICATION_SERVICE_URL, {
+    const baseUrl = getNotificationServiceUrl();
+    socket = io(baseUrl, {
       auth: { token },
       transports: ["websocket"],
     });
@@ -70,15 +80,13 @@ export const NotificationProvider = ({ children }) => {
 
     socket.on("badgeIncrement", (data) => {
       setBadge((prev) =>
-        typeof data?.count === "number" ? data.count : prev + 1
+        typeof data?.count === "number" ? data.count : prev + 1,
       );
     });
 
     socket.on("badgeDecrement", (data) => {
       setBadge((prev) =>
-        typeof data?.count === "number"
-          ? data.count
-          : Math.max(prev - 1, 0)
+        typeof data?.count === "number" ? data.count : Math.max(prev - 1, 0),
       );
     });
 
@@ -99,8 +107,8 @@ export const NotificationProvider = ({ children }) => {
     if (!token) return;
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/notifications?limit=1`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${getNotificationServiceUrl()}/notifications?limit=1`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const { unreadCount } = res.data?.data ?? res.data ?? {};
       if (typeof unreadCount === "number") setBadge(unreadCount);
