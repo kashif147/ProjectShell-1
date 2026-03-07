@@ -11,8 +11,12 @@ Socket.IO is used in this React app for real-time notifications via `Notificatio
 
 ## Connection Setup
 
+Socket.io-client ignores the path when given a full URL; it only uses host/port. The path must be passed explicitly:
+
 ```javascript
-socket = io(process.env.REACT_APP_NOTIFICATION_SERVICE_URL, {
+const { origin, path } = getSocketOptions(); // origin + path from base URL
+socket = io(origin, {
+  path,  // e.g. "/notification-service/api/socket.io"
   auth: { token },
   transports: ["websocket"],
 });
