@@ -180,7 +180,8 @@ function ProfileHeader({
       setLedgerLoading(true);
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}`,
+          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/summary`,
+          // /reports/member/B00002/summary?year=2026
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -188,18 +189,16 @@ function ProfileHeader({
           }
         );
 
-        const summaryData = response.data;
-        
+        const summaryData = response.data?.data || response.data;
+
         // Update states based on the new API response
         // User's example: "net": 120.5 (Decimal suggests Euros)
-        setLedgerBalance(summaryData.net || 0); 
-        
+        setLedgerBalance(summaryData.net || 0);
+
         if (summaryData.lastPayment) {
           // User's example: "amount": 32600 (Integer suggests cents)
           setLastPaymentAmount(summaryData.lastPayment.amount || 0);
           setLastPaymentDate(summaryData.lastPayment.date);
-          // Store docNo to be used as payment code
-          setPaymentCode(summaryData.lastPayment.docNo || "");
         }
       } catch (error) {
         console.error("Error fetching account summary in ProfileHeader:", error);
@@ -310,7 +309,7 @@ function ProfileHeader({
     // let's check if we should still use centsToEuro. 
     // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
     // Given the example "net": 120.5, it looks like Euros.
-    const balance = `€${Math.abs(ledgerBalance || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const balance = `€${Math.abs(centsToEuro(ledgerBalance || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Use latest ledger date for payment date if available, fallback to subscription/submission
@@ -321,7 +320,7 @@ function ProfileHeader({
       : "N/A";
 
     // Use paymentCode from API if available, fallback to generated one
-    const paymentCodeToUse = paymentCode || `MB-${subscriptionData?.subscriptionYear || dayjs().year()
+    const paymentCodeToUse = `MB-${subscriptionData?.subscriptionYear || dayjs().year()
       }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
