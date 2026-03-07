@@ -15,11 +15,11 @@ const NotificationContext = createContext();
 const NOTIFICATION_SERVICE_FALLBACK =
   "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
 
-export const getNotificationServiceUrl = () =>
-  (
-    process.env.REACT_APP_NOTIFICATION_SERVICE_URL ||
-    NOTIFICATION_SERVICE_FALLBACK
-  ).trim();
+export const getNotificationServiceUrl = () => {
+  const env = (process.env.REACT_APP_NOTIFICATION_SERVICE_URL || "").trim();
+  if (env && env.includes("/notification-service/")) return env;
+  return NOTIFICATION_SERVICE_FALLBACK;
+};
 
 let socket = null;
 
@@ -44,6 +44,7 @@ export const NotificationProvider = ({ children }) => {
     }
 
     const baseUrl = getNotificationServiceUrl();
+    console.log("Socket URL:", baseUrl);
     socket = io(baseUrl, {
       auth: { token },
       transports: ["websocket"],
