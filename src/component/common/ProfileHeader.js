@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from "react";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
 import { useLocation } from "react-router-dom";
 import { Modal, Button, message, Dropdown } from "antd";
 import {
@@ -21,11 +21,13 @@ import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
 import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
 import { centsToEuro } from "../../utils/Utilities";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 
 function ProfileHeader({
   isEditMode = false,
@@ -38,6 +40,7 @@ function ProfileHeader({
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
   const location = useLocation();
+  const dispatch = useDispatch();
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
     reason: "",
@@ -173,42 +176,51 @@ function ProfileHeader({
     );
   }, [source, location]);
 
-  useEffect(() => {
-    const fetchAccountSummary = async () => {
-      if (!memberIdForLedger || !token) return;
+  const fetchAccountSummary = useCallback(async () => {
+    if (!memberIdForLedger || !token) return;
 
-      setLedgerLoading(true);
-      try {
-        const response = await axios.get(
-          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/summary`,
-          // /reports/member/B00002/summary?year=2026
-          {
-            headers: {
-              Authorization: `Bearer ${token}`,
-            },
-          }
-        );
-
-        const summaryData = response.data?.data || response.data;
-
-        // Update states based on the new API response
-        // User's example: "net": 120.5 (Decimal suggests Euros)
-        setLedgerBalance(summaryData.net || 0);
-
-        if (summaryData.lastPayment) {
-          // User's example: "amount": 32600 (Integer suggests cents)
-          setLastPaymentAmount(summaryData.lastPayment.amount || 0);
-          setLastPaymentDate(summaryData.lastPayment.date);
+    setLedgerLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/summary`,
+        // /reports/member/B00002/summary?year=2026
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
         }
-      } catch (error) {
-        console.error("Error fetching account summary in ProfileHeader:", error);
-      } finally {
-        setLedgerLoading(false);
-      }
-    };
+      );
 
-    fetchAccountSummary();
+      const summaryData = response.data?.data || response.data;
+
+      // Update states based on the new API response
+      // User's example: "net": 120.5 (Decimal suggests Euros)
+      setLedgerBalance(summaryData.net || 0);
+
+      if (summaryData.lastPayment) {
+        // User's example: "amount": 32600 (Integer suggests cents)
+        setLastPaymentAmount(summaryData.lastPayment.amount || 0);
+        setLastPaymentDate(summaryData.lastPayment.date);
+      }
+    } catch (error) {
+      console.error("Error fetching account summary in ProfileHeader:", error);
+    } finally {
+      setLedgerLoading(false);
+    }
   }, [memberIdForLedger, token]);
+
+  const refreshAllData = useCallback(() => {
+    const profileId = source?.id || source?._id;
+    if (profileId) {
+      dispatch(getProfileDetailsById(profileId));
+      dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+    }
+    fetchAccountSummary();
+  }, [dispatch, source, fetchAccountSummary]);
+
+  useEffect(() => {
+    fetchAccountSummary();
+  }, [fetchAccountSummary]);
 
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
@@ -430,6 +442,7 @@ function ProfileHeader({
 
       MyAlert("success", "Membership cancellation submitted successfully!");
       handleCancelModalClose();
+      refreshAllData();
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -755,11 +768,7 @@ function ProfileHeader({
         onClose={() => setIsUndoCancelModalVisible(false)}
         record={source}
         onSuccess={() => {
-          // Optionally refresh data here if needed, or rely on Redux/Parent refresh
-          if (typeof window !== "undefined") {
-            // A simple way to trigger a refresh if the parent doesn't handle it automatically
-            // But ideally, the modal update triggers a redux action that updates the view.
-          }
+          refreshAllData();
         }}
       />
     </div>
