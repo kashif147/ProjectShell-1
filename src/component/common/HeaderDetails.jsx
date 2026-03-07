@@ -779,7 +779,7 @@ function HeaderDetails() {
       }
 
       <div
-        className={`details-header d-flex w-100% overflow-hidden ${location?.pathname == "/Details" ||
+          className={`details-header d-flex w-100 overflow-hidden ${location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
@@ -1075,7 +1075,7 @@ function HeaderDetails() {
                     </Row>
                   </div>
                 ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
-                  <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
+                  <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
@@ -1084,10 +1084,12 @@ function HeaderDetails() {
                         className="inp"
                       />
                     ) : (
-                      <Toolbar />
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Toolbar />
+                      </div>
                     )}
-                    <div className="d-flex">
-                      <SaveViewMenu className="me-4" />
+                    <div className="d-flex flex-shrink-0">
+                      <SaveViewMenu className="ms-3" />
                     </div>
                   </div>
                 )}

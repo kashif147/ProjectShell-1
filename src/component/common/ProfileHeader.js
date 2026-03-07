@@ -46,6 +46,7 @@ function ProfileHeader({
   const [ledgerBalance, setLedgerBalance] = useState(0);
   const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
   const [lastPaymentDate, setLastPaymentDate] = useState(null);
+  const [paymentCode, setPaymentCode] = useState("");
   const [ledgerLoading, setLedgerLoading] = useState(false);
 
   // Get data from Redux store
@@ -173,13 +174,13 @@ function ProfileHeader({
   }, [source, location]);
 
   useEffect(() => {
-    const fetchLedgerData = async () => {
+    const fetchAccountSummary = async () => {
       if (!memberIdForLedger || !token) return;
 
       setLedgerLoading(true);
       try {
         const response = await axios.get(
-          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/ledger`,
+          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}`,
           {
             headers: {
               Authorization: `Bearer ${token}`,
@@ -187,59 +188,27 @@ function ProfileHeader({
           }
         );
 
-        const rawData = response.data?.data?.items || [];
-        const targetId = String(memberIdForLedger).trim().toLowerCase();
-
-        // Filter and sort like in FinanceByID.jsx
-        const filteredRawData = rawData.filter((item) =>
-          item.entries?.some((e) =>
-            String(e.memberId).trim().toLowerCase() === targetId
-          )
-        );
-
-        const sortedData = [...filteredRawData].sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
-
-        let cumulativeBalance = 0;
-        let lastDate = null;
-        let lastAmt = 0;
-
-        sortedData.forEach((item) => {
-          const memberEntries = item.entries?.filter((e) =>
-            String(e.memberId).trim().toLowerCase() === targetId
-          ) || [];
-
-          let totalDebit = 0;
-          let totalCredit = 0;
-
-          memberEntries.forEach(e => {
-            const amt = Number(e.amount) || 0;
-            if (e.dc === "D") totalDebit += amt;
-            if (e.dc === "C") totalCredit += amt;
-          });
-
-          cumulativeBalance += (totalCredit - totalDebit);
-          // Update lastDate to the most recent transaction date
-          if (item.date) {
-            lastDate = item.date;
-          }
-
-          // If there was any credit in this transaction, it's considered a payment
-          if (totalCredit > 0) {
-            lastAmt = totalCredit;
-          }
-        });
-
-        setLedgerBalance(cumulativeBalance);
-        setLastPaymentDate(lastDate);
-        setLastPaymentAmount(lastAmt);
+        const summaryData = response.data;
+        
+        // Update states based on the new API response
+        // User's example: "net": 120.5 (Decimal suggests Euros)
+        setLedgerBalance(summaryData.net || 0); 
+        
+        if (summaryData.lastPayment) {
+          // User's example: "amount": 32600 (Integer suggests cents)
+          setLastPaymentAmount(summaryData.lastPayment.amount || 0);
+          setLastPaymentDate(summaryData.lastPayment.date);
+          // Store docNo to be used as payment code
+          setPaymentCode(summaryData.lastPayment.docNo || "");
+        }
       } catch (error) {
-        console.error("Error fetching ledger data in ProfileHeader:", error);
+        console.error("Error fetching account summary in ProfileHeader:", error);
       } finally {
         setLedgerLoading(false);
       }
     };
 
-    fetchLedgerData();
+    fetchAccountSummary();
   }, [memberIdForLedger, token]);
 
   const isSubscriptionEmpty = useMemo(() => {
@@ -336,8 +305,12 @@ function ProfileHeader({
     const paymentType = subscriptionData?.paymentType || "Salary Deduction";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
-    // Financial Info - Now using fetched ledger data
-    const balance = `€${Math.abs(centsToEuro(ledgerBalance || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    // Financial Info - Now using fetched summary data
+    // Assume ledgerBalance (net) is in Euros if it has decimal, but to be safe and consistent with previous logic, 
+    // let's check if we should still use centsToEuro. 
+    // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
+    // Given the example "net": 120.5, it looks like Euros.
+    const balance = `€${Math.abs(ledgerBalance || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
     const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
     // Use latest ledger date for payment date if available, fallback to subscription/submission
@@ -347,8 +320,8 @@ function ProfileHeader({
       ? formatDate(paymentDateRaw)
       : "N/A";
 
-    // Include subscription year in payment code if available
-    const paymentCode = `MB-${subscriptionData?.subscriptionYear || dayjs().year()
+    // Use paymentCode from API if available, fallback to generated one
+    const paymentCodeToUse = paymentCode || `MB-${subscriptionData?.subscriptionYear || dayjs().year()
       }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
@@ -383,7 +356,7 @@ function ProfileHeader({
       balance,
       lastPayment,
       paymentDate,
-      paymentCode,
+      paymentCode: paymentCodeToUse,
     };
   }, [
     source,
@@ -394,7 +367,8 @@ function ProfileHeader({
     ledgerBalance,
     lastPaymentAmount,
     lastPaymentDate,
-  ]); // Now recalculates when source OR subscriptionData OR ledger data changes
+    paymentCode,
+  ]); // Now recalculates when source OR subscriptionData OR summary data changes
 
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
@@ -517,7 +491,7 @@ function ProfileHeader({
       <div className="member-header-single-card">
         {/* Profile Header Section */}
         <div
-          className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
+          className={`member-header-top ${isDeceased ? "member-deceased" : memberData.status === "Resigned" ? "member-resigned" : ""}`}
         >
           {showButtons && (
             <Dropdown
@@ -633,7 +607,7 @@ function ProfileHeader({
             <FaClock className="detail-icon" />
             <div className="detail-content">
               <span className="detail-label">Last Payment:</span>
-              <span className="detail-value">€74.00</span>
+              <span className="detail-value">{memberData.lastPayment}</span>
             </div>
           </div>
           <div className="detail-row">
@@ -677,7 +651,7 @@ function ProfileHeader({
 
         {/* Grade and Category Section - on blue background */}
         <div
-          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""
+          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : memberData.status === "Resigned" ? "member-resigned" : ""
             }`}
         >
           <div className="grade-row-blue">

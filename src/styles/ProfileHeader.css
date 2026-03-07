@@ -31,6 +31,11 @@
   background: linear-gradient(135deg, #616161 0%, #424242 100%);
 }
 
+/* Light red state for resigned members */
+.member-header-top.member-resigned {
+  background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
+}
+
 .member-edit-btn {
   position: absolute;
   top: 16px;
@@ -300,6 +305,11 @@
 /* Grayed out state for deceased members - grade section */
 .member-grade-section-blue.member-deceased {
   background: linear-gradient(135deg, #616161 0%, #424242 100%);
+}
+
+/* Light red state for resigned members - grade section */
+.member-grade-section-blue.member-resigned {
+  background: linear-gradient(135deg, #ff7875 0%, #ff4d4f 100%);
 }
 
 .grade-row-blue {

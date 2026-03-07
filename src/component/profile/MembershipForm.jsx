@@ -566,6 +566,22 @@ const MembershipForm = ({
           has been cancelled.
         </div>
       )}
+      {formData.subscriptionStatus === "Resigned" && (
+        <div
+          style={{
+            backgroundColor: "#fff1f0",
+            border: "1px solid #ffa39e",
+            borderRadius: "4px",
+            padding: "12px 16px",
+            marginBottom: "16px",
+            color: "#cf1322",
+            fontSize: "14px",
+            fontWeight: 500,
+          }}
+        >
+          ⚠️ Member is resigned. Subscription has been cancelled.
+        </div>
+      )}
       <Row gutter={[24, 24]}>
         {/* Column 1: Personal Information */}
         <Col span={8}>

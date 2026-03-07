@@ -22,7 +22,7 @@ import MyInput from "./MyInput";
 import { getLabelToKeyMap, transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
 import { setTemplateId, setInitialized, initializeWithTemplate, resetInitialization } from "../../features/applicationwithfilterslice";
 
-const SaveViewMenu = () => {
+const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
   const location = useLocation();
   const { templates, loading } = useSelector((state) => state.templetefiltrsclumnapi);
@@ -365,7 +365,7 @@ const SaveViewMenu = () => {
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className={className} style={{ display: "flex", alignItems: "center", gap: "8px", ...style }}>
       <Dropdown
         overlay={menu}
         trigger={["click"]}
