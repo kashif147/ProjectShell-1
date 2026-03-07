@@ -111,6 +111,22 @@ const MembershipForm = ({
     return null;
   }, [ProfileSubData]);
 
+  const isSubscriptionEmpty = useMemo(() => {
+    if (!ProfileSubData) return false;
+    // Direct array empty
+    if (Array.isArray(ProfileSubData.data) && ProfileSubData.data.length === 0)
+      return true;
+    // Nested array empty
+    if (
+      ProfileSubData.data &&
+      typeof ProfileSubData.data === "object" &&
+      Array.isArray(ProfileSubData.data.data) &&
+      ProfileSubData.data.data.length === 0
+    )
+      return true;
+    return false;
+  }, [ProfileSubData]);
+
   const memoizedPaymentTypeOptions = useMemo(() => {
     if (!paymentTypeOptions) return [];
     const hasPayrollDeduction = paymentTypeOptions.some(
@@ -251,13 +267,20 @@ const MembershipForm = ({
         secondarySection: subscriptionData.secondarySection || prev.secondarySection || "",
       }));
     } else {
+      // If no subscription data, check if it's because they are resigned
+      let status = "";
+      if (isSubscriptionEmpty && !ProfileSubLoading) {
+        status = "Resigned";
+      }
+
       // If no subscription data, just set profile data
       setFormData(prev => ({
         ...prev,
-        ...initialFormData
+        ...initialFormData,
+        subscriptionStatus: status
       }));
     }
-  }, [profileDetails, profileSearchData, subscriptionData]); // FIXED: Removed ProfileSubData from dependencies
+  }, [profileDetails, profileSearchData, subscriptionData, isSubscriptionEmpty, ProfileSubLoading]); // FIXED: Added isSubscriptionEmpty and ProfileSubLoading
 
   // Internal form state
   const [formData, setFormData] = useState({
@@ -501,8 +524,11 @@ const MembershipForm = ({
     }
   }, [propIsDeceased]);
 
-  // Check if form should be read-only (either not in edit mode or member is deceased)
-  const isFormReadOnly = !isEditMode || formData.isDeceased;
+  // Check if form should be read-only (either not in edit mode or member is deceased or resigned)
+  const isFormReadOnly =
+    !isEditMode ||
+    formData.isDeceased ||
+    formData.subscriptionStatus === "Resigned";
 
   // Calculate indeterminate state for main checkbox
   const isIndeterminate = () => {
@@ -579,7 +605,8 @@ const MembershipForm = ({
             fontWeight: 500,
           }}
         >
-          ⚠️ Member is resigned. Subscription has been cancelled.
+          ⚠️ Member is resigned. Profile is read-only and subscription has been
+          cancelled.
         </div>
       )}
       <Row gutter={[24, 24]}>
