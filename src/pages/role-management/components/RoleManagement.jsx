@@ -47,6 +47,7 @@ import MyConfirm from "../../../component/common/MyConfirm";
 import RoleForm from "../../../component/role/RoleForm";
 import RolePermissions from "./RolePermissions";
 import "../../../styles/RoleManagement.css";
+import { useAuthorization } from "../../../context/AuthorizationContext";
 import { deleteFtn } from "../../../utils/Utilities";
 
 const { Option } = Select;
@@ -63,6 +64,12 @@ const RoleManagement = ({ onClose }) => {
     selectedStatus,
     selectedCategory,
   } = useSelector((state) => state.roles);
+  const { hasPermission } = useAuthorization();
+
+  const canReadRoles = hasPermission("role:read");
+  const canWriteRoles = hasPermission("role:write");
+  const canDeleteRoles = hasPermission("role:delete");
+  const canAssignPermissions = hasPermission("role:permission_assign");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [role, setRole] = useState({});
@@ -350,26 +357,32 @@ const RoleManagement = ({ onClose }) => {
       width: 180,
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="Edit Role">
-            <FaEdit
-              size={16}
-              style={{ cursor: "pointer", color: "#1890ff" }}
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Manage Permissions">
-            <SettingOutlined
-              style={{ cursor: "pointer", color: "#52c41a", fontSize: "16px" }}
-              onClick={() => handleManagePermissions(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete Role">
-            <AiFillDelete
-              size={16}
-              style={{ cursor: "pointer", color: "#ff4d4f" }}
-              onClick={() => handleDelete(record?._id)}
-            />
-          </Tooltip>
+          {canWriteRoles && (
+            <Tooltip title="Edit Role">
+              <FaEdit
+                size={16}
+                style={{ cursor: "pointer", color: "#1890ff" }}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
+          )}
+          {canAssignPermissions && (
+            <Tooltip title="Manage Permissions">
+              <SettingOutlined
+                style={{ cursor: "pointer", color: "#52c41a", fontSize: "16px" }}
+                onClick={() => handleManagePermissions(record)}
+              />
+            </Tooltip>
+          )}
+          {canDeleteRoles && (
+            <Tooltip title="Delete Role">
+              <AiFillDelete
+                size={16}
+                style={{ cursor: "pointer", color: "#ff4d4f" }}
+                onClick={() => handleDelete(record?._id)}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -404,18 +417,20 @@ const RoleManagement = ({ onClose }) => {
             </div>
             <div className="text-muted small">Categories</div>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAddNew}
-            style={{
-              backgroundColor: "var(--primary-color)",
-              borderColor: "var(--primary-color)",
-              borderRadius: "4px",
-            }}
-          >
-            Add Role
-          </Button>
+          {canWriteRoles && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddNew}
+              style={{
+                backgroundColor: "var(--primary-color)",
+                borderColor: "var(--primary-color)",
+                borderRadius: "4px",
+              }}
+            >
+              Add Role
+            </Button>
+          )}
         </div>
       </div>
 
@@ -495,30 +510,36 @@ const RoleManagement = ({ onClose }) => {
       </Card>
 
       {/* Table */}
-      <div className="bg-white rounded shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={filteredRoles || []}
-          loading={rolesLoading}
-          rowKey="id"
-          pagination={getUnifiedPaginationConfig({
-            total: filteredRoles.length,
-            itemName: "roles",
-          })}
-          className="drawer-tbl"
-          size="small"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          scroll={{ x: 1000, y: "48vh" }}
-          locale={{
-            emptyText: "No Data",
-          }}
-        />
-      </div>
+      {!canReadRoles ? (
+        <Card className="text-center py-5">
+          <div className="text-muted">You do not have permission to view roles.</div>
+        </Card>
+      ) : (
+        <div className="bg-white rounded shadow-sm">
+          <Table
+            columns={columns}
+            dataSource={filteredRoles || []}
+            loading={rolesLoading}
+            rowKey="id"
+            pagination={getUnifiedPaginationConfig({
+              total: filteredRoles.length,
+              itemName: "roles",
+            })}
+            className="drawer-tbl"
+            size="small"
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            scroll={{ x: 1000, y: "48vh" }}
+            locale={{
+              emptyText: "No Data",
+            }}
+          />
+        </div>
+      )}
 
       {/* Role Form Drawer */}
-      {isFormOpen && (
+      {isFormOpen && canWriteRoles && (
         <RoleForm
           isEdit={isEdit}
           onClose={handleFormClose}
@@ -528,7 +549,7 @@ const RoleManagement = ({ onClose }) => {
       )}
 
       {/* Role Permissions Drawer */}
-      {isPermissionsOpen && (
+      {isPermissionsOpen && canAssignPermissions && (
         <RolePermissions
           role={editingRole}
           onClose={handlePermissionsClose}

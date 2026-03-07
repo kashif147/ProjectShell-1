@@ -431,7 +431,8 @@ export const AuthorizationProvider = ({ children }) => {
   // Check if user has specific permission
   const hasPermission = (permission) => {
     if (!state.permissions || state.permissions.length === 0) return false;
-    return state.permissions.includes(permission);
+
+    return state.permissions.includes("*") || state.permissions.includes(permission);
   };
 
   // Check if user has any of the specified permissions

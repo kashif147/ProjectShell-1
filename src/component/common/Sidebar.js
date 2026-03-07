@@ -10,7 +10,6 @@ import {
   reportItems,
   issuesItems,
   eventsItems,
-  filterMenuItemsByAuth,
 } from "../../constants/SideNavWithAuth.js";
 import { useSelector } from "react-redux";
 import "../../styles/Sidebar.css";
@@ -24,7 +23,7 @@ const Sidebar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
-  const { permissions, roles } = useAuthorization();
+  const { hasPermission } = useAuthorization();
 
   // Debug logging
   const [isPinned, setIsPinned] = useState(() => {
@@ -52,27 +51,25 @@ const Sidebar = () => {
     []
   );
 
-  // Debug: Log available itemsMap keys
-
   // Filter menu items based on user permissions and roles
   const menuItems = useMemo(() => {
     // Get the base menu items for the active module
     const baseMenuItems = itemsMap[activeKey] || [];
 
+    return baseMenuItems.filter((item) => {
+      // If no permissions required, show the item
+      if (!item.permissions?.length) {
+        return true;
+      }
 
-    // Debug each menu item's requirements
-    baseMenuItems.forEach((item, index) => {
-      const hasPermission =
-        item.permissions?.some((p) => permissions.includes(p)) || true;
-      const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
+      // Check permissions
+      const hasRequiredPermission =
+        !item.permissions?.length ||
+        item.permissions.some((permission) => hasPermission(permission));
 
-      // You can use hasPermission and hasRole for further logic if needed
+      return hasRequiredPermission;
     });
-
-
-    const filtered = filterMenuItemsByAuth(baseMenuItems, permissions, roles);
-    return filtered;
-  }, [itemsMap, activeKey, permissions, roles]);
+  }, [itemsMap, activeKey, hasPermission]);
 
   const getNavLinkData = (key) => {
     switch (key) {

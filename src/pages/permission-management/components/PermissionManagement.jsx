@@ -42,7 +42,8 @@ const { Option } = Select;
 
 const PermissionManagement = ({ onClose }) => {
   const dispatch = useDispatch();
-  const { permissionDefinitions } = useAuthorization();
+  const { permissionDefinitions, hasPermission } = useAuthorization();
+  const canManagePermissions = hasPermission("user:manage_roles");
   const {
     permissions,
     permissionsLoading,
@@ -128,45 +129,46 @@ const PermissionManagement = ({ onClose }) => {
     setEditingPermission(permission);
     setIsFormOpen(true);
   };
-//  const deleteFtn = async (url, callback) => {
-//   const token = localStorage.getItem("token");
+  //  const deleteFtn = async (url, callback) => {
+  //   const token = localStorage.getItem("token");
 
-//   const config = {
-//     method: "delete",
-//     url,
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${token}`,
-//     },
-//   };
+  //   const config = {
+  //     method: "delete",
+  //     url,
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   };
 
-//   try {
-//     const response = await axios.request(config);
+  //   try {
+  //     const response = await axios.request(config);
 
-//     // ✅ Handle all success codes (200–299)
-//     if (response.status >= 200 && response.status < 300) {
-//       MyAlert("success", "You Have Successfully Deleted.");
-//       // ✅ Always call callback after success
-//       // if (callback && typeof callback === "function") {
-//       if (callback && typeof callback === "function") {
-//         await callback();
-//       }
-//     }
+  //     // ✅ Handle all success codes (200–299)
+  //     if (response.status >= 200 && response.status < 300) {
+  //       MyAlert("success", "You Have Successfully Deleted.");
+  //       // ✅ Always call callback after success
+  //       // if (callback && typeof callback === "function") {
+  //       if (callback && typeof callback === "function") {
+  //         await callback();
+  //       }
+  //     }
 
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error deleting record:",
-//       error?.response?.data?.error?.message || error.message
-//     );
-//     MyAlert(
-//       "error",
-//       "Please Try Again",
-//       error?.response?.data?.error?.message || ""
-//     );
-//   }
-// };
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error(
+  //       "Error deleting record:",
+  //       error?.response?.data?.error?.message || error.message
+  //     );
+  //     MyAlert(
+  //       "error",
+  //       "Please Try Again",
+  //       error?.response?.data?.error?.message || ""
+  //     );
+  //   }
+  // };
   const handleDelete = (permissionId) => {
+    if (!canManagePermissions) return;
     MyConfirm({
       title: "Confirm Deletionqwe",
       message:
@@ -363,33 +365,37 @@ const PermissionManagement = ({ onClose }) => {
       width: 120,
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="Edit Permission">
-            <FaEdit
-              size={16}
-              style={{ cursor: "pointer", color: "#1890ff" }}
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete Permission">
-            <AiFillDelete
-              size={16}
-              style={{
-                cursor: "pointer",
-                color: record.isSystemPermission ? "#ccc" : "#ff4d4f",
-                opacity: record.isSystemPermission ? 0.5 : 1,
-              }}
-              onClick={() =>
-                !record.isSystemPermission && handleDelete(record._id)
-              }
-            />
-          </Tooltip>
+          {canManagePermissions && (
+            <Tooltip title="Edit Permission">
+              <FaEdit
+                size={16}
+                style={{ cursor: "pointer", color: "#1890ff" }}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
+          )}
+          {canManagePermissions && (
+            <Tooltip title="Delete Permission">
+              <AiFillDelete
+                size={16}
+                style={{
+                  cursor: "pointer",
+                  color: record.isSystemPermission ? "#ccc" : "#ff4d4f",
+                  opacity: record.isSystemPermission ? 0.5 : 1,
+                }}
+                onClick={() =>
+                  !record.isSystemPermission && handleDelete(record._id)
+                }
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
   ];
 
   return (
-    <div className="permission-management"> 
+    <div className="permission-management">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h4 className="mb-1">Permission Management</h4>
@@ -416,18 +422,20 @@ const PermissionManagement = ({ onClose }) => {
             </div>
             <div className="text-muted small">Actions</div>
           </div>
-          <Button
-            type="primary"
-            icon={<PlusOutlined />}
-            onClick={handleAddNew}
-            style={{
-              backgroundColor: "var(--primary-color)",
-              borderColor: "var(--primary-color)",
-              borderRadius: "4px",
-            }}
-          >
-            Add Permission
-          </Button>
+          {canManagePermissions && (
+            <Button
+              type="primary"
+              icon={<PlusOutlined />}
+              onClick={handleAddNew}
+              style={{
+                backgroundColor: "var(--primary-color)",
+                borderColor: "var(--primary-color)",
+                borderRadius: "4px",
+              }}
+            >
+              Add Permission
+            </Button>
+          )}
         </div>
       </div>
 
@@ -488,30 +496,36 @@ const PermissionManagement = ({ onClose }) => {
       </Card>
 
       {/* Table */}
-      <div className="bg-white rounded shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={filteredPermissions || []}
-          loading={permissionsLoading}
-          rowKey="id"
-          pagination={getUnifiedPaginationConfig({
-            total: filteredPermissions.length,
-            itemName: "permissions",
-          })}
-          className="drawer-tbl"
-          size="small"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          scroll={{ x: 1000, y: '48vh' }}
-          locale={{
-            emptyText: "No Data",
-          }}
-        />
-      </div>
+      {!canManagePermissions ? (
+        <Card className="text-center py-5">
+          <div className="text-muted">You do not have permission to manage permissions.</div>
+        </Card>
+      ) : (
+        <div className="bg-white rounded shadow-sm">
+          <Table
+            columns={columns}
+            dataSource={filteredPermissions || []}
+            loading={permissionsLoading}
+            rowKey="id"
+            pagination={getUnifiedPaginationConfig({
+              total: filteredPermissions.length,
+              itemName: "permissions",
+            })}
+            className="drawer-tbl"
+            size="small"
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            scroll={{ x: 1000, y: "48vh" }}
+            locale={{
+              emptyText: "No Data",
+            }}
+          />
+        </div>
+      )}
 
       {/* Permission Form Drawer */}
-      {isFormOpen && (
+      {isFormOpen && canManagePermissions && (
         <PermissionForm
           permission={editingPermission}
           onClose={handleFormClose}

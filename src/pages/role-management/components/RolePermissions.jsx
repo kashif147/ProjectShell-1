@@ -19,6 +19,9 @@ import { useDispatch, useSelector } from "react-redux";
 import { assignPermissionsToRole } from "../../../features/RoleSlice";
 import insertDataFtn from "../../../utils/Utilities";
 import { getAllPermissions } from "../../../features/PermissionSlice";
+import { useAuthorization } from "../../../context/AuthorizationContext";
+import MyAlert from "../../../component/common/MyAlert";
+import axios from "axios";
 
 const { Search } = Input;
 const { Panel } = Collapse;
@@ -29,6 +32,8 @@ const RolePermissions = ({ role, onClose }) => {
   const [initialPermissions, setInitialPermissions] = useState([]); // 👈 define it here
 
   const [loading, setLoading] = useState(false);
+  const { hasPermission } = useAuthorization();
+  const canAssignPermissions = hasPermission("role:permission_assign");
 
   const { permissions, searchQuery } = useSelector(
     (state) => state.permissions
@@ -37,8 +42,11 @@ const RolePermissions = ({ role, onClose }) => {
   // Load role’s current permissions
   useEffect(() => {
     if (role) {
-      setSelectedPermissions(role.permissions || []);
-      setInitialPermissions(role.permissions || []);
+      const perms = (role.permissions || []).map((p) =>
+        typeof p === "string" ? p : p._id || p.id
+      );
+      setSelectedPermissions(perms);
+      setInitialPermissions(perms);
     }
   }, [role]);
 
@@ -113,57 +121,39 @@ const RolePermissions = ({ role, onClose }) => {
 
   const userdata = JSON.parse(localStorage.getItem("userData"));
   const handleSave = async () => {
-    // 68c8690e40c7b7d13ba2d0a8
-    //  "permissions": [
-    //               "68c84c57f10b0fff9ac905e2",
-    //               "68c84c58f10b0fff9ac905ec"
-    //           ],
+    if (!canAssignPermissions) {
+      MyAlert("error", "Permission Denied", "You do not have permission to assign permissions");
+      return;
+    }
+
     try {
       setLoading(true);
 
-      // Compare differences
-      const added = selectedPermissions.filter(
-        (id) => !initialPermissions.includes(id)
+      const token = localStorage.getItem("token");
+
+      await axios.put(
+        `${process.env.REACT_APP_POLICY_SERVICE_URL}/roles/${role._id}/permissions`,
+        {
+          permissionIds: selectedPermissions,
+        },
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
       );
 
-      const removed = initialPermissions.filter(
-        (id) => !selectedPermissions.includes(id)
-      );
-
-      // 🔹 Assign new permissions
-      if (added.length > 0) {
-        for (const permissionId of added) {
-          await insertDataFtn(
-            process.env.REACT_APP_POLICY_SERVICE_URL,
-            "/users/assign-role",
-            { userId: userdata?.id, roleId: role._id },
-            () => {}
-          );
-        }
-      }
-
-      // 🔹 Remove unselected permissions
-      if (removed.length > 0) {
-        for (const permissionId of removed) {
-          await insertDataFtn(
-            "/users/remove-role",
-            { userId: permissionId, roleId: role._id },
-            () => {}
-          );
-        }
-      }
-
-      // ✅ Show single success message after both loops
-      if (added.length > 0 || removed.length > 0) {
-        message.success("Permissions updated successfully");
-      } else {
-        message.info("No changes made");
-      }
-
+      MyAlert("success", "Success", "Permissions updated successfully");
       onClose();
     } catch (error) {
       console.error("Error updating role permissions", error);
-      message.error("Failed to update permissions");
+
+      MyAlert(
+        "error",
+        "Error",
+        error?.response?.data?.message || "Failed to update permissions"
+      );
     } finally {
       setLoading(false);
     }
@@ -196,18 +186,20 @@ const RolePermissions = ({ role, onClose }) => {
       extra={
         <Space>
           <Button onClick={onClose}>Close</Button>
-          <Button
-            type="primary"
-            onClick={handleSave}
-            loading={loading}
-            style={{
-              backgroundColor: "var(--primary-color)",
-              borderColor: "var(--primary-color)",
-              borderRadius: "4px",
-            }}
-          >
-            Save Permissions
-          </Button>
+          {canAssignPermissions && (
+            <Button
+              type="primary"
+              onClick={handleSave}
+              loading={loading}
+              style={{
+                backgroundColor: "var(--primary-color)",
+                borderColor: "var(--primary-color)",
+                borderRadius: "4px",
+              }}
+            >
+              Save Permissions
+            </Button>
+          )}
         </Space>
       }
     >
@@ -299,6 +291,7 @@ const RolePermissions = ({ role, onClose }) => {
                       <div className="permission-item">
                         <Checkbox
                           checked={checked}
+                          disabled={!canAssignPermissions}
                           onChange={(e) =>
                             handlePermissionToggle(
                               permission.id,

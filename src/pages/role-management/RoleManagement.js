@@ -1,5 +1,6 @@
 import React from "react";
 import RoleManagement from "./components/RoleManagement";
+import { withPermission } from "../../context/AuthorizationContext";
 
 const RoleManagementPage = () => {
   return (
@@ -9,4 +10,4 @@ const RoleManagementPage = () => {
   );
 };
 
-export default RoleManagementPage;
+export default withPermission(RoleManagementPage, "role:read");

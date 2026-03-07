@@ -115,7 +115,7 @@ const RolePermissions = ({ role, onClose }) => {
       message.success("Permissions updated successfully");
       onClose();
     } catch (error) {
-      message.error("Failed to update permissions");
+      message.error("Failed to update permissions1");
     } finally {
       setLoading(false);
     }
