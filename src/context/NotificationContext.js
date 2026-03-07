@@ -12,6 +12,34 @@ import axios from "axios";
 
 const NotificationContext = createContext();
 
+const NOTIFICATION_SERVICE_FALLBACK =
+  "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
+
+export const getNotificationServiceUrl = () => {
+  const env = (process.env.REACT_APP_NOTIFICATION_SERVICE_URL || "").trim();
+  if (env && env.includes("/notification-service/")) return env;
+  return NOTIFICATION_SERVICE_FALLBACK;
+};
+
+/**
+ * Socket.io-client ignores path in the URL; it only uses host/port.
+ * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
+ */
+const getSocketOptions = () => {
+  const baseUrl = getNotificationServiceUrl();
+  try {
+    const url = new URL(baseUrl);
+    const origin = url.origin;
+    const path = `${url.pathname.replace(/\/$/, "")}/socket.io`;
+    return { origin, path };
+  } catch {
+    return {
+      origin: "https://projectshell-vm.northeurope.cloudapp.azure.com",
+      path: "/notification-service/api/socket.io",
+    };
+  }
+};
+
 let socket = null;
 
 export const NotificationProvider = ({ children }) => {
@@ -34,7 +62,9 @@ export const NotificationProvider = ({ children }) => {
       return;
     }
 
-    socket = io(process.env.REACT_APP_NOTIFICATION_SERVICE_URL, {
+    const { origin, path } = getSocketOptions();
+    socket = io(origin, {
+      path,
       auth: { token },
       transports: ["websocket"],
     });
@@ -70,15 +100,13 @@ export const NotificationProvider = ({ children }) => {
 
     socket.on("badgeIncrement", (data) => {
       setBadge((prev) =>
-        typeof data?.count === "number" ? data.count : prev + 1
+        typeof data?.count === "number" ? data.count : prev + 1,
       );
     });
 
     socket.on("badgeDecrement", (data) => {
       setBadge((prev) =>
-        typeof data?.count === "number"
-          ? data.count
-          : Math.max(prev - 1, 0)
+        typeof data?.count === "number" ? data.count : Math.max(prev - 1, 0),
       );
     });
 
@@ -99,8 +127,8 @@ export const NotificationProvider = ({ children }) => {
     if (!token) return;
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/notifications?limit=1`,
-        { headers: { Authorization: `Bearer ${token}` } }
+        `${getNotificationServiceUrl()}/notifications?limit=1`,
+        { headers: { Authorization: `Bearer ${token}` } },
       );
       const { unreadCount } = res.data?.data ?? res.data ?? {};
       if (typeof unreadCount === "number") setBadge(unreadCount);
