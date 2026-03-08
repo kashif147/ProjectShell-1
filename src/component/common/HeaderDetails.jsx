@@ -64,6 +64,7 @@ import MyAlert from "./MyAlert";
 import axios from "axios";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer"
@@ -82,6 +83,7 @@ function HeaderDetails() {
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
+  const { hasPermission } = useAuthorization();
   const formattedNav = nav.replace(/^\//, " ");
   const [isSideNav, setisSideNav] = useState(true);
   const [ReportName, setReportName] = useState(null);
@@ -902,7 +904,7 @@ function HeaderDetails() {
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : "")}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : nav === "/onlinePayment" ? "Finance" : nav === "/MembershipDashboard" ? "Subscriptions & Rewards" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -933,7 +935,11 @@ function HeaderDetails() {
                         ) : nav === "/ClaimSummary" ? (
                           <CreateClaim />
                         ) : (
-                          nav === "/Reconciliation" ? null : (
+                          nav === "/Reconciliation" || (
+                            ["/Batches", "/Import", "/Deductions", "/StandingOrders", "/Cheque", "/Refunds", "/write-offs", "/onlinePayment", "/DirectDebit"].includes(nav) && !hasPermission('payments:create')
+                          ) || (
+                            ["/Applications", "/Summary"].includes(nav) && !hasPermission('application:create')
+                          ) ? null : (
                             <Button
                               onClick={() => {
                                 if (nav == "/Applications") {

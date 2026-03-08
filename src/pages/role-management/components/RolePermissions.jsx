@@ -16,12 +16,13 @@ import {
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { assignPermissionsToRole } from "../../../features/RoleSlice";
-import insertDataFtn from "../../../utils/Utilities";
+import { getAllRoles } from "../../../features/RoleSlice";
+import insertDataFtn, { updateFtn } from "../../../utils/Utilities";
 import { getAllPermissions } from "../../../features/PermissionSlice";
 import { useAuthorization } from "../../../context/AuthorizationContext";
 import MyAlert from "../../../component/common/MyAlert";
 import axios from "axios";
+
 
 const { Search } = Input;
 const { Panel } = Collapse;
@@ -39,16 +40,7 @@ const RolePermissions = ({ role, onClose }) => {
     (state) => state.permissions
   );
 
-  // Load role’s current permissions
-  useEffect(() => {
-    if (role) {
-      const perms = (role.permissions || []).map((p) =>
-        typeof p === "string" ? p : p._id || p.id
-      );
-      setSelectedPermissions(perms);
-      setInitialPermissions(perms);
-    }
-  }, [role]);
+
 
   // Fetch all permissions
   useEffect(() => {
@@ -63,8 +55,38 @@ const RolePermissions = ({ role, onClose }) => {
       category: p.category ?? "Uncategorized",
       description: p.description ?? "",
       permission: p._id,
+      code: p.code, // 👈 add code
     }));
   }, [permissions]);
+
+  const [isInitialized, setIsInitialized] = useState(false);
+
+  // Load role’s current permissions and normalize to IDs
+  useEffect(() => {
+    if (role && allPermissions.length > 0 && !isInitialized) {
+      const perms = role.permissions || [];
+      // Normalize to IDs by checking against allPermissions (supports both IDs and Codes in input)
+      const normalizedIds = perms
+        .map((p) => {
+          const id = typeof p === "object" ? p._id || p.id : p;
+          const matched = allPermissions.find(
+            (ap) => ap.id === id || ap.code === id
+          );
+          return matched ? matched.id : id;
+        })
+        .filter(Boolean);
+
+      const uniqueIds = [...new Set(normalizedIds)];
+
+      console.log(
+        `Normalizing permissions for ${role.name}: Initial count: ${perms.length}, Unique IDs count: ${uniqueIds.length}`
+      );
+
+      setSelectedPermissions(uniqueIds);
+      setInitialPermissions(uniqueIds);
+      setIsInitialized(true);
+    }
+  }, [role, allPermissions, isInitialized]);
 
   // Group by category
   const groupedPermissions = useMemo(() => {
@@ -121,21 +143,24 @@ const RolePermissions = ({ role, onClose }) => {
 
   const userdata = JSON.parse(localStorage.getItem("userData"));
   const handleSave = async () => {
-    if (!canAssignPermissions) {
-      MyAlert("error", "Permission Denied", "You do not have permission to assign permissions");
-      return;
-    }
-
     try {
       setLoading(true);
 
-      const token = localStorage.getItem("token");
+      // Map IDs to Codes
+      const idToCodeMap = {};
+      allPermissions.forEach((p) => {
+        idToCodeMap[p.id] = p.code;
+      });
 
-      await axios.put(
+      const selectedCodes = selectedPermissions
+        .map((id) => idToCodeMap[id])
+        .filter(Boolean);
+
+      // Call the role permissions API via PUT
+      const token = localStorage.getItem("token");
+      const response = await axios.put(
         `${process.env.REACT_APP_POLICY_SERVICE_URL}/roles/${role._id}/permissions`,
-        {
-          permissionIds: selectedPermissions,
-        },
+        { permissions: selectedCodes },
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -144,16 +169,16 @@ const RolePermissions = ({ role, onClose }) => {
         }
       );
 
-      MyAlert("success", "Success", "Permissions updated successfully");
-      onClose();
+      if (response.status === 200 || response.status === 204) {
+        message.success("Permissions updated successfully");
+        dispatch(getAllRoles()); // Refresh the roles table in the parent component
+        onClose();
+      } else {
+        throw new Error("Failed to update permissions");
+      }
     } catch (error) {
       console.error("Error updating role permissions", error);
-
-      MyAlert(
-        "error",
-        "Error",
-        error?.response?.data?.message || "Failed to update permissions"
-      );
+      // message.error is already handled by insertDataFtn (via MyAlert)
     } finally {
       setLoading(false);
     }

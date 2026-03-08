@@ -57,20 +57,17 @@ const Sidebar = () => {
     const baseMenuItems = itemsMap[activeKey] || [];
 
     return baseMenuItems.filter((item) => {
-      // If no permissions required, show the item
-      if (!item.permissions?.length) {
-        return true;
+      // REQUIRE permissions to be present and matched
+      if (!item.permissions || item.permissions.length === 0) {
+        return false;
       }
-
-      // Check permissions
-      const hasRequiredPermission =
-        !item.permissions?.length ||
-        item.permissions.some((permission) => hasPermission(permission));
-
+      const hasRequiredPermission = item.permissions.some((permission) =>
+        hasPermission(permission)
+      );
       return hasRequiredPermission;
     });
   }, [itemsMap, activeKey, hasPermission]);
-
+  console.log(menuItems, "trt")
   const getNavLinkData = (key) => {
     switch (key) {
       case "Profiles":

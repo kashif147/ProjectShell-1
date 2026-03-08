@@ -66,37 +66,37 @@ export const correspondenceItems = [
     "Dashboard",
     <FaChartLine />,
     "Dashboard",
-    ["menu:correspondence:access"]
+    ["dashboard:read"]
   ),
   createMenuItem(
     "InAppNotifications",
     <FaBell />,
     "In-App Notifications",
-    ["menu:correspondence:access"]
+    ["notifications:read"]
   ),
   createMenuItem(
     "Email",
     <FaEnvelope />,
     "Email",
-    ["menu:correspondence:access"]
+    ["communication:write"]
   ),
   createMenuItem(
     "SMS",
     <FaSms />,
     "SMS",
-    ["menu:correspondence:access"]
+    ["communication:write"]
   ),
   createMenuItem(
     "Notes & Letters",
     <FaStickyNote />,
     "Notes & Letters",
-    ["menu:correspondence:access"]
+    ["communication:read"]
   ),
   createMenuItem(
     "Communication History",
     <FaHistory />,
     "Communication History",
-    ["menu:correspondence:access"]
+    ["communication:read"]
   ),
 ];
 
@@ -105,68 +105,68 @@ export const financeItems = [
     "Online Payments",
     <FaCreditCard />,
     "Online Payments",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Cheque",
     <FaMoneyCheckAlt />,
     "Cheque",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Deductions",
     <FaCoins />,
     "Deductions",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Standing Orders",
     <FaHandHoldingUsd />,
     "Standing Orders",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "DD Authorisations",
     <FaUserShield />,
     "DD Authorisation",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Direct Debit",
     <FaCreditCard />,
     "Direct Debit",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
 
   createMenuItem(
     "Refunds",
     <FaReceipt />,
     "Refunds",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Write-offs",
     <FaCommentDollar />,
     "Write-offs",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Batches",
     <FaFileInvoiceDollar />,
     "Batches",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Reconciliations",
     <FaExchangeAlt />,
     "Reconciliations",
-    ["menu:finance:access"]
+    ["payments:read"]
   ),
   // createMenuItem(
   //   "DD Batches",
@@ -182,25 +182,25 @@ export const profileItems = [
     "Non Members",
     <FaUserSlash />,
     "Non Members",
-    ["menu:membership:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Membership",
     <FaUsers />,
     "Membership",
-    ["menu:membership:access"]
+    ["subscriptions:read"]
   ),
   createMenuItem(
     "Leavers",
     <FaUserMinus />,
     "Leavers",
-    ["menu:membership:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Joiners",
     <FaUserPlus />,
     "Joiners",
-    ["menu:membership:access"]
+    ["profile:read"]
   ),
 ];
 
@@ -208,50 +208,50 @@ export const subscriptionItems = [
   createMenuItem(
     "MembershipDashboard",
     <FaChartLine />,
-    "Membership Dashboard",
-    ["menu:membership:access"]
+    "crm:member:read",
+    ["dashboard:read"]
   ),
   createMenuItem(
     "Applications",
     <FaClipboardList />,
     "Applications",
-    ["menu:membership:access"]
+    ["application:read"]
   ),
   createMenuItem(
     "Profiles",
     <FaUserCog />,
     "Profiles",
-    ["menu:membership:access"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Membership",
     <FaIdCard />,
     "Membership",
-    ["menu:membership:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Reminders",
     <FaRegClock />,
     "Reminders",
-    ["menu:membership:access"]
+    ["notifications:read"]
   ),
   createMenuItem(
     "Cancellations",
     <FaBan />,
     "Cancellations",
-    ["menu:membership:access"]
+    ["subscriptions:read"]
   ),
   createMenuItem(
     "Transfer Requests",
     <FaExchangeAlt />,
     "Transfer Requests",
-    ["menu:membership:access"]
+    ["transferrequests:read"]
   ),
   createMenuItem(
     "Change Category",
     <FaTags />,
     "Change Category",
-    ["menu:membership:access"]
+    ["changeofcategory:read"]
   ),
   // createMenuItem(
   //   "CornMarket",
@@ -265,25 +265,25 @@ export const subscriptionItems = [
     "CornMarket New Graduate",
     <FaGraduationCap />,
     "New Graduate",
-    ["menu:membership:access"]
+    []
   ),
   createMenuItem(
     "CornMarket Rewards",
     <FaUserPlus />,
     "INMO Rewards",
-    ["menu:membership:access"]
+    []
   ),
   createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
-    ["menu:membership:access"]
+    []
   ),
   createMenuItem(
     "LandingPage",
     <FaGlobe />,
     "LandingPage",
-    ["menu:membership:access"]
+    ["portal:read"]
   ),
 ];
 
@@ -292,52 +292,52 @@ export const configurationItems = [
     "Templetes",
     <FaFileCode />,
     "Templetes",
-    ["menu:configuration:access"]
+    ["templates:read"]
   ),
 
   createMenuItem(
     "System Configuration",
     <FaWrench />,
     "System Configuration",
-    ["menu:configuration:access"]
+    ["portal:read"]
   ),
 
   createMenuItem(
     "Permission Management",
     <FaKey />,
     "Permission Management",
-    ["menu:configuration:access"]
+    ["role:permission_assign"]
   ),
   createMenuItem(
     "Role Management",
     <FaUserCog />,
     "Role Management",
-    ["menu:configuration:access"]
+    ["role:read"]
   ),
   createMenuItem(
     "User Management",
     <FaUsers />,
     "User Management",
-    ["menu:configuration:access"]
+    ["user:read"]
   ),
   createMenuItem(
     "Product Management",
     <FaBox />,
     "Product Management",
-    ["menu:configuration:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Tenant Management",
     <FaServer />,
     "Tenant Management",
-    ["menu:configuration:access"]
+    ["tenant:read"]
   ),
 
   createMenuItem(
     "Policy Client Example",
     <FaShieldAlt />,
     "Policy Client Example",
-    ["menu:configuration:access"]
+    ["portal:read"]
   ),
 ];
 
@@ -346,73 +346,73 @@ export const reportItems = [
     "Cancelled Members Report",
     <FaUserTimes />,
     "Cancelled Members Report",
-    ["menu:reports:access"]
+    ["subscriptions:read"]
   ),
   createMenuItem(
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    ["menu:reports:access"]
+    []
   ),
   createMenuItem(
     "Control Report",
     <FaClipboardCheck />,
     "Control Report",
-    ["menu:reports:access"]
+    []
   ),
   createMenuItem(
     "Deferred Income",
     <FaFileInvoiceDollar />,
     "Deferred Income",
-    ["menu:reports:access"]
+    []
   ),
   createMenuItem(
     "End of Year Reports",
     <FaCalendarCheck />,
     "End of Year Reports",
-    ["menu:reports:access"]
+    []
   ),
   createMenuItem(
     "Executive Council Report",
     <FaGavel />,
     "Executive Council Report + drill down listings",
-    ["menu:reports:access"]
+    []
   ),
   createMenuItem(
     "Joiners Report",
     <FaUserPlus />,
     "Joiners Report",
-    ["menu:reports:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Leavers Report",
     <FaUserMinus />,
     "Leavers Report",
-    ["menu:reports:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Live Stats",
     <FaChartPie />,
     "Live Stats",
-    ["menu:reports:access"]
+    []
   ),
   createMenuItem(
     "New Members Report",
     <FaUserEdit />,
     "New Members Report",
-    ["menu:reports:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Resigned Members Report",
     <FaUserSlash />,
     "Resigned Members Report",
-    ["menu:reports:access"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Suspended Members Report",
     <FaUserLock />,
     "Suspended Members Report",
-    ["menu:reports:access"]
+    ["profile:read"]
   ),
 ];
 
@@ -421,25 +421,25 @@ export const casesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["menu:issues_management:access"]
+    ["dashboard:read"]
   ),
   createMenuItem(
     "All cases",
     <FaFolderOpen />,
     "All cases",
-    ["menu:issues_management:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    ["menu:issues_management:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    ["menu:issues_management:access"]
+    ["portal:read"]
   ),
 ];
 
@@ -448,25 +448,25 @@ export const issuesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["menu:issues_management:access"]
+    ["dashboard:read"]
   ),
   createMenuItem(
     "All Issues",
     <FaFolderOpen />,
     "All Issues",
-    ["menu:issues_management:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    ["menu:issues_management:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    ["menu:issues_management:access"]
+    ["portal:read"]
   ),
 ];
 
@@ -475,31 +475,31 @@ export const eventsItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["menu:events:access"]
+    ["dashboard:read"]
   ),
   createMenuItem(
     "Events",
     <FaCalendarAlt />,
     "Events",
-    ["menu:events:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Attendees",
     <FaUsers />,
     "Attendees",
-    ["menu:events:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Reporting",
     <FaChartLine />,
     "Reporting",
-    ["menu:events:access"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Settings",
     <FaWrench />,
     "Settings",
-    ["menu:events:access"]
+    ["portal:read"]
   ),
 ];
 
