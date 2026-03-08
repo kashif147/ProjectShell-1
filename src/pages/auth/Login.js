@@ -335,6 +335,10 @@ const Login = () => {
         console.log("Login Debug - roleCodes:", roleCodes);
         if (roleCodes.includes("SU")) {
           navigate("/Configuratin");
+        } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+          navigate("/onlinePayment");
+        } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
+          navigate("/MembershipDashboard");
         } else {
           navigate("/MembershipDashboard");
         }
@@ -410,6 +414,8 @@ const Login = () => {
 
       if (roleCodes.includes("SU")) {
         navigate("/Configuratin");
+      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+        navigate("/onlinePayment");
       } else {
         navigate("/MembershipDashboard");
       }
@@ -497,6 +503,8 @@ const Login = () => {
       // Navigate based on user role
       if (roleCodes.includes("SU")) {
         navigate("/Configuratin");
+      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+        navigate("/onlinePayment");
       } else {
         navigate("/Summary", {
           state: {
