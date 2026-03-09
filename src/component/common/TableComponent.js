@@ -251,6 +251,7 @@ const TableComponent = ({
   );
 
   const dispatch = useDispatch();
+  const { permissions = [] } = useSelector((state) => state.auth);
   const fileInputRef = useRef(null);
 
   // **UPDATED: Row click handler that can be overridden by props**
@@ -640,6 +641,8 @@ const TableComponent = ({
 
             case "Membership Category":
               const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+              const hasProfileRead = permissions.includes("profile:read") || permissions.includes("*");
+              const isSummaryPage = currentPath.includes("summary");
 
               let content;
 
@@ -676,6 +679,33 @@ const TableComponent = ({
                   >
                     <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                   </span>
+                );
+              } else if (isSummaryPage && hasProfileRead) {
+                content = (
+                  <Link
+                    to="/Details"
+                    state={{
+                      search: screenName,
+                      name: record?.user?.userFullName || record?.fullName,
+                      code: record?.personalDetails?.membershipNo || record?.regNo,
+                      memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
+                      applicationId: record?.applicationId || record?.ApplicationId,
+                    }}
+                    onClick={() => {
+                      handleRowClick(record, index);
+                      const idToUse = record?.profileId || record?._id;
+                      dispatch(getProfileDetailsById(idToUse));
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId: idToUse,
+                          isCurrent: true,
+                        })
+                      );
+                    }}
+                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
                 );
               } else if (isMembersPage) {
                 content = (

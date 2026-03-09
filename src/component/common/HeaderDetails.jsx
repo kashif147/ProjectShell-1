@@ -939,6 +939,14 @@ function HeaderDetails() {
                             ["/Batches", "/Import", "/Deductions", "/StandingOrders", "/Cheque", "/Refunds", "/write-offs", "/onlinePayment", "/DirectDebit"].includes(nav) && !hasPermission('payments:create')
                           ) || (
                             ["/Applications", "/Summary"].includes(nav) && !hasPermission('application:create')
+                          ) || (
+                            nav === "/EventsSummary" && !hasPermission('events:create')
+                          ) || (
+                            nav === "/ChangCateSumm" && !hasPermission('changeOfCategory:create')
+                          ) || (
+                            nav === "/CasesSummary" && (screenName === "All Issues" || screenName === "Assigned to me") && !hasPermission('queries:create')
+                          ) || (
+                            nav === "/InAppNotifications" && !hasPermission('notifications:create')
                           ) ? null : (
                             <Button
                               onClick={() => {

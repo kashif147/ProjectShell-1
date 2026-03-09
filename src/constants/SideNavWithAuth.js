@@ -306,7 +306,7 @@ export const configurationItems = [
     "Permission Management",
     <FaKey />,
     "Permission Management",
-    ["role:permission_assign"]
+    ["role:permission:assign"]
   ),
   createMenuItem(
     "Role Management",
@@ -454,7 +454,7 @@ export const issuesItems = [
     "All Issues",
     <FaFolderOpen />,
     "All Issues",
-    ["portal:read"]
+    ["queries:read"]
   ),
   createMenuItem(
     "Assigned to me",
@@ -481,13 +481,13 @@ export const eventsItems = [
     "Events",
     <FaCalendarAlt />,
     "Events",
-    ["portal:read"]
+    ["events:read"]
   ),
   createMenuItem(
     "Attendees",
     <FaUsers />,
     "Attendees",
-    ["portal:read"]
+    // ["portal:read"]
   ),
   createMenuItem(
     "Reporting",
