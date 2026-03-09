@@ -66,7 +66,21 @@ export const NotificationProvider = ({ children }) => {
     socket = io(origin, {
       path,
       auth: { token },
+      query: { token },
       transports: ["websocket"],
+    });
+
+    socket.on("connect_error", (err) => {
+      console.warn(
+        "[NotificationContext] Socket connect_error:",
+        err.message || err
+      );
+    });
+
+    socket.on("disconnect", (reason) => {
+      if (reason !== "io client disconnect") {
+        console.warn("[NotificationContext] Socket disconnect:", reason);
+      }
     });
 
     // Expose for Firebase duplicate guard
