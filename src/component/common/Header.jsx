@@ -5,6 +5,7 @@ import {
   BellOutlined,
   QuestionCircleOutlined,
   PhoneOutlined,
+  UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 import {
@@ -449,19 +450,7 @@ function Header() {
             placement="bottomRight"
             styles={{ body: { padding: 0 } }}
           >
-            <div className="top-icon" style={{ cursor: "pointer", marginRight: "10px" }}>
-              <Avatar
-                size={32}
-                style={{
-                  backgroundColor: "#1e3a5f",
-                  color: "#ffffff",
-                  fontSize: "14px",
-                  fontWeight: "500",
-                }}
-              >
-                {getInitial()}
-              </Avatar>
-            </div>
+            <UserOutlined className="top-icon" />
           </Popover>
           <LogoutOutlined
             className="top-icon"
