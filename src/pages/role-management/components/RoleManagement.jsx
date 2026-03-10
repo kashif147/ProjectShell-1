@@ -69,7 +69,7 @@ const RoleManagement = ({ onClose }) => {
   const canReadRoles = hasPermission("role:read");
   const canWriteRoles = hasPermission("role:write");
   const canDeleteRoles = hasPermission("role:delete");
-  const canAssignPermissions = hasPermission("role:permission_assign");
+  const canAssignPermissions = hasPermission("role:permission:assign");
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [role, setRole] = useState({});

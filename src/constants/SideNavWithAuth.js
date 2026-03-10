@@ -182,7 +182,7 @@ export const profileItems = [
     "Non Members",
     <FaUserSlash />,
     "Non Members",
-    ["profile:read"]
+    [""]
   ),
   createMenuItem(
     "Membership",
@@ -194,13 +194,13 @@ export const profileItems = [
     "Leavers",
     <FaUserMinus />,
     "Leavers",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Joiners",
     <FaUserPlus />,
     "Joiners",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
 ];
 
@@ -208,7 +208,7 @@ export const subscriptionItems = [
   createMenuItem(
     "MembershipDashboard",
     <FaChartLine />,
-    "crm:member:read",
+    "Membership Dashboard",
     ["dashboard:read"]
   ),
   createMenuItem(
@@ -221,13 +221,13 @@ export const subscriptionItems = [
     "Profiles",
     <FaUserCog />,
     "Profiles",
-    ["crm:member:read"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Membership",
     <FaIdCard />,
     "Membership",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Reminders",
@@ -382,13 +382,13 @@ export const reportItems = [
     "Joiners Report",
     <FaUserPlus />,
     "Joiners Report",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Leavers Report",
     <FaUserMinus />,
     "Leavers Report",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Live Stats",
@@ -400,19 +400,19 @@ export const reportItems = [
     "New Members Report",
     <FaUserEdit />,
     "New Members Report",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Resigned Members Report",
     <FaUserSlash />,
     "Resigned Members Report",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Suspended Members Report",
     <FaUserLock />,
     "Suspended Members Report",
-    ["profile:read"]
+    ["crm:member:read"]
   ),
 ];
 
@@ -421,7 +421,7 @@ export const casesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["dashboard:read"]
+    // ["dashboard:read"]
   ),
   createMenuItem(
     "All cases",
