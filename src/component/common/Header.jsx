@@ -5,7 +5,6 @@ import {
   BellOutlined,
   QuestionCircleOutlined,
   PhoneOutlined,
-  UserOutlined,
   LogoutOutlined,
 } from "@ant-design/icons";
 import {
@@ -23,8 +22,9 @@ import { IoSettingsOutline } from "react-icons/io5";
 import { MdOutlineWork } from "react-icons/md";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { Link, useLocation } from "react-router-dom";
-import { message, Popover } from "antd";
+import { message, Popover, Badge, Avatar } from "antd";
 import NotificationPopover from "./NotificationPopover";
+import UserProfilePopover from "./UserProfilePopover";
 import { PiDotsNineLight } from "react-icons/pi";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
 import { useDispatch, useSelector } from "react-redux";
@@ -33,7 +33,6 @@ import { clearAuth } from "../../features/AuthSlice";
 import "../../styles/AppLauncher.css";
 import axios from "axios";
 import MemberSearch from "../profile/MemberSearch";
-import { Badge } from "antd";
 import { useNotifications } from "../../context/NotificationContext";
 
 const AppLauncherMenu = ({ closeDropdown }) => {
@@ -280,6 +279,20 @@ function Header() {
 
   const { badge } = useNotifications();
   const [notificationOpen, setNotificationOpen] = useState(false);
+  const [profileOpen, setProfileOpen] = useState(false);
+  
+  // Read directly from localStorage as requested
+  const userDataRaw = localStorage.getItem("userData");
+  const userData = userDataRaw ? JSON.parse(userDataRaw) : {};
+
+  const getInitial = () => {
+    const name =
+      userData?.name ||
+      userData?.unique_name ||
+      userData?.preferred_username ||
+      "U";
+    return name.charAt(0).toUpperCase();
+  };
 
   const reportLink =
     ReportsTitle?.map((i, index) => {
@@ -423,7 +436,33 @@ function Header() {
 
           <QuestionCircleOutlined className="top-icon" />
           <SettingOutlined className="top-icon" />
-          <UserOutlined className="top-icon" />
+          <Popover
+            content={
+              <UserProfilePopover
+                onLogout={logout}
+                onClose={() => setProfileOpen(false)}
+              />
+            }
+            trigger="click"
+            open={profileOpen}
+            onOpenChange={(open) => setProfileOpen(open)}
+            placement="bottomRight"
+            styles={{ body: { padding: 0 } }}
+          >
+            <div className="top-icon" style={{ cursor: "pointer", marginRight: "10px" }}>
+              <Avatar
+                size={32}
+                style={{
+                  backgroundColor: "#1e3a5f",
+                  color: "#ffffff",
+                  fontSize: "14px",
+                  fontWeight: "500",
+                }}
+              >
+                {getInitial()}
+              </Avatar>
+            </div>
+          </Popover>
           <LogoutOutlined
             className="top-icon"
             style={{ marginRight: "30px" }}
