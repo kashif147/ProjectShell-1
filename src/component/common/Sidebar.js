@@ -59,11 +59,17 @@ const Sidebar = () => {
     return baseMenuItems.filter((item) => {
       // REQUIRE permissions to be present and matched
       if (!item.permissions || item.permissions.length === 0) {
+        console.warn(`Sidebar item ${item.key} has no permissions defined.`);
         return false;
       }
       const hasRequiredPermission = item.permissions.some((permission) =>
         hasPermission(permission)
       );
+      
+      if (!hasRequiredPermission) {
+        console.log(`User lacks permissions for sidebar item ${item.key}:`, item.permissions);
+      }
+      
       return hasRequiredPermission;
     });
   }, [itemsMap, activeKey, hasPermission]);

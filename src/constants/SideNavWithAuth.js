@@ -182,13 +182,13 @@ export const profileItems = [
     "Non Members",
     <FaUserSlash />,
     "Non Members",
-    [""]
+    ["portal:read"]
   ),
   createMenuItem(
     "Membership",
     <FaUsers />,
     "Membership",
-    ["subscriptions:read"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Leavers",
@@ -283,7 +283,7 @@ export const subscriptionItems = [
     "LandingPage",
     <FaGlobe />,
     "LandingPage",
-    ["portal:read"]
+    []
   ),
 ];
 
@@ -421,7 +421,7 @@ export const casesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    // ["dashboard:read"]
+    ["portal:read"]
   ),
   createMenuItem(
     "All cases",
@@ -454,7 +454,7 @@ export const issuesItems = [
     "All Issues",
     <FaFolderOpen />,
     "All Issues",
-    ["queries:read"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Assigned to me",
@@ -475,7 +475,7 @@ export const eventsItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["dashboard:read"]
+    ["events:read"]
   ),
   createMenuItem(
     "Events",
@@ -487,7 +487,7 @@ export const eventsItems = [
     "Attendees",
     <FaUsers />,
     "Attendees",
-    // ["portal:read"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Reporting",
