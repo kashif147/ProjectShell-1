@@ -60,7 +60,7 @@ const Sidebar = () => {
       // REQUIRE permissions to be present and matched
       if (!item.permissions || item.permissions.length === 0) {
         console.warn(`Sidebar item ${item.key} has no permissions defined.`);
-        return false;
+        return true;
       }
       const hasRequiredPermission = item.permissions.some((permission) =>
         hasPermission(permission)
