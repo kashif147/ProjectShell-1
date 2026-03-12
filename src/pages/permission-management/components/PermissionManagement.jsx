@@ -11,7 +11,14 @@ import {
   Col,
   Card,
 } from "antd";
-import { SearchOutlined, PlusOutlined } from "@ant-design/icons";
+import {
+  SearchOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  PlusOutlined,
+  FilterOutlined,
+  ReloadOutlined,
+} from "@ant-design/icons";
 import { FaRegCircleQuestion } from "react-icons/fa6";
 import { AiFillDelete } from "react-icons/ai";
 import { FaEdit } from "react-icons/fa";
@@ -19,6 +26,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
 import {
   getAllPermissions,
+  deletePermission,
   addPermission,
   updatePermission,
   setSearchQuery,
@@ -30,17 +38,15 @@ import MyConfirm from "../../../component/common/MyConfirm";
 import PermissionForm from "./PermissionForm";
 import "../../../styles/PermissionManagement.css";
 import { deleteFtn } from "../../../utils/Utilities";
-
 const { Option } = Select;
 
-const PermissionManagement = () => {
+const PermissionManagement = ({ onClose }) => {
   const dispatch = useDispatch();
-
   const { permissionDefinitions } = useAuthorization();
-
   const {
     permissions,
     permissionsLoading,
+    error,
     searchQuery,
     selectedCategory,
     selectedAction,
@@ -50,6 +56,21 @@ const PermissionManagement = () => {
   const [editingPermission, setEditingPermission] = useState(null);
   const [localSearchQuery, setLocalSearchQuery] = useState(searchQuery);
 
+  // Use API permissions instead of static permissions
+  const allPermissions = permissionDefinitions.map((permission) => ({
+    id: permission.key,
+    name: permission.name,
+    code: permission.code,
+    description: permission.description,
+    resource: permission.resource,
+    action: permission.action,
+    category: permission.category,
+    level: permission.level,
+    isSystemPermission: permission.isSystemPermission,
+    isActive: permission.isActive,
+  }));
+
+  // Backend schema categories
   const PERMISSION_CATEGORIES = [
     { value: "all", label: "All Categories" },
     { value: "GENERAL", label: "General" },
@@ -107,15 +128,54 @@ const PermissionManagement = () => {
     setEditingPermission(permission);
     setIsFormOpen(true);
   };
+  //  const deleteFtn = async (url, callback) => {
+  //   const token = localStorage.getItem("token");
 
+  //   const config = {
+  //     method: "delete",
+  //     url,
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   };
+
+  //   try {
+  //     const response = await axios.request(config);
+
+  //     // ✅ Handle all success codes (200–299)
+  //     if (response.status >= 200 && response.status < 300) {
+  //       MyAlert("success", "You Have Successfully Deleted.");
+  //       // ✅ Always call callback after success
+  //       // if (callback && typeof callback === "function") {
+  //       if (callback && typeof callback === "function") {
+  //         await callback();
+  //       }
+  //     }
+
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error(
+  //       "Error deleting record:",
+  //       error?.response?.data?.error?.message || error.message
+  //     );
+  //     MyAlert(
+  //       "error",
+  //       "Please Try Again",
+  //       error?.response?.data?.error?.message || ""
+  //     );
+  //   }
+  // };
   const handleDelete = (permissionId) => {
     MyConfirm({
-      title: "Confirm Deletion",
+      title: "Confirm Deletionqwe",
       message:
         "Are you sure you want to delete this permission? This action cannot be undone.",
       onConfirm: async () => {
         await deleteFtn(
           `${process.env.REACT_APP_POLICY_SERVICE_URL}/permissions/${permissionId}`,
+          // "/permissions",
+          // permissionId,
           () => {
             dispatch(getAllPermissions());
           }
@@ -212,39 +272,50 @@ const PermissionManagement = () => {
       title: "Permission Name",
       dataIndex: "name",
       key: "name",
+      sorter: (a, b) => a.name.localeCompare(b.name),
       render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
       title: "Code",
       dataIndex: "code",
       key: "code",
+      sorter: (a, b) => a.code.localeCompare(b.code),
       render: (text) => <code className="permission-string">{text}</code>,
     },
     {
       title: "Category",
       dataIndex: "category",
       key: "category",
+      sorter: (a, b) => a.category.localeCompare(b.category),
       render: (category) => (
-        <Tag color={getCategoryColor(category)}>{category}</Tag>
+        <Tag color={getCategoryColor(category)} className="category-tag">
+          {category}
+        </Tag>
       ),
     },
     {
       title: "Resource",
       dataIndex: "resource",
       key: "resource",
+      sorter: (a, b) => a.resource.localeCompare(b.resource),
+      render: (text) => <span className="fw-medium">{text}</span>,
     },
     {
       title: "Action",
       dataIndex: "action",
       key: "action",
+      sorter: (a, b) => a.action.localeCompare(b.action),
       render: (action) => (
-        <Tag color={getActionColor(action)}>{action.toUpperCase()}</Tag>
+        <Tag color={getActionColor(action)} className="action-tag">
+          {action.toUpperCase()}
+        </Tag>
       ),
     },
     {
       title: "Level",
       dataIndex: "level",
       key: "level",
+      sorter: (a, b) => a.level - b.level,
       render: (level) => (
         <Tag color={level >= 50 ? "red" : level >= 25 ? "orange" : "green"}>
           {level}
@@ -264,28 +335,48 @@ const PermissionManagement = () => {
       ),
     },
     {
+      title: "Description",
+      dataIndex: "description",
+      key: "description",
+      ellipsis: true,
+      render: (text) => (
+        <Tooltip title={text}>
+          <span>{text}</span>
+        </Tooltip>
+      ),
+    },
+    {
       title: (
-        <div style={{ display: "flex", alignItems: "center" }}>
-          <FaRegCircleQuestion style={{ marginRight: 8 }} />
+        <div
+          style={{
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "center",
+          }}
+        >
+          <FaRegCircleQuestion size={16} style={{ marginRight: "8px" }} />
           Actions
         </div>
       ),
       key: "actions",
       align: "center",
+      width: 120,
       render: (_, record) => (
-        <Space>
+        <Space size="middle">
           <Tooltip title="Edit Permission">
             <FaEdit
+              size={16}
               style={{ cursor: "pointer", color: "#1890ff" }}
               onClick={() => handleEdit(record)}
             />
           </Tooltip>
-
           <Tooltip title="Delete Permission">
             <AiFillDelete
+              size={16}
               style={{
-                cursor: record.isSystemPermission ? "not-allowed" : "pointer",
+                cursor: "pointer",
                 color: record.isSystemPermission ? "#ccc" : "#ff4d4f",
+                opacity: record.isSystemPermission ? 0.5 : 1,
               }}
               onClick={() =>
                 !record.isSystemPermission && handleDelete(record._id)
@@ -306,70 +397,120 @@ const PermissionManagement = () => {
             Manage system permissions and access controls
           </p>
         </div>
-
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleAddNew}
-        >
-          Add Permission
-        </Button>
+        <div className="d-flex align-items-center gap-3">
+          <div className="text-center">
+            <div className="fw-bold text-primary">
+              {filteredPermissions.length}
+            </div>
+            <div className="text-muted small">Total Permissions</div>
+          </div>
+          <div className="text-center">
+            <div className="fw-bold text-success">
+              {new Set(filteredPermissions.map((p) => p.category)).size}
+            </div>
+            <div className="text-muted small">Categories</div>
+          </div>
+          <div className="text-center">
+            <div className="fw-bold text-info">
+              {new Set(filteredPermissions.map((p) => p.action)).size}
+            </div>
+            <div className="text-muted small">Actions</div>
+          </div>
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddNew}
+            style={{
+              backgroundColor: "var(--primary-color)",
+              borderColor: "var(--primary-color)",
+              borderRadius: "4px",
+            }}
+          >
+            Add Permission
+          </Button>
+        </div>
       </div>
 
-      <Card className="mb-4">
-        <Row gutter={16}>
-          <Col span={8}>
-            <Input
-              placeholder="Search permissions..."
-              prefix={<SearchOutlined />}
-              value={localSearchQuery}
-              onChange={handleSearchChange}
-            />
+      {/* Filters */}
+      <Card className="mb-4 filter-card">
+        <Row gutter={[16, 16]}>
+          <Col xs={24} sm={12} md={8}>
+            <div className="filter-item">
+              <label className="filter-label">Search</label>
+              <Input
+                placeholder="Search permissions..."
+                prefix={<SearchOutlined />}
+                value={localSearchQuery}
+                onChange={handleSearchChange}
+                style={{
+                  height: "40px",
+                  borderRadius: "4px",
+                  border: "1px solid #d9d9d9",
+                }}
+              />
+            </div>
           </Col>
-
-          <Col span={8}>
-            <Select
-              value={selectedCategory}
-              onChange={handleCategoryChange}
-              className="w-100"
-            >
-              {PERMISSION_CATEGORIES.map((c) => (
-                <Option key={c.value} value={c.value}>
-                  {c.label}
-                </Option>
-              ))}
-            </Select>
+          <Col xs={24} sm={12} md={8}>
+            <div className="filter-item">
+              <label className="filter-label">Category</label>
+              <Select
+                value={selectedCategory}
+                onChange={handleCategoryChange}
+                className="w-100"
+                placeholder="Select category"
+              >
+                {PERMISSION_CATEGORIES.map((category) => (
+                  <Option key={category.value} value={category.value}>
+                    {category.label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
           </Col>
-
-          <Col span={8}>
-            <Select
-              value={selectedAction}
-              onChange={handleActionChange}
-              className="w-100"
-            >
-              {PERMISSION_ACTIONS.map((a) => (
-                <Option key={a.value} value={a.value}>
-                  {a.label}
-                </Option>
-              ))}
-            </Select>
+          <Col xs={24} sm={12} md={8}>
+            <div className="filter-item">
+              <label className="filter-label">Action</label>
+              <Select
+                value={selectedAction}
+                onChange={handleActionChange}
+                className="w-100"
+                placeholder="Select action"
+              >
+                {PERMISSION_ACTIONS.map((action) => (
+                  <Option key={action.value} value={action.value}>
+                    {action.label}
+                  </Option>
+                ))}
+              </Select>
+            </div>
           </Col>
         </Row>
       </Card>
 
-      <Table
-        columns={columns}
-        dataSource={filteredPermissions || []}
-        loading={permissionsLoading}
-        rowKey="id"
-        pagination={getUnifiedPaginationConfig({
-          total: filteredPermissions.length,
-          itemName: "permissions",
-        })}
-        size="small"
-        scroll={{ x: 1000, y: "48vh" }}
-      />
+      {/* Table */}
+      <div className="bg-white rounded shadow-sm">
+        <Table
+          columns={columns}
+          dataSource={filteredPermissions || []}
+          loading={permissionsLoading}
+          rowKey="id"
+          pagination={getUnifiedPaginationConfig({
+            total: filteredPermissions.length,
+            itemName: "permissions",
+          })}
+          className="drawer-tbl"
+          size="small"
+          rowClassName={(record, index) =>
+            index % 2 !== 0 ? "odd-row" : "even-row"
+          }
+          scroll={{ x: 1000, y: '48vh' }}
+          locale={{
+            emptyText: "No Data",
+          }}
+        />
+      </div>
 
+      {/* Permission Form Drawer */}
       {isFormOpen && (
         <PermissionForm
           permission={editingPermission}

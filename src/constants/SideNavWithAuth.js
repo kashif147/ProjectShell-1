@@ -265,25 +265,25 @@ export const subscriptionItems = [
     "CornMarket New Graduate",
     <FaGraduationCap />,
     "New Graduate",
-    []
+    ["corn:market:new:graduate:read"]
   ),
   createMenuItem(
     "CornMarket Rewards",
     <FaUserPlus />,
     "INMO Rewards",
-    []
+    ["corn:market:rewards:read"]
   ),
   createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
-    []
+    ["recruit:friend:read"]
   ),
   createMenuItem(
     "LandingPage",
     <FaGlobe />,
     "LandingPage",
-    []
+    ["landing:page:read"]
   ),
 ];
 
@@ -352,43 +352,43 @@ export const reportItems = [
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    []
+    ["comparison:report:read"]
   ),
   createMenuItem(
     "Control Report",
     <FaClipboardCheck />,
     "Control Report",
-    []
+    ["control:report:read"]
   ),
   createMenuItem(
     "Deferred Income",
     <FaFileInvoiceDollar />,
     "Deferred Income",
-    []
+    ["deferred:income:report:read"]
   ),
   createMenuItem(
     "End of Year Reports",
     <FaCalendarCheck />,
     "End of Year Reports",
-    []
+    ["end:of:year:report:read"]
   ),
   createMenuItem(
     "Executive Council Report",
     <FaGavel />,
     "Executive Council Report + drill down listings",
-    []
+    ["executive:council:report:read"]
   ),
   createMenuItem(
     "Joiners Report",
     <FaUserPlus />,
     "Joiners Report",
-    ["crm:member:read"]
+    []
   ),
   createMenuItem(
     "Leavers Report",
     <FaUserMinus />,
     "Leavers Report",
-    ["crm:member:read"]
+    []
   ),
   createMenuItem(
     "Live Stats",
@@ -400,19 +400,19 @@ export const reportItems = [
     "New Members Report",
     <FaUserEdit />,
     "New Members Report",
-    ["crm:member:read"]
+    []
   ),
   createMenuItem(
     "Resigned Members Report",
     <FaUserSlash />,
     "Resigned Members Report",
-    ["crm:member:read"]
+    []
   ),
   createMenuItem(
     "Suspended Members Report",
     <FaUserLock />,
     "Suspended Members Report",
-    ["crm:member:read"]
+    []
   ),
 ];
 
@@ -421,25 +421,25 @@ export const casesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["portal:read"]
+    []
   ),
   createMenuItem(
     "All cases",
     <FaFolderOpen />,
     "All cases",
-    ["portal:read"]
+    []
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    ["portal:read"]
+    []
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    ["portal:read"]
+    []
   ),
 ];
 
@@ -448,25 +448,25 @@ export const issuesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["dashboard:read"]
+    []
   ),
   createMenuItem(
     "All Issues",
     <FaFolderOpen />,
     "All Issues",
-    ["portal:read"]
+    []
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    ["portal:read"]
+    []
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    ["portal:read"]
+    []
   ),
 ];
 

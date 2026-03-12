@@ -12,6 +12,8 @@ import {
 } from "antd";
 import { useAuthorization } from "../../../context/AuthorizationContext";
 import "../../../styles/PermissionManagement.css";
+import MyAlert from "../../../component/common/MyAlert";
+
 
 const { Option } = Select;
 const { TextArea } = Input;
@@ -94,18 +96,13 @@ const PermissionForm = ({ permission, onClose, onSubmit }) => {
       };
 
       await onSubmit(cleanedValues);
-      message.success(
-        permission
-          ? "Permission updated successfully"
-          : "Permission added successfully"
-      );
       form.resetFields();
     } catch (error) {
       if (error.errorFields) {
-        message.error("Please fill in all required fields");
+        MyAlert("warning", "Missing Information", "Please fill in all required fields");
       } else {
         console.error("Submit error:", error);
-        message.error("Failed to save permission");
+        // Error is also handled by the parent handleFormSubmit
       }
     } finally {
       setLoading(false);
