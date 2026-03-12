@@ -21,6 +21,8 @@ import MyConfirm from "../../../component/common/MyConfirm";
 // import TenantForm from "./TenantForm";
 import TenantForm from "../../../component/tenant/TenantForm";
 import { getUnifiedPaginationConfig } from "../../../component/common/UnifiedPagination";
+import { useAuthorization } from "../../../context/AuthorizationContext";
+import { Card } from "antd";
 import "../../../styles/TenantManagement.css";
 
 const TenantManagement = ({ onClose }) => {
@@ -28,6 +30,11 @@ const TenantManagement = ({ onClose }) => {
   const { tenants, tenantsLoading, error } = useSelector(
     (state) => state.tenants
   );
+  const { hasPermission } = useAuthorization();
+
+  const canReadTenants = hasPermission("tenant:read");
+  const canWriteTenants = hasPermission("tenant:write");
+  const canDeleteTenants = hasPermission("tenant:delete");
   const [searchQuery, setSearchQuery] = useState("");
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingTenant, setEditingTenant] = useState(null);
@@ -200,20 +207,24 @@ const TenantManagement = ({ onClose }) => {
       align: "center",
       render: (_, record) => (
         <Space size="middle">
-          <Tooltip title="Edit Tenant">
-            <FaEdit
-              size={16}
-              style={{ cursor: "pointer", color: "#1890ff" }}
-              onClick={() => handleEdit(record)}
-            />
-          </Tooltip>
-          <Tooltip title="Delete Tenant">
-            <AiFillDelete
-              size={16}
-              style={{ cursor: "pointer", color: "#ff4d4f" }}
-              onClick={() => handleDelete(record._id)}
-            />
-          </Tooltip>
+          {canWriteTenants && (
+            <Tooltip title="Edit Tenant">
+              <FaEdit
+                size={16}
+                style={{ cursor: "pointer", color: "#1890ff" }}
+                onClick={() => handleEdit(record)}
+              />
+            </Tooltip>
+          )}
+          {canDeleteTenants && (
+            <Tooltip title="Delete Tenant">
+              <AiFillDelete
+                size={16}
+                style={{ cursor: "pointer", color: "#ff4d4f" }}
+                onClick={() => handleDelete(record._id)}
+              />
+            </Tooltip>
+          )}
         </Space>
       ),
     },
@@ -229,14 +240,16 @@ const TenantManagement = ({ onClose }) => {
             Manage organizations and their authentication settings
           </p>
         </div>
-        <Button
-          type="primary"
-          icon={<PlusOutlined />}
-          onClick={handleAddNew}
-          className="butn primary-btn"
-        >
-          Add Tenant
-        </Button>
+        {canWriteTenants && (
+          <Button
+            type="primary"
+            icon={<PlusOutlined />}
+            onClick={handleAddNew}
+            className="butn primary-btn"
+          >
+            Add Tenant
+          </Button>
+        )}
       </div>
 
       {/* Search */}
@@ -255,30 +268,36 @@ const TenantManagement = ({ onClose }) => {
       </div>
 
       {/* Table */}
-      <div className="bg-white rounded shadow-sm">
-        <Table
-          columns={columns}
-          dataSource={filteredTenants || []}
-          loading={tenantsLoading}
-          rowKey="_id"
-          pagination={getUnifiedPaginationConfig({
-            total: filteredTenants.length,
-            itemName: "tenants",
-          })}
-          className="drawer-tbl"
-          size="small"
-          rowClassName={(record, index) =>
-            index % 2 !== 0 ? "odd-row" : "even-row"
-          }
-          scroll={{ x: 1400, y: 600 }}
-          locale={{
-            emptyText: "No Data"
-          }}
-        />
-      </div>
+      {!canReadTenants ? (
+        <Card className="text-center py-5 mt-4">
+          <div className="text-muted">You do not have permission to view tenants.</div>
+        </Card>
+      ) : (
+        <div className="bg-white rounded shadow-sm">
+          <Table
+            columns={columns}
+            dataSource={filteredTenants || []}
+            loading={tenantsLoading}
+            rowKey="_id"
+            pagination={getUnifiedPaginationConfig({
+              total: filteredTenants.length,
+              itemName: "tenants",
+            })}
+            className="drawer-tbl"
+            size="small"
+            rowClassName={(record, index) =>
+              index % 2 !== 0 ? "odd-row" : "even-row"
+            }
+            scroll={{ x: 1400, y: 600 }}
+            locale={{
+              emptyText: "No Data"
+            }}
+          />
+        </div>
+      )}
 
       {/* Tenant Form Drawer */}
-      {isFormOpen && (
+      {isFormOpen && canWriteTenants && (
         <TenantForm
           tenant={editingTenant}
           onClose={handleFormClose}

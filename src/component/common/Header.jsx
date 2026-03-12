@@ -72,90 +72,75 @@ const AppLauncherMenu = ({ closeDropdown }) => {
       name: "Membership",
       icon: FaRegUserCircle,
       bgColor: "#4CAF50",
+      permissions: ["menu:membership:access"],
       route: "/MembershipDashboard",
     },
     {
       name: "Finance",
       icon: FaRegMoneyBillAlt,
       bgColor: "#4CAF50",
-      permissions: ["USER_READ", "USER_WRITE"],
-      roles: ["AM", "DAM", "GS", "DGS", "ASU", "SU"],
+      permissions: ["menu:finance:access"],
       route: "/onlinePayment",
     },
     {
       name: "Correspondence",
       icon: FaRegClipboard,
       bgColor: "#FF7043",
-      permissions: ["crm:access"],
-      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      permissions: ["menu:correspondence:access"],
       route: "/Email",
     },
     {
       name: "Events",
       icon: FaCalendarAlt,
       bgColor: "#EF5350",
-      permissions: ["crm:access"],
-      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      permissions: ["menu:events:access"],
       route: "/Events",
     },
     {
       name: "Courses",
       icon: LuCalendarClock,
       bgColor: "#7E57C2",
-      permissions: ["crm:access"],
-      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      permissions: ["menu:courses:access"],
       route: "/Courses",
     },
     {
       name: "Issues Management",
       icon: MdOutlineWork,
       bgColor: "#3F51B5",
-      permissions: ["crm:access"],
-      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      permissions: ["menu:issues_management:access"],
       route: "/CasesSummary",
     },
     {
       name: "Settings",
       icon: IoSettingsOutline,
       bgColor: "#3F51B5",
-      permissions: ["portal:settings:read"],
-      roles: ["MEMBER", "MO", "AMO", "GS", "DGS", "SU"],
+      permissions: ["menu:settings:access"],
       route: "/Settings",
     },
     {
       name: "Configuration",
       icon: FaCogs,
       bgColor: "#5E35B1",
-      permissions: ["user:read", "role:read"],
-      roles: ["SU", "GS", "DGS"],
+      permissions: ["menu:configuration:access"],
       route: "/Configuration",
     },
     {
       name: "Reports",
       icon: TbReportAnalytics,
       bgColor: "#A63D2F",
-      permissions: ["crm:reports:read"],
-      roles: ["MO", "AMO", "GS", "DGS", "IRO", "SU"],
+      permissions: ["menu:reports:access"],
       route: "/Reports",
     },
   ];
 
+  const { hasPermission } = useAuthorization();
+
   const accessibleApps = appItems.filter((app) => {
-    if (!app.permissions?.length && !app.roles?.length) {
+    if (!app.permissions || app.permissions.length === 0) {
       return true;
     }
 
-    const hasWildcardPermission = permissions.includes("*");
-
-    const hasRequiredPermission =
-      hasWildcardPermission ||
-      !app.permissions?.length ||
-      app.permissions.some((permission) => permissions.includes(permission));
-
-    const hasRequiredRole =
-      !app.roles?.length || app.roles.some((role) => roles.includes(role));
-
-    return hasRequiredPermission && hasRequiredRole;
+    return app.permissions.some((perm) => hasPermission(perm));
   });
 
   const filteredItems = accessibleApps.filter((app) =>
@@ -404,8 +389,8 @@ function Header() {
           /> */}
           <MemberSearch
             headerStyle={true}
-            // onSelectBehavior="navigate" (default)
-            // navigateTo="/Details" (default)
+          // onSelectBehavior="navigate" (default)
+          // navigateTo="/Details" (default)
           />
         </div>
 

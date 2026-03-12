@@ -10,7 +10,6 @@ import {
   reportItems,
   issuesItems,
   eventsItems,
-  filterMenuItemsByAuth,
 } from "../../constants/SideNavWithAuth.js";
 import { useSelector } from "react-redux";
 import "../../styles/Sidebar.css";
@@ -24,7 +23,7 @@ const Sidebar = () => {
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
-  const { permissions, roles } = useAuthorization();
+  const { hasPermission } = useAuthorization();
 
   // Debug logging
   const [isPinned, setIsPinned] = useState(() => {
@@ -52,28 +51,29 @@ const Sidebar = () => {
     []
   );
 
-  // Debug: Log available itemsMap keys
-
   // Filter menu items based on user permissions and roles
   const menuItems = useMemo(() => {
     // Get the base menu items for the active module
     const baseMenuItems = itemsMap[activeKey] || [];
 
-
-    // Debug each menu item's requirements
-    baseMenuItems.forEach((item, index) => {
-      const hasPermission =
-        item.permissions?.some((p) => permissions.includes(p)) || true;
-      const hasRole = item.roles?.some((r) => roles.includes(r)) || true;
-
-      // You can use hasPermission and hasRole for further logic if needed
+    return baseMenuItems.filter((item) => {
+      // REQUIRE permissions to be present and matched
+      if (!item.permissions || item.permissions.length === 0) {
+        console.warn(`Sidebar item ${item.key} has no permissions defined.`);
+        return true;
+      }
+      const hasRequiredPermission = item.permissions.some((permission) =>
+        hasPermission(permission)
+      );
+      
+      if (!hasRequiredPermission) {
+        console.log(`User lacks permissions for sidebar item ${item.key}:`, item.permissions);
+      }
+      
+      return hasRequiredPermission;
     });
-
-
-    const filtered = filterMenuItemsByAuth(baseMenuItems, permissions, roles);
-    return filtered;
-  }, [itemsMap, activeKey, permissions, roles]);
-
+  }, [itemsMap, activeKey, hasPermission]);
+  console.log(menuItems, "trt")
   const getNavLinkData = (key) => {
     switch (key) {
       case "Profiles":

@@ -128,44 +128,44 @@ const PermissionManagement = ({ onClose }) => {
     setEditingPermission(permission);
     setIsFormOpen(true);
   };
-//  const deleteFtn = async (url, callback) => {
-//   const token = localStorage.getItem("token");
+  //  const deleteFtn = async (url, callback) => {
+  //   const token = localStorage.getItem("token");
 
-//   const config = {
-//     method: "delete",
-//     url,
-//     headers: {
-//       "Content-Type": "application/json",
-//       Authorization: `Bearer ${token}`,
-//     },
-//   };
+  //   const config = {
+  //     method: "delete",
+  //     url,
+  //     headers: {
+  //       "Content-Type": "application/json",
+  //       Authorization: `Bearer ${token}`,
+  //     },
+  //   };
 
-//   try {
-//     const response = await axios.request(config);
+  //   try {
+  //     const response = await axios.request(config);
 
-//     // ✅ Handle all success codes (200–299)
-//     if (response.status >= 200 && response.status < 300) {
-//       MyAlert("success", "You Have Successfully Deleted.");
-//       // ✅ Always call callback after success
-//       // if (callback && typeof callback === "function") {
-//       if (callback && typeof callback === "function") {
-//         await callback();
-//       }
-//     }
+  //     // ✅ Handle all success codes (200–299)
+  //     if (response.status >= 200 && response.status < 300) {
+  //       MyAlert("success", "You Have Successfully Deleted.");
+  //       // ✅ Always call callback after success
+  //       // if (callback && typeof callback === "function") {
+  //       if (callback && typeof callback === "function") {
+  //         await callback();
+  //       }
+  //     }
 
-//     return response.data;
-//   } catch (error) {
-//     console.error(
-//       "Error deleting record:",
-//       error?.response?.data?.error?.message || error.message
-//     );
-//     MyAlert(
-//       "error",
-//       "Please Try Again",
-//       error?.response?.data?.error?.message || ""
-//     );
-//   }
-// };
+  //     return response.data;
+  //   } catch (error) {
+  //     console.error(
+  //       "Error deleting record:",
+  //       error?.response?.data?.error?.message || error.message
+  //     );
+  //     MyAlert(
+  //       "error",
+  //       "Please Try Again",
+  //       error?.response?.data?.error?.message || ""
+  //     );
+  //   }
+  // };
   const handleDelete = (permissionId) => {
     MyConfirm({
       title: "Confirm Deletionqwe",
@@ -389,7 +389,7 @@ const PermissionManagement = ({ onClose }) => {
   ];
 
   return (
-    <div className="permission-management"> 
+    <div className="permission-management">
       <div className="d-flex justify-content-between align-items-center mb-4">
         <div>
           <h4 className="mb-1">Permission Management</h4>

@@ -20,6 +20,7 @@ import { getSubscriptionByProfileId } from "../../features/subscription/profileS
 import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   filterTransferById,
   fetchAndFilterTransferById,
@@ -31,7 +32,6 @@ import {
 } from "../../features/profiles/filterTransferSlice";
 import TransferRequests from "../TransferRequests";
 import { formatDateOnly } from "../../utils/Utilities";
-
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import {
@@ -191,6 +191,7 @@ const TableComponent = ({
   const [transferDrawerOpen, setTransferDrawerOpen] = useState(false);
   const [selectedTransferRecord, setSelectedTransferRecord] = useState(null);
   const mainData = useSelector((state) => state.transferRequest.data);
+  const { hasPermission } = useAuthorization();
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -251,6 +252,7 @@ const TableComponent = ({
   );
 
   const dispatch = useDispatch();
+  const { permissions = [] } = useSelector((state) => state.auth);
   const fileInputRef = useRef(null);
 
   // **UPDATED: Row click handler that can be overridden by props**
@@ -530,9 +532,22 @@ const TableComponent = ({
           const currentPath = location.pathname.toLowerCase();
           const isApplicationsPage = currentPath.includes('/applications');
           const isMembersPage = currentPath.includes('/members');
-
           switch (col.title) {
             case "Full Name":
+              // Check for crm:member:read permission on Summary page
+              const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
+              const hasMemberReadPermission = hasPermission('crm:member:read');
+              debugger
+              // On Summary page, only show link if user has crm:member:read permission
+              if (isFullNameOnSummaryPage && !hasMemberReadPermission) {
+                return (
+                  <span style={{ textOverflow: "ellipsis" }}>
+                    {text}
+                  </span>
+                );
+              }
+
+              // Otherwise show the link (for all other pages or if user has permission)
               return (
                 <Link
                   to="/Details"
@@ -640,6 +655,9 @@ const TableComponent = ({
 
             case "Membership Category":
               const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+              const hasProfileRead =  hasPermission('crm:access')
+            
+              const isSummaryPage = currentPath.includes("summary");
 
               let content;
 
@@ -676,6 +694,33 @@ const TableComponent = ({
                   >
                     <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                   </span>
+                );
+              } else if (isSummaryPage && hasProfileRead) {
+                content = (
+                  <Link
+                    to="/Details"
+                    state={{
+                      search: screenName,
+                      name: record?.user?.userFullName || record?.fullName,
+                      code: record?.personalDetails?.membershipNo || record?.regNo,
+                      memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
+                      applicationId: record?.applicationId || record?.ApplicationId,
+                    }}
+                    onClick={() => {
+                      handleRowClick(record, index);
+                      const idToUse = record?.profileId || record?._id;
+                      dispatch(getProfileDetailsById(idToUse));
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId: idToUse,
+                          isCurrent: true,
+                        })
+                      );
+                    }}
+                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
                 );
               } else if (isMembersPage) {
                 content = (
