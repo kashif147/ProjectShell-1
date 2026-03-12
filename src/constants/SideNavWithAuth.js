@@ -66,7 +66,7 @@ export const correspondenceItems = [
     "Dashboard",
     <FaChartLine />,
     "Dashboard",
-    ["dashboard:read"]
+    []
   ),
   createMenuItem(
     "InAppNotifications",
@@ -209,7 +209,7 @@ export const subscriptionItems = [
     "MembershipDashboard",
     <FaChartLine />,
     "Membership Dashboard",
-    ["dashboard:read"]
+    []
   ),
   createMenuItem(
     "Applications",

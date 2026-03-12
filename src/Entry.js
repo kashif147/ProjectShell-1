@@ -905,9 +905,9 @@ function Entry() {
                         path="MembershipDashboard"
                         element={
                           <RoutePermissionWrapper path="/MembershipDashboard">
-                            <ProtectedRoute requiredPermission={RoutePermissions["MembershipDashboard"]}>
-                              <MembershipDashboard />
-                            </ProtectedRoute>
+                            {/* <ProtectedRoute requiredPermission={RoutePermissions["MembershipDashboard"]}> */}
+                            <MembershipDashboard />
+                            {/* </ProtectedRoute> */}
                           </RoutePermissionWrapper>
                         }
                       />
