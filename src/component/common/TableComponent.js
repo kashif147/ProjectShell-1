@@ -215,6 +215,12 @@ const TableComponent = ({
     selectedRowKeys !== undefined && onSelectionChange !== undefined;
 
   useEffect(() => {
+    if (data && Array.isArray(data)) {
+      setGridData(data);
+    }
+  }, [data, setGridData]);
+
+  useEffect(() => {
     if (JSON.stringify(dataSource) !== JSON.stringify(data)) {
       setdataSource(data);
     }
@@ -568,6 +574,7 @@ const TableComponent = ({
                         isCurrent: true,
                       })
                     );
+                    getProfile([record], index);
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
@@ -595,6 +602,7 @@ const TableComponent = ({
                       })
                     );
                     dispatch(getProfileDetailsById(record?.profileId));
+                    getProfile([record], index);
                     // dispatch(getProfileDetailsById(record?._id))
                   }}
                   style={{
@@ -716,6 +724,7 @@ const TableComponent = ({
                           isCurrent: true,
                         })
                       );
+                      getProfile([record], index);
                     }}
                     style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                   >

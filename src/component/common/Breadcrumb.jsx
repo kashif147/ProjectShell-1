@@ -369,6 +369,11 @@ const Breadcrumb = () => {
       page: "System Configuration",
       icon: "⚙️",
     },
+    "/worklocation": {
+      module: "Configuration",
+      page: "Work Location",
+      icon: "📍",
+    },
     "/templeteConfig": {
       module: "Configuration",
       page: "Templete Config",

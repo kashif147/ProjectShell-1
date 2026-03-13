@@ -1,6 +1,6 @@
 // ContactDrawer.jsx
 import React, { useState, useEffect } from "react";
-import { Drawer, Button, Space, Table } from "antd";
+import { Drawer, Button, Space, Table, Row, Col, Card } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import { getContacts, resetContacts } from "../../features/ContactSlice";
 import {
@@ -11,9 +11,10 @@ import { insertDataFtn, deleteFtn, baseURL } from "../../utils/Utilities";
 import CustomSelect from "./CustomSelect";
 import MyInput from "./MyInput";
 import MyConfirm from "../common/MyConfirm";
-import { FaEdit } from "react-icons/fa";
+import { FaEdit, FaPlus } from "react-icons/fa";
 import { AiFillDelete } from "react-icons/ai";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { UpOutlined, DownOutlined } from "@ant-design/icons";
 
 function ContactDrawer({ open, onClose }) {
   const dispatch = useDispatch();
@@ -45,6 +46,7 @@ function ContactDrawer({ open, onClose }) {
   const [errors, setErrors] = useState({});
   const [isUpdate, setIsUpdate] = useState(false);
   const [updateId, setUpdateId] = useState(null);
+  const [showForm, setShowForm] = useState(false);
 
   useEffect(() => {
     if (open) {
@@ -118,6 +120,7 @@ function ContactDrawer({ open, onClose }) {
     setForm(record);
     setIsUpdate(true);
     setUpdateId(record._id);
+    setShowForm(true);
   };
 
   const handleDelete = (record) => {
@@ -163,134 +166,186 @@ function ContactDrawer({ open, onClose }) {
       open={open}
       onClose={onClose}
       width={1040}
-      title="Contacts"
+      title={
+        <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", width: "95%" }}>
+          <span>Contacts</span>
+          <Button
+            type="primary"
+            icon={showForm ? <UpOutlined /> : <FaPlus />}
+            onClick={() => {
+              setShowForm(!showForm);
+              if (!showForm) {
+                setForm({ ...initialData });
+                setIsUpdate(false);
+              }
+            }}
+            style={{ backgroundColor: showForm ? "#ff4d4f" : "#45669d", borderColor: showForm ? "#ff4d4f" : "#45669d" }}
+          >
+            {showForm ? "Cancel / Hide Form" : "Add New Contact"}
+          </Button>
+        </div>
+      }
       extra={
         <Space>
           <Button className="butn secoundry-btn" onClick={onClose}>
             Close
           </Button>
-          <Button className="butn primary-btn" onClick={handleSubmit}>
-            {isUpdate ? "Save" : "Add"}
-          </Button>
+          {showForm && (
+            <Button className="butn primary-btn" onClick={handleSubmit}>
+              {isUpdate ? "Save Changes" : "Submit Contact"}
+            </Button>
+          )}
         </Space>
       }
     >
       <div className="drawer-main-cntainer">
-        <div className="mb-4 pb-4">
-          <CustomSelect
-            label="Contact Type:"
-            placeholder="Select Contact type"
-            options={selectLokups?.contactTypes}
-            value={form.ContactTypeID}
-            onChange={(e) => onInputChange("ContactTypeID", e)}
-            required
-            hasError={!!errors.ContactTypeID}
-            errorMessage={errors.ContactTypeID}
-            style={{ width: "25%" }}
-          />
+        {showForm && (
+          <div className="mb-4">
+            <Card
+              size="small"
+              title={isUpdate ? "Edit Contact Information" : "New Contact Information"}
+              className="mb-4"
+              headStyle={{ backgroundColor: "#f0f2f5", fontWeight: "600" }}
+            >
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
+                  <CustomSelect
+                    label="Contact Type"
+                    placeholder="Select Contact type"
+                    options={selectLokups?.contactTypes}
+                    value={form.ContactTypeID}
+                    onChange={(e) => onInputChange("ContactTypeID", e)}
+                    required
+                    hasError={!!errors.ContactTypeID}
+                    errorMessage={errors.ContactTypeID}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Forename"
+                    value={form.Forename}
+                    onChange={(e) => onInputChange("Forename", e.target.value)}
+                    required
+                    hasError={!!errors.Forename}
+                    errorMessage={errors.Forename}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Surname"
+                    value={form.Surname}
+                    onChange={(e) => onInputChange("Surname", e.target.value)}
+                    required
+                    hasError={!!errors.Surname}
+                    errorMessage={errors.Surname}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Email"
+                    type="email"
+                    value={form.ContactEmail}
+                    onChange={(e) => onInputChange("ContactEmail", e.target.value)}
+                    required
+                    hasError={!!errors.ContactEmail}
+                    errorMessage={errors.ContactEmail}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Mobile"
+                    value={form.ContactPhone}
+                    onChange={(e) => onInputChange("ContactPhone", e.target.value)}
+                    required
+                    hasError={!!errors.ContactPhone}
+                    errorMessage={errors.ContactPhone}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+              </Row>
 
-          <MyInput
-            label="Forename:"
-            value={form.Forename}
-            onChange={(e) => onInputChange("Forename", e.target.value)}
-            required
-            hasError={!!errors.Forename}
-            errorMessage={errors.Forename}
-            style={{ width: "25%" }}
-          />
+              <div style={{ marginTop: "20px", marginBottom: "10px", fontWeight: "600", borderBottom: "1px solid #f0f0f0", paddingBottom: "5px" }}>
+                Address Details
+              </div>
 
-          <MyInput
-            label="Surname:"
-            value={form.Surname}
-            onChange={(e) => onInputChange("Surname", e.target.value)}
-            required
-            hasError={!!errors.Surname}
-            errorMessage={errors.Surname}
-            style={{ width: "25%" }}
-          />
+              <Row gutter={[16, 16]}>
+                <Col span={6}>
+                  <MyInput
+                    label="Building or House"
+                    value={form.ContactAddress.BuildingOrHouse}
+                    onChange={(e) =>
+                      onInputChange("ContactAddress.BuildingOrHouse", e.target.value)
+                    }
+                    required
+                    hasError={!!errors.BuildingOrHouse}
+                    errorMessage={errors.BuildingOrHouse}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Street or Road"
+                    value={form.ContactAddress.StreetOrRoad}
+                    onChange={(e) =>
+                      onInputChange("ContactAddress.StreetOrRoad", e.target.value)
+                    }
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Area or Town"
+                    value={form.ContactAddress.AreaOrTown}
+                    onChange={(e) =>
+                      onInputChange("ContactAddress.AreaOrTown", e.target.value)
+                    }
+                    required
+                    hasError={!!errors.AreaOrTown}
+                    errorMessage={errors.AreaOrTown}
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="City/Postcode"
+                    value={form.ContactAddress.CityCountyOrPostCode}
+                    onChange={(e) =>
+                      onInputChange(
+                        "ContactAddress.CityCountyOrPostCode",
+                        e.target.value
+                      )
+                    }
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+                <Col span={6}>
+                  <MyInput
+                    label="Eircode"
+                    value={form.ContactAddress.Eircode}
+                    onChange={(e) =>
+                      onInputChange("ContactAddress.Eircode", e.target.value)
+                    }
+                    style={{ width: "100%" }}
+                  />
+                </Col>
+              </Row>
+            </Card>
+          </div>
+        )}
 
-          <MyInput
-            label="Email:"
-            type="email"
-            value={form.ContactEmail}
-            onChange={(e) => onInputChange("ContactEmail", e.target.value)}
-            required
-            hasError={!!errors.ContactEmail}
-            errorMessage={errors.ContactEmail}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Mobile:"
-            value={form.ContactPhone}
-            onChange={(e) => onInputChange("ContactPhone", e.target.value)}
-            required
-            hasError={!!errors.ContactPhone}
-            errorMessage={errors.ContactPhone}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Building or House:"
-            value={form.ContactAddress.BuildingOrHouse}
-            onChange={(e) =>
-              onInputChange("ContactAddress.BuildingOrHouse", e.target.value)
-            }
-            required
-            hasError={!!errors.BuildingOrHouse}
-            errorMessage={errors.BuildingOrHouse}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Street or Road:"
-            value={form.ContactAddress.StreetOrRoad}
-            onChange={(e) =>
-              onInputChange("ContactAddress.StreetOrRoad", e.target.value)
-            }
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Area or Town:"
-            value={form.ContactAddress.AreaOrTown}
-            onChange={(e) =>
-              onInputChange("ContactAddress.AreaOrTown", e.target.value)
-            }
-            required
-            hasError={!!errors.AreaOrTown}
-            errorMessage={errors.AreaOrTown}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="City/Postcode:"
-            value={form.ContactAddress.CityCountyOrPostCode}
-            onChange={(e) =>
-              onInputChange(
-                "ContactAddress.CityCountyOrPostCode",
-                e.target.value
-              )
-            }
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Eircode:"
-            value={form.ContactAddress.Eircode}
-            onChange={(e) =>
-              onInputChange("ContactAddress.Eircode", e.target.value)
-            }
-            style={{ width: "25%" }}
-          />
-        </div>
-
-        <div className="mt-4 config-tbl-container">
+        <div className="mt-2 config-tbl-container">
+          <div style={{ marginBottom: "10px", fontWeight: "600", color: "#45669d" }}>
+            Existing Contacts List
+          </div>
           <Table
             pagination={false}
             columns={columns}
-            dataSource={data?.Solicitors}
-            loading={contactsLoading}
+            dataSource={contacts}
+            loading={contactsLoadingState}
             rowClassName={(_, index) =>
               index % 2 !== 0 ? "odd-row" : "even-row"
             }

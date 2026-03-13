@@ -271,7 +271,9 @@ function HeaderDetails() {
   const menuItems =
     nav === "/CasesSummary"
       ? [...defaultMenuItems, editCasesItem]
-      : defaultMenuItems;
+      : nav === "/worklocation"
+        ? defaultMenuItems.filter((item) => item.label === "Assign IRO")
+        : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -892,7 +894,7 @@ function HeaderDetails() {
             location?.pathname == "/Sms" ||
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
-            location?.pathname == "/Popout" ||
+            location?.pathname == "/worklocation" ||
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
             location?.pathname == "/templeteSummary" ||
@@ -1097,13 +1099,15 @@ function HeaderDetails() {
                         style={{ width: 300 }}
                         className="inp"
                       />
-                    ) : (
+                     ) : location?.pathname === "/worklocation" ? null : (
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <Toolbar />
                       </div>
                     )}
-                    <div className="d-flex flex-shrink-0">
-                      <SaveViewMenu className="ms-3" />
+                     <div className="d-flex flex-shrink-0">
+                      {location?.pathname === "/worklocation" ? null : (
+                        <SaveViewMenu className="ms-3" />
+                      )}
                     </div>
                   </div>
                 )}

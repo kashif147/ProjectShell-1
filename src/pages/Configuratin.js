@@ -6701,7 +6701,7 @@ function Configuratin() {
             <Button
               style={{ height: 40, marginBottom: 4 }}
               onClick={() =>
-                navigate("/Popout", { state: { search: "Work Location" } })
+                navigate("/worklocation", { state: { search: "Work Location" } })
               }
             >
               <FaArrowUpRightFromSquare />
@@ -6878,7 +6878,7 @@ function Configuratin() {
             <Button
               style={{ height: 40, marginBottom: 4 }}
               onClick={() =>
-                navigate("/Popout", { state: { search: "Work Location" } })
+                navigate("/worklocation", { state: { search: "Work Location" } })
               }
             >
               <FaArrowUpRightFromSquare />

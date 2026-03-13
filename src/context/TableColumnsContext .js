@@ -14,6 +14,8 @@ import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
 import { convertToLocalTime, formatDateOnly, formatCurrency, formatMobileNumber } from "../utils/Utilities";
+import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
+import { getSubscriptionByProfileId } from "../features/subscription/profileSubscriptionSlice";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
@@ -4900,21 +4902,33 @@ export const TableColumnsProvider = ({ children }) => {
     setRowIndex(index);
   }, []);
 
-  const profilNextBtnFtn = () => {
+  const profilNextBtnFtn = useCallback(() => {
     const newIndex = rowIndex + 1;
-    const filteredData = gridData?.filter((_, index) => index === newIndex);
-    setProfileDetails(filteredData);
-    setRowIndex(newIndex);
-  };
+    if (newIndex < gridData.length) {
+      const record = gridData[newIndex];
+      const idToUse = record?.profileId || record?._id || record?._Id || record?.ApplicationId || record?.id;
+      if (idToUse) {
+        dispatch(getProfileDetailsById(idToUse));
+        dispatch(getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" }));
+      }
+      setProfileDetails([record]);
+      setRowIndex(newIndex);
+    }
+  }, [rowIndex, gridData, dispatch]);
 
   const profilPrevBtnFtn = useCallback(() => {
-    setRowIndex((prevIndex) => {
-      const newIndex = prevIndex - 1;
-      const filteredData = gridData?.filter((_, index) => index === newIndex);
-      setProfileDetails(filteredData);
-      return newIndex;
-    });
-  }, [gridData]);
+    const newIndex = rowIndex - 1;
+    if (newIndex >= 0) {
+      const record = gridData[newIndex];
+      const idToUse = record?.profileId || record?._id || record?._Id || record?.[ "ApplicationId" ] || record?.id;
+      if (idToUse) {
+        dispatch(getProfileDetailsById(idToUse));
+        dispatch(getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" }));
+      }
+      setProfileDetails([record]);
+      setRowIndex(newIndex);
+    }
+  }, [rowIndex, gridData, dispatch]);
 
   const filterByRegNo = useCallback(
     async (regNo) => {

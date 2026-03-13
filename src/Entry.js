@@ -160,7 +160,7 @@ const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
-const Popout = lazyWithRetry(() => import("../src/component/common/PopOut"));
+const WorkLocation = lazyWithRetry(() => import("../src/component/common/PopOut"));
 const Members = lazyWithRetry(() => import("./pages/membership/Members"));
 const RemindersDetails = lazyWithRetry(
   () => import("./pages/reminders/RemindersDetails"),
@@ -857,10 +857,10 @@ function Entry() {
                       />
 
                       <Route
-                        path="Popout"
+                        path="worklocation"
                         element={
                           <ProtectedRoute>
-                            <Popout />
+                            <WorkLocation />
                           </ProtectedRoute>
                         }
                       />

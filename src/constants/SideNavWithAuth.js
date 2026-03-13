@@ -394,7 +394,7 @@ export const reportItems = [
     "Live Stats",
     <FaChartPie />,
     "Live Stats",
-    []
+    ["LIVE:STATS:REPORT:READ"]
   ),
   createMenuItem(
     "New Members Report",
@@ -412,7 +412,7 @@ export const reportItems = [
     "Suspended Members Report",
     <FaUserLock />,
     "Suspended Members Report",
-    []
+    ["SUSPENDED:MEMBERS:REPORT:READ"]
   ),
 ];
 
