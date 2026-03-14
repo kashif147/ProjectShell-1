@@ -1,0 +1,60 @@
+﻿532:    Stations: [],
+570:    Station: "",
+644:    Station: false,
+645:    DivisionsForStation: false,
+686:    Station: false,
+802:      "Stations",
+855:        Stations: regions.filter(
+1005:    Station: {
+1772:  const columnStations = [
+1820:              IsUpdateFtn("Station", !isUpdateRec?.Station, record);
+1821:              addIdKeyToLookup(record?._id, "Station");
+4099:      "Station",
+4277:          key: "Station",
+5046:            <p className="inpt-lbl">Station</p>
+5049:              placeholder="Please enter Station"
+5050:              onChange={(e) => handleInputChange7("Station", e.target.value)}
+6561:        open={drawerOpen?.Station}
+6563:        onClose={() => openCloseDrawerFtn("Station")}
+6565:          if (!validateForm("Station")) return;
+6568:            drawerIpnuts?.Station,
+6572:              resetCounteries("Station", () => dispatch(getAllLookups()));
+6577:        isEdit={isUpdateRec?.Station}
+6579:          if (!validateForm("Station")) return;
+6580:          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
+6581:            resetCounteries("Station", () => dispatch(getAllLookups())),
+6584:          IsUpdateFtn("Station", false);
+6606:                  value={drawerIpnuts?.Station?.lookupname}
+6608:                    drawrInptChng("Station", "lookupname", val)
+6611:                  hasError={!!errors?.Station?.lookupname}
+6612:                  errorMessage={errors?.Station?.lookupname}
+6620:                  value={drawerIpnuts?.Station?.code}
+6621:                  onChange={(val) => drawrInptChng("Station", "code", val)}
+6623:                  hasError={!!errors?.Station?.code}
+6624:                  errorMessage={errors?.Station?.code}
+6635:                  value={drawerIpnuts?.Station?.DisplayName}
+6637:                    drawrInptChng("Station", "DisplayName", val)
+6682:                  checked={drawerIpnuts?.Station?.isactive}
+6684:                    drawrInptChng("Station", "isactive", e.target.checked)
+6715:              columns={columnStations}
+6742:          if (!validateForm("Station")) return;
+6745:            drawerIpnuts?.Station,
+6749:              resetCounteries("Station", () => dispatch(getAllLookups()));
+6754:        isEdit={isUpdateRec?.Station}
+6756:          if (!validateForm("Station")) return;
+6757:          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
+6758:            resetCounteries("Station", () => dispatch(getAllLookups())),
+6761:          IsUpdateFtn("Station", false);
+6783:                  value={drawerIpnuts?.Station?.lookupname}
+6785:                    drawrInptChng("Station", "lookupname", val)
+6788:                  hasError={!!errors?.Station?.lookupname}
+6789:                  errorMessage={errors?.Station?.lookupname}
+6797:                  value={drawerIpnuts?.Station?.code}
+6798:                  onChange={(val) => drawrInptChng("Station", "code", val)}
+6800:                  hasError={!!errors?.Station?.code}
+6801:                  errorMessage={errors?.Station?.code}
+6812:                  value={drawerIpnuts?.Station?.DisplayName}
+6814:                    drawrInptChng("Station", "DisplayName", val)
+6859:                  checked={drawerIpnuts?.Station?.isactive}
+6861:                    drawrInptChng("Station", "isactive", e.target.checked)
+6892:              columns={columnStations}

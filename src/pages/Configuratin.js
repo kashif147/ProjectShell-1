@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useMemo, useCallback } from "react";
+import React, { useEffect, useState, useMemo, useCallback, useRef } from "react";
 import { SiActigraph } from "react-icons/si";
 import { FaLeaf, FaRegMap, FaRocketchat } from "react-icons/fa6";
 import MyDrawer from "../component/common/MyDrawer";
@@ -91,6 +91,7 @@ import MyInput from "../component/common/MyInput";
 import { useNavigate } from "react-router-dom";
 import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
 import { getBookmarks } from "../features/templete/BookmarkActions";
+import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 
 // i have different drwers for configuration of lookups for the system
 
@@ -551,7 +552,80 @@ function Configuratin() {
   // const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
 
   const groupedlookupsForSelect = [];
+
   const [searchQuery, setSearchQuery] = useState("");
+  // ---- Work Location Eircode Search ----
+  const [addressSearchValue, setAddressSearchValue] = useState("");
+  const addressInputRef = useRef(null);
+  const mapsLibraries = ["places", "maps"];
+  const { isLoaded: isMapsLoaded } = useJsApiLoader({
+    id: "google-map-script",
+    googleMapsApiKey: "AIzaSyCJYpj8WV5Rzof7O3jGhW9XabD0J4Yqe1o",
+    libraries: mapsLibraries,
+  });
+
+  const handleStationPlacesChanged = () => {
+    const places = addressInputRef.current?.getPlaces();
+    if (!places || places.length === 0) return;
+
+    const place = places[0];
+    if (place.formatted_address) setAddressSearchValue(place.formatted_address);
+
+    const service = new window.google.maps.places.PlacesService(
+      document.createElement("div")
+    );
+    service.getDetails(
+      { placeId: place.place_id, fields: ["address_components", "formatted_address"] },
+      (details, status) => {
+        if (status !== window.google.maps.places.PlacesServiceStatus.OK || !details) return;
+
+        const components = details.address_components;
+        const getComp = (type) =>
+          components.find((c) => c.types.includes(type))?.long_name || "";
+
+        const streetNumber = getComp("street_number");
+        const route = getComp("route");
+        const neighborhood = getComp("neighborhood") || getComp("sublocality") || "";
+        const town = getComp("locality") || getComp("postal_town") || "";
+        const county = getComp("administrative_area_level_1") || "";
+        const postalCode = getComp("postal_code");
+        const countryName = getComp("country");
+        const countryShort = components.find((c) => c.types.includes("country"))?.short_name || "";
+
+        let finalCountry = countryName;
+        const matchedCountry = countriesOptions?.find(
+          (c) =>
+            c?.label?.toLowerCase() === countryName.toLowerCase() ||
+            c?.value?.toLowerCase() === countryName.toLowerCase() ||
+            c?.label?.toLowerCase() === countryShort.toLowerCase() ||
+            c?.value?.toLowerCase() === countryShort.toLowerCase() ||
+            c?.displayname?.toLowerCase() === countryName.toLowerCase()
+        );
+
+        if (matchedCountry) {
+          finalCountry = matchedCountry.displayname || matchedCountry.label || matchedCountry.value;
+        }
+
+        setdrawerIpnuts((prev) => ({
+          ...prev,
+          Station: {
+            ...prev.Station,
+            worklocationAddress: {
+              ...prev.Station.worklocationAddress,
+              buildingOrHouse: `${streetNumber} ${route}`.trim(),
+              streetOrRoad: neighborhood,
+              areaOrTown: town,
+              countyCityOrPostCode: county,
+              eircode: postalCode,
+              country: finalCountry,
+              fullAddress: details.formatted_address || "",
+            },
+          },
+        }));
+      }
+    );
+  };
+  // ---- End Work Location Eircode Search ----
   const [membershipModal, setMembershipModal] = useState(false);
   const [isSubscriptionsModal, setIsSubscriptionsModal] = useState(false);
   const [isProfileModal, setisProfileModal] = useState(false);
@@ -600,7 +674,7 @@ function Configuratin() {
     provincesOption,
   } = useSelector((state) => state.lookups);
   console.log("lookups", lookups);
-  const { countriesData } = useSelector((state) => state.countries);
+  const { countriesData, countriesOptions } = useSelector((state) => state.countries);
 
   const { lookupsTypes, lookupsTypesloading } = useSelector(
     (state) => state.lookupsTypes,
@@ -1011,6 +1085,15 @@ function Configuratin() {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      worklocationAddress: {
+        eircode: "",
+        buildingOrHouse: "",
+        streetOrRoad: "",
+        areaOrTown: "",
+        countyCityOrPostCode: "",
+        country: "",
+        fullAddress: "",
+      },
     },
     Cities: {
       lookuptypeId: "68c85f22302e5600dc8477ed",
@@ -1789,6 +1872,24 @@ function Configuratin() {
       title: "Branch",
       dataIndex: "Parentlookup",
       key: "Parentlookup",
+    },
+    {
+      title: "Address",
+      key: "worklocationAddress",
+      render: (_, record) => {
+        const addr = record?.worklocationAddress;
+        if (!addr) return "-";
+        return [
+          addr.buildingOrHouse,
+          addr.streetOrRoad,
+          addr.areaOrTown,
+          addr.countyCityOrPostCode,
+          addr.country,
+          addr.eircode,
+        ]
+          .filter(Boolean)
+          .join(", ") || "-";
+      },
     },
     {
       title: "Active",
@@ -4037,7 +4138,7 @@ function Configuratin() {
   const [selectionType, setSelectionType] = useState("checkbox");
   const [errors, setErrors] = useState({});
   const rowSelection = {
-    onChange: (selectedRowKeys, selectedRows) => {},
+    onChange: (selectedRowKeys, selectedRows) => { },
     getCheckboxProps: (record) => ({
       disabled: record.name === "Disabled User",
       name: record.name,
@@ -4158,17 +4259,17 @@ function Configuratin() {
     setisContactTypeModal(!isContactTypeModal);
   const addContactTypeModalOpenCloseFtn = () =>
     setisAddContactTypeModal(!isAddContactTypeModal);
-  const addmembershipFtn = () => {};
+  const addmembershipFtn = () => { };
 
-  const AddpartnershipFtn = () => {};
+  const AddpartnershipFtn = () => { };
 
-  const AddprofileModalFtn = () => {};
+  const AddprofileModalFtn = () => { };
 
-  const AddRegionTypeModalFtn = () => {};
+  const AddRegionTypeModalFtn = () => { };
 
-  const AddContactTypeModalFtn = () => {};
+  const AddContactTypeModalFtn = () => { };
 
-  const AddSubscriptionsFtn = () => {};
+  const AddSubscriptionsFtn = () => { };
 
   const columnClaimType = [
     {
@@ -6585,7 +6686,7 @@ function Configuratin() {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <div className="mb-4 pb-4">
+          <div className="mb-2">
             <Row gutter={24}>
               <Col span={24}>
                 <CustomSelect
@@ -6605,7 +6706,7 @@ function Configuratin() {
                   name="lookupname"
                   value={drawerIpnuts?.Station?.lookupname}
                   onChange={(val) =>
-                    drawrInptChng("Station", "lookupname", val)
+                    drawrInptChng("Station", "lookupname", val.target.value)
                   }
                   disabled={isDisable}
                   hasError={!!errors?.Station?.lookupname}
@@ -6618,7 +6719,7 @@ function Configuratin() {
                   label="Code"
                   name="code"
                   value={drawerIpnuts?.Station?.code}
-                  onChange={(val) => drawrInptChng("Station", "code", val)}
+                  onChange={(val) => drawrInptChng("Station", "code", val.target.value)}
                   disabled={isDisable}
                   hasError={!!errors?.Station?.code}
                   errorMessage={errors?.Station?.code}
@@ -6634,7 +6735,7 @@ function Configuratin() {
                   name="DisplayName"
                   value={drawerIpnuts?.Station?.DisplayName}
                   onChange={(val) =>
-                    drawrInptChng("Station", "DisplayName", val)
+                    drawrInptChng("Station", "DisplayName", val.target.value)
                   }
                   disabled={isDisable}
                 />
@@ -6646,13 +6747,14 @@ function Configuratin() {
                     <CustomSelect
                       label="Region"
                       placeholder="Select Region"
-                      options={selectLokups?.Divisions}
+                      options={regionOptions}
+                      isIDs={true}
                       disabled={isDisable}
                       required
-                      hasError={!!errors?.Districts?.Parentlookupid}
-                      value={drawerIpnuts?.Districts?.Parentlookupid}
+                      hasError={!!errors?.Station?.Parentlookupid}
+                      value={drawerIpnuts?.Station?.Parentlookupid}
                       onChange={(val) =>
-                        drawrInptChng("Districts", "Parentlookupid", val)
+                        drawrInptChng("Station", "Parentlookupid", val.target.value)
                       }
                     />
                   </div>
@@ -6688,28 +6790,134 @@ function Configuratin() {
                 </Checkbox>
               </Col>
             </Row>
+
+            <Row gutter={24} style={{ marginTop: 16 }}>
+              <Col span={24}>
+                <div className="mt-1 mb-2">
+                  <h4
+                    style={{
+                      fontSize: "15px",
+                      fontWeight: 600,
+                      color: "#1a1a1a",
+                      margin: 0,
+                      paddingBottom: "4px",
+                      borderBottom: "1px solid #f0f0f0",
+                    }}
+                  >
+                    Address
+                  </h4>
+                </div>
+              </Col>
+
+              {/* Eircode / address search */}
+              <Col span={24}>
+                {isMapsLoaded && (
+                  <StandaloneSearchBox
+                    onLoad={(ref) => (addressInputRef.current = ref)}
+                    onPlacesChanged={handleStationPlacesChanged}
+                  >
+                    <MyInput
+                      label="Search by Address or Eircode"
+                      name="addressSearch"
+                      placeholder="Enter Eircode (e.g., D01X4X0) or address"
+                      disabled={isDisable}
+                      value={addressSearchValue}
+                      onChange={(e) => setAddressSearchValue(e.target.value)}
+                    />
+                  </StandaloneSearchBox>
+                )}
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 1 (Building or House)"
+                  name="buildingOrHouse"
+                  value={drawerIpnuts?.Station?.worklocationAddress?.buildingOrHouse}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "worklocationAddress.buildingOrHouse", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 2 (Street or Road)"
+                  name="streetOrRoad"
+                  value={drawerIpnuts?.Station?.worklocationAddress?.streetOrRoad}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "worklocationAddress.streetOrRoad", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 3 (Area or Town)"
+                  name="areaOrTown"
+                  value={drawerIpnuts?.Station?.worklocationAddress?.areaOrTown}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "worklocationAddress.areaOrTown", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Address Line 4 (County, City or Postcode)"
+                  name="countyCityOrPostCode"
+                  value={drawerIpnuts?.Station?.worklocationAddress?.countyCityOrPostCode}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "worklocationAddress.countyCityOrPostCode", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <MyInput
+                  label="Eircode"
+                  name="eircode"
+                  placeholder="Enter Eircode (e.g., D01X4X0)"
+                  value={drawerIpnuts?.Station?.worklocationAddress?.eircode}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "worklocationAddress.eircode", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+
+              <Col xs={24} md={12}>
+                <CustomSelect
+                  label="Country"
+                  name="country"
+                  value={drawerIpnuts?.Station?.worklocationAddress?.country}
+                  options={countriesOptions}
+                  onChange={(val) =>
+                    drawrInptChng("Station", "worklocationAddress.country", val.target.value)
+                  }
+                  disabled={isDisable}
+                />
+              </Col>
+            </Row>
           </div>
 
-          {/* Popout Btn aligned right and bottom with inputs */}
-          <div
-            style={{
-              display: "flex",
-              justifyContent: "flex-end",
-              alignItems: "flex-end",
-            }}
-          >
-            <Button
-              style={{ height: 40, marginBottom: 4 }}
-              onClick={() =>
-                navigate("/worklocation", { state: { search: "Work Location" } })
-              }
-            >
-              <FaArrowUpRightFromSquare />
-            </Button>
-          </div>
+          {/* Table Header and Popout Btn */}
+          <div className="mt-2 config-tbl-container">
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h6 className="m-0 text-primary">Existing Work Locations</h6>
+              <Button
+                style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                onClick={() =>
+                  navigate("/worklocation", { state: { search: "Work Location" } })
+                }
+              >
+                <FaArrowUpRightFromSquare size={14} />
+              </Button>
+            </div>
 
-          <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Work Locations</h6>
             <Table
               pagination={true}
               columns={columnStations}
@@ -6782,7 +6990,7 @@ function Configuratin() {
                   name="lookupname"
                   value={drawerIpnuts?.Station?.lookupname}
                   onChange={(val) =>
-                    drawrInptChng("Station", "lookupname", val)
+                    drawrInptChng("Station", "lookupname", val.target.value)
                   }
                   disabled={isDisable}
                   hasError={!!errors?.Station?.lookupname}
@@ -6795,7 +7003,7 @@ function Configuratin() {
                   label="Code"
                   name="code"
                   value={drawerIpnuts?.Station?.code}
-                  onChange={(val) => drawrInptChng("Station", "code", val)}
+                  onChange={(val) => drawrInptChng("Station", "code", val.target.value)}
                   disabled={isDisable}
                   hasError={!!errors?.Station?.code}
                   errorMessage={errors?.Station?.code}
@@ -6811,7 +7019,7 @@ function Configuratin() {
                   name="DisplayName"
                   value={drawerIpnuts?.Station?.DisplayName}
                   onChange={(val) =>
-                    drawrInptChng("Station", "DisplayName", val)
+                    drawrInptChng("Station", "DisplayName", val.target.value)
                   }
                   disabled={isDisable}
                 />
@@ -6823,13 +7031,14 @@ function Configuratin() {
                     <CustomSelect
                       label="Region"
                       placeholder="Select Region"
-                      options={selectLokups?.Divisions}
+                      options={regionOptions}
+                      isIDs={true}
                       disabled={isDisable}
                       required
-                      hasError={!!errors?.Districts?.Parentlookupid}
-                      value={drawerIpnuts?.Districts?.Parentlookupid}
+                      hasError={!!errors?.Station?.Parentlookupid}
+                      value={drawerIpnuts?.Station?.Parentlookupid}
                       onChange={(val) =>
-                        drawrInptChng("Districts", "Parentlookupid", val)
+                        drawrInptChng("Station", "Parentlookupid", val.target.value)
                       }
                     />
                   </div>
@@ -7064,8 +7273,8 @@ function Configuratin() {
           );
           dispatch(getLookupTypes());
         }}
-        //   onChange={handlePageChange}
-        // total={lookupsTypes?.length}
+      //   onChange={handlePageChange}
+      // total={lookupsTypes?.length}
       >
         <div className="drawer-main-cntainer p-4">
           <Row gutter={24}>
@@ -7430,7 +7639,7 @@ function Configuratin() {
                   );
                   // drawrInptChng("Lookup", "lookuptypeId", String(value));
                 }}
-                // hasError={!!errors?.Lookup?.lookuptypeId}
+              // hasError={!!errors?.Lookup?.lookuptypeId}
               />
             </Col>
           </Row>
@@ -10226,7 +10435,7 @@ function Configuratin() {
           dispatch(getAllLookups());
           IsUpdateFtn("Lookup", false);
         }}
-        // width="680"
+      // width="680"
       >
         <div className="drawer-main-cntainer p-4">
           {" "}

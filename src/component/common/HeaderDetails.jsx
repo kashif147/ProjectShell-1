@@ -1456,6 +1456,7 @@ function HeaderDetails() {
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(false)}
+        title="IRO Assignment"
       />
       <SimpleBatch
         open={isSimpleBatchOpen}

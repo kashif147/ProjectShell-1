@@ -6,6 +6,7 @@
   padding: 0;
   height: calc(100vh - 120px);
   max-height: calc(100vh - 120px);
+  flex-shrink: 0;
 }
 
 .member-header-single-card {

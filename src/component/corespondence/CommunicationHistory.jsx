@@ -1,5 +1,5 @@
 import { FaFileDownload } from 'react-icons/fa';
-import SubTableComp from '../../component/common/SubTableComp'; // Make sure the path is correct
+import MyTable from '../../component/common/MyTable'; // Make sure the path is correct
 
 const CommunicationHistory = () => {
   const columns = [
@@ -61,8 +61,15 @@ const CommunicationHistory = () => {
     },
   ];
 
-  // return ;
-  return  <div className='cases-main'><SubTableComp   className='claims-table' dataSource={documentsData} columns={columns} /></div> ;
+  return (
+    <div className='cases-main'>
+      <MyTable 
+        dataSource={documentsData} 
+        columns={columns} 
+        selection={false} 
+      />
+    </div>
+  );
 };
 
 export default CommunicationHistory;

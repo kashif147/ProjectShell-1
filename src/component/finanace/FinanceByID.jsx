@@ -209,7 +209,7 @@ const TransactionHistory = () => {
         overflowX: "hidden",
         position: "relative",
         scrollBehavior: "smooth",
-        paddingRight: "12px",
+        // paddingRight: "12px",
         paddingBottom: "200px",
         width: '100%'
       }}

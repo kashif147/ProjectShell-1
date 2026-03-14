@@ -57,6 +57,8 @@ const lookupsSlice = createSlice({
     secondarySectionOptions: [],
     countryOptions: [],
     provincesOption: [],
+    
+    selectedWorkLocations: [], // Adding selectedWorkLocations to Redux
 
     // Raw API response (optional - remove if not needed)
     lookups: [],
@@ -67,6 +69,9 @@ const lookupsSlice = createSlice({
   reducers: {
     clearLookupsError: (state) => {
       state.error = null;
+    },
+    setSelectedWorkLocations: (state, action) => {
+      state.selectedWorkLocations = action.payload;
     },
     resetLookups: (state) => {
       // Reset all arrays to empty
@@ -82,6 +87,7 @@ const lookupsSlice = createSlice({
       state.secondarySectionOptions = [];
       state.countryOptions = [];
       state.provincesOption = [];
+      state.selectedWorkLocations = [];
       state.lookups = [];
     },
   },
@@ -228,5 +234,5 @@ const lookupsSlice = createSlice({
   },
 });
 
-export const { clearLookupsError, resetLookups } = lookupsSlice.actions;
+export const { clearLookupsError, resetLookups, setSelectedWorkLocations } = lookupsSlice.actions;
 export default lookupsSlice.reducer;

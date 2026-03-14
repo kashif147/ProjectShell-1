@@ -90,6 +90,9 @@ function WorkLocation() {
 
   const onSelectionChange = (newSelectedRowKeys) => {
     setSelectedRowKeys(newSelectedRowKeys);
+    // Find full objects for the selected keys and send to Redux
+    const selectedItems = workLocationData.filter((item) => newSelectedRowKeys.includes(item._id));
+    dispatch({ type: "lookups/setSelectedWorkLocations", payload: selectedItems });
   };
 
   return (
