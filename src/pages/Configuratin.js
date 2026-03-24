@@ -18,11 +18,7 @@ import {
 } from "antd";
 import { SearchOutlined } from "@ant-design/icons";
 import {
-  Crown,
-  User,
-  Heart,
   Map,
-  // MapPin,
   Globe,
   Building2,
   MapPin,
@@ -47,8 +43,10 @@ import {
   Bookmark,
   HelpCircle,
   Users,
-  search,
   Briefcase,
+  User,
+  Heart,
+  Crown,
 } from "lucide-react";
 import { PiHandshakeDuotone } from "react-icons/pi";
 import { AiFillDelete } from "react-icons/ai";
@@ -76,7 +74,6 @@ import "../styles/Configuration.css";
 import MySelect from "../component/common/MySelect";
 import { deleteFtn, updateFtn } from "../utils/Utilities";
 import { baseURL } from "../utils/Utilities";
-import { render } from "@testing-library/react";
 import { fetchRegions, deleteRegion } from "../features/RegionSlice";
 // import { getLookupTypes } from "../features/LookupTypeSlice";
 import { getAllRegionTypes } from "../features/RegionTypeSlice";
@@ -93,13 +90,58 @@ import { fetchCountries, clearCountriesData } from "../features/CountriesSlice";
 import { getBookmarks } from "../features/templete/BookmarkActions";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 
+const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
+
 // i have different drwers for configuration of lookups for the system
 
 function Configuratin() {
+  const [iroUsers, setIroUsers] = useState([]);
+
+  useEffect(() => {
+    const fetchIroUsers = async () => {
+      const token = localStorage.getItem("token");
+      try {
+        const response = await axios.get(
+          `${baseURL}/roles/${IRO_ROLE_ID}/users`,
+          {
+            headers: {
+              Authorization: `Bearer ${token}`,
+              "Content-Type": "application/json",
+            },
+          },
+        );
+        const data = response.data?.data || response.data || [];
+        setIroUsers(Array.isArray(data) ? data : []);
+      } catch (error) {
+        console.error("Failed to fetch IRO users:", error);
+      }
+    };
+    fetchIroUsers();
+  }, []);
+
   const dispatch = useDispatch();
   const { bookmarks, bookmarksLoading, bookmarksError } = useSelector(
     (state) => state.bookmarks,
   );
+  const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+  const { lookupsTypes, lookupsTypesloading } = useSelector(
+    (state) => state.lookupsTypes,
+  );
+  const { regions, loading: regionsLoading } = useSelector(
+    (state) => state.regions,
+  );
+  const { regionTypes, regionTypesLoading } = useSelector(
+    (state) => state.regionTypes,
+  );
+  const { contacts, contactsLoading } = useSelector((state) => state.contact);
+  const { contactTypes, contactTypesloading } = useSelector(
+    (state) => state.contactType,
+  );
+  const {
+    countriesData,
+    loadingC: countriesLoading,
+    countriesOptions,
+  } = useSelector((state) => state.countries);
   const insertDataFtn = async (
     url,
     data,
@@ -546,12 +588,10 @@ function Configuratin() {
     Solicitors: [],
     MaritalStatus: [],
     Sections: [],
+    PostCode: [],
   });
 
-  // const groupedLookups = useSelector(selectGroupedLookups);
   // const groupedlookupsForSelect = useSelector(selectGroupedLookupsByType);
-
-  const groupedlookupsForSelect = [];
 
   const [searchQuery, setSearchQuery] = useState("");
   // ---- Work Location Eircode Search ----
@@ -657,8 +697,8 @@ function Configuratin() {
     DisplayName: "",
   });
 
-  const { regions, loading } = useSelector((state) => state.regions);
-  const { lookups, lookupsloading } = useSelector((state) => state.lookups);
+
+
   const {
     titleOptions,
     genderOptions,
@@ -674,21 +714,9 @@ function Configuratin() {
     provincesOption,
   } = useSelector((state) => state.lookups);
   console.log("lookups", lookups);
-  const { countriesData, countriesOptions } = useSelector((state) => state.countries);
+  // const { countriesData, countriesOptions } = useSelector((state) => state.countries);
 
-  const { lookupsTypes, lookupsTypesloading } = useSelector(
-    (state) => state.lookupsTypes,
-  );
-  const { regionTypes, regionTypesLoading } = useSelector(
-    (state) => state.regionTypes,
-  );
-  const { contactTypes, contactTypesloading, error } = useSelector(
-    (state) => state.contactType,
-  );
-  const { contacts, contactsLoading } = useSelector((state) => state.contact);
-  const { loadingC: countriesLoading } = useSelector(
-    (state) => state.countries,
-  );
+
   const [contactTypelookup, setcontactTypelookup] = useState([]);
   useEffect(() => {
     if (contactTypes) {
@@ -884,6 +912,7 @@ function Configuratin() {
       "Trainings",
       "Ranks",
       "RosterType",
+      "PostCode",
     ];
 
     const filteredData = lookupKeys.reduce((acc, key) => {
@@ -1085,6 +1114,7 @@ function Configuratin() {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      officer: null,
       worklocationAddress: {
         eircode: "",
         buildingOrHouse: "",
@@ -1114,6 +1144,7 @@ function Configuratin() {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      officer: null,
     },
     // Region
     Divisions: {
@@ -1125,6 +1156,7 @@ function Configuratin() {
       userid: "67f3f9d812b014a0a7a94081",
       isactive: true,
       isDeleted: false,
+      officer: null,
     },
     Councils: {
       lookuptypeId: "68c85f22302e5600dc8477f6",
@@ -1400,7 +1432,26 @@ function Configuratin() {
         if (key === "lookuptypeId") return acc;
 
         if (data.hasOwnProperty(key)) {
-          acc[key] = data[key];
+          const val = data[key];
+          // If the value is a populated object from the backend (has _id), flatten it to just the ID string
+          // but preserve actual nested data objects like 'worklocationAddress'
+          if (
+            typeof val === "object" &&
+            val !== null &&
+            val._id &&
+            key !== "worklocationAddress" &&
+            key !== "contactAddress"
+          ) {
+            acc[key] = val._id;
+          } else {
+            acc[key] = val;
+          }
+        } else if (
+          key === "Parentlookupid" &&
+          data.hasOwnProperty("Parentlookup")
+        ) {
+          const val = data["Parentlookup"];
+          acc[key] = val && typeof val === "object" && val._id ? val._id : val;
         }
         return acc;
       },
@@ -1802,6 +1853,16 @@ function Configuratin() {
     //   key: "Parentlookup",
     // },
     {
+      title: "Assigned Officer",
+      key: "officer",
+      render: (_, record) => {
+        const o = record?.officer;
+        if (!o) return "-";
+        if (typeof o === "object") return o.userEmail || `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() || "-";
+        return String(o);
+      },
+    },
+    {
       title: "Active",
 
       render: (index, record) => (
@@ -1872,6 +1933,16 @@ function Configuratin() {
       title: "Branch",
       dataIndex: "Parentlookup",
       key: "Parentlookup",
+    },
+    {
+      title: "Assigned Officer",
+      key: "officer",
+      render: (_, record) => {
+        const o = record?.officer;
+        if (!o) return "-";
+        if (typeof o === "object") return o.userEmail || `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() || "-";
+        return String(o);
+      },
     },
     {
       title: "Address",
@@ -1962,6 +2033,16 @@ function Configuratin() {
     //   dataIndex: "Parentlookup",
     //   key: "Parentlookup",
     // },
+    {
+      title: "Assigned Officer",
+      key: "officer",
+      render: (_, record) => {
+        const o = record?.officer;
+        if (!o) return "-";
+        if (typeof o === "object") return o.userEmail || `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() || "-";
+        return String(o);
+      },
+    },
     {
       title: "Active",
       dataIndex: "Active",
@@ -4625,7 +4706,7 @@ function Configuratin() {
       }));
       setBranchesWithRegionData(updatedBranches);
     }
-  }, []);
+  }, [groupedLookups?.Branch, getRegionNameForBranch]);
 
   // Filter branches based on search term
   const filteredBranches = useMemo(() => {
@@ -6232,8 +6313,8 @@ function Configuratin() {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
+          <Row gutter={24}>
+            <Col span={12}>
               <CustomSelect
                 label="Type"
                 placeholder="Branch"
@@ -6243,6 +6324,19 @@ function Configuratin() {
                 disabled={true}
                 required
                 hasError={!!errors?.Districts?.lookuptypeId}
+              />
+            </Col>
+            <Col span={12}>
+              <CustomSelect
+                label="Branch Manager"
+                placeholder="Select Branch Manager"
+                options={iroUsers.map((user) => ({
+                  key: user._id,
+                  label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
+                }))}
+                value={drawerIpnuts?.Districts?.officer?._id || drawerIpnuts?.Districts?.officer}
+                onChange={(e) => drawrInptChng("Districts", "officer", e.target.value)}
+                isIDs={true}
               />
             </Col>
           </Row>
@@ -6348,7 +6442,17 @@ function Configuratin() {
           </Row>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className="mb-3 text-primary">Existing Branches</h6>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h6 className="m-0 text-primary">Existing Branches</h6>
+              <Button
+                style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                onClick={() =>
+                  navigate("/branch", { state: { search: "Branch" } })
+                }
+              >
+                <FaArrowUpRightFromSquare size={14} />
+              </Button>
+            </div>
             <MyInput
               placeholder="Search branches..."
               style={{ width: 250 }}
@@ -6410,8 +6514,8 @@ function Configuratin() {
           isEdit={isUpdateRec?.Divisions}
         >
           <div className="drawer-main-cntainer p-4 me-2 ms-2">
-            <Row>
-              <Col span={24}>
+            <Row gutter={24}>
+              <Col span={12}>
                 <CustomSelect
                   label="Type"
                   placeholder="Region"
@@ -6421,6 +6525,19 @@ function Configuratin() {
                   disabled={true}
                   required
                   hasError={!!errors?.Divisions?.lookuptypeId}
+                />
+              </Col>
+              <Col span={12}>
+                <CustomSelect
+                  label="Region Officer"
+                  placeholder="Select Region Officer"
+                  options={iroUsers.map((user) => ({
+                    key: user._id,
+                    label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
+                  }))}
+                  value={drawerIpnuts?.Divisions?.officer?._id || drawerIpnuts?.Divisions?.officer}
+                  onChange={(e) => drawrInptChng("Divisions", "officer", e.target.value)}
+                  isIDs={true}
                 />
               </Col>
             </Row>
@@ -6501,7 +6618,17 @@ function Configuratin() {
             </Row>
 
             <div className="mt-4 config-tbl-container">
-              <h6 className="mb-3 text-primary">Existing Regions</h6>
+              <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+                <h6 className="m-0 text-primary">Existing Regions</h6>
+                <Button
+                  style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                  onClick={() =>
+                    navigate("/region", { state: { search: "Region" } })
+                  }
+                >
+                  <FaArrowUpRightFromSquare size={14} />
+                </Button>
+              </div>
               <Table
                 pagination={{ pageSize: 10 }}
                 columns={columnDivisions}
@@ -6556,15 +6683,35 @@ function Configuratin() {
         }}
       >
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
-          <Row>
-            <Col span={24}>
+          <Row gutter={24}>
+            <Col span={12}>
               <CustomSelect
                 label="Type"
-                required
                 placeholder="Region"
-                isSimple
-                disabled
-                hasError={!!errors?.Divisions?.type}
+                value={"Region"}
+                options={[{ label: "Region", value: "Region" }]}
+                isSimple={true}
+                disabled={true}
+                required
+                hasError={!!errors?.Divisions?.lookuptypeId}
+              />
+            </Col>
+            <Col span={12}>
+              <CustomSelect
+                label="Region Officer"
+                placeholder="Select Region Officer"
+                options={iroUsers.map((user) => ({
+                  key: user._id,
+                  label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
+                }))}
+                value={
+                  drawerIpnuts?.Divisions?.officer?._id ||
+                  drawerIpnuts?.Divisions?.officer
+                }
+                onChange={(e) =>
+                  drawrInptChng("Divisions", "officer", e.target.value)
+                }
+                isIDs={true}
               />
             </Col>
           </Row>
@@ -6633,7 +6780,17 @@ function Configuratin() {
           </Checkbox>
 
           <div className="mt-4 config-tbl-container">
-            <h6 className=" mb-3 text-primary">Existing Regions</h6>
+            <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+              <h6 className="m-0 text-primary">Existing Regions</h6>
+              <Button
+                style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                onClick={() =>
+                  navigate("/region", { state: { search: "Region" } })
+                }
+              >
+                <FaArrowUpRightFromSquare size={14} />
+              </Button>
+            </div>
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnDivisions}
@@ -6688,13 +6845,26 @@ function Configuratin() {
         <div className="drawer-main-cntainer p-4 me-2 ms-2">
           <div className="mb-2">
             <Row gutter={24}>
-              <Col span={24}>
+              <Col span={12}>
                 <CustomSelect
                   label="Type"
                   name="type"
                   placeholder="Work Location"
                   disabled={true}
                   required
+                />
+              </Col>
+              <Col span={12}>
+                <CustomSelect
+                  label="Officer (IRO)"
+                  placeholder="Select Officer"
+                  options={iroUsers.map((user) => ({
+                    key: user._id,
+                    label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
+                  }))}
+                  value={drawerIpnuts?.Station?.officer?._id || drawerIpnuts?.Station?.officer}
+                  onChange={(e) => drawrInptChng("Station", "officer", e.target.value)}
+                  isIDs={true}
                 />
               </Col>
             </Row>
@@ -6745,16 +6915,20 @@ function Configuratin() {
                   {/* Region Select */}
                   <div style={{ flex: 1 }}>
                     <CustomSelect
-                      label="Region"
-                      placeholder="Select Region"
-                      options={regionOptions}
+                      label="Branch"
+                      placeholder="Select Branch"
+                      options={branchOptions}
                       isIDs={true}
                       disabled={isDisable}
                       required
                       hasError={!!errors?.Station?.Parentlookupid}
                       value={drawerIpnuts?.Station?.Parentlookupid}
-                      onChange={(val) =>
-                        drawrInptChng("Station", "Parentlookupid", val.target.value)
+                      onChange={(e) =>
+                        drawrInptChng(
+                          "Station",
+                          "Parentlookupid",
+                          e.target.value,
+                        )
                       }
                     />
                   </div>
@@ -6768,7 +6942,7 @@ function Configuratin() {
                     <Button
                       className="butn primary-btn detail-btn"
                       style={{ height: 40 }}
-                      onClick={() => openCloseDrawerFtn("DivisionsForDistrict")}
+                      onClick={() => openCloseDrawerFtn("Districts")}
                     >
                       +
                     </Button>

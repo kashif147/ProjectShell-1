@@ -3,20 +3,23 @@ import React, { useEffect, useState } from "react";
 import { Drawer, Table, Button, Card, Typography, Space, Tag } from "antd";
 import { useDispatch, useSelector } from "react-redux";
 import axios from "axios";
-import { UserPlus, MapPin } from "lucide-react";
+import { UserPlus, MapPin, Send, ChevronDown, ChevronRight } from "lucide-react";
+import MyConfirm from "./MyConfirm";
 
 const { Text } = Typography;
 
 const USER_SERVICE_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 // Role ID for IRO — update if needed
-const IRO_ROLE_ID = "68c6b4d1e42306a6836622c7";
+const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
 
-function ContactDrawer({ open, onClose, title = "Contacts", onAssign }) {
+function ContactDrawer({ open, onClose, title = "Contacts", onAssign, type = "workLocation" }) {
   const dispatch = useDispatch();
   const { selectedWorkLocations } = useSelector((state) => state.lookups);
 
   const [users, setUsers] = useState([]);
   const [usersLoading, setUsersLoading] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     if (open) {
@@ -41,8 +44,8 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign }) {
       const userList = Array.isArray(data)
         ? data
         : Array.isArray(data?.data)
-        ? data.data
-        : [];
+          ? data.data
+          : [];
       setUsers(userList);
     } catch (err) {
       console.error("Failed to fetch IRO users:", err);
@@ -82,33 +85,62 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign }) {
       key: "address",
       render: () => "-",
     },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
+  ];
+
+  const handleAssign = () => {
+    if (selectedRowKeys.length === 0) return;
+    const selectedUser = users.find((u) => (u._id || u.userEmail) === selectedRowKeys[0]);
+    if (!selectedUser) return;
+
+    MyConfirm({
+      title: "Assign IRO",
+      message: "Do you want to assign",
+      onConfirm: () => {
+        if (onAssign) onAssign(selectedUser, selectedWorkLocations);
+      },
+    });
+  };
+
+  const getLabel = () => {
+    switch (type) {
+      case "Branch": return "Branches";
+      case "Region": return "Regions";
+      default: return "Work Locations";
+    }
+  };
+
+  const getOfficerLabel = () => {
+    switch (type) {
+      case "Branch": return "Branch Manager";
+      case "Region": return "Region Officer";
+      default: return "IRO";
+    }
+  };
+
+  return (
+    <Drawer
+      open={open}
+      onClose={onClose}
+      width={1040}
+      title={title}
+      extra={
         <Button
           type="primary"
-          size="small"
-          icon={<UserPlus size={14} />}
-          onClick={() => {
-            if (onAssign) onAssign(record, selectedWorkLocations);
-          }}
+          icon={<Send size={16} />}
+          disabled={selectedRowKeys.length === 0}
+          onClick={handleAssign}
           style={{
             backgroundColor: "#45669d",
             borderColor: "#45669d",
             display: "flex",
             alignItems: "center",
-            gap: "4px",
+            gap: "8px",
           }}
         >
           Assign
         </Button>
-      ),
-    },
-  ];
-
-  return (
-    <Drawer open={open} onClose={onClose} width={1040} title={title}>
+      }
+    >
       <Card
         bordered={false}
         className="drawer-main-cntainer"
@@ -129,22 +161,35 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign }) {
               style={{
                 display: "flex",
                 alignItems: "center",
-                gap: "8px",
-                marginBottom: "8px",
+                justifyContent: "space-between",
+                cursor: "pointer",
               }}
+              onClick={() => setIsExpanded(!isExpanded)}
             >
-              <MapPin size={16} color="#1890ff" />
-              <Text strong style={{ color: "#1890ff" }}>
-                Selected Work Locations to Assign:
-              </Text>
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: isExpanded ? "8px" : "0",
+                }}
+              >
+                <MapPin size={16} color="#1890ff" />
+                <Text strong style={{ color: "#1890ff" }}>
+                  Selected {getLabel()} to Assign {getOfficerLabel()}: ({selectedWorkLocations.length})
+                </Text>
+              </div>
+              {isExpanded ? <ChevronDown size={18} color="#1890ff" /> : <ChevronRight size={18} color="#1890ff" />}
             </div>
-            <Space size={[0, 8]} wrap>
-              {selectedWorkLocations.map((location) => (
-                <Tag color="geekblue" key={location._id || location.code}>
-                  {location.lookupname || location.DisplayName || location.code}
-                </Tag>
-              ))}
-            </Space>
+            {isExpanded && (
+              <Space size={[0, 8]} wrap>
+                {selectedWorkLocations.map((location) => (
+                  <Tag color="geekblue" key={location._id || location.code}>
+                    {location.lookupname || location.DisplayName || location.code}
+                  </Tag>
+                ))}
+              </Space>
+            )}
           </div>
         )}
 
@@ -163,6 +208,11 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign }) {
             dataSource={users}
             loading={usersLoading}
             rowKey={(record) => record._id || record.userEmail}
+            rowSelection={{
+              type: "radio",
+              selectedRowKeys,
+              onChange: (keys) => setSelectedRowKeys(keys),
+            }}
             rowClassName={(_, index) =>
               index % 2 !== 0 ? "odd-row" : "even-row"
             }

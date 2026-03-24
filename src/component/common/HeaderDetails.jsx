@@ -73,9 +73,11 @@ import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
 import { useCasesEdit } from "../../context/CasesEditContext";
+import { getAllLookups } from "../../features/LookupsSlice";
+import { baseURL } from "../../utils/Utilities";
 import "../../styles/CreateCasesDrawer.css";
 
-function HeaderDetails() {
+function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalContactDrawer, selectedRowsCount }) {
   const { Search } = Input;
   const { TextArea } = Input;
   const { filtersState } = useFilters();
@@ -253,10 +255,21 @@ function HeaderDetails() {
     { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
     { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
     {
-      label: "Assign IRO",
+      label: `Assign ${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"}`,
       onClick: (e) => {
         e?.domEvent?.stopPropagation();
-        setcontactDrawer((prev) => !prev);
+        
+        // Selection check for lookup routes
+        if ((nav === "/worklocation" || nav === "/region" || nav === "/branch") && selectedWorkLocations.length === 0) {
+          MyAlert("warning", "Selection Required", "plz select region barch or worklocation frist");
+          return;
+        }
+
+        if (setExternalContactDrawer) {
+          setExternalContactDrawer((prev) => !prev);
+        } else {
+          setcontactDrawer((prev) => !prev);
+        }
       },
     },
   ];
@@ -271,8 +284,8 @@ function HeaderDetails() {
   const menuItems =
     nav === "/CasesSummary"
       ? [...defaultMenuItems, editCasesItem]
-      : nav === "/worklocation"
-        ? defaultMenuItems.filter((item) => item.label === "Assign IRO")
+      : nav === "/worklocation" || nav === "/region" || nav === "/branch"
+        ? defaultMenuItems.filter((item) => item.label.startsWith("Assign"))
         : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
@@ -307,6 +320,7 @@ function HeaderDetails() {
   const dispatch = useDispatch();
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
+  const { selectedWorkLocations = [] } = useSelector((state) => state.lookups, shallowEqual);
   useEffect(() => {
     dispatch(fetchRegions());
   }, [dispatch]);
@@ -542,11 +556,60 @@ function HeaderDetails() {
         }
       },
       onCancel: () => {
-        if (!isProcessing) {
+        if (typeof MyAlert === 'function') {
           MyAlert('info', 'Cancelled', 'Approval process was cancelled.');
         }
       },
     });
+  };
+
+  const handleAssignIRO = async (selectedUser, selectedWorkLocations) => {
+    if (!selectedWorkLocations || selectedWorkLocations.length === 0) {
+      MyAlert("warning", "Selection Required", "Please select at least one work location.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const officerId = selectedUser._id || selectedUser.id;
+
+    const processingKey = "iro-assignment-processing";
+    message.loading({
+      content: `Assigning IRO to ${selectedWorkLocations.length} location(s)...`,
+      duration: 0,
+      key: processingKey,
+    });
+
+    const officerLabel = nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO";
+
+    try {
+      const locationIds = selectedWorkLocations.map((location) => location._id || location.id);
+      const payload = {
+        ids: locationIds,
+        officer: officerId,
+      };
+
+      await axios.patch(`${baseURL}/lookups/officer`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      message.success({
+        content: `${officerLabel} assigned successfully!`,
+        key: processingKey,
+      });
+
+      // Refresh lookups to show updated officer
+      dispatch(getAllLookups());
+      setcontactDrawer(false);
+    } catch (error) {
+      console.error(`Failed to assign ${officerLabel}:`, error);
+      message.error({
+        content: `Failed to assign ${officerLabel}: ${error.response?.data?.message || error.message}`,
+        key: processingKey,
+      });
+    }
   };
 
   const gender = {
@@ -774,6 +837,7 @@ function HeaderDetails() {
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
       {
+        !hideBreadcrumb &&
         location?.pathname !== "/applicationMgt" &&
         location?.pathname !== "/CommunicationBatchDetail" &&
         !location?.pathname?.startsWith("/BatchMemberSummary") &&
@@ -783,7 +847,7 @@ function HeaderDetails() {
       }
 
       <div
-          className={`details-header d-flex w-100 overflow-hidden ${location?.pathname == "/Details" ||
+        className={`details-header d-flex w-100 overflow-hidden ${location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
@@ -895,6 +959,8 @@ function HeaderDetails() {
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
             location?.pathname == "/worklocation" ||
+            location?.pathname == "/region" ||
+            location?.pathname == "/branch" ||
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
             location?.pathname == "/templeteSummary" ||
@@ -940,16 +1006,16 @@ function HeaderDetails() {
                           nav === "/Reconciliation" || (
                             ["/Batches", "/Import", "/Deductions", "/StandingOrders", "/Cheque", "/Refunds", "/write-offs", "/onlinePayment", "/DirectDebit"].includes(nav) && !hasPermission('payments:create')
                           ) || (
-                            ["/Applications", "/Summary"].includes(nav) && !hasPermission('application:create')
-                          ) || (
-                            nav === "/EventsSummary" && !hasPermission('events:create')
-                          ) || (
-                            nav === "/ChangCateSumm" && !hasPermission('changeOfCategory:create')
-                          ) || (
-                            nav === "/CasesSummary" && (screenName === "All Issues" || screenName === "Assigned to me") && !hasPermission('queries:create')
-                          ) || (
-                            nav === "/InAppNotifications" && !hasPermission('notifications:create')
-                          ) ? null : (
+                              ["/Applications", "/Summary"].includes(nav) && !hasPermission('application:create')
+                            ) || (
+                              nav === "/EventsSummary" && !hasPermission('events:create')
+                            ) || (
+                              nav === "/ChangCateSumm" && !hasPermission('changeOfCategory:create')
+                            ) || (
+                              nav === "/CasesSummary" && (screenName === "All Issues" || screenName === "Assigned to me") && !hasPermission('queries:create')
+                            ) || (
+                              nav === "/InAppNotifications" && !hasPermission('notifications:create')
+                            ) ? null : (
                             <Button
                               onClick={() => {
                                 if (nav == "/Applications") {
@@ -1099,13 +1165,13 @@ function HeaderDetails() {
                         style={{ width: 300 }}
                         className="inp"
                       />
-                     ) : location?.pathname === "/worklocation" ? null : (
+                    ) : (location?.pathname === "/worklocation" || location?.pathname === "/region" || location?.pathname === "/branch") ? null : (
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <Toolbar />
                       </div>
                     )}
-                     <div className="d-flex flex-shrink-0">
-                      {location?.pathname === "/worklocation" ? null : (
+                    <div className="d-flex flex-shrink-0">
+                      {(location?.pathname === "/worklocation" || location?.pathname === "/region" || location?.pathname === "/branch") ? null : (
                         <SaveViewMenu className="ms-3" />
                       )}
                     </div>
@@ -1456,7 +1522,9 @@ function HeaderDetails() {
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(false)}
-        title="IRO Assignment"
+        title={`${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"} Assignment`}
+        onAssign={handleAssignIRO}
+        type={nav === "/branch" ? "Branch" : nav === "/region" ? "Region" : "workLocation"}
       />
       <SimpleBatch
         open={isSimpleBatchOpen}

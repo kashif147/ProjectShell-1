@@ -160,7 +160,7 @@ const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
-const WorkLocation = lazyWithRetry(() => import("../src/component/common/PopOut"));
+const PopOut = lazyWithRetry(() => import("./component/common/PopOut"));
 const Members = lazyWithRetry(() => import("./pages/membership/Members"));
 const RemindersDetails = lazyWithRetry(
   () => import("./pages/reminders/RemindersDetails"),
@@ -860,7 +860,23 @@ function Entry() {
                         path="worklocation"
                         element={
                           <ProtectedRoute>
-                            <WorkLocation />
+                            <PopOut />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="region"
+                        element={
+                          <ProtectedRoute>
+                            <PopOut />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="branch"
+                        element={
+                          <ProtectedRoute>
+                            <PopOut />
                           </ProtectedRoute>
                         }
                       />
