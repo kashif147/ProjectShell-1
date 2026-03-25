@@ -12,7 +12,7 @@ const USER_SERVICE_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
 // Role ID for IRO — update if needed
 const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
 
-function ContactDrawer({ open, onClose, title = "Contacts", onAssign, type = "workLocation" }) {
+function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign, type = "workLocation" }) {
   const dispatch = useDispatch();
   const { selectedWorkLocations } = useSelector((state) => state.lookups);
 
@@ -87,16 +87,32 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, type = "wo
     },
   ];
 
+  const isAssigning = selectedRowKeys.length > 0;
+
   const handleAssign = () => {
     if (selectedRowKeys.length === 0) return;
     const selectedUser = users.find((u) => (u._id || u.userEmail) === selectedRowKeys[0]);
     if (!selectedUser) return;
 
     MyConfirm({
-      title: "Assign IRO",
-      message: "Do you want to assign",
+      title: `Assign ${getOfficerLabel()}`,
+      message: `Do you want to assign this ${getOfficerLabel()}?`,
       onConfirm: () => {
         if (onAssign) onAssign(selectedUser, selectedWorkLocations);
+      },
+    });
+  };
+
+  const handleUnassign = () => {
+    MyConfirm({
+      title: `Unassign ${getOfficerLabel()}`,
+      message: `Do you want to unassign the ${getOfficerLabel()} from the selected ${getLabel()}?`,
+      onConfirm: () => {
+        if (onUnassign) {
+          onUnassign(selectedWorkLocations);
+        } else if (onAssign) {
+          onAssign(null, selectedWorkLocations);
+        }
       },
     });
   };
@@ -122,22 +138,24 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, type = "wo
       open={open}
       onClose={onClose}
       width={1040}
-      title={title}
+      title={isAssigning
+        ? `${getOfficerLabel()} Assignment`
+        : `Unassign ${getOfficerLabel()}`
+      }
       extra={
         <Button
           type="primary"
           icon={<Send size={16} />}
-          disabled={selectedRowKeys.length === 0}
-          onClick={handleAssign}
+          onClick={isAssigning ? handleAssign : handleUnassign}
           style={{
-            backgroundColor: "#45669d",
-            borderColor: "#45669d",
+            backgroundColor: isAssigning ? "#45669d" : "#ff4d4f",
+            borderColor: isAssigning ? "#45669d" : "#ff4d4f",
             display: "flex",
             alignItems: "center",
             gap: "8px",
           }}
         >
-          Assign
+          {isAssigning ? "Assign" : "Unassign"}
         </Button>
       }
     >
@@ -176,7 +194,7 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, type = "wo
               >
                 <MapPin size={16} color="#1890ff" />
                 <Text strong style={{ color: "#1890ff" }}>
-                  Selected {getLabel()} to Assign {getOfficerLabel()}: ({selectedWorkLocations.length})
+                  Selected {getLabel()} to {isAssigning ? "Assign" : "Unassign"} {getOfficerLabel()}: ({selectedWorkLocations.length})
                 </Text>
               </div>
               {isExpanded ? <ChevronDown size={18} color="#1890ff" /> : <ChevronRight size={18} color="#1890ff" />}

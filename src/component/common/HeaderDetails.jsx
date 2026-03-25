@@ -570,16 +570,18 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     }
 
     const token = localStorage.getItem("token");
-    const officerId = selectedUser._id || selectedUser.id;
+    const isUnassign = !selectedUser;
+    const officerId = isUnassign ? null : (selectedUser._id || selectedUser.id);
+
+    const officerLabel = nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO";
+    const actionLabel = isUnassign ? "Unassigning" : "Assigning";
 
     const processingKey = "iro-assignment-processing";
     message.loading({
-      content: `Assigning IRO to ${selectedWorkLocations.length} location(s)...`,
+      content: `${actionLabel} ${officerLabel} ${isUnassign ? "from" : "to"} ${selectedWorkLocations.length} location(s)...`,
       duration: 0,
       key: processingKey,
     });
-
-    const officerLabel = nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO";
 
     try {
       const locationIds = selectedWorkLocations.map((location) => location._id || location.id);
@@ -596,7 +598,7 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       });
 
       message.success({
-        content: `${officerLabel} assigned successfully!`,
+        content: `${officerLabel} ${isUnassign ? "unassigned" : "assigned"} successfully!`,
         key: processingKey,
       });
 
@@ -604,9 +606,9 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       dispatch(getAllLookups());
       setcontactDrawer(false);
     } catch (error) {
-      console.error(`Failed to assign ${officerLabel}:`, error);
+      console.error(`Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}:`, error);
       message.error({
-        content: `Failed to assign ${officerLabel}: ${error.response?.data?.message || error.message}`,
+        content: `Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}: ${error.response?.data?.message || error.message}`,
         key: processingKey,
       });
     }
