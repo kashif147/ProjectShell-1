@@ -450,8 +450,8 @@ function Configuratin() {
   // Helper function to refresh data after mutations
   // Resets the state first (so condition allows fetch) then fetches fresh data
   const refreshLookups = () => {
-    // dispatch(resetLookups());
-    // dispatch(getAllLookups());
+    dispatch(resetLookups());
+    dispatch(getAllLookups());
   };
 
   const refreshContacts = () => {
@@ -4734,6 +4734,32 @@ function Configuratin() {
     setSearchTermBranch("");
   };
 
+  // ---- Work Location (Station) search ----
+  const [searchTermStation, setSearchTermStation] = useState("");
+
+  const filteredWorkLocations = useMemo(() => {
+    const workLocations = groupedLookups?.workLocation || [];
+    if (!searchTermStation.trim()) return workLocations;
+
+    const term = searchTermStation.toLowerCase().trim();
+    return workLocations.filter(
+      (item) =>
+        (item.lookupname || "").toLowerCase().includes(term) ||
+        (item.code || "").toLowerCase().includes(term) ||
+        (item.DisplayName || "").toLowerCase().includes(term) ||
+        (item.Parentlookup || "").toLowerCase().includes(term) ||
+        (item.officer?.userEmail || "").toLowerCase().includes(term),
+    );
+  }, [groupedLookups?.workLocation, searchTermStation]);
+
+  const handleStationSearchChange = (e) => {
+    setSearchTermStation(e.target.value);
+  };
+
+  const clearStationSearch = () => {
+    setSearchTermStation("");
+  };
+
   // Updated table columns with Region filter
   const uniqueRegionNames = useMemo(() => {
     if (!branchesWithRegionData.length) return [];
@@ -6292,10 +6318,10 @@ function Configuratin() {
         isContact={true}
         update={async () => {
           if (!validateForm("Districts")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Districts, () =>
-            resetCounteries("Districts", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
+          await updateFtn("/lookup", drawerIpnuts?.Districts, () => {
+            resetCounteries("Districts");
+            refreshLookups();
+          });
           IsUpdateFtn("Districts", false);
         }}
         add={() => {
@@ -6307,7 +6333,7 @@ function Configuratin() {
             "Data did not insert:",
             () => {
               resetCounteries("Districts");
-              dispatch(getAllLookups());
+              refreshLookups();
             },
           );
         }}
@@ -6468,6 +6494,7 @@ function Configuratin() {
               dataSource={filteredBranches}
               className="drawer-tbl"
               size="small"
+              scroll={{ x: "max-content" }}
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index
               }
@@ -6817,7 +6844,7 @@ function Configuratin() {
         title="Work Location"
         isContact={true}
         open={drawerOpen?.Station}
-        isPagination={true}
+        // isPagination={true}
         onClose={() => openCloseDrawerFtn("Station")}
         add={() => {
           if (!validateForm("Station")) return;
@@ -6827,18 +6854,18 @@ function Configuratin() {
             "Data inserted successfully:",
             "Data did not insert:",
             () => {
-              resetCounteries("Station", () => dispatch(getAllLookups()));
+              resetCounteries("Station");
+              refreshLookups();
             },
           );
-          dispatch(getAllLookups());
         }}
         isEdit={isUpdateRec?.Station}
         update={async () => {
           if (!validateForm("Station")) return;
-          await updateFtn("/lookup", drawerIpnuts?.Station, () =>
-            resetCounteries("Station", () => dispatch(getAllLookups())),
-          );
-          dispatch(getAllLookups());
+          await updateFtn("/lookup", drawerIpnuts?.Station, () => {
+            resetCounteries("Station");
+            refreshLookups();
+          });
           IsUpdateFtn("Station", false);
         }}
       >
@@ -7091,13 +7118,21 @@ function Configuratin() {
                 <FaArrowUpRightFromSquare size={14} />
               </Button>
             </div>
-
+            <MyInput
+              placeholder="Search work locations..."
+              style={{ width: 250 }}
+              prefix={<SearchOutlined />}
+              value={searchTermStation}
+              onChange={handleStationSearchChange}
+              onClear={clearStationSearch}
+              allowClear
+            />
             <Table
-              pagination={true}
               columns={columnStations}
-              dataSource={groupedLookups?.workLocation}
+              dataSource={filteredWorkLocations}
               className="drawer-tbl"
               size="small"
+              scroll={{ x: "max-content" }}
               loading={lookupsloading}
               rowKey={(record, index) =>
                 record._id || record.id || record.key || index

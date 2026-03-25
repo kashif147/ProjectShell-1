@@ -209,9 +209,16 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, type = "wo
             loading={usersLoading}
             rowKey={(record) => record._id || record.userEmail}
             rowSelection={{
-              type: "radio",
+              type: "checkbox",
               selectedRowKeys,
-              onChange: (keys) => setSelectedRowKeys(keys),
+              onChange: (keys) => {
+                // Allow only one selection at a time — keep the latest
+                if (keys.length > 1) {
+                  setSelectedRowKeys([keys[keys.length - 1]]);
+                } else {
+                  setSelectedRowKeys(keys);
+                }
+              },
             }}
             rowClassName={(_, index) =>
               index % 2 !== 0 ? "odd-row" : "even-row"
