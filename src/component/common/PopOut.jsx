@@ -18,11 +18,6 @@ function PopOut() {
   const { lookups, lookupsloading } = useSelector((state) => state.lookups);
   const [searchText, setSearchText] = useState("");
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
-  const [isAssignModalOpen, setIsAssignModalOpen] = useState(false);
-  const [selectedItem, setSelectedItem] = useState(null);
-  const [iroUsers, setIroUsers] = useState([]);
-  const [selectedIroId, setSelectedIroId] = useState(null);
-  const [assignLoading, setAssignLoading] = useState(false);
   const [contactDrawer, setContactDrawer] = useState(false);
 
   // Determine type based on path
@@ -54,56 +49,6 @@ function PopOut() {
       dispatch(getAllLookups());
     }
   }, [dispatch, lookups, lookupsloading]);
-
-  useEffect(() => {
-    const fetchIroUsers = async () => {
-      const token = localStorage.getItem("token");
-      try {
-        const response = await axios.get(`${baseURL}/roles/${IRO_ROLE_ID}/users`, {
-          headers: {
-            Authorization: `Bearer ${token}`,
-            "Content-Type": "application/json",
-          },
-        });
-        const data = response.data?.data || response.data || [];
-        const users = Array.isArray(data) ? data : [];
-        setIroUsers(users);
-      } catch (error) {
-        console.error("Failed to fetch IRO users:", error);
-      }
-    };
-    fetchIroUsers();
-  }, []);
-
-  const handleIndividualAssign = async () => {
-    if (!selectedIroId) {
-      message.warning(`Please select a ${officerLabel}.`);
-      return;
-    }
-    setAssignLoading(true);
-    const token = localStorage.getItem("token");
-    const payload = {
-      ids: [selectedItem._id],
-      officer: selectedIroId,
-    };
-    try {
-      await axios.patch(`${baseURL}/lookups/officer`, payload, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      message.success(`${officerLabel} assigned successfully!`);
-      setIsAssignModalOpen(false);
-      setSelectedIroId(null);
-      dispatch(getAllLookups());
-    } catch (error) {
-      console.error("Assignment failed:", error);
-      message.error(`Failed to assign ${officerLabel}.`);
-    } finally {
-      setAssignLoading(false);
-    }
-  };
 
   // Helper function to get unique filter values
   const getUniqueFilterValues = (dataSource, getValue) => {
@@ -343,9 +288,9 @@ function PopOut() {
           icon={<UserOutlined />}
           style={{ display: 'flex', alignItems: 'center', height: '100%' }}
           onClick={() => {
-            setSelectedItem(record);
-            setSelectedIroId(record.officer?.officer || record.officer?.userid || null);
-            setIsAssignModalOpen(true);
+            // Set this single item as the selected work location
+            dispatch({ type: "lookups/setSelectedWorkLocations", payload: [record] });
+            setContactDrawer(true);
           }}
         >
           Assign
@@ -413,47 +358,57 @@ function PopOut() {
         </div>
       </div>
 
-      <Modal
-        title={
-          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 0' }}>
-            <UserOutlined style={{ color: '#1890ff' }} />
-            <span>Assign {officerLabel} to {selectedItem?.DisplayName || selectedItem?.lookupname}</span>
-          </div>
-        }
-        open={isAssignModalOpen}
-        onOk={handleIndividualAssign}
-        onCancel={() => setIsAssignModalOpen(false)}
-        okText="Assign"
-        confirmLoading={assignLoading}
-        width={450}
-        destroyOnClose
-        bodyStyle={{ padding: '20px 24px' }}
-      >
-        <div style={{ padding: '10px 0' }}>
-          <div style={{ marginBottom: '12px', fontWeight: 500, fontSize: '14px' }}>Select {officerLabel}:</div>
-          <Select
-            showSearch
-            style={{ width: '100%' }}
-            placeholder={`Search for ${officerLabel}`}
-            optionFilterProp="label"
-            value={selectedIroId}
-            onChange={(value) => setSelectedIroId(value)}
-            filterOption={(input, option) =>
-              (option?.label ?? '').toLowerCase().includes(input.toLowerCase())
-            }
-            options={iroUsers.map(user => ({
-              value: user._id,
-              label: `${user.userFirstName || ''} ${user.userLastName || ''} (${user.userEmail || 'No Email'})`.trim()
-            }))}
-          />
-        </div>
-      </Modal>
-
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setContactDrawer(false)}
-        selectedLocations={selectedRowKeys}
         type={type}
+        onAssign={async (selectedUser, selectedWorkLocations) => {
+          if (!selectedWorkLocations || selectedWorkLocations.length === 0) {
+            message.warning("Please select at least one location.");
+            return;
+          }
+
+          const token = localStorage.getItem("token");
+          const isUnassign = !selectedUser;
+          const officerId = isUnassign ? null : (selectedUser._id || selectedUser.id);
+          const actionLabel = isUnassign ? "Unassigning" : "Assigning";
+
+          const processingKey = "iro-assignment-processing";
+          message.loading({
+            content: `${actionLabel} ${officerLabel} ${isUnassign ? "from" : "to"} ${selectedWorkLocations.length} location(s)...`,
+            duration: 0,
+            key: processingKey,
+          });
+
+          try {
+            const locationIds = selectedWorkLocations.map((loc) => loc._id || loc.id);
+            const payload = {
+              ids: locationIds,
+              officer: officerId,
+            };
+
+            await axios.patch(`${baseURL}/lookups/officer`, payload, {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
+              },
+            });
+
+            message.success({
+              content: `${officerLabel} ${isUnassign ? "unassigned" : "assigned"} successfully!`,
+              key: processingKey,
+            });
+
+            dispatch(getAllLookups());
+            setContactDrawer(false);
+          } catch (error) {
+            console.error(`Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}:`, error);
+            message.error({
+              content: `Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}: ${error.response?.data?.message || error.message}`,
+              key: processingKey,
+            });
+          }
+        }}
       />
     </div>
   );
