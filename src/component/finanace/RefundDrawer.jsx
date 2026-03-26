@@ -93,34 +93,34 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                     </Col>
                     <Col span={24}>
                         <div className="my-input-wrapper">
-  <div className="d-flex justify-content-between">
-    <label htmlFor="refund" className={`my-input-label ${errors.refund ? "error" : ""}`}>
-      Refund <span className="star">*</span>
-      {errors.refund && <span className="error-message">Required</span>}
-    </label>
-  </div>
-  <div className={`my-input-container ${errors.refund ? "error" : ""}`}>
-    <InputNumber
-      name="refund"
-      placeholder="0.00"
-      value={formValues.refund}
-      onChange={(value) => handleChange("refund", value)}
-      prefix="€"
-      precision={2}
-      min={0}
-      style={{ width: "100%" }}
-      controls={false}
-      size="large"
-      className="refund-input-right"
-      formatter={(value) =>
-        value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
-      }
-      parser={(value) => value.replace(/[^\d.]/g, "")}
-      status={errors.refund ? "error" : ""}
-    />
-  </div>
-</div>
-<style>{`
+                            <div className="d-flex justify-content-between">
+                                <label htmlFor="refund" className={`my-input-label ${errors.refund ? "error" : ""}`}>
+                                    Refund <span className="star">*</span>
+                                    {errors.refund && <span className="error-message">Required</span>}
+                                </label>
+                            </div>
+                            <div className={`my-input-container ${errors.refund ? "error" : ""}`}>
+                                <InputNumber
+                                    name="refund"
+                                    placeholder="0.00"
+                                    value={formValues.refund}
+                                    onChange={(value) => handleChange("refund", value)}
+                                    prefix="€"
+                                    precision={2}
+                                    min={0}
+                                    style={{ width: "100%" }}
+                                    controls={false}
+                                    size="large"
+                                    className="refund-input-right"
+                                    formatter={(value) =>
+                                        value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
+                                    }
+                                    parser={(value) => value.replace(/[^\d.]/g, "")}
+                                    status={errors.refund ? "error" : ""}
+                                />
+                            </div>
+                        </div>
+                        <style>{`
   .refund-input-right .ant-input-number-input { text-align: right !important; }
 `}</style>
 
