@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty } from "antd";
+import { Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty, notification } from "antd";
+import CommonPopConfirm from "../common/CommonPopConfirm";
 import dayjs from "dayjs";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
@@ -30,6 +31,7 @@ const TransactionHistory = () => {
   const [transactionType, setTransactionType] = useState("All");
   const [dateRange, setDateRange] = useState([]);
   const [amountRange, setAmountRange] = useState("All");
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
 
   useEffect(() => {
     if (memberId) {
@@ -195,6 +197,12 @@ const TransactionHistory = () => {
     setAmountRange("All");
   };
 
+  // Refund handler
+  const handleRefund = () => {
+    console.log("Refund confirmed for:", selectedRowKeys);
+    // TODO: call refund API here
+  };
+
   if (!memberId) {
     return <div className="mt-4"><Empty description="No Member ID provided" /></div>;
   }
@@ -216,7 +224,7 @@ const TransactionHistory = () => {
     >
       {/* Filters */}
       <Card className="mb-3">
-        <Row gutter={16} align="middle">
+        <Row gutter={[12, 12]} align="middle">
           <Col xs={24} md={5}>
             <Input
               size="large"
@@ -237,7 +245,7 @@ const TransactionHistory = () => {
               <Option value="credit">Credit</Option>
             </Select>
           </Col>
-          <Col xs={24} md={7}>
+          <Col xs={24} md={6}>
             <RangePicker
               size="large"
               style={{ width: "100%" }}
@@ -245,7 +253,7 @@ const TransactionHistory = () => {
               onChange={(val) => setDateRange(val || [])}
             />
           </Col>
-          <Col xs={24} md={4}>
+          <Col xs={24} md={3}>
             <Select
               size="large"
               value={amountRange}
@@ -258,10 +266,43 @@ const TransactionHistory = () => {
               <Option value="large">1000+</Option>
             </Select>
           </Col>
-          <Col xs={24} md={4}>
+          <Col xs={24} md={3}>
             <Button size="large" block onClick={handleReset}>
               Reset
             </Button>
+          </Col>
+          <Col xs={24} md={3}>
+            {selectedRowKeys.length > 0 ? (
+              <CommonPopConfirm
+                title="Are you sure you want to refund the selected transaction(s)?"
+                onConfirm={handleRefund}
+                okText="Yes, Refund"
+                cancelText="Cancel"
+              >
+                <Button
+                  size="large"
+                  block
+                  className="butn primary-btn"
+                >
+                  Refund
+                </Button>
+              </CommonPopConfirm>
+            ) : (
+              <Button
+                size="large"
+                block
+                className="butn primary-btn"
+                onClick={() =>
+                  notification.warning({
+                    message: "No Selection",
+                    description: "Please select at least one transaction to refund.",
+                    placement: "topRight",
+                  })
+                }
+              >
+                Refund
+              </Button>
+            )}
           </Col>
         </Row>
       </Card>
@@ -272,7 +313,9 @@ const TransactionHistory = () => {
         columns={columns}
         dataSource={filteredData}
         loading={loading}
-        selection={false}
+        selection={true}
+        rowSelection={{ selectedRowKeys }}
+        onSelectionChange={(keys) => setSelectedRowKeys(keys)}
         tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
       />
       {/* </Card> */}

@@ -9,8 +9,13 @@ import MyConfirm from "./MyConfirm";
 const { Text } = Typography;
 
 const USER_SERVICE_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
-// Role ID for IRO — update if needed
-const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
+
+// Role ID mapping
+const ROLE_IDS = {
+  BRANCH: "68c6b4d1e42306a6836622fd",
+  REGION: "68c6b4d1e42306a6836622fa",
+  IRO: "68c6b4d1e42306a6836622f1",
+};
 
 function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign, type = "workLocation" }) {
   const dispatch = useDispatch();
@@ -23,16 +28,19 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign
 
   useEffect(() => {
     if (open) {
-      fetchIROUsers();
+      fetchUsers();
     }
-  }, [open]);
+  }, [open, type]);
 
-  const fetchIROUsers = async () => {
+  const fetchUsers = async () => {
+    const roleId = type === "Branch" ? ROLE_IDS.BRANCH :
+      type === "Region" ? ROLE_IDS.REGION :
+        ROLE_IDS.IRO;
     setUsersLoading(true);
     try {
       const token = localStorage.getItem("token");
       const { data } = await axios.get(
-        `${USER_SERVICE_URL}/roles/${IRO_ROLE_ID}/users`,
+        `${USER_SERVICE_URL}/roles/${roleId}/users`,
         {
           headers: {
             Authorization: `Bearer ${token}`,
@@ -48,7 +56,7 @@ function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign
           : [];
       setUsers(userList);
     } catch (err) {
-      console.error("Failed to fetch IRO users:", err);
+      console.error(`Failed to fetch users for role ${roleId}:`, err);
       setUsers([]);
     } finally {
       setUsersLoading(false);

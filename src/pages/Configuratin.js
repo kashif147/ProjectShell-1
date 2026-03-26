@@ -41,7 +41,7 @@ import {
   Search,
   Phone,
   Bookmark,
-  HelpCircle,
+  CircleHelp,
   Users,
   Briefcase,
   User,
@@ -91,6 +91,132 @@ import { getBookmarks } from "../features/templete/BookmarkActions";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
 
 const IRO_ROLE_ID = "68c6b4d1e42306a6836622fa";
+
+// Helper function to get unique filter values
+const getUniqueFilterValues = (dataSource, getValue) => {
+  const uniqueValues = new Set();
+  if (Array.isArray(dataSource)) {
+    dataSource.forEach((record) => {
+      const value = getValue(record);
+      if (value !== null && value !== undefined && value !== "") {
+        uniqueValues.add(value.toString());
+      }
+    });
+  }
+  return Array.from(uniqueValues)
+    .sort()
+    .map((value) => ({ text: value, value }));
+};
+
+// Filter Dropdown Component
+const FilterDropdown = ({
+  setSelectedKeys,
+  selectedKeys,
+  confirm,
+  clearFilters,
+  dataSource,
+  getValue,
+}) => {
+  const [searchText, setSearchText] = useState("");
+  const uniqueValues = getUniqueFilterValues(dataSource, getValue);
+  const filteredOptions = uniqueValues.filter((option) =>
+    option.text.toLowerCase().includes(searchText.toLowerCase()),
+  );
+
+  const handleReset = () => {
+    setSearchText("");
+    setSelectedKeys([]);
+    if (clearFilters) clearFilters();
+    confirm();
+  };
+
+  const handleConfirm = () => {
+    confirm();
+  };
+
+  return (
+    <div style={{ padding: 8, width: 280, boxSizing: "border-box" }}>
+      <Input
+        placeholder="Search filter"
+        prefix={<SearchOutlined />}
+        value={searchText}
+        onChange={(e) => setSearchText(e.target.value)}
+        onPressEnter={handleConfirm}
+        style={{
+          marginBottom: 8,
+          width: "100%",
+          boxSizing: "border-box",
+        }}
+        allowClear
+      />
+      <div
+        style={{
+          maxHeight: 200,
+          overflowY: "auto",
+          marginBottom: 8,
+          border: "1px solid #f0f0f0",
+          borderRadius: "4px",
+        }}
+      >
+        {filteredOptions.length > 0 ? (
+          filteredOptions.map((option) => (
+            <div
+              key={option.value}
+              onClick={() => {
+                const newSelectedKeys = selectedKeys?.includes(option.value)
+                  ? selectedKeys.filter((key) => key !== option.value)
+                  : [...(selectedKeys || []), option.value];
+                setSelectedKeys(newSelectedKeys);
+              }}
+              style={{
+                padding: "8px 12px",
+                cursor: "pointer",
+                backgroundColor: selectedKeys?.includes(option.value)
+                  ? "#e6f7ff"
+                  : "transparent",
+                borderBottom: "1px solid #f0f0f0",
+                display: "flex",
+                alignItems: "center",
+              }}
+            >
+              <Checkbox
+                checked={selectedKeys?.includes(option.value) || false}
+                style={{ marginRight: 8 }}
+              />
+              <span style={{ fontSize: "14px" }}>{option.text}</span>
+            </div>
+          ))
+        ) : (
+          <div style={{ padding: "12px", color: "#999", textAlign: "center" }}>
+            No options found
+          </div>
+        )}
+      </div>
+      <Space
+        style={{ display: "flex", justifyContent: "flex-end", marginTop: 8 }}
+      >
+        <Button size="small" onClick={handleReset} style={{ width: 80 }}>
+          Reset
+        </Button>
+        <Button
+          type="primary"
+          size="small"
+          onClick={handleConfirm}
+          style={{ width: 80 }}
+        >
+          OK
+        </Button>
+      </Space>
+    </div>
+  );
+};
+
+// Helper function to create searchable filter dropdown
+const createFilterDropdown = (dataSource, getValue) => {
+  return (props) => (
+    <FilterDropdown {...props} dataSource={dataSource} getValue={getValue} />
+  );
+};
 
 // i have different drwers for configuration of lookups for the system
 
@@ -142,6 +268,145 @@ function Configuratin() {
     loadingC: countriesLoading,
     countriesOptions,
   } = useSelector((state) => state.countries);
+
+  const [searchTermLookup, setSearchTermLookup] = useState("");
+  const [filteredLookups, setFilteredLookups] = useState([]);
+  const [searchTermBranch, setSearchTermBranch] = useState("");
+  const [branchesWithRegionData, setBranchesWithRegionData] = useState([]);
+  const [searchTermStation, setSearchTermStation] = useState("");
+  const [searchTermRegion, setSearchTermRegion] = useState("");
+
+  const groupedLookups = useMemo(() => {
+    if (!lookups || !Array.isArray(lookups)) return {};
+    return lookups.reduce((acc, item) => {
+      const type = item.lookuptypeName || item.lookuptypeId?.lookuptype || item.lookuptype?.name;
+      if (type) {
+        if (!acc[type]) acc[type] = [];
+        acc[type].push(item);
+      }
+      return acc;
+    }, {});
+  }, [lookups]);
+
+  // Lookup-specific search handler function
+  const handleLookupSearch = (value) => {
+    setSearchTermLookup(value);
+    if (!value.trim()) {
+      setFilteredLookups(lookups);
+      return;
+    }
+    const searchValue = value.toLowerCase();
+    const filtered = lookups.filter((item) => {
+      const basicMatch =
+        (item.code && item.code.toLowerCase().includes(searchValue)) ||
+        (item.lookupname &&
+          item.lookupname.toLowerCase().includes(searchValue)) ||
+        (item.DisplayName &&
+          item.DisplayName.toLowerCase().includes(searchValue));
+      const typeMatch =
+        item.lookuptype &&
+        ((item.lookuptype.name &&
+          item.lookuptype.name.toLowerCase().includes(searchValue)) ||
+          (item.lookuptypeId &&
+            item.lookuptypeId.toString().toLowerCase().includes(searchValue)));
+      const parentMatch =
+        item.Parentlookup &&
+        ((item.Parentlookup.lookupname &&
+          item.Parentlookup.lookupname.toLowerCase().includes(searchValue)) ||
+          (item.Parentlookup.DisplayName &&
+            item.Parentlookup.DisplayName.toLowerCase().includes(
+              searchValue,
+            )) ||
+          (item.Parentlookupid &&
+            item.Parentlookupid.toString()
+              .toLowerCase()
+              .includes(searchValue)));
+      const statusMatch =
+        item.isactive !== undefined &&
+        ((item.isactive && "active".includes(searchValue)) ||
+          (!item.isactive && "inactive".includes(searchValue)));
+      return basicMatch || typeMatch || parentMatch || statusMatch;
+    });
+    setFilteredLookups(filtered);
+  };
+
+  // Add this useEffect to initialize filtered Lookup data when lookups change
+  useEffect(() => {
+    setFilteredLookups(lookups);
+  }, [lookups]);
+
+  // Function to get region name for a branch
+  const getRegionNameForBranch = useCallback(
+    (parentLookupId) => {
+      const region = groupedLookups?.Region?.find(
+        (r) => r._id === parentLookupId,
+      );
+      return region ? region.lookupname : "No Region";
+    },
+    [groupedLookups?.Region],
+  );
+
+  // Use useEffect to update branchesWithRegionData when groupedLookups changes
+  useEffect(() => {
+    if (groupedLookups?.Branch) {
+      const updatedBranches = groupedLookups.Branch.map((branch) => ({
+        ...branch,
+        regionName: getRegionNameForBranch(branch.Parentlookupid),
+      }));
+      setBranchesWithRegionData(updatedBranches);
+    }
+  }, [groupedLookups?.Branch, getRegionNameForBranch]);
+
+  // Filter branches based on search term
+  const filteredBranches = useMemo(() => {
+    if (!branchesWithRegionData.length) return [];
+    if (!searchTermBranch.trim()) return branchesWithRegionData;
+    const searchTerm = searchTermBranch.toLowerCase().trim();
+    return branchesWithRegionData.filter(
+      (branch) =>
+        branch.lookupname?.toLowerCase().includes(searchTerm) ||
+        branch.code?.toLowerCase().includes(searchTerm) ||
+        branch.DisplayName?.toLowerCase().includes(searchTerm) ||
+        branch.regionName?.toLowerCase().includes(searchTerm),
+    );
+  }, [branchesWithRegionData, searchTermBranch]);
+
+  const filteredWorkLocations = useMemo(() => {
+    const workLocations = groupedLookups?.workLocation || [];
+    if (!searchTermStation.trim()) return workLocations;
+    const term = searchTermStation.toLowerCase().trim();
+    return workLocations.filter(
+      (item) =>
+        (item.lookupname || "").toLowerCase().includes(term) ||
+        (item.code || "").toLowerCase().includes(term) ||
+        (item.DisplayName || "").toLowerCase().includes(term) ||
+        (item.Parentlookup || "").toLowerCase().includes(term) ||
+        (item.officer?.userEmail || "").toLowerCase().includes(term),
+    );
+  }, [groupedLookups?.workLocation, searchTermStation]);
+
+  const filteredRegions = useMemo(() => {
+    const regionData = groupedLookups?.Region || [];
+    if (!searchTermRegion.trim()) return regionData;
+    const term = searchTermRegion.toLowerCase().trim();
+    return regionData.filter(
+      (item) =>
+        (item.lookupname || "").toLowerCase().includes(term) ||
+        (item.code || "").toLowerCase().includes(term) ||
+        (item.DisplayName || "").toLowerCase().includes(term) ||
+        (item.officer?.userEmail || "").toLowerCase().includes(term),
+    );
+  }, [groupedLookups?.Region, searchTermRegion]);
+
+  // Function to handle search input changes
+  const handleBranchSearchChange = (e) => setSearchTermBranch(e.target.value);
+  const clearBranchSearch = () => setSearchTermBranch("");
+
+  const handleStationSearchChange = (e) => setSearchTermStation(e.target.value);
+  const clearStationSearch = () => setSearchTermStation("");
+
+  const handleRegionSearchChange = (e) => setSearchTermRegion(e.target.value);
+  const clearRegionSearch = () => setSearchTermRegion("");
   const insertDataFtn = async (
     url,
     data,
@@ -588,6 +853,8 @@ function Configuratin() {
     Solicitors: [],
     MaritalStatus: [],
     Sections: [],
+    Committees: [],
+    ContactType: [],
     PostCode: [],
   });
 
@@ -913,6 +1180,9 @@ function Configuratin() {
       "Ranks",
       "RosterType",
       "PostCode",
+      "Sections",
+      "Committees",
+      "ContactType",
     ];
 
     const filteredData = lookupKeys.reduce((acc, key) => {
@@ -1836,11 +2106,23 @@ function Configuratin() {
       title: "Code",
       dataIndex: "code",
       key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => record.code),
+      onFilter: (value, record) => (record.code || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Branch",
       dataIndex: "lookupname",
       key: "lookupname",
+      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
+      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => record.lookupname),
+      onFilter: (value, record) => (record.lookupname || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Display Name",
@@ -1853,8 +2135,26 @@ function Configuratin() {
     //   key: "Parentlookup",
     // },
     {
-      title: "Assigned Officer",
+      title: "Branch Manager",
       key: "officer",
+      sorter: (a, b) => {
+        const emailA = a.officer?.userEmail || (typeof a.officer === 'string' ? a.officer : "");
+        const emailB = b.officer?.userEmail || (typeof b.officer === 'string' ? b.officer : "");
+        return emailA.localeCompare(emailB);
+      },
+      filterDropdown: createFilterDropdown(groupedLookups?.Branch, (record) => {
+        const o = record?.officer;
+        if (!o) return "";
+        return o.userEmail || (typeof o === 'string' ? o : "");
+      }),
+      onFilter: (value, record) => {
+        const o = record?.officer;
+        const email = o?.userEmail || (typeof o === 'string' ? o : "");
+        return (email || "").toString() === value;
+      },
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (_, record) => {
         const o = record?.officer;
         if (!o) return "-";
@@ -1918,29 +2218,98 @@ function Configuratin() {
       title: "Code",
       dataIndex: "code",
       key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.workLocation,
+        (record) => record.code
+      ),
+      onFilter: (value, record) => (record.code || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Work Location",
       dataIndex: "lookupname",
       key: "lookupname",
+      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.workLocation,
+        (record) => record.lookupname
+      ),
+      onFilter: (value, record) =>
+        (record.lookupname || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      sorter: (a, b) => (a.DisplayName || "").localeCompare(b.DisplayName || ""),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.workLocation,
+        (record) => record.DisplayName
+      ),
+      onFilter: (value, record) =>
+        (record.DisplayName || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Branch",
       dataIndex: "Parentlookup",
       key: "Parentlookup",
+      sorter: (a, b) =>
+        (a.Parentlookup || "").localeCompare(b.Parentlookup || ""),
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.workLocation,
+        (record) => record.Parentlookup
+      ),
+      onFilter: (value, record) =>
+        (record.Parentlookup || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
-      title: "Assigned Officer",
+      title: "IRO",
       key: "officer",
+      sorter: (a, b) => {
+        const emailA =
+          a.officer?.userEmail || (typeof a.officer === "string" ? a.officer : "");
+        const emailB =
+          b.officer?.userEmail || (typeof b.officer === "string" ? b.officer : "");
+        return emailA.localeCompare(emailB);
+      },
+      filterDropdown: createFilterDropdown(
+        groupedLookups?.workLocation,
+        (record) => {
+          const o = record?.officer;
+          if (!o) return "";
+          return o.userEmail || (typeof o === "string" ? o : "");
+        }
+      ),
+      onFilter: (value, record) => {
+        const o = record?.officer;
+        const email = o?.userEmail || (typeof o === "string" ? o : "");
+        return (email || "").toString() === value;
+      },
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (_, record) => {
         const o = record?.officer;
         if (!o) return "-";
-        if (typeof o === "object") return o.userEmail || `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() || "-";
+        if (typeof o === "object") {
+          return (
+            o.userEmail ||
+            `${o.userFirstName || ""} ${o.userLastName || ""}`.trim() ||
+            "-"
+          );
+        }
         return String(o);
       },
     },
@@ -1950,21 +2319,23 @@ function Configuratin() {
       render: (_, record) => {
         const addr = record?.worklocationAddress;
         if (!addr) return "-";
-        return [
-          addr.buildingOrHouse,
-          addr.streetOrRoad,
-          addr.areaOrTown,
-          addr.countyCityOrPostCode,
-          addr.country,
-          addr.eircode,
-        ]
-          .filter(Boolean)
-          .join(", ") || "-";
+        return (
+          [
+            addr.buildingOrHouse,
+            addr.streetOrRoad,
+            addr.areaOrTown,
+            addr.countyCityOrPostCode,
+            addr.country,
+            addr.eircode,
+          ]
+            .filter(Boolean)
+            .join(", ") || "-"
+        );
       },
     },
     {
       title: "Active",
-      render: (index, record) => (
+      render: (_, record) => (
         <Checkbox disabled={isDisable} checked={record?.isactive}></Checkbox>
       ),
     },
@@ -1987,7 +2358,7 @@ function Configuratin() {
         <Space size="middle">
           <FaEdit
             size={16}
-            style={{ marginRight: "10px" }}
+            style={{ marginRight: "10px", cursor: "pointer" }}
             onClick={() => {
               IsUpdateFtn("Station", !isUpdateRec?.Station, record);
               addIdKeyToLookup(record?._id, "Station");
@@ -1995,6 +2366,7 @@ function Configuratin() {
           />
           <AiFillDelete
             size={16}
+            style={{ cursor: "pointer" }}
             onClick={() => {
               MyConfirm({
                 title: "Confirm Deletion",
@@ -2017,11 +2389,23 @@ function Configuratin() {
       title: "Code",
       dataIndex: "code",
       key: "code",
+      sorter: (a, b) => (a.code || "").localeCompare(b.code || ""),
+      filterDropdown: createFilterDropdown(groupedLookups?.Region, (record) => record.code),
+      onFilter: (value, record) => (record.code || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Region",
       dataIndex: "lookupname",
       key: "lookupname",
+      sorter: (a, b) => (a.lookupname || "").localeCompare(b.lookupname || ""),
+      filterDropdown: createFilterDropdown(groupedLookups?.Region, (record) => record.lookupname),
+      onFilter: (value, record) => (record.lookupname || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     },
     {
       title: "Display Name",
@@ -2036,6 +2420,24 @@ function Configuratin() {
     {
       title: "Assigned Officer",
       key: "officer",
+      sorter: (a, b) => {
+        const emailA = a.officer?.userEmail || (typeof a.officer === 'string' ? a.officer : "");
+        const emailB = b.officer?.userEmail || (typeof b.officer === 'string' ? b.officer : "");
+        return emailA.localeCompare(emailB);
+      },
+      filterDropdown: createFilterDropdown(groupedLookups?.Region, (record) => {
+        const o = record?.officer;
+        if (!o) return "";
+        return o.userEmail || (typeof o === 'string' ? o : "");
+      }),
+      onFilter: (value, record) => {
+        const o = record?.officer;
+        const email = o?.userEmail || (typeof o === 'string' ? o : "");
+        return (email || "").toString() === value;
+      },
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
       render: (_, record) => {
         const o = record?.officer;
         if (!o) return "-";
@@ -2457,45 +2859,6 @@ function Configuratin() {
       ),
     },
   ];
-  function useGroupByLookupType(lookups) {
-    const [isLoading, setIsLoading] = useState(false);
-    const [groupedData, setGroupedData] = useState({});
-
-    useEffect(() => {
-      if (!lookups || lookups.length === 0) {
-        setGroupedData({});
-        setIsLoading(false);
-        return;
-      }
-
-      setIsLoading(true);
-
-      // Small timeout to prevent UI blocking and show loading state
-      const timer = setTimeout(() => {
-        const result = lookups.reduce((grouped, item) => {
-          const lookupType = item.lookuptypeId?.lookuptype;
-
-          if (!grouped[lookupType]) {
-            grouped[lookupType] = [];
-          }
-
-          grouped[lookupType].push(item);
-          return grouped;
-        }, {});
-
-        setGroupedData(result);
-        setIsLoading(false);
-      }, 0);
-
-      return () => clearTimeout(timer);
-    }, [lookups]);
-
-    return { groupedLookups: groupedData, isLoading };
-  }
-
-  // Usage remains similar
-  const { groupedLookups, isLoading } = useGroupByLookupType(lookups);
-
   // Usage
   // const groupedLookups = groupByLookupType(lookups);
 
@@ -4442,7 +4805,7 @@ function Configuratin() {
         }, // green-500
         {
           key: "counties",
-          icon: <CountyOutlined size={24} color="#22c55e" />,
+          icon: <Globe size={24} color="#22c55e" />,
           label: "Counties",
         }, // green-500
         {
@@ -4602,7 +4965,7 @@ function Configuratin() {
         }, // yellow-400
         {
           key: "Reasons",
-          icon: <HelpCircle size={24} color="#fb923c" />,
+          icon: <CircleHelp size={24} color="#fb923c" />,
           label: "Reasons",
         }, // orange-400
       ],
@@ -4623,142 +4986,7 @@ function Configuratin() {
       ],
     },
   ];
-  const [searchTermLookup, setSearchTermLookup] = useState("");
-  const [filteredLookups, setFilteredLookups] = useState([]);
 
-  // Add this useEffect to initialize filtered Lookup data when lookups change
-  useEffect(() => {
-    setFilteredLookups(lookups);
-  }, [lookups]);
-
-  // Lookup-specific search handler function
-  const handleLookupSearch = (value) => {
-    setSearchTermLookup(value);
-
-    if (!value.trim()) {
-      setFilteredLookups(lookups);
-      return;
-    }
-
-    const searchValue = value.toLowerCase();
-    const filtered = lookups.filter((item) => {
-      // Search in basic fields
-      const basicMatch =
-        (item.code && item.code.toLowerCase().includes(searchValue)) ||
-        (item.lookupname &&
-          item.lookupname.toLowerCase().includes(searchValue)) ||
-        (item.DisplayName &&
-          item.DisplayName.toLowerCase().includes(searchValue));
-
-      // Search in lookuptype (if it's an object with name property)
-      const typeMatch =
-        item.lookuptype &&
-        ((item.lookuptype.name &&
-          item.lookuptype.name.toLowerCase().includes(searchValue)) ||
-          (item.lookuptypeId &&
-            item.lookuptypeId.toString().toLowerCase().includes(searchValue)));
-
-      // Search in parent lookup (if it's an object with lookupname property)
-      const parentMatch =
-        item.Parentlookup &&
-        ((item.Parentlookup.lookupname &&
-          item.Parentlookup.lookupname.toLowerCase().includes(searchValue)) ||
-          (item.Parentlookup.DisplayName &&
-            item.Parentlookup.DisplayName.toLowerCase().includes(
-              searchValue,
-            )) ||
-          (item.Parentlookupid &&
-            item.Parentlookupid.toString()
-              .toLowerCase()
-              .includes(searchValue)));
-
-      // Search in status (active/inactive)
-      const statusMatch =
-        item.isactive !== undefined &&
-        ((item.isactive && "active".includes(searchValue)) ||
-          (!item.isactive && "inactive".includes(searchValue)));
-
-      return basicMatch || typeMatch || parentMatch || statusMatch;
-    });
-
-    setFilteredLookups(filtered);
-  };
-  const [searchTermBranch, setSearchTermBranch] = useState("");
-  const [branchesWithRegionData, setBranchesWithRegionData] = useState([]);
-
-  // Function to get region name for a branch
-  const getRegionNameForBranch = useCallback(
-    (parentLookupId) => {
-      const region = groupedLookups?.Region?.find(
-        (r) => r._id === parentLookupId,
-      );
-      return region ? region.lookupname : "No Region";
-    },
-    [groupedLookups?.Region],
-  );
-
-  // Use useEffect to update branchesWithRegionData when groupedLookups changes
-  useEffect(() => {
-    if (groupedLookups?.Branch) {
-      const updatedBranches = groupedLookups.Branch.map((branch) => ({
-        ...branch,
-        regionName: getRegionNameForBranch(branch.Parentlookupid),
-      }));
-      setBranchesWithRegionData(updatedBranches);
-    }
-  }, [groupedLookups?.Branch, getRegionNameForBranch]);
-
-  // Filter branches based on search term
-  const filteredBranches = useMemo(() => {
-    if (!branchesWithRegionData.length) return [];
-
-    if (!searchTermBranch.trim()) return branchesWithRegionData;
-
-    const searchTerm = searchTermBranch.toLowerCase().trim();
-    return branchesWithRegionData.filter(
-      (branch) =>
-        branch.lookupname?.toLowerCase().includes(searchTerm) ||
-        branch.code?.toLowerCase().includes(searchTerm) ||
-        branch.DisplayName?.toLowerCase().includes(searchTerm) ||
-        branch.regionName?.toLowerCase().includes(searchTerm),
-    );
-  }, [branchesWithRegionData, searchTermBranch]);
-
-  // Function to handle search input change
-  const handleBranchSearchChange = (e) => {
-    setSearchTermBranch(e.target.value);
-  };
-
-  // Function to clear search
-  const clearBranchSearch = () => {
-    setSearchTermBranch("");
-  };
-
-  // ---- Work Location (Station) search ----
-  const [searchTermStation, setSearchTermStation] = useState("");
-
-  const filteredWorkLocations = useMemo(() => {
-    const workLocations = groupedLookups?.workLocation || [];
-    if (!searchTermStation.trim()) return workLocations;
-
-    const term = searchTermStation.toLowerCase().trim();
-    return workLocations.filter(
-      (item) =>
-        (item.lookupname || "").toLowerCase().includes(term) ||
-        (item.code || "").toLowerCase().includes(term) ||
-        (item.DisplayName || "").toLowerCase().includes(term) ||
-        (item.Parentlookup || "").toLowerCase().includes(term) ||
-        (item.officer?.userEmail || "").toLowerCase().includes(term),
-    );
-  }, [groupedLookups?.workLocation, searchTermStation]);
-
-  const handleStationSearchChange = (e) => {
-    setSearchTermStation(e.target.value);
-  };
-
-  const clearStationSearch = () => {
-    setSearchTermStation("");
-  };
 
   // Updated table columns with Region filter
   const uniqueRegionNames = useMemo(() => {
@@ -4783,12 +5011,12 @@ function Configuratin() {
       title: "Region",
       dataIndex: "regionName",
       key: "regionName",
-      filters: uniqueRegionNames.map((name) => ({
-        text: name,
-        value: name,
-      })),
-      onFilter: (value, record) => record.regionName === value,
       sorter: (a, b) => (a.regionName || "").localeCompare(b.regionName || ""),
+      filterDropdown: createFilterDropdown(branchesWithRegionData, (record) => record.regionName),
+      onFilter: (value, record) => (record.regionName || "").toString() === value,
+      filterIcon: (filtered) => (
+        <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
+      ),
     };
 
     // Return columns in correct order: [...other columns, Region, Action]
@@ -6361,7 +6589,14 @@ function Configuratin() {
                   label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
                 }))}
                 value={drawerIpnuts?.Districts?.officer?._id || drawerIpnuts?.Districts?.officer}
-                onChange={(e) => drawrInptChng("Districts", "officer", e.target.value)}
+                // onChange={(e) => drawrInptChng("Districts", "officer", e.target.value)}
+                onChange={(e) =>
+                  drawrInptChng(
+                    "Districts",
+                    "officer",
+                    e.target.value === "" ? null : e.target.value
+                  )
+                }
                 isIDs={true}
               />
             </Col>
@@ -6563,7 +6798,14 @@ function Configuratin() {
                     label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
                   }))}
                   value={drawerIpnuts?.Divisions?.officer?._id || drawerIpnuts?.Divisions?.officer}
-                  onChange={(e) => drawrInptChng("Divisions", "officer", e.target.value)}
+                  // onChange={(e) => drawrInptChng("Divisions", "officer", e.target.value)}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Divisions",
+                      "officer",
+                      e.target.value === "" ? null : e.target.value
+                    )
+                  }
                   isIDs={true}
                 />
               </Col>
@@ -6647,19 +6889,29 @@ function Configuratin() {
             <div className="mt-4 config-tbl-container">
               <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
                 <h6 className="m-0 text-primary">Existing Regions</h6>
-                <Button
-                  style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
-                  onClick={() =>
-                    navigate("/region", { state: { search: "Region" } })
-                  }
-                >
-                  <FaArrowUpRightFromSquare size={14} />
-                </Button>
+                <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                  <Input
+                    placeholder="Search Regions..."
+                    prefix={<SearchOutlined />}
+                    value={searchTermRegion}
+                    onChange={handleRegionSearchChange}
+                    style={{ width: 200 }}
+                    allowClear
+                  />
+                  <Button
+                    style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                    onClick={() =>
+                      navigate("/region", { state: { search: "Region" } })
+                    }
+                  >
+                    <FaArrowUpRightFromSquare size={14} />
+                  </Button>
+                </div>
               </div>
               <Table
                 pagination={{ pageSize: 10 }}
                 columns={columnDivisions}
-                dataSource={groupedLookups?.Region}
+                dataSource={filteredRegions}
                 loading={lookupsloading}
                 className="drawer-tbl"
                 size="small"
@@ -6809,19 +7061,29 @@ function Configuratin() {
           <div className="mt-4 config-tbl-container">
             <div style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
               <h6 className="m-0 text-primary">Existing Regions</h6>
-              <Button
-                style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
-                onClick={() =>
-                  navigate("/region", { state: { search: "Region" } })
-                }
-              >
-                <FaArrowUpRightFromSquare size={14} />
-              </Button>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <Input
+                  placeholder="Search Regions..."
+                  prefix={<SearchOutlined />}
+                  value={searchTermRegion}
+                  onChange={handleRegionSearchChange}
+                  style={{ width: 200 }}
+                  allowClear
+                />
+                <Button
+                  style={{ height: 32, display: "flex", alignItems: "center", justifyContent: "center", padding: "4px 10px" }}
+                  onClick={() =>
+                    navigate("/region", { state: { search: "Region" } })
+                  }
+                >
+                  <FaArrowUpRightFromSquare size={14} />
+                </Button>
+              </div>
             </div>
             <Table
               pagination={{ pageSize: 10 }}
               columns={columnDivisions}
-              dataSource={groupedLookups?.Region}
+              dataSource={filteredRegions}
               loading={lookupsloading}
               className="drawer-tbl"
               size="small"
@@ -6890,7 +7152,14 @@ function Configuratin() {
                     label: `${user.userFirstName || ""} ${user.userLastName || ""} (${user.userEmail || "No Email"})`.trim(),
                   }))}
                   value={drawerIpnuts?.Station?.officer?._id || drawerIpnuts?.Station?.officer}
-                  onChange={(e) => drawrInptChng("Station", "officer", e.target.value)}
+                  // onChange={(e) => drawrInptChng("Station", "officer", e.target.value)}
+                  onChange={(e) =>
+                    drawrInptChng(
+                      "Station",
+                      "officer",
+                      e.target.value === "" ? null : e.target.value
+                    )
+                  }
                   isIDs={true}
                 />
               </Col>
@@ -7308,7 +7577,7 @@ function Configuratin() {
             <Table
               pagination={true}
               columns={columnStations}
-              dataSource={groupedLookups?.workLocation}
+              dataSource={groupedLookups?.Station}
               className="drawer-tbl"
               size="small"
               loading={lookupsloading}

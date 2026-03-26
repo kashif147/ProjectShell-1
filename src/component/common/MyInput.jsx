@@ -186,7 +186,7 @@ const MyInput = ({
               placeholder="87 900 0538"
               value={mobileNumber}
               onChange={handleMobileChange}
-              maxLength={11}
+              maxLength={12}
               disabled={disabled}
             />
           </div>
