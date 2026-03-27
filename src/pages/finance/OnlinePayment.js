@@ -6,6 +6,9 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchStripePayments } from "../../features/AccountSlice";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
+import { formatCurrency } from "../../utils/Utilities";
+import { formatMobileNumber } from "../../utils/Utilities";
+import { formatDateOnly } from "../../utils/Utilities";
 
 const OnlinePayment = () => {
   const dispatch = useDispatch();
@@ -58,9 +61,9 @@ const OnlinePayment = () => {
 
   const getMenuItems = (record) => [
     {
-      key: "view",
-      label: "View Details",
-      onClick: () => handleViewDetails(record),
+      key: "Refund",
+      label: "Refund",
+      onClick: () => handleRefund(record),
     },
     ...(record?.paymentStatus?.toLowerCase() === "paid" || record?.status?.toLowerCase() === "paid"
       ? [
@@ -76,88 +79,105 @@ const OnlinePayment = () => {
 
   const columns = [
     {
-      title: "Member ID",
-      dataIndex: "memberId",
-      key: "memberId",
-      render: (text) => text || "-",
-    },
-    {
-      title: "Full Name",
-      dataIndex: "memberName",
-      key: "memberName",
-      render: (text) => text || "-",
-    },
-    {
-      title: "Email",
-      dataIndex: "email",
-      key: "email",
-      render: (text) => text || "-",
-    },
-    {
-      title: "Phone",
-      dataIndex: "phone",
-      key: "phone",
-      render: (text) => text || "-",
-    },
-    {
-      title: "Join Date",
-      dataIndex: "joinDate",
-      key: "joinDate",
+      title: "Member No",
+      dataIndex: "Member No",
+      key: "memberNo",
+      ellipsis: true,
+      width: 250,
+      sorter: true,
       render: (text) => text || "-",
     },
     {
       title: "Category",
       dataIndex: "category",
       key: "category",
+      ellipsis: true,
+      width: 150,
+      render: (text) => text || "-",
+    },
+    {
+      title: "Full Name",
+      dataIndex: "fullName",
+      key: "fullName",
+      ellipsis: true,
+      width: 200,
+      sorter: true,
       render: (text) => text || "-",
     },
     {
       title: "Membership Status",
       dataIndex: "membershipStatus",
       key: "membershipStatus",
+      ellipsis: true,
+      width: 180,
       render: (text) => text || "-",
     },
     {
       title: "Renewal Date",
       dataIndex: "renewalDate",
       key: "renewalDate",
+      ellipsis: true,
+      width: 150,
       render: (text) => text || "-",
     },
     {
       title: "Transaction ID",
-      dataIndex: "transactionId",
-      key: "transactionId",
+      dataIndex: "docNo",
+      key: "docNo",
+      ellipsis: true,
+      width: 180,
       render: (text) => text || "-",
     },
     {
       title: "Paid Amount",
-      dataIndex: "amount",
-      key: "amount",
-      render: (amount) => `Rs. ${amount || 0}`,
+      dataIndex: "entries",
+      key: "entries",
+      ellipsis: true,
+      width: 150,
+      align: "right",
+      render: (entries) => {
+        if (!Array.isArray(entries)) return formatCurrency(0);
+
+        const bankEntry = entries.find(
+          (e) => e.accountCode === "1220" && e.dc === "D"
+        );
+
+        const amountInEuros = bankEntry ? bankEntry.amount / 100 : 0;
+
+        return formatCurrency(amountInEuros);
+      },
     },
     {
       title: "Payment Date",
-      dataIndex: "paymentDate",
-      key: "paymentDate",
-      render: (text) => text || "-",
+      dataIndex: "date",
+      key: "date",
+      ellipsis: true,
+      width: 150,
+      render: (date) => (date ? formatDateOnly(date) : "-"),
     },
     {
       title: "Payment Method",
-      dataIndex: "paymentMethod",
+      dataIndex: ["settlement", "provider"],
       key: "paymentMethod",
+      ellipsis: true,
+      width: 150,
       render: (text) => text || "-",
     },
     {
       title: "Payment Status",
-      dataIndex: "status",
+      dataIndex: ["settlement", "status"],
       key: "status",
+      ellipsis: true,
+      width: 150,
       render: (status) => {
         const value = status?.toLowerCase();
         let color = "default";
+
         if (value === "paid") color = "green";
         else if (value === "refunded") color = "red";
         else if (value === "pending") color = "orange";
         else if (value === "failed") color = "volcano";
+
         return <Tag color={color}>{status || "-"}</Tag>;
       },
     },
@@ -165,8 +185,36 @@ const OnlinePayment = () => {
       title: "Billing Cycle",
       dataIndex: "billingCycle",
       key: "billingCycle",
+      ellipsis: true,
+      width: 150,
       render: (text) => text || "-",
     },
+    {
+      title: "Email",
+      dataIndex: "email",
+      key: "email",
+      ellipsis: true,
+      width: 200,
+      render: (text) => text || "-",
+    },
+    {
+      title: "Phone",
+      dataIndex: "phone",
+      key: "phone",
+      ellipsis: true,
+      width: 150,
+      render: (value) => (value ? formatMobileNumber(value) : "-"),
+    },
+    {
+      title: "Join Date",
+      dataIndex: "joinDate",
+      key: "joinDate",
+      ellipsis: true,
+      width: 150,
+      render: (text) => text || "-",
+    },
+
+    // ✅ KEEPING YOUR ORIGINAL 3 DOT MENU
     {
       title: "Actions",
       key: "actions",

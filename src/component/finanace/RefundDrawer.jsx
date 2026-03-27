@@ -105,18 +105,17 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                                     placeholder="0.00"
                                     value={formValues.refund}
                                     onChange={(value) => handleChange("refund", value)}
-                                    prefix="€"
                                     precision={2}
                                     min={0}
                                     style={{ width: "100%" }}
                                     controls={false}
                                     size="large"
-                                    className="refund-input-right"
                                     formatter={(value) =>
                                         value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
                                     }
                                     parser={(value) => value.replace(/[^\d.]/g, "")}
                                     status={errors.refund ? "error" : ""}
+                                    addonAfter="€"
                                 />
                             </div>
                         </div>
