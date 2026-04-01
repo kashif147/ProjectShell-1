@@ -16,7 +16,10 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
-import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+} from "../../features/subscription/profileSubscriptionSlice";
 import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
@@ -48,6 +51,7 @@ import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import { buildDetailsSearch } from "../../utils/detailsRoute";
 import UnifiedPagination, { getUnifiedPaginationConfig, getDefaultPageSize } from "./UnifiedPagination";
 import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
 
@@ -543,7 +547,6 @@ const TableComponent = ({
               // Check for crm:member:read permission on Summary page
               const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
               const hasMemberReadPermission = hasPermission('crm:member:read');
-              debugger
               // On Summary page, only show link if user has crm:member:read permission
               if (isFullNameOnSummaryPage && !hasMemberReadPermission) {
                 return (
@@ -554,26 +557,54 @@ const TableComponent = ({
               }
 
               // Otherwise show the link (for all other pages or if user has permission)
+              const profileIdForUrl = isMembersPage
+                ? record?.profileId || record?._id
+                : record?._id;
+              const subscriptionIdForUrl =
+                isMembersPage && record?.profileId && record?._id
+                  ? record._id
+                  : undefined;
+
               return (
                 <Link
-                  to="/Details"
+                  to={{
+                    pathname: "/Details",
+                    search: buildDetailsSearch(profileIdForUrl, subscriptionIdForUrl),
+                  }}
                   state={{
                     search: screenName,
                     name: record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
                     applicationId: record?.applicationId || record?.ApplicationId,
+                    ...(isMembersPage &&
+                    record?.profileId &&
+                    record?._id && {
+                      subscriptionId: record._id,
+                    }),
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    const idToUse = isMembersPage ? (record?.profileId || record?._id) : record?._id;
+                    const profileId = record?.profileId;
+                    const subscriptionRowId = record?._id;
+                    const idToUse = isMembersPage
+                      ? profileId || subscriptionRowId
+                      : record?._id;
                     dispatch(getProfileDetailsById(idToUse));
-                    dispatch(
-                      getSubscriptionByProfileId({
-                        profileId: idToUse,
-                        isCurrent: true,
-                      })
-                    );
+                    if (
+                      isMembersPage &&
+                      profileId &&
+                      subscriptionRowId
+                    ) {
+                      dispatch(getSubscriptionById(subscriptionRowId));
+                    } else {
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId: idToUse,
+                          isCurrent: true,
+                        })
+                      );
+                    }
                     getProfile([record], index);
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
@@ -585,23 +616,46 @@ const TableComponent = ({
             case "Subscription Status": // <-- NEW CASE
               return (
                 <Link
-                  to="/Details"
+                  to={{
+                    pathname: "/Details",
+                    search: buildDetailsSearch(
+                      record?.profileId || record?._id,
+                      isMembersPage && record?.profileId && record?._id
+                        ? record._id
+                        : undefined
+                    ),
+                  }}
                   state={{
                     search: screenName,
                     name: record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
                     applicationId: record?.applicationId || record?.ApplicationId,
+                    ...(isMembersPage &&
+                    record?.profileId &&
+                    record?._id && {
+                      subscriptionId: record._id,
+                    }),
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    dispatch(
-                      getSubscriptionByProfileId({
-                        profileId: record?.profileId,
-                        isCurrent: true,
-                      })
-                    );
-                    dispatch(getProfileDetailsById(record?.profileId));
+                    const profileId = record?.profileId;
+                    const subscriptionRowId = record?._id;
+                    dispatch(getProfileDetailsById(profileId));
+                    if (
+                      isMembersPage &&
+                      profileId &&
+                      subscriptionRowId
+                    ) {
+                      dispatch(getSubscriptionById(subscriptionRowId));
+                    } else if (profileId) {
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId,
+                          isCurrent: true,
+                        })
+                      );
+                    }
                     getProfile([record], index);
                     // dispatch(getProfileDetailsById(record?._id))
                   }}
@@ -677,7 +731,6 @@ const TableComponent = ({
                       e.stopPropagation();
                       const { applicationStatus } = record || {};
                       const id = record?.applicationId;
-                      debugger
                       if (applicationStatus === "Draft") {
                         dispatch(
                           getApplicationById({
@@ -704,9 +757,13 @@ const TableComponent = ({
                   </span>
                 );
               } else if (isSummaryPage && hasProfileRead) {
+                const summaryProfileId = record?.profileId || record?._id;
                 content = (
                   <Link
-                    to="/Details"
+                    to={{
+                      pathname: "/Details",
+                      search: buildDetailsSearch(summaryProfileId, undefined),
+                    }}
                     state={{
                       search: screenName,
                       name: record?.user?.userFullName || record?.fullName,

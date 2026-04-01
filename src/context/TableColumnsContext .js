@@ -8,14 +8,18 @@ import React, {
 } from "react";
 import { Tag } from "antd";
 import { tableData } from "../Data";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
 import { convertToLocalTime, formatDateOnly, formatCurrency, formatMobileNumber } from "../utils/Utilities";
 import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
-import { getSubscriptionByProfileId } from "../features/subscription/profileSubscriptionSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+} from "../features/subscription/profileSubscriptionSlice";
+import { buildDetailsSearch } from "../utils/detailsRoute";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
@@ -4595,6 +4599,7 @@ const staticSearchFilters = {
 
 export const TableColumnsProvider = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const screenName = location?.state?.search;
   const [claimsDrawer, setClaimsDrawer] = useState(false);
@@ -4906,29 +4911,95 @@ export const TableColumnsProvider = ({ children }) => {
     const newIndex = rowIndex + 1;
     if (newIndex < gridData.length) {
       const record = gridData[newIndex];
-      const idToUse = record?.profileId || record?._id || record?._Id || record?.ApplicationId || record?.id;
+      const profileId = record?.profileId;
+      const subscriptionRowId = record?._id;
+      const idToUse =
+        profileId ||
+        record?._id ||
+        record?._Id ||
+        record?.ApplicationId ||
+        record?.id;
       if (idToUse) {
         dispatch(getProfileDetailsById(idToUse));
-        dispatch(getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" }));
+        if (
+          screenName === "Members" &&
+          profileId &&
+          subscriptionRowId
+        ) {
+          dispatch(getSubscriptionById(subscriptionRowId));
+        } else {
+          dispatch(
+            getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" })
+          );
+        }
       }
       setProfileDetails([record]);
       setRowIndex(newIndex);
+      const nextNavState = { ...location.state };
+      if (screenName === "Members" && profileId && subscriptionRowId) {
+        nextNavState.subscriptionId = subscriptionRowId;
+      } else {
+        delete nextNavState.subscriptionId;
+      }
+      const pid = profileId || idToUse;
+      const sid =
+        screenName === "Members" && profileId && subscriptionRowId
+          ? subscriptionRowId
+          : undefined;
+      const searchStr = buildDetailsSearch(pid, sid);
+      navigate(
+        { pathname: location.pathname, search: searchStr },
+        { replace: true, state: nextNavState }
+      );
     }
-  }, [rowIndex, gridData, dispatch]);
+  }, [rowIndex, gridData, dispatch, screenName, location.pathname, location.state, navigate]);
 
   const profilPrevBtnFtn = useCallback(() => {
     const newIndex = rowIndex - 1;
     if (newIndex >= 0) {
       const record = gridData[newIndex];
-      const idToUse = record?.profileId || record?._id || record?._Id || record?.[ "ApplicationId" ] || record?.id;
+      const profileId = record?.profileId;
+      const subscriptionRowId = record?._id;
+      const idToUse =
+        profileId ||
+        record?._id ||
+        record?._Id ||
+        record?.["ApplicationId"] ||
+        record?.id;
       if (idToUse) {
         dispatch(getProfileDetailsById(idToUse));
-        dispatch(getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" }));
+        if (
+          screenName === "Members" &&
+          profileId &&
+          subscriptionRowId
+        ) {
+          dispatch(getSubscriptionById(subscriptionRowId));
+        } else {
+          dispatch(
+            getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" })
+          );
+        }
       }
       setProfileDetails([record]);
       setRowIndex(newIndex);
+      const nextNavState = { ...location.state };
+      if (screenName === "Members" && profileId && subscriptionRowId) {
+        nextNavState.subscriptionId = subscriptionRowId;
+      } else {
+        delete nextNavState.subscriptionId;
+      }
+      const pid = profileId || idToUse;
+      const sid =
+        screenName === "Members" && profileId && subscriptionRowId
+          ? subscriptionRowId
+          : undefined;
+      const searchStr = buildDetailsSearch(pid, sid);
+      navigate(
+        { pathname: location.pathname, search: searchStr },
+        { replace: true, state: nextNavState }
+      );
     }
-  }, [rowIndex, gridData, dispatch]);
+  }, [rowIndex, gridData, dispatch, screenName, location.pathname, location.state, navigate]);
 
   const filterByRegNo = useCallback(
     async (regNo) => {

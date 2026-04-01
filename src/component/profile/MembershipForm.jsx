@@ -44,7 +44,6 @@ const MembershipForm = ({
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-  console.log(ProfileSubData, "ProfileSubData")
   const dispatch = useDispatch();
   const {
     titleOptions,
@@ -89,7 +88,6 @@ const MembershipForm = ({
   const subscriptionData = useMemo(() => {
     if (ProfileSubData?.data?.length > 0) {
       const subscription = ProfileSubData.data[0];
-      debugger
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
@@ -106,6 +104,8 @@ const MembershipForm = ({
         membershipCategory: subscription.membershipCategory || "",
         primarySection: subscription.professionalDetails?.primarySection || "",
         secondarySection: subscription.professionalDetails?.secondarySection || "",
+        resignationDate: subscription.resignation?.dateResigned,
+        resignationReason: subscription.resignation?.reason || "",
       };
     }
     return null;
@@ -149,7 +149,6 @@ const MembershipForm = ({
     const searchAoiRes = profileSearchData?.results?.[0] || null;
     // Choose source dynamically
     const source = profileDetails || searchAoiRes;
-    debugger
     if (!source) return;
 
     // Initialize form data from profile API
@@ -251,6 +250,9 @@ const MembershipForm = ({
         startDate: convertUTCToLocalDate(subscriptionData.startDate) || prev.startDate,
         endDate: convertUTCToLocalDate(subscriptionData.endDate),
         renewalDate: convertUTCToLocalDate(subscriptionData.renewalDate) || prev.renewalDate,
+        dateCancelled: convertUTCToLocalDate(subscriptionData.resignationDate) || prev.dateCancelled,
+        cancellationReason:
+          subscriptionData.resignationReason || prev.cancellationReason || "",
 
         // Payment Information
         paymentFrequency: subscriptionData.paymentFrequency || "",
@@ -368,7 +370,6 @@ const MembershipForm = ({
     endDate: null,
     subscriptionYear: null,
   });
-  console.log("formData", formData);
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },

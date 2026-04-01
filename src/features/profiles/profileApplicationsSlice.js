@@ -16,12 +16,19 @@ export const getProfileApplications = createAsyncThunk(
                 }
             );
 
-            // API format based on screenshot: { status: "success", data: { applications: [...] } }
-            if (response.data.status === "success") {
-                return response.data.data.applications;
-            } else {
-                return rejectWithValue("Failed to fetch profile applications");
+            const body = response.data;
+            if (body?.status === "error") {
+                return rejectWithValue(body.message || "Failed to fetch profile applications");
             }
+            if (body?.status === "success" && body?.data?.applications != null) {
+                return Array.isArray(body.data.applications)
+                    ? body.data.applications
+                    : [];
+            }
+            if (Array.isArray(body?.data)) return body.data;
+            if (Array.isArray(body?.applications)) return body.applications;
+            if (Array.isArray(body)) return body;
+            return [];
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }

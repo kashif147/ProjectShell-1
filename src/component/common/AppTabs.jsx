@@ -1,8 +1,13 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, Suspense, lazy, useEffect } from "react";
 import { useSelector, useDispatch } from "react-redux";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+  getSubscriptionHistoryByProfileId,
+} from "../../features/subscription/profileSubscriptionSlice";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
-import { getSubscriptionHistoryByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
 import { Tabs, Spin, Drawer } from "antd";
 import MyTable from "./MyTable";
@@ -41,6 +46,24 @@ function AppTabs() {
   const dispatch = useDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const profileIdParam = searchParams.get("profileId") || "";
+  const subscriptionIdParam = searchParams.get("subscriptionId") || "";
+
+  useEffect(() => {
+    if (!profileIdParam) return;
+    dispatch(getProfileDetailsById(profileIdParam));
+    if (subscriptionIdParam) {
+      dispatch(getSubscriptionById(subscriptionIdParam));
+    } else {
+      dispatch(
+        getSubscriptionByProfileId({
+          profileId: profileIdParam,
+          isCurrent: "true",
+        })
+      );
+    }
+  }, [dispatch, profileIdParam, subscriptionIdParam]);
 
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
 

@@ -7,6 +7,7 @@ import dayjs from "dayjs";
 import axios from "axios";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
+import { buildDetailsSearch } from "../../utils/detailsRoute";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -319,7 +320,9 @@ const MemberSearch = ({
               ).unwrap();
 
               // Navigate to the specified route
-              navigate(navigateTo, {
+              navigate({
+                pathname: navigateTo,
+                search: buildDetailsSearch(memberData._id),
                 state: {
                   name: memberData.fullName ||
                     `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
@@ -393,7 +396,9 @@ const MemberSearch = ({
               ).unwrap();
 
               // Both navigate and call callback
-              navigate(navigateTo, {
+              navigate({
+                pathname: navigateTo,
+                search: buildDetailsSearch(memberData._id),
                 state: {
                   name: memberData.fullName ||
                     `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,
@@ -456,7 +461,9 @@ const MemberSearch = ({
                 })
               ).unwrap();
 
-              navigate(navigateTo, {
+              navigate({
+                pathname: navigateTo,
+                search: buildDetailsSearch(memberData._id),
                 state: {
                   name: memberData.fullName ||
                     `${memberData.personalInfo?.forename} ${memberData.personalInfo?.surname}`,

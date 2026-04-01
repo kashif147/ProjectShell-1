@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect, useCallback } from "react";
-import { useLocation } from "react-router-dom";
-import { Modal, Button, message, Dropdown } from "antd";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { Modal, Button, message, Dropdown, Tooltip } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -27,7 +27,12 @@ import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
 import { centsToEuro } from "../../utils/Utilities";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
-import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+  getProfileSubscriptionsForActivateEligibility,
+} from "../../features/subscription/profileSubscriptionSlice";
+import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
 
 function ProfileHeader({
   isEditMode = false,
@@ -40,6 +45,7 @@ function ProfileHeader({
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const dispatch = useDispatch();
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
@@ -58,9 +64,12 @@ function ProfileHeader({
   );
 
   // Subscription API data
-  const { ProfileSubData, ProfileSubLoading, ProfileSubError } = useSelector(
-    (state) => state.profileSubscription
-  );
+  const {
+    ProfileSubData,
+    ProfileSubLoading,
+    ProfileSubError,
+    profileSubscriptionsForActivateEligibility,
+  } = useSelector((state) => state.profileSubscription);
 
   const {
     profileSearchData,
@@ -73,6 +82,16 @@ function ProfileHeader({
 
   // Choose source dynamically - profileDetails has priority
   const source = profileDetails || searchAoiRes;
+
+  const profileIdForApps = source?.id || source?._id;
+  useEffect(() => {
+    if (!profileIdForApps) return;
+    dispatch(
+      getProfileSubscriptionsForActivateEligibility({
+        profileId: profileIdForApps,
+      })
+    );
+  }, [dispatch, profileIdForApps]);
 
   // Get token from Redux store (assuming you have auth state)
   // const { token } = useSelector((state) => state.auth || {});
@@ -211,12 +230,24 @@ function ProfileHeader({
 
   const refreshAllData = useCallback(() => {
     const profileId = source?.id || source?._id;
+    const subscriptionId =
+      searchParams.get("subscriptionId") || location.state?.subscriptionId;
     if (profileId) {
       dispatch(getProfileDetailsById(profileId));
-      dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+      if (subscriptionId) {
+        dispatch(getSubscriptionById(subscriptionId));
+      } else {
+        dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+      }
     }
     fetchAccountSummary();
-  }, [dispatch, source, fetchAccountSummary]);
+  }, [
+    dispatch,
+    source,
+    searchParams,
+    location.state?.subscriptionId,
+    fetchAccountSummary,
+  ]);
 
   useEffect(() => {
     fetchAccountSummary();
@@ -381,6 +412,65 @@ function ProfileHeader({
     paymentCode,
   ]); // Now recalculates when source OR subscriptionData OR summary data changes
 
+  const statusBadgeTooltip = useMemo(() => {
+    if (isDeceased) return "";
+    const statusLower = (memberData.status || "").toLowerCase();
+    const subLower = (subscriptionData?.subscriptionStatus || "").toLowerCase();
+    const isResignedOrCancelled =
+      statusLower.includes("resign") ||
+      statusLower.includes("cancel") ||
+      subLower.includes("resign") ||
+      subLower.includes("cancel");
+    if (!isResignedOrCancelled) return "";
+
+    const reason =
+      subscriptionData?.resignation?.reason?.trim() ||
+      subscriptionData?.cancellation?.reason?.trim();
+    const dateRaw =
+      subscriptionData?.resignation?.dateResigned ||
+      subscriptionData?.cancellation?.dateCancelled;
+    const dateStr = dateRaw ? formatDate(dateRaw) : "";
+
+    const lines = [];
+    if (dateStr) lines.push(`Date: ${dateStr}`);
+    if (reason) lines.push(`Reason: ${reason}`);
+    return lines.length ? lines.join("\n") : "";
+  }, [isDeceased, memberData.status, subscriptionData]);
+
+  const currentSubscriptionForActivate = useMemo(() => {
+    const arr = ProfileSubData?.data;
+    if (Array.isArray(arr) && arr[0]) return arr[0];
+    return null;
+  }, [ProfileSubData]);
+
+  const mergedProfileSubscriptions = useMemo(() => {
+    const fromEligibility = Array.isArray(
+      profileSubscriptionsForActivateEligibility
+    )
+      ? profileSubscriptionsForActivateEligibility
+      : [];
+    const fromProfile = Array.isArray(ProfileSubData?.data)
+      ? ProfileSubData.data
+      : [];
+    const byId = new Map();
+    [...fromEligibility, ...fromProfile].forEach((s) => {
+      if (s?._id) byId.set(s._id, s);
+    });
+    return [...byId.values()];
+  }, [profileSubscriptionsForActivateEligibility, ProfileSubData]);
+
+  const shouldDisableActivateMembership = useMemo(() => {
+    if (memberData.status !== "Resigned") return false;
+    return shouldDisableActivateUnlessLatestSubscriptionByStartDate(
+      currentSubscriptionForActivate,
+      mergedProfileSubscriptions
+    );
+  }, [
+    memberData.status,
+    currentSubscriptionForActivate,
+    mergedProfileSubscriptions,
+  ]);
+
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
     { key: "retirement", label: "Retirement" },
@@ -503,7 +593,7 @@ function ProfileHeader({
       <div className="member-header-single-card">
         {/* Profile Header Section */}
         <div
-          className={`member-header-top ${isDeceased ? "member-deceased" : memberData.status === "Resigned" ? "member-resigned" : ""}`}
+          className={`member-header-top ${isDeceased ? "member-deceased" : ""}`}
         >
           {showButtons && (
             <Dropdown
@@ -547,14 +637,26 @@ function ProfileHeader({
             <p className="member-details">
               {memberData.dob} ({memberData.gender}) {memberData.age}
             </p>
-            <span
-              className={`member-status-badge ${isDeceased ? "member-status-deceased" : memberData.status === "Resigned" ? "member-status-resigned" : ""
-                }`}
+            <Tooltip
+              title={statusBadgeTooltip || undefined}
+              trigger={["hover", "focus"]}
+              mouseEnterDelay={0.05}
+              mouseLeaveDelay={0.05}
             >
-              {memberData.status}
-              {subscriptionData?.isCurrent && " (Current)"}
-              {subscriptionData?.reinstated && " (Reinstated)"}
-            </span>
+              <span
+                className={`member-status-badge ${isDeceased
+                  ? "member-status-deceased"
+                  : /resign|cancel/i.test(memberData.status || "")
+                    ? "member-status-resigned"
+                    : ""
+                  }`}
+                style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
+              >
+                {memberData.status}
+                {subscriptionData?.isCurrent && " (Current)"}
+                {subscriptionData?.reinstated && " (Reinstated)"}
+              </span>
+            </Tooltip>
           </div>
 
           {/* Contact Information Section - on blue background */}
@@ -663,8 +765,7 @@ function ProfileHeader({
 
         {/* Grade and Category Section - on blue background */}
         <div
-          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : memberData.status === "Resigned" ? "member-resigned" : ""
-            }`}
+          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}
         >
           <div className="grade-row-blue">
             <span className="grade-label-blue">Category:</span>
@@ -686,8 +787,21 @@ function ProfileHeader({
                   backgroundColor: "#52c41a",
                   borderColor: "#52c41a",
                   color: "#fff",
+                  opacity: shouldDisableActivateMembership ? 0.5 : 1,
+                  cursor: shouldDisableActivateMembership
+                    ? "not-allowed"
+                    : "pointer",
                 }}
-                onClick={() => setIsUndoCancelModalVisible(true)}
+                disabled={shouldDisableActivateMembership}
+                title={
+                  shouldDisableActivateMembership
+                    ? "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line."
+                    : undefined
+                }
+                onClick={() => {
+                  if (shouldDisableActivateMembership) return;
+                  setIsUndoCancelModalVisible(true);
+                }}
               >
                 Activate Membership
               </button>
