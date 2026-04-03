@@ -25,10 +25,15 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
-import { useLocation, useNavigate } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
+import {
+  clearApplicationDetails,
+  getApplicationById,
+} from "../../features/ApplicationDetailsSlice";
 import { getAllApplications } from "../../features/ApplicationSlice";
+import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { cleanPayload } from "../../utils/Utilities";
 import MyAlert from "../common/MyAlert";
 import { generatePatch } from "../../utils/Utilities";
@@ -147,7 +152,12 @@ function ApplicationMgtDrawer({
   const [addressSearchValue, setAddressSearchValue] = useState("");
   const [recruiterSearchValue, setRecruiterSearchValue] = useState("");
   const { state } = useLocation();
-  const isEdit = state?.isEdit || false;
+  const [searchParams] = useSearchParams();
+  const appIdFromUrl =
+    searchParams.get("applicationId") || searchParams.get("id") || "";
+  const draftIdFromUrl = searchParams.get("draftId") || "";
+  const isEdit =
+    Boolean(state?.isEdit) || Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -277,9 +287,12 @@ function ApplicationMgtDrawer({
 
   useEffect(() => {
     if (application && applications?.length) {
+      const appKey =
+        application.applicationId || application.ApplicationId;
       const newIndex =
         applications.findIndex(
-          (app) => app.applicationId === application?.applicationId
+          (app) =>
+            (app.applicationId || app.ApplicationId) === appKey
         ) + 1;
 
       setIndex(newIndex);
@@ -290,6 +303,65 @@ function ApplicationMgtDrawer({
   const { lookupsForSelect, isDisable, disableFtn } = useTableColumns();
 
   const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (draftIdFromUrl || appIdFromUrl || state?.isEdit) return;
+    dispatch(clearApplicationDetails());
+  }, [dispatch, draftIdFromUrl, appIdFromUrl, state?.isEdit]);
+
+  useEffect(() => {
+    if (!draftIdFromUrl && !appIdFromUrl) return;
+    const curApiId = application?.applicationId || application?.ApplicationId;
+    if (draftIdFromUrl) {
+      if (
+        application?.type === "draft" &&
+        String(application?.ApplicationId) === String(draftIdFromUrl)
+      ) {
+        return;
+      }
+      dispatch(getApplicationById({ id: "draft", draftId: draftIdFromUrl }));
+      return;
+    }
+    if (curApiId && String(curApiId) === String(appIdFromUrl)) return;
+    dispatch(getApplicationById({ id: appIdFromUrl }));
+  }, [dispatch, appIdFromUrl, draftIdFromUrl, application]);
+
+  useEffect(() => {
+    if (loading || !application) return;
+    const urlApp =
+      searchParams.get("applicationId") || searchParams.get("id") || "";
+    const urlDraft = searchParams.get("draftId") || "";
+    if (application.type === "draft") {
+      const da = application.ApplicationId;
+      if (da && String(urlDraft) !== String(da)) {
+        navigate(
+          {
+            pathname: "/applicationMgt",
+            search: buildApplicationMgtSearch({
+              draftId: da,
+              edit: true,
+            }),
+          },
+          { replace: true }
+        );
+      }
+      return;
+    }
+    const aid = application.applicationId || application.ApplicationId;
+    if (aid && String(urlApp) !== String(aid)) {
+      navigate(
+        {
+          pathname: "/applicationMgt",
+          search: buildApplicationMgtSearch({
+            applicationId: aid,
+            edit: true,
+          }),
+        },
+        { replace: true }
+      );
+    }
+  }, [application, loading, navigate, searchParams]);
+
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries
   );
@@ -1832,6 +1904,27 @@ function ApplicationMgtDrawer({
       setOriginalData(newdata);
       setCurrentApplication(newApplication);
       setSelectedMember(null);
+
+      const rawId =
+        newApplication.applicationId || newApplication.ApplicationId;
+      if (rawId) {
+        const isDraftRow =
+          String(newApplication.applicationStatus || "").toLowerCase() ===
+            "draft" ||
+          newApplication.type === "draft";
+        navigate(
+          {
+            pathname: "/applicationMgt",
+            search: isDraftRow
+              ? buildApplicationMgtSearch({ draftId: rawId, edit: true })
+              : buildApplicationMgtSearch({
+                  applicationId: rawId,
+                  edit: true,
+                }),
+          },
+          { replace: true }
+        );
+      }
 
       const status = newApplication.applicationStatus?.toLowerCase();
       const readOnlyStatuses = ['approved', 'in-progress'];

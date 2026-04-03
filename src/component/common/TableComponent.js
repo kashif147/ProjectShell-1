@@ -16,6 +16,7 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import {
   getSubscriptionByProfileId,
   getSubscriptionById,
@@ -738,14 +739,19 @@ const TableComponent = ({
                             draftId: id,
                           })
                         );
-                        navigate("/applicationMgt", {
-                          state: { isEdit: true },
+                        navigate({
+                          pathname: "/applicationMgt",
+                          search: buildApplicationMgtSearch({ draftId: id, edit: true }),
                         });
                       } else {
                         if (id) {
                           dispatch(getApplicationById({ id: id }));
-                          navigate("/applicationMgt", {
-                            state: { isEdit: true },
+                          navigate({
+                            pathname: "/applicationMgt",
+                            search: buildApplicationMgtSearch({
+                              applicationId: id,
+                              edit: true,
+                            }),
                           });
                         } else {
                           console.error("No valid application ID found in record:", record);

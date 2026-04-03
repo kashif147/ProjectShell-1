@@ -8,6 +8,7 @@ import {
   getSubscriptionHistoryByProfileId,
 } from "../../features/subscription/profileSubscriptionSlice";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
 import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
 import { Tabs, Spin, Drawer } from "antd";
 import MyTable from "./MyTable";
@@ -96,9 +97,14 @@ function AppTabs() {
           <a
             style={{ color: "#1890ff", fontWeight: "500" }}
             onClick={() => {
-              dispatch(getApplicationById({ id: record._id || record.id }));
-              navigate("/applicationMgt", {
-                state: { isEdit: true, applicationId: record.id || record._id },
+              const appId = record._id || record.id;
+              dispatch(getApplicationById({ id: appId }));
+              navigate({
+                pathname: "/applicationMgt",
+                search: buildApplicationMgtSearch({
+                  applicationId: appId,
+                  edit: true,
+                }),
               });
               setIsApplicationDrawerOpen(false);
             }}
@@ -141,8 +147,12 @@ function AppTabs() {
           style={{ color: "#1890ff", fontWeight: "500" }}
           onClick={() => {
             dispatch(getApplicationById({ id: record.applicationId }));
-            navigate("/applicationMgt", {
-              state: { isEdit: true, applicationId: record.applicationId },
+            navigate({
+              pathname: "/applicationMgt",
+              search: buildApplicationMgtSearch({
+                applicationId: record.applicationId,
+                edit: true,
+              }),
             });
             setIsApplicationDrawerOpen(false);
           }}
