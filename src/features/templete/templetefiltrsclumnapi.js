@@ -18,6 +18,10 @@ export const getGridTemplates = createAsyncThunk(
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
+    },
+    {
+        condition: (_, { getState }) =>
+            !getState().templetefiltrsclumnapi.templatesFetching,
     }
 );
 
@@ -108,6 +112,8 @@ const templetefiltrsclumnapi = createSlice({
     initialState: {
         templates: null,
         loading: false,
+        /** Only toggled by getGridTemplates — avoids blocking fetch while delete/save uses `loading`. */
+        templatesFetching: false,
         error: null,
     },
     reducers: {},
@@ -115,14 +121,17 @@ const templetefiltrsclumnapi = createSlice({
         builder
             .addCase(getGridTemplates.pending, (state) => {
                 state.loading = true;
+                state.templatesFetching = true;
                 state.error = null;
             })
             .addCase(getGridTemplates.fulfilled, (state, action) => {
                 state.loading = false;
+                state.templatesFetching = false;
                 state.templates = action.payload;
             })
             .addCase(getGridTemplates.rejected, (state, action) => {
                 state.loading = false;
+                state.templatesFetching = false;
                 state.error = action.payload;
             })
             .addCase(deleteGridTemplate.pending, (state) => {

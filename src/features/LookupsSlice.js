@@ -23,7 +23,6 @@ const sortArray = (array, key, order = 'asc') => {
   });
 };
 
-// Only GET operation - CONDITION REMOVED
 export const getAllLookups = createAsyncThunk(
   "lookups/getAllLookups",
   async (_, { rejectWithValue }) => {
@@ -37,8 +36,10 @@ export const getAllLookups = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch lookups"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => !getState().lookups.lookupsloading,
   }
-  // Condition block removed completely
 );
 
 const lookupsSlice = createSlice({

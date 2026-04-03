@@ -29,7 +29,7 @@ export const fetchRegions = createAsyncThunk(
       const { regions, lookups } = getState();
       // Don't dispatch if already loading in either slice
       // Note: fetchRegions calls /api/lookup same as getAllLookups, but different slice
-      if (regions.loading || lookups.loading) {
+      if (regions.loading || lookups.lookupsloading) {
         return false; // Prevent duplicate request
       }
       // Allow fetch if data doesn't exist or is empty in both slices

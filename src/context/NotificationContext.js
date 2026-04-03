@@ -12,6 +12,9 @@ import axios from "axios";
 
 const NotificationContext = createContext();
 
+/** Coalesce overlapping unread-count XHRs (e.g. StrictMode double mount + visibility). */
+let unreadCountFetchInFlight = null;
+
 const NOTIFICATION_SERVICE_FALLBACK =
   "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
 
@@ -139,16 +142,22 @@ export const NotificationProvider = ({ children }) => {
   const fetchUnreadCount = useCallback(async () => {
     const token = localStorage.getItem("token");
     if (!token) return;
-    try {
-      const res = await axios.get(
-        `${getNotificationServiceUrl()}/notifications?limit=1`,
-        { headers: { Authorization: `Bearer ${token}` } },
-      );
-      const { unreadCount } = res.data?.data ?? res.data ?? {};
-      if (typeof unreadCount === "number") setBadge(unreadCount);
-    } catch {
-      // ignore
-    }
+    if (unreadCountFetchInFlight) return unreadCountFetchInFlight;
+    unreadCountFetchInFlight = (async () => {
+      try {
+        const res = await axios.get(
+          `${getNotificationServiceUrl()}/notifications?limit=1`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const { unreadCount } = res.data?.data ?? res.data ?? {};
+        if (typeof unreadCount === "number") setBadge(unreadCount);
+      } catch {
+        // ignore
+      } finally {
+        unreadCountFetchInFlight = null;
+      }
+    })();
+    return unreadCountFetchInFlight;
   }, []);
 
   useEffect(() => {

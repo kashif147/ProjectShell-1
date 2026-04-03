@@ -35,6 +35,21 @@ export const getCategoryLookup = createAsyncThunk(
         error.response?.data?.message || 'Failed to fetch category lookup'
       );
     }
+  },
+  {
+    condition: (categoryId, { getState }) => {
+      const { categoryLoading, currentCategoryId, categoryData } =
+        getState().categoryLookup;
+      if (categoryLoading) return false;
+      if (
+        currentCategoryId === categoryId &&
+        Array.isArray(categoryData) &&
+        categoryData.length > 0
+      ) {
+        return false;
+      }
+      return true;
+    },
   }
 );
 

@@ -320,10 +320,13 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
   const dispatch = useDispatch();
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
+  const regionsLoading = useSelector((state) => state.regions.loading);
   const { selectedWorkLocations = [] } = useSelector((state) => state.lookups, shallowEqual);
   useEffect(() => {
-    dispatch(fetchRegions());
-  }, [dispatch]);
+    if (!regionsLoading && (!regions || regions.length === 0)) {
+      dispatch(fetchRegions());
+    }
+  }, [dispatch, regions, regionsLoading]);
   const [tempSelectedDate, setTempSelectedDate] = useState(null);
   const handleBulkApproval = async (selectedApplications) => {
     if (!selectedApplications || selectedApplications.length === 0) {
