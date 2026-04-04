@@ -37,16 +37,15 @@ import moment from "moment";
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
-const requiredBatchColumns = [
-  "Membership No",
-  "Value for Periods Selected",
-];
+const requiredBatchColumns = ["Membership No", "Value for Periods Selected"];
 
 const CreateBatchPayment = forwardRef((props, ref) => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch(); // Initialize Redux dispatch
-  const { workLocationOptions, branchOptions } = useSelector((state) => state.lookups);
+  const { workLocationOptions, branchOptions } = useSelector(
+    (state) => state.lookups,
+  );
 
   const memberData = [
     {
@@ -180,7 +179,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
       const uploadedColumns = Object.keys(json[0]);
       const missingColumns = requiredBatchColumns.filter(
-        (col) => !uploadedColumns.includes(col)
+        (col) => !uploadedColumns.includes(col),
       );
 
       if (missingColumns.length > 0) {
@@ -202,7 +201,10 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
         const totalCurrent = json.reduce((sum, row) => {
           // Use specific column name from user template if present for calculations
-          return sum + cleanValue(row["Value for Periods Selected"] || row["Amount"] || 0);
+          return (
+            sum +
+            cleanValue(row["Value for Periods Selected"] || row["Amount"] || 0)
+          );
         }, 0);
 
         const totalAdvance = json.reduce((sum, row) => {
@@ -283,13 +285,20 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     ) {
       try {
         const formData = new FormData();
-        const isStandingOrder = formValues.batchType?.toLowerCase() === "standing order";
+        const isStandingOrder =
+          formValues.batchType?.toLowerCase() === "standing order";
         const apiType = isStandingOrder ? "Standing Order" : "deduction";
 
         // Format dates to YYYY-MM-DD for API using dayjs
         // MyDatePicker handles values as dayjs objects or strings
-        const formattedBatchDate = dayjs(formValues.batchDate, "MM/YYYY").format("YYYY-MM-DD");
-        const formattedPaymentDate = dayjs(formValues.paymentDate, "DD/MM/YYYY").format("YYYY-MM-DD");
+        const formattedBatchDate = dayjs(
+          formValues.batchDate,
+          "MM/YYYY",
+        ).format("YYYY-MM-DD");
+        const formattedPaymentDate = dayjs(
+          formValues.paymentDate,
+          "DD/MM/YYYY",
+        ).format("YYYY-MM-DD");
 
         formData.append("type", apiType);
         formData.append("date", formattedPaymentDate);
@@ -311,20 +320,21 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details`,
+          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details`,
           formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (response.status === 200 || response.status === 201) {
           message.success(
-            `${apiType === "standing order" ? "Standing Order" : "Deduction"
-            } batch created successfully`
+            `${
+              apiType === "standing order" ? "Standing Order" : "Deduction"
+            } batch created successfully`,
           );
           const batchId = response?.data?.data?._id;
           // Merge the API response ID into the batch object if needed
@@ -335,10 +345,11 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       } catch (error) {
         console.error("Error creating batch:", error);
         message.error(
-          `Failed to create ${formValues.batchType?.toLowerCase() === "standing order"
-            ? "Standing Order"
-            : "Deduction"
-          } batch`
+          `Failed to create ${
+            formValues.batchType?.toLowerCase() === "standing order"
+              ? "Standing Order"
+              : "Deduction"
+          } batch`,
         );
         return null; // Stop navigation if API call fails
       }
@@ -478,12 +489,20 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
               <div className="w-100 mb-3">
                 <CustomSelect
-                  label={location.pathname === "/StandingOrders" ? "Bank Name" : "Work Location"}
+                  label={
+                    location.pathname === "/StandingOrders"
+                      ? "Bank Name"
+                      : "Work Location"
+                  }
                   name="workLocation"
                   required
                   hasError={!!formErrors.workLocation}
                   errorMessage={`Please select ${location.pathname === "/StandingOrders" ? "bank name" : "work location"}`}
-                  options={location.pathname === "/StandingOrders" ? branchOptions : workLocationOptions}
+                  options={
+                    location.pathname === "/StandingOrders"
+                      ? branchOptions
+                      : workLocationOptions
+                  }
                   value={formValues.workLocation}
                   onChange={(e) => setField("workLocation", e.target.value)}
                 />

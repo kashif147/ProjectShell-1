@@ -104,7 +104,7 @@ const ManualPaymentEntry = ({ open, onClose, batchSummryData, batchId, onSuccess
 
       const token = localStorage.getItem("token");
       await axios.post(
-        `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details/add-profile/${batchId}`,
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/add-profile/${batchId}`,
         payload,
         {
           headers: {

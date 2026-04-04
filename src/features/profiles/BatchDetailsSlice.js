@@ -10,7 +10,7 @@ export const getBatchDetailsById = createAsyncThunk(
         try {
             const token = localStorage.getItem("token");
             const response = await axios.get(
-                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details/${batchId}`,
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/${batchId}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -33,7 +33,7 @@ export const getAllBatchDetails = createAsyncThunk(
         try {
             const token = localStorage.getItem("token");
             const response = await axios.get(
-                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details`,
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }

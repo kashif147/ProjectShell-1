@@ -118,12 +118,12 @@ const MembershipNoResolver = ({
     if (!memberData?.membershipNumber) return;
     setLoading(true);
     try {
-      const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
+      const baseUrl = process.env.REACT_APP_ACCOUNT_SERVICE_URL;
       const token = localStorage.getItem("token");
 
       // Resolve the exception directly with selected member info
       await axios.post(
-        `${baseUrl}/batch-details/resolve-exception/${batchId}`,
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/resolve-exception/${batchId}`,
         {
           membershipNumber: memberData.membershipNumber,
           exceptionMembershipNumber: exceptionMembershipNumber,
@@ -133,7 +133,7 @@ const MembershipNoResolver = ({
             Authorization: `Bearer ${token}`,
             "Content-Type": "application/json",
           },
-        }
+        },
       );
 
       message.success("Exception resolved successfully");
@@ -141,7 +141,7 @@ const MembershipNoResolver = ({
     } catch (error) {
       console.error("Resolution error:", error);
       message.error(
-        error.response?.data?.message || "Failed to resolve exception"
+        error.response?.data?.message || "Failed to resolve exception",
       );
     } finally {
       setLoading(false);
@@ -180,7 +180,7 @@ function BatchMemberSummary() {
       hasFetchedRef.current = batchId;
     }
     return () => {
-      // Cleanup is handled by new instance creation; ref reset is removed 
+      // Cleanup is handled by new instance creation; ref reset is removed
       // to support React 18's StrictMode double-mount simulation.
     };
   }, [batchId, dispatch]);
@@ -461,7 +461,6 @@ function BatchMemberSummary() {
           const aVal = parseFloat(a.fileRow?.valueForPeriodSelected) || 0;
           const bVal = parseFloat(b.fileRow?.valueForPeriodSelected) || 0;
           return aVal - bVal;
-
         },
         sortDirections: ["ascend", "descend"],
         render: (value) => formatCurrency((value || 0) / 100),
@@ -536,7 +535,8 @@ function BatchMemberSummary() {
           );
         },
         onFilter: (value, record) => {
-          const amount = parseFloat(record.fileRow?.valueForPeriodSelected) || 0;
+          const amount =
+            parseFloat(record.fileRow?.valueForPeriodSelected) || 0;
           if (value === "0-100") return amount >= 0 && amount < 100;
           if (value === "100-500") return amount >= 100 && amount < 500;
           if (value === "500-1000") return amount >= 500 && amount < 1000;
@@ -809,7 +809,12 @@ function BatchMemberSummary() {
         render: () => batchInfo.description || "",
       },
     ];
-  }, [batchInfo.referenceNumber, batchInfo.description, exceptions, refreshData]);
+  }, [
+    batchInfo.referenceNumber,
+    batchInfo.description,
+    exceptions,
+    refreshData,
+  ]);
 
   // Pagination state
   const rawDataSource = useMemo(
@@ -921,9 +926,11 @@ function BatchMemberSummary() {
 
       try {
         const response = await axios.get(fileUrl, {
-          headers: isAzureUrl ? {} : {
-            Authorization: `Bearer ${token}`,
-          },
+          headers: isAzureUrl
+            ? {}
+            : {
+                Authorization: `Bearer ${token}`,
+              },
           responseType: "blob",
         });
 
@@ -944,8 +951,8 @@ function BatchMemberSummary() {
         hide();
         message.error(
           error.response?.data?.message ||
-          error.message ||
-          "Failed to download file",
+            error.message ||
+            "Failed to download file",
         );
         console.error("Download error:", error);
       }
@@ -962,7 +969,8 @@ function BatchMemberSummary() {
 
   // Calculate totals strictly from the Redux lists
   const calcTotalCurrent = members.reduce(
-    (sum, m) => sum + (parseFloat(m.fileRow?.valueForPeriodSelected) || 0) / 100,
+    (sum, m) =>
+      sum + (parseFloat(m.fileRow?.valueForPeriodSelected) || 0) / 100,
     0,
   );
   const calcTotalExceptions = exceptions.reduce(
