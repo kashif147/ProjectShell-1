@@ -10,13 +10,18 @@ import {
   Space,
   Card,
   Input as AntInput,
+  Select,
   Spin,
+  Dropdown,
+  Modal,
+  Tooltip,
 } from "antd";
 import { useSelector, useDispatch } from "react-redux";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import axios from "axios";
 import TrigerBatchMemberDrawer from "../../component/finanace/TrigerBatchMemberDrawer";
 import "../../styles/ManualEntry.css";
+import "../../styles/BatchMemberSummary.css";
 import ManualPaymentEntryDrawer from "../../component/finanace/ManualPaymentEntryDrawer";
 import MyDrawer from "../../component/common/MyDrawer";
 import MemberSearch from "../../component/profile/MemberSearch";
@@ -27,6 +32,7 @@ import { paymentTypes } from "../../Data";
 import {
   getBatchDetailsById,
   clearBatchDetails,
+  deleteBatchDetail,
 } from "../../features/profiles/BatchDetailsSlice";
 import CustomSelect from "../../component/common/CustomSelect";
 import MyDatePicker from "../../component/common/MyDatePicker";
@@ -40,7 +46,6 @@ import {
   PlusOutlined,
   MinusCircleOutlined,
   SearchOutlined,
-  FilterOutlined,
   HistoryOutlined,
   RiseOutlined,
   CarryOutOutlined,
@@ -51,6 +56,9 @@ import {
   CalculatorOutlined,
   DownloadOutlined,
   LoadingOutlined,
+  EditOutlined,
+  DeleteOutlined,
+  ExclamationCircleFilled,
 } from "@ant-design/icons";
 import { BsThreeDots } from "react-icons/bs";
 import { AlertCircle } from "lucide-react";
@@ -162,10 +170,21 @@ const MembershipNoResolver = ({
   );
 };
 
+function isFileRefMembershipMismatch(record) {
+  const fileRef = record?.fileRow?.membershipNumber;
+  const memberNo = record?.membershipNumber;
+  if (fileRef == null || memberNo == null) return false;
+  const a = String(fileRef).trim();
+  const b = String(memberNo).trim();
+  if (!a || !b) return false;
+  return a.toUpperCase() !== b.toUpperCase();
+}
+
 function BatchMemberSummary() {
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
   const { batchId } = useParams();
   const dispatch = useDispatch();
+  const navigate = useNavigate();
 
   const { data: batchDetails, loading } = useSelector(
     (state) => state.batchDetails,
@@ -253,11 +272,21 @@ function BatchMemberSummary() {
 
   const [isBatchmemberOpen, setIsBatchmemberOpen] = useState(false);
   const [activeKey, setActiveKey] = useState("1");
+  const paymentTableRowClassName = useCallback(
+    (record) =>
+      activeKey === "1" && isFileRefMembershipMismatch(record)
+        ? "batch-file-ref-membership-mismatch"
+        : "",
+    [activeKey],
+  );
+  const [fileRefMembershipViewFilter, setFileRefMembershipViewFilter] =
+    useState("all");
   const [manualPayment, setManualPayment] = useState(false);
   const [filteredInfo, setFilteredInfo] = useState({});
   const [sortedInfo, setSortedInfo] = useState({});
   const [isBatchDetailsDrawerOpen, setIsBatchDetailsDrawerOpen] =
     useState(false);
+  const [isEditBatchDetails, setIsEditBatchDetails] = useState(false);
   const batchFormRef = useRef(null);
 
   // Helper function to get unique filter values
@@ -383,28 +412,34 @@ function BatchMemberSummary() {
     return [
       {
         title: "FILE REF NO",
-        dataIndex: "", // Updated to match API field
+        dataIndex: ["fileRow", "membershipNumber"],
         key: "refNo",
         ellipsis: true,
         width: 150,
         sorter: (a, b) => {
-          const aVal = a["Membership No"] || "";
-          const bVal = b["Membership No"] || "";
+          const aVal = String(a.fileRow?.membershipNumber ?? "");
+          const bVal = String(b.fileRow?.membershipNumber ?? "");
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        render: (text, record) => text || record["Membership No"] || "-",
+        render: (_, record) => {
+          const v = record?.fileRow?.membershipNumber;
+          return v != null && String(v).trim() !== "" ? String(v) : "-";
+        },
         filterDropdown: createFilterDropdown(
           dataSource,
-          (record) => record["Membership No"],
+          (record) => record.fileRow?.membershipNumber,
         ),
-        onFilter: (value, record) => {
-          const recordValue = record["Membership No"] || "";
-          return recordValue.toString() === value;
-        },
+        onFilter: (value, record) =>
+          String(record.fileRow?.membershipNumber ?? "") === String(value),
         filterIcon: (filtered) => (
           <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
         ),
+        onCell: (record) => ({
+          className: isFileRefMembershipMismatch(record)
+            ? "batch-file-ref-cell-mismatch"
+            : "",
+        }),
       },
       {
         title: "FULL NAME",
@@ -570,6 +605,11 @@ function BatchMemberSummary() {
         filterIcon: (filtered) => (
           <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
         ),
+        onCell: (record) => ({
+          className: isFileRefMembershipMismatch(record)
+            ? "batch-file-ref-cell-mismatch"
+            : "",
+        }),
       },
       {
         title: "PAYROLL NO",
@@ -630,23 +670,34 @@ function BatchMemberSummary() {
       },
       {
         title: "FILE REF NO",
-        dataIndex: "membershipNumber",
         key: "refNo",
         ellipsis: true,
         width: 150,
         sorter: (a, b) => {
-          const aVal = (a.membershipNumber || "").toString();
-          const bVal = (b.membershipNumber || "").toString();
+          const aVal = String(
+            a.fileRow?.membershipNumber ?? a.membershipNumber ?? "",
+          );
+          const bVal = String(
+            b.fileRow?.membershipNumber ?? b.membershipNumber ?? "",
+          );
           return aVal.localeCompare(bVal);
         },
         sortDirections: ["ascend", "descend"],
-        filterDropdown: createFilterDropdown(
-          dataSource,
-          (record) => record.membershipNumber,
+        render: (_, record) => {
+          const v =
+            record?.fileRow?.membershipNumber ?? record?.membershipNumber;
+          return v != null && String(v).trim() !== "" ? String(v) : "-";
+        },
+        filterDropdown: createFilterDropdown(dataSource, (record) =>
+          record.fileRow?.membershipNumber != null &&
+          record.fileRow.membershipNumber !== ""
+            ? record.fileRow.membershipNumber
+            : record.membershipNumber,
         ),
         onFilter: (value, record) => {
-          const recordValue = (record.membershipNumber || "").toString();
-          return recordValue === value;
+          const ref =
+            record.fileRow?.membershipNumber ?? record.membershipNumber ?? "";
+          return String(ref) === String(value);
         },
         filterIcon: (filtered) => (
           <SearchOutlined style={{ color: filtered ? "#1890ff" : undefined }} />
@@ -797,7 +848,7 @@ function BatchMemberSummary() {
         ),
       },
       {
-        title: "BATH REF",
+        title: "BATCH REF",
         key: "batchRefNo",
         render: () => batchInfo.referenceNumber || "",
       },
@@ -845,6 +896,14 @@ function BatchMemberSummary() {
       }
     });
 
+    if (activeKey === "1") {
+      if (fileRefMembershipViewFilter === "mismatch") {
+        data = data.filter((record) => isFileRefMembershipMismatch(record));
+      } else if (fileRefMembershipViewFilter === "match") {
+        data = data.filter((record) => !isFileRefMembershipMismatch(record));
+      }
+    }
+
     // Apply sorting
     if (sortedInfo.columnKey && sortedInfo.order) {
       const column = (activeKey === "1" ? columns : exceptionColumns).find(
@@ -866,6 +925,7 @@ function BatchMemberSummary() {
     activeKey,
     columns,
     exceptionColumns,
+    fileRefMembershipViewFilter,
   ]);
 
   // Update paginated data when page, pageSize, or processedDataSource changes
@@ -896,6 +956,7 @@ function BatchMemberSummary() {
     setSelectedRowKeys([]);
     setFilteredInfo({});
     setSortedInfo({});
+    setFileRefMembershipViewFilter("all");
   }, [activeKey]);
 
   const onChange = (key) => setActiveKey(key);
@@ -910,54 +971,53 @@ function BatchMemberSummary() {
       return;
     }
 
+    const isAzureUrl = fileUrl.includes("blob.core.windows.net");
+
+    if (isAzureUrl) {
+      const link = document.createElement("a");
+      link.href = fileUrl;
+      link.target = "_blank";
+      link.rel = "noopener noreferrer";
+      link.download = batchInfo.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    if (!token) {
+      message.error("Authentication required to download file");
+      return;
+    }
+
+    const hide = message.loading("Downloading file...", 0);
     try {
-      const token = localStorage.getItem("token");
-      if (!token) {
-        message.error("Authentication required to download file");
-        return;
-      }
+      const response = await axios.get(fileUrl, {
+        headers: { Authorization: `Bearer ${token}` },
+        responseType: "blob",
+      });
 
-      // Show loading message
-      const hide = message.loading("Downloading file...", 0);
+      const blob = new Blob([response.data]);
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = batchInfo.fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
 
-      // If it's a direct Azure blob URL, don't send the Authorization header
-      // as it causes 403 Forbidden or CORS issues.
-      const isAzureUrl = fileUrl.includes("blob.core.windows.net");
-
-      try {
-        const response = await axios.get(fileUrl, {
-          headers: isAzureUrl
-            ? {}
-            : {
-                Authorization: `Bearer ${token}`,
-              },
-          responseType: "blob",
-        });
-
-        // Create blob and download
-        const blob = new Blob([response.data]);
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement("a");
-        link.href = url;
-        link.download = batchInfo.fileName;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-
-        hide();
-        message.success("File downloaded successfully");
-      } catch (error) {
-        hide();
-        message.error(
-          error.response?.data?.message ||
-            error.message ||
-            "Failed to download file",
-        );
-        console.error("Download error:", error);
-      }
-    } catch (outerError) {
-      console.error("Outer error in download:", outerError);
+      hide();
+      message.success("File downloaded successfully");
+    } catch (error) {
+      hide();
+      message.error(
+        error.response?.data?.message ||
+          error.message ||
+          "Failed to download file",
+      );
+      console.error("Download error:", error);
     }
   };
 
@@ -984,6 +1044,136 @@ function BatchMemberSummary() {
   const displayTotalCurrent = calcTotalCurrent;
   const displayTotal = displayTotalCurrent + displayArrears;
   const displayRecords = members.length;
+
+  const isPendingBatch =
+    batchInfo?.batchStatus != null &&
+    String(batchInfo.batchStatus).trim().toLowerCase() === "pending";
+
+  const confirmDeleteBatch = () => {
+    const openDeleteModal = () => {
+      Modal.confirm({
+        wrapClassName: "batch-member-summary-delete-confirm",
+        icon: <ExclamationCircleFilled />,
+        title: "Delete batch",
+        content: (
+          <div className="batch-member-summary-delete-confirm-content">
+            <div className="batch-member-summary-delete-message">
+              <p style={{ margin: 0 }}>
+                Deleting this batch will permanently remove the uploaded file
+                and any changes made to the batch. This action cannot be
+                undone.
+              </p>
+              <div style={{ height: "1em" }} aria-hidden />
+              <p style={{ margin: 0, fontWeight: 600 }}>
+                Are you sure you want to proceed?
+              </p>
+            </div>
+          </div>
+        ),
+        okText: "Yes",
+        cancelText: "No",
+        okType: "primary",
+        okButtonProps: { danger: true, type: "primary" },
+        autoFocusButton: null,
+        onOk: async () => {
+          if (!batchId) return;
+          try {
+            await dispatch(deleteBatchDetail(batchId)).unwrap();
+            message.success("Batch detail deleted");
+            dispatch(clearBatchDetails());
+            const t = (batchInfo?.type || "").toLowerCase();
+            if (t.includes("deduction")) navigate("/Deductions");
+            else if (t.includes("standing")) navigate("/StandingOrders");
+            else navigate(-1);
+          } catch (err) {
+            message.error(
+              typeof err === "string"
+                ? err
+                : err?.message || "Failed to delete batch",
+            );
+            return Promise.reject(err);
+          }
+        },
+      });
+    };
+    // Defer until after the dropdown menu closes; otherwise focus/CSS for the OK
+    // button can be wrong on first paint (danger styles not applied until a click).
+    setTimeout(openDeleteModal, 0);
+  };
+
+  const batchHeaderMenuItems = [
+    {
+      key: "edit",
+      disabled: !isPendingBatch,
+      label: (
+        <Tooltip
+          title={
+            isPendingBatch
+              ? "Edit (batch details) — open the drawer to change batch metadata, dates, work location or bank, comments, and optionally replace the uploaded file."
+              : "Edit is only available while the batch status is pending."
+          }
+          placement="left"
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 22,
+              ...(!isPendingBatch ? { pointerEvents: "auto" } : {}),
+            }}
+          >
+            <EditOutlined
+              style={{
+                fontSize: 16,
+                color: isPendingBatch ? undefined : "rgba(0, 0, 0, 0.25)",
+              }}
+            />
+          </span>
+        </Tooltip>
+      ),
+      ...(isPendingBatch
+        ? {
+            onClick: () => {
+              setIsEditBatchDetails(true);
+              setIsBatchDetailsDrawerOpen(true);
+            },
+          }
+        : {}),
+    },
+    {
+      key: "delete",
+      disabled: !isPendingBatch,
+      label: (
+        <Tooltip
+          title={
+            isPendingBatch
+              ? "Delete batch — permanently removes this batch and its uploaded file from storage. You will be asked to confirm before anything is deleted."
+              : "Delete is only available while the batch status is pending."
+          }
+          placement="left"
+        >
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              justifyContent: "center",
+              minWidth: 22,
+              ...(!isPendingBatch ? { pointerEvents: "auto" } : {}),
+            }}
+          >
+            <DeleteOutlined
+              style={{
+                fontSize: 16,
+                color: isPendingBatch ? "#ff4d4f" : "rgba(0, 0, 0, 0.25)",
+              }}
+            />
+          </span>
+        </Tooltip>
+      ),
+      ...(isPendingBatch ? { onClick: () => confirmDeleteBatch() } : {}),
+    },
+  ];
 
   if (loading && !batchDetails) {
     return (
@@ -1022,11 +1212,19 @@ function BatchMemberSummary() {
           <Breadcrumb />
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: "12px" }}>
-          <Button
-            className="me-1 gray-btn butn"
-            icon={<BsThreeDots style={{ fontSize: "15px", fontWeight: 500 }} />}
-            onClick={() => setIsBatchDetailsDrawerOpen(true)}
-          />
+          <Dropdown
+            menu={{ items: batchHeaderMenuItems }}
+            trigger={["click"]}
+            placement="bottomRight"
+          >
+            <Button
+              className="me-1 gray-btn butn"
+              icon={
+                <BsThreeDots style={{ fontSize: "15px", fontWeight: 500 }} />
+              }
+              aria-label="Batch actions"
+            />
+          </Dropdown>
           <Button
             className="butn primary-btn"
             icon={<ThunderboltFilled />}
@@ -1901,25 +2099,36 @@ function BatchMemberSummary() {
             />
           </div>
 
-          {/* Center: Search */}
+          {/* Center: file ref / membership match filter (batch payments only) */}
           <div
             style={{
               flex: "1 1 auto",
               display: "flex",
               justifyContent: "center",
+              alignItems: "center",
+              gap: "12px",
+              flexWrap: "wrap",
             }}
           >
-            <AntInput
-              placeholder="Search records..."
-              prefix={<SearchOutlined style={{ color: "#94a3b8" }} />}
-              style={{
-                maxWidth: "400px",
-                borderRadius: "8px",
-                backgroundColor: "#f8fafc",
-                border: "1px solid #e2e8f0",
-                height: "36px",
-              }}
-            />
+            {activeKey === "1" && (
+              <Select
+                aria-label="Filter by file ref vs membership match"
+                value={fileRefMembershipViewFilter}
+                onChange={setFileRefMembershipViewFilter}
+                style={{ minWidth: 220, height: 36 }}
+                options={[
+                  { value: "all", label: "All rows" },
+                  {
+                    value: "mismatch",
+                    label: "Highlighted only (file ref ≠ membership)",
+                  },
+                  {
+                    value: "match",
+                    label: "Not highlighted (match or no file ref)",
+                  },
+                ]}
+              />
+            )}
           </div>
 
           {/* Right: Actions */}
@@ -1931,17 +2140,6 @@ function BatchMemberSummary() {
               gap: "12px",
             }}
           >
-            <Button
-              icon={<FilterOutlined />}
-              style={{
-                borderRadius: "8px",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                width: "36px",
-                height: "36px",
-              }}
-            />
             <Space size="small">
               <Button
                 icon={<PlusOutlined />}
@@ -1980,7 +2178,7 @@ function BatchMemberSummary() {
         </div>
 
         <div
-          className="common-table"
+          className="common-table batch-member-summary-table"
           style={{
             padding: "0px",
             paddingLeft: "34px",
@@ -1991,7 +2189,7 @@ function BatchMemberSummary() {
           <Table
             loading={loading}
             bordered={true}
-            rowClassName={() => ""}
+            rowClassName={paymentTableRowClassName}
             scroll={{ x: 1200, y: "calc(100vh - 440px)" }}
             size="middle"
             sticky
@@ -2121,26 +2319,25 @@ function BatchMemberSummary() {
 
       {/* Batch Details Drawer */}
       <MyDrawer
-        title="Batch Details"
+        title={isEditBatchDetails ? "Edit batch details" : "Batch Details"}
         open={isBatchDetailsDrawerOpen}
         onClose={() => {
           setIsBatchDetailsDrawerOpen(false);
+          setIsEditBatchDetails(false);
         }}
         width={1200}
         isPagination={false}
         add={async () => {
-          // Try to submit the batch form inside drawer first
           if (
             batchFormRef &&
             batchFormRef.current &&
             typeof batchFormRef.current.submit === "function"
           ) {
             const result = await batchFormRef.current.submit();
-            if (!result) return; // validation failed or API failed
+            if (!result) return;
 
-            message.success("Batch updated successfully");
             setIsBatchDetailsDrawerOpen(false);
-            // Optionally refresh batch details
+            setIsEditBatchDetails(false);
             if (batchId) {
               dispatch(getBatchDetailsById(batchId));
             }
@@ -2149,7 +2346,20 @@ function BatchMemberSummary() {
           }
         }}
       >
-        <CreateBatchPayment ref={batchFormRef} />
+        <CreateBatchPayment
+          key={
+            isBatchDetailsDrawerOpen && isEditBatchDetails && batchId
+              ? `edit-batch-${batchId}`
+              : "batch-drawer-form"
+          }
+          ref={batchFormRef}
+          editBatchId={
+            isEditBatchDetails && batchId ? batchId : null
+          }
+          editSource={
+            isEditBatchDetails && batchDetails ? batchDetails : null
+          }
+        />
       </MyDrawer>
     </div>
   );

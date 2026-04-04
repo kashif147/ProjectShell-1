@@ -56,6 +56,8 @@ const lookupsSlice = createSlice({
     branchOptions: [],
     regionOptions: [],
     secondarySectionOptions: [],
+    studyLocationOptions: [],
+    disciplineOptions: [],
     countryOptions: [],
     provincesOption: [],
     
@@ -86,6 +88,8 @@ const lookupsSlice = createSlice({
       state.branchOptions = [];
       state.regionOptions = [];
       state.secondarySectionOptions = [];
+      state.studyLocationOptions = [];
+      state.disciplineOptions = [];
       state.countryOptions = [];
       state.provincesOption = [];
       state.selectedWorkLocations = [];
@@ -115,6 +119,8 @@ const lookupsSlice = createSlice({
         state.branchOptions = [];
         state.regionOptions = [];
         state.secondarySectionOptions = [];
+        state.studyLocationOptions = [];
+        state.disciplineOptions = [];
         state.countryOptions = [];
         state.provincesOption = []
 
@@ -156,6 +162,12 @@ const lookupsSlice = createSlice({
                 break;
               case "Secondary Section":
                 state.secondarySectionOptions.push(optionItem);
+                break;
+              case "Study Location":
+                state.studyLocationOptions.push(optionItem);
+                break;
+              case "Discipline":
+                state.disciplineOptions.push(optionItem);
                 break;
               case "Country":
                 state.countryOptions.push(optionItem);
@@ -224,6 +236,8 @@ const lookupsSlice = createSlice({
         state.branchOptions = sortArray(state.branchOptions, 'label', 'asc');
         state.regionOptions = sortArray(state.regionOptions, 'label', 'asc');
         state.secondarySectionOptions = sortArray(state.secondarySectionOptions, 'label', 'asc');
+        state.studyLocationOptions = sortArray(state.studyLocationOptions, 'label', 'asc');
+        state.disciplineOptions = sortArray(state.disciplineOptions, 'label', 'asc');
         state.countryOptions = sortArray(state.countryOptions, 'label', 'asc');
         state.Provinces = sortArray(state.Provinces, 'label', 'asc');
       })

@@ -3,6 +3,113 @@ import "../../styles/MyInput.css";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchCountries } from "../../features/CountriesSlice";
 
+/** Digits only, strip trunk leading zeros (e.g. 0345… → 345…) */
+function normalizeNationalDigits(raw) {
+  const d = (raw || "").replace(/\D/g, "");
+  return d.replace(/^0+/, "");
+}
+
+function ensurePlusCallingCode(code) {
+  if (!code) return "+353";
+  const c = String(code).trim();
+  return c.startsWith("+") ? c : `+${c}`;
+}
+
+/**
+ * National number display (no country code).
+ * 10 digits → 3 3 4; 9 digits → 2 3 4. Shorter input uses 2-3-4 partial groups while typing.
+ */
+function formatNationalDisplay(digits) {
+  const d = String(digits || "").replace(/\D/g, "");
+  if (!d) return "";
+
+  if (d.length >= 10) {
+    const core = d.slice(0, 10);
+    const rest = d.slice(10);
+    const formatted = `${core.slice(0, 3)} ${core.slice(3, 6)} ${core.slice(6, 10)}`;
+    return rest ? `${formatted} ${rest}` : formatted;
+  }
+
+  if (d.length <= 2) return d;
+  if (d.length <= 5) return `${d.slice(0, 2)} ${d.slice(2)}`;
+  return `${d.slice(0, 2)} ${d.slice(2, 5)} ${d.slice(5)}`;
+}
+
+function buildCompactMobile(callingCode, nationalRaw) {
+  const code = ensurePlusCallingCode(callingCode);
+  const national = normalizeNationalDigits(nationalRaw);
+  if (!national) return "";
+  return `${code}${national}`;
+}
+
+/** Fallback prefixes when /countries has not loaded yet (longest first). */
+const DEFAULT_CALLING_CODES = [
+  "+353",
+  "+358",
+  "+352",
+  "+44",
+  "+91",
+  "+92",
+  "+61",
+  "+49",
+  "+86",
+  "+81",
+  "+39",
+  "+34",
+  "+33",
+  "+31",
+  "+420",
+  "+1",
+];
+
+function sortedCallingCodes(countriesData) {
+  const set = new Set(DEFAULT_CALLING_CODES);
+  (countriesData || []).forEach((c) => {
+    (c.callingCodes || []).forEach((raw) => {
+      if (!raw) return;
+      const code = ensurePlusCallingCode(raw);
+      if (code.length > 1) set.add(code);
+    });
+  });
+  return [...set].sort((a, b) => b.length - a.length);
+}
+
+/**
+ * Parse parent value (compact "+92345…" or legacy "+92 0345…") into code + national digits (normalized).
+ */
+function parseMobileValue(value, countriesData) {
+  if (!value || !String(value).trim()) {
+    return { code: "+353", national: "" };
+  }
+  const trimmed = String(value).trim();
+
+  if (trimmed.includes(" ")) {
+    const parts = trimmed.split(/\s+/);
+    const code = ensurePlusCallingCode(parts[0]);
+    const nationalJoined = parts.slice(1).join("");
+    return { code, national: normalizeNationalDigits(nationalJoined) };
+  }
+
+  if (trimmed.startsWith("+")) {
+    const codes = sortedCallingCodes(countriesData);
+    for (const c of codes) {
+      if (trimmed === c) {
+        return { code: c, national: "" };
+      }
+    }
+    for (const c of codes) {
+      if (trimmed.startsWith(c) && trimmed.length > c.length) {
+        return {
+          code: c,
+          national: normalizeNationalDigits(trimmed.slice(c.length)),
+        };
+      }
+    }
+  }
+
+  return { code: "+353", national: "" };
+}
+
 const MyInput = ({
   label,
   placeholder = "Enter...",
@@ -36,14 +143,12 @@ const MyInput = ({
   }, [dispatch, countriesData]);
 
   const handleMobileChange = (e) => {
-    let val = e.target.value.replace(/\D/g, ""); // only digits
-    let formatted = val
-      .replace(/(\d{2})(\d{3})(\d{4})/, "$1 $2 $3")
-      .trim();
-
+    const national = normalizeNationalDigits(e.target.value);
+    const formatted = formatNationalDisplay(national);
     setMobileNumber(formatted);
-    const fullNumber = `${countryCode} ${formatted}`;
-    onChange({ target: { name, value: fullNumber } });
+    onChange({
+      target: { name, value: buildCompactMobile(countryCode, national) },
+    });
   };
 
   const handleChange = (e) => {
@@ -85,52 +190,15 @@ const MyInput = ({
   const showError = hasError || internalError;
 
   useEffect(() => {
-    if (type === "mobile") {
-      if (!value) {
-        setMobileNumber("");
-        return;
-      }
-      let code = "+353"; // default
-      let number = "";
-
-      // Handle different formats
-      if (value.includes(" ")) {
-        // Format: "+353 38 927 5210"
-        const parts = value.trim().split(" ");
-        code = parts[0] || "+353";
-        number = parts.slice(1).join(" ");
-      } else {
-        // Format: "+3534444444"
-        // Extract country code (assuming +353 is the code)
-        if (value.startsWith("+353") && value.length > 4) {
-          code = "+353";
-          const rawNumber = value.substring(4); // Remove +353
-          // Format the remaining digits
-          number = rawNumber.replace(/(\d{2})(\d{3})(\d{0,4})/, "$1 $2 $3").trim();
-        } else {
-          // Fallback: try to extract any country code
-          const match = value.match(/^(\+\d+)(\d+)$/);
-          if (match) {
-            code = match[1];
-            const rawNumber = match[2];
-            // Format based on length
-            if (rawNumber.length === 7) {
-              number = rawNumber.replace(/(\d{2})(\d{3})(\d{2})/, "$1 $2 $3");
-            } else {
-              number = rawNumber.replace(/(\d{2})(\d{3})(\d{4})/, "$1 $2 $3");
-            }
-          } else {
-            // If no clear format, use as is
-            code = "+353";
-            number = value.replace("+353", "");
-          }
-        }
-      }
-
-      setCountryCode(code);
-      setMobileNumber(number);
+    if (type !== "mobile") return;
+    if (!value) {
+      setMobileNumber("");
+      return;
     }
-  }, [type, value]);
+    const { code, national } = parseMobileValue(value, countriesData);
+    setCountryCode(code);
+    setMobileNumber(formatNationalDisplay(national));
+  }, [type, value, countriesData]);
 
   return (
     <div className="my-input-wrapper">
@@ -163,9 +231,17 @@ const MyInput = ({
               className={`country-code-select ${showError ? "error" : ""}`}
               value={countryCode}
               onChange={(e) => {
-                setCountryCode(e.target.value);
-                const fullNumber = `${e.target.value} ${mobileNumber}`;
-                onChange({ target: { name, value: fullNumber } });
+                const nextCode = e.target.value;
+                setCountryCode(nextCode);
+                const nationalDigits = normalizeNationalDigits(
+                  mobileNumber.replace(/\s/g, "")
+                );
+                onChange({
+                  target: {
+                    name,
+                    value: buildCompactMobile(nextCode, nationalDigits),
+                  },
+                });
               }}
               disabled={disabled || loadingC}
             >
@@ -183,10 +259,10 @@ const MyInput = ({
             <input
               type="text"
               className={`mobile-number-input ${showError ? "error" : ""}`}
-              placeholder="87 900 0538"
+              placeholder="345 049 1493"
               value={mobileNumber}
               onChange={handleMobileChange}
-              maxLength={12}
+              maxLength={14}
               disabled={disabled}
             />
           </div>

@@ -25,7 +25,7 @@ import { useTableColumns } from "../../context/TableColumnsContext ";
 import MyInput from "../common/MyInput";
 import { useSelector, useDispatch, shallowEqual } from "react-redux";
 import { useJsApiLoader, StandaloneSearchBox } from "@react-google-maps/api";
-import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import {
@@ -46,6 +46,7 @@ import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
 import { searchProfiles, clearResults } from '../../features/profiles/SearchProfile';
+import { getAllLookups } from "../../features/LookupsSlice";
 import {
   InsuranceScreen,
   RewardsScreen
@@ -55,6 +56,116 @@ import debounce from "lodash.debounce";
 const baseURL = process.env.REACT_APP_PROFILE_SERVICE_URL;
 const { Search: AntdSearch } = Input;
 const { Option } = Select;
+
+/** Product ids used for conditional retired / student fields (policy service products). */
+const RETIRED_MEMBERSHIP_CATEGORY_ID = "68dae699c5b15073d66b892c";
+const STUDENT_MEMBERSHIP_CATEGORY_ID = "68dae699c5b15073d66b892d";
+
+function membershipCategoryCompareKey(s) {
+  if (s == null || s === "") return "";
+  return String(s)
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ");
+}
+
+/**
+ * Canonical label from API value (id, object with _id, or label with any casing/spacing).
+ */
+function normalizeMembershipCategoryToLabel(raw, categoryData) {
+  if (raw == null || raw === "") return "";
+  const fromObj =
+    typeof raw === "object" && raw != null && raw._id != null
+      ? String(raw._id)
+      : null;
+  const str = (fromObj ?? String(raw)).trim();
+  if (!str) return "";
+
+  if (!Array.isArray(categoryData) || categoryData.length === 0) {
+    return str;
+  }
+
+  const byId = categoryData.find(
+    (o) => String(o.value) === str || String(o.key) === str
+  );
+  if (byId?.label) return byId.label;
+
+  const key = membershipCategoryCompareKey(str);
+  const byLabel = categoryData.find(
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key
+  );
+  if (byLabel?.label) return byLabel.label;
+
+  return str;
+}
+
+/**
+ * Resolve UI label (or id) to product id for API payloads.
+ */
+function membershipCategoryLabelToId(labelOrId, categoryData) {
+  if (labelOrId == null || labelOrId === "") return "";
+  const str = String(labelOrId).trim();
+  if (!Array.isArray(categoryData) || categoryData.length === 0) {
+    return str;
+  }
+
+  const key = membershipCategoryCompareKey(str);
+  const byLabel = categoryData.find(
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key
+  );
+  if (byLabel != null) {
+    return String(byLabel.value ?? byLabel.key ?? "");
+  }
+
+  const byId = categoryData.find(
+    (o) => String(o.value) === str || String(o.key) === str
+  );
+  if (byId != null) {
+    return String(byId.value ?? byId.key ?? str);
+  }
+
+  return str;
+}
+
+function membershipCategoryMatchesProductId(
+  storedValue,
+  productId,
+  categoryData
+) {
+  if (!storedValue || !productId) return false;
+  if (String(storedValue).trim() === productId) return true;
+  const id = membershipCategoryLabelToId(storedValue, categoryData);
+  return id === productId;
+}
+
+/** Map API discipline/study location (id, { _id }, or label) to canonical lookup label for selects. */
+function normalizeLookupOptionToLabel(raw, options) {
+  if (raw == null || raw === "") return "";
+  const fromObj =
+    typeof raw === "object" && raw != null && raw._id != null
+      ? String(raw._id)
+      : null;
+  const str = (fromObj ?? String(raw)).trim();
+  if (!str) return "";
+
+  if (!Array.isArray(options) || options.length === 0) {
+    return str;
+  }
+
+  const byId = options.find(
+    (o) => String(o.value) === str || String(o.key) === str
+  );
+  if (byId?.label) return byId.label;
+
+  const key = membershipCategoryCompareKey(str);
+  const byLabel = options.find(
+    (o) => o.label && membershipCategoryCompareKey(o.label) === key
+  );
+  if (byLabel?.label) return byLabel.label;
+
+  return str;
+}
+
 function ApplicationMgtDrawer({
   open,
   onClose,
@@ -75,7 +186,11 @@ function ApplicationMgtDrawer({
     branchOptions,
     regionOptions,
     secondarySectionOptions,
+    studyLocationOptions,
+    disciplineOptions,
     countryOptions,
+    lookups: lookupsRaw,
+    lookupsloading,
   } = useSelector((state) => state.lookups);
   const navigate = useNavigate();
   const {
@@ -151,13 +266,12 @@ function ApplicationMgtDrawer({
   const [selectedMember, setSelectedMember] = useState(null);
   const [addressSearchValue, setAddressSearchValue] = useState("");
   const [recruiterSearchValue, setRecruiterSearchValue] = useState("");
-  const { state } = useLocation();
   const [searchParams] = useSearchParams();
   const appIdFromUrl =
     searchParams.get("applicationId") || searchParams.get("id") || "";
   const draftIdFromUrl = searchParams.get("draftId") || "";
-  const isEdit =
-    Boolean(state?.isEdit) || Boolean(appIdFromUrl || draftIdFromUrl);
+  /** Edit mode follows URL only so "new application" clears reliably (no stale location.state). */
+  const isEdit = Boolean(appIdFromUrl || draftIdFromUrl);
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -218,6 +332,7 @@ function ApplicationMgtDrawer({
         retiredDate: toDayJS(searchResult?.professionalDetails?.retiredDate),
         pensionNo: searchResult?.professionalDetails?.pensionNo || "",
         studyLocation: searchResult?.professionalDetails?.studyLocation || "",
+        discipline: searchResult?.professionalDetails?.discipline || "",
         graduationDate: toDayJS(searchResult?.professionalDetails?.graduationDate),
         startDate: toDayJS(searchResult?.professionalDetails?.startDate),
       },
@@ -305,9 +420,9 @@ function ApplicationMgtDrawer({
   const dispatch = useDispatch();
 
   useEffect(() => {
-    if (draftIdFromUrl || appIdFromUrl || state?.isEdit) return;
+    if (draftIdFromUrl || appIdFromUrl) return;
     dispatch(clearApplicationDetails());
-  }, [dispatch, draftIdFromUrl, appIdFromUrl, state?.isEdit]);
+  }, [dispatch, draftIdFromUrl, appIdFromUrl]);
 
   useEffect(() => {
     if (!draftIdFromUrl && !appIdFromUrl) return;
@@ -331,6 +446,8 @@ function ApplicationMgtDrawer({
     const urlApp =
       searchParams.get("applicationId") || searchParams.get("id") || "";
     const urlDraft = searchParams.get("draftId") || "";
+    // New application: no id in URL — never push stale Redux application back into the query string
+    if (!urlApp && !urlDraft) return;
     if (application.type === "draft") {
       const da = application.ApplicationId;
       if (da && String(urlDraft) !== String(da)) {
@@ -428,7 +545,18 @@ function ApplicationMgtDrawer({
         isRetired: apiData?.professionalDetails?.isRetired || false,
         retiredDate: toDayJS(apiData?.professionalDetails?.retiredDate),
         pensionNo: apiData?.professionalDetails?.pensionNo || "",
-        studyLocation: apiData?.professionalDetails?.studyLocation,
+        studyLocation: (() => {
+          const sl = apiData?.professionalDetails?.studyLocation;
+          if (sl == null || sl === "") return "";
+          if (typeof sl === "object" && sl._id != null) return String(sl._id);
+          return String(sl);
+        })(),
+        discipline: (() => {
+          const d = apiData?.professionalDetails?.discipline;
+          if (d == null || d === "") return "";
+          if (typeof d === "object" && d._id != null) return String(d._id);
+          return String(d);
+        })(),
         graduationDate: toDayJS(apiData?.professionalDetails?.graduationDate),
         startDate: toDayJS(apiData?.professionalDetails?.startDate),
       },
@@ -457,7 +585,12 @@ function ApplicationMgtDrawer({
           apiData?.subscriptionDetails?.valueAddedServices || false,
         termsAndConditions:
           apiData?.subscriptionDetails?.termsAndConditions || false,
-        membershipCategory: apiData?.subscriptionDetails?.membershipCategory,
+        membershipCategory: (() => {
+          const mc = apiData?.subscriptionDetails?.membershipCategory;
+          if (mc == null || mc === "") return "";
+          if (typeof mc === "object" && mc._id != null) return String(mc._id);
+          return String(mc);
+        })(),
         confirmedRecruiterProfileId:
           apiData?.subscriptionDetails?.confirmedRecruiterProfileId || null,
         dateJoined: toDayJS(
@@ -475,6 +608,22 @@ function ApplicationMgtDrawer({
   );
   console.log(categoryData, "categoryData");
 
+  const withMembershipCategoryIdsForApi = (prepared) => {
+    if (!prepared?.subscriptionDetails) return prepared;
+    const id = membershipCategoryLabelToId(
+      prepared.subscriptionDetails.membershipCategory,
+      categoryData
+    );
+    return {
+      ...prepared,
+      subscriptionDetails: {
+        ...prepared.subscriptionDetails,
+        membershipCategory:
+          id || prepared.subscriptionDetails.membershipCategory,
+      },
+    };
+  };
+
   useEffect(() => {
     dispatch(fetchCountries());
   }, [dispatch]);
@@ -482,6 +631,13 @@ function ApplicationMgtDrawer({
   useEffect(() => {
     dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
   }, [dispatch]);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (!token || lookupsloading) return;
+    if (Array.isArray(lookupsRaw) && lookupsRaw.length > 0) return;
+    dispatch(getAllLookups());
+  }, [dispatch, lookupsloading, lookupsRaw]);
 
   useEffect(() => {
     if (isEdit) {
@@ -498,6 +654,63 @@ function ApplicationMgtDrawer({
       setOriginalData(mappedData);
     }
   }, [isEdit, application]);
+
+  useEffect(() => {
+    if (!Array.isArray(categoryData) || categoryData.length === 0) return;
+
+    const patchMembershipCategory = (prev) => {
+      if (!prev?.subscriptionDetails) return prev;
+      const raw = prev.subscriptionDetails.membershipCategory;
+      const norm = normalizeMembershipCategoryToLabel(raw, categoryData);
+      if (norm === raw) return prev;
+      return {
+        ...prev,
+        subscriptionDetails: {
+          ...prev.subscriptionDetails,
+          membershipCategory: norm,
+        },
+      };
+    };
+
+    setInfData((prev) => patchMembershipCategory(prev));
+    setOriginalData((prev) =>
+      prev ? patchMembershipCategory(prev) : prev
+    );
+  }, [categoryData, application, isEdit]);
+
+  useEffect(() => {
+    if (!Array.isArray(disciplineOptions) || disciplineOptions.length === 0)
+      return;
+
+    const patchDisciplineAndStudyLocation = (prev) => {
+      if (!prev?.professionalDetails) return prev;
+      let next = prev;
+      const pd = prev.professionalDetails;
+      const dNorm = normalizeLookupOptionToLabel(
+        pd.discipline,
+        disciplineOptions
+      );
+      const slNorm = normalizeLookupOptionToLabel(
+        pd.studyLocation,
+        studyLocationOptions
+      );
+      if (dNorm === pd.discipline && slNorm === pd.studyLocation) return prev;
+      return {
+        ...prev,
+        professionalDetails: {
+          ...pd,
+          discipline: dNorm,
+          studyLocation: slNorm,
+        },
+      };
+    };
+
+    setInfData((prev) => patchDisciplineAndStudyLocation(prev));
+    setOriginalData((prev) =>
+      prev ? patchDisciplineAndStudyLocation(prev) : prev
+    );
+  }, [disciplineOptions, studyLocationOptions, application, isEdit]);
+
   console.log(application, "application92");
 
   useEffect(() => {
@@ -522,8 +735,6 @@ function ApplicationMgtDrawer({
       }));
     }
   }, [hierarchyData, workLocationLoading]);
-
-  const { lookups, groupedLookups } = useSelector(state => state.lookups);
 
   const SectionHeader = ({ icon, title, backgroundColor, iconBackground, subTitle }) => (
     <Row gutter={18} className="p-3 mb-3 rounded" style={{ backgroundColor }}>
@@ -634,6 +845,7 @@ function ApplicationMgtDrawer({
       "isRetired",
       "retiredDate",
       "studyLocation",
+      "discipline",
       "graduationDate",
       "startDate",
     ];
@@ -683,6 +895,8 @@ function ApplicationMgtDrawer({
       isRetired: false,
       pensionNo: "",
       retiredDate: null,
+      studyLocation: "",
+      discipline: "",
       graduationDate: null,
       startDate: null
     },
@@ -714,6 +928,13 @@ function ApplicationMgtDrawer({
 
   const [InfData, setInfData] = useState(inputValue);
 
+  useEffect(() => {
+    if (appIdFromUrl || draftIdFromUrl) return;
+    setInfData(inputValue);
+    setOriginalData(null);
+    setSelectedMember(null);
+    setErrors({});
+  }, [appIdFromUrl, draftIdFromUrl]);
 
   const handleLocationChange = (selectedLookupId) => {
     const storedLookups = localStorage.getItem("hierarchicalLookups");
@@ -757,7 +978,6 @@ function ApplicationMgtDrawer({
       "countryPrimaryQualification",
       "otherIrishTradeUnion",
       "otherScheme",
-      "nurseType",
       "membershipStatus",
       "nursingAdaptationProgramme",
     ];
@@ -790,9 +1010,10 @@ function ApplicationMgtDrawer({
       otherWorkLocation: "Other Work Location",
       otherPrimarySection: "Other Primary Section",
       otherIrishTradeUnionName: "Union Name",
-      retiredDate: "Retired Date",
+      retiredDate: "Retirement Date",
       pensionNo: "Pension Number",
       studyLocation: "Study Location",
+      discipline: "Discipline",
       graduationDate: "Graduation Date",
       startDate: "Start Date",
       payrollNo: "Payroll Number",
@@ -894,8 +1115,11 @@ function ApplicationMgtDrawer({
     }
 
     if (
-      InfData?.subscriptionDetails?.membershipCategory ===
-      "68dae699c5b15073d66b892c"
+      membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        RETIRED_MEMBERSHIP_CATEGORY_ID,
+        categoryData
+      )
     ) {
       if (!InfData.professionalDetails?.retiredDate) {
         newErrors.retiredDate = "Retired date is required";
@@ -908,20 +1132,23 @@ function ApplicationMgtDrawer({
     }
 
     if (
-      InfData?.subscriptionDetails?.membershipCategory ===
-      "68dae699c5b15073d66b892d"
+      membershipCategoryMatchesProductId(
+        InfData?.subscriptionDetails?.membershipCategory,
+        STUDENT_MEMBERSHIP_CATEGORY_ID,
+        categoryData
+      )
     ) {
       if (!InfData.professionalDetails?.studyLocation?.trim()) {
         newErrors.studyLocation = "Study location is required";
         missingFieldNames.push(fieldLabels.studyLocation);
       }
+      if (!InfData.professionalDetails?.discipline?.trim()) {
+        newErrors.discipline = "Discipline is required";
+        missingFieldNames.push(fieldLabels.discipline);
+      }
       if (!InfData.professionalDetails?.graduationDate) {
         newErrors.graduationDate = "Graduation date is required";
         missingFieldNames.push(fieldLabels.graduationDate);
-      }
-      if (!InfData.professionalDetails?.startDate) {
-        newErrors.startDate = "Start date is required";
-        missingFieldNames.push(fieldLabels.startDate);
       }
     }
 
@@ -942,6 +1169,11 @@ function ApplicationMgtDrawer({
       if (!InfData.professionalDetails.nmbiNumber?.trim()) {
         newErrors.nmbiNumber = "NMBI No/An Board Altranais Number is required";
         missingFieldNames.push(fieldLabels.nmbiNumber);
+      }
+      const nt = InfData.professionalDetails.nurseType;
+      if (nt === undefined || nt === null || (typeof nt === "string" && nt.trim() === "")) {
+        newErrors.nurseType = "This field is required";
+        missingFieldNames.push(fieldLabels.nurseType);
       }
     }
 
@@ -1054,7 +1286,9 @@ function ApplicationMgtDrawer({
         throw new Error("No authentication token found");
       }
 
-      const apiData = dateUtils.prepareForAPI(InfData);
+      const apiData = withMembershipCategoryIdsForApi(
+        dateUtils.prepareForAPI(InfData)
+      );
 
       const personalPayload = cleanPayload({
         personalInfo: apiData.personalInfo,
@@ -1113,7 +1347,9 @@ function ApplicationMgtDrawer({
           let approvalPayload;
 
           if (isEdit && originalData) {
-            const apiOriginalData = dateUtils.prepareForAPI(originalData);
+            const apiOriginalData = withMembershipCategoryIdsForApi(
+              dateUtils.prepareForAPI(originalData)
+            );
             const proposedPatch = generatePatch(apiOriginalData, apiData);
             approvalPayload = {
               submission: apiData,
@@ -1174,6 +1410,7 @@ function ApplicationMgtDrawer({
             // Only preserve these specific fields
             grade: InfData.professionalDetails?.grade || "",
             studyLocation: InfData.professionalDetails?.studyLocation || "",
+            discipline: InfData.professionalDetails?.discipline || "",
             workLocation: InfData.professionalDetails?.workLocation || "",
             region: InfData.professionalDetails?.region || "",
             branch: InfData.professionalDetails?.branch || "",
@@ -1329,6 +1566,16 @@ function ApplicationMgtDrawer({
       const currentVal = currentSub[field];
       const originalVal = originalSub[field];
 
+      if (field === "membershipCategory") {
+        const c =
+          membershipCategoryLabelToId(currentVal, categoryData) ||
+          currentVal;
+        const o =
+          membershipCategoryLabelToId(originalVal, categoryData) ||
+          originalVal;
+        return c !== o;
+      }
+
       if (currentVal && originalVal) {
         return currentVal !== originalVal;
       }
@@ -1351,7 +1598,9 @@ function ApplicationMgtDrawer({
       if (!token) {
         throw new Error("No authentication token found");
       }
-      const apiData = dateUtils.prepareForAPI(InfData);
+      const apiData = withMembershipCategoryIdsForApi(
+        dateUtils.prepareForAPI(InfData)
+      );
       if (!isEdit || !originalData) {
         throw new Error("Save operation requires edit mode and original data");
       }
@@ -1361,7 +1610,9 @@ function ApplicationMgtDrawer({
         throw new Error("ApplicationId not found");
       }
 
-      const apiOriginalData = dateUtils.prepareForAPI(originalData);
+      const apiOriginalData = withMembershipCategoryIdsForApi(
+        dateUtils.prepareForAPI(originalData)
+      );
       const savePromises = [];
 
       if (applicationId && hasPersonalDetailsChanged(apiData, apiOriginalData)) {
@@ -1503,16 +1754,38 @@ function ApplicationMgtDrawer({
             [field]: value,
           },
         };
+        if (
+          section === "professionalDetails" &&
+          field === "nursingAdaptationProgramme" &&
+          value === false
+        ) {
+          updated = {
+            ...updated,
+            professionalDetails: {
+              ...updated.professionalDetails,
+              nurseType: null,
+            },
+          };
+        }
         return updated;
       });
     }
 
     setErrors((prevErrors) => {
+      let next = prevErrors;
       if (prevErrors?.[field]) {
         const { [field]: removed, ...rest } = prevErrors;
-        return rest;
+        next = rest;
       }
-      return prevErrors;
+      if (
+        field === "nursingAdaptationProgramme" &&
+        value === false &&
+        next?.nurseType
+      ) {
+        const { nurseType: _removedNt, ...rest } = next;
+        next = rest;
+      }
+      return next;
     });
   };
 
@@ -1731,8 +2004,12 @@ function ApplicationMgtDrawer({
         throw new Error("No authentication token found");
       }
 
-      const apiInfData = dateUtils.prepareForAPI(InfData);
-      const apiOriginalData = dateUtils.prepareForAPI(originalData);
+      const apiInfData = withMembershipCategoryIdsForApi(
+        dateUtils.prepareForAPI(InfData)
+      );
+      const apiOriginalData = withMembershipCategoryIdsForApi(
+        dateUtils.prepareForAPI(originalData)
+      );
 
       const subscriptionChanged = hasSubscriptionDetailsChanged(apiOriginalData, apiInfData);
       const personalChanged = hasPersonalDetailsChanged(apiOriginalData, apiInfData);
@@ -2031,6 +2308,12 @@ function ApplicationMgtDrawer({
 
     message.success("Ready to add new member");
   };
+
+  const isUndergraduateStudentCategory = membershipCategoryMatchesProductId(
+    InfData?.subscriptionDetails?.membershipCategory,
+    STUDENT_MEMBERSHIP_CATEGORY_ID,
+    categoryData
+  );
 
   return (
     <div>
@@ -2642,7 +2925,7 @@ function ApplicationMgtDrawer({
                   label="Membership Category"
                   name="membershipCategory"
                   value={InfData.subscriptionDetails?.membershipCategory}
-                  // isIDs={true}
+                  isIDs={false}
                   options={categoryData}
                   required
                   disabled={isDisable}
@@ -2656,8 +2939,11 @@ function ApplicationMgtDrawer({
                   hasError={!!errors?.membershipCategory}
                 />
               </Col>
-              {InfData.subscriptionDetails?.membershipCategory ===
-                "68dae699c5b15073d66b892c" ? (
+              {membershipCategoryMatchesProductId(
+                InfData.subscriptionDetails?.membershipCategory,
+                RETIRED_MEMBERSHIP_CATEGORY_ID,
+                categoryData
+              ) ? (
                 <Col xs={24} md={12}>
                   <Row gutter={[8, 8]}>
                     <Col xs={24} md={12}>
@@ -2667,12 +2953,18 @@ function ApplicationMgtDrawer({
                         value={InfData?.professionalDetails?.retiredDate}
                         disabled={
                           isDisable ||
-                          InfData?.subscriptionDetails?.membershipCategory !==
-                          "68dae699c5b15073d66b892c"
+                          !membershipCategoryMatchesProductId(
+                            InfData?.subscriptionDetails?.membershipCategory,
+                            RETIRED_MEMBERSHIP_CATEGORY_ID,
+                            categoryData
+                          )
                         }
                         required={
-                          InfData?.subscriptionDetails?.membershipCategory ===
-                          "68dae699c5b15073d66b892c"
+                          membershipCategoryMatchesProductId(
+                            InfData?.subscriptionDetails?.membershipCategory,
+                            RETIRED_MEMBERSHIP_CATEGORY_ID,
+                            categoryData
+                          )
                         }
                         onChange={(date, dateString) => {
                           handleInputChange(
@@ -2691,12 +2983,18 @@ function ApplicationMgtDrawer({
                         value={InfData.professionalDetails?.pensionNo}
                         disabled={
                           isDisable ||
-                          InfData?.subscriptionDetails?.membershipCategory !==
-                          "68dae699c5b15073d66b892c"
+                          !membershipCategoryMatchesProductId(
+                            InfData?.subscriptionDetails?.membershipCategory,
+                            RETIRED_MEMBERSHIP_CATEGORY_ID,
+                            categoryData
+                          )
                         }
                         required={
-                          InfData?.subscriptionDetails?.membershipCategory ===
-                          "68dae699c5b15073d66b892c"
+                          membershipCategoryMatchesProductId(
+                            InfData?.subscriptionDetails?.membershipCategory,
+                            RETIRED_MEMBERSHIP_CATEGORY_ID,
+                            categoryData
+                          )
                         }
                         onChange={(e) =>
                           handleInputChange(
@@ -2710,76 +3008,88 @@ function ApplicationMgtDrawer({
                     </Col>
                   </Row>
                 </Col>
-              ) : InfData.subscriptionDetails?.membershipCategory ==
-                "68dae699c5b15073d66b892d" ? (
-                <>
-                  <Col xs={24} md={12}>
-                    <Row gutter={12}>
-                      <Col xs={24} md={8}>
-                        <CustomSelect
-                          onChange={(e) =>
-                            handleInputChange(
-                              "professionalDetails",
-                              "studyLocation",
-                              e.target.value
-                            )
-                          }
-                          label="Study Location"
-                          disabled={isDisable}
-                          required
-                          options={[
-                            {
-                              value: "Trinity College Dublin",
-                              label: "Trinity College Dublin",
-                            },
-                            {
-                              value: "University College Dublin",
-                              label: "University College Dublin",
-                            },
-                          ]}
-                          value={InfData?.professionalDetails?.studyLocation}
-                          hasError={!!errors?.studyLocation}
-                        />
-                      </Col>
-
-                      <Col xs={24} md={8}>
-                        <MyDatePicker1
-                          label="Start Date"
-                          onChange={(date, datestring) => {
-                            handleInputChange(
-                              "professionalDetails",
-                              "startDate",
-                              date
-                            );
-                          }}
-                          required
-                          disabled={isDisable}
-                          value={InfData?.professionalDetails?.startDate}
-                          hasError={!!errors?.startDate}
-                        />
-                      </Col>
-                      <Col xs={24} md={8}>
-                        <MyDatePicker1
-                          label="Graduation date"
-                          required
-                          disabled={isDisable}
-                          onChange={(date, datestring) => {
-                            handleInputChange(
-                              "professionalDetails",
-                              "graduationDate",
-                              date
-                            );
-                          }}
-                          value={InfData?.professionalDetails?.graduationDate}
-                          hasError={!!errors?.graduationDate}
-                        />
-                      </Col>
-                    </Row>
-                  </Col>
-                </>
-              ) : (
-                <Col span={12}></Col>
-              )}
+              ) : !isUndergraduateStudentCategory ? (
+                <Col xs={24} md={12} />
+              ) : null}
+              {isUndergraduateStudentCategory ? (
+                <Col xs={24}>
+                  <Row gutter={[16, 12]}>
+                    <Col xs={24} md={12}>
+                      <Row gutter={[16, 12]}>
+                        <Col xs={24} sm={12}>
+                          <CustomSelect
+                            onChange={(e) =>
+                              handleInputChange(
+                                "professionalDetails",
+                                "studyLocation",
+                                e.target.value
+                              )
+                            }
+                            label="Study Location"
+                            disabled={isDisable}
+                            required
+                            options={studyLocationOptions}
+                            value={InfData?.professionalDetails?.studyLocation}
+                            hasError={!!errors?.studyLocation}
+                          />
+                        </Col>
+                        <Col xs={24} sm={12}>
+                          <CustomSelect
+                            label="Discipline"
+                            name="discipline"
+                            disabled={isDisable}
+                            required
+                            options={disciplineOptions}
+                            value={InfData?.professionalDetails?.discipline}
+                            onChange={(e) =>
+                              handleInputChange(
+                                "professionalDetails",
+                                "discipline",
+                                e.target.value
+                              )
+                            }
+                            hasError={!!errors?.discipline}
+                          />
+                        </Col>
+                      </Row>
+                    </Col>
+                    <Col xs={24} md={12}>
+                      <Row gutter={[16, 12]}>
+                        <Col xs={24} sm={12}>
+                          <MyDatePicker1
+                            label="Start Date"
+                            onChange={(date, datestring) => {
+                              handleInputChange(
+                                "professionalDetails",
+                                "startDate",
+                                date
+                              );
+                            }}
+                            disabled={isDisable}
+                            value={InfData?.professionalDetails?.startDate}
+                          />
+                        </Col>
+                        <Col xs={24} sm={12}>
+                          <MyDatePicker1
+                            label="Graduation date"
+                            required
+                            disabled={isDisable}
+                            onChange={(date, datestring) => {
+                              handleInputChange(
+                                "professionalDetails",
+                                "graduationDate",
+                                date
+                              );
+                            }}
+                            value={InfData?.professionalDetails?.graduationDate}
+                            hasError={!!errors?.graduationDate}
+                          />
+                        </Col>
+                      </Row>
+                    </Col>
+                  </Row>
+                </Col>
+              ) : null}
 
               {/* Work Location */}
               <Col xs={24} md={12}>
@@ -3001,7 +3311,10 @@ function ApplicationMgtDrawer({
                     className="my-input-label mb-1"
                     style={{ color: errors?.nurseType ? "#ff4d4f" : "#14532d" }}
                   >
-                    Please tick one of the following <span className="text-danger">*</span>
+                    Please tick one of the following{" "}
+                    {InfData?.professionalDetails?.nursingAdaptationProgramme === true ? (
+                      <span className="text-danger">*</span>
+                    ) : null}
                   </label>
 
                   <Radio.Group
@@ -3014,7 +3327,10 @@ function ApplicationMgtDrawer({
                         e.target.value
                       )
                     }
-                    disabled={isDisable}
+                    disabled={
+                      InfData?.professionalDetails?.nursingAdaptationProgramme !==
+                        true || isDisable
+                    }
                     style={{
                       color: "#14532d",
                       width: "100%",

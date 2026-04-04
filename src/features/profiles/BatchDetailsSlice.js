@@ -48,6 +48,61 @@ export const getAllBatchDetails = createAsyncThunk(
 );
 
 // ===============================
+// Thunk: Update Batch Details (multipart)
+// ===============================
+export const updateBatchDetail = createAsyncThunk(
+    "batchDetails/update",
+    async ({ batchDetailId, formData }, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.patch(
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/${batchDetailId}`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return response?.data;
+        } catch (error) {
+            const msg =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to update batch";
+            return rejectWithValue(msg);
+        }
+    }
+);
+
+// ===============================
+// Thunk: Delete Batch Detail
+// ===============================
+export const deleteBatchDetail = createAsyncThunk(
+    "batchDetails/delete",
+    async (batchDetailId, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.delete(
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/${batchDetailId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response?.data;
+        } catch (error) {
+            const data = error?.response?.data;
+            const msg =
+                data?.message ||
+                error?.message ||
+                "Failed to delete batch";
+            return rejectWithValue(msg);
+        }
+    }
+);
+
+// ===============================
 // Slice
 // ===============================
 const batchDetailsSlice = createSlice({

@@ -432,11 +432,10 @@ function Configuratin() {
         setTimeout(() => {
           MyAlert("success", successNotification);
         }, 100);
-        // MyAlert("success", successNotification);
         if (typeof callback === "function") {
-          console.log("✅ Executing callback");
+          callback();
         }
-        return response.data; // This returns data
+        return response.data;
       }
     } catch (error) {
       console.error("Axios Error:", error?.response || error);
@@ -1197,11 +1196,15 @@ function Configuratin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
   // const [filteredLookupsTypes, setFilteredLookupsTypes] = useState([]);
+  const sortLookupTypesByName = (arr) =>
+    [...(arr || [])].sort((a, b) =>
+      (a.lookuptype || "").localeCompare(b.lookuptype || ""),
+    );
   const handleSearchLookupTypes = (searchValue) => {
     setSearchTerm(searchValue);
 
     if (!searchValue.trim()) {
-      setFilteredLookupsTypes(lookupsTypes);
+      setFilteredLookupsTypes(sortLookupTypesByName(lookupsTypes));
       return;
     }
 
@@ -1215,11 +1218,11 @@ function Configuratin() {
       );
     });
 
-    setFilteredLookupsTypes(filtered);
+    setFilteredLookupsTypes(sortLookupTypesByName(filtered));
   };
   // Initialize filtered data when lookupsTypes changes
   useEffect(() => {
-    setFilteredLookupsTypes(lookupsTypes);
+    setFilteredLookupsTypes(sortLookupTypesByName(lookupsTypes));
   }, [lookupsTypes]);
   useMemo(() => {
     if (regions && Array.isArray(regions)) {
@@ -1772,6 +1775,30 @@ function Configuratin() {
       ...prevState,
       [drawer]: drawerInputsInitalValues[drawer],
     }));
+    if (callback && typeof callback === "function") {
+      callback();
+    }
+  };
+
+  const resetLookupDrawerForNextEntry = (callback) => {
+    setdrawerIpnuts((prevState) => {
+      const lookuptypeId = prevState?.Lookup?.lookuptypeId ?? "";
+      return {
+        ...prevState,
+        Lookup: {
+          ...drawerInputsInitalValues.Lookup,
+          lookuptypeId:
+            lookuptypeId === null || lookuptypeId === undefined
+              ? ""
+              : String(lookuptypeId),
+        },
+      };
+    });
+    setErrors((prev) => {
+      const next = { ...prev };
+      delete next.Lookup;
+      return next;
+    });
     if (callback && typeof callback === "function") {
       callback();
     }
@@ -2641,11 +2668,16 @@ function Configuratin() {
       title: "Name",
       dataIndex: "lookuptype",
       key: "lookuptype",
+      defaultSortOrder: "ascend",
+      sorter: (a, b) =>
+        (a.lookuptype || "").localeCompare(b.lookuptype || ""),
     },
     {
       title: "Display Name",
       dataIndex: "DisplayName",
       key: "DisplayName",
+      sorter: (a, b) =>
+        (a.DisplayName || "").localeCompare(b.DisplayName || ""),
     },
 
     {
@@ -8016,7 +8048,7 @@ function Configuratin() {
             drawerIpnuts?.Lookup,
             "Data inserted successfully",
             "Data did not insert",
-            () => resetCounteries("Lookup", () => dispatch(getAllLookups())),
+            () => resetLookupDrawerForNextEntry(() => dispatch(getAllLookups())),
           );
           dispatch(getAllLookups());
         }}

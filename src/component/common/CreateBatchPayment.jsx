@@ -31,6 +31,7 @@ import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
 import { useLocation } from "react-router-dom";
 import { addBatchWithMember } from "../../features/BatchesSlice"; // Import the Redux action
+import { updateBatchDetail } from "../../features/profiles/BatchDetailsSlice";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 
@@ -40,6 +41,7 @@ const { Title, Text } = Typography;
 const requiredBatchColumns = ["Membership No", "Value for Periods Selected"];
 
 const CreateBatchPayment = forwardRef((props, ref) => {
+  const { editBatchId = null, editSource = null } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch(); // Initialize Redux dispatch
@@ -236,6 +238,47 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     setFormErrors((prev) => ({ ...prev, [name]: false }));
   };
 
+  const buildBatchDetailsFormData = () => {
+    const formData = new FormData();
+    const isStandingOrder =
+      formValues.batchType?.toLowerCase() === "standing order";
+    const isDeduction = formValues.batchType?.toLowerCase() === "deduction";
+
+    const formattedBatchDate = dayjs(
+      formValues.batchDate,
+      "MM/YYYY",
+    ).format("YYYY-MM-DD");
+    const formattedPaymentDate = dayjs(
+      formValues.paymentDate,
+      "DD/MM/YYYY",
+    ).format("YYYY-MM-DD");
+
+    const apiType = isStandingOrder
+      ? "Standing Order"
+      : isDeduction
+        ? "deduction"
+        : formValues.batchType || "";
+
+    formData.append("type", apiType);
+    formData.append("date", formattedPaymentDate);
+    formData.append("batchDate", formattedBatchDate);
+    formData.append("paymentDate", formattedPaymentDate);
+
+    if (isStandingOrder) {
+      formData.append("bankName", formValues.workLocation);
+    } else {
+      formData.append("workLocation", formValues.workLocation);
+    }
+
+    formData.append("referenceNumber", formValues.batchRef);
+    formData.append("description", formValues.description);
+    formData.append("comments", formValues.comments || "");
+    if (uploadedFile) {
+      formData.append("file", uploadedFile);
+    }
+    return formData;
+  };
+
   const handleSubmit = async () => {
     const required = [
       "batchType",
@@ -255,6 +298,24 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     if (Object.keys(nextErrors).length > 0) {
       message.error("Please fill all required fields.");
       return null;
+    }
+
+    if (editBatchId) {
+      try {
+        const formData = buildBatchDetailsFormData();
+        await dispatch(
+          updateBatchDetail({ batchDetailId: editBatchId, formData }),
+        ).unwrap();
+        message.success("Batch updated successfully");
+        return { _id: editBatchId };
+      } catch (error) {
+        message.error(
+          typeof error === "string"
+            ? error
+            : error?.message || "Failed to update batch",
+        );
+        return null;
+      }
     }
 
     const currentPath = window.location.pathname;
@@ -284,39 +345,9 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       formValues.batchType?.toLowerCase() === "standing order"
     ) {
       try {
-        const formData = new FormData();
+        const formData = buildBatchDetailsFormData();
         const isStandingOrder =
           formValues.batchType?.toLowerCase() === "standing order";
-        const apiType = isStandingOrder ? "Standing Order" : "deduction";
-
-        // Format dates to YYYY-MM-DD for API using dayjs
-        // MyDatePicker handles values as dayjs objects or strings
-        const formattedBatchDate = dayjs(
-          formValues.batchDate,
-          "MM/YYYY",
-        ).format("YYYY-MM-DD");
-        const formattedPaymentDate = dayjs(
-          formValues.paymentDate,
-          "DD/MM/YYYY",
-        ).format("YYYY-MM-DD");
-
-        formData.append("type", apiType);
-        formData.append("date", formattedPaymentDate);
-        formData.append("batchDate", formattedBatchDate);
-        formData.append("paymentDate", formattedPaymentDate);
-
-        if (isStandingOrder) {
-          formData.append("bankName", formValues.workLocation);
-        } else {
-          formData.append("workLocation", formValues.workLocation);
-        }
-
-        formData.append("referenceNumber", formValues.batchRef);
-        formData.append("description", formValues.description);
-        formData.append("comments", formValues.comments || "");
-        if (uploadedFile) {
-          formData.append("file", uploadedFile);
-        }
 
         const token = localStorage.getItem("token");
         const response = await axios.post(
@@ -333,7 +364,7 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         if (response.status === 200 || response.status === 201) {
           message.success(
             `${
-              apiType === "standing order" ? "Standing Order" : "Deduction"
+              isStandingOrder ? "Standing Order" : "Deduction"
             } batch created successfully`,
           );
           const batchId = response?.data?.data?._id;
@@ -387,6 +418,42 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       fileInput.value = "";
     }
   };
+
+  useEffect(() => {
+    if (
+      !editBatchId ||
+      !editSource?._id ||
+      String(editSource._id) !== String(editBatchId)
+    ) {
+      return;
+    }
+
+    const batchDateVal = editSource.batchDate
+      ? dayjs(editSource.batchDate).format("MM/YYYY")
+      : "";
+    const paymentDateVal = editSource.paymentDate
+      ? dayjs(editSource.paymentDate).format("DD/MM/YYYY")
+      : "";
+
+    setFormValues({
+      batchType: editSource.type || "",
+      batchDate: batchDateVal,
+      paymentDate: paymentDateVal,
+      batchRef: editSource.referenceNumber || "",
+      description: editSource.description || editSource.name || "",
+      comments: editSource.comments || "",
+      workLocation: editSource.workLocation || editSource.bankName || "",
+    });
+    setFormErrors({});
+
+    const count = Array.isArray(editSource.batchPayments)
+      ? editSource.batchPayments.length
+      : 0;
+    setBatchTotals((prev) => ({
+      ...prev,
+      records: count,
+    }));
+  }, [editBatchId, editSource]);
 
   useImperativeHandle(ref, () => ({
     submit: handleSubmit,
