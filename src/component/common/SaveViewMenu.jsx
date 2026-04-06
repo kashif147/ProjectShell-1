@@ -8,25 +8,30 @@ import {
   PlusOutlined,
 } from "@ant-design/icons";
 import { useDispatch, useSelector } from "react-redux";
-import { getGridTemplates, deleteGridTemplate, pinGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getGridTemplates, deleteGridTemplate, setDefaultGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getViewById } from "../../features/views/ViewByIdSlice";
+import { setActiveTemplateId, clearActiveTemplateId } from "../../features/views/ActiveTemplateSlice";
 import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getAllApplications } from "../../features/ApplicationSlice";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useFilters } from "../../context/FilterContext";
 import { useLocation } from "react-router-dom";
 import axios from "axios";
 import MyAlert from "./MyAlert";
 import MyInput from "./MyInput";
-import { getLabelToKeyMap, transformFiltersForApi } from "../../utils/filterUtils";
-import { setTemplateId, setInitialized } from "../../features/applicationwithfilterslice";
+import { getLabelToKeyMap, transformFiltersForApi, transformFiltersFromApi } from "../../utils/filterUtils";
+import { setTemplateId, setInitialized, initializeWithTemplate, resetInitialization } from "../../features/applicationwithfilterslice";
 
-const SaveViewMenu = () => {
+const SaveViewMenu = ({ className, style }) => {
   const dispatch = useDispatch();
   const location = useLocation();
   const { templates, loading } = useSelector((state) => state.templetefiltrsclumnapi);
-  const { columns, applyTemplate } = useTableColumns();
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  const { selectedView, loading: viewLoading } = useSelector((state) => state.viewById);
+  const { columns, applyTemplate, selectedTemplates, updateSelectedTemplate } = useTableColumns();
   const { filtersState, applyTemplateFilters } = useFilters();
   const [activeView, setActiveView] = useState("Default View");
-  const [currentTemplateId, setCurrentTemplateId] = useState("");
   const [isModalVisible, setIsModalVisible] = useState(false);
   const [viewName, setViewName] = useState("");
   const [saving, setSaving] = useState(false);
@@ -63,83 +68,112 @@ const SaveViewMenu = () => {
   const targetTemplateType = screenMapping[screenNameForApi] || screenNameForApi;
 
   const transformFiltersForApply = (apiFilters) => {
-    const labelMap = getLabelToKeyMap(columns[activeScreen] || []);
-    // Reverse the map for loading
-    const keyToLabel = {};
-    Object.keys(labelMap).forEach(label => {
-      keyToLabel[labelMap[label]] = label;
-    });
-
-    const transformed = {};
-    Object.keys(apiFilters).forEach(key => {
-      const filter = apiFilters[key];
-      const label = keyToLabel[key] || key;
-      transformed[label] = {
-        operator: filter.operator === 'equal_to' ? '==' : '!=',
-        selectedValues: filter.values || filter.selectedValues || []
-      };
-    });
-    return transformed;
+    return transformFiltersFromApi(apiFilters, columns[activeScreen] || []);
   };
-
-
 
   useEffect(() => {
     dispatch(getGridTemplates());
   }, [dispatch]);
 
-  // Set initial active view from system default when templates load
+  // Consolidate Initialization Logic: Reset and Apply Template on Screen Change
+  const lastScreen = React.useRef(null);
   useEffect(() => {
-    if (!loading && templates) {
-      const systemView =
-        templates.systemDefault?.templateType === targetTemplateType
-          ? templates.systemDefault
-          : null;
-      const userViews =
-        templates.userTemplates?.filter(
-          (t) => t.templateType === targetTemplateType
-        ) || [];
-
-      const pinnedView = userViews.find((t) => t.pinned);
-
-      if (pinnedView) {
-        handleApplyView(pinnedView);
-      } else if (systemView) {
-        handleApplyView(systemView);
-      } else {
-        setActiveView("No View in this Screen");
-        // Update Redux state even if no template ID to trigger load
-        if (location.pathname === "/applications") {
-          dispatch(setTemplateId(""));
-        }
-      }
-      // Signal that initial view determination is complete
-      dispatch(setInitialized(true));
+    // 🛡️ Always reset immediately IF AND ONLY IF the screen actually changed
+    if (lastScreen.current !== targetTemplateType) {
+      console.log("🔄 SaveViewMenu: Screen change detected, resetting initialization:", targetTemplateType);
+      dispatch(resetInitialization());
+      dispatch(clearActiveTemplateId()); // 🛡️ Clear any active template from the previous screen
+      lastScreen.current = targetTemplateType;
     }
-  }, [templates, loading, targetTemplateType]);
 
-  const handleApplyView = (template) => {
-    // Map FilterContext screen names to TableColumnsContext keys if different
-    const colScreen = activeScreen;
+    // 🛡️ Guard: Wait until templates are loaded and ready
+    if (loading || !templates) {
+      console.log("⏳ SaveViewMenu: Waiting for templates to load for screen:", targetTemplateType);
+      return;
+    }
 
-    const transformedFilters = transformFiltersForApply(template.filters || {});
+    console.log("🚀 SaveViewMenu: Initializing view for screen:", targetTemplateType);
 
-    applyTemplate(colScreen, template.columns);
-    applyTemplateFilters(transformedFilters);
-    setActiveView(template.name);
-    setCurrentTemplateId(template._id);
+    // 1. Check if we have a persisted view in context for this screen
+    const persistedTemplate = selectedTemplates[targetTemplateType];
 
-    // Update Redux state so MembershipApplication can react
-    dispatch(setTemplateId(template._id || ""));
+    if (persistedTemplate) {
+      handleApplyView(persistedTemplate, false); // false to avoid redundant context update
+      return;
+    }
+
+    // 2. Fall back to user default or system default
+    const systemView =
+      templates.systemDefault?.templateType === targetTemplateType
+        ? templates.systemDefault
+        : templates.userTemplates?.find(
+          (t) => t.systemDefault && t.templateType === targetTemplateType
+        ) || null;
+
+    const userViews =
+      templates.userTemplates?.filter(
+        (t) => t.templateType === targetTemplateType
+      ) || [];
+
+    const defaultView = userViews.find((t) => t.isDefault);
+
+    if (defaultView) {
+      dispatch(setActiveTemplateId(defaultView._id));
+      handleApplyView(defaultView);
+    } else if (systemView) {
+      dispatch(setActiveTemplateId(systemView._id));
+      handleApplyView(systemView);
+    } else {
+      setActiveView("System Template");
+      dispatch(setActiveTemplateId(null));
+      // Always initialize data loading even if no explicitly saved view exists
+      dispatch(initializeWithTemplate(""));
+    }
+  }, [dispatch, targetTemplateType, templates, loading]);
+
+  useEffect(() => {
+    if (activeTemplateId) {
+      dispatch(getViewById(activeTemplateId));
+    }
+  }, [dispatch, activeTemplateId]);
+
+  // Apply template settings when view details are fetched
+  useEffect(() => {
+    if (selectedView && selectedView._id === activeTemplateId) {
+      console.log("✅ SaveViewMenu: Applying view details from viewById slice:", selectedView.name);
+
+      const colScreen = activeScreen;
+      const transformedFilters = transformFiltersForApply(selectedView.filters || {});
+
+      applyTemplate(colScreen, selectedView.columns);
+      applyTemplateFilters(transformedFilters);
+      setActiveView(selectedView.name);
+
+      // Initialize data loading with the template
+      dispatch(initializeWithTemplate(selectedView._id || ""));
+    }
+  }, [selectedView, activeTemplateId]);
+
+  const handleApplyView = (template, shouldPersist = true) => {
+    // Just set the active ID; the useEffect above will handle the application of details
+    dispatch(setActiveTemplateId(template._id || null));
+
+    // Update context persistence
+    if (shouldPersist) {
+      updateSelectedTemplate(targetTemplateType, template);
+    }
   };
 
-  const handlePinView = (templateId) => {
-    dispatch(pinGridTemplate(templateId))
+  const handleSetDefaultView = (id, isDefault) => {
+    dispatch(setDefaultGridTemplate({ id, isDefault }))
       .unwrap()
-      .then(() => MyAlert("success", "Success", "View pinned successfully"))
+      .then(() => {
+        MyAlert("success", "Success", `Default view ${isDefault ? "set" : "removed"} successfully`);
+        dispatch(getGridTemplates()); // Refresh the list to show new default star
+      })
       .catch((error) => {
-        console.error("Error pinning view:", error);
-        MyAlert("error", "Error", error?.message || "Failed to pin view");
+        console.error("Error setting default view:", error);
+        MyAlert("error", "Error", error?.message || "Failed to update default view");
       });
   };
 
@@ -148,6 +182,14 @@ const SaveViewMenu = () => {
       .unwrap()
       .then(() => {
         MyAlert("success", "Success", "View deleted successfully");
+
+        // If the deleted view was active, we need to clear it so initialization can reset to system default
+        if (id === activeTemplateId) {
+          dispatch(setActiveTemplateId(null));
+          updateSelectedTemplate(targetTemplateType, null);
+        }
+
+        dispatch(getGridTemplates()); // This will trigger the useEffect initialization
       })
       .catch((error) => {
         console.error("Error deleting view:", error);
@@ -178,7 +220,7 @@ const SaveViewMenu = () => {
         templateType: targetTemplateType,
         filters: activeFilters,
         columns: visibleColumns,
-        pinned: false,
+        isDefault: false,
       };
 
       const token = localStorage.getItem("token");
@@ -193,7 +235,27 @@ const SaveViewMenu = () => {
       MyAlert("success", "Success", `View "${viewName}" saved successfully`);
       setIsModalVisible(false);
       setViewName("");
-      dispatch(getGridTemplates()); // Refresh the list
+
+      // 1. Refresh the templates list first and WAIT for it
+      const templatesResponse = await dispatch(getGridTemplates()).unwrap();
+
+      // 2. Find the newly saved template in the refreshed list
+      const savedTemplate = templatesResponse.userTemplates?.find(t => t.name === viewName && t.templateType === targetTemplateType);
+
+      if (savedTemplate) {
+        handleApplyView(savedTemplate); // This will update context and filters
+      }
+
+      // 3. Refresh the grid data
+      if (location.pathname.toLowerCase() === "/applications") {
+        dispatch(getApplicationsWithFilter({
+          templateId: savedTemplate?._id || currentTemplateId || "",
+          page: 1,
+          limit: 10
+        }));
+      } else {
+        dispatch(getAllApplications());
+      }
     } catch (error) {
       console.error("Error saving template:", error);
       MyAlert(
@@ -227,11 +289,12 @@ const SaveViewMenu = () => {
         {isPinned ? (
           <StarFilled
             style={{ color: "#1890ff", fontSize: 16, cursor: "pointer" }}
+            onClick={() => handleSetDefaultView(template._id, false)}
           />
         ) : (
           <StarOutlined
             style={{ color: "#555", fontSize: 16, cursor: "pointer" }}
-            onClick={() => handlePinView(template._id)}
+            onClick={() => handleSetDefaultView(template._id, true)}
           />
         )}
         {!template.systemDefault && (
@@ -262,9 +325,13 @@ const SaveViewMenu = () => {
           </div>
 
           {/* System Default */}
-          {templates?.systemDefault && templates.systemDefault.templateType === targetTemplateType &&
-            renderTemplateItem(templates.systemDefault, templates.systemDefault.pinned)
-          }
+          {(() => {
+            const userViews = templates?.userTemplates?.filter(t => t.templateType === targetTemplateType) || [];
+            const hasUserDefault = userViews.some(t => t.isDefault);
+
+            return templates?.systemDefault && templates.systemDefault.templateType === targetTemplateType &&
+              renderTemplateItem(templates.systemDefault, templates.systemDefault.isDefault || !hasUserDefault);
+          })()}
 
           <Divider style={{ margin: "4px 0" }} />
 
@@ -290,7 +357,7 @@ const SaveViewMenu = () => {
 
           {/* User Templates */}
           {templates?.userTemplates?.filter(t => t.templateType === targetTemplateType).map(template =>
-            renderTemplateItem(template, template.pinned)
+            renderTemplateItem(template, template.isDefault)
           )}
         </>
       )}
@@ -298,7 +365,7 @@ const SaveViewMenu = () => {
   );
 
   return (
-    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+    <div className={className} style={{ display: "flex", alignItems: "center", gap: "8px", ...style }}>
       <Dropdown
         overlay={menu}
         trigger={["click"]}
@@ -326,18 +393,19 @@ const SaveViewMenu = () => {
           <Button key="cancel" onClick={() => setIsModalVisible(false)}>
             Cancel
           </Button>,
-          <Button key="submit" className="butn primary-btn" onClick={handleSaveView} loading={saving}>
+          <Button className="butn primary-btn" style={{ marginRight: 4 }} onClick={handleSaveView} loading={saving}>
             Save
           </Button>,
         ]}
       >
-        <div style={{ margin: 4 }}>
-          <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>View Name</label>
+        <div style={{ margin: 16 }}>
+          {/* <label style={{ display: "block", marginBottom: 8, fontWeight: 500 }}>View Name</label>
           <Input
             placeholder="Enter view name"
             value={viewName}
             onChange={(e) => setViewName(e.target.value)}
-          />
+          /> */}
+          <MyInput label="View Name" value={viewName} onChange={(e) => setViewName(e.target.value)} />
 
         </div>
       </Modal>

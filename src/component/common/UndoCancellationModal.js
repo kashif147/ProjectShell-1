@@ -82,7 +82,7 @@ const UndoCancellationModal = ({
         </Button>,
       ]}
     >
-      <div style={{ margin: "20px 0" }}>
+      <div style={{ margin: "20px" }}>
         <CustomSelect
           label="Reason for Undoing Cancellation"
           placeholder="Select a reason"

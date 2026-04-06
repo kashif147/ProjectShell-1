@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { Drawer, Button, Space } from "antd";
 import MyInput from "./common/MyInput";
 import CustomSelect from "./common/CustomSelect";
-import SubTableComp from "./common/SubTableComp";
+import MyTable from "./common/MyTable";
 import { useSelector } from "react-redux";
 import { selectFilteredTransfer } from '../features/profiles/filterTransferSlice';
 import { getTransferRequest } from "../features/profiles/TransferRequest";
@@ -78,7 +78,7 @@ function TransferRequests({ open, onClose }) {
       );
       dispatch(getTransferRequest())
       oncloseftn();
-         
+
       // Dispatch action to update Redux state if needed
       // dispatch(updateTransferStatus({ id: requestId, status: "APPROVED" }));
 
@@ -394,15 +394,12 @@ function TransferRequests({ open, onClose }) {
 
         <div>
           <h4 className="mt-2 mb-3">Transfer History</h4>
-          <Table
-            className='claims-table'
-            bortdered
-            columns={columnHistory} dataSource={transferHistory} loading={!filteredData} pagination={false} />
-          {/* <SubTableComp
+          <MyTable
             columns={columnHistory}
             dataSource={transferHistory}
             loading={!filteredData}
-          /> */}
+            selection={false}
+          />
         </div>
       </div>
     </Drawer>

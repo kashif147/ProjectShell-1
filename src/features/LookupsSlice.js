@@ -11,19 +11,18 @@ const getAuthHeaders = () => ({
 // Sort utility function
 const sortArray = (array, key, order = 'asc') => {
   if (!Array.isArray(array)) return [];
-  
+
   return [...array].sort((a, b) => {
     const aValue = a[key] || '';
     const bValue = b[key] || '';
-    
+
     const comparison = String(aValue).toLowerCase()
       .localeCompare(String(bValue).toLowerCase());
-    
+
     return order === 'desc' ? -comparison : comparison;
   });
 };
 
-// Only GET operation - CONDITION REMOVED
 export const getAllLookups = createAsyncThunk(
   "lookups/getAllLookups",
   async (_, { rejectWithValue }) => {
@@ -37,8 +36,10 @@ export const getAllLookups = createAsyncThunk(
         error.response?.data?.message || "Failed to fetch lookups"
       );
     }
+  },
+  {
+    condition: (_, { getState }) => !getState().lookups.lookupsloading,
   }
-  // Condition block removed completely
 );
 
 const lookupsSlice = createSlice({
@@ -55,8 +56,12 @@ const lookupsSlice = createSlice({
     branchOptions: [],
     regionOptions: [],
     secondarySectionOptions: [],
+    studyLocationOptions: [],
+    disciplineOptions: [],
     countryOptions: [],
-    provincesOption:[],
+    provincesOption: [],
+    
+    selectedWorkLocations: [], // Adding selectedWorkLocations to Redux
 
     // Raw API response (optional - remove if not needed)
     lookups: [],
@@ -67,6 +72,9 @@ const lookupsSlice = createSlice({
   reducers: {
     clearLookupsError: (state) => {
       state.error = null;
+    },
+    setSelectedWorkLocations: (state, action) => {
+      state.selectedWorkLocations = action.payload;
     },
     resetLookups: (state) => {
       // Reset all arrays to empty
@@ -80,8 +88,11 @@ const lookupsSlice = createSlice({
       state.branchOptions = [];
       state.regionOptions = [];
       state.secondarySectionOptions = [];
+      state.studyLocationOptions = [];
+      state.disciplineOptions = [];
       state.countryOptions = [];
       state.provincesOption = [];
+      state.selectedWorkLocations = [];
       state.lookups = [];
     },
   },
@@ -96,7 +107,7 @@ const lookupsSlice = createSlice({
         state.error = null;
         state.lastErrorTime = null;
         state.lookups = payload;
-        
+
         // Reset all arrays
         state.titleOptions = [];
         state.genderOptions = [];
@@ -108,6 +119,8 @@ const lookupsSlice = createSlice({
         state.branchOptions = [];
         state.regionOptions = [];
         state.secondarySectionOptions = [];
+        state.studyLocationOptions = [];
+        state.disciplineOptions = [];
         state.countryOptions = [];
         state.provincesOption = []
 
@@ -138,7 +151,7 @@ const lookupsSlice = createSlice({
               case "MembershipCategory":
                 state.membershipCategoryOptions.push(optionItem);
                 break;
-              case "PaymentType":
+              case "Payment Type":
                 state.paymentTypeOptions.push(optionItem);
                 break;
               case "Branch":
@@ -149,6 +162,12 @@ const lookupsSlice = createSlice({
                 break;
               case "Secondary Section":
                 state.secondarySectionOptions.push(optionItem);
+                break;
+              case "Study Location":
+                state.studyLocationOptions.push(optionItem);
+                break;
+              case "Discipline":
+                state.disciplineOptions.push(optionItem);
                 break;
               case "Country":
                 state.countryOptions.push(optionItem);
@@ -161,6 +180,25 @@ const lookupsSlice = createSlice({
             }
           });
         }
+
+        // Add standard Irish banks to branchOptions (used as Bank Name in Standing Orders)
+        const irishBanks = [
+          { value: "Allied Irish Banks (AIB)", label: "Allied Irish Banks (AIB)", key: "AIB" },
+          { value: "Bank of Ireland", label: "Bank of Ireland", key: "BOI" },
+          { value: "Permanent TSB", label: "Permanent TSB", key: "PTSB" },
+          { value: "Ulster Bank", label: "Ulster Bank", key: "Ulster" },
+          { value: "EBS", label: "EBS", key: "EBS" },
+          { value: "KBC Bank Ireland", label: "KBC Bank Ireland", key: "KBC" },
+          { value: "Danske Bank", label: "Danske Bank", key: "Danske" },
+          { value: "An Post Money", label: "An Post Money", key: "AnPost" },
+          { value: "Revolut", label: "Revolut", key: "Revolut" },
+        ];
+
+        irishBanks.forEach(bank => {
+          if (!state.branchOptions.find(b => b.label === bank.label)) {
+            state.branchOptions.push(bank);
+          }
+        });
 
         const otherOption = {
           id: "Other",
@@ -198,6 +236,8 @@ const lookupsSlice = createSlice({
         state.branchOptions = sortArray(state.branchOptions, 'label', 'asc');
         state.regionOptions = sortArray(state.regionOptions, 'label', 'asc');
         state.secondarySectionOptions = sortArray(state.secondarySectionOptions, 'label', 'asc');
+        state.studyLocationOptions = sortArray(state.studyLocationOptions, 'label', 'asc');
+        state.disciplineOptions = sortArray(state.disciplineOptions, 'label', 'asc');
         state.countryOptions = sortArray(state.countryOptions, 'label', 'asc');
         state.Provinces = sortArray(state.Provinces, 'label', 'asc');
       })
@@ -209,5 +249,5 @@ const lookupsSlice = createSlice({
   },
 });
 
-export const { clearLookupsError, resetLookups } = lookupsSlice.actions;
+export const { clearLookupsError, resetLookups, setSelectedWorkLocations } = lookupsSlice.actions;
 export default lookupsSlice.reducer;

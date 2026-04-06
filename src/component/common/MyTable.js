@@ -79,7 +79,7 @@ const MyTable = ({
 
   // Process data for filtering and sorting
   const processedData = useMemo(() => {
-    let data = [...dataSource];
+    let data = Array.isArray(dataSource) ? [...dataSource] : [];
 
     // Filter data
     Object.keys(filteredInfo).forEach((key) => {

@@ -142,43 +142,10 @@ export const AuthorizationProvider = ({ children }) => {
 
   // Load all authorization data from API in one call
   const loadAllAuthorizationData = useCallback(async (token) => {
-    try {
-      console.log(
-        "AuthorizationContext - loadAllAuthorizationData called with token:",
-        token ? "exists" : "missing"
-      );
-      dispatch({ type: AUTH_ACTIONS.SET_LOADING, payload: true });
-
-      console.log(
-        "AuthorizationContext - Fetching authorization data from API..."
-      );
-      const data = await AuthorizationAPI.fetchAllAuthorizationData(token);
-
-      console.log("AuthorizationContext - API Response:", data);
-
-      dispatch({
-        type: AUTH_ACTIONS.SET_ALL_AUTHORIZATION_DATA,
-        payload: data,
-      });
-
-      console.log("AuthorizationContext - API data loaded and dispatched");
-    } catch (error) {
-      console.error("Error loading authorization data:", error);
-      // Fallback to individual calls if consolidated call fails
-      try {
-        await Promise.all([
-          loadPermissionDefinitions(token),
-          loadRoleDefinitions(token),
-          loadRoutePermissions(token),
-        ]);
-      } catch (fallbackError) {
-        console.error(
-          "Error in fallback authorization loading:",
-          fallbackError
-        );
-        dispatch({ type: AUTH_ACTIONS.SET_ERROR, payload: error.message });
-      }
-    }
+    // Rely ONLY on JWT and LocalStorage as per user requirement
+    console.log("AuthorizationContext - relying on JWT/LocalStorage only, skipping API sync");
+    dispatch({ type: AUTH_ACTIONS.SET_INITIALIZED, payload: true });
+    return;
   }, []);
 
   // Clear authentication
@@ -421,17 +388,18 @@ export const AuthorizationProvider = ({ children }) => {
     localStorage.setItem("userRoles", JSON.stringify(roles));
     localStorage.setItem("userPermissions", JSON.stringify(permissions));
 
-    // Fetch all authorization data
-    const token = localStorage.getItem("token");
-    if (token) {
-      await loadAllAuthorizationData(token);
-    }
+    // Fetched all authorization data (Disabled for local-only trust)
+    // const token = localStorage.getItem("token");
+    // if (token) {
+    //   await loadAllAuthorizationData(token);
+    // }
+    dispatch({ type: AUTH_ACTIONS.SET_INITIALIZED, payload: true });
   };
 
   // Check if user has specific permission
   const hasPermission = (permission) => {
     if (!state.permissions || state.permissions.length === 0) return false;
-    return state.permissions.includes(permission);
+    return state.permissions.includes("*") || state.permissions.includes(permission);
   };
 
   // Check if user has any of the specified permissions

@@ -30,6 +30,10 @@ const token = localStorage.getItem("token")
         err.response?.data?.message || "Failed to fetch subscriptions"
       );
     }
+  },
+  {
+    condition: (_, { getState }) =>
+      !getState().subscription.subscriptionLoading,
   }
 );
 

@@ -1,19 +1,21 @@
 import React from 'react'
-import SubTableComp from '../../component/common/SubTableComp'
+import MyTable from '../../component/common/MyTable'
 import { Space, Checkbox, Button } from 'antd';
 import "../../styles/CasesById.css";
 
 function CasesById() {
   const viewCase = (caseId) => {
+    console.log("Viewing case:", caseId);
   };
 
   const editCase = (caseId) => {
-    // Edit case logic
+    console.log("Editing case:", caseId);
   };
 
   const deleteCase = (caseId) => {
-    // Delete case logic
+    console.log("Deleting case:", caseId);
   };
+
   const caseColumns = [
     {
       title: 'Case ID',
@@ -56,10 +58,9 @@ function CasesById() {
       ],
       onFilter: (value, record) => record.caseStatus.indexOf(value) === 0,
       filterDropdown: ({ setSelectedKeys, selectedKeys, confirm, clearFilters }) => {
-        // Function to handle checkbox change
         const handleChange = (checkedValues) => {
           setSelectedKeys(checkedValues);
-          confirm(); // Apply the filter immediately
+          confirm();
         };
 
         return (
@@ -67,7 +68,7 @@ function CasesById() {
             <Checkbox.Group
               value={selectedKeys}
               onChange={handleChange}
-              style={{ display: 'flex', flexDirection: 'column' }} // Ensure checkboxes are vertical
+              style={{ display: 'flex', flexDirection: 'column' }}
             >
               {['Open', 'In Progress', 'Closed'].map((status) => (
                 <Checkbox key={status} value={status} style={{ marginBottom: 8 }}>
@@ -78,9 +79,9 @@ function CasesById() {
             <div style={{ marginTop: 8 }}>
               <Button
                 onClick={() => {
-                  clearFilters(); // Clear all filters
-                  setSelectedKeys([]); // Clear selected keys
-                  confirm(); // Reapply filter with cleared values
+                  clearFilters();
+                  setSelectedKeys([]);
+                  confirm();
                 }}
                 size="small"
                 style={{ width: '100%' }}
@@ -152,11 +153,16 @@ function CasesById() {
       priority: 'Low',
     },
   ];
+
   return (
     <div className='cases-main'>
-      <SubTableComp columns={caseColumns} dataSource={caseDataSource} className='claims-table' />
+      <MyTable
+        columns={caseColumns}
+        dataSource={caseDataSource}
+        selection={false}
+      />
     </div>
-  )
+  );
 }
 
-export default CasesById
+export default CasesById;

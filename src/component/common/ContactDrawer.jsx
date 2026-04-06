@@ -1,303 +1,258 @@
 // ContactDrawer.jsx
-import React, { useState, useEffect } from "react";
-import { Drawer, Button, Space, Table } from "antd";
+import React, { useEffect, useState } from "react";
+import { Drawer, Table, Button, Card, Typography, Space, Tag } from "antd";
 import { useDispatch, useSelector } from "react-redux";
-import { getContacts, resetContacts } from "../../features/ContactSlice";
-import {
-  getContactTypes,
-  resetContactTypes,
-} from "../../features/ContactTypeSlice";
-import { insertDataFtn, deleteFtn, baseURL } from "../../utils/Utilities";
-import CustomSelect from "./CustomSelect";
-import MyInput from "./MyInput";
-import MyConfirm from "../common/MyConfirm";
-import { FaEdit } from "react-icons/fa";
-import { AiFillDelete } from "react-icons/ai";
-import { useTableColumns } from "../../context/TableColumnsContext ";
+import axios from "axios";
+import { UserPlus, MapPin, Send, ChevronDown, ChevronRight } from "lucide-react";
+import MyConfirm from "./MyConfirm";
 
-function ContactDrawer({ open, onClose }) {
+const { Text } = Typography;
+
+const USER_SERVICE_URL = process.env.REACT_APP_POLICY_SERVICE_URL;
+
+// Role ID mapping
+const ROLE_IDS = {
+  BRANCH: "68c6b4d1e42306a6836622fd",
+  REGION: "68c6b4d1e42306a6836622fa",
+  IRO: "68c6b4d1e42306a6836622f1",
+};
+
+function ContactDrawer({ open, onClose, title = "Contacts", onAssign, onUnassign, type = "workLocation" }) {
   const dispatch = useDispatch();
-  const { selectLokups, lookupsForSelect } = useTableColumns();
-  const { contactsLoading, contactTypes, contactTypesloading } = useSelector(
-    (state) => state.contactType
-  );
-  const { contacts, contactsLoading: contactsLoadingState } = useSelector(
-    (state) => state.contact
-  );
+  const { selectedWorkLocations } = useSelector((state) => state.lookups);
 
-  const initialData = {
-    Forename: "",
-    Surname: "",
-    ContactPhone: "",
-    ContactEmail: "",
-    ContactAddress: {
-      BuildingOrHouse: "",
-      StreetOrRoad: "",
-      AreaOrTown: "",
-      CityCountyOrPostCode: "",
-      Eircode: "",
-    },
-    ContactTypeID: "",
-  };
-
-  const [data, setData] = useState({ Solicitors: [] });
-  const [form, setForm] = useState({ ...initialData });
-  const [errors, setErrors] = useState({});
-  const [isUpdate, setIsUpdate] = useState(false);
-  const [updateId, setUpdateId] = useState(null);
+  const [users, setUsers] = useState([]);
+  const [usersLoading, setUsersLoading] = useState(false);
+  const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const [isExpanded, setIsExpanded] = useState(true);
 
   useEffect(() => {
     if (open) {
-      // Only fetch if data doesn't exist and not already loading
-      if (
-        !contactTypesloading &&
-        (!contactTypes || contactTypes.length === 0)
-      ) {
-        dispatch(getContactTypes());
-      }
-      if (!contactsLoadingState && (!contacts || contacts.length === 0)) {
-        dispatch(getContacts());
-      }
+      fetchUsers();
     }
-  }, [
-    open,
-    dispatch,
-    contactTypes,
-    contactTypesloading,
-    contacts,
-    contactsLoadingState,
-  ]);
+  }, [open, type]);
 
-  const onInputChange = (field, value) => {
-    if (field.includes(".")) {
-      const [parent, child] = field.split(".");
-      setForm((prev) => ({
-        ...prev,
-        [parent]: {
-          ...prev[parent],
-          [child]: value,
-        },
-      }));
-    } else {
-      setForm((prev) => ({ ...prev, [field]: value }));
+  const fetchUsers = async () => {
+    const roleId = type === "Branch" ? ROLE_IDS.BRANCH :
+      type === "Region" ? ROLE_IDS.REGION :
+        ROLE_IDS.IRO;
+    setUsersLoading(true);
+    try {
+      const token = localStorage.getItem("token");
+      const { data } = await axios.get(
+        `${USER_SERVICE_URL}/roles/${roleId}/users`,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      // Accept array directly or wrapped in data/users
+      const userList = Array.isArray(data)
+        ? data
+        : Array.isArray(data?.data)
+          ? data.data
+          : [];
+      setUsers(userList);
+    } catch (err) {
+      console.error(`Failed to fetch users for role ${roleId}:`, err);
+      setUsers([]);
+    } finally {
+      setUsersLoading(false);
     }
   };
 
-  const validate = () => {
-    const newErrors = {};
-    if (!form.Forename) newErrors.Forename = "Required";
-    if (!form.Surname) newErrors.Surname = "Required";
-    if (!form.ContactEmail) newErrors.ContactEmail = "Required";
-    if (!form.ContactPhone) newErrors.ContactPhone = "Required";
-    if (!form.ContactAddress.BuildingOrHouse)
-      newErrors.BuildingOrHouse = "Required";
-    if (!form.ContactAddress.AreaOrTown) newErrors.AreaOrTown = "Required";
-    if (!form.ContactTypeID) newErrors.ContactTypeID = "Required";
-    setErrors(newErrors);
-    return Object.keys(newErrors).length === 0;
-  };
+  const columns = [
+    {
+      title: "Forename",
+      dataIndex: "userFirstName",
+      key: "userFirstName",
+      render: (val, record) => val || record.userFullName?.split(" ")?.[0] || "-",
+    },
+    {
+      title: "Surname",
+      dataIndex: "userLastName",
+      key: "userLastName",
+      render: (val, record) => val || record.userFullName?.split(" ")?.[1] || "-",
+    },
+    {
+      title: "Phone",
+      dataIndex: "userMobilePhone",
+      key: "userMobilePhone",
+      render: (val) => val || "-",
+    },
+    {
+      title: "Email",
+      dataIndex: "userEmail",
+      key: "userEmail",
+      render: (val) => val || "-",
+    },
+    {
+      title: "Address",
+      key: "address",
+      render: () => "-",
+    },
+  ];
 
-  const handleSubmit = async () => {
-    if (!validate()) return;
-    await insertDataFtn(
-      "/contact",
-      form,
-      "Data inserted successfully",
-      "Failed to insert data",
-      () => {
-        setForm({ ...initialData });
-        setErrors({});
-        setIsUpdate(false);
-        dispatch(resetContacts());
-        dispatch(getContacts());
-      }
-    );
-  };
+  const isAssigning = selectedRowKeys.length > 0;
 
-  const handleEdit = (record) => {
-    setForm(record);
-    setIsUpdate(true);
-    setUpdateId(record._id);
-  };
+  const handleAssign = () => {
+    if (selectedRowKeys.length === 0) return;
+    const selectedUser = users.find((u) => (u._id || u.userEmail) === selectedRowKeys[0]);
+    if (!selectedUser) return;
 
-  const handleDelete = (record) => {
     MyConfirm({
-      title: "Confirm Deletion",
-      message: "Do You Want To Delete This Item?",
-      onConfirm: async () => {
-        await deleteFtn(`${baseURL}/contact`, record._id, () => {
-          dispatch(resetContacts());
-          dispatch(getContacts());
-        });
+      title: `Assign ${getOfficerLabel()}`,
+      message: `Do you want to assign this ${getOfficerLabel()}?`,
+      onConfirm: () => {
+        if (onAssign) onAssign(selectedUser, selectedWorkLocations);
       },
     });
   };
 
-  const columns = [
-    { title: "Surname", dataIndex: "Surname" },
-    { title: "Forename", dataIndex: "Forename" },
-    { title: "Phone", dataIndex: "ContactPhone" },
-    { title: "Email", dataIndex: "ContactEmail" },
-    { title: "Building", dataIndex: ["ContactAddress", "BuildingOrHouse"] },
-    { title: "Street", dataIndex: ["ContactAddress", "StreetOrRoad"] },
-    { title: "Area", dataIndex: ["ContactAddress", "AreaOrTown"] },
-    {
-      title: "Postcode",
-      dataIndex: ["ContactAddress", "CityCountyOrPostCode"],
-    },
-    { title: "Eircode", dataIndex: ["ContactAddress", "Eircode"] },
-    {
-      title: "Action",
-      key: "action",
-      render: (_, record) => (
-        <Space>
-          <FaEdit onClick={() => handleEdit(record)} />
-          <AiFillDelete onClick={() => handleDelete(record)} />
-        </Space>
-      ),
-    },
-  ];
+  const handleUnassign = () => {
+    MyConfirm({
+      title: `Unassign ${getOfficerLabel()}`,
+      message: `Do you want to unassign the ${getOfficerLabel()} from the selected ${getLabel()}?`,
+      onConfirm: () => {
+        if (onUnassign) {
+          onUnassign(selectedWorkLocations);
+        } else if (onAssign) {
+          onAssign(null, selectedWorkLocations);
+        }
+      },
+    });
+  };
+
+  const getLabel = () => {
+    switch (type) {
+      case "Branch": return "Branches";
+      case "Region": return "Regions";
+      default: return "Work Locations";
+    }
+  };
+
+  const getOfficerLabel = () => {
+    switch (type) {
+      case "Branch": return "Branch Manager";
+      case "Region": return "Region Officer";
+      default: return "IRO";
+    }
+  };
 
   return (
     <Drawer
       open={open}
       onClose={onClose}
       width={1040}
-      title="Contacts"
+      title={isAssigning
+        ? `${getOfficerLabel()} Assignment`
+        : `Unassign ${getOfficerLabel()}`
+      }
       extra={
-        <Space>
-          <Button className="butn secoundry-btn" onClick={onClose}>
-            Close
-          </Button>
-          <Button className="butn primary-btn" onClick={handleSubmit}>
-            {isUpdate ? "Save" : "Add"}
-          </Button>
-        </Space>
+        <Button
+          type="primary"
+          icon={<Send size={16} />}
+          onClick={isAssigning ? handleAssign : handleUnassign}
+          style={{
+            backgroundColor: isAssigning ? "#45669d" : "#ff4d4f",
+            borderColor: isAssigning ? "#45669d" : "#ff4d4f",
+            display: "flex",
+            alignItems: "center",
+            gap: "8px",
+          }}
+        >
+          {isAssigning ? "Assign" : "Unassign"}
+        </Button>
       }
     >
-      <div className="drawer-main-cntainer">
-        <div className="mb-4 pb-4">
-          <CustomSelect
-            label="Contact Type:"
-            placeholder="Select Contact type"
-            options={selectLokups?.contactTypes}
-            value={form.ContactTypeID}
-            onChange={(e) => onInputChange("ContactTypeID", e)}
-            required
-            hasError={!!errors.ContactTypeID}
-            errorMessage={errors.ContactTypeID}
-            style={{ width: "25%" }}
-          />
+      <Card
+        bordered={false}
+        className="drawer-main-cntainer"
+        bodyStyle={{ padding: "10px" }}
+      >
+        {/* Selection Indication */}
+        {selectedWorkLocations && selectedWorkLocations.length > 0 && (
+          <div
+            style={{
+              marginBottom: "16px",
+              padding: "12px",
+              backgroundColor: "#f0f5ff",
+              borderRadius: "6px",
+              border: "1px solid #d6e4ff",
+            }}
+          >
+            <div
+              style={{
+                display: "flex",
+                alignItems: "center",
+                justifyContent: "space-between",
+                cursor: "pointer",
+              }}
+              onClick={() => setIsExpanded(!isExpanded)}
+            >
+              <div
+                style={{
+                  display: "flex",
+                  alignItems: "center",
+                  gap: "8px",
+                  marginBottom: isExpanded ? "8px" : "0",
+                }}
+              >
+                <MapPin size={16} color="#1890ff" />
+                <Text strong style={{ color: "#1890ff" }}>
+                  Selected {getLabel()} to {isAssigning ? "Assign" : "Unassign"} {getOfficerLabel()}: ({selectedWorkLocations.length})
+                </Text>
+              </div>
+              {isExpanded ? <ChevronDown size={18} color="#1890ff" /> : <ChevronRight size={18} color="#1890ff" />}
+            </div>
+            {isExpanded && (
+              <Space size={[0, 8]} wrap>
+                {selectedWorkLocations.map((location) => (
+                  <Tag color="geekblue" key={location._id || location.code}>
+                    {location.lookupname || location.DisplayName || location.code}
+                  </Tag>
+                ))}
+              </Space>
+            )}
+          </div>
+        )}
 
-          <MyInput
-            label="Forename:"
-            value={form.Forename}
-            onChange={(e) => onInputChange("Forename", e.target.value)}
-            required
-            hasError={!!errors.Forename}
-            errorMessage={errors.Forename}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Surname:"
-            value={form.Surname}
-            onChange={(e) => onInputChange("Surname", e.target.value)}
-            required
-            hasError={!!errors.Surname}
-            errorMessage={errors.Surname}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Email:"
-            type="email"
-            value={form.ContactEmail}
-            onChange={(e) => onInputChange("ContactEmail", e.target.value)}
-            required
-            hasError={!!errors.ContactEmail}
-            errorMessage={errors.ContactEmail}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Mobile:"
-            value={form.ContactPhone}
-            onChange={(e) => onInputChange("ContactPhone", e.target.value)}
-            required
-            hasError={!!errors.ContactPhone}
-            errorMessage={errors.ContactPhone}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Building or House:"
-            value={form.ContactAddress.BuildingOrHouse}
-            onChange={(e) =>
-              onInputChange("ContactAddress.BuildingOrHouse", e.target.value)
-            }
-            required
-            hasError={!!errors.BuildingOrHouse}
-            errorMessage={errors.BuildingOrHouse}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Street or Road:"
-            value={form.ContactAddress.StreetOrRoad}
-            onChange={(e) =>
-              onInputChange("ContactAddress.StreetOrRoad", e.target.value)
-            }
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Area or Town:"
-            value={form.ContactAddress.AreaOrTown}
-            onChange={(e) =>
-              onInputChange("ContactAddress.AreaOrTown", e.target.value)
-            }
-            required
-            hasError={!!errors.AreaOrTown}
-            errorMessage={errors.AreaOrTown}
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="City/Postcode:"
-            value={form.ContactAddress.CityCountyOrPostCode}
-            onChange={(e) =>
-              onInputChange(
-                "ContactAddress.CityCountyOrPostCode",
-                e.target.value
-              )
-            }
-            style={{ width: "25%" }}
-          />
-
-          <MyInput
-            label="Eircode:"
-            value={form.ContactAddress.Eircode}
-            onChange={(e) =>
-              onInputChange("ContactAddress.Eircode", e.target.value)
-            }
-            style={{ width: "25%" }}
-          />
-        </div>
-
-        <div className="mt-4 config-tbl-container">
+        <div
+          className="common-table"
+          style={{
+            width: "100%",
+            overflowX: "auto",
+            paddingBottom: "20px",
+          }}
+        >
           <Table
+            className="common-table"
             pagination={false}
             columns={columns}
-            dataSource={data?.Solicitors}
-            loading={contactsLoading}
+            dataSource={users}
+            loading={usersLoading}
+            rowKey={(record) => record._id || record.userEmail}
+            rowSelection={{
+              type: "checkbox",
+              selectedRowKeys,
+              onChange: (keys) => {
+                // Allow only one selection at a time — keep the latest
+                if (keys.length > 1) {
+                  setSelectedRowKeys([keys[keys.length - 1]]);
+                } else {
+                  setSelectedRowKeys(keys);
+                }
+              },
+            }}
             rowClassName={(_, index) =>
               index % 2 !== 0 ? "odd-row" : "even-row"
             }
             bordered
           />
         </div>
-      </div>
+      </Card>
     </Drawer>
   );
 }

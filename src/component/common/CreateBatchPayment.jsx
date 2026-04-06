@@ -21,6 +21,7 @@ import {
   Button,
 } from "antd";
 import * as XLSX from "xlsx";
+import dayjs from "dayjs";
 import { ExcelContext } from "../../context/ExcelContext";
 import { UploadOutlined } from "@ant-design/icons";
 import { paymentTypes } from "../../Data";
@@ -30,27 +31,23 @@ import MyInput from "./MyInput";
 import CustomSelect from "./CustomSelect";
 import { useLocation } from "react-router-dom";
 import { addBatchWithMember } from "../../features/BatchesSlice"; // Import the Redux action
+import { updateBatchDetail } from "../../features/profiles/BatchDetailsSlice";
 import { useNavigate } from "react-router-dom";
 import moment from "moment";
 
 const { TextArea } = Input;
 const { Title, Text } = Typography;
 
-const requiredColumns = [
-  "Member Name",
-  "Bank Account",
-  "Payroll No",
-  "Arrears",
-  "Comments",
-  "Advance",
-  "Total Amount",
-];
+const requiredBatchColumns = ["Membership No", "Value for Periods Selected"];
 
 const CreateBatchPayment = forwardRef((props, ref) => {
+  const { editBatchId = null, editSource = null } = props;
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch(); // Initialize Redux dispatch
-  const { workLocationOptions, branchOptions } = useSelector((state) => state.lookups);
+  const { workLocationOptions, branchOptions } = useSelector(
+    (state) => state.lookups,
+  );
 
   const memberData = [
     {
@@ -178,25 +175,24 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
       if (json.length === 0) {
         message.error("Excel file is empty.");
+        if (event.target) event.target.value = "";
         return;
       }
 
-      const requiredColumns = [
-        "Membership No",
-        "Last name",
-        "First name",
-        "Full name",
-        "Value for Periods Selected",
-      ];
       const uploadedColumns = Object.keys(json[0]);
-      const missingColumns = requiredColumns.filter(
-        (col) => !uploadedColumns.includes(col)
+      const missingColumns = requiredBatchColumns.filter(
+        (col) => !uploadedColumns.includes(col),
       );
 
       if (missingColumns.length > 0) {
         message.error(`Missing required columns: ${missingColumns.join(", ")}`);
+        // Reset the input so the user can try again after fixing the file
+        if (event.target) event.target.value = "";
+        setUploadedFile(null);
+        setExcelData([]);
       } else {
         message.success("All required columns are present.");
+        setUploadedFile(file); // Only set file on success
         setExcelData(json);
 
         // Utility function to clean and parse dollar values
@@ -206,11 +202,15 @@ const CreateBatchPayment = forwardRef((props, ref) => {
         };
 
         const totalCurrent = json.reduce((sum, row) => {
-          return sum + cleanValue(row["Value for Periods Selected"]);
+          // Use specific column name from user template if present for calculations
+          return (
+            sum +
+            cleanValue(row["Value for Periods Selected"] || row["Amount"] || 0)
+          );
         }, 0);
 
         const totalAdvance = json.reduce((sum, row) => {
-          return sum + cleanValue(row["Advance"]);
+          return sum + cleanValue(row["Advance"] || 0);
         }, 0);
 
         const batchTotal = totalCurrent;
@@ -238,6 +238,47 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     setFormErrors((prev) => ({ ...prev, [name]: false }));
   };
 
+  const buildBatchDetailsFormData = () => {
+    const formData = new FormData();
+    const isStandingOrder =
+      formValues.batchType?.toLowerCase() === "standing order";
+    const isDeduction = formValues.batchType?.toLowerCase() === "deduction";
+
+    const formattedBatchDate = dayjs(
+      formValues.batchDate,
+      "MM/YYYY",
+    ).format("YYYY-MM-DD");
+    const formattedPaymentDate = dayjs(
+      formValues.paymentDate,
+      "DD/MM/YYYY",
+    ).format("YYYY-MM-DD");
+
+    const apiType = isStandingOrder
+      ? "Standing Order"
+      : isDeduction
+        ? "deduction"
+        : formValues.batchType || "";
+
+    formData.append("type", apiType);
+    formData.append("date", formattedPaymentDate);
+    formData.append("batchDate", formattedBatchDate);
+    formData.append("paymentDate", formattedPaymentDate);
+
+    if (isStandingOrder) {
+      formData.append("bankName", formValues.workLocation);
+    } else {
+      formData.append("workLocation", formValues.workLocation);
+    }
+
+    formData.append("referenceNumber", formValues.batchRef);
+    formData.append("description", formValues.description);
+    formData.append("comments", formValues.comments || "");
+    if (uploadedFile) {
+      formData.append("file", uploadedFile);
+    }
+    return formData;
+  };
+
   const handleSubmit = async () => {
     const required = [
       "batchType",
@@ -257,6 +298,24 @@ const CreateBatchPayment = forwardRef((props, ref) => {
     if (Object.keys(nextErrors).length > 0) {
       message.error("Please fill all required fields.");
       return null;
+    }
+
+    if (editBatchId) {
+      try {
+        const formData = buildBatchDetailsFormData();
+        await dispatch(
+          updateBatchDetail({ batchDetailId: editBatchId, formData }),
+        ).unwrap();
+        message.success("Batch updated successfully");
+        return { _id: editBatchId };
+      } catch (error) {
+        message.error(
+          typeof error === "string"
+            ? error
+            : error?.message || "Failed to update batch",
+        );
+        return null;
+      }
     }
 
     const currentPath = window.location.pathname;
@@ -280,37 +339,33 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       members: members,
     };
 
-    // If it's a deduction batch, call the API
-    if (formValues.batchType?.toLowerCase() === "deduction") {
+    // If it's a deduction or standing order batch, call the API
+    if (
+      formValues.batchType?.toLowerCase() === "deduction" ||
+      formValues.batchType?.toLowerCase() === "standing order"
+    ) {
       try {
-        const formData = new FormData();
-        formData.append("type", "deduction");
-        formData.append("date", formValues.paymentDate);
-        formData.append("batchDate", formValues.batchDate);
-        formData.append("paymentDate", formValues.paymentDate);
-        formData.append("workLocation", formValues.workLocation);
-        formData.append("referenceNumber", formValues.batchRef);
-        formData.append("description", formValues.description);
-        formData.append("comments", formValues.comments || "");
-        if (uploadedFile) {
-          formData.append("file", uploadedFile);
-        }
+        const formData = buildBatchDetailsFormData();
+        const isStandingOrder =
+          formValues.batchType?.toLowerCase() === "standing order";
 
         const token = localStorage.getItem("token");
         const response = await axios.post(
-          `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details`,
+          `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details`,
           formData,
           {
             headers: {
               "Content-Type": "multipart/form-data",
               Authorization: `Bearer ${token}`,
             },
-          }
+          },
         );
 
         if (response.status === 200 || response.status === 201) {
           message.success(
-            "Deduction batch created successfully in profile service"
+            `${
+              isStandingOrder ? "Standing Order" : "Deduction"
+            } batch created successfully`,
           );
           const batchId = response?.data?.data?._id;
           // Merge the API response ID into the batch object if needed
@@ -319,8 +374,14 @@ const CreateBatchPayment = forwardRef((props, ref) => {
           return finalBatchObject;
         }
       } catch (error) {
-        console.error("Error creating deduction batch:", error);
-        message.error("Failed to create deduction batch in profile service");
+        console.error("Error creating batch:", error);
+        message.error(
+          `Failed to create ${
+            formValues.batchType?.toLowerCase() === "standing order"
+              ? "Standing Order"
+              : "Deduction"
+          } batch`,
+        );
         return null; // Stop navigation if API call fails
       }
     }
@@ -357,6 +418,42 @@ const CreateBatchPayment = forwardRef((props, ref) => {
       fileInput.value = "";
     }
   };
+
+  useEffect(() => {
+    if (
+      !editBatchId ||
+      !editSource?._id ||
+      String(editSource._id) !== String(editBatchId)
+    ) {
+      return;
+    }
+
+    const batchDateVal = editSource.batchDate
+      ? dayjs(editSource.batchDate).format("MM/YYYY")
+      : "";
+    const paymentDateVal = editSource.paymentDate
+      ? dayjs(editSource.paymentDate).format("DD/MM/YYYY")
+      : "";
+
+    setFormValues({
+      batchType: editSource.type || "",
+      batchDate: batchDateVal,
+      paymentDate: paymentDateVal,
+      batchRef: editSource.referenceNumber || "",
+      description: editSource.description || editSource.name || "",
+      comments: editSource.comments || "",
+      workLocation: editSource.workLocation || editSource.bankName || "",
+    });
+    setFormErrors({});
+
+    const count = Array.isArray(editSource.batchPayments)
+      ? editSource.batchPayments.length
+      : 0;
+    setBatchTotals((prev) => ({
+      ...prev,
+      records: count,
+    }));
+  }, [editBatchId, editSource]);
 
   useImperativeHandle(ref, () => ({
     submit: handleSubmit,
@@ -459,12 +556,20 @@ const CreateBatchPayment = forwardRef((props, ref) => {
 
               <div className="w-100 mb-3">
                 <CustomSelect
-                  label={location.pathname === "/StandingOrders" ? "Bank Name" : "Work Location"}
+                  label={
+                    location.pathname === "/StandingOrders"
+                      ? "Bank Name"
+                      : "Work Location"
+                  }
                   name="workLocation"
                   required
                   hasError={!!formErrors.workLocation}
                   errorMessage={`Please select ${location.pathname === "/StandingOrders" ? "bank name" : "work location"}`}
-                  options={location.pathname === "/StandingOrders" ? branchOptions : workLocationOptions}
+                  options={
+                    location.pathname === "/StandingOrders"
+                      ? branchOptions
+                      : workLocationOptions
+                  }
                   value={formValues.workLocation}
                   onChange={(e) => setField("workLocation", e.target.value)}
                 />

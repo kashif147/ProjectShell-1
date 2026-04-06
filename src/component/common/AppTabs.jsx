@@ -1,5 +1,17 @@
-import { useState, Suspense, lazy } from "react";
+import { useState, Suspense, lazy, useEffect } from "react";
+import { useSelector, useDispatch } from "react-redux";
+import { useNavigate, useLocation, useSearchParams } from "react-router-dom";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+  getSubscriptionHistoryByProfileId,
+} from "../../features/subscription/profileSubscriptionSlice";
+import { getApplicationById } from "../../features/ApplicationDetailsSlice";
+import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import { getProfileApplications } from "../../features/profiles/profileApplicationsSlice";
 import { Tabs, Spin, Drawer } from "antd";
+import MyTable from "./MyTable";
 import {
   FaFolder,
   FaFileAlt,
@@ -7,9 +19,11 @@ import {
   FaBook,
   FaHistory,
 } from "react-icons/fa";
+import { useTableColumns } from "../../context/TableColumnsContext ";
 import TransferRequests from "../TransferRequests";
 import CategoryChangeRequest from "../details/ChangeCategoryDrawer";
 import Reminder from "../profile/Reminder";
+import { formatDateOnly } from "../../utils/Utilities";
 
 const { TabPane } = Tabs;
 
@@ -30,6 +44,30 @@ const DuplicateMembers = lazy(() => import("../profile/DuplicateMembers"));
 const staticTabKeys = ["1", "15", "2", "4", "5", "6", "7"];
 
 function AppTabs() {
+  const dispatch = useDispatch();
+  const navigate = useNavigate();
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const profileIdParam = searchParams.get("profileId") || "";
+  const subscriptionIdParam = searchParams.get("subscriptionId") || "";
+
+  useEffect(() => {
+    if (!profileIdParam) return;
+    dispatch(getProfileDetailsById(profileIdParam));
+    if (subscriptionIdParam) {
+      dispatch(getSubscriptionById(subscriptionIdParam));
+    } else {
+      dispatch(
+        getSubscriptionByProfileId({
+          profileId: profileIdParam,
+          isCurrent: "true",
+        })
+      );
+    }
+  }, [dispatch, profileIdParam, subscriptionIdParam]);
+
+  const { profileDetails } = useSelector((state) => state.profileDetails || {});
+
   const [activeKey, setActiveKey] = useState("1");
   const [visibleTabs, setVisibleTabs] = useState(staticTabKeys);
   const [TransferDrawer, setTransferDrawer] = useState(false);
@@ -38,6 +76,106 @@ function AppTabs() {
   const [isEditMode, setIsEditMode] = useState(false);
   const [isDeceased, setIsDeceased] = useState(false);
   const [isDuplicateDrawerOpen, setIsDuplicateDrawerOpen] = useState(false);
+  const [isApplicationDrawerOpen, setIsApplicationDrawerOpen] = useState(false);
+  const [isSubscriptionDrawerOpen, setIsSubscriptionDrawerOpen] = useState(false);
+
+  const { columns } = useTableColumns();
+  const userApplications = useSelector((state) => state.userApplications?.applications || []);
+  const { ProfileSubHistory, ProfileSubHistoryLoading } = useSelector((state) => state.profileSubscription || {});
+  const { profileApplications, loading: profileApplicationsLoading } = useSelector((state) => state.profileApplications || {});
+
+  const applicationColumns = columns?.Applications?.map((col) => {
+    // Correctly check if it's the Membership Category column
+    const isCategoryColumn = Array.isArray(col.dataIndex)
+      ? col.dataIndex.includes("membershipCategory")
+      : col.dataIndex === "membershipCategory";
+
+    if (isCategoryColumn) {
+      return {
+        ...col,
+        render: (text, record) => (
+          <a
+            style={{ color: "#1890ff", fontWeight: "500" }}
+            onClick={() => {
+              const appId = record._id || record.id;
+              dispatch(getApplicationById({ id: appId }));
+              navigate({
+                pathname: "/applicationMgt",
+                search: buildApplicationMgtSearch({
+                  applicationId: appId,
+                  edit: true,
+                }),
+              });
+              setIsApplicationDrawerOpen(false);
+            }}
+          >
+            {text || "View Application"}
+          </a>
+        ),
+      };
+    }
+    return col;
+  }) || [];
+
+  const subscriptionHistoryColumns = [
+    { title: "Category", dataIndex: "membershipCategory", key: "membershipCategory" },
+    { title: "Status", dataIndex: "subscriptionStatus", key: "subscriptionStatus" },
+    { title: "Year", dataIndex: "subscriptionYear", key: "subscriptionYear" },
+    {
+      title: "Start Date",
+      dataIndex: "startDate",
+      key: "startDate",
+      render: (date) => formatDateOnly(date),
+    },
+    {
+      title: "End Date",
+      dataIndex: "endDate",
+      key: "endDate",
+      render: (date) => formatDateOnly(date),
+    },
+    { title: "Frequency", dataIndex: "paymentFrequency", key: "paymentFrequency" },
+    { title: "Movement", dataIndex: "membershipMovement", key: "membershipMovement" },
+  ];
+
+  const profileApplicationColumns = [
+    {
+      title: "Category",
+      dataIndex: "membershipCategory",
+      key: "membershipCategory",
+      render: (text, record) => (
+        <a
+          style={{ color: "#1890ff", fontWeight: "500" }}
+          onClick={() => {
+            dispatch(getApplicationById({ id: record.applicationId }));
+            navigate({
+              pathname: "/applicationMgt",
+              search: buildApplicationMgtSearch({
+                applicationId: record.applicationId,
+                edit: true,
+              }),
+            });
+            setIsApplicationDrawerOpen(false);
+          }}
+        >
+          {text || "View Application"}
+        </a>
+      ),
+    },
+    {
+      title: "Submission Date",
+      dataIndex: "submissionDate",
+      key: "submissionDate",
+      render: (date) => formatDateOnly(date),
+    },
+    {
+      title: "Approval Date",
+      dataIndex: "approvalDate",
+      key: "approvalDate",
+      render: (date) => formatDateOnly(date),
+    },
+    { title: "Approved By", dataIndex: "approvedBy", key: "approvedBy" },
+    { title: "Status", dataIndex: "applicationStatus", key: "applicationStatus" },
+  ];
 
   const allItems = [
     {
@@ -141,6 +279,28 @@ function AppTabs() {
       icon: <FaHistory />,
       onClick: () => setIsReminder(true),
     },
+    {
+      key: "application",
+      label: "Application",
+      icon: <FaFileAlt />,
+      onClick: () => {
+        if (profileDetails?._id) {
+          dispatch(getProfileApplications({ profileId: profileDetails._id }));
+        }
+        setIsApplicationDrawerOpen(true);
+      },
+    },
+    {
+      key: "subscriptionhistory",
+      label: "Subscription History",
+      icon: <FaHistory />,
+      onClick: () => {
+        if (profileDetails?._id) {
+          dispatch(getSubscriptionHistoryByProfileId({ profileId: profileDetails._id }));
+        }
+        setIsSubscriptionDrawerOpen(true);
+      },
+    },
   ];
   const historyData = [
     {
@@ -226,7 +386,7 @@ function AppTabs() {
         activeKey={activeKey}
         onChange={handleTabChange}
         destroyInactiveTabPane
-        style={{ width: "100%" }}
+        style={{ flex: 1, minWidth: 0 }}
       >
         {filteredItems.map((item) => (
           <TabPane tab={item.label} key={item.key}>
@@ -265,6 +425,36 @@ function AppTabs() {
         styles={{ body: { padding: 0 } }}
       >
         <DuplicateMembers />
+      </Drawer>
+
+      <Drawer
+        title="Member Applications"
+        open={isApplicationDrawerOpen}
+        onClose={() => setIsApplicationDrawerOpen(false)}
+        width={1000}
+        styles={{ body: { padding: "20px" } }}
+      >
+        <MyTable
+          columns={profileApplicationColumns}
+          dataSource={profileApplications}
+          loading={profileApplicationsLoading}
+          selection={false}
+        />
+      </Drawer>
+
+      <Drawer
+        title="Subscription History"
+        open={isSubscriptionDrawerOpen}
+        onClose={() => setIsSubscriptionDrawerOpen(false)}
+        width={1000}
+        styles={{ body: { padding: "20px" } }}
+      >
+        <MyTable
+          columns={subscriptionHistoryColumns}
+          dataSource={ProfileSubHistory}
+          loading={ProfileSubHistoryLoading}
+          selection={false}
+        />
       </Drawer>
     </div>
   );

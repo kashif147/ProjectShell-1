@@ -24,7 +24,7 @@ function App() {
     hierarchicalLookupsError,
   } = useSelector((state) => state.hierarchicalLookups);
 
-  const { lookups, loading: lookupsLoading } = useSelector(
+  const { lookups, lookupsloading: lookupsLoading } = useSelector(
     (state) => state.lookups,
   );
 

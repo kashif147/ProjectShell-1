@@ -26,112 +26,32 @@ function MembershipApplication() {
   const { loading: templatesLoading } = useSelector((state) => state.templetefiltrsclumnapi);
   const [formattedApplications, setFormattedApplications] = useState([]);
   const [selectedRows, setSelectedRows] = useState(null)
-  console.log(selectedRows, "selected rows data");
-
-  // Function to format dates in the application data
-  const formatApplicationDates = (applicationData) => {
-    if (!applicationData) return applicationData;
-
-    dayjs.extend(utc);
-
-    const formatDate = (dateString) => {
-      if (!dateString) return null;
-      return dayjs.utc(dateString).format("DD/MM/YYYY HH:mm"); // stays in UTC
-    };
-
-    const formatDateOnly = (dateString) => {
-      if (!dateString) return null;
-      return dayjs.utc(dateString).format("DD/MM/YYYY"); // DD/MM/YYYY only for dates without time
-    };
-
-    return {
-      ...applicationData,
-      // Format dates in personalDetails
-      personalDetails: applicationData.personalDetails ? {
-        ...applicationData.personalDetails,
-        personalInfo: applicationData.personalDetails.personalInfo ? {
-          ...applicationData.personalDetails.personalInfo,
-          dateOfBirth: formatDateOnly(applicationData.personalDetails.personalInfo.dateOfBirth),
-          deceasedDate: formatDateOnly(applicationData.personalDetails.personalInfo.deceasedDate)
-        } : null,
-        contactInfo: applicationData.personalDetails.contactInfo,
-        approvalDetails: applicationData.personalDetails.approvalDetails ? {
-          ...applicationData.personalDetails.approvalDetails,
-          approvedAt: formatDate(applicationData.personalDetails.approvalDetails.approvedAt)
-        } : null,
-        createdAt: formatDate(applicationData.personalDetails.createdAt),
-        updatedAt: formatDate(applicationData.personalDetails.updatedAt)
-      } : null,
-
-      // Format dates in professionalDetails
-      professionalDetails: applicationData.professionalDetails ? {
-        ...applicationData.professionalDetails,
-        retiredDate: formatDate(applicationData.professionalDetails.retiredDate),
-        graduationDate: formatDate(applicationData.professionalDetails.graduationDate)
-      } : null,
-
-      // Format dates in subscriptionDetails
-      subscriptionDetails: applicationData.subscriptionDetails ? {
-        ...applicationData.subscriptionDetails,
-        dateJoined: formatDate(applicationData.subscriptionDetails.dateJoined),
-        submissionDate: formatDate(applicationData.subscriptionDetails.submissionDate)
-      } : null,
-
-      // Format top-level dates
-      createdAt: formatDate(applicationData.createdAt),
-      updatedAt: formatDate(applicationData.updatedAt),
-
-
-      // Format approvalDetails dates
-      approvalDetails: applicationData.approvalDetails ? {
-        ...applicationData.approvalDetails,
-        approvedAt: formatDate(applicationData.approvalDetails.approvedAt)
-      } : null
-    };
-  };
+  const { activeTemplateId } = useSelector((state) => state.activeTemplate);
+  console.log(activeTemplateId, "activeTemplateId activeTemplateId");
 
   useEffect(() => {
-    // Only fetch if initial view determination is complete
-    if (!isInitialized) return;
+    // Only fetch if initial view determination is complete and templates are NOT currently loading
+    if (!activeTemplateId) return;
 
     dispatch(getApplicationsWithFilter({
-      templateId: currentTemplateId || "",
+      templateId: activeTemplateId || "",
       page: 1,
       limit: 10
     }));
-  }, [dispatch, currentTemplateId, isInitialized]);
+  }, [activeTemplateId]);
 
   useEffect(() => {
     if (applications && applications.length > 0) {
-      const formatted = applications.map(app => formatApplicationDates(app));
-      setFormattedApplications(formatted);
+      setFormattedApplications(applications);
     } else {
       setFormattedApplications([]);
     }
   }, [applications]);
 
   const shouldDisableRow = useCallback((record) => {
-    debugger;
-
-    // Get the status from the record
-    const status = record?.applicationStatus ||
-      // record?.status ||
-      // record?.approvalDetails?.applicationStatus;
-
-      console.log("Checking row status:", status, "for record:", record);
-
-    // Only enable for "Rejected" or "Submitted"
-    // Disable for: "In-Progress", "Approved", "Draft"
-    const enabledStatuses = ["rejected", "submitted"];
-    const disabledStatuses = ["in-Progress", "approved", "Draft"];
-
-    // Check if status exists and is in disabled statuses
-    if (!status) return false; // If no status, don't disable
-
-    // Return true to DISABLE if status is NOT in enabled statuses
-    // OR if status IS in disabled statuses
-    return !enabledStatuses.includes(status) ||
-      disabledStatuses.includes(status);
+    const status = record?.applicationStatus;
+    // Return true to DISABLE if status is NOT "submitted"
+    return status !== "submitted";
   }, []);
 
   const [selectedKeys, setSelectedKeys] = useState([]);
@@ -148,20 +68,24 @@ function MembershipApplication() {
   const handleRowClick = useCallback((record, index) => {
     console.log("Row clicked12:", record?.applicationId,);
   }, []);
+
+  // Synchronize local selection with global context (to handle clear selection)
+  useEffect(() => {
+    if (selectedIds.length === 0) {
+      setSelectedKeys([]);
+    }
+  }, [selectedIds]);
+
+  if (!isInitialized || templatesLoading) {
+    return (
+      <div style={{ display: "flex", justifyContent: "center", alignItems: "center", height: "100%", padding: "50px" }}>
+        <Spin tip="Initializing Template..." />
+      </div>
+    );
+  }
+
   return (
     <div className="" style={{ width: "100%" }}>
-      {/* <TableComponent
-      data={formattedApplications}
-      screenName="Applications"
-      isGrideLoading={applicationsLoading}
-      selectedRowKeys={selectedKeys}
-      onSelectionChange={handleSelectionChange}
-      selectionType="checkbox"
-      enableRowSelection={true}
-      disableDefaultRowClick={true}
-      disableRowFn={shouldDisableRow} // Pass the disable function
-    /> */}
-
       <TableComponent
         data={formattedApplications}
         screenName="Applications"

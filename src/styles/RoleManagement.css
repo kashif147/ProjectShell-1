@@ -95,8 +95,8 @@
 }
 
 .drawer-tbl .ant-table-thead .ant-table-selection-column {
-  background-color: var(--secoundry-bg-color) !important;
-  color: var(--primary-color) !important;
+  background-color: #45669d !important;
+  color: white !important;
 }
 
 .drawer-tbl .ant-table-tbody > tr > td {

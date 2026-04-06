@@ -18,6 +18,10 @@ export const getGridTemplates = createAsyncThunk(
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
+    },
+    {
+        condition: (_, { getState }) =>
+            !getState().templetefiltrsclumnapi.templatesFetching,
     }
 );
 
@@ -79,16 +83,16 @@ export const updateGridTemplate = createAsyncThunk(
     }
 );
 
-// Async thunk to pin a template
-export const pinGridTemplate = createAsyncThunk(
-    "templetefiltrsclumnapi/pinGridTemplate",
-    async (id, { rejectWithValue, dispatch }) => {
+// Async thunk to set a template as default
+export const setDefaultGridTemplate = createAsyncThunk(
+    "templetefiltrsclumnapi/setDefaultGridTemplate",
+    async ({ id, isDefault }, { rejectWithValue, dispatch }) => {
         try {
             const token = localStorage.getItem("token");
             const URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates/${id}`;
             await axios.put(
                 URL,
-                { pinned: true },
+                { isDefault },
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
@@ -96,7 +100,7 @@ export const pinGridTemplate = createAsyncThunk(
                 }
             );
             dispatch(getGridTemplates()); // Refresh list
-            return id;
+            return { id, isDefault };
         } catch (error) {
             return rejectWithValue(error.response?.data || error.message);
         }
@@ -108,6 +112,8 @@ const templetefiltrsclumnapi = createSlice({
     initialState: {
         templates: null,
         loading: false,
+        /** Only toggled by getGridTemplates — avoids blocking fetch while delete/save uses `loading`. */
+        templatesFetching: false,
         error: null,
     },
     reducers: {},
@@ -115,14 +121,17 @@ const templetefiltrsclumnapi = createSlice({
         builder
             .addCase(getGridTemplates.pending, (state) => {
                 state.loading = true;
+                state.templatesFetching = true;
                 state.error = null;
             })
             .addCase(getGridTemplates.fulfilled, (state, action) => {
                 state.loading = false;
+                state.templatesFetching = false;
                 state.templates = action.payload;
             })
             .addCase(getGridTemplates.rejected, (state, action) => {
                 state.loading = false;
+                state.templatesFetching = false;
                 state.error = action.payload;
             })
             .addCase(deleteGridTemplate.pending, (state) => {
@@ -145,13 +154,13 @@ const templetefiltrsclumnapi = createSlice({
                 state.loading = false;
                 state.error = action.payload;
             })
-            .addCase(pinGridTemplate.pending, (state) => {
+            .addCase(setDefaultGridTemplate.pending, (state) => {
                 state.loading = true;
             })
-            .addCase(pinGridTemplate.fulfilled, (state) => {
+            .addCase(setDefaultGridTemplate.fulfilled, (state) => {
                 state.loading = false;
             })
-            .addCase(pinGridTemplate.rejected, (state, action) => {
+            .addCase(setDefaultGridTemplate.rejected, (state, action) => {
                 state.loading = false;
                 state.error = action.payload;
             })

@@ -15,6 +15,8 @@ import {
   Avatar,
   Tooltip,
 } from "antd";
+// import { MyAlert } from "../../utils/Alert";
+import MyAlert from "../common/MyAlert";
 import { SearchOutlined, UserOutlined } from "@ant-design/icons";
 import { getAllRolesList } from "../../constants/Roles";
 import { useDispatch, useSelector } from "react-redux";
@@ -96,16 +98,25 @@ const UserRoleAssignment = ({ user, onClose }) => {
   const handleSave = async () => {
     try {
       setLoading(true);
+
       await dispatch(
         assignRolesToUser({
           userId: user._id,
           roleIds: selectedRoles,
         })
-      );
-      message.success("Roles updated successfully");
+      ).unwrap(); // ensures rejection is caught in try/catch
+
+      // Show success notification
+      MyAlert("success", "Roles Updated", "Roles have been updated successfully.");
+
       onClose();
     } catch (error) {
-      message.error("Failed to update roles");
+      // Show error notification
+      MyAlert(
+        "error",
+        "Update Failed",
+        error?.message || "Failed to update roles"
+      );
     } finally {
       setLoading(false);
     }
@@ -136,20 +147,19 @@ const UserRoleAssignment = ({ user, onClose }) => {
   };
 
   const isCategoryFullySelected = (categoryRoles) => {
-    return categoryRoles.every((r) => selectedRoles.includes(r.id));
+    return categoryRoles.every((r) => selectedRoles.includes(r._id));
   };
 
   const isCategoryPartiallySelected = (categoryRoles) => {
     const selectedCount = categoryRoles.filter((r) =>
-      selectedRoles.includes(r.id)
+      selectedRoles.includes(r._id)
     ).length;
     return selectedCount > 0 && selectedCount < categoryRoles.length;
   };
 
   const getUserInitials = (user) => {
-    return `${user.userFirstName?.[0] || ""}${
-      user.userLastName?.[0] || ""
-    }`.toUpperCase();
+    return `${user.userFirstName?.[0] || ""}${user.userLastName?.[0] || ""
+      }`.toUpperCase();
   };
 
   return (
@@ -276,7 +286,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
                       <Badge
                         count={
                           categoryRoles.filter((r) =>
-                            selectedRoles.includes(r.id)
+                            selectedRoles.includes(r._id)
                           ).length
                         }
                         showZero
@@ -290,7 +300,7 @@ const UserRoleAssignment = ({ user, onClose }) => {
                   <div className="roles-list">
                     <Row gutter={[16, 16]}>
                       {categoryRoles.map((role) => (
-                        <Col xs={24} sm={12} md={8} key={role.id}>
+                        <Col xs={24} sm={12} md={8} key={role._id}>
                           <div className="role-item">
                             <Checkbox
                               checked={selectedRoles.includes(role._id)}
@@ -315,10 +325,10 @@ const UserRoleAssignment = ({ user, onClose }) => {
                                       >
                                         {role.permissions?.length > 0
                                           ? role.permissions.map((perm) => (
-                                              <div key={perm._id}>
-                                                {perm.name}
-                                              </div>
-                                            ))
+                                            <div key={perm._id}>
+                                              {perm.name}
+                                            </div>
+                                          ))
                                           : "No permissions assigned"}
                                       </div>
                                     }

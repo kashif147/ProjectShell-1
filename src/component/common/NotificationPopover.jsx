@@ -8,7 +8,10 @@ import {
   ClockCircleOutlined,
 } from "@ant-design/icons";
 import axios from "axios";
-import { useNotifications } from "../../context/NotificationContext";
+import {
+  useNotifications,
+  getNotificationServiceUrl,
+} from "../../context/NotificationContext";
 
 const { Text, Title } = Typography;
 
@@ -20,21 +23,22 @@ const iconMap = {
 };
 
 const NotificationPopover = ({ isOpen }) => {
-  const { notifications, setNotifications, markAsRead, markAllAsRead } =
+  const { notifications, setNotifications, setBadge, markAsRead, markAllAsRead } =
     useNotifications();
 
   const fetchNotifications = async () => {
     try {
       const res = await axios.get(
-        `${process.env.REACT_APP_NOTIFICATION_SERVICE_URL}/notifications?limit=20`,
+        `${getNotificationServiceUrl()}/notifications?limit=20`,
         {
           headers: {
             Authorization: `Bearer ${localStorage.getItem("token")}`,
           },
         },
       );
-
-      setNotifications(res.data || []);
+      const { notifications: list, unreadCount } = res.data?.data ?? res.data ?? {};
+      if (Array.isArray(list)) setNotifications(list);
+      if (typeof unreadCount === "number") setBadge(unreadCount);
     } catch (error) {
       console.error("Failed to fetch notifications:", error);
     }

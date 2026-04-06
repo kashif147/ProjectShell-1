@@ -1,5 +1,6 @@
-import React, { useState, useMemo } from "react";
-import { Modal, Button, message, Dropdown } from "antd";
+import React, { useState, useMemo, useEffect, useCallback } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
+import { Modal, Button, message, Dropdown, Tooltip } from "antd";
 import {
   FaMapMarkerAlt,
   FaEnvelope,
@@ -20,10 +21,18 @@ import dayjs from "dayjs";
 import MyDatePicker from "./MyDatePicker";
 import CustomSelect from "./CustomSelect";
 import "../../styles/ProfileHeader.css";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
+import { centsToEuro } from "../../utils/Utilities";
+import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+  getProfileSubscriptionsForActivateEligibility,
+} from "../../features/subscription/profileSubscriptionSlice";
+import { shouldDisableActivateUnlessLatestSubscriptionByStartDate } from "../../utils/applicationEligibility";
 
 function ProfileHeader({
   isEditMode = false,
@@ -35,11 +44,19 @@ function ProfileHeader({
   const [isCancelModalVisible, setIsCancelModalVisible] = useState(false);
   const [isUndoCancelModalVisible, setIsUndoCancelModalVisible] =
     useState(false);
+  const location = useLocation();
+  const [searchParams] = useSearchParams();
+  const dispatch = useDispatch();
   const [cancelFormData, setCancelFormData] = useState({
     dateResigned: null,
     reason: "",
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [ledgerBalance, setLedgerBalance] = useState(0);
+  const [lastPaymentAmount, setLastPaymentAmount] = useState(0);
+  const [lastPaymentDate, setLastPaymentDate] = useState(null);
+  const [paymentCode, setPaymentCode] = useState("");
+  const [ledgerLoading, setLedgerLoading] = useState(false);
 
   // Get data from Redux store
   const { profileDetails, loading, error } = useSelector(
@@ -47,9 +64,12 @@ function ProfileHeader({
   );
 
   // Subscription API data
-  const { ProfileSubData, ProfileSubLoading, ProfileSubError } = useSelector(
-    (state) => state.profileSubscription
-  );
+  const {
+    ProfileSubData,
+    ProfileSubLoading,
+    ProfileSubError,
+    profileSubscriptionsForActivateEligibility,
+  } = useSelector((state) => state.profileSubscription);
 
   const {
     profileSearchData,
@@ -62,6 +82,16 @@ function ProfileHeader({
 
   // Choose source dynamically - profileDetails has priority
   const source = profileDetails || searchAoiRes;
+
+  const profileIdForApps = source?.id || source?._id;
+  useEffect(() => {
+    if (!profileIdForApps) return;
+    dispatch(
+      getProfileSubscriptionsForActivateEligibility({
+        profileId: profileIdForApps,
+      })
+    );
+  }, [dispatch, profileIdForApps]);
 
   // Get token from Redux store (assuming you have auth state)
   // const { token } = useSelector((state) => state.auth || {});
@@ -155,6 +185,74 @@ function ProfileHeader({
     return null;
   }, [ProfileSubData]);
 
+  const memberIdForLedger = useMemo(() => {
+    return (
+      location.state?.memberId ||
+      source?.membershipNumber ||
+      source?.regNo ||
+      source?.id ||
+      source?._id
+    );
+  }, [source, location]);
+
+  const fetchAccountSummary = useCallback(async () => {
+    if (!memberIdForLedger || !token) return;
+
+    setLedgerLoading(true);
+    try {
+      const response = await axios.get(
+        `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberIdForLedger}/summary`,
+        // /reports/member/B00002/summary?year=2026
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+          },
+        }
+      );
+
+      const summaryData = response.data?.data || response.data;
+
+      // Update states based on the new API response
+      // User's example: "net": 120.5 (Decimal suggests Euros)
+      setLedgerBalance(summaryData.net || 0);
+
+      if (summaryData.lastPayment) {
+        // User's example: "amount": 32600 (Integer suggests cents)
+        setLastPaymentAmount(summaryData.lastPayment.amount || 0);
+        setLastPaymentDate(summaryData.lastPayment.date);
+      }
+    } catch (error) {
+      console.error("Error fetching account summary in ProfileHeader:", error);
+    } finally {
+      setLedgerLoading(false);
+    }
+  }, [memberIdForLedger, token]);
+
+  const refreshAllData = useCallback(() => {
+    const profileId = source?.id || source?._id;
+    const subscriptionId =
+      searchParams.get("subscriptionId") || location.state?.subscriptionId;
+    if (profileId) {
+      dispatch(getProfileDetailsById(profileId));
+      if (subscriptionId) {
+        dispatch(getSubscriptionById(subscriptionId));
+      } else {
+        dispatch(getSubscriptionByProfileId({ profileId, isCurrent: "true" }));
+      }
+    }
+    fetchAccountSummary();
+  }, [
+    dispatch,
+    source,
+    searchParams,
+    location.state?.subscriptionId,
+    fetchAccountSummary,
+  ]);
+
+  useEffect(() => {
+    fetchAccountSummary();
+  }, [fetchAccountSummary]);
+
   const isSubscriptionEmpty = useMemo(() => {
     if (!ProfileSubData) return false;
     // Direct array empty
@@ -189,10 +287,10 @@ function ProfileHeader({
     // Personal Info
     const name = source
       ? `${getSafe(source, "personalInfo.forename", "")} ${getSafe(
-          source,
-          "personalInfo.surname",
-          ""
-        )}`.trim()
+        source,
+        "personalInfo.surname",
+        ""
+      )}`.trim()
       : "";
     const dob = formatDOB(getSafe(source, "personalInfo.dateOfBirth"));
     const gender = getSafe(source, "personalInfo.gender", "M")
@@ -227,11 +325,11 @@ function ProfileHeader({
     // Contact Info
     const address = source?.contactInfo
       ? `${getSafe(source, "contactInfo.buildingOrHouse", "")} ${getSafe(
-          source,
-          "contactInfo.streetOrRoad",
-          ""
-        )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
-        "123 Main Street, New York"
+        source,
+        "contactInfo.streetOrRoad",
+        ""
+      )}, ${getSafe(source, "contactInfo.areaOrTown", "")}`.trim() ||
+      "123 Main Street, New York"
       : "123 Main Street, New York";
 
     const email =
@@ -249,21 +347,24 @@ function ProfileHeader({
     const paymentType = subscriptionData?.paymentType || "Salary Deduction";
     const subscriptionYear = subscriptionData?.subscriptionYear || "";
 
-    // Financial Info - These would likely come from a different API endpoint
-    const balance = "€200";
-    const lastPayment = "€74.7";
+    // Financial Info - Now using fetched summary data
+    // Assume ledgerBalance (net) is in Euros if it has decimal, but to be safe and consistent with previous logic, 
+    // let's check if we should still use centsToEuro. 
+    // Actually, historical code used centsToEuro. If the API changed units, we should adjust.
+    // Given the example "net": 120.5, it looks like Euros.
+    const balance = `€${Math.abs(centsToEuro(ledgerBalance || 0)).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    const lastPayment = `€${centsToEuro(lastPaymentAmount || 0).toLocaleString('en-IE', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
 
-    // Use subscription start date for payment date if available - format as date-time
+    // Use latest ledger date for payment date if available, fallback to subscription/submission
     const paymentDateRaw =
-      subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
+      lastPaymentDate || subscriptionData?.startDate || getSafe(source, "submissionDate") || null;
     const paymentDate = paymentDateRaw
-      ? formatDateTime(paymentDateRaw)
-      : "1/02/2025";
+      ? formatDate(paymentDateRaw)
+      : "N/A";
 
-    // Include subscription year in payment code if available
-    const paymentCode = `MB-${
-      subscriptionData?.subscriptionYear || dayjs().year()
-    }-${getSafe(source, "membershipNumber", "001")}`;
+    // Use paymentCode from API if available, fallback to generated one
+    const paymentCodeToUse = `MB-${subscriptionData?.subscriptionYear || dayjs().year()
+      }-${getSafe(source, "membershipNumber", "001")}`;
 
     return {
       // Personal Info
@@ -297,7 +398,7 @@ function ProfileHeader({
       balance,
       lastPayment,
       paymentDate,
-      paymentCode,
+      paymentCode: paymentCodeToUse,
     };
   }, [
     source,
@@ -305,7 +406,70 @@ function ProfileHeader({
     isDeceased,
     isSubscriptionEmpty,
     ProfileSubLoading,
-  ]); // Now recalculates when source OR subscriptionData changes
+    ledgerBalance,
+    lastPaymentAmount,
+    lastPaymentDate,
+    paymentCode,
+  ]); // Now recalculates when source OR subscriptionData OR summary data changes
+
+  const statusBadgeTooltip = useMemo(() => {
+    if (isDeceased) return "";
+    const statusLower = (memberData.status || "").toLowerCase();
+    const subLower = (subscriptionData?.subscriptionStatus || "").toLowerCase();
+    const isResignedOrCancelled =
+      statusLower.includes("resign") ||
+      statusLower.includes("cancel") ||
+      subLower.includes("resign") ||
+      subLower.includes("cancel");
+    if (!isResignedOrCancelled) return "";
+
+    const reason =
+      subscriptionData?.resignation?.reason?.trim() ||
+      subscriptionData?.cancellation?.reason?.trim();
+    const dateRaw =
+      subscriptionData?.resignation?.dateResigned ||
+      subscriptionData?.cancellation?.dateCancelled;
+    const dateStr = dateRaw ? formatDate(dateRaw) : "";
+
+    const lines = [];
+    if (dateStr) lines.push(`Date: ${dateStr}`);
+    if (reason) lines.push(`Reason: ${reason}`);
+    return lines.length ? lines.join("\n") : "";
+  }, [isDeceased, memberData.status, subscriptionData]);
+
+  const currentSubscriptionForActivate = useMemo(() => {
+    const arr = ProfileSubData?.data;
+    if (Array.isArray(arr) && arr[0]) return arr[0];
+    return null;
+  }, [ProfileSubData]);
+
+  const mergedProfileSubscriptions = useMemo(() => {
+    const fromEligibility = Array.isArray(
+      profileSubscriptionsForActivateEligibility
+    )
+      ? profileSubscriptionsForActivateEligibility
+      : [];
+    const fromProfile = Array.isArray(ProfileSubData?.data)
+      ? ProfileSubData.data
+      : [];
+    const byId = new Map();
+    [...fromEligibility, ...fromProfile].forEach((s) => {
+      if (s?._id) byId.set(s._id, s);
+    });
+    return [...byId.values()];
+  }, [profileSubscriptionsForActivateEligibility, ProfileSubData]);
+
+  const shouldDisableActivateMembership = useMemo(() => {
+    if (memberData.status !== "Resigned") return false;
+    return shouldDisableActivateUnlessLatestSubscriptionByStartDate(
+      currentSubscriptionForActivate,
+      mergedProfileSubscriptions
+    );
+  }, [
+    memberData.status,
+    currentSubscriptionForActivate,
+    mergedProfileSubscriptions,
+  ]);
 
   const cancellationReasons = [
     { key: "voluntary", label: "Voluntary Resignation" },
@@ -368,6 +532,7 @@ function ProfileHeader({
 
       MyAlert("success", "Membership cancellation submitted successfully!");
       handleCancelModalClose();
+      refreshAllData();
     } catch (error) {
       const message =
         error.response?.data?.message ||
@@ -472,15 +637,26 @@ function ProfileHeader({
             <p className="member-details">
               {memberData.dob} ({memberData.gender}) {memberData.age}
             </p>
-            <span
-              className={`member-status-badge ${
-                isDeceased ? "member-status-deceased" : ""
-              }`}
+            <Tooltip
+              title={statusBadgeTooltip || undefined}
+              trigger={["hover", "focus"]}
+              mouseEnterDelay={0.05}
+              mouseLeaveDelay={0.05}
             >
-              {memberData.status}
-              {subscriptionData?.isCurrent && " (Current)"}
-              {subscriptionData?.reinstated && " (Reinstated)"}
-            </span>
+              <span
+                className={`member-status-badge ${isDeceased
+                  ? "member-status-deceased"
+                  : /resign|cancel/i.test(memberData.status || "")
+                    ? "member-status-resigned"
+                    : ""
+                  }`}
+                style={{ cursor: statusBadgeTooltip ? "help" : undefined }}
+              >
+                {memberData.status}
+                {subscriptionData?.isCurrent && " (Current)"}
+                {subscriptionData?.reinstated && " (Reinstated)"}
+              </span>
+            </Tooltip>
           </div>
 
           {/* Contact Information Section - on blue background */}
@@ -589,9 +765,7 @@ function ProfileHeader({
 
         {/* Grade and Category Section - on blue background */}
         <div
-          className={`member-grade-section-blue ${
-            isDeceased ? "member-deceased" : ""
-          }`}
+          className={`member-grade-section-blue ${isDeceased ? "member-deceased" : ""}`}
         >
           <div className="grade-row-blue">
             <span className="grade-label-blue">Category:</span>
@@ -613,8 +787,21 @@ function ProfileHeader({
                   backgroundColor: "#52c41a",
                   borderColor: "#52c41a",
                   color: "#fff",
+                  opacity: shouldDisableActivateMembership ? 0.5 : 1,
+                  cursor: shouldDisableActivateMembership
+                    ? "not-allowed"
+                    : "pointer",
                 }}
-                onClick={() => setIsUndoCancelModalVisible(true)}
+                disabled={shouldDisableActivateMembership}
+                title={
+                  shouldDisableActivateMembership
+                    ? "Only the subscription with the latest start date can be reactivated here. This membership is an older subscription line."
+                    : undefined
+                }
+                onClick={() => {
+                  if (shouldDisableActivateMembership) return;
+                  setIsUndoCancelModalVisible(true);
+                }}
               >
                 Activate Membership
               </button>
@@ -695,11 +882,7 @@ function ProfileHeader({
         onClose={() => setIsUndoCancelModalVisible(false)}
         record={source}
         onSuccess={() => {
-          // Optionally refresh data here if needed, or rely on Redux/Parent refresh
-          if (typeof window !== "undefined") {
-            // A simple way to trigger a refresh if the parent doesn't handle it automatically
-            // But ideally, the modal update triggers a redux action that updates the view.
-          }
+          refreshAllData();
         }}
       />
     </div>

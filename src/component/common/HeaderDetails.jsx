@@ -56,6 +56,7 @@ import SaveViewMenu from "./SaveViewMenu";
 import ApplicationMgtDrawer from "../applications/ApplicationMgtDrawer";
 import Breadcrumb from "./Breadcrumb";
 import SimpleBatch from "../../pages/membership/SimpleBatch";
+import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
 import { useSelectedIds } from "../../context/SelectedIdsContext";
 import MyDatePicker1 from "./MyDatePicker1";
 import MyConfirm from "./MyConfirm";
@@ -63,6 +64,7 @@ import MyAlert from "./MyAlert";
 import axios from "axios";
 import Toolbar from "./Toolbar";
 import { useFilters } from "../../context/FilterContext";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
 import RefundDrawer from "../../component/finanace/RefundDrawer"
@@ -71,9 +73,11 @@ import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
 import { useCasesEdit } from "../../context/CasesEditContext";
+import { getAllLookups } from "../../features/LookupsSlice";
+import { baseURL } from "../../utils/Utilities";
 import "../../styles/CreateCasesDrawer.css";
 
-function HeaderDetails() {
+function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalContactDrawer, selectedRowsCount }) {
   const { Search } = Input;
   const { TextArea } = Input;
   const { filtersState } = useFilters();
@@ -81,6 +85,7 @@ function HeaderDetails() {
   const location = useLocation();
   const currentURL = `${location?.pathname}`;
   const nav = location?.pathname || "";
+  const { hasPermission } = useAuthorization();
   const formattedNav = nav.replace(/^\//, " ");
   const [isSideNav, setisSideNav] = useState(true);
   const [ReportName, setReportName] = useState(null);
@@ -200,6 +205,8 @@ function HeaderDetails() {
     globleFilters,
   } = useTableColumns();
 
+  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+
   const plainOptions = ["Approve", "Reject"];
   const screenName = location?.state?.search;
   const format = "HH:mm";
@@ -248,10 +255,21 @@ function HeaderDetails() {
     { label: "Bulk Email", onClick: (e) => handleAction("Bulk Email", e) },
     { label: "Bulk SMS", onClick: (e) => handleAction("Bulk SMS", e) },
     {
-      label: "Assign IRO",
+      label: `Assign ${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"}`,
       onClick: (e) => {
         e?.domEvent?.stopPropagation();
-        setcontactDrawer((prev) => !prev);
+        
+        // Selection check for lookup routes
+        if ((nav === "/worklocation" || nav === "/region" || nav === "/branch") && selectedWorkLocations.length === 0) {
+          MyAlert("warning", "Selection Required", "plz select region barch or worklocation frist");
+          return;
+        }
+
+        if (setExternalContactDrawer) {
+          setExternalContactDrawer((prev) => !prev);
+        } else {
+          setcontactDrawer((prev) => !prev);
+        }
       },
     },
   ];
@@ -266,7 +284,9 @@ function HeaderDetails() {
   const menuItems =
     nav === "/CasesSummary"
       ? [...defaultMenuItems, editCasesItem]
-      : defaultMenuItems;
+      : nav === "/worklocation" || nav === "/region" || nav === "/branch"
+        ? defaultMenuItems.filter((item) => item.label.startsWith("Assign"))
+        : defaultMenuItems;
   const [statusOperator, setStatusOperator] = useState("==");
   const [statusValues, setStatusValues] = useState(["submitted", "draft"]);
 
@@ -300,9 +320,13 @@ function HeaderDetails() {
   const dispatch = useDispatch();
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
+  const regionsLoading = useSelector((state) => state.regions.loading);
+  const { selectedWorkLocations = [] } = useSelector((state) => state.lookups, shallowEqual);
   useEffect(() => {
-    dispatch(fetchRegions());
-  }, [dispatch]);
+    if (!regionsLoading && (!regions || regions.length === 0)) {
+      dispatch(fetchRegions());
+    }
+  }, [dispatch, regions, regionsLoading]);
   const [tempSelectedDate, setTempSelectedDate] = useState(null);
   const handleBulkApproval = async (selectedApplications) => {
     if (!selectedApplications || selectedApplications.length === 0) {
@@ -410,11 +434,11 @@ function HeaderDetails() {
         }
 
         try {
-          const applicationIds = selectedApplications.map(app => app.id || app.applicationId);
+          const applicationIds = selectedApplications; // It's already an array of IDs
           const formattedDate = dayjs(selectedDate).format('YYYY-MM-DD');
 
           const requestData = {
-            applicationIds: selectedApplications,
+            applicationIds: applicationIds,
             processingDate: formattedDate
           };
 
@@ -451,7 +475,21 @@ function HeaderDetails() {
               'Approval Successful',
               `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format('DD/MM/YYYY')}!`
             );
-            dispatch(getAllApplications());
+
+            // Clear selected IDs context
+            setSelectedIds([]);
+
+            // Refresh the grid
+            if (location.pathname === "/applicationMgt" || location.pathname === "/Applications") {
+              dispatch(getApplicationsWithFilter({
+                templateId: currentTemplateId || "",
+                page: 1,
+                limit: 10
+              }));
+            } else {
+              dispatch(getAllApplications());
+            }
+
             Modal.destroyAll();
             return Promise.resolve();
           } else {
@@ -521,11 +559,62 @@ function HeaderDetails() {
         }
       },
       onCancel: () => {
-        if (!isProcessing) {
+        if (typeof MyAlert === 'function') {
           MyAlert('info', 'Cancelled', 'Approval process was cancelled.');
         }
       },
     });
+  };
+
+  const handleAssignIRO = async (selectedUser, selectedWorkLocations) => {
+    if (!selectedWorkLocations || selectedWorkLocations.length === 0) {
+      MyAlert("warning", "Selection Required", "Please select at least one work location.");
+      return;
+    }
+
+    const token = localStorage.getItem("token");
+    const isUnassign = !selectedUser;
+    const officerId = isUnassign ? null : (selectedUser._id || selectedUser.id);
+
+    const officerLabel = nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO";
+    const actionLabel = isUnassign ? "Unassigning" : "Assigning";
+
+    const processingKey = "iro-assignment-processing";
+    message.loading({
+      content: `${actionLabel} ${officerLabel} ${isUnassign ? "from" : "to"} ${selectedWorkLocations.length} location(s)...`,
+      duration: 0,
+      key: processingKey,
+    });
+
+    try {
+      const locationIds = selectedWorkLocations.map((location) => location._id || location.id);
+      const payload = {
+        ids: locationIds,
+        officer: officerId,
+      };
+
+      await axios.patch(`${baseURL}/lookups/officer`, payload, {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      message.success({
+        content: `${officerLabel} ${isUnassign ? "unassigned" : "assigned"} successfully!`,
+        key: processingKey,
+      });
+
+      // Refresh lookups to show updated officer
+      dispatch(getAllLookups());
+      setcontactDrawer(false);
+    } catch (error) {
+      console.error(`Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}:`, error);
+      message.error({
+        content: `Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}: ${error.response?.data?.message || error.message}`,
+        key: processingKey,
+      });
+    }
   };
 
   const gender = {
@@ -753,6 +842,7 @@ function HeaderDetails() {
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
       {
+        !hideBreadcrumb &&
         location?.pathname !== "/applicationMgt" &&
         location?.pathname !== "/CommunicationBatchDetail" &&
         !location?.pathname?.startsWith("/BatchMemberSummary") &&
@@ -762,7 +852,7 @@ function HeaderDetails() {
       }
 
       <div
-        className={`details-header d-flex w-100% overflow-hidden ${location?.pathname == "/Details" ||
+        className={`details-header d-flex w-100 overflow-hidden ${location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
@@ -873,7 +963,9 @@ function HeaderDetails() {
             location?.pathname == "/Sms" ||
             location?.pathname == "/Email" ||
             location?.pathname == "/Notes" ||
-            location?.pathname == "/Popout" ||
+            location?.pathname == "/worklocation" ||
+            location?.pathname == "/region" ||
+            location?.pathname == "/branch" ||
             location?.pathname == "/DirectDebitAuthorization" ||
             location?.pathname == "/DirectDebit" ||
             location?.pathname == "/templeteSummary" ||
@@ -885,7 +977,7 @@ function HeaderDetails() {
                   <h2 className="title-main">
                     {nav == "/" && location?.state == null
                       ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : "")}
+                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : nav === "/onlinePayment" ? "Finance" : nav === "/MembershipDashboard" ? "Subscriptions & Rewards" : "")}
                   </h2>
 
                   <div className="d-flex">
@@ -916,7 +1008,19 @@ function HeaderDetails() {
                         ) : nav === "/ClaimSummary" ? (
                           <CreateClaim />
                         ) : (
-                          nav === "/Reconciliation" ? null : (
+                          nav === "/Reconciliation" || (
+                            ["/Batches", "/Import", "/Deductions", "/StandingOrders", "/Cheque", "/Refunds", "/write-offs", "/onlinePayment", "/DirectDebit"].includes(nav) && !hasPermission('payments:create')
+                          ) || (
+                              ["/Applications", "/Summary"].includes(nav) && !hasPermission('application:create')
+                            ) || (
+                              nav === "/EventsSummary" && !hasPermission('events:create')
+                            ) || (
+                              nav === "/ChangCateSumm" && !hasPermission('changeOfCategory:create')
+                            ) || (
+                              nav === "/CasesSummary" && (screenName === "All Issues" || screenName === "Assigned to me") && !hasPermission('queries:create')
+                            ) || (
+                              nav === "/InAppNotifications" && !hasPermission('notifications:create')
+                            ) ? null : (
                             <Button
                               onClick={() => {
                                 if (nav == "/Applications") {
@@ -1058,7 +1162,7 @@ function HeaderDetails() {
                     </Row>
                   </div>
                 ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
-                  <div className="d-flex me-5 search-fliters align-items-baseline justify-content-between  mt-2 mb-1">
+                  <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
@@ -1066,11 +1170,15 @@ function HeaderDetails() {
                         style={{ width: 300 }}
                         className="inp"
                       />
-                    ) : (
-                      <Toolbar />
+                    ) : (location?.pathname === "/worklocation" || location?.pathname === "/region" || location?.pathname === "/branch") ? null : (
+                      <div style={{ flex: 1, minWidth: 0 }}>
+                        <Toolbar />
+                      </div>
                     )}
-                    <div className="d-flex">
-                      <SaveViewMenu className="me-4" />
+                    <div className="d-flex flex-shrink-0">
+                      {(location?.pathname === "/worklocation" || location?.pathname === "/region" || location?.pathname === "/branch") ? null : (
+                        <SaveViewMenu className="ms-3" />
+                      )}
                     </div>
                   </div>
                 )}
@@ -1386,6 +1494,7 @@ function HeaderDetails() {
                         : ""
           }`}
         open={isBatchOpen}
+        isDisable={false}
         onClose={() => {
           setIsBatchOpen(!isBatchOpen);
         }}
@@ -1395,11 +1504,9 @@ function HeaderDetails() {
             const result = await batchFormRef.current.submit();
             if (!result) return; // validation failed or API failed
 
-            navigate("/BatchMemberSummary", {
+            navigate(`/BatchMemberSummary/${result._id || result.id}`, {
               state: {
-                search: "BatchMemberSummary",
-                batchId: result._id || result.id, // Fallback for safety
-                batchData: result
+                batchName: result.description,
               },
             });
             setIsBatchOpen(!isBatchOpen);
@@ -1420,6 +1527,9 @@ function HeaderDetails() {
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(false)}
+        title={`${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"} Assignment`}
+        onAssign={handleAssignIRO}
+        type={nav === "/branch" ? "Branch" : nav === "/region" ? "Region" : "workLocation"}
       />
       <SimpleBatch
         open={isSimpleBatchOpen}

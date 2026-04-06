@@ -4,11 +4,44 @@ import React, {
   useEffect,
   useRef,
   useState,
+  useCallback,
 } from "react";
 import { io } from "socket.io-client";
 import { notification } from "antd";
+import axios from "axios";
 
 const NotificationContext = createContext();
+
+/** Coalesce overlapping unread-count XHRs (e.g. StrictMode double mount + visibility). */
+let unreadCountFetchInFlight = null;
+
+const NOTIFICATION_SERVICE_FALLBACK =
+  "https://projectshell-vm.northeurope.cloudapp.azure.com/notification-service/api";
+
+export const getNotificationServiceUrl = () => {
+  const env = (process.env.REACT_APP_NOTIFICATION_SERVICE_URL || "").trim();
+  if (env && env.includes("/notification-service/")) return env;
+  return NOTIFICATION_SERVICE_FALLBACK;
+};
+
+/**
+ * Socket.io-client ignores path in the URL; it only uses host/port.
+ * Must pass path explicitly: io(origin, { path: basePath + "/socket.io" })
+ */
+const getSocketOptions = () => {
+  const baseUrl = getNotificationServiceUrl();
+  try {
+    const url = new URL(baseUrl);
+    const origin = url.origin;
+    const path = `${url.pathname.replace(/\/$/, "")}/socket.io`;
+    return { origin, path };
+  } catch {
+    return {
+      origin: "https://projectshell-vm.northeurope.cloudapp.azure.com",
+      path: "/notification-service/api/socket.io",
+    };
+  }
+};
 
 let socket = null;
 
@@ -32,9 +65,25 @@ export const NotificationProvider = ({ children }) => {
       return;
     }
 
-    socket = io(process.env.REACT_APP_NOTIFICATION_SERVICE_URL, {
+    const { origin, path } = getSocketOptions();
+    socket = io(origin, {
+      path,
       auth: { token },
+      query: { token },
       transports: ["websocket"],
+    });
+
+    socket.on("connect_error", (err) => {
+      console.warn(
+        "[NotificationContext] Socket connect_error:",
+        err.message || err
+      );
+    });
+
+    socket.on("disconnect", (reason) => {
+      if (reason !== "io client disconnect") {
+        console.warn("[NotificationContext] Socket disconnect:", reason);
+      }
     });
 
     // Expose for Firebase duplicate guard
@@ -66,12 +115,16 @@ export const NotificationProvider = ({ children }) => {
       });
     });
 
-    socket.on("badgeIncrement", () => {
-      setBadge((prev) => prev + 1);
+    socket.on("badgeIncrement", (data) => {
+      setBadge((prev) =>
+        typeof data?.count === "number" ? data.count : prev + 1,
+      );
     });
 
-    socket.on("badgeDecrement", () => {
-      setBadge((prev) => Math.max(prev - 1, 0));
+    socket.on("badgeDecrement", (data) => {
+      setBadge((prev) =>
+        typeof data?.count === "number" ? data.count : Math.max(prev - 1, 0),
+      );
     });
 
     socket.on("badgeReset", () => {
@@ -85,6 +138,41 @@ export const NotificationProvider = ({ children }) => {
       }
     };
   }, []);
+
+  const fetchUnreadCount = useCallback(async () => {
+    const token = localStorage.getItem("token");
+    if (!token) return;
+    if (unreadCountFetchInFlight) return unreadCountFetchInFlight;
+    unreadCountFetchInFlight = (async () => {
+      try {
+        const res = await axios.get(
+          `${getNotificationServiceUrl()}/notifications?limit=1`,
+          { headers: { Authorization: `Bearer ${token}` } },
+        );
+        const { unreadCount } = res.data?.data ?? res.data ?? {};
+        if (typeof unreadCount === "number") setBadge(unreadCount);
+      } catch {
+        // ignore
+      } finally {
+        unreadCountFetchInFlight = null;
+      }
+    })();
+    return unreadCountFetchInFlight;
+  }, []);
+
+  useEffect(() => {
+    const token = localStorage.getItem("token");
+    if (token) fetchUnreadCount();
+  }, [fetchUnreadCount]);
+
+  useEffect(() => {
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === "visible") fetchUnreadCount();
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    return () =>
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+  }, [fetchUnreadCount]);
 
   // Cross-tab logout sync
   useEffect(() => {
@@ -125,6 +213,7 @@ export const NotificationProvider = ({ children }) => {
     <NotificationContext.Provider
       value={{
         badge,
+        setBadge,
         notifications,
         setNotifications,
         markAsRead,

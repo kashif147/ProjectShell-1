@@ -24,15 +24,7 @@ function Members() {
 
     const data = useMemo(() => {
         if (!subscriptionsData?.data) return [];
-
-        return subscriptionsData.data.map((item) => ({
-            ...item,
-            startDate: formatLocalDate(item.startDate),
-            endDate: formatLocalDate(item.endDate),
-            rolloverDate: formatLocalDate(item.rolloverDate),
-            createdAt: formatLocalDate(item.createdAt),
-            updatedAt: formatLocalDate(item.updatedAt),
-        }));
+        return subscriptionsData.data;
     }, [subscriptionsData]);
 
     return (

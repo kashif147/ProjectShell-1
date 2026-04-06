@@ -4,6 +4,7 @@ import { useSelector, useDispatch } from "react-redux";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getCategoryLookup } from "../features/CategoryLookupSlice";
 import { getWorkLocationHierarchy } from "../features/LookupsWorkLocationSlice";
+import { resetInitialization } from "../features/applicationwithfilterslice";
 
 const FilterContext = createContext();
 
@@ -23,10 +24,16 @@ export const FilterProvider = ({ children }) => {
     paymentTypeOptions,
     genderOptions,
     sectionOptions,
+    lookups: lookupsRaw,
+    lookupsloading,
   } = useSelector((state) => state.lookups);
 
   // 🔹 Get category data from categoryLookup slice
-  const { categoryData } = useSelector((state) => state.categoryLookup);
+  const { categoryData, categoryLoading, currentCategoryId } = useSelector(
+    (state) => state.categoryLookup
+  );
+
+  const MEMBERSHIP_CATEGORY_LOOKUP_ID = "68dae613c5b15073d66b891f";
 
   // 🔹 Get hierarchical data from lookupsWorkLocation slice
   const {
@@ -101,14 +108,29 @@ export const FilterProvider = ({ children }) => {
   const location = useLocation();
   const activeScreenName = location?.pathname;
 
-  // 🔹 Fetch lookups and categories on mount (only if authenticated)
+  // 🔹 Fetch lookups and categories when missing (avoids duplicating App.js bootstrap)
   useEffect(() => {
     const token = localStorage.getItem("token");
     if (!token) return;
 
-    dispatch(getAllLookups());
-    dispatch(getCategoryLookup("68dae613c5b15073d66b891f"));
-  }, [dispatch]);
+    if (!lookupsloading && (!lookupsRaw || lookupsRaw.length === 0)) {
+      dispatch(getAllLookups());
+    }
+    if (
+      !categoryLoading &&
+      (currentCategoryId !== MEMBERSHIP_CATEGORY_LOOKUP_ID ||
+        !categoryData?.length)
+    ) {
+      dispatch(getCategoryLookup(MEMBERSHIP_CATEGORY_LOOKUP_ID));
+    }
+  }, [
+    dispatch,
+    lookupsloading,
+    lookupsRaw,
+    categoryLoading,
+    currentCategoryId,
+    categoryData,
+  ]);
 
   // 🔹 Remove old API-based extraction helper
 
@@ -233,7 +255,10 @@ export const FilterProvider = ({ children }) => {
       // If sourceOfTruth is empty (e.g. data still loading), don't prune yet
       if (!sourceOfTruth || sourceOfTruth.length === 0) return;
 
-      const stillValid = current.filter(val => sourceOfTruth.includes(val));
+      const stillValid = current.filter(val => {
+        const stringVal = String(val).toLowerCase();
+        return sourceOfTruth.some(opt => String(opt).toLowerCase() === stringVal);
+      });
       if (stillValid.length !== current.length) {
         syncedFiltersState[type] = { ...filtersState[type], selectedValues: stillValid };
         needsStateSync = true;
@@ -666,6 +691,7 @@ export const FilterProvider = ({ children }) => {
 
     // Load new screen's saved state
     const savedState = screenFilterStates[activeScreen];
+
     if (savedState && Object.keys(savedState.filtersState).length > 0) {
       setVisibleFilters(savedState.visibleFilters);
       setFiltersState(savedState.filtersState);

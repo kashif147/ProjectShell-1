@@ -203,6 +203,11 @@ const Breadcrumb = () => {
       page: "Online Payments",
       icon: "📥",
     },
+    "/write-offs": {
+      module: "Finance",
+      page: "Write-offs",
+      icon: "💰",
+    },
     "/BatchMemberSummary": {
       module: "Finance",
       page: "Batch Member Summary",
@@ -363,6 +368,21 @@ const Breadcrumb = () => {
       module: "Configuration",
       page: "System Configuration",
       icon: "⚙️",
+    },
+    "/worklocation": {
+      module: "Configuration",
+      page: "Work Location",
+      icon: "📍",
+    },
+    "/branch": {
+      module: "Configuration",
+      page: "Branch",
+      icon: "📍",
+    },
+    "/region": {
+      module: "Configuration",
+      page: "Region",
+      icon: "📍",
     },
     "/templeteConfig": {
       module: "Configuration",

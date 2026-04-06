@@ -118,6 +118,9 @@ const Login = () => {
       } else if (roleCodes.includes("IRO")) {
         // Industrial Relations Officer - show Issue Management
         dispatch(updateMenuLbl({ key: "Issue Management", value: true }));
+      } else if (roleCodes.includes("IO")) {
+        // Correspondence Dashboard - show Correspondences module
+        dispatch(updateMenuLbl({ key: "Correspondences", value: true }));
       } else if (roleCodes.includes("MEMBER")) {
         // Regular member - show Subscriptions & Rewards
         dispatch(
@@ -333,8 +336,14 @@ const Login = () => {
 
         // Navigate based on user role for default login behavior
         console.log("Login Debug - roleCodes:", roleCodes);
-        if (roleCodes.includes("SU")) {
+        if (roleCodes.includes("SU") || roleCodes.includes("ASU")) {
           navigate("/Configuratin");
+        } else if (roleCodes.includes("IO")) {
+          navigate("/CorrespondenceDashboard");
+        } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+          navigate("/onlinePayment", { state: { search: "Finance" } });
+        } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
+          navigate("/MembershipDashboard", { state: { search: "Subscriptions & Rewards" } });
         } else {
           navigate("/MembershipDashboard");
         }
@@ -410,6 +419,12 @@ const Login = () => {
 
       if (roleCodes.includes("SU")) {
         navigate("/Configuratin");
+      } else if (roleCodes.includes("IO")) {
+        navigate("/CorrespondenceDashboard");
+      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+        navigate("/onlinePayment", { state: { search: "Finance" } });
+      } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
+        navigate("/MembershipDashboard", { state: { search: "Subscriptions & Rewards" } });
       } else {
         navigate("/MembershipDashboard");
       }
@@ -497,6 +512,12 @@ const Login = () => {
       // Navigate based on user role
       if (roleCodes.includes("SU")) {
         navigate("/Configuratin");
+      } else if (roleCodes.includes("IO")) {
+        navigate("/CorrespondenceDashboard");
+      } else if (roleCodes.includes("AM") || roleCodes.includes("DAM")) {
+        navigate("/onlinePayment", { state: { search: "Finance" } });
+      } else if (roleCodes.includes("MO") || roleCodes.includes("AMO")) {
+        navigate("/MembershipDashboard", { state: { search: "Subscriptions & Rewards" } });
       } else {
         navigate("/Summary", {
           state: {

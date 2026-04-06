@@ -12,6 +12,7 @@ import { CasesEditProvider } from "./context/CasesEditContext";
 import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
+import RoutePermissions from "./constants/RoutePermissions";
 
 // Wrapper for lazy loading with retry logic
 const lazyWithRetry = (componentImport) => {
@@ -159,7 +160,7 @@ const NotDesignedYet = lazyWithRetry(() => import("./pages/NotDesign"));
 const Sms = lazyWithRetry(() => import("./pages/Correspondences/sms"));
 const Email = lazyWithRetry(() => import("./pages/Correspondences/Emails"));
 const Notes = lazyWithRetry(() => import("./pages/Correspondences/Notes"));
-const Popout = lazyWithRetry(() => import("../src/component/common/PopOut"));
+const PopOut = lazyWithRetry(() => import("./component/common/PopOut"));
 const Members = lazyWithRetry(() => import("./pages/membership/Members"));
 const RemindersDetails = lazyWithRetry(
   () => import("./pages/reminders/RemindersDetails"),
@@ -348,7 +349,7 @@ function Entry() {
                         path="Details"
                         element={
                           <RoutePermissionWrapper path="/Details">
-                            <ProtectedRoute>
+                            <ProtectedRoute requiredPermission={RoutePermissions["Details"]}>
                               <ProfileDetails />
                             </ProtectedRoute>
                           </RoutePermissionWrapper>
@@ -359,7 +360,7 @@ function Entry() {
                         path="Summary"
                         element={
                           <RoutePermissionWrapper path="/Summary">
-                            <ProtectedRoute>
+                            <ProtectedRoute requiredPermission={RoutePermissions["Summary"]}>
                               <ProfileSummary />
                             </ProtectedRoute>
                           </RoutePermissionWrapper>
@@ -369,7 +370,7 @@ function Entry() {
                       <Route
                         path="CasesDetails"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/CasesDetails"]}>
                             <CasesDetails />
                           </ProtectedRoute>
                         }
@@ -378,7 +379,7 @@ function Entry() {
                       <Route
                         path="CasesById"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/CasesById"]}>
                             <CasesById />
                           </ProtectedRoute>
                         }
@@ -387,7 +388,7 @@ function Entry() {
                       <Route
                         path="CasesSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/CasesSummary"]}>
                             <CasesSummary />
                           </ProtectedRoute>
                         }
@@ -414,7 +415,7 @@ function Entry() {
                       <Route
                         path="templeteSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/templeteSummary"]}>
                             <TempletsSummary />
                           </ProtectedRoute>
                         }
@@ -422,7 +423,7 @@ function Entry() {
                       <Route
                         path="templeteConfig"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/templeteConfig"]}>
                             <TempleteConfig />
                           </ProtectedRoute>
                         }
@@ -431,7 +432,7 @@ function Entry() {
                       <Route
                         path="ClaimSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/ClaimSummary"]}>
                             <ClaimSummary />
                           </ProtectedRoute>
                         }
@@ -440,7 +441,7 @@ function Entry() {
                       <Route
                         path="ClaimsDetails"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/ClaimsDetails"]}>
                             <ClaimsDetails />
                           </ProtectedRoute>
                         }
@@ -449,7 +450,7 @@ function Entry() {
                       <Route
                         path="Configuratin"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/Configuratin"]}>
                             <Configuratin />
                           </ProtectedRoute>
                         }
@@ -467,7 +468,7 @@ function Entry() {
                       <Route
                         path="ClaimsById"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/ClaimsById"]}>
                             <ClaimsById />
                           </ProtectedRoute>
                         }
@@ -476,7 +477,7 @@ function Entry() {
                       <Route
                         path="AddNewProfile"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/AddNewProfile"]}>
                             <AddNewProfile />
                           </ProtectedRoute>
                         }
@@ -485,7 +486,7 @@ function Entry() {
                       <Route
                         path="Transfers"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/Transfers"]}>
                             <TransferSummary />
                           </ProtectedRoute>
                         }
@@ -494,7 +495,7 @@ function Entry() {
                       <Route
                         path="AddClaims"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/AddClaims"]}>
                             <AddClaims />
                           </ProtectedRoute>
                         }
@@ -503,7 +504,7 @@ function Entry() {
                       <Route
                         path="CorrespondencesSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/CorrespondencesSummary"]}>
                             <CorrespondencesSummary />
                           </ProtectedRoute>
                         }
@@ -511,7 +512,7 @@ function Entry() {
                       <Route
                         path="InAppNotifications"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/InAppNotifications"]}>
                             <InAppNotifications />
                           </ProtectedRoute>
                         }
@@ -519,7 +520,7 @@ function Entry() {
                       <Route
                         path="CorrespondenceDashboard"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/CorrespondenceDashboard"]}>
                             <CorrespondenceDashboard />
                           </ProtectedRoute>
                         }
@@ -527,7 +528,7 @@ function Entry() {
                       <Route
                         path="CommunicationBatchDetail"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/CommunicationBatchDetail"]}>
                             <CommunicationBatchDetail />
                           </ProtectedRoute>
                         }
@@ -571,7 +572,7 @@ function Entry() {
                       <Route
                         path="EventsSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/EventsSummary"]}>
                             <EventsSummary />
                           </ProtectedRoute>
                         }
@@ -579,7 +580,7 @@ function Entry() {
                       <Route
                         path="EventDetails"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/EventDetails"]}>
                             <EventDetails />
                           </ProtectedRoute>
                         }
@@ -615,7 +616,7 @@ function Entry() {
                       <Route
                         path="Applications"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["/Applications"]}>
                             <MembershipApplication />
                           </ProtectedRoute>
                         }
@@ -641,7 +642,7 @@ function Entry() {
                       <Route
                         path="ChangCateSumm"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["ChangCateSumm"]}>
                             <ChangCateSumm />
                           </ProtectedRoute>
                         }
@@ -659,7 +660,7 @@ function Entry() {
                       <Route
                         path="RemindersSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["RemindersSummary"]}>
                             <RemindersSummary />
                           </ProtectedRoute>
                         }
@@ -668,7 +669,7 @@ function Entry() {
                       <Route
                         path="Cancallation"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Cancallation"]}>
                             <Cancallation />
                           </ProtectedRoute>
                         }
@@ -677,7 +678,7 @@ function Entry() {
                       <Route
                         path="Batches"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Batches"]}>
                             <Batches />
                           </ProtectedRoute>
                         }
@@ -686,7 +687,7 @@ function Entry() {
                       <Route
                         path="Import"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Import"]}>
                             <Import />
                           </ProtectedRoute>
                         }
@@ -695,7 +696,7 @@ function Entry() {
                       <Route
                         path="Deductions"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Deductions"]}>
                             <Deductions />
                           </ProtectedRoute>
                         }
@@ -704,7 +705,7 @@ function Entry() {
                       <Route
                         path="StandingOrders"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["StandingOrders"]}>
                             <StandingOrders />
                           </ProtectedRoute>
                         }
@@ -713,7 +714,7 @@ function Entry() {
                       <Route
                         path="Cheque"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Cheque"]}>
                             <Cheque />
                           </ProtectedRoute>
                         }
@@ -722,7 +723,7 @@ function Entry() {
                       <Route
                         path="Reconciliation"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Reconciliation"]}>
                             <Reconciliation />
                           </ProtectedRoute>
                         }
@@ -730,7 +731,7 @@ function Entry() {
                       <Route
                         path="DirectDebitAuthorization"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["DirectDebitAuthorization"]}>
                             <DirectDebitAuthorization />
                           </ProtectedRoute>
                         }
@@ -738,7 +739,7 @@ function Entry() {
                       <Route
                         path="Members"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Members"]}>
                             <Subscriptions />
                           </ProtectedRoute>
                         }
@@ -746,7 +747,7 @@ function Entry() {
                       <Route
                         path="onlinePayment"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["onlinePayment"]}>
                             <OnlinePayment />
                           </ProtectedRoute>
                         }
@@ -763,7 +764,7 @@ function Entry() {
                       <Route
                         path="DirectDebit"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["DirectDebit"]}>
                             <DirectDebitSummary />
                           </ProtectedRoute>
                         }
@@ -772,7 +773,7 @@ function Entry() {
                       <Route
                         path="Refunds"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Refunds"]}>
                             <RefundsSummary />
                           </ProtectedRoute>
                         }
@@ -780,7 +781,7 @@ function Entry() {
                       <Route
                         path="write-offs"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["write-offs"]}>
                             <WriteOffsSummary />
                           </ProtectedRoute>
                         }
@@ -796,7 +797,7 @@ function Entry() {
                       <Route
                         path="SimpleBatchMemberSummary"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Batches"]}>
                             <SimpleBatchMemberSummary />
                           </ProtectedRoute>
                         }
@@ -822,7 +823,7 @@ function Entry() {
                       <Route
                         path="Email"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Email"]}>
                             <Email />
                           </ProtectedRoute>
                         }
@@ -831,7 +832,7 @@ function Entry() {
                       <Route
                         path="Sms"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Sms"]}>
                             <Sms />
                           </ProtectedRoute>
                         }
@@ -840,7 +841,7 @@ function Entry() {
                       <Route
                         path="Notes"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Notes"]}>
                             <Notes />
                           </ProtectedRoute>
                         }
@@ -849,17 +850,33 @@ function Entry() {
                       <Route
                         path="CornMarket"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Configuratin"]}>
                             <CornGrideSummary />
                           </ProtectedRoute>
                         }
                       />
 
                       <Route
-                        path="Popout"
+                        path="worklocation"
                         element={
                           <ProtectedRoute>
-                            <Popout />
+                            <PopOut />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="region"
+                        element={
+                          <ProtectedRoute>
+                            <PopOut />
+                          </ProtectedRoute>
+                        }
+                      />
+                      <Route
+                        path="branch"
+                        element={
+                          <ProtectedRoute>
+                            <PopOut />
                           </ProtectedRoute>
                         }
                       />
@@ -876,7 +893,7 @@ function Entry() {
                       <Route
                         path="members"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["Members"]}>
                             <Members />
                           </ProtectedRoute>
                         }
@@ -904,9 +921,9 @@ function Entry() {
                         path="MembershipDashboard"
                         element={
                           <RoutePermissionWrapper path="/MembershipDashboard">
-                            <ProtectedRoute>
-                              <MembershipDashboard />
-                            </ProtectedRoute>
+                            {/* <ProtectedRoute requiredPermission={RoutePermissions["MembershipDashboard"]}> */}
+                            <MembershipDashboard />
+                            {/* </ProtectedRoute> */}
                           </RoutePermissionWrapper>
                         }
                       />
@@ -914,7 +931,7 @@ function Entry() {
                       <Route
                         path="TenantManagement"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["TenantManagement"]}>
                             <TenantManagement />
                           </ProtectedRoute>
                         }
@@ -922,7 +939,7 @@ function Entry() {
                       <Route
                         path="CancelledMembersReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["CancelledMembersReport"]}>
                             <CancelledMembersReport />
                           </ProtectedRoute>
                         }
@@ -930,7 +947,7 @@ function Entry() {
                       <Route
                         path="SuspendedMembersReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["SuspendedMembersReport"]}>
                             <SuspendedMembersReport />
                           </ProtectedRoute>
                         }
@@ -938,7 +955,7 @@ function Entry() {
                       <Route
                         path="ResignedMembersReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["ResignedMembersReport"]}>
                             <ResignedMembersReport />
                           </ProtectedRoute>
                         }
@@ -946,7 +963,7 @@ function Entry() {
                       <Route
                         path="NewMembersReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["NewMembersReport"]}>
                             <NewMembersReport />
                           </ProtectedRoute>
                         }
@@ -954,7 +971,7 @@ function Entry() {
                       <Route
                         path="LeaversReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["LeaversReport"]}>
                             <LeaversReport />
                           </ProtectedRoute>
                         }
@@ -962,7 +979,7 @@ function Entry() {
                       <Route
                         path="JoinersReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["JoinersReport"]}>
                             <JoinersReport />
                           </ProtectedRoute>
                         }
@@ -971,7 +988,7 @@ function Entry() {
                       <Route
                         path="RoleManagement"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["RoleManagement"]}>
                             <RoleManagement />
                           </ProtectedRoute>
                         }
@@ -981,7 +998,7 @@ function Entry() {
                         path="UserManagement"
                         element={
                           <RoutePermissionWrapper path="/UserManagement">
-                            <ProtectedRoute>
+                            <ProtectedRoute requiredPermission={RoutePermissions["UserManagement"]}>
                               <UserManagement />
                             </ProtectedRoute>
                           </RoutePermissionWrapper>
@@ -991,7 +1008,7 @@ function Entry() {
                       <Route
                         path="PermissionManagement"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["PermissionManagement"]}>
                             <PermissionManagement />
                           </ProtectedRoute>
                         }
@@ -1000,7 +1017,7 @@ function Entry() {
                       <Route
                         path="ProductTypesManagement"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["ProductTypesManagement"]}>
                             <ProductTypesManagement />
                           </ProtectedRoute>
                         }
@@ -1009,7 +1026,7 @@ function Entry() {
                       <Route
                         path="CancelledMembersReport"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["CancelledMembersReport"]}>
                             <CancelledMembersReport />
                           </ProtectedRoute>
                         }
@@ -1054,7 +1071,7 @@ function Entry() {
                       <Route
                         path="PolicyClientExample"
                         element={
-                          <ProtectedRoute>
+                          <ProtectedRoute requiredPermission={RoutePermissions["PolicyClientExample"]}>
                             <PolicyClientExample />
                           </ProtectedRoute>
                         }

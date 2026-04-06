@@ -10,7 +10,7 @@ export const getBatchDetailsById = createAsyncThunk(
         try {
             const token = localStorage.getItem("token");
             const response = await axios.get(
-                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details/${batchId}`,
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/${batchId}`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -33,7 +33,7 @@ export const getAllBatchDetails = createAsyncThunk(
         try {
             const token = localStorage.getItem("token");
             const response = await axios.get(
-                `${process.env.REACT_APP_PROFILE_SERVICE_URL}/batch-details`,
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details`,
                 {
                     headers: { Authorization: `Bearer ${token}` },
                 }
@@ -43,6 +43,61 @@ export const getAllBatchDetails = createAsyncThunk(
             return rejectWithValue(
                 error?.response?.data?.message || "Failed to fetch all batches"
             );
+        }
+    }
+);
+
+// ===============================
+// Thunk: Update Batch Details (multipart)
+// ===============================
+export const updateBatchDetail = createAsyncThunk(
+    "batchDetails/update",
+    async ({ batchDetailId, formData }, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.patch(
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/${batchDetailId}`,
+                formData,
+                {
+                    headers: {
+                        "Content-Type": "multipart/form-data",
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+            return response?.data;
+        } catch (error) {
+            const msg =
+                error?.response?.data?.message ||
+                error?.message ||
+                "Failed to update batch";
+            return rejectWithValue(msg);
+        }
+    }
+);
+
+// ===============================
+// Thunk: Delete Batch Detail
+// ===============================
+export const deleteBatchDetail = createAsyncThunk(
+    "batchDetails/delete",
+    async (batchDetailId, { rejectWithValue }) => {
+        try {
+            const token = localStorage.getItem("token");
+            const response = await axios.delete(
+                `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/batch-details/${batchDetailId}`,
+                {
+                    headers: { Authorization: `Bearer ${token}` },
+                }
+            );
+            return response?.data;
+        } catch (error) {
+            const data = error?.response?.data;
+            const msg =
+                data?.message ||
+                error?.message ||
+                "Failed to delete batch";
+            return rejectWithValue(msg);
         }
     }
 );

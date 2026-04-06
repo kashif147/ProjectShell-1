@@ -54,12 +54,11 @@ import {
 } from "react-icons/fa";
 
 // Helper function to create menu item with permissions
-const createMenuItem = (key, icon, label, permissions = [], roles = []) => ({
+const createMenuItem = (key, icon, label, permissions = []) => ({
   key,
   icon: <div className="icon">{icon}</div>,
   label: <div className="sidebar-label">{label}</div>,
   permissions,
-  roles,
 });
 
 export const correspondenceItems = [
@@ -67,43 +66,37 @@ export const correspondenceItems = [
     "Dashboard",
     <FaChartLine />,
     "Dashboard",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "InAppNotifications",
     <FaBell />,
     "In-App Notifications",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["notifications:read"]
   ),
   createMenuItem(
     "Email",
     <FaEnvelope />,
     "Email",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["communication:write"]
   ),
   createMenuItem(
     "SMS",
     <FaSms />,
     "SMS",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["communication:write"]
   ),
   createMenuItem(
     "Notes & Letters",
     <FaStickyNote />,
     "Notes & Letters",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["communication:read"]
   ),
   createMenuItem(
     "Communication History",
     <FaHistory />,
     "Communication History",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["communication:read"]
   ),
 ];
 
@@ -112,79 +105,68 @@ export const financeItems = [
     "Online Payments",
     <FaCreditCard />,
     "Online Payments",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Cheque",
     <FaMoneyCheckAlt />,
     "Cheque",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Deductions",
     <FaCoins />,
     "Deductions",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Standing Orders",
     <FaHandHoldingUsd />,
     "Standing Orders",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "DD Authorisations",
     <FaUserShield />,
     "DD Authorisation",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Direct Debit",
     <FaCreditCard />,
     "Direct Debit",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
 
   createMenuItem(
     "Refunds",
     <FaReceipt />,
     "Refunds",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Write-offs",
     <FaCommentDollar />,
     "Write-offs",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Imports",
     <FaFileImport />,
     "Imports",
-    ["USER_WRITE", "USER_MANAGE_ROLES"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Batches",
     <FaFileInvoiceDollar />,
     "Batches",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   createMenuItem(
     "Reconciliations",
     <FaExchangeAlt />,
     "Reconciliations",
-    ["USER_READ", "USER_WRITE"],
-    ["AM", "DAM", "GS", "DGS", "ASU", "SU"]
+    ["payments:read"]
   ),
   // createMenuItem(
   //   "DD Batches",
@@ -200,29 +182,25 @@ export const profileItems = [
     "Non Members",
     <FaUserSlash />,
     "Non Members",
-    ["crm:member:read", "crm:member:list"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Membership",
     <FaUsers />,
     "Membership",
-    ["crm:member:read", "crm:member:list"],
-    ["MEMBER", "MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Leavers",
     <FaUserMinus />,
     "Leavers",
-    ["crm:member:read", "crm:member:list"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Joiners",
     <FaUserPlus />,
     "Joiners",
-    ["crm:member:read", "crm:member:list"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["crm:member:read"]
   ),
 ];
 
@@ -231,63 +209,55 @@ export const subscriptionItems = [
     "MembershipDashboard",
     <FaChartLine />,
     "Membership Dashboard",
-    ["portal:access", "crm:access"],
-    ["MEMBER", "MO", "AMO", "GS", "DGS", "SU"]
+    []
   ),
   createMenuItem(
     "Applications",
     <FaClipboardList />,
     "Applications",
-    ["crm:application:read", "crm:application:list"],
-    ["MO", "AMO", "GS", "DGS", "SU"]
+    ["application:read"]
   ),
   createMenuItem(
     "Profiles",
     <FaUserCog />,
     "Profiles",
-    ["crm:member:read", "crm:member:list"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["profile:read"]
   ),
   createMenuItem(
     "Membership",
     <FaIdCard />,
     "Membership",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
+    ["crm:member:read"]
   ),
   createMenuItem(
     "Reminders",
     <FaRegClock />,
     "Reminders",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["notifications:read"]
   ),
   createMenuItem(
     "Cancellations",
     <FaBan />,
     "Cancellations",
-    ["crm:member:read", "crm:member:write"],
-    ["MO", "AMO", "GS", "DGS", "SU"]
+    ["subscriptions:read"]
   ),
   createMenuItem(
     "Transfer Requests",
     <FaExchangeAlt />,
     "Transfer Requests",
-    ["crm:member:read", "crm:member:write"],
-    ["MO", "AMO", "GS", "DGS", "SU"]
+    ["transferrequests:read"]
   ),
   createMenuItem(
     "Change Category",
     <FaTags />,
     "Change Category",
-    ["crm:member:read", "crm:member:write"],
-    ["MO", "AMO", "GS", "DGS", "SU"]
+    ["changeofcategory:read"]
   ),
   // createMenuItem(
   //   "CornMarket",
   //   <FaBuilding />,
   //   "CornMarket",
-  //   ["crm:access"],
+  //   ["menu:correspondence:access"],
   //   ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
   // ),
 
@@ -295,29 +265,25 @@ export const subscriptionItems = [
     "CornMarket New Graduate",
     <FaGraduationCap />,
     "New Graduate",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["corn:market:new:graduate:read"]
   ),
   createMenuItem(
     "CornMarket Rewards",
     <FaUserPlus />,
     "INMO Rewards",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["corn:market:rewards:read"]
   ),
   createMenuItem(
     "Recruit a Friend",
     <FaUserFriends />,
     "Recruit a Friend",
-    ["crm:member:create"],
-    ["MO", "AMO", "GS", "DGS", "SU"]
+    ["recruit:friend:read"]
   ),
   createMenuItem(
     "LandingPage",
     <FaGlobe />,
     "LandingPage",
-    ["portal:access"],
-    ["MEMBER", "NON-MEMBER"]
+    ["landing:page:read"]
   ),
 ];
 
@@ -326,60 +292,52 @@ export const configurationItems = [
     "Templetes",
     <FaFileCode />,
     "Templetes",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
+    ["templates:read"]
   ),
 
   createMenuItem(
     "System Configuration",
     <FaWrench />,
     "System Configuration",
-    ["user:read", "role:read"],
-    ["SU", "GS", "DGS"]
+    ["portal:read"]
   ),
 
   createMenuItem(
     "Permission Management",
     <FaKey />,
     "Permission Management",
-    ["role:read", "role:write"],
-    ["SU", "GS"]
+    ["role:permission:assign"]
   ),
   createMenuItem(
     "Role Management",
     <FaUserCog />,
     "Role Management",
-    ["role:read", "role:list"],
-    ["SU", "GS", "DGS"]
+    ["role:read"]
   ),
   createMenuItem(
     "User Management",
     <FaUsers />,
     "User Management",
-    ["user:read", "user:list"],
-    ["SU", "GS", "DGS"]
+    ["user:read"]
   ),
   createMenuItem(
     "Product Management",
     <FaBox />,
     "Product Management",
-    ["user:read", "user:write"],
-    ["SU", "GS", "DGS"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Tenant Management",
     <FaServer />,
     "Tenant Management",
-    ["user:read", "user:write"],
-    ["SU", "GS", "DGS"]
+    ["tenant:read"]
   ),
 
   createMenuItem(
     "Policy Client Example",
     <FaShieldAlt />,
     "Policy Client Example",
-    ["admin:read", "user:read"],
-    ["SU", "GS", "DGS"]
+    ["portal:read"]
   ),
 ];
 
@@ -388,85 +346,73 @@ export const reportItems = [
     "Cancelled Members Report",
     <FaUserTimes />,
     "Cancelled Members Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["subscriptions:read"]
   ),
   createMenuItem(
     "Comparison Report",
     <FaBalanceScale />,
     "Comparison Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["comparison:report:read"]
   ),
   createMenuItem(
     "Control Report",
     <FaClipboardCheck />,
     "Control Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["control:report:read"]
   ),
   createMenuItem(
     "Deferred Income",
     <FaFileInvoiceDollar />,
     "Deferred Income",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["deferred:income:report:read"]
   ),
   createMenuItem(
     "End of Year Reports",
     <FaCalendarCheck />,
     "End of Year Reports",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["end:of:year:report:read"]
   ),
   createMenuItem(
     "Executive Council Report",
     <FaGavel />,
     "Executive Council Report + drill down listings",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["executive:council:report:read"]
   ),
   createMenuItem(
     "Joiners Report",
     <FaUserPlus />,
     "Joiners Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "Leavers Report",
     <FaUserMinus />,
     "Leavers Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "Live Stats",
     <FaChartPie />,
     "Live Stats",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["LIVE:STATS:REPORT:READ"]
   ),
   createMenuItem(
     "New Members Report",
     <FaUserEdit />,
     "New Members Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "Resigned Members Report",
     <FaUserSlash />,
     "Resigned Members Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "Suspended Members Report",
     <FaUserLock />,
     "Suspended Members Report",
-    ["crm:reports:read"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["SUSPENDED:MEMBERS:REPORT:READ"]
   ),
 ];
 
@@ -475,29 +421,25 @@ export const casesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "All cases",
     <FaFolderOpen />,
     "All cases",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    []
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    ["role:read", "role:write"],
-    ["SU", "GS"]
+    []
   ),
 ];
 
@@ -506,29 +448,25 @@ export const issuesItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    [], // No permission restrictions
-    [] // No role restrictions
+    []
   ),
   createMenuItem(
     "All Issues",
     <FaFolderOpen />,
     "All Issues",
-    [], // No permission restrictions
-    [] // No role restrictions
+    []
   ),
   createMenuItem(
     "Assigned to me",
     <FaUserShield />,
     "Assigned to me",
-    [], // No permission restrictions
-    [] // No role restrictions
+    []
   ),
   createMenuItem(
     "Reports setting",
     <FaWrench />,
     "Reports setting",
-    [], // No permission restrictions
-    [] // No role restrictions
+    []
   ),
 ];
 
@@ -537,48 +475,42 @@ export const eventsItems = [
     "Dashboard",
     <FaChartPie />,
     "Dashboard",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["events:read"]
   ),
   createMenuItem(
     "Events",
     <FaCalendarAlt />,
     "Events",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["events:read"]
   ),
   createMenuItem(
     "Attendees",
     <FaUsers />,
     "Attendees",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Reporting",
     <FaChartLine />,
     "Reporting",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["portal:read"]
   ),
   createMenuItem(
     "Settings",
     <FaWrench />,
     "Settings",
-    ["crm:access"],
-    ["MO", "AMO", "GS", "DGS", "IRO", "SU"]
+    ["portal:read"]
   ),
 ];
 
 // Helper function to filter menu items based on user permissions and roles
 export const filterMenuItemsByAuth = (
   menuItems,
-  userPermissions = [],
-  userRoles = []
+  userPermissions = []
 ) => {
   return menuItems.filter((item) => {
-    // If no permissions/roles required, show the item
-    if (!item.permissions?.length && !item.roles?.length) {
+    // If no permissions required, show the item
+    if (!item.permissions?.length) {
       return true;
     }
 
@@ -593,22 +525,14 @@ export const filterMenuItemsByAuth = (
         userPermissions.includes(permission)
       );
 
-    // Check roles
-    const hasRequiredRole =
-      !item.roles?.length ||
-      item.roles.some((role) => userRoles.includes(role));
-
     console.log(`Filtering item ${item.key}:`, {
       hasWildcardPermission,
       hasRequiredPermission,
-      hasRequiredRole,
       userPermissions,
-      userRoles,
       itemPermissions: item.permissions,
-      itemRoles: item.roles,
     });
 
-    return hasRequiredPermission && hasRequiredRole;
+    return hasRequiredPermission;
   });
 };
 

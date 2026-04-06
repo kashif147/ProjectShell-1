@@ -44,7 +44,6 @@ const MembershipForm = ({
     ProfileSubLoading,
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
-  console.log(ProfileSubData, "ProfileSubData")
   const dispatch = useDispatch();
   const {
     titleOptions,
@@ -89,7 +88,6 @@ const MembershipForm = ({
   const subscriptionData = useMemo(() => {
     if (ProfileSubData?.data?.length > 0) {
       const subscription = ProfileSubData.data[0];
-      debugger
       return {
         subscriptionStatus: subscription.subscriptionStatus || "",
         paymentType: subscription.paymentType || "",
@@ -104,17 +102,53 @@ const MembershipForm = ({
         reinstated: subscription.cancellation?.reinstated || false,
         yearendProcessed: subscription.yearend?.processed || false,
         membershipCategory: subscription.membershipCategory || "",
+        primarySection: subscription.professionalDetails?.primarySection || "",
+        secondarySection: subscription.professionalDetails?.secondarySection || "",
+        resignationDate: subscription.resignation?.dateResigned,
+        resignationReason: subscription.resignation?.reason || "",
       };
     }
     return null;
   }, [ProfileSubData]);
+
+  const isSubscriptionEmpty = useMemo(() => {
+    if (!ProfileSubData) return false;
+    // Direct array empty
+    if (Array.isArray(ProfileSubData.data) && ProfileSubData.data.length === 0)
+      return true;
+    // Nested array empty
+    if (
+      ProfileSubData.data &&
+      typeof ProfileSubData.data === "object" &&
+      Array.isArray(ProfileSubData.data.data) &&
+      ProfileSubData.data.data.length === 0
+    )
+      return true;
+    return false;
+  }, [ProfileSubData]);
+
+  const memoizedPaymentTypeOptions = useMemo(() => {
+    if (!paymentTypeOptions) return [];
+    const hasPayrollDeduction = paymentTypeOptions.some(
+      (opt) => opt.label === "Payroll Deduction" || opt.value === "Payroll Deduction"
+    );
+    if (hasPayrollDeduction) return paymentTypeOptions;
+
+    return [
+      ...paymentTypeOptions,
+      {
+        id: "Payroll Deduction",
+        value: "Payroll Deduction",
+        label: "Payroll Deduction",
+      },
+    ];
+  }, [paymentTypeOptions]);
 
   useEffect(() => {
     // FIXED: Safely access profileSearchData results
     const searchAoiRes = profileSearchData?.results?.[0] || null;
     // Choose source dynamically
     const source = profileDetails || searchAoiRes;
-
     if (!source) return;
 
     // Initialize form data from profile API
@@ -167,6 +201,8 @@ const MembershipForm = ({
         ? "Yes"
         : "No",
       nursingSpecialization: source.professionalDetails?.nurseType || "",
+      primarySection: source.professionalDetails?.primarySection || source.professionalDetails?.nurseType || "",
+      secondarySection: source.professionalDetails?.secondarySection || "",
 
       // Membership Info
       membershipNumber: source.membershipNumber || "",
@@ -176,6 +212,7 @@ const MembershipForm = ({
 
       // Preferences
       consent: source.preferences?.consent,
+      valueAddedServices: source.preferences?.valueAddedServices,
 
       // Corn Market
       joinINMOIncomeProtection: source.cornMarket?.incomeProtectionScheme,
@@ -183,7 +220,7 @@ const MembershipForm = ({
       exclusiveDiscountsOffers: source.cornMarket?.exclusiveDiscountsAndOffers,
 
       // Additional Information
-      memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion,
+      memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion === true ? "Yes" : "No",
       otherUnionName:
         source.additionalInformation?.otherIrishTradeUnionName || "",
       otherUnionScheme: source.additionalInformation?.otherScheme
@@ -198,7 +235,7 @@ const MembershipForm = ({
 
     // Override with subscription data if available
     if (subscriptionData) {
-      debugger
+
       setFormData(prev => ({
         ...prev,
         ...initialFormData,
@@ -206,13 +243,16 @@ const MembershipForm = ({
         // Subscription Details
         subscriptionStatus: subscriptionData.subscriptionStatus || "",
         membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
-        paymentType: subscriptionData.paymentType || prev.paymentType || "",
+        paymentType: subscriptionData.paymentType,
         payrollNumber: subscriptionData.payrollNo || prev.payrollNumber || "",
 
         // Subscription Dates
         startDate: convertUTCToLocalDate(subscriptionData.startDate) || prev.startDate,
         endDate: convertUTCToLocalDate(subscriptionData.endDate),
         renewalDate: convertUTCToLocalDate(subscriptionData.renewalDate) || prev.renewalDate,
+        dateCancelled: convertUTCToLocalDate(subscriptionData.resignationDate) || prev.dateCancelled,
+        cancellationReason:
+          subscriptionData.resignationReason || prev.cancellationReason || "",
 
         // Payment Information
         paymentFrequency: subscriptionData.paymentFrequency || "",
@@ -225,15 +265,24 @@ const MembershipForm = ({
         reinstated: subscriptionData.reinstated || false,
         yearendProcessed: subscriptionData.yearendProcessed || false,
         subscriptionYear: subscriptionData.subscriptionYear || null,
+        primarySection: subscriptionData.primarySection || prev.primarySection || "",
+        secondarySection: subscriptionData.secondarySection || prev.secondarySection || "",
       }));
     } else {
+      // If no subscription data, check if it's because they are resigned
+      let status = "";
+      if (isSubscriptionEmpty && !ProfileSubLoading) {
+        status = "Resigned";
+      }
+
       // If no subscription data, just set profile data
       setFormData(prev => ({
         ...prev,
-        ...initialFormData
+        ...initialFormData,
+        subscriptionStatus: status
       }));
     }
-  }, [profileDetails, profileSearchData, subscriptionData]); // FIXED: Removed ProfileSubData from dependencies
+  }, [profileDetails, profileSearchData, subscriptionData, isSubscriptionEmpty, ProfileSubLoading]); // FIXED: Added isSubscriptionEmpty and ProfileSubLoading
 
   // Internal form state
   const [formData, setFormData] = useState({
@@ -300,7 +349,7 @@ const MembershipForm = ({
     joinINMOIncomeProtection: false,
     joinRewards: false,
     exclusiveDiscountsOffers: false,
-    allowPartnerContact: false,
+    valueAddedServices: false,
     agreeDataProtection: false,
     recruitedBy: "",
     recruitedByMembershipNo: "",
@@ -321,7 +370,6 @@ const MembershipForm = ({
     endDate: null,
     subscriptionYear: null,
   });
-  console.log("formData", formData);
   const lookupData = {
     titles: [
       { key: "mr", label: "Mr" },
@@ -477,8 +525,11 @@ const MembershipForm = ({
     }
   }, [propIsDeceased]);
 
-  // Check if form should be read-only (either not in edit mode or member is deceased)
-  const isFormReadOnly = !isEditMode || formData.isDeceased;
+  // Check if form should be read-only (either not in edit mode or member is deceased or resigned)
+  const isFormReadOnly =
+    !isEditMode ||
+    formData.isDeceased ||
+    formData.subscriptionStatus === "Resigned";
 
   // Calculate indeterminate state for main checkbox
   const isIndeterminate = () => {
@@ -500,14 +551,14 @@ const MembershipForm = ({
   };
 
   const NursingSpecializationSelectOptn = [
-    { label: "General Nurse", value: "general-nurse" },
-    { label: "Public Health Nurse", value: "public-health-nurse" },
-    { label: "Mental Health Nurse", value: "mental-health-nurse" },
+    { label: "General Nursing", value: "generalNursing" },
+    { label: "Public Health Nurse", value: "publicHealthNurse" },
+    { label: "Mental Health Nurse", value: "mentalHealth" },
     { label: "Midwife", value: "midwife" },
-    { label: "Sick Children's Nurse", value: "sick-children-nurse" },
+    { label: "Sick Children's Nurse", value: "sickChildrenNurse" },
     {
       label: "Registered Nurse for Intellectual Disability",
-      value: "intellectual-disability-nurse",
+      value: "intellectualDisability",
     },
   ];
 
@@ -540,6 +591,23 @@ const MembershipForm = ({
         >
           ⚠️ Member is marked as deceased. Profile is read-only and subscription
           has been cancelled.
+        </div>
+      )}
+      {formData.subscriptionStatus === "Resigned" && (
+        <div
+          style={{
+            backgroundColor: "#fff1f0",
+            border: "1px solid #ffa39e",
+            borderRadius: "4px",
+            padding: "12px 16px",
+            marginBottom: "16px",
+            color: "#cf1322",
+            fontSize: "14px",
+            fontWeight: 500,
+          }}
+        >
+          ⚠️ Member is resigned. Profile is read-only and subscription has been
+          cancelled.
         </div>
       )}
       <Row gutter={[24, 24]}>
@@ -947,9 +1015,9 @@ const MembershipForm = ({
                   Additional Service and Terms
                 </h4>
                 <Checkbox
-                  checked={formData.allowPartnerContact}
+                  checked={formData.valueAddedServices}
                   onChange={(e) =>
-                    handleChange("allowPartnerContact", e.target.checked)
+                    handleChange("valueAddedServices", e.target.checked)
                   }
                   style={{
                     display: "flex",
@@ -1076,7 +1144,7 @@ const MembershipForm = ({
               <MyDatePicker
                 label="Start Date"
                 placeholder="Select start date (Optional)"
-                value={formData.startDate}
+                // value={formData.startDate}
                 onChange={(date) => handleChange("startDate", date)}
                 disabled={isFormReadOnly}
               />
@@ -1141,17 +1209,37 @@ const MembershipForm = ({
                 onChange={(e) => handleChange("nmbiNumber", e.target.value)}
               />
               <div style={{ marginBottom: "16px" }}>
-                <label className="my-input-label">Primary Nurse Type</label>
+                <label className="my-input-label mb-1">
+                  Primary Nurse Type <span className="text-danger">*</span>
+                </label>
+
                 <Radio.Group
+                  name="nursingSpecialization"
                   value={formData.nursingSpecialization}
                   onChange={(e) =>
                     handleChange("nursingSpecialization", e.target.value)
                   }
                   disabled={isFormReadOnly}
+                  className="w-100"
                 >
-                  <Radio value="generalNursing">General Nurse</Radio>
-                  <Radio value="public-health-nurse">Public Health Nurse</Radio>
-                  <Radio value="mental-health-nurse">Mental Health Nurse</Radio>
+                  <Row gutter={[16, 8]}>
+                    {NursingSpecializationSelectOptn.map((option) => (
+                      <Col key={option.value} xs={24} sm={12}>
+                        <Radio
+                          value={option.value}
+                          style={{
+                            whiteSpace: "normal",
+                            display: "flex",
+                            alignItems: "center",
+                            height: "100%",
+                            color: "#212529"
+                          }}
+                        >
+                          {option.label}
+                        </Radio>
+                      </Col>
+                    ))}
+                  </Row>
                 </Radio.Group>
               </div>
             </Card>
@@ -1402,15 +1490,16 @@ const MembershipForm = ({
               <CustomSelect
                 label="Payment Type"
                 placeholder="Select Payment Type"
-                options={[
-                  { value: "Salary Deduction", label: "Salary Deduction" },
-                  { value: "Credit Card", label: "Credit Card" },
-                  // { value: "Direct Debit", label: "Direct Debit" },
-                ]}
+                // options={[
+                //   { value: "Salary Deduction", label: "Salary Deduction" },
+                //   { value: "Credit Card", label: "Credit Card" },
+                // ]}
                 value={formData.paymentType}
                 onChange={(e) => handleChange("paymentType", e.target.value)}
                 disabled={isFormReadOnly}
                 required={true}
+                isIDs={false}
+                options={memoizedPaymentTypeOptions}
               />
               <MyInput
                 label="Payroll No."

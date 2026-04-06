@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Row, Col, message, Checkbox } from "antd";
+import { Row, Col, message, Checkbox, InputNumber } from "antd";
 import dayjs from "dayjs";
 import MyDrawer from "../common/MyDrawer";
 import MyInput from "../common/MyInput";
@@ -92,15 +92,37 @@ const RefundDrawer = ({ open, onClose, onSubmit }) => {
                         />
                     </Col>
                     <Col span={24}>
-                        <MyInput
-                            label="Refund"
-                            name="refund"
-                            placeholder="Enter refund amount or name"
-                            value={formValues.refund}
-                            onChange={(e) => handleChange("refund", e.target.value)}
-                            required
-                            hasError={errors.refund}
-                        />
+                        <div className="my-input-wrapper">
+                            <div className="d-flex justify-content-between">
+                                <label htmlFor="refund" className={`my-input-label ${errors.refund ? "error" : ""}`}>
+                                    Refund <span className="star">*</span>
+                                    {errors.refund && <span className="error-message">Required</span>}
+                                </label>
+                            </div>
+                            <div className={`my-input-container ${errors.refund ? "error" : ""}`}>
+                                <InputNumber
+                                    name="refund"
+                                    placeholder="0.00"
+                                    value={formValues.refund}
+                                    onChange={(value) => handleChange("refund", value)}
+                                    precision={2}
+                                    min={0}
+                                    style={{ width: "100%" }}
+                                    controls={false}
+                                    size="large"
+                                    formatter={(value) =>
+                                        value ? `${value}`.replace(/\B(?=(\d{3})+(?!\d))/g, ",") : ""
+                                    }
+                                    parser={(value) => value.replace(/[^\d.]/g, "")}
+                                    status={errors.refund ? "error" : ""}
+                                    addonAfter="€"
+                                />
+                            </div>
+                        </div>
+                        <style>{`
+  .refund-input-right .ant-input-number-input { text-align: right !important; }
+`}</style>
+
                     </Col>
                     <Col span={24}>
                         <MyDatePicker1

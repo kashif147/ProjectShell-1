@@ -8,12 +8,18 @@ import React, {
 } from "react";
 import { Tag } from "antd";
 import { tableData } from "../Data";
-import { useLocation } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import { useDispatch, useSelector } from "react-redux";
 import { fetchRegions } from "../features/RegionSlice";
 import { getAllLookups } from "../features/LookupsSlice";
 import { getContactTypes } from "../features/ContactTypeSlice";
-import { convertToLocalTime, formatDateOnly, formatCurrency } from "../utils/Utilities";
+import { convertToLocalTime, formatDateOnly, formatCurrency, formatMobileNumber } from "../utils/Utilities";
+import { getProfileDetailsById } from "../features/profiles/ProfileDetailsSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+} from "../features/subscription/profileSubscriptionSlice";
+import { buildDetailsSearch } from "../utils/detailsRoute";
 import { Triangle } from "lucide-react";
 import { Tooltip } from "antd";
 
@@ -91,7 +97,8 @@ const staticColumns = {
         const bankEntry = entries.find(
           (e) => e.accountCode === "1220" && e.dc === "D"
         );
-        return bankEntry ? formatCurrency(bankEntry.amount) : formatCurrency(0);
+        const amountInEuros = bankEntry ? bankEntry.amount / 100 : 0;
+        return formatCurrency(amountInEuros);
       },
     },
     {
@@ -142,6 +149,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatMobileNumber(value),
     },
     {
       title: "Join Date",
@@ -373,9 +381,9 @@ const staticColumns = {
       isVisible: true,
       width: 150,
     },
-
     {
       dataIndex: ["personalInfo", "forename"],
+      // dataIndex: ["user", "userFullName"],
       title: "Full Name",
       ellipsis: true,
       isGride: true,
@@ -383,8 +391,10 @@ const staticColumns = {
       width: 200,
     },
 
+
     {
-      dataIndex: ["contactInfo", "personalEmail"],
+      // dataIndex: ["contactInfo", "normalizedEmail"],
+      dataIndex: "normalizedEmail",
       title: "Email",
       ellipsis: true,
       isGride: true,
@@ -399,6 +409,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatMobileNumber(value),
     },
 
     {
@@ -489,6 +500,14 @@ const staticColumns = {
     {
       dataIndex: ["professionalDetails", "nurseType"],
       title: "Section (Primary)",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 180,
+    },
+    {
+      dataIndex: ["professionalDetails", "secondarySection"],
+      title: "Secondary Section",
       ellipsis: true,
       isGride: true,
       isVisible: true,
@@ -802,7 +821,7 @@ const staticColumns = {
       editable: true,
     },
     {
-      dataIndex: "dob",
+      dataIndex: "dateOfBirth",
       title: "Date Of Birth",
       ellipsis: true,
       isGride: false,
@@ -849,6 +868,7 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 150,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: "pensionNo",
@@ -947,6 +967,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
+      render: (value) => (value ? convertToLocalTime(value) : "-"),
     },
     {
       dataIndex: "updatedAt",
@@ -956,7 +977,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      // render: (value) => value ? convertToLocalTime(value) : "-",
+      render: (value) => (value ? convertToLocalTime(value) : "-"),
     },
 
     // 🔹 Personal Info
@@ -1092,6 +1113,7 @@ const staticColumns = {
       isVisible: true,
       width: 150,
       editable: true,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: ["personalDetails", "contactInfo", "telephoneNumber"],
@@ -1101,6 +1123,7 @@ const staticColumns = {
       isVisible: true,
       width: 150,
       editable: true,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: ["personalDetails", "contactInfo", "personalEmail"],
@@ -1150,7 +1173,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      // render: (value) => value ? convertToLocalTime(value) : "-",
+      render: (value) => (value ? convertToLocalTime(value) : "-"),
     },
   ],
   members: [
@@ -1192,7 +1215,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
-      // render: (value) => value ? convertToLocalTime(value) : "-"
+      render: (value) => formatDateOnly(value),
     },
 
     {
@@ -1203,6 +1226,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "isCurrent",
@@ -1222,6 +1246,7 @@ const staticColumns = {
       isVisible: true,
       width: 160,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
 
     // 🔹 Membership Info
@@ -1565,6 +1590,104 @@ const staticColumns = {
     },
   ],
   Correspondence: [
+    {
+      dataIndex: "correspondenceID",
+      title: "Correspondence ID",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "regNo",
+      title: "Membership No",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "forename",
+      title: "Forename",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "surname",
+      title: "Surname",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "methodOfContact",
+      title: "Method of Contact",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "dateOfContact",
+      title: "Date of Contact",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "duration",
+      title: "Duration",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "details",
+      title: "Details",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 400,
+    },
+    {
+      dataIndex: "followUpNeeded",
+      title: "Follow-up Needed",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "followUpDate",
+      title: "Follow-up Date",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "status",
+      title: "Status",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 150,
+    },
+    {
+      dataIndex: "nextStep",
+      title: "Next Step",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+    },
+  ],
+  CorrespondencesSummary: [
     {
       dataIndex: "correspondenceID",
       title: "Correspondence ID",
@@ -2606,6 +2729,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatMobileNumber(value),
     },
     {
       dataIndex: ["professionalDetails", "workLocation"],
@@ -2653,6 +2777,15 @@ const staticColumns = {
       editable: false,
     },
     {
+      dataIndex: ["professionalDetails", "secondarySection"],
+      title: "Secondary Section",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 200,
+      editable: false,
+    },
+    {
       dataIndex: "startDate",
       title: "Joining Date",
       ellipsis: true,
@@ -2660,6 +2793,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "endDate",
@@ -2669,6 +2803,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: ["financialDetails", "lastPaymentAmount"],
@@ -2687,6 +2822,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: ["financialDetails", "membershipFee"],
@@ -2723,6 +2859,7 @@ const staticColumns = {
       isVisible: true,
       width: 200,
       editable: false,
+      render: (value) => formatDateOnly(value),
     },
     {
       dataIndex: "CancellationFlag",
@@ -4462,6 +4599,7 @@ const staticSearchFilters = {
 
 export const TableColumnsProvider = ({ children }) => {
   const location = useLocation();
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const screenName = location?.state?.search;
   const [claimsDrawer, setClaimsDrawer] = useState(false);
@@ -4487,6 +4625,15 @@ export const TableColumnsProvider = ({ children }) => {
     setmenuLbl((prev) => ({
       ...prev,
       [key]: value,
+    }));
+  }, []);
+
+  const [selectedTemplates, setSelectedTemplates] = useState({});
+
+  const updateSelectedTemplate = useCallback((screen, template) => {
+    setSelectedTemplates((prev) => ({
+      ...prev,
+      [screen]: template,
     }));
   }, []);
 
@@ -4760,21 +4907,99 @@ export const TableColumnsProvider = ({ children }) => {
     setRowIndex(index);
   }, []);
 
-  const profilNextBtnFtn = () => {
+  const profilNextBtnFtn = useCallback(() => {
     const newIndex = rowIndex + 1;
-    const filteredData = gridData?.filter((_, index) => index === newIndex);
-    setProfileDetails(filteredData);
-    setRowIndex(newIndex);
-  };
+    if (newIndex < gridData.length) {
+      const record = gridData[newIndex];
+      const profileId = record?.profileId;
+      const subscriptionRowId = record?._id;
+      const idToUse =
+        profileId ||
+        record?._id ||
+        record?._Id ||
+        record?.ApplicationId ||
+        record?.id;
+      if (idToUse) {
+        dispatch(getProfileDetailsById(idToUse));
+        if (
+          screenName === "Members" &&
+          profileId &&
+          subscriptionRowId
+        ) {
+          dispatch(getSubscriptionById(subscriptionRowId));
+        } else {
+          dispatch(
+            getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" })
+          );
+        }
+      }
+      setProfileDetails([record]);
+      setRowIndex(newIndex);
+      const nextNavState = { ...location.state };
+      if (screenName === "Members" && profileId && subscriptionRowId) {
+        nextNavState.subscriptionId = subscriptionRowId;
+      } else {
+        delete nextNavState.subscriptionId;
+      }
+      const pid = profileId || idToUse;
+      const sid =
+        screenName === "Members" && profileId && subscriptionRowId
+          ? subscriptionRowId
+          : undefined;
+      const searchStr = buildDetailsSearch(pid, sid);
+      navigate(
+        { pathname: location.pathname, search: searchStr },
+        { replace: true, state: nextNavState }
+      );
+    }
+  }, [rowIndex, gridData, dispatch, screenName, location.pathname, location.state, navigate]);
 
   const profilPrevBtnFtn = useCallback(() => {
-    setRowIndex((prevIndex) => {
-      const newIndex = prevIndex - 1;
-      const filteredData = gridData?.filter((_, index) => index === newIndex);
-      setProfileDetails(filteredData);
-      return newIndex;
-    });
-  }, [gridData]);
+    const newIndex = rowIndex - 1;
+    if (newIndex >= 0) {
+      const record = gridData[newIndex];
+      const profileId = record?.profileId;
+      const subscriptionRowId = record?._id;
+      const idToUse =
+        profileId ||
+        record?._id ||
+        record?._Id ||
+        record?.["ApplicationId"] ||
+        record?.id;
+      if (idToUse) {
+        dispatch(getProfileDetailsById(idToUse));
+        if (
+          screenName === "Members" &&
+          profileId &&
+          subscriptionRowId
+        ) {
+          dispatch(getSubscriptionById(subscriptionRowId));
+        } else {
+          dispatch(
+            getSubscriptionByProfileId({ profileId: idToUse, isCurrent: "true" })
+          );
+        }
+      }
+      setProfileDetails([record]);
+      setRowIndex(newIndex);
+      const nextNavState = { ...location.state };
+      if (screenName === "Members" && profileId && subscriptionRowId) {
+        nextNavState.subscriptionId = subscriptionRowId;
+      } else {
+        delete nextNavState.subscriptionId;
+      }
+      const pid = profileId || idToUse;
+      const sid =
+        screenName === "Members" && profileId && subscriptionRowId
+          ? subscriptionRowId
+          : undefined;
+      const searchStr = buildDetailsSearch(pid, sid);
+      navigate(
+        { pathname: location.pathname, search: searchStr },
+        { replace: true, state: nextNavState }
+      );
+    }
+  }, [rowIndex, gridData, dispatch, screenName, location.pathname, location.state, navigate]);
 
   const filterByRegNo = useCallback(
     async (regNo) => {
@@ -4982,7 +5207,7 @@ export const TableColumnsProvider = ({ children }) => {
     if (searchFilters) {
       setGridData(filterData());
     }
-  }, [searchFilters, location?.pathname, filterData]);
+  }, [searchFilters, filterData]);
 
   // Update search filters when lookups change
   const updateSearchFilters = useCallback(
@@ -5021,12 +5246,13 @@ export const TableColumnsProvider = ({ children }) => {
           : col.dataIndex;
 
         // Check if this column exists in the template's columns array
-        const isVisible = templateColumns.includes(dataIndexString);
+        const isGride = templateColumns.includes(dataIndexString);
 
         return {
           ...col,
-          isGride: isVisible,
-          isVisible: isVisible,
+          isGride: isGride,
+          // 🛡️ Keep isVisible: true so other columns remain in the "add/remove" menu
+          isVisible: true,
         };
       });
 
@@ -5105,6 +5331,8 @@ export const TableColumnsProvider = ({ children }) => {
       resetFtn,
       menuLbl,
       updateMenuLbl,
+      selectedTemplates,
+      updateSelectedTemplate,
     }),
     [
       columns,
@@ -5141,6 +5369,8 @@ export const TableColumnsProvider = ({ children }) => {
       resetFtn,
       menuLbl,
       updateMenuLbl,
+      selectedTemplates,
+      updateSelectedTemplate,
       addColumnToSection,
     ]
   );

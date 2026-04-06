@@ -1,6 +1,7 @@
 .sid-nav-main {
   height: 80vh;
-  background-color: #001529; /* Dark theme look */
+  background-color: #001529;
+  /* Dark theme look */
 }
 
 /* Sidebar Container */
@@ -51,7 +52,8 @@
 .sidebar-menu {
   height: 100vh;
   background: transparent;
-  padding-top: 60px; /* Make space for toggle button */
+  padding-top: 60px;
+  /* Make space for toggle button */
 }
 
 /* General menu item styling */
@@ -62,6 +64,7 @@
   align-items: center;
   height: auto !important;
   padding: 10px !important;
+  /* Restore original padding */
   margin: 8px !important;
   border-radius: 8px;
   background: transparent;
@@ -75,6 +78,7 @@
 /* Collapsed state styling */
 .sidebar-menu.collapsed .ant-menu-item {
   padding: 12px 8px !important;
+  /* Restore original padding */
   margin: 4px 8px !important;
   min-height: 48px;
   position: relative;
@@ -115,6 +119,7 @@
     width: 0;
     opacity: 0;
   }
+
   to {
     width: 3px;
     opacity: 1;
@@ -131,10 +136,10 @@
 
 /* Active (selected) item - Base styling for both states */
 .sidebar-menu .ant-menu-item-selected {
-  background: var(
-    --secoundry-bg-color
-  ) !important; /* Light blue secondary color */
-  color: var(--primary-color) !important; /* Primary color text */
+  background: var(--secoundry-bg-color) !important;
+  /* Light blue secondary color */
+  color: var(--primary-color) !important;
+  /* Primary color text */
   box-shadow: 0 4px 12px rgba(201, 122, 47, 0.3);
   transform: translateX(2px);
   position: relative;
@@ -143,10 +148,10 @@
 
 /* Enhanced selected state for collapsed (pinned) view */
 .sidebar-menu.collapsed .ant-menu-item-selected {
-  background: var(
-    --secoundry-bg-color
-  ) !important; /* Light blue secondary color */
-  color: var(--primary-color) !important; /* Primary color text */
+  background: var(--secoundry-bg-color) !important;
+  /* Light blue secondary color */
+  color: var(--primary-color) !important;
+  /* Primary color text */
   box-shadow: 0 4px 12px rgba(201, 122, 47, 0.3);
   transform: translateX(2px);
   border-radius: 12px;
@@ -155,10 +160,10 @@
 
 /* Enhanced selected state for expanded (unpinned) view */
 .sidebar-menu.expanded .ant-menu-item-selected {
-  background: var(
-    --secoundry-bg-color
-  ) !important; /* Light blue secondary color */
-  color: var(--primary-color) !important; /* Primary color text */
+  background: var(--secoundry-bg-color) !important;
+  /* Light blue secondary color */
+  color: var(--primary-color) !important;
+  /* Primary color text */
   box-shadow: 0 4px 12px rgba(201, 122, 47, 0.3);
   transform: translateX(2px);
   border-radius: 8px;
@@ -210,12 +215,14 @@
 /* Icon styling with colors */
 .icon {
   font-size: 20px;
-  color: white; /* White color for unselected icons */
+  color: white;
+  /* White color for unselected icons */
   transition: all 0.3s ease;
 }
 
 .icon:hover {
-  color: #f2f5f8 !important; /* Light gray on hover */
+  color: #f2f5f8 !important;
+  /* Light gray on hover */
   transform: scale(1.1);
 }
 
@@ -231,7 +238,8 @@
 
 /* Selected item icon styling */
 .sidebar-menu .ant-menu-item-selected .icon {
-  color: var(--primary-color) !important; /* Primary color for selected icons */
+  color: var(--primary-color) !important;
+  /* Primary color for selected icons */
   transform: scale(1.1);
 }
 
@@ -259,9 +267,7 @@
 .sidebar-menu .ant-menu-item-selected[data-key="User Management"] .icon,
 .sidebar-menu .ant-menu-item-selected[data-key="Role Management"] .icon,
 .sidebar-menu .ant-menu-item-selected[data-key="Permission Management"] .icon,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Cancelled Members Report"]
-  .icon,
+.sidebar-menu .ant-menu-item-selected[data-key="Cancelled Members Report"] .icon,
 .sidebar-menu .ant-menu-item-selected[data-key="Live Stats"] .icon,
 .sidebar-menu .ant-menu-item-selected[data-key="Comparison Report"] .icon,
 .sidebar-menu .ant-menu-item-selected[data-key="Issues"] .icon,
@@ -315,7 +321,8 @@
   white-space: normal !important;
   overflow: visible !important;
   text-overflow: unset !important;
-  color: white !important; /* Ensure labels are white by default */
+  color: white !important;
+  /* Ensure labels are white by default */
   word-wrap: break-word;
   line-height: 1.3;
   font-weight: 500;
@@ -345,9 +352,8 @@
 
 /* Selected item label styling */
 .sidebar-menu .ant-menu-item-selected .sidebar-label {
-  color: var(
-    --primary-color
-  ) !important; /* Primary color for selected labels */
+  color: var(--primary-color) !important;
+  /* Primary color for selected labels */
   font-weight: 600;
 }
 
@@ -355,12 +361,8 @@
 .sidebar-menu .ant-menu-item-selected .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Email"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="SMS"] .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Notes & Letters"]
-  .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Communication History"]
-  .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Notes & Letters"] .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Communication History"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Batches"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Direct Debits"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Salary"] .sidebar-label,
@@ -369,35 +371,19 @@
 .sidebar-menu .ant-menu-item-selected[data-key="Non Members"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Joiners"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Leavers"] .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="MembershipDashboard"]
-  .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="MembershipDashboard"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Profiles"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Applications"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Reminders"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Cancellations"] .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Transfer Requests"]
-  .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="System Configuration"]
-  .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="User Management"]
-  .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Role Management"]
-  .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Permission Management"]
-  .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Cancelled Members Report"]
-  .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Transfer Requests"] .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="System Configuration"] .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="User Management"] .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Role Management"] .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Permission Management"] .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Cancelled Members Report"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Live Stats"] .sidebar-label,
-.sidebar-menu
-  .ant-menu-item-selected[data-key="Comparison Report"]
-  .sidebar-label,
+.sidebar-menu .ant-menu-item-selected[data-key="Comparison Report"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Issues"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Cases"] .sidebar-label,
 .sidebar-menu .ant-menu-item-selected[data-key="Manage Events"] .sidebar-label {
@@ -414,7 +400,7 @@
 }
 
 /* Remove default margin between icon and text */
-.ant-menu .ant-menu-item .ant-menu-item-icon + span {
+.ant-menu .ant-menu-item .ant-menu-item-icon+span {
   margin: 0px !important;
 }
 
@@ -487,4 +473,27 @@
     width: 28px !important;
     height: 28px !important;
   }
+}
+
+/* Sidebar Link Wrapper */
+.sidebar-link-wrapper {
+  text-decoration: none !important;
+  color: inherit !important;
+  display: contents;
+  /* Use display: contents to avoid affecting flex layout */
+}
+
+/* Ensure the title content area fills correctly */
+.sidebar-menu .ant-menu-title-content {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Selected items keep primary color for links too */
+.sidebar-menu .ant-menu-item-selected .sidebar-link-wrapper {
+  color: var(--primary-color) !important;
 }

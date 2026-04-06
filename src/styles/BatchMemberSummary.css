@@ -1,0 +1,77 @@
+/* Batch payments: file row membership ≠ resolved membership */
+.batch-member-summary-table
+  .ant-table-tbody
+  > tr.batch-file-ref-membership-mismatch
+  > td {
+  background-color: rgba(250, 173, 20, 0.14) !important;
+}
+
+.batch-member-summary-table
+  .ant-table-tbody
+  > tr.batch-file-ref-membership-mismatch.ant-table-row-selected
+  > td {
+  background-color: rgba(250, 173, 20, 0.22) !important;
+}
+
+.batch-member-summary-table
+  .ant-table-tbody
+  > tr.batch-file-ref-membership-mismatch:hover
+  > td {
+  background-color: rgba(250, 173, 20, 0.2) !important;
+}
+
+.batch-member-summary-table td.batch-file-ref-cell-mismatch {
+  color: #cf1322 !important;
+}
+
+/* Delete confirm: white shell, warning icon on white chip, tinted message block */
+.batch-member-summary-delete-confirm .ant-modal-content {
+  background: #fff !important;
+}
+.batch-member-summary-delete-confirm .ant-modal-confirm-body {
+  align-items: flex-start !important;
+}
+
+.batch-member-summary-delete-confirm-content {
+  margin-top: 2px;
+  padding-top: 0;
+  width: 100%;
+}
+
+.batch-member-summary-delete-message {
+  text-align: justify;
+  margin-right: 12px !important;
+  background-color: #fffbe6;
+
+  border-radius: 8px;
+  padding: 12px 14px;
+  color: rgba(0, 0, 0, 0.88);
+}
+
+/* Delete confirm: solid red OK on first paint (dropdown→modal timing + global .ant-btn rules) */
+.batch-member-summary-delete-confirm
+  .ant-modal-confirm-btns
+  .ant-btn.ant-btn-primary.ant-btn-dangerous {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #fff !important;
+}
+
+.batch-member-summary-delete-confirm
+  .ant-modal-confirm-btns
+  .ant-btn.ant-btn-primary.ant-btn-dangerous:hover:not(:disabled) {
+  background-color: #ff7875 !important;
+  border-color: #ff7875 !important;
+  color: #fff !important;
+}
+
+.batch-member-summary-delete-confirm
+  .ant-modal-confirm-btns
+  .ant-btn.ant-btn-primary.ant-btn-dangerous:focus,
+.batch-member-summary-delete-confirm
+  .ant-modal-confirm-btns
+  .ant-btn.ant-btn-primary.ant-btn-dangerous:focus-visible {
+  background-color: #ff4d4f !important;
+  border-color: #ff4d4f !important;
+  color: #fff !important;
+}

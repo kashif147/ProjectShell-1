@@ -1,11 +1,7 @@
 import React, { useState } from "react";
-import MyTable from "../../component/common/MyTable";
-import { useTableColumns } from "../../context/TableColumnsContext ";
+import TableComponent from "../../component/common/TableComponent";
 
 const WriteOffsSummary = () => {
-    const { columns } = useTableColumns();
-    const tableColumns = columns["WriteOffs"] || [];
-
     // Mock data for Write-offs Summary
     const [mockData] = useState([
         {
@@ -45,12 +41,9 @@ const WriteOffsSummary = () => {
 
     return (
         <div style={{ width: "100%", padding: "0" }}>
-            <MyTable
-                dataSource={mockData}
-                columns={tableColumns}
-                loading={false}
-                selection={true}
-                selectionType="checkbox"
+            <TableComponent
+                data={mockData}
+                screenName="WriteOffs"
             />
         </div>
     );

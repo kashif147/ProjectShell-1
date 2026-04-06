@@ -1,17 +1,22 @@
 import React, { useState, useEffect } from "react";
+import { useLocation } from "react-router-dom";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button, Divider, message } from "antd";
 import { SearchOutlined, SaveOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
-import { updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
+import { getViewById } from "../../features/views/ViewByIdSlice";
+import { getApplicationsWithFilter } from "../../features/applicationwithfilterslice";
+import { getAllApplications } from "../../features/ApplicationSlice";
 import { useFilters } from "../../context/FilterContext";
 import { transformFiltersForApi } from "../../utils/filterUtils";
 import MyAlert from "./MyAlert";
 
 function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setColumnsForFilter }) {
   const dispatch = useDispatch();
-  const { columns, updateColumns, handleCheckboxFilterChange } = useTableColumns();
-  const { filtersState } = useFilters();
+  const location = useLocation(); // Add location to check route
+  const { columns, updateColumns, handleCheckboxFilterChange, updateSelectedTemplate } = useTableColumns();
+  const { filtersState, applyTemplateFilters } = useFilters();
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const [isUpdating, setIsUpdating] = useState(false);
 
@@ -37,7 +42,18 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       };
 
       await dispatch(updateGridTemplate({ id: currentTemplateId, payload })).unwrap();
+
       MyAlert("success", "Success", "Template updated successfully");
+
+      console.log("✅ Update successful, re-fetching details via viewById slice...");
+
+      // 1. Refresh the specific view details in Redux
+      // This will trigger the global synchronization via SaveViewMenu's observers
+      dispatch(getViewById(currentTemplateId));
+
+      // 2. Refresh the overall list
+      dispatch(getGridTemplates());
+
     } catch (error) {
       console.error("Error updating template:", error);
       MyAlert("error", "Error", error?.message || "Failed to update template");

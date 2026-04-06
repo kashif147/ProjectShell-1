@@ -16,10 +16,15 @@ import { useDispatch, useSelector } from "react-redux";
 import { MdKeyboard } from "react-icons/md";
 import { ExcelContext } from "../../context/ExcelContext";
 import { getApplicationById } from "../../features/ApplicationDetailsSlice";
-import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
+import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+} from "../../features/subscription/profileSubscriptionSlice";
 import { Triangle, AlertCircle } from "lucide-react";
 import { Tooltip } from "antd";
 import SimpleMenu from "./SimpleMenu";
+import { useAuthorization } from "../../context/AuthorizationContext";
 import {
   filterTransferById,
   fetchAndFilterTransferById,
@@ -31,7 +36,6 @@ import {
 } from "../../features/profiles/filterTransferSlice";
 import TransferRequests from "../TransferRequests";
 import { formatDateOnly } from "../../utils/Utilities";
-
 import { DndContext, DragOverlay } from "@dnd-kit/core";
 import { restrictToHorizontalAxis } from "@dnd-kit/modifiers";
 import {
@@ -48,6 +52,7 @@ import CancallationDrawer from "./cancallation/CancallationDrawer";
 import TrigerBatchMemberDrawer from "../finanace/TrigerBatchMemberDrawer";
 import MyDrawer from "./MyDrawer";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
+import { buildDetailsSearch } from "../../utils/detailsRoute";
 import UnifiedPagination, { getUnifiedPaginationConfig, getDefaultPageSize } from "./UnifiedPagination";
 import { getCornMarketBatchById } from "../../features/profiles/CornMarketBatchByIdSlice";
 
@@ -175,6 +180,7 @@ const TableComponent = ({
   enableRowSelection = true,
   onRowClick: externalOnRowClick = null,
   disableDefaultRowClick = false,
+  disableRowFn = null,
   ...props
 }) => {
   const navigate = useNavigate();
@@ -190,6 +196,7 @@ const TableComponent = ({
   const [transferDrawerOpen, setTransferDrawerOpen] = useState(false);
   const [selectedTransferRecord, setSelectedTransferRecord] = useState(null);
   const mainData = useSelector((state) => state.transferRequest.data);
+  const { hasPermission } = useAuthorization();
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
@@ -213,6 +220,12 @@ const TableComponent = ({
     selectedRowKeys !== undefined && onSelectionChange !== undefined;
 
   useEffect(() => {
+    if (data && Array.isArray(data)) {
+      setGridData(data);
+    }
+  }, [data, setGridData]);
+
+  useEffect(() => {
     if (JSON.stringify(dataSource) !== JSON.stringify(data)) {
       setdataSource(data);
     }
@@ -222,7 +235,7 @@ const TableComponent = ({
         (key) =>
           data &&
           data.some((item) => {
-            const itemKey = item.key || item.id || item._id;
+            const itemKey = item.applicationId || item.key || item.id || item._id;
             return itemKey === key || String(itemKey) === String(key);
           })
       );
@@ -239,17 +252,18 @@ const TableComponent = ({
   const [transferreq, settransferreq] = useState(false);
 
   const [columnsDragbe, setColumnsDragbe] = useState(() =>
-    columns?.[screenName]
+    (columns?.[screenName] || [])
       ?.filter((item) => item?.isGride)
       ?.map((item, index) => ({
         ...item,
         key: `${index}`,
         onHeaderCell: () => ({ id: `${index}` }),
         onCell: () => ({ id: `${index}` }),
-      }))
+      })) || []
   );
 
   const dispatch = useDispatch();
+  const { permissions = [] } = useSelector((state) => state.auth);
   const fileInputRef = useRef(null);
 
   // **UPDATED: Row click handler that can be overridden by props**
@@ -298,27 +312,27 @@ const TableComponent = ({
   };
 
   const [columnsForFilter, setColumnsForFilter] = useState(() =>
-    columns?.[screenName]
+    (columns?.[screenName] || [])
       ?.filter((item) => item?.isGride)
       ?.map((item, index) => ({
         ...item,
         key: `${index}`,
         onHeaderCell: () => ({ id: `${index}` }),
         onCell: () => ({ id: `${index}` }),
-      }))
+      })) || []
   );
 
   // **Sync columns when screenName or global columns change**
   useEffect(() => {
     // All available columns for the selection menu
-    const menuColumns = columns?.[screenName]?.map((item, index) => ({
+    const menuColumns = (columns?.[screenName] || [])?.map((item, index) => ({
       ...item,
       key: `${index}`,
       isVisible: item.isVisible !== false, // Ensure visibility flag exists
     }));
 
     // Only visible columns for the actual table grid
-    const gridColumns = menuColumns
+    const gridColumns = (menuColumns || [])
       ?.filter((item) => item?.isGride)
       ?.map((item) => ({
         ...item,
@@ -407,8 +421,8 @@ const TableComponent = ({
         setSelectedRowData([record]);
         setSelectedRowIndex(
           dataSource.findIndex((r) => {
-            const rKey = r.key || r.id || r._id;
-            const recordKey = record.key || record.id || record._id;
+            const rKey = r.applicationId || r.key || r.id || r._id;
+            const recordKey = record.applicationId || record.key || record.id || record._id;
             return rKey === recordKey || String(rKey) === String(recordKey);
           })
         );
@@ -421,6 +435,9 @@ const TableComponent = ({
       fixed: true,
       // Optional: align checkbox properly
       columnStyle: { padding: "0 10px", verticalAlign: "middle" },
+      getCheckboxProps: (record) => ({
+        disabled: disableRowFn ? disableRowFn(record) : false,
+      }),
     };
 
     // Remove dropdown menu in header
@@ -435,6 +452,7 @@ const TableComponent = ({
     selectionType,
     handleSelectionChange,
     dataSource,
+    disableRowFn
   ]);
 
   // Build columns
@@ -525,28 +543,70 @@ const TableComponent = ({
           const currentPath = location.pathname.toLowerCase();
           const isApplicationsPage = currentPath.includes('/applications');
           const isMembersPage = currentPath.includes('/members');
-
           switch (col.title) {
             case "Full Name":
+              // Check for crm:member:read permission on Summary page
+              const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
+              const hasMemberReadPermission = hasPermission('crm:member:read');
+              // On Summary page, only show link if user has crm:member:read permission
+              if (isFullNameOnSummaryPage && !hasMemberReadPermission) {
+                return (
+                  <span style={{ textOverflow: "ellipsis" }}>
+                    {text}
+                  </span>
+                );
+              }
+
+              // Otherwise show the link (for all other pages or if user has permission)
+              const profileIdForUrl = isMembersPage
+                ? record?.profileId || record?._id
+                : record?._id;
+              const subscriptionIdForUrl =
+                isMembersPage && record?.profileId && record?._id
+                  ? record._id
+                  : undefined;
+
               return (
                 <Link
-                  to="/Details"
+                  to={{
+                    pathname: "/Details",
+                    search: buildDetailsSearch(profileIdForUrl, subscriptionIdForUrl),
+                  }}
                   state={{
                     search: screenName,
                     name: record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
+                    applicationId: record?.applicationId || record?.ApplicationId,
+                    ...(isMembersPage &&
+                    record?.profileId &&
+                    record?._id && {
+                      subscriptionId: record._id,
+                    }),
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    const idToUse = isMembersPage ? (record?.profileId || record?._id) : record?._id;
+                    const profileId = record?.profileId;
+                    const subscriptionRowId = record?._id;
+                    const idToUse = isMembersPage
+                      ? profileId || subscriptionRowId
+                      : record?._id;
                     dispatch(getProfileDetailsById(idToUse));
-                    dispatch(
-                      getSubscriptionByProfileId({
-                        profileId: idToUse,
-                        isCurrent: true,
-                      })
-                    );
+                    if (
+                      isMembersPage &&
+                      profileId &&
+                      subscriptionRowId
+                    ) {
+                      dispatch(getSubscriptionById(subscriptionRowId));
+                    } else {
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId: idToUse,
+                          isCurrent: true,
+                        })
+                      );
+                    }
+                    getProfile([record], index);
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
@@ -557,22 +617,47 @@ const TableComponent = ({
             case "Subscription Status": // <-- NEW CASE
               return (
                 <Link
-                  to="/Details"
+                  to={{
+                    pathname: "/Details",
+                    search: buildDetailsSearch(
+                      record?.profileId || record?._id,
+                      isMembersPage && record?.profileId && record?._id
+                        ? record._id
+                        : undefined
+                    ),
+                  }}
                   state={{
                     search: screenName,
                     name: record?.user?.userFullName || record?.fullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
+                    applicationId: record?.applicationId || record?.ApplicationId,
+                    ...(isMembersPage &&
+                    record?.profileId &&
+                    record?._id && {
+                      subscriptionId: record._id,
+                    }),
                   }}
                   onClick={() => {
                     handleRowClick(record, index);
-                    dispatch(
-                      getSubscriptionByProfileId({
-                        profileId: record?.profileId,
-                        isCurrent: true,
-                      })
-                    );
-                    dispatch(getProfileDetailsById(record?.profileId));
+                    const profileId = record?.profileId;
+                    const subscriptionRowId = record?._id;
+                    dispatch(getProfileDetailsById(profileId));
+                    if (
+                      isMembersPage &&
+                      profileId &&
+                      subscriptionRowId
+                    ) {
+                      dispatch(getSubscriptionById(subscriptionRowId));
+                    } else if (profileId) {
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId,
+                          isCurrent: true,
+                        })
+                      );
+                    }
+                    getProfile([record], index);
                     // dispatch(getProfileDetailsById(record?._id))
                   }}
                   style={{
@@ -633,6 +718,9 @@ const TableComponent = ({
 
             case "Membership Category":
               const isPotentialDuplicate = record?.personalDetails?.duplicateDetection?.isPotentialDuplicate;
+              const hasProfileRead =  hasPermission('crm:access')
+            
+              const isSummaryPage = currentPath.includes("summary");
 
               let content;
 
@@ -643,8 +731,7 @@ const TableComponent = ({
                     onClick={(e) => {
                       e.stopPropagation();
                       const { applicationStatus } = record || {};
-                      const id = record?.applicationId || record?._id || record?.id;
-
+                      const id = record?.applicationId;
                       if (applicationStatus === "Draft") {
                         dispatch(
                           getApplicationById({
@@ -652,14 +739,19 @@ const TableComponent = ({
                             draftId: id,
                           })
                         );
-                        navigate("/applicationMgt", {
-                          state: { isEdit: true },
+                        navigate({
+                          pathname: "/applicationMgt",
+                          search: buildApplicationMgtSearch({ draftId: id, edit: true }),
                         });
                       } else {
                         if (id) {
                           dispatch(getApplicationById({ id: id }));
-                          navigate("/applicationMgt", {
-                            state: { isEdit: true },
+                          navigate({
+                            pathname: "/applicationMgt",
+                            search: buildApplicationMgtSearch({
+                              applicationId: id,
+                              edit: true,
+                            }),
                           });
                         } else {
                           console.error("No valid application ID found in record:", record);
@@ -669,6 +761,38 @@ const TableComponent = ({
                   >
                     <span style={{ textOverflow: "ellipsis" }}>{text}</span>
                   </span>
+                );
+              } else if (isSummaryPage && hasProfileRead) {
+                const summaryProfileId = record?.profileId || record?._id;
+                content = (
+                  <Link
+                    to={{
+                      pathname: "/Details",
+                      search: buildDetailsSearch(summaryProfileId, undefined),
+                    }}
+                    state={{
+                      search: screenName,
+                      name: record?.user?.userFullName || record?.fullName,
+                      code: record?.personalDetails?.membershipNo || record?.regNo,
+                      memberId: record?.personalDetails?.membershipNo || record?.membershipNumber || record?.regNo || record?._id,
+                      applicationId: record?.applicationId || record?.ApplicationId,
+                    }}
+                    onClick={() => {
+                      handleRowClick(record, index);
+                      const idToUse = record?.profileId || record?._id;
+                      dispatch(getProfileDetailsById(idToUse));
+                      dispatch(
+                        getSubscriptionByProfileId({
+                          profileId: idToUse,
+                          isCurrent: true,
+                        })
+                      );
+                      getProfile([record], index);
+                    }}
+                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
+                  >
+                    <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  </Link>
                 );
               } else if (isMembersPage) {
                 content = (
@@ -816,7 +940,7 @@ const TableComponent = ({
               return (
                 <span
                   style={{ textOverflow: "ellipsis" }}
-                  onClick={() => handleRowClick(record, index)}
+                  onClick={() => !disableDefaultRowClick && handleRowClick(record, index)}
                 >
                   {formatDateOnly(text)}
                 </span>
@@ -826,7 +950,7 @@ const TableComponent = ({
               return (
                 <span
                   style={{ textOverflow: "ellipsis" }}
-                  onClick={() => handleRowClick(record, index)}
+                  onClick={() => !disableDefaultRowClick && handleRowClick(record, index)}
                 >
                   {text}
                 </span>
@@ -1013,7 +1137,7 @@ const TableComponent = ({
           }}
         >
           <Table
-            rowKey={(record) => record.key || record.id}
+            rowKey={(record) => record.applicationId || record.key || record.id || record._id}
             rowClassName={() => ""}
             loading={isGrideLoading}
             components={components}
@@ -1033,7 +1157,7 @@ const TableComponent = ({
             }}
             // **UPDATED: Row click handler uses the prop-controlled function**
             onRow={(record, index) => ({
-              onClick: () => handleRowClick(record, index),
+              onClick: () => !disableDefaultRowClick && handleRowClick(record, index),
             })}
           />
           <div

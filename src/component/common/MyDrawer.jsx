@@ -86,14 +86,17 @@ function MyDrawer({
   extra,
   className,
   rootClassName,
+  isDisable: isDisableProp, // Added prop override
 }) {
   const {
     selectLokups,
     lookupsForSelect,
     // contactTypes,
     disableFtn,
-    isDisable,
+    isDisable: isDisableContext, // Renamed context variable
   } = useTableColumns();
+
+  const isDisable = isDisableProp !== undefined ? isDisableProp : isDisableContext;
   const { excelData, selectedRowIndex, selectedRowData } =
     useContext(ExcelContext);
   const dispatch = useDispatch();
@@ -699,7 +702,7 @@ function MyDrawer({
         extra || (
           <div className="d-flex flex-wrap align-items-center gap-3">
             {/* Contact Button */}
-            {isContact && (
+            {/* {isContact && (
               <Button
                 onClick={() => setcontactDrawer(!contactDrawer)}
                 className="butn"
@@ -707,7 +710,7 @@ function MyDrawer({
               >
                 Add IRO
               </Button>
-            )}
+            )} */}
 
             {/* Add Member */}
             {isAddMemeber && (

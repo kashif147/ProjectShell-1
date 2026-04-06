@@ -6,16 +6,23 @@
   padding: 0;
   height: calc(100vh - 120px);
   max-height: calc(100vh - 120px);
+  flex-shrink: 0;
 }
 
 .member-header-single-card {
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  overflow-y: auto;
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
   display: flex;
   flex-direction: column;
   height: 100%;
+}
+
+.member-header-single-card::-webkit-scrollbar {
+  display: none; /* Chrome, Safari and Opera */
 }
 
 /* Profile Header Top Section */
@@ -108,6 +115,11 @@
 .member-status-badge.member-status-deceased {
   background-color: #ffd591;
   color: #ad6800;
+}
+
+.member-status-badge.member-status-resigned {
+  background-color: #ff4d4f;
+  color: white;
 }
 
 /* Contact Information Section - on blue background */
@@ -452,9 +464,7 @@
   border-color: #ff4d4f;
 }
 
-.cancel-membership-modal
-  .ant-modal-footer
-  .ant-btn-primary:hover:not(:disabled) {
+.cancel-membership-modal .ant-modal-footer .ant-btn-primary:hover:not(:disabled) {
   background-color: #ff7875;
   border-color: #ff7875;
 }

@@ -556,6 +556,7 @@ function SimpleMenu({
       <ContactDrawer
         open={contactDrawer}
         onClose={() => setcontactDrawer(false)}
+        title="IRO Assignment"
       />
       <UndoCancellationModal
         visible={isUndoCancelModalVisible}
