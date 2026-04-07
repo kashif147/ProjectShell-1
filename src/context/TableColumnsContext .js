@@ -382,7 +382,7 @@ const staticColumns = {
       width: 150,
     },
     {
-      dataIndex: ["personalInfo", "forename"],
+      dataIndex: "fullName",
       // dataIndex: ["user", "userFullName"],
       title: "Full Name",
       ellipsis: true,
@@ -458,6 +458,10 @@ const staticColumns = {
       isGride: true,
       isVisible: true,
       width: 180,
+      render: (_, record) =>
+        record?.membershipCategory ||
+        record?.professionalDetails?.membershipCategory ||
+        "",
     },
 
     // ======================= PROFESSIONAL =======================

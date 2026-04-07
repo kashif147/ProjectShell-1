@@ -545,6 +545,13 @@ const TableComponent = ({
           const isMembersPage = currentPath.includes('/members');
           switch (col.title) {
             case "Full Name":
+              const resolvedFullName =
+                text ||
+                record?.user?.userFullName ||
+                record?.fullName ||
+                record?.fullname ||
+                record?.personalInfo?.fullName ||
+                `${record?.personalInfo?.forename || ""} ${record?.personalInfo?.surname || ""}`.trim();
               // Check for crm:member:read permission on Summary page
               const isFullNameOnSummaryPage = location.pathname.toLowerCase().includes('/summary');
               const hasMemberReadPermission = hasPermission('crm:member:read');
@@ -552,7 +559,7 @@ const TableComponent = ({
               if (isFullNameOnSummaryPage && !hasMemberReadPermission) {
                 return (
                   <span style={{ textOverflow: "ellipsis" }}>
-                    {text}
+                    {resolvedFullName}
                   </span>
                 );
               }
@@ -574,7 +581,7 @@ const TableComponent = ({
                   }}
                   state={{
                     search: screenName,
-                    name: record?.user?.userFullName || record?.fullName,
+                    name: resolvedFullName,
                     code: record?.personalDetails?.membershipNo || record?.regNo,
                     memberId: record?.personalDetails?.membershipNo || record?.membershipNumber,
                     applicationId: record?.applicationId || record?.ApplicationId,
@@ -610,7 +617,7 @@ const TableComponent = ({
                   }}
                   style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
                 >
-                  <span style={{ textOverflow: "ellipsis" }}>{text}</span>
+                  <span style={{ textOverflow: "ellipsis" }}>{resolvedFullName}</span>
                 </Link>
               );
 
