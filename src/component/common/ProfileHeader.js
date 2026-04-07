@@ -25,7 +25,7 @@ import { useSelector, useDispatch } from "react-redux";
 import axios from "axios";
 import MyAlert from "./MyAlert"; // Assuming you have this component
 import UndoCancellationModal from "./UndoCancellationModal";
-import { centsToEuro } from "../../utils/Utilities";
+import { centsToEuro, formatMobileNumber } from "../../utils/Utilities";
 import { getProfileDetailsById } from "../../features/profiles/ProfileDetailsSlice";
 import {
   getSubscriptionByProfileId,
@@ -337,7 +337,7 @@ function ProfileHeader({
         ? getSafe(source, "contactInfo.workEmail")
         : getSafe(source, "contactInfo.personalEmail", "");
 
-    const phone = getSafe(source, "contactInfo.mobileNumber", "");
+    const phone = formatMobileNumber(getSafe(source, "contactInfo.mobileNumber", ""));
 
     // Professional Info
     const grade = getSafe(source, "professionalDetails.grade", " ");

@@ -8,6 +8,7 @@ import axios from "axios";
 import { getSubscriptionByProfileId } from "../../features/subscription/profileSubscriptionSlice";
 import { searchProfiles } from "../../features/profiles/SearchProfile";
 import { buildDetailsSearch } from "../../utils/detailsRoute";
+import { formatMobileNumber } from "../../utils/Utilities";
 
 // Debounce hook
 const useDebounce = (value, delay) => {
@@ -183,7 +184,7 @@ const MemberSearch = ({
 
                   {/* Row 2: Mobile Number, Address */}
                   <div style={{ fontSize: "13px", color: "#555" }}>
-                    📱 {member.contactInfo?.mobileNumber || 'No phone'} •
+                    📱 {member.contactInfo?.mobileNumber ? formatMobileNumber(member.contactInfo.mobileNumber) : 'No phone'} •
                     📍 {member.contactInfo?.fullAddress || 'No address'}
                   </div>
 

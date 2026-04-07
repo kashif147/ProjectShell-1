@@ -257,38 +257,60 @@ export function formatDateOnly(dateString) {
 export function formatMobileNumber(value) {
   if (!value) return "-";
 
-  // Clean the string - keep only digits and +
   let cleaned = value.toString().replace(/[^\d+]/g, "");
 
-  // Normalize international format
   if (cleaned.startsWith("00")) {
     cleaned = "+" + cleaned.substring(2);
   }
 
-  // If it's a local Irish number starting with 0 followed by 2 digits then more
-  // (e.g., 0871234567 or 0761234567)
   if (cleaned.startsWith("0") && !cleaned.startsWith("00")) {
     cleaned = "+353" + cleaned.substring(1);
   }
 
-  // If it starts with 353 but no +, add one
   if (cleaned.startsWith("353")) {
     cleaned = "+" + cleaned;
   }
 
-  // Handle +3530... cases (strip the extra 0)
   if (cleaned.startsWith("+3530")) {
     cleaned = "+353" + cleaned.substring(5);
   }
 
-  // Check if it matches the expected Irish format: +353 followed by 9 digits
-  const irishMatch = cleaned.match(/^\+353(\d{2})(\d{3})(\d{4})$/);
-  if (irishMatch) {
-    return `+353 ${irishMatch[1]} ${irishMatch[2]} ${irishMatch[3]}`;
+  if (!cleaned.startsWith("+")) {
+    return value;
   }
 
-  // If no match, return cleaned or original if it's already mostly okay
-  return cleaned.startsWith("+") ? cleaned : value;
+  const digits = cleaned.slice(1).replace(/\D/g, "");
+  if (!digits) return cleaned;
+
+  let countryLen = 0;
+  for (let i = 1; i <= 4; i += 1) {
+    const localLen = digits.length - i;
+    if (localLen === 9 || localLen === 10) {
+      countryLen = i;
+      break;
+    }
+  }
+
+  if (!countryLen) {
+    countryLen = Math.min(3, Math.max(1, digits.length - 1));
+  }
+
+  const countryCode = `+${digits.slice(0, countryLen)}`;
+  const local = digits.slice(countryLen);
+
+  if (!local) return countryCode;
+
+  if (local.length === 9) {
+    return `${countryCode} ${local.slice(0, 2)} ${local.slice(2, 5)} ${local.slice(5, 9)}`;
+  }
+
+  if (local.length === 10) {
+    return `${countryCode} ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6, 10)}`;
+  }
+
+  if (local.length <= 3) return `${countryCode} ${local}`;
+  if (local.length <= 6) return `${countryCode} ${local.slice(0, 3)} ${local.slice(3)}`;
+  return `${countryCode} ${local.slice(0, 3)} ${local.slice(3, 6)} ${local.slice(6)}`;
 }
 
 function base64URLEncode(buffer) {
