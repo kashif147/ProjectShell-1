@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from "react";
+import React, { useMemo, useState, useEffect } from "react";
 import { Menu, Tooltip, Button } from "antd";
 import {
   subscriptionItems,
@@ -11,15 +11,17 @@ import {
   issuesItems,
   eventsItems,
 } from "../../constants/SideNavWithAuth.js";
-import { useSelector } from "react-redux";
+import { useSelector, useDispatch } from "react-redux";
 import "../../styles/Sidebar.css";
 import { useNavigate, useLocation, Link } from "react-router-dom";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import { PushpinOutlined, PushpinFilled } from "@ant-design/icons";
+import { updateMenuLbl } from "../../features/MenuLblSlice";
 // import policy from "../../utils/react-policy-client";
 
 const Sidebar = () => {
   // state
+  const dispatch = useDispatch();
   const menuLblState = useSelector((state) => state.menuLbl);
   const location = useLocation();
   const navigate = useNavigate();
@@ -33,6 +35,50 @@ const Sidebar = () => {
 
   // Used to determine which module is currently active.
   const activeKey = Object.keys(menuLblState).find((key) => menuLblState[key]);
+
+  useEffect(() => {
+    const path = location.pathname;
+    const financePaths = [
+      "/onlinePayment",
+      "/Deductions",
+      "/StandingOrders",
+      "/Cheque",
+      "/Import",
+      "/Refunds",
+      "/write-offs",
+      "/DirectDebitAuthorization",
+      "/DirectDebit",
+      "/DirectDebitBatchDetails",
+      "/Reconciliation",
+      "/BatchMemberSummary",
+      "/Batches",
+    ];
+
+    const isFinanceRoute = financePaths.some((p) => path.startsWith(p));
+    if (isFinanceRoute && activeKey !== "Finance") {
+      dispatch(updateMenuLbl({ key: "Finance", value: true }));
+      return;
+    }
+
+    const correspondencePaths = [
+      "/CorrespondenceDashboard",
+      "/Email",
+      "/InAppNotifications",
+      "/Sms",
+      "/Notes",
+      "/Letters",
+      "/CorspndncDetail",
+      "/CorrespondencesSummary",
+      "/CommunicationBatchDetail",
+    ];
+
+    const isCorrespondenceRoute = correspondencePaths.some((p) =>
+      path.startsWith(p)
+    );
+    if (isCorrespondenceRoute && activeKey !== "Correspondence") {
+      dispatch(updateMenuLbl({ key: "Correspondence", value: true }));
+    }
+  }, [location.pathname, activeKey, dispatch]);
 
   // These are the menu links for various modules, imported from a constants file
   const itemsMap = useMemo(
@@ -380,6 +426,15 @@ const Sidebar = () => {
     const currentPath = Object.keys(routeKeyMap).find((route) =>
       location.pathname.startsWith(route)
     );
+
+    if (location.pathname.startsWith("/BatchMemberSummary")) {
+      const batchMenuFromState =
+        location.state?.sidebarMenu || location.state?.search || "";
+      if (batchMenuFromState === "Online Payments") return "Online Payments";
+      if (batchMenuFromState === "Deductions") return "Deductions";
+      if (batchMenuFromState === "Standing Orders") return "Standing Orders";
+      return "";
+    }
 
     if (!currentPath) return "";
 

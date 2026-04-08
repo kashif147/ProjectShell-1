@@ -1,14 +1,32 @@
-import React, { useEffect, useState } from "react";
-import MyTable from "../../component/common/MyTable";
+import React, { useEffect, useMemo, useState } from "react";
 import { Table, Tag, Dropdown, Button, message } from "antd"; // Add message here
 import { MoreOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
+import axios from "axios";
 import { fetchStripePayments } from "../../features/AccountSlice";
 import RefundDrawer from "../../component/finanace/RefundDrawer";
 import { formatCurrency } from "../../utils/Utilities";
 import { formatMobileNumber } from "../../utils/Utilities";
 import { formatDateOnly } from "../../utils/Utilities";
+import { buildDetailsSearch } from "../../utils/detailsRoute";
+import { buildApplicationMgtSearch } from "../../utils/applicationMgtRoute";
+
+const APPROVED_MEMBERSHIP_STATUSES = new Set([
+  "active",
+  "resigned",
+  "cancelled",
+  "suspended",
+  "archived",
+]);
+
+function isApprovedRow(row) {
+  const status = String(row?.membershipStatus || "").trim().toLowerCase();
+  const hasMembershipNo = String(
+    row?.membershipNumber || row?.memberId || ""
+  ).trim() !== "";
+  return hasMembershipNo || APPROVED_MEMBERSHIP_STATUSES.has(status);
+}
 
 const OnlinePayment = () => {
   const dispatch = useDispatch();
@@ -22,6 +40,29 @@ const OnlinePayment = () => {
     dispatch(fetchStripePayments());
   }, [dispatch]);
 
+  const normalizedStripePayments = useMemo(() => {
+    if (!Array.isArray(stripePayments)) return [];
+
+    return stripePayments.map((row) => ({
+      isApproved: isApprovedRow(row),
+      ...row,
+      applicationId: row?.applicationId || row?.ApplicationId || row?.appId || null,
+      memberNo: isApprovedRow(row)
+        ? row?.membershipNumber || row?.memberId || row?.["Member No"] || "-"
+        : row?.applicationId || row?.ApplicationId || row?.appId || "-",
+      category: row?.category || row?.membershipCategory || "-",
+      membershipStatus: row?.membershipStatus || row?.memberhsipStatus || "-",
+      renewalDate: row?.renewalDate || row?.RenewalDate || null,
+      billingCycle: row?.billingCycle || "-",
+      email: row?.email || row?.normalizedEmail || "-",
+      phone: row?.phone || row?.mobileNumber || null,
+      joinDate: row?.joinDate || row?.JoinDate || null,
+      paymentStatus: row?.settlement?.status || "-",
+      transactionId: row?.transactionId || row?.docNo || row?.id || row?._id,
+      fullName: row?.fullName || "-",
+    }));
+  }, [stripePayments]);
+
   // Row selection configuration
   const rowSelection = {
     selectedRowKeys,
@@ -32,7 +73,7 @@ const OnlinePayment = () => {
       console.log("Selected Rows:", selectedRows);
     },
     getCheckboxProps: (record) => ({
-      disabled: record?.status?.toLowerCase() === "refunded",
+      disabled: record?.paymentStatus?.toLowerCase() === "refunded",
       name: record?.transactionId,
     }),
   };
@@ -54,9 +95,79 @@ const OnlinePayment = () => {
     // Here you can dispatch an action to process the refund
     // dispatch(processRefund({ ...refundData, record: selectedRecord }));
 
-    message.success(`Refund of ${refundData.refund} processed successfully for ${selectedRecord?.memberName}`);
+    message.success(`Refund of ${refundData.refund} processed successfully for ${selectedRecord?.fullName || selectedRecord?.memberNo}`);
     setRefundDrawerOpen(false);
     setSelectedRecord(null);
+  };
+
+  const handleOpenMemberFinance = async (record) => {
+    const approved = !!record?.isApproved;
+    const memberOrApplicationNo = String(record?.memberNo || "").trim();
+    if (!memberOrApplicationNo || memberOrApplicationNo === "-") {
+      message.warning(
+        approved
+          ? "Membership No is not available for this row."
+          : "Application ID is not available for this row."
+      );
+      return;
+    }
+
+    const applicationId = String(
+      record?.applicationId || record?.ApplicationId || record?.appId || ""
+    ).trim();
+    if (!approved) {
+      if (!applicationId) {
+        message.warning("Application ID is not available for this row.");
+        return;
+      }
+      const appUrl = `/applicationMgt${buildApplicationMgtSearch({
+        applicationId,
+        edit: true,
+      })}`;
+      window.open(appUrl, "_blank", "noopener,noreferrer");
+      return;
+    }
+
+    try {
+      const token = localStorage.getItem("token");
+      const baseUrl = process.env.REACT_APP_PROFILE_SERVICE_URL;
+      const response = await axios.get(
+        `${baseUrl}/profile/search?q=${encodeURIComponent(memberOrApplicationNo)}`,
+        { headers: { Authorization: `Bearer ${token}` } }
+      );
+      const results = response?.data?.data?.results || [];
+      const matchedProfile =
+        results.find(
+          (item) =>
+            String(item?.membershipNumber || "").trim().toLowerCase() ===
+            memberOrApplicationNo.toLowerCase()
+        ) || results[0];
+
+      if (!matchedProfile?._id) {
+        message.warning(`No member file found for ${memberOrApplicationNo}.`);
+        return;
+      }
+
+      const detailsParams = new URLSearchParams(
+        buildDetailsSearch(matchedProfile._id).replace("?", "")
+      );
+      detailsParams.set("activeTab", "2");
+      detailsParams.set(
+        "memberId",
+        matchedProfile.membershipNumber || memberOrApplicationNo
+      );
+      if (record?.transactionId) {
+        detailsParams.set("transactionId", String(record.transactionId));
+      }
+      window.open(
+        `/Details?${detailsParams.toString()}`,
+        "_blank",
+        "noopener,noreferrer"
+      );
+    } catch (error) {
+      console.error("Failed to open member finance tab:", error);
+      message.error("Unable to open member file. Please try again.");
+    }
   };
 
   const getMenuItems = (record) => [
@@ -79,8 +190,8 @@ const OnlinePayment = () => {
 
   const columns = [
     {
-      title: "Member No",
-      dataIndex: "Member No",
+      title: "Member / Application No",
+      dataIndex: "memberNo",
       key: "memberNo",
       ellipsis: true,
       width: 250,
@@ -102,7 +213,22 @@ const OnlinePayment = () => {
       ellipsis: true,
       width: 200,
       sorter: true,
-      render: (text) => text || "-",
+      render: (text, record) => {
+        if (!text || text === "-") return "-";
+        return (
+          <a
+            href="#"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              handleOpenMemberFinance(record);
+            }}
+            style={{ color: "#1677ff", textDecoration: "underline", cursor: "pointer" }}
+          >
+            {text}
+          </a>
+        );
+      },
     },
     {
       title: "Membership Status",
@@ -118,11 +244,11 @@ const OnlinePayment = () => {
       key: "renewalDate",
       ellipsis: true,
       width: 150,
-      render: (text) => text || "-",
+      render: (date) => (date ? formatDateOnly(date) : "-"),
     },
     {
       title: "Transaction ID",
-      dataIndex: "docNo",
+      dataIndex: "transactionId",
       key: "docNo",
       ellipsis: true,
       width: 180,
@@ -211,7 +337,7 @@ const OnlinePayment = () => {
       key: "joinDate",
       ellipsis: true,
       width: 150,
-      render: (text) => text || "-",
+      render: (date) => (date ? formatDateOnly(date) : "-"),
     },
 
     // ✅ KEEPING YOUR ORIGINAL 3 DOT MENU
@@ -255,11 +381,11 @@ const OnlinePayment = () => {
         }}
       >
         <Table
-          dataSource={stripePayments}
+          dataSource={normalizedStripePayments}
           columns={columns}
           loading={loading}
           rowSelection={rowSelection}
-          rowKey={(record) => record.id || record.transactionId}
+          rowKey={(record) => record.id || record.transactionId || record._id}
           scroll={{ x: "max-content" }}
           pagination={{
             pageSize: 10,

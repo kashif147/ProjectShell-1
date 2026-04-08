@@ -50,6 +50,9 @@ function AppTabs() {
   const [searchParams] = useSearchParams();
   const profileIdParam = searchParams.get("profileId") || "";
   const subscriptionIdParam = searchParams.get("subscriptionId") || "";
+  const activeTabParam = String(searchParams.get("activeTab") || "")
+    .trim()
+    .toLowerCase();
 
   useEffect(() => {
     if (!profileIdParam) return;
@@ -83,6 +86,14 @@ function AppTabs() {
   const userApplications = useSelector((state) => state.userApplications?.applications || []);
   const { ProfileSubHistory, ProfileSubHistoryLoading } = useSelector((state) => state.profileSubscription || {});
   const { profileApplications, loading: profileApplicationsLoading } = useSelector((state) => state.profileApplications || {});
+
+  useEffect(() => {
+    const requestedTab = String(location.state?.activeTab || "").trim().toLowerCase();
+    const resolvedTab = requestedTab || activeTabParam;
+    if (resolvedTab === "2" || resolvedTab === "finance") {
+      setActiveKey("2");
+    }
+  }, [location.state, activeTabParam]);
 
   const applicationColumns = columns?.Applications?.map((col) => {
     // Correctly check if it's the Membership Category column

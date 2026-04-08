@@ -144,7 +144,7 @@ const Deductions = () => {
             }}
             onClick={() =>
               navigate(`/BatchMemberSummary/${record._id}`, {
-                state: { batchName: text },
+                state: { batchName: text, sidebarMenu: "Deductions" },
               })
             }
           >
