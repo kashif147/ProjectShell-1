@@ -147,7 +147,7 @@ const StandingOrders = () => {
             }}
             onClick={() =>
               navigate(`/BatchMemberSummary/${record._id}`, {
-                state: { batchName: text },
+                state: { batchName: text, sidebarMenu: "Standing Orders" },
               })
             }
           >

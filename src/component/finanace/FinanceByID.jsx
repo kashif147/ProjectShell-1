@@ -2,7 +2,7 @@ import React, { useState, useEffect, useMemo } from "react";
 import { Input, Select, DatePicker, Button, Card, Row, Col, Spin, Empty, notification } from "antd";
 import CommonPopConfirm from "../common/CommonPopConfirm";
 import dayjs from "dayjs";
-import { useLocation } from "react-router-dom";
+import { useLocation, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import MyTable from "../common/MyTable";
@@ -15,10 +15,15 @@ const { RangePicker } = DatePicker;
 
 const TransactionHistory = () => {
   const location = useLocation();
+  const [searchParams] = useSearchParams();
   const { profileDetails } = useSelector((state) => state.profileDetails || {});
 
   // Try to get memberId from location state first, then fallback to Redux profileDetails
-  const memberId = location.state?.memberId || profileDetails?.membershipNumber || profileDetails?.regNo;
+  const memberId =
+    location.state?.memberId ||
+    searchParams.get("memberId") ||
+    profileDetails?.membershipNumber ||
+    profileDetails?.regNo;
 
   console.log("FinanceByID - location.state:", location.state);
   console.log("FinanceByID - profileDetails:", profileDetails);
@@ -32,12 +37,38 @@ const TransactionHistory = () => {
   const [dateRange, setDateRange] = useState([]);
   const [amountRange, setAmountRange] = useState("All");
   const [selectedRowKeys, setSelectedRowKeys] = useState([]);
+  const targetTransactionId = String(
+    location.state?.transactionId || searchParams.get("transactionId") || ""
+  )
+    .trim()
+    .toLowerCase();
 
   useEffect(() => {
     if (memberId) {
       fetchLedgerData();
     }
   }, [memberId]);
+
+  useEffect(() => {
+    if (!targetTransactionId || !Array.isArray(data) || !data.length) return;
+
+    const matchedRow = data.find((item) => {
+      const candidates = [
+        item?.docNo,
+        item?.reference,
+        item?.transactionId,
+        item?.id,
+        item?._id,
+      ]
+        .filter(Boolean)
+        .map((v) => String(v).trim().toLowerCase());
+
+      return candidates.includes(targetTransactionId);
+    });
+
+    if (!matchedRow) return;
+
+  }, [data, location.state?.transactionId, searchParams, targetTransactionId]);
 
   const fetchLedgerData = async () => {
     setLoading(true);

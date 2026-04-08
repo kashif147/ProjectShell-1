@@ -1507,6 +1507,14 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             navigate(`/BatchMemberSummary/${result._id || result.id}`, {
               state: {
                 batchName: result.description,
+                sidebarMenu:
+                  nav === "/Deductions"
+                    ? "Deductions"
+                    : nav === "/StandingOrders"
+                      ? "Standing Orders"
+                      : nav === "/onlinePayment"
+                        ? "Online Payments"
+                        : "",
               },
             });
             setIsBatchOpen(!isBatchOpen);

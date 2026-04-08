@@ -414,7 +414,8 @@ function ApplicationMgtDrawer({
     }
   }, [open, application, applications]);
 
-  const showLoader = applicationsLoading || loading;
+  // Keep form stable while switching records; only block on the very first load.
+  const showLoader = loading && !application;
   const { lookupsForSelect, isDisable, disableFtn } = useTableColumns();
 
   const dispatch = useDispatch();
