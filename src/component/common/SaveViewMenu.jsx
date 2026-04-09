@@ -58,22 +58,25 @@ const SaveViewMenu = ({ className, style }) => {
 
   // Application screens map to 'application' templateType
   const screenMapping = {
-    'applications': 'application',
-    'members': 'member',
-    'summary': 'Profile',
+    applications: "application",
+    members: "member",
+    summary: "profile",
     // add more mappings as needed
   };
 
   const activeScreen = getScreenFromPath();
   const targetTemplateType = screenMapping[screenNameForApi] || screenNameForApi;
+  const normalizeTemplateType = (type) => String(type || "").trim().toLowerCase();
+  const isTemplateForCurrentType = (template) =>
+    normalizeTemplateType(template?.templateType) === normalizeTemplateType(targetTemplateType);
 
   const transformFiltersForApply = (apiFilters) => {
     return transformFiltersFromApi(apiFilters, columns[activeScreen] || []);
   };
 
   useEffect(() => {
-    dispatch(getGridTemplates());
-  }, [dispatch]);
+    dispatch(getGridTemplates({ type: targetTemplateType }));
+  }, [dispatch, targetTemplateType]);
 
   // Consolidate Initialization Logic: Reset and Apply Template on Screen Change
   const lastScreen = React.useRef(null);
@@ -104,15 +107,15 @@ const SaveViewMenu = ({ className, style }) => {
 
     // 2. Fall back to user default or system default
     const systemView =
-      templates.systemDefault?.templateType === targetTemplateType
+      isTemplateForCurrentType(templates.systemDefault)
         ? templates.systemDefault
         : templates.userTemplates?.find(
-          (t) => t.systemDefault && t.templateType === targetTemplateType
+          (t) => t.systemDefault && isTemplateForCurrentType(t)
         ) || null;
 
     const userViews =
       templates.userTemplates?.filter(
-        (t) => t.templateType === targetTemplateType
+        (t) => isTemplateForCurrentType(t)
       ) || [];
 
     const defaultView = userViews.find((t) => t.isDefault);
@@ -169,7 +172,7 @@ const SaveViewMenu = ({ className, style }) => {
       .unwrap()
       .then(() => {
         MyAlert("success", "Success", `Default view ${isDefault ? "set" : "removed"} successfully`);
-        dispatch(getGridTemplates()); // Refresh the list to show new default star
+        dispatch(getGridTemplates({ type: targetTemplateType })); // Refresh the list to show new default star
       })
       .catch((error) => {
         console.error("Error setting default view:", error);
@@ -189,7 +192,7 @@ const SaveViewMenu = ({ className, style }) => {
           updateSelectedTemplate(targetTemplateType, null);
         }
 
-        dispatch(getGridTemplates()); // This will trigger the useEffect initialization
+        dispatch(getGridTemplates({ type: targetTemplateType })); // This will trigger the useEffect initialization
       })
       .catch((error) => {
         console.error("Error deleting view:", error);
@@ -237,10 +240,12 @@ const SaveViewMenu = ({ className, style }) => {
       setViewName("");
 
       // 1. Refresh the templates list first and WAIT for it
-      const templatesResponse = await dispatch(getGridTemplates()).unwrap();
+      const templatesResponse = await dispatch(getGridTemplates({ type: targetTemplateType })).unwrap();
 
       // 2. Find the newly saved template in the refreshed list
-      const savedTemplate = templatesResponse.userTemplates?.find(t => t.name === viewName && t.templateType === targetTemplateType);
+      const savedTemplate = templatesResponse.userTemplates?.find(
+        (t) => t.name === viewName && isTemplateForCurrentType(t)
+      );
 
       if (savedTemplate) {
         handleApplyView(savedTemplate); // This will update context and filters
@@ -326,10 +331,10 @@ const SaveViewMenu = ({ className, style }) => {
 
           {/* System Default */}
           {(() => {
-            const userViews = templates?.userTemplates?.filter(t => t.templateType === targetTemplateType) || [];
+            const userViews = templates?.userTemplates?.filter((t) => isTemplateForCurrentType(t)) || [];
             const hasUserDefault = userViews.some(t => t.isDefault);
 
-            return templates?.systemDefault && templates.systemDefault.templateType === targetTemplateType &&
+            return templates?.systemDefault && isTemplateForCurrentType(templates.systemDefault) &&
               renderTemplateItem(templates.systemDefault, templates.systemDefault.isDefault || !hasUserDefault);
           })()}
 
@@ -356,7 +361,7 @@ const SaveViewMenu = ({ className, style }) => {
           </div>
 
           {/* User Templates */}
-          {templates?.userTemplates?.filter(t => t.templateType === targetTemplateType).map(template =>
+          {templates?.userTemplates?.filter((t) => isTemplateForCurrentType(t)).map(template =>
             renderTemplateItem(template, template.isDefault)
           )}
         </>

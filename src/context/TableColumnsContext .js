@@ -382,6 +382,15 @@ const staticColumns = {
       width: 150,
     },
     {
+      dataIndex: "isActive",
+      title: "Active",
+      ellipsis: true,
+      isGride: true,
+      isVisible: true,
+      width: 90,
+      render: (value) => (value === true ? "Yes" : value === false ? "No" : "—"),
+    },
+    {
       dataIndex: "fullName",
       // dataIndex: ["user", "userFullName"],
       title: "Full Name",
@@ -5239,30 +5248,75 @@ export const TableColumnsProvider = ({ children }) => {
   const applyTemplate = useCallback((screenName, templateColumns) => {
     if (!screenName || !templateColumns) return;
 
+    const profileTemplateKeys =
+      screenName === "Profile"
+        ? templateColumns.map((k) => String(k).replace(/^profile\./i, ""))
+        : null;
+
+    const normalizedTemplateKeys =
+      screenName === "Profile"
+        ? profileTemplateKeys || []
+        : templateColumns.map((k) => String(k));
+
+    const templateOrderMap = normalizedTemplateKeys.reduce((acc, key, index) => {
+      acc[key] = index;
+      return acc;
+    }, {});
+
+    const profileColumnInTemplate = (dataIndexString) => {
+      if (!profileTemplateKeys) return false;
+      if (profileTemplateKeys.includes(dataIndexString)) return true;
+      if (
+        dataIndexString === "fullName" &&
+        profileTemplateKeys.includes("personalInfo.fullName")
+      ) {
+        return true;
+      }
+      return false;
+    };
+
     setColumns((prevColumns) => {
       const currentScreenColumns = prevColumns[screenName];
       if (!currentScreenColumns) return prevColumns;
 
-      const updatedScreenColumns = currentScreenColumns.map((col) => {
+      const updatedScreenColumns = currentScreenColumns.map((col, originalIndex) => {
         // Handle dataIndex as array or string
         const dataIndexString = Array.isArray(col.dataIndex)
           ? col.dataIndex.join(".")
           : col.dataIndex;
 
-        // Check if this column exists in the template's columns array
-        const isGride = templateColumns.includes(dataIndexString);
+        const isGride =
+          screenName === "Profile"
+            ? profileColumnInTemplate(dataIndexString)
+            : templateColumns.includes(dataIndexString);
 
         return {
           ...col,
           isGride: isGride,
           // 🛡️ Keep isVisible: true so other columns remain in the "add/remove" menu
           isVisible: true,
+          __templateOrderIndex:
+            templateOrderMap[dataIndexString] !== undefined
+              ? templateOrderMap[dataIndexString]
+              : Number.MAX_SAFE_INTEGER,
+          __originalIndex: originalIndex,
         };
       });
 
+      const reorderedScreenColumns = [...updatedScreenColumns]
+        .sort((a, b) => {
+          // Keep selected columns in template order first
+          if (a.__templateOrderIndex !== b.__templateOrderIndex) {
+            return a.__templateOrderIndex - b.__templateOrderIndex;
+          }
+          // Preserve stable order for non-template columns
+          return a.__originalIndex - b.__originalIndex;
+        })
+        .map(({ __templateOrderIndex, __originalIndex, ...rest }) => rest);
+
       return {
         ...prevColumns,
-        [screenName]: updatedScreenColumns,
+        [screenName]: reorderedScreenColumns,
       };
     });
   }, []);

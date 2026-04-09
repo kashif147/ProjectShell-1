@@ -6,10 +6,11 @@ const API_URL = `${process.env.REACT_APP_PROFILE_SERVICE_URL}/templates`;
 // Async thunk to fetch templates
 export const getGridTemplates = createAsyncThunk(
     "templetefiltrsclumnapi/getGridTemplates",
-    async (_, { rejectWithValue }) => {
+    async (params = {}, { rejectWithValue }) => {
         try {
             const token = localStorage.getItem("token");
             const response = await axios.get(API_URL, {
+                params: params?.type ? { type: params.type } : undefined,
                 headers: {
                     Authorization: `Bearer ${token}`,
                 },

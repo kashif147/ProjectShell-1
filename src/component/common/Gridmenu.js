@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import { Dropdown, Menu, Input, Row, Col, Checkbox, Button, Divider, message } from "antd";
-import { SearchOutlined, SaveOutlined } from "@ant-design/icons";
+import { SearchOutlined, SaveOutlined, HolderOutlined } from "@ant-design/icons";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 import { useDispatch, useSelector } from "react-redux";
 import { getGridTemplates, updateGridTemplate } from "../../features/templete/templetefiltrsclumnapi";
@@ -19,6 +19,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
   const { filtersState, applyTemplateFilters } = useFilters();
   const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [draggingIndex, setDraggingIndex] = useState(null);
 
   const handleUpdateTemplate = async () => {
     if (!currentTemplateId) {
@@ -62,7 +63,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     }
   };
 
-  const handleChange = (title, checked, screen, width, e) => {
+  const handleChange = (title, checked, screen, width) => {
     const filtered_columns = columnsForFilter.map(col => {
       if (col.title === title) {
         return { ...col, isGride: checked };
@@ -75,7 +76,7 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
 
     // Update global context
     handleCheckboxFilterChange(title, checked, screen, width);
-  }
+  };
   const [checkBoxData, setcheckBoxData] = useState();
   useEffect(() => {
     setcheckBoxData(columns?.[screenName]);
@@ -105,6 +106,29 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
     setColumnsForFilter(filteredResults);
   };
 
+  const handleDragStart = (index) => {
+    setDraggingIndex(index);
+  };
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+  };
+
+  const handleDrop = (dropIndex) => {
+    if (draggingIndex === null || draggingIndex === dropIndex) {
+      setDraggingIndex(null);
+      return;
+    }
+
+    const reorderedColumns = [...(columnsForFilter || [])];
+    const [moved] = reorderedColumns.splice(draggingIndex, 1);
+    reorderedColumns.splice(dropIndex, 0, moved);
+
+    setColumnsForFilter(reorderedColumns);
+    setColumnsDragbe(reorderedColumns.filter((col) => col.isGride));
+    setDraggingIndex(null);
+  };
+
   const menu = (
     <Menu>
       <Menu.Item key="search" disabled style={{ cursor: 'default', padding: '8px' }}>
@@ -118,31 +142,49 @@ function Gridmenu({ title, screenName, setColumnsDragbe, columnsForFilter, setCo
       <Divider style={{ margin: "4px 0" }} />
       <div style={{ maxHeight: "250px", overflowY: "auto", overflowX: "hidden", padding: '4px 12px' }}>
         <Row>
-          {columnsForFilter?.map((col) =>
+          {columnsForFilter?.map((col, index) =>
             col.isVisible !== false && (
               <Col span={24} key={col.key || col.title || col.dataIndex}>
-                <Checkbox
+                <div
+                  draggable
+                  onDragStart={() => handleDragStart(index)}
+                  onDragOver={handleDragOver}
+                  onDrop={() => handleDrop(index)}
+                  onDragEnd={() => setDraggingIndex(null)}
                   style={{
+                    display: "flex",
+                    alignItems: "center",
+                    gap: 8,
                     marginBottom: "8px",
-                    width: '100%',
-                    fontSize: '13px',
-                    fontWeight: 500,
-                    color: '#444'
+                    opacity: draggingIndex === index ? 0.5 : 1,
+                    cursor: "move",
                   }}
-                  onChange={(e) => {
-                    handleChange(
-                      col?.title,
-                      e.target.checked,
-                      screenName,
-                      col?.width,
-                      e
-                    );
-                  }}
-                  onMouseDown={(e) => e.stopPropagation()} // Stop menu closure on click
-                  checked={col.isGride}
                 >
-                  {col?.title}
-                </Checkbox>
+                  <HolderOutlined
+                    style={{ color: "#999", fontSize: 14, cursor: "grab" }}
+                    onMouseDown={(e) => e.stopPropagation()}
+                  />
+                  <Checkbox
+                    style={{
+                      width: '100%',
+                      fontSize: '13px',
+                      fontWeight: 500,
+                      color: '#444'
+                    }}
+                    onChange={(e) => {
+                      handleChange(
+                        col?.title,
+                        e.target.checked,
+                        screenName,
+                        col?.width
+                      );
+                    }}
+                    onMouseDown={(e) => e.stopPropagation()} // Stop menu closure on click
+                    checked={col.isGride}
+                  >
+                    {col?.title}
+                  </Checkbox>
+                </div>
               </Col>
             ))}
         </Row>
