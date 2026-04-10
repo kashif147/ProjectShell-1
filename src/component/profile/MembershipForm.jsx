@@ -1,24 +1,36 @@
 import React, { useState, useEffect, useMemo } from "react";
-import { Row, Col, Card, Checkbox, Radio, Dropdown } from "antd";
+import { Row, Col, Card, Checkbox, Radio, Dropdown, Button } from "antd";
 import MyInput from "../common/MyInput";
 import MyDatePicker from "../common/MyDatePicker";
 import CustomSelect from "../common/CustomSelect";
+import MyAlert from "../common/MyAlert";
 import { IoBagRemoveOutline } from "react-icons/io5";
 import { CiCreditCard1 } from "react-icons/ci";
 import { BsThreeDotsVertical } from "react-icons/bs";
 import { useSelector, useDispatch } from "react-redux";
+import { useSearchParams } from "react-router-dom";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
 
 import {
   getProfileDetailsById,
-  clearProfileDetails,
+  updateProfileDetails,
 } from "../../features/profiles/ProfileDetailsSlice";
+import {
+  getSubscriptionByProfileId,
+  getSubscriptionById,
+  updateSubscriptionById,
+} from "../../features/subscription/profileSubscriptionSlice";
+import {
+  formDataToProfilePutPayload,
+  formDataToSubscriptionPutPayload,
+} from "../../utils/membershipProfileSaveMappers";
 import utc from "dayjs/plugin/utc";
 import timezone from "dayjs/plugin/timezone";
 import dayjs from "dayjs";
 
 const MembershipForm = ({
   isEditMode = false,
+  setIsEditMode,
   isDeceased: propIsDeceased = false,
   setIsDeceased,
 }) => {
@@ -45,6 +57,10 @@ const MembershipForm = ({
     ProfileSubError,
   } = useSelector((state) => state.profileSubscription);
   const dispatch = useDispatch();
+  const [searchParams] = useSearchParams();
+  const subscriptionIdParam = searchParams.get("subscriptionId") || "";
+  const profileIdParam = searchParams.get("profileId") || "";
+  const [saveLoading, setSaveLoading] = useState(false);
   const {
     titleOptions,
     genderOptions,
@@ -151,6 +167,9 @@ const MembershipForm = ({
     const source = profileDetails || searchAoiRes;
     if (!source) return;
 
+    const subDoc =
+      ProfileSubData?.data?.length > 0 ? ProfileSubData.data[0] : null;
+
     // Initialize form data from profile API
     const initialFormData = {
       // Personal Info
@@ -169,6 +188,7 @@ const MembershipForm = ({
       countyState: source.contactInfo?.countyCityOrPostCode || "",
       eircode: source.contactInfo?.eircode || "",
       country: source.contactInfo?.country || "",
+      nata: Boolean(source.contactInfo?.nATA),
       preferredAddress:
         source.contactInfo?.preferredAddress === "home"
           ? "Home/Personal"
@@ -182,6 +202,7 @@ const MembershipForm = ({
 
       // Professional Details
       studyLocation: source.professionalDetails?.studyLocation || "",
+      discipline: source.professionalDetails?.discipline || "",
       startDate: convertUTCToLocalDate(source.professionalDetails?.startDate),
       graduationDate: convertUTCToLocalDate(
         source.professionalDetails?.graduationDate
@@ -192,6 +213,9 @@ const MembershipForm = ({
       region: source.professionalDetails?.region || "",
       grade: source.professionalDetails?.grade || "",
       otherGrade: source.professionalDetails?.otherGrade || "",
+      otherPrimarySection: source.professionalDetails?.otherPrimarySection || "",
+      otherSecondarySection:
+        source.professionalDetails?.otherSecondarySection || "",
       retiredDate: convertUTCToLocalDate(
         source.professionalDetails?.retiredDate
       ),
@@ -211,7 +235,13 @@ const MembershipForm = ({
       submissionDate: convertUTCToLocalDate(source.submissionDate),
 
       // Preferences
-      consent: source.preferences?.consent,
+      consent: Boolean(source.preferences?.consent),
+      consentSMS: source.preferences?.smsConsent ?? false,
+      consentEmail: source.preferences?.emailConsent ?? false,
+      consentPost: source.preferences?.postalConsent ?? false,
+      consentApp: source.preferences?.appConsent ?? false,
+      consentCorrespondence: Boolean(source.preferences?.consent),
+      agreeDataProtection: source.preferences?.termsAndConditions ?? false,
       valueAddedServices: source.preferences?.valueAddedServices,
 
       // Corn Market
@@ -220,6 +250,7 @@ const MembershipForm = ({
       exclusiveDiscountsOffers: source.cornMarket?.exclusiveDiscountsAndOffers,
 
       // Additional Information
+      membershipStatus: source.additionalInformation?.membershipStatus || "",
       memberOfOtherUnion: source.additionalInformation?.otherIrishTradeUnion === true ? "Yes" : "No",
       otherUnionName:
         source.additionalInformation?.otherIrishTradeUnionName || "",
@@ -245,6 +276,24 @@ const MembershipForm = ({
         membershipCategory: subscriptionData.membershipCategory || prev.membershipCategory || "",
         paymentType: subscriptionData.paymentType,
         payrollNumber: subscriptionData.payrollNo || prev.payrollNumber || "",
+
+        membershipNumber:
+          subDoc?.personalDetails?.membershipNo || initialFormData.membershipNumber,
+
+        joinINMOIncomeProtection:
+          subDoc?.preferences?.incomeProtection ??
+          source.cornMarket?.incomeProtectionScheme,
+        joinRewards:
+          subDoc?.preferences?.inmoRewards ?? source.cornMarket?.inmoRewards,
+
+        ...(subDoc?.additionalInfo
+          ? {
+              memberOfOtherUnion: subDoc.additionalInfo.anotherUnionMember
+                ? "Yes"
+                : "No",
+              otherUnionName: subDoc.additionalInfo.otherUnionName || "",
+            }
+          : {}),
 
         // Subscription Dates
         startDate: convertUTCToLocalDate(subscriptionData.startDate) || prev.startDate,
@@ -282,7 +331,14 @@ const MembershipForm = ({
         subscriptionStatus: status
       }));
     }
-  }, [profileDetails, profileSearchData, subscriptionData, isSubscriptionEmpty, ProfileSubLoading]); // FIXED: Added isSubscriptionEmpty and ProfileSubLoading
+  }, [
+    profileDetails,
+    profileSearchData,
+    subscriptionData,
+    isSubscriptionEmpty,
+    ProfileSubLoading,
+    ProfileSubData,
+  ]);
 
   // Internal form state
   const [formData, setFormData] = useState({
@@ -443,6 +499,9 @@ const MembershipForm = ({
 
   const handleChange = (field, value) => {
     const updatedData = { ...formData, [field]: value };
+    if (field === "consentCorrespondence") {
+      updatedData.consent = value;
+    }
     // Uncheck NATA if addressLine1 is changed
     if (field === "addressLine1" && formData.nata) {
       updatedData.nata = false;
@@ -542,12 +601,79 @@ const MembershipForm = ({
     return checkedCount > 0 && checkedCount < 4;
   };
 
-  const handleSaveDraft = () => {
-    console.log("Saving draft:", formData);
+  const getSaveErrorMessage = (err) => {
+    const p = err?.payload ?? err;
+    if (typeof p === "string") return p;
+    return (
+      p?.message ||
+      p?.error?.message ||
+      (Array.isArray(p?.errors) ? p.errors.join(", ") : null) ||
+      "Request failed"
+    );
   };
 
-  const handleSubmit = () => {
-    console.log("Submitting form:", formData);
+  const handleCancelEdit = () => {
+    if (setIsEditMode) setIsEditMode(false);
+  };
+
+  const handleSaveChanges = async () => {
+    if (
+      !isEditMode ||
+      formData.isDeceased ||
+      formData.subscriptionStatus === "Resigned"
+    ) {
+      return;
+    }
+    const sourceProfile = profileDetails || profileSearchData?.results?.[0];
+    const profileId = sourceProfile?._id || sourceProfile?.id || profileIdParam;
+    if (!profileId) {
+      MyAlert("error", "Cannot save: missing profile id");
+      return;
+    }
+    setSaveLoading(true);
+    try {
+      const profileBody = formDataToProfilePutPayload(
+        formData,
+        profileDetails || sourceProfile
+      );
+      await dispatch(
+        updateProfileDetails({ profileId, body: profileBody })
+      ).unwrap();
+
+      const subId = ProfileSubData?.data?.[0]?._id;
+      if (subId) {
+        const subBody = formDataToSubscriptionPutPayload(
+          formData,
+          ProfileSubData.data[0]
+        );
+        await dispatch(
+          updateSubscriptionById({ subscriptionId: subId, body: subBody })
+        ).unwrap();
+      }
+
+      await dispatch(getProfileDetailsById(profileId)).unwrap();
+      if (subscriptionIdParam) {
+        await dispatch(getSubscriptionById(subscriptionIdParam)).unwrap();
+      } else {
+        await dispatch(
+          getSubscriptionByProfileId({
+            profileId,
+            isCurrent: "true",
+          })
+        ).unwrap();
+      }
+
+      MyAlert("success", "Profile updated successfully");
+      if (setIsEditMode) setIsEditMode(false);
+    } catch (err) {
+      MyAlert(
+        "error",
+        "Failed to save changes",
+        getSaveErrorMessage(err)
+      );
+    } finally {
+      setSaveLoading(false);
+    }
   };
 
   const NursingSpecializationSelectOptn = [
@@ -1271,7 +1397,7 @@ const MembershipForm = ({
                 value={formData.primarySection}
                 onChange={(e) => handleChange("primarySection", e.target.value)}
                 options={sectionOptions}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
                 required={true}
               />
               <MyInput
@@ -1291,7 +1417,7 @@ const MembershipForm = ({
                   handleChange("secondarySection", e.target.value)
                 }
                 options={secondarySectionOptions}
-                disabled={!isEditMode}
+                disabled={isFormReadOnly}
               />
               <MyInput
                 label="Other"
@@ -1386,45 +1512,23 @@ const MembershipForm = ({
                 placeholder="Select start date"
                 value={formData.startDate}
                 onChange={(date) => handleChange("startDate", date)}
-                disabled={true}
+                disabled={isFormReadOnly}
               />
-              {/* <MyDatePicker
+              <MyDatePicker
                 label="Subscription End Date"
                 placeholder="Select end date"
                 value={formData.endDate}
                 onChange={(date) => handleChange("endDate", date)}
-                disabled={true}
-              /> */}
+                disabled={isFormReadOnly}
+              />
               <MyDatePicker
                 label="Renewal Date"
                 placeholder="Select renewal date"
                 value={formData.renewalDate}
                 onChange={(date) => handleChange("renewalDate", date)}
-                disabled={true}
+                disabled={isFormReadOnly}
               />
-              {/* <CustomSelect
-                label="Subscription Status"
-                placeholder="Select Status..."
-                options={[
-                  { value: "Active", label: "Active" },
-                  { value: "Inactive", label: "Inactive" },
-                  { value: "Cancelled", label: "Cancelled" },
-                  { value: "Pending", label: "Pending" },
-                  { value: "Expired", label: "Expired" },
-                ]}
-                value={formData.subscriptionStatus}
-                onChange={(e) =>
-                  handleChange("subscriptionStatus", e.target.value)
-                }
-                disabled={true}
-              /> */}
-              {/* <MyInput
-                label="Subscription Year"
-                value={formData.subscriptionYear}
-                onChange={(e) => handleChange("subscriptionYear", e.target.value)}
-                disabled={true}
-              /> */}
-              {/* <CustomSelect
+              <CustomSelect
                 label="Membership Movement"
                 placeholder="Select Movement..."
                 options={[
@@ -1438,8 +1542,8 @@ const MembershipForm = ({
                 onChange={(e) =>
                   handleChange("membershipMovement", e.target.value)
                 }
-                disabled={true}
-              /> */}
+                disabled={isFormReadOnly}
+              />
               {/* <div style={{ marginTop: "16px", marginBottom: "16px" }}>
                 <Checkbox
                   checked={formData.isCurrent}
@@ -1508,7 +1612,7 @@ const MembershipForm = ({
                 onChange={(e) => handleChange("payrollNumber", e.target.value)}
                 disabled={isFormReadOnly}
               />
-              {/* <CustomSelect
+              <CustomSelect
                 label="Payment Frequency"
                 placeholder="Select Frequency"
                 options={[
@@ -1518,9 +1622,11 @@ const MembershipForm = ({
                   { value: "Semi-Annually", label: "Semi-Annually" },
                 ]}
                 value={formData.paymentFrequency}
-                onChange={(e) => handleChange("paymentFrequency", e.target.value)}
+                onChange={(e) =>
+                  handleChange("paymentFrequency", e.target.value)
+                }
                 disabled={isFormReadOnly}
-              /> */}
+              />
             </Card>
 
             {/* Reminders Card */}
@@ -1747,6 +1853,36 @@ const MembershipForm = ({
           </div>
         </Col>
       </Row>
+      {isEditMode && !isFormReadOnly && (
+        <div
+          style={{
+            position: "sticky",
+            bottom: 0,
+            left: 0,
+            right: 0,
+            padding: "12px 16px",
+            background: "#fff",
+            borderTop: "1px solid #e8e8e8",
+            display: "flex",
+            justifyContent: "flex-end",
+            gap: 8,
+            zIndex: 20,
+            marginTop: 16,
+            boxShadow: "0 -2px 8px rgba(0,0,0,0.06)",
+          }}
+        >
+          <Button onClick={handleCancelEdit} disabled={saveLoading}>
+            Cancel
+          </Button>
+          <Button
+            type="primary"
+            loading={saveLoading}
+            onClick={handleSaveChanges}
+          >
+            Save changes
+          </Button>
+        </div>
+      )}
     </div>
   );
 };
