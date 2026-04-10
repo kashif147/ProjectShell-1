@@ -96,6 +96,32 @@ export const getSubscriptionById = createAsyncThunk(
   }
 );
 
+export const updateSubscriptionById = createAsyncThunk(
+  "profileSubscription/updateById",
+  async ({ subscriptionId, body }, { rejectWithValue }) => {
+    try {
+      const token = localStorage.getItem("token");
+      const res = await axios.put(
+        `${process.env.REACT_APP_SUBSCRIPTION}/subscriptions/${subscriptionId}`,
+        body,
+        {
+          headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json",
+          },
+        }
+      );
+      return normalizeSubscriptionResponse(res);
+    } catch (err) {
+      return rejectWithValue(
+        err.response?.data?.message ||
+          err.response?.data ||
+          "Failed to update subscription"
+      );
+    }
+  }
+);
+
 // ✅ Fetch subscription history by profileId
 export const getSubscriptionHistoryByProfileId = createAsyncThunk(
   "profileSubscription/getHistoryByProfileId",
