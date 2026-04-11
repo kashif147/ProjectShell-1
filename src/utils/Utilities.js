@@ -254,6 +254,37 @@ export function formatDateOnly(dateString) {
   return date.isValid() ? date.format("DD/MM/YYYY") : "";
 }
 
+const REMINDER_DATE_PARSE_FORMATS = [
+  "DD/MM/YYYY",
+  "D/M/YYYY",
+  "MM/DD/YYYY",
+  "M/D/YYYY",
+  "YYYY-MM-DD",
+];
+
+/** Display-only: parses common slash/ISO date strings, outputs DD-MM-YYYY */
+export function formatDateDdMmYyyy(dateInput) {
+  if (dateInput == null || dateInput === "") return "—";
+  const s = String(dateInput).trim();
+  const datePart = s.split(/\s+/)[0];
+  let m = moment(datePart, REMINDER_DATE_PARSE_FORMATS, true);
+  if (!m.isValid()) {
+    m = moment(datePart);
+  }
+  return m.isValid() ? m.format("DD-MM-YYYY") : datePart;
+}
+
+/** For sorting / comparisons; invalid or missing dates sort as 0 (epoch-relative tie-break). */
+export function parseReminderDateToMs(dateInput) {
+  if (dateInput == null || dateInput === "") return 0;
+  const datePart = String(dateInput).trim().split(/\s+/)[0];
+  let m = moment(datePart, REMINDER_DATE_PARSE_FORMATS, true);
+  if (!m.isValid()) {
+    m = moment(datePart);
+  }
+  return m.isValid() ? m.valueOf() : 0;
+}
+
 export function formatMobileNumber(value) {
   if (!value) return "-";
 

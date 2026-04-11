@@ -13,6 +13,7 @@ import { Spin } from "antd";
 import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
 import RoutePermissions from "./constants/RoutePermissions";
+import { ReminderBatchesFilterProvider } from "./context/ReminderBatchesFilterContext";
 
 // Wrapper for lazy loading with retry logic
 const lazyWithRetry = (componentImport) => {
@@ -277,6 +278,7 @@ function Entry() {
 
   return (
     <AuthorizationProvider>
+      <ReminderBatchesFilterProvider>
       <div
         style={{
           height: "100vh",
@@ -1124,6 +1126,7 @@ function Entry() {
         {/* Footer - also hide for noSidebarRoutes */}
         {showSidebar && <MyFooter />}
       </div>
+      </ReminderBatchesFilterProvider>
     </AuthorizationProvider>
   );
 }

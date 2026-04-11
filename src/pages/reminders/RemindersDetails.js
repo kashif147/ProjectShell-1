@@ -21,6 +21,7 @@ import { BsFiletypeXls } from "react-icons/bs";
 import CustomSelect from "../../component/common/CustomSelect";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
+import { formatDateDdMmYyyy } from "../../utils/Utilities";
 const { TabPane } = Tabs;
 
 
@@ -114,11 +115,13 @@ function RemindersDetails() {
             title: "Joining Date",
             dataIndex: "joiningDate",
             key: "joiningDate",
+            render: (v) => formatDateDdMmYyyy(v),
         },
         {
             title: "Expiry Date",
             dataIndex: "expiryDate",
             key: "expiryDate",
+            render: (v) => formatDateDdMmYyyy(v),
         },
         {
             title: "Last Payment Amount",
@@ -129,6 +132,7 @@ function RemindersDetails() {
             title: "Last Payment Date",
             dataIndex: "lastPaymentDate",
             key: "lastPaymentDate",
+            render: (v) => formatDateDdMmYyyy(v),
         },
         {
             title: "Membership Fee",
@@ -149,6 +153,7 @@ function RemindersDetails() {
             title: "Reminder Date",
             dataIndex: "reminderDate",
             key: "reminderDate",
+            render: (v) => formatDateDdMmYyyy(v),
         },
         {
             title: "Cancellation Flag",
@@ -304,7 +309,7 @@ function RemindersDetails() {
                         <div style={{ display: "flex", alignItems: "center", gap: 8, flexShrink: 0 }}>
                             <Checkbox disabled={isDisable} />
                             <CalendarOutlined />
-                            <span>{date}</span>
+                            <span>{formatDateDdMmYyyy(date)}</span>
                             <UserOutlined />
                             <span>Created by {user}</span>
                         </div>

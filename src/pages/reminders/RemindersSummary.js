@@ -1,19 +1,101 @@
-import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
-import { useReminders } from '../../context/CampaignDetailsProvider';
-import { useTableColumns } from '../../context/TableColumnsContext ';
-import { campaigns } from '../../Data';
-import ReminderListItem from '../../component/reminders/ReminderListItem';
-import UnifiedPagination from '../../component/common/UnifiedPagination';
+import React, { useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
+import { useReminders } from "../../context/CampaignDetailsProvider";
+import { useTableColumns } from "../../context/TableColumnsContext ";
+import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
+import { campaigns } from "../../Data";
+import ReminderBatchesTable from "../../component/reminders/ReminderBatchesTable";
+import { parseReminderDateToMs } from "../../utils/Utilities";
+
+function enrichCampaign(item) {
+  const parts = String(item.date || "").split("/");
+  const month = parts[0] ? parseInt(parts[0], 10) : 0;
+  const year = parts[2] ? parseInt(parts[2], 10) : null;
+  const batchCode =
+    item.batchCode ||
+    (year && month
+      ? `BATCH-${year}-${String(month).padStart(2, "0")}`
+      : `BATCH-${item.id}`);
+  const hash = Number(item.id) * 17;
+  const perf = (i) => {
+    const positive = (hash + i) % 3 !== 0;
+    const pct = Math.round((((hash + i * 11) % 250) / 10) * 10) / 10;
+    return { positive, pct };
+  };
+  return {
+    ...item,
+    batchCode,
+    performance: item.performance || {
+      R1: perf(1),
+      R2: perf(2),
+      R3: perf(3),
+    },
+  };
+}
 
 function RemindersSummary() {
   const navigate = useNavigate();
   const { getRemindersById } = useReminders();
   const { disableFtn } = useTableColumns();
+  const { applied } = useReminderBatchesFilter();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
+  const [sortState, setSortState] = useState({
+    columnKey: null,
+    order: null,
+  });
 
-  const handleView = (item) => {
+  const filteredData = useMemo(() => {
+    const enriched = campaigns.map(enrichCampaign);
+    return enriched.filter((c) => {
+      const titleOk =
+        !applied.title ||
+        (c.title || "").toLowerCase().includes(applied.title);
+      if (applied.year == null) return titleOk;
+      const p = String(c.date || "").split("/");
+      const y = p[2] ? parseInt(p[2], 10) : NaN;
+      return titleOk && y === applied.year;
+    });
+  }, [applied]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [applied.title, applied.year]);
+
+  const sortedFilteredData = useMemo(() => {
+    const arr = [...filteredData];
+    const { columnKey, order } = sortState;
+    if (!columnKey || !order) return arr;
+    const mult = order === "ascend" ? 1 : -1;
+    if (columnKey === "batchName") {
+      arr.sort(
+        (a, b) =>
+          mult *
+          String(a.title || "").localeCompare(String(b.title || ""), undefined, {
+            sensitivity: "base",
+          }),
+      );
+    } else if (columnKey === "createdDate") {
+      arr.sort(
+        (a, b) =>
+          mult *
+          (parseReminderDateToMs(a.date) - parseReminderDateToMs(b.date)),
+      );
+    }
+    return arr;
+  }, [filteredData, sortState]);
+
+  const paginatedData = sortedFilteredData.slice(
+    (currentPage - 1) * pageSize,
+    currentPage * pageSize,
+  );
+
+  const handleSortChange = (columnKey, order) => {
+    setSortState({ columnKey, order });
+    setCurrentPage(1);
+  };
+
+  const openBatch = (item) => {
     navigate("/RemindersDetails", {
       state: {
         reminderBatchTitle: item?.title,
@@ -28,17 +110,6 @@ function RemindersSummary() {
     }
   };
 
-  const handleEdit = (item) => {
-    console.log('Edit item:', item);
-  };
-
-  const filteredData = campaigns;
-
-  const paginatedData = filteredData.slice(
-    (currentPage - 1) * pageSize,
-    currentPage * pageSize
-  );
-
   const handlePageChange = (page, size) => {
     setCurrentPage(page);
     if (size !== pageSize) {
@@ -47,54 +118,22 @@ function RemindersSummary() {
   };
 
   return (
-    <div style={{ 
-      padding: '24px', 
-      backgroundColor: '#f5f5f5', 
-      height: '100vh',
-      display: 'flex',
-      flexDirection: 'column',
-      overflow: 'hidden'
-    }}>
-      {/* List Items - Scrollable Area */}
-      <div style={{ 
-        flex: 1,
-        overflowY: 'auto',
-        overflowX: 'hidden',
-        marginBottom: '16px',
-        paddingRight: '8px',
-      }}>
-        {paginatedData.map((item) => (
-          <ReminderListItem
-            key={item.id}
-            item={item}
-            onView={handleView}
-            onEdit={handleEdit}
-          />
-        ))}
-      </div>
-
-      {/* Pagination - Fixed at Bottom, Centered */}
-      <div style={{ 
-        display: 'flex', 
-        justifyContent: 'center', 
-        alignItems: 'center',
-        paddingTop: '16px',
-        borderTop: '1px solid #e8e8e8',
-        flexShrink: 0
-      }}>
-        <UnifiedPagination
-          current={currentPage}
-          pageSize={pageSize}
-          total={filteredData.length}
-          onChange={handlePageChange}
-          onShowSizeChange={(current, size) => {
-            setCurrentPage(1);
-            setPageSize(size);
-          }}
-          itemName="reminders"
-          showSizeChanger={true}
-        />
-      </div>
+    <div style={{ width: "100%" }}>
+      <ReminderBatchesTable
+        dataSource={paginatedData}
+        onOpenBatch={openBatch}
+        total={sortedFilteredData.length}
+        sortColumnKey={sortState.columnKey}
+        sortOrder={sortState.order}
+        onSortChange={handleSortChange}
+        current={currentPage}
+        pageSize={pageSize}
+        onPageChange={handlePageChange}
+        onShowSizeChange={(current, size) => {
+          setCurrentPage(1);
+          setPageSize(size);
+        }}
+      />
     </div>
   );
 }

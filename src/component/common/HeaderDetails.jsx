@@ -73,6 +73,7 @@ import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
 import { useCasesEdit } from "../../context/CasesEditContext";
+import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { baseURL } from "../../utils/Utilities";
 import "../../styles/CreateCasesDrawer.css";
@@ -103,7 +104,6 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
   const [isDrawerOpen, setisDrawerOpen] = useState(false);
   const { viewMode, toggleView } = useView();
   const [value, setValue] = useState(dayjs("2025", "YYYY"));
-  const [sortOption, setSortOption] = useState(null);
   const [ddDrawerOpen, setDdDrawerOpen] = useState(false);
   const [refundDrawerOpen, setRefundDrawerOpen] = useState(false);
   const [writeOffDrawerOpen, setWriteOffDrawerOpen] = useState(false);
@@ -176,9 +176,14 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     setEditFieldsDrawerOpen(false);
   };
 
-  const handleSortChange = (value) => {
-    setSortOption(value);
-  };
+  const {
+    draftTitle,
+    setDraftTitle,
+    draftYear,
+    setDraftYear,
+    applySearch: reminderApplySearch,
+    reset: reminderReset,
+  } = useReminderBatchesFilter();
 
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
@@ -827,11 +832,7 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     );
   };
   const currentKey =
-    location.pathname === "/Cancallation"
-      ? "Cancallation"
-      : location.pathname === "/RemindersSummary"
-        ? "reminder"
-        : null;
+    location.pathname === "/Cancallation" ? "Cancallation" : null;
 
   const batchSearchPaths = [
 
@@ -985,12 +986,32 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             location?.pathname == "/Refunds" ||
             location?.pathname == "/InAppNotifications") && (
               <div className="search-main">
-                <div className="title d-flex justify-content-between ">
-                  <h2 className="title-main">
-                    {nav == "/" && location?.state == null
-                      ? `Profile`
-                      : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : nav === "/onlinePayment" ? "Finance" : nav === "/MembershipDashboard" ? "Subscriptions & Rewards" : "")}
-                  </h2>
+                <div className="title d-flex justify-content-between align-items-start">
+                  <div>
+                    {nav === "/RemindersSummary" ? (
+                      <>
+                        <h2 className="title-main" style={{ marginBottom: 4 }}>
+                          Reminder Batches
+                        </h2>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 14,
+                            color: "#595959",
+                            fontWeight: 400,
+                          }}
+                        >
+                          Manage and monitor your reminders
+                        </p>
+                      </>
+                    ) : (
+                      <h2 className="title-main">
+                        {nav == "/" && location?.state == null
+                          ? `Profile`
+                          : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : nav === "/onlinePayment" ? "Finance" : nav === "/MembershipDashboard" ? "Subscriptions & Rewards" : "")}
+                      </h2>
+                    )}
+                  </div>
 
                   <div className="d-flex">
                     {/* For templateSummary, only show Create button */}
@@ -1134,7 +1155,64 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                       />
                     </Row>
                   </div>
-                ) : nav == "/RemindersSummary" || nav == "/Cancallation" ? (
+                ) : nav == "/RemindersSummary" ? (
+                  <div
+                    className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
+                    style={{ gap: 8 }}
+                  >
+                    <div style={{ flex: "0 0 250px", minWidth: 200 }}>
+                      <Input
+                        className="my-input-field"
+                        placeholder="Reminder batch title"
+                        value={draftTitle}
+                        onChange={(e) => setDraftTitle(e.target.value)}
+                        onPressEnter={reminderApplySearch}
+                        style={{
+                          height: "30px",
+                          borderRadius: "4px",
+                          color: "gray",
+                        }}
+                      />
+                    </div>
+                    <DatePicker
+                      picker="year"
+                      format="YYYY"
+                      value={draftYear}
+                      onChange={setDraftYear}
+                      allowClear
+                      placeholder="Reminder year"
+                      style={{ width: 160, height: 30 }}
+                    />
+                    <Button
+                      htmlType="button"
+                      onClick={reminderReset}
+                      style={{
+                        backgroundColor: "#091e420a",
+                        borderRadius: "4px",
+                        border: "none",
+                        height: "32px",
+                        fontWeight: "500",
+                        color: "#42526e",
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      htmlType="button"
+                      onClick={reminderApplySearch}
+                      style={{
+                        backgroundColor: "#45669d",
+                        borderRadius: "4px",
+                        border: "none",
+                        height: "32px",
+                        fontWeight: "500",
+                        color: "white",
+                      }}
+                    >
+                      Search
+                    </Button>
+                  </div>
+                ) : nav == "/Cancallation" ? (
                   <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
                     <Row className="align-items-baseline w-100" gutter={12}>
                       <Col>
@@ -1143,34 +1221,12 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                           format="YYYY"
                           value={value}
                           onChange={(e) => handleDateChange(e)}
-                          inputReadOnly={false} // allow typing
-                          allowClear={false} // keep a value always; set true if you want clear
-                          style={{ width: 220 }} // compact width for year
-                          placeholder={
-                            nav === "/CasesSummary"
-                              ? "Search Issue ID, team, or stakeholder"
-                              : "Search anything..."
-                          }
+                          inputReadOnly={false}
+                          allowClear={false}
+                          style={{ width: 220 }}
+                          placeholder="Search anything..."
                         />
                       </Col>
-                      {nav == "/RemindersSummary" && (
-                        <Col>
-                          <Select
-                            placeholder="Sort by"
-                            value={sortOption}
-                            onChange={handleSortChange}
-                            allowClear
-                            style={{ width: 180 }}
-                          >
-                            <Select.Option value="date-asc">Date (Ascending)</Select.Option>
-                            <Select.Option value="date-desc">Date (Descending)</Select.Option>
-                            <Select.Option value="title-asc">Title (A-Z)</Select.Option>
-                            <Select.Option value="title-desc">Title (Z-A)</Select.Option>
-                            <Select.Option value="user-asc">User (A-Z)</Select.Option>
-                            <Select.Option value="user-desc">User (Z-A)</Select.Option>
-                          </Select>
-                        </Col>
-                      )}
                     </Row>
                   </div>
                 ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
