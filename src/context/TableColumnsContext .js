@@ -25,6 +25,85 @@ import { Tooltip } from "antd";
 
 const TableColumnsContext = createContext();
 
+function normalizeProfileDetailsRow(profileDetails) {
+  if (profileDetails == null) return null;
+  if (Array.isArray(profileDetails)) {
+    return profileDetails.length ? profileDetails[0] : null;
+  }
+  return profileDetails;
+}
+
+function rowIdentifierCandidates(record) {
+  if (!record || typeof record !== "object") return [];
+  const raw = [
+    record._id,
+    record.profileId,
+    record.memberId,
+    record.applicationId,
+    record.ApplicationId,
+    record.transferRequestId,
+    record.requestId,
+    record.regNo,
+    record.membershipNo,
+    record.membershipNumber,
+    record.personalDetails?.membershipNo,
+    record.key,
+  ].filter((v) => v != null && v !== "");
+  return [...new Set(raw.map((v) => String(v)))];
+}
+
+function gridRowsMatch(row, record) {
+  if (!row || !record) return false;
+  if (row === record) return true;
+  const a = rowIdentifierCandidates(row);
+  const b = rowIdentifierCandidates(record);
+  if (!a.length || !b.length) return false;
+  return a.some((id) => b.includes(id));
+}
+
+function findRecordIndexInGrid(gridData, record) {
+  if (!Array.isArray(gridData) || !record) return -1;
+  return gridData.findIndex((row) => gridRowsMatch(row, record));
+}
+
+/** 0-based index in full gridData for prev/next (fixes paginated table page-local index bug). */
+function resolveGridNavigationIndex(gridData, profileDetails) {
+  if (!Array.isArray(gridData) || gridData.length === 0) return -1;
+  const row = normalizeProfileDetailsRow(profileDetails);
+  return findRecordIndexInGrid(gridData, row);
+}
+
+/** Sync location.state fields Breadcrumb.jsx uses for /Details (regNo, membership, name). */
+function profileDetailsBreadcrumbState(record) {
+  if (!record || typeof record !== "object") return {};
+  const membershipDisplay =
+    record.personalDetails?.membershipNo ??
+    record.membershipNumber ??
+    record.membershipNo ??
+    record.memberNo ??
+    "";
+  const regNo =
+    record.regNo ?? record.personalDetails?.regNo ?? "";
+  const regOrMember = regNo || membershipDisplay;
+  const name = record.user?.userFullName ?? record.fullName;
+  const rowCode =
+    record.code != null && String(record.code).trim() !== ""
+      ? String(record.code)
+      : null;
+  const out = {};
+  if (regOrMember) {
+    out.regNo = regOrMember;
+    out.memberId = membershipDisplay || regOrMember;
+    out.membershipNumber = membershipDisplay || regOrMember;
+    out.membershipNo = membershipDisplay || regOrMember;
+    out.code = rowCode || membershipDisplay || regOrMember;
+  } else if (rowCode) {
+    out.code = rowCode;
+  }
+  if (name) out.name = name;
+  return out;
+}
+
 // Static column configurations
 const staticColumns = {
   onlinePayment: [
@@ -4920,8 +4999,16 @@ export const TableColumnsProvider = ({ children }) => {
     setRowIndex(index);
   }, []);
 
+  const navigationRowIndex = useMemo(
+    () => resolveGridNavigationIndex(gridData, ProfileDetails),
+    [gridData, ProfileDetails]
+  );
+
   const profilNextBtnFtn = useCallback(() => {
-    const newIndex = rowIndex + 1;
+    if (!gridData?.length) return;
+    const currentIndex = resolveGridNavigationIndex(gridData, ProfileDetails);
+    if (currentIndex < 0) return;
+    const newIndex = currentIndex + 1;
     if (newIndex < gridData.length) {
       const record = gridData[newIndex];
       const profileId = record?.profileId;
@@ -4948,7 +5035,10 @@ export const TableColumnsProvider = ({ children }) => {
       }
       setProfileDetails([record]);
       setRowIndex(newIndex);
-      const nextNavState = { ...location.state };
+      const nextNavState = {
+        ...location.state,
+        ...profileDetailsBreadcrumbState(record),
+      };
       if (screenName === "Members" && profileId && subscriptionRowId) {
         nextNavState.subscriptionId = subscriptionRowId;
       } else {
@@ -4965,10 +5055,13 @@ export const TableColumnsProvider = ({ children }) => {
         { replace: true, state: nextNavState }
       );
     }
-  }, [rowIndex, gridData, dispatch, screenName, location.pathname, location.state, navigate]);
+  }, [gridData, ProfileDetails, dispatch, screenName, location.pathname, location.state, navigate]);
 
   const profilPrevBtnFtn = useCallback(() => {
-    const newIndex = rowIndex - 1;
+    if (!gridData?.length) return;
+    const currentIndex = resolveGridNavigationIndex(gridData, ProfileDetails);
+    if (currentIndex <= 0) return;
+    const newIndex = currentIndex - 1;
     if (newIndex >= 0) {
       const record = gridData[newIndex];
       const profileId = record?.profileId;
@@ -4995,7 +5088,10 @@ export const TableColumnsProvider = ({ children }) => {
       }
       setProfileDetails([record]);
       setRowIndex(newIndex);
-      const nextNavState = { ...location.state };
+      const nextNavState = {
+        ...location.state,
+        ...profileDetailsBreadcrumbState(record),
+      };
       if (screenName === "Members" && profileId && subscriptionRowId) {
         nextNavState.subscriptionId = subscriptionRowId;
       } else {
@@ -5012,7 +5108,7 @@ export const TableColumnsProvider = ({ children }) => {
         { replace: true, state: nextNavState }
       );
     }
-  }, [rowIndex, gridData, dispatch, screenName, location.pathname, location.state, navigate]);
+  }, [gridData, ProfileDetails, dispatch, screenName, location.pathname, location.state, navigate]);
 
   const filterByRegNo = useCallback(
     async (regNo) => {
@@ -5376,6 +5472,7 @@ export const TableColumnsProvider = ({ children }) => {
       report,
       ReportsTitle,
       rowIndex,
+      navigationRowIndex,
       profilNextBtnFtn,
       profilPrevBtnFtn,
       globleFilters,
@@ -5414,6 +5511,7 @@ export const TableColumnsProvider = ({ children }) => {
       report,
       ReportsTitle,
       rowIndex,
+      navigationRowIndex,
       profilNextBtnFtn,
       profilPrevBtnFtn,
       globleFilters,

@@ -3,12 +3,29 @@ import { Breadcrumb as AntBreadcrumb } from "antd";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useSelector, useDispatch } from "react-redux";
 import { updateMenuLbl } from "../../features/MenuLblSlice";
+import { useReminders } from "../../context/CampaignDetailsProvider";
+
+function getOpenApplicationFullName(app) {
+  if (!app) return "";
+  const pi = app.personalDetails?.personalInfo ?? app.personalInfo;
+  const fore = (pi?.forename != null ? String(pi.forename) : "").trim();
+  const sur = (pi?.surname != null ? String(pi.surname) : "").trim();
+  const combined = `${fore} ${sur}`.trim();
+  if (combined) return combined;
+  if (app.user?.userFullName) return String(app.user.userFullName).trim();
+  if (app.fullName) return String(app.fullName).trim();
+  return "";
+}
 
 const Breadcrumb = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const dispatch = useDispatch();
   const menuLblState = useSelector((state) => state.menuLbl);
+  const {
+    selectedId: selectedReminderBatch,
+    cancallationbyId: selectedCancellationBatch,
+  } = useReminders();
 
   // Get the active module from Redux state
   const activeModule = Object.keys(menuLblState).find(
@@ -332,9 +349,8 @@ const Breadcrumb = () => {
     },
     "/RemindersDetails": {
       module: "Subscriptions & Rewards",
-      page: "Reminder Details",
+      page: "Reminders",
       icon: "⏰",
-      recordIdField: "code",
     },
 
     // Cancellations
@@ -345,9 +361,8 @@ const Breadcrumb = () => {
     },
     "/CancellationDetail": {
       module: "Subscriptions & Rewards",
-      page: "Cancellation Details",
+      page: "Cancellations",
       icon: "❌",
-      recordIdField: "code",
     },
 
     // Category Changes
@@ -413,9 +428,8 @@ const Breadcrumb = () => {
     // Additional Batch Routes
     "/CancellationBatch": {
       module: "Subscriptions & Rewards",
-      page: "Cancellation Batch",
+      page: "Cancellations",
       icon: "❌",
-      recordIdField: "code",
     },
 
     // New Graduate & Newly Joint
@@ -432,25 +446,187 @@ const Breadcrumb = () => {
     "/RecruitAFriend": {
       module: "Subscriptions & Rewards",
       page: "Recruit a Friend",
-      icon: "FaUserFriends",
-
+      icon: "🤝",
     },
   };
 
+  /** Sidebar module key used by Login / Sidebar for the membership area */
+  const MEMBERSHIP_MENU_KEY = "Subscriptions & Rewards";
+
+  /**
+   * Membership tab: show "Membership > …" (no App Launcher).
+   * Values align with Sidebar getNavLinkData `state.search` for each item.
+   */
+  const membershipSectionNav = {
+    "/MembershipDashboard": {
+      pageLabel: "Dashboard",
+      listingPath: "/MembershipDashboard",
+      listingSearch: "Membership Dashboard",
+    },
+    "/Summary": {
+      pageLabel: "Profiles",
+      listingPath: "/Summary",
+      listingSearch: "Profile",
+    },
+    "/Members": {
+      pageLabel: "Subscriptions",
+      listingPath: "/Members",
+      listingSearch: "Members",
+    },
+    "/members": {
+      pageLabel: "Subscriptions",
+      listingPath: "/members",
+      listingSearch: "Members",
+    },
+    "/Applications": {
+      pageLabel: "Applications",
+      listingPath: "/Applications",
+      listingSearch: "Applications",
+    },
+    "/applicationMgt": {
+      pageLabel: "Applications",
+      listingPath: "/Applications",
+      listingSearch: "Applications",
+    },
+    "/AproveMembersip": {
+      pageLabel: "Approve Membership",
+      listingPath: "/Applications",
+      listingSearch: "Applications",
+    },
+    "/AddNewProfile": {
+      pageLabel: "Add New Profile",
+      listingPath: "/Summary",
+      listingSearch: "Profile",
+    },
+    "/Transfers": {
+      pageLabel: "Transfer Requests",
+      listingPath: "/Transfers",
+      listingSearch: "Transfers",
+    },
+    "/RemindersSummary": {
+      pageLabel: "Reminders",
+      listingPath: "/RemindersSummary",
+      listingSearch: "Reminders",
+    },
+    "/RemindersDetails": {
+      pageLabel: "Reminders",
+      listingPath: "/RemindersSummary",
+      listingSearch: "Reminders",
+    },
+    "/Cancallation": {
+      pageLabel: "Cancellations",
+      listingPath: "/Cancallation",
+      listingSearch: "Cancallation",
+    },
+    "/CancellationDetail": {
+      pageLabel: "Cancellations",
+      listingPath: "/Cancallation",
+      listingSearch: "Cancallation",
+    },
+    "/CancellationBatch": {
+      pageLabel: "Cancellations",
+      listingPath: "/Cancallation",
+      listingSearch: "Cancallation",
+    },
+    "/ChangCateSumm": {
+      pageLabel: "Category Changes",
+      listingPath: "/ChangCateSumm",
+      listingSearch: "Change Category Summary",
+    },
+    "/ChangeCatById": {
+      pageLabel: "Category Change",
+      listingPath: "/ChangCateSumm",
+      listingSearch: "Change Category Summary",
+    },
+    "/Doucmnets": {
+      pageLabel: "Documents",
+      listingPath: "/Summary",
+      listingSearch: "Profile",
+    },
+    "/NewGraduate": {
+      pageLabel: "New Graduates",
+      listingPath: "/NewGraduate",
+      listingSearch: "CornMarket New Graduate",
+    },
+    "/CornMarketRewards": {
+      pageLabel: "Rewards",
+      listingPath: "/CornMarketRewards",
+      listingSearch: "CornMarket Rewards",
+    },
+    "/RecruitAFriend": {
+      pageLabel: "Recruit Friends",
+      listingPath: "/RecruitAFriend",
+      listingSearch: "Recruit a Friend",
+    },
+  };
+
+  const matchRoutePrefix = (currentPath, pathMap) => {
+    const keys = Object.keys(pathMap);
+    const matches = keys.filter(
+      (p) => currentPath === p || currentPath.startsWith(`${p}/`)
+    );
+    if (matches.length === 0) return null;
+    return matches.sort((a, b) => b.length - a.length)[0];
+  };
+
   const { data: batchDetails } = useSelector((state) => state.batchDetails);
+  const openApplication = useSelector(
+    (state) => state.applicationDetails?.application
+  );
 
   // Get breadcrumb data for current route
   const getBreadcrumbData = () => {
     const currentPath = location.pathname;
-    // Handle dynamic routes with IDs
-    const matchedPath = Object.keys(routeBreadcrumbMap).find(path =>
-      currentPath.startsWith(path)
-    );
+    const matchedPath =
+      matchRoutePrefix(currentPath, routeBreadcrumbMap) || currentPath;
 
-    const breadcrumbData = routeBreadcrumbMap[matchedPath || currentPath];
+    const breadcrumbData = routeBreadcrumbMap[matchedPath];
 
     if (!breadcrumbData) {
       return null;
+    }
+
+    const simpleBatchSearch = location.state?.search;
+    const onSimpleBatchMemberSummary =
+      currentPath === "/SimpleBatchMemberSummary" ||
+      currentPath.startsWith("/SimpleBatchMemberSummary/");
+    const membershipSimpleBatchSearches = [
+      "RecruitAFriend",
+      "CornMarketRewards",
+      "NewGraduate",
+    ];
+    const isMembershipSimpleBatch =
+      onSimpleBatchMemberSummary &&
+      membershipSimpleBatchSearches.includes(simpleBatchSearch);
+
+    let membershipNav = membershipSectionNav[matchedPath] || null;
+    let icon = breadcrumbData.icon;
+
+    if (isMembershipSimpleBatch) {
+      const listingKey =
+        simpleBatchSearch === "RecruitAFriend"
+          ? "/RecruitAFriend"
+          : simpleBatchSearch === "CornMarketRewards"
+            ? "/CornMarketRewards"
+            : "/NewGraduate";
+      membershipNav = membershipSectionNav[listingKey];
+      icon = routeBreadcrumbMap[listingKey]?.icon || icon;
+    }
+
+    // /Details: second crumb follows listing you came from (TableComponent state.search)
+    if (matchedPath === "/Details") {
+      const src = location.state?.search;
+      if (src === "Members") {
+        membershipNav = {
+          pageLabel: "Subscriptions",
+          listingPath: "/members",
+          listingSearch: "Members",
+        };
+      } else if (src === "Applications") {
+        membershipNav = { ...membershipSectionNav["/Applications"] };
+      } else {
+        membershipNav = { ...membershipSectionNav["/Summary"] };
+      }
     }
 
     // Get the app launcher item for the current module
@@ -460,9 +636,11 @@ const Breadcrumb = () => {
       appLauncher: appLauncherItem,
       module: breadcrumbData.module,
       page: breadcrumbData.page,
-      icon: breadcrumbData.icon,
+      icon,
       path: currentPath,
+      matchedPath,
       recordIdField: breadcrumbData.recordIdField,
+      membershipNav,
     };
   };
 
@@ -474,13 +652,27 @@ const Breadcrumb = () => {
 
   // Get record ID from location state or params
   const getRecordId = () => {
+    const appMgtParams = new URLSearchParams(location.search);
+    if (location.pathname === "/applicationMgt") {
+      if (
+        appMgtParams.get("applicationId") ||
+        appMgtParams.get("id") ||
+        appMgtParams.get("draftId")
+      ) {
+        return null;
+      }
+    }
+
     // Try to get from location state first
     if (location.state && breadcrumbData.recordIdField && location.state[breadcrumbData.recordIdField]) {
       return location.state[breadcrumbData.recordIdField];
     }
 
-    // Fallback for BatchMemberSummary from Redux
-    if (location.pathname.includes("BatchMemberSummary") && batchDetails?.description) {
+    // Finance /BatchMemberSummary only (not /SimpleBatchMemberSummary — pathname includes "BatchMemberSummary")
+    const isFinanceBatchMemberSummary =
+      location.pathname.startsWith("/BatchMemberSummary") &&
+      !location.pathname.startsWith("/SimpleBatchMemberSummary");
+    if (isFinanceBatchMemberSummary && batchDetails?.description) {
       return batchDetails.description;
     }
 
@@ -579,59 +771,239 @@ const Breadcrumb = () => {
     });
   };
 
+  const handleMembershipRootClick = () => {
+    dispatch(updateMenuLbl({ key: MEMBERSHIP_MENU_KEY, value: true }));
+    setTimeout(() => {
+      navigate("/MembershipDashboard", {
+        state: { search: "Membership Dashboard" },
+      });
+    }, 0);
+  };
+
+  const handleMembershipSectionClick = () => {
+    const nav = breadcrumbData.membershipNav;
+    if (!nav) return;
+    dispatch(updateMenuLbl({ key: MEMBERSHIP_MENU_KEY, value: true }));
+    setTimeout(() => {
+      navigate(nav.listingPath, {
+        state: { search: nav.listingSearch },
+      });
+    }, 0);
+  };
+
   // Build breadcrumb items - avoid duplication between app launcher and module
   const breadcrumbItems = [];
 
-  // Add app launcher item (only if different from module)
-  const appLauncherName = breadcrumbData.appLauncher
-    ? Object.keys(appLauncherItems).find(
-      (key) => appLauncherItems[key] === breadcrumbData.appLauncher
-    )
-    : "App Launcher";
-
-  if (appLauncherName !== breadcrumbData.module) {
+  if (breadcrumbData.membershipNav) {
     breadcrumbItems.push({
       title: (
         <span style={{ display: "flex", alignItems: "center" }}>
-          <span style={{ marginRight: 4 }}>
-            {breadcrumbData.appLauncher?.icon || "🏠"}
-          </span>
-          {appLauncherName}
+          <span style={{ marginRight: 4 }}>👤</span>
+          Membership
         </span>
       ),
-      onClick: handleAppLauncherClick,
+      onClick: handleMembershipRootClick,
     });
-  }
 
-  // Add module item
-  breadcrumbItems.push({
-    title: (
-      <span style={{ display: "flex", alignItems: "center" }}>
-        <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
-        {breadcrumbData.module}
-      </span>
-    ),
-    onClick: handleModuleClick,
-  });
-
-  // Add page item only if page title is present
-  if (breadcrumbData.page) {
     breadcrumbItems.push({
       title: (
         <span style={{ display: "flex", alignItems: "center" }}>
           <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
-          {breadcrumbData.page}
+          {breadcrumbData.membershipNav.pageLabel}
         </span>
       ),
-      onClick: handlePageClick,
+      onClick: handleMembershipSectionClick,
     });
+
+    if (location.pathname === "/applicationMgt") {
+      const p = new URLSearchParams(location.search);
+      const urlAppId = p.get("applicationId") || p.get("id");
+      const urlDraftId = p.get("draftId");
+      if (urlAppId || urlDraftId) {
+        const displayId = urlAppId || urlDraftId;
+        const app = openApplication;
+        const reduxSubmittedId = app?.applicationId || app?.ApplicationId;
+        const matchesSubmitted =
+          urlAppId &&
+          reduxSubmittedId &&
+          String(reduxSubmittedId) === String(urlAppId);
+        const matchesDraft =
+          urlDraftId &&
+          app &&
+          String(app.ApplicationId) === String(urlDraftId);
+        const idMatches = matchesSubmitted || matchesDraft;
+        const category =
+          idMatches && app?.subscriptionDetails?.membershipCategory
+            ? String(app.subscriptionDetails.membershipCategory).trim()
+            : "";
+        const fullName =
+          idMatches ? getOpenApplicationFullName(app).trim() : "";
+        const nameOrFallback = fullName || displayId;
+        const openAppTitle = category
+          ? `${category} - ${nameOrFallback}`
+          : `Application - ${nameOrFallback}`;
+
+        breadcrumbItems.push({
+          title: (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                maxWidth: "min(720px, 70vw)",
+              }}
+            >
+              <span style={{ marginRight: 4 }}>📋</span>
+              <span
+                style={{
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={openAppTitle}
+              >
+                {openAppTitle}
+              </span>
+            </span>
+          ),
+          onClick: () => {},
+        });
+      }
+    }
+
+    if (location.pathname === "/RemindersDetails") {
+      const reminderBatchTitle =
+        location.state?.reminderBatchTitle ||
+        selectedReminderBatch?.title ||
+        "";
+      if (reminderBatchTitle) {
+        breadcrumbItems.push({
+          title: (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                maxWidth: "min(720px, 70vw)",
+              }}
+            >
+              <span style={{ marginRight: 4 }}>⏰</span>
+              <span
+                style={{
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={reminderBatchTitle}
+              >
+                {reminderBatchTitle}
+              </span>
+            </span>
+          ),
+          onClick: () => {},
+        });
+      }
+    }
+
+    if (
+      location.pathname === "/CancellationDetail" ||
+      location.pathname === "/CancellationBatch"
+    ) {
+      const cancellationBatchTitle =
+        location.state?.cancellationBatchTitle ||
+        location.state?.batchName ||
+        selectedCancellationBatch?.title ||
+        "";
+      if (cancellationBatchTitle) {
+        breadcrumbItems.push({
+          title: (
+            <span
+              style={{
+                display: "flex",
+                alignItems: "center",
+                maxWidth: "min(720px, 70vw)",
+              }}
+            >
+              <span style={{ marginRight: 4 }}>❌</span>
+              <span
+                style={{
+                  fontWeight: 600,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                }}
+                title={cancellationBatchTitle}
+              >
+                {cancellationBatchTitle}
+              </span>
+            </span>
+          ),
+          onClick: () => {},
+        });
+      }
+    }
+  } else {
+    // Add app launcher item (only if different from module)
+    const appLauncherName = breadcrumbData.appLauncher
+      ? Object.keys(appLauncherItems).find(
+        (key) => appLauncherItems[key] === breadcrumbData.appLauncher
+      )
+      : "App Launcher";
+
+    if (appLauncherName !== breadcrumbData.module) {
+      breadcrumbItems.push({
+        title: (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <span style={{ marginRight: 4 }}>
+              {breadcrumbData.appLauncher?.icon || "🏠"}
+            </span>
+            {appLauncherName}
+          </span>
+        ),
+        onClick: handleAppLauncherClick,
+      });
+    }
+
+    // Add module item
+    breadcrumbItems.push({
+      title: (
+        <span style={{ display: "flex", alignItems: "center" }}>
+          <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
+          {breadcrumbData.module}
+        </span>
+      ),
+      onClick: handleModuleClick,
+    });
+
+    // Add page item only if page title is present
+    if (breadcrumbData.page) {
+      breadcrumbItems.push({
+        title: (
+          <span style={{ display: "flex", alignItems: "center" }}>
+            <span style={{ marginRight: 4 }}>{breadcrumbData.icon}</span>
+            {breadcrumbData.page}
+          </span>
+        ),
+        onClick: handlePageClick,
+      });
+    }
   }
 
   // Add record level if we have a record ID
   if (recordId) {
-    const isBatchPage = location.pathname.includes("BatchMemberSummary") || location.pathname.includes("DirectDebitBatchDetails");
-    const batchId = location.state?.batchId || (location.pathname.includes("BatchMemberSummary") ? batchDetails?._id : null);
-    const batchStatus = location.state?.batchStatus || (location.pathname.includes("BatchMemberSummary") ? batchDetails?.batchStatus : null);
+    const isFinanceBatchMemberSummary =
+      location.pathname.startsWith("/BatchMemberSummary") &&
+      !location.pathname.startsWith("/SimpleBatchMemberSummary");
+    const isBatchPage =
+      isFinanceBatchMemberSummary ||
+      location.pathname.startsWith("/SimpleBatchMemberSummary") ||
+      location.pathname.includes("DirectDebitBatchDetails");
+    const batchId =
+      location.state?.batchId ||
+      (isFinanceBatchMemberSummary ? batchDetails?._id : null);
+    const batchStatus =
+      location.state?.batchStatus ||
+      (isFinanceBatchMemberSummary ? batchDetails?.batchStatus : null);
 
     breadcrumbItems.push({
       title: (
@@ -682,7 +1054,7 @@ const Breadcrumb = () => {
   }
 
   return (
-    <div className="bred-cram-main" style={{ padding: "0" }}>
+    <div className="bred-cram-main" style={{ paddingTop: "5px" }}>
       <AntBreadcrumb
         items={breadcrumbItems}
         separator=">"

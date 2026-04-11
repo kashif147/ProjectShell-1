@@ -55,7 +55,12 @@ function CancallationCard() {
             </Card>
             <Button onClick={() => {
              getCancellationById(item?.id)
-             navigate('/CancellationDetail')
+             navigate("/CancellationDetail", {
+              state: {
+                cancellationBatchTitle: item?.title,
+                cancellationBatchId: item?.id,
+              },
+            })
             }} className="primary-btn mt-1" block icon={<BarChartOutlined />} >
               View Details
             </Button>

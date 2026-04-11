@@ -33,7 +33,6 @@ import {
   FaChartLine,
   FaChartPie,
   FaReceipt,
-  FaGlobe,
   FaServer,
   FaKey,
   FaUserCog,
@@ -278,12 +277,6 @@ export const subscriptionItems = [
     <FaUserFriends />,
     "Recruit a Friend",
     ["recruit:friend:read"]
-  ),
-  createMenuItem(
-    "LandingPage",
-    <FaGlobe />,
-    "LandingPage",
-    ["landing:page:read"]
   ),
 ];
 

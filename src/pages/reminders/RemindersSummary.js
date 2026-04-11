@@ -14,7 +14,12 @@ function RemindersSummary() {
   const [pageSize, setPageSize] = useState(500);
 
   const handleView = (item) => {
-    navigate('/RemindersDetails');
+    navigate("/RemindersDetails", {
+      state: {
+        reminderBatchTitle: item?.title,
+        reminderBatchId: item?.id,
+      },
+    });
     getRemindersById(item?.id);
     if (item?.isSelected === true) {
       disableFtn(true);

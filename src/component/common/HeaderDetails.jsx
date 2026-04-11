@@ -200,7 +200,7 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     profilNextBtnFtn,
     profilPrevBtnFtn,
     gridData,
-    rowIndex,
+    navigationRowIndex,
     resetFtn,
     globleFilters,
   } = useTableColumns();
@@ -843,7 +843,6 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       {/* New Breadcrumb Component */}
       {
         !hideBreadcrumb &&
-        location?.pathname !== "/applicationMgt" &&
         location?.pathname !== "/CommunicationBatchDetail" &&
         !location?.pathname?.startsWith("/BatchMemberSummary") &&
         !location?.pathname?.startsWith("/Batch/") &&
@@ -906,7 +905,11 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                     Print
                   </Button>
                   <Button
-                    disabled={rowIndex == 0}
+                    disabled={
+                      !gridData?.length ||
+                      navigationRowIndex < 0 ||
+                      navigationRowIndex <= 0
+                    }
                     onClick={profilPrevBtnFtn}
                     className="me-1 gray-btn butn"
                   >
@@ -920,10 +923,19 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                       marginLeft: "4px",
                     }}
                   >
-                    {rowIndex + 1} of {gridData?.length}
+                    {(() => {
+                      const total = gridData?.length ?? 0;
+                      if (!total) return "—";
+                      if (navigationRowIndex < 0) return `— of ${total}`;
+                      return `${navigationRowIndex + 1} of ${total}`;
+                    })()}
                   </p>
                   <Button
-                    disabled={rowIndex == gridData?.length - 1}
+                    disabled={
+                      !gridData?.length ||
+                      navigationRowIndex < 0 ||
+                      navigationRowIndex >= gridData.length - 1
+                    }
                     onClick={profilNextBtnFtn}
                     className="me-1 gray-btn butn"
                     style={{ marginLeft: "8px" }}

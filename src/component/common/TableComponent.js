@@ -572,23 +572,6 @@ const TableComponent = ({
                 isMembersPage && record?.profileId && record?._id
                   ? record._id
                   : undefined;
-              const detailsHref = `/Details${buildDetailsSearch(
-                profileIdForUrl,
-                subscriptionIdForUrl
-              )}`;
-
-              if (isFullNameOnSummaryPage || isMembersPage) {
-                return (
-                  <a
-                    href={detailsHref}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    style={{ color: "blue", textDecoration: "underline", cursor: "pointer" }}
-                  >
-                    <span style={{ textOverflow: "ellipsis" }}>{resolvedFullName}</span>
-                  </a>
-                );
-              }
 
               return (
                 <Link

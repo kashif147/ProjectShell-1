@@ -1,4 +1,4 @@
-import { useState, useRef, useEffect } from "react";
+import { useState, useRef, useEffect, useMemo } from "react";
 import {
   Row,
   Col,
@@ -43,7 +43,6 @@ import { fetchCountries } from "../../features/CountriesSlice";
 import MyFooter from "../common/MyFooter";
 import MyDatePicker1 from "../common/MyDatePicker1";
 import { getCategoryLookup } from "../../features/CategoryLookupSlice";
-import Breadcrumb from "../common/Breadcrumb";
 import { useFilters } from "../../context/FilterContext";
 import { searchProfiles, clearResults } from '../../features/profiles/SearchProfile';
 import { getAllLookups } from "../../features/LookupsSlice";
@@ -166,6 +165,14 @@ function normalizeLookupOptionToLabel(raw, options) {
   return str;
 }
 
+/** Stable id for matching grid rows across API / filter / draft shapes */
+function getNavApplicationRowId(app) {
+  if (app == null) return "";
+  return String(
+    app.applicationId ?? app.ApplicationId ?? app._id ?? app.id ?? ""
+  );
+}
+
 function ApplicationMgtDrawer({
   open,
   onClose,
@@ -275,7 +282,36 @@ function ApplicationMgtDrawer({
   const { applications, applicationsLoading } = useSelector(
     (state) => state.applications
   );
-  // let index = applications.findIndex(app => app.ApplicationId === application?.applicationId) + 1;
+  const filteredApplications = useSelector(
+    (state) => state.applicationWithFilter?.applications || []
+  );
+
+  const applicationsForNav = useMemo(() => {
+    const fromFilter = filteredApplications || [];
+    const fromLegacy = applications || [];
+    const urlKey = String(
+      draftIdFromUrl ||
+        appIdFromUrl ||
+        application?.applicationId ||
+        application?.ApplicationId ||
+        ""
+    );
+    const listContains = (list, id) =>
+      id &&
+      list.some((row) => getNavApplicationRowId(row) === String(id));
+    if (urlKey && listContains(fromFilter, urlKey)) return fromFilter;
+    if (urlKey && listContains(fromLegacy, urlKey)) return fromLegacy;
+    if (fromFilter.length) return fromFilter;
+    return fromLegacy;
+  }, [
+    filteredApplications,
+    applications,
+    draftIdFromUrl,
+    appIdFromUrl,
+    application?.applicationId,
+    application?.ApplicationId,
+  ]);
+
   const [index, setIndex] = useState();
   const [rejectionData, setRejectionData] = useState({
     reason: "",
@@ -401,18 +437,32 @@ function ApplicationMgtDrawer({
   }, [profileSearchData, selectedMember, isEdit]);
 
   useEffect(() => {
-    if (application && applications?.length) {
-      const appKey =
-        application.applicationId || application.ApplicationId;
-      const newIndex =
-        applications.findIndex(
-          (app) =>
-            (app.applicationId || app.ApplicationId) === appKey
-        ) + 1;
-
-      setIndex(newIndex);
+    if (!applicationsForNav?.length) {
+      setIndex(undefined);
+      return;
     }
-  }, [open, application, applications]);
+    const urlOrAppKey = String(
+      draftIdFromUrl ||
+        appIdFromUrl ||
+        application?.applicationId ||
+        application?.ApplicationId ||
+        ""
+    );
+    if (!urlOrAppKey) {
+      setIndex(undefined);
+      return;
+    }
+    const found = applicationsForNav.findIndex(
+      (app) => getNavApplicationRowId(app) === urlOrAppKey
+    );
+    setIndex(found === -1 ? undefined : found + 1);
+  }, [
+    open,
+    application,
+    applicationsForNav,
+    appIdFromUrl,
+    draftIdFromUrl,
+  ]);
 
   // Keep form stable while switching records; only block on the very first load.
   const showLoader = loading && !application;
@@ -442,16 +492,19 @@ function ApplicationMgtDrawer({
     dispatch(getApplicationById({ id: appIdFromUrl }));
   }, [dispatch, appIdFromUrl, draftIdFromUrl, application]);
 
+  // Align URL with loaded application only when they already match or URL has no id yet.
+  // If URL already points at another id, Redux may still hold the previous record until
+  // getApplicationById fulfills — overwriting the URL here causes prev/next flicker.
   useEffect(() => {
     if (loading || !application) return;
     const urlApp =
       searchParams.get("applicationId") || searchParams.get("id") || "";
     const urlDraft = searchParams.get("draftId") || "";
-    // New application: no id in URL — never push stale Redux application back into the query string
     if (!urlApp && !urlDraft) return;
     if (application.type === "draft") {
       const da = application.ApplicationId;
-      if (da && String(urlDraft) !== String(da)) {
+      if (!da) return;
+      if (!urlDraft) {
         navigate(
           {
             pathname: "/applicationMgt",
@@ -462,11 +515,14 @@ function ApplicationMgtDrawer({
           },
           { replace: true }
         );
+        return;
       }
+      if (String(urlDraft) === String(da)) return;
       return;
     }
     const aid = application.applicationId || application.ApplicationId;
-    if (aid && String(urlApp) !== String(aid)) {
+    if (!aid) return;
+    if (!urlApp) {
       navigate(
         {
           pathname: "/applicationMgt",
@@ -477,14 +533,16 @@ function ApplicationMgtDrawer({
         },
         { replace: true }
       );
+      return;
     }
+    if (String(urlApp) === String(aid)) return;
   }, [application, loading, navigate, searchParams]);
 
   const { countriesOptions, countriesData, loadingC, errorC } = useSelector(
     (state) => state.countries
   );
   console.log(countriesOptions, "countriesOptions");
-  const nextPrevData = { total: applications?.length };
+  const nextPrevData = { total: applicationsForNav?.length || 0 };
   const [originalData, setOriginalData] = useState(null);
   const mapApiToState = (apiData) => {
     if (!apiData) return inputValue;
@@ -2161,20 +2219,26 @@ function ApplicationMgtDrawer({
   };
 
   function navigateApplication(direction) {
-    if (index === -1 || !applications?.length) return;
+    if (
+      index == null ||
+      index < 1 ||
+      !applicationsForNav?.length
+    ) {
+      return;
+    }
 
     let newIndex = index;
 
     if (direction === "prev" && index > 1) {
       newIndex = index - 1;
-    } else if (direction === "next" && index < applications.length - 1) {
+    } else if (direction === "next" && index < applicationsForNav.length) {
       newIndex = index + 1;
     } else {
       return;
     }
 
     setIndex(newIndex);
-    const newApplication = applications[newIndex];
+    const newApplication = applicationsForNav[newIndex - 1];
 
     if (newApplication) {
       const newdata = mapApiToState(newApplication);
@@ -2321,11 +2385,8 @@ function ApplicationMgtDrawer({
       <div style={{ backgroundColor: "#f6f7f8" }}>
         <div
           style={{ marginRight: "2.25rem" }}
-          className="d-flex justify-content-between align-items-center py-3"
+          className="d-flex justify-content-end align-items-center py-3"
         >
-          <div>
-            <Breadcrumb />
-          </div>
           <div className="d-flex align-items-center gap-3">
             {!isEdit && (
               <>
@@ -2406,6 +2467,11 @@ function ApplicationMgtDrawer({
               <div className="d-flex align-items-center">
                 <Button
                   className="me-1 gray-btn butn"
+                  disabled={
+                    index == null ||
+                    index <= 1 ||
+                    !nextPrevData?.total
+                  }
                   onClick={() => navigateApplication("prev")}
                 >
                   <FaAngleLeft className="deatil-header-icon" />
@@ -2414,10 +2480,17 @@ function ApplicationMgtDrawer({
                   className="mb-0 mx-2"
                   style={{ fontWeight: "500", fontSize: "14px" }}
                 >
-                  {index} of {nextPrevData?.total}
+                  {index != null && nextPrevData?.total
+                    ? `${index} of ${nextPrevData.total}`
+                    : "—"}
                 </p>
                 <Button
                   className="me-1 gray-btn butn"
+                  disabled={
+                    index == null ||
+                    !nextPrevData?.total ||
+                    index >= nextPrevData.total
+                  }
                   onClick={() => navigateApplication("next")}
                 >
                   <FaAngleRight className="deatil-header-icon" />
