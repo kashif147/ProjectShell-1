@@ -1,5 +1,15 @@
 import { useState, React, useRef, useEffect, useMemo } from "react";
-import { Table, Checkbox, DatePicker, Modal, TimePicker, Radio, Select, Drawer, Switch } from "antd";
+import {
+  Table,
+  Checkbox,
+  DatePicker,
+  Modal,
+  TimePicker,
+  Radio,
+  Select,
+  Drawer,
+  Switch,
+} from "antd";
 import { Link, useLocation, useNavigate } from "react-router-dom";
 import { useView } from "../../context/ViewContext";
 import {
@@ -67,7 +77,7 @@ import { useFilters } from "../../context/FilterContext";
 import { useAuthorization } from "../../context/AuthorizationContext";
 import DirectDebitForm from "../../pages/finance/components/DirectDebitForm";
 // import RefundEntryForm from "../../pages/finance/components/RefundEntryForm";
-import RefundDrawer from "../../component/finanace/RefundDrawer"
+import RefundDrawer from "../../component/finanace/RefundDrawer";
 import WriteOffDrawer from "../../component/finanace/WriteOffDrawer";
 import { fetchBatchesByType } from "../../features/profiles/batchMemberSlice";
 import CreateCasesDrawer from "../cases/CreateCasesDrawer";
@@ -79,7 +89,11 @@ import { getAllLookups } from "../../features/LookupsSlice";
 import { baseURL } from "../../utils/Utilities";
 import "../../styles/CreateCasesDrawer.css";
 
-function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalContactDrawer, selectedRowsCount }) {
+function HeaderDetails({
+  hideBreadcrumb = false,
+  setcontactDrawer: setExternalContactDrawer,
+  selectedRowsCount,
+}) {
   const { Search } = Input;
   const { TextArea } = Input;
   const { filtersState } = useFilters();
@@ -111,7 +125,6 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
   const [casesDrawerOpen, setCasesDrawerOpen] = useState(false);
   const [eventDrawerOpen, setEventDrawerOpen] = useState(false);
   const refundFormRef = useRef(null);
-
 
   const handleDateChange = (val) => {
     setValue(val); // val is a dayjs or null
@@ -155,22 +168,33 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     const keys = selectedCaseRows.map((r) => r.key);
     const payload = {};
     if (editCasesDraft.incidentDate != null) {
-      payload["Incident Date"] = editCasesDraft.incidentDate.format("YYYY-MM-DD");
+      payload["Incident Date"] =
+        editCasesDraft.incidentDate.format("YYYY-MM-DD");
     }
-    if (editCasesDraft.location !== KEEP_AS_IS) payload.Location = editCasesDraft.location;
-    if (editCasesDraft.category !== KEEP_AS_IS) payload.Category = editCasesDraft.category;
-    if (editCasesDraft.caseType !== KEEP_AS_IS) payload["Case Type"] = editCasesDraft.caseType;
-    if (editCasesDraft.status !== KEEP_AS_IS) payload.Status = editCasesDraft.status;
-    if (editCasesDraft.priority !== KEEP_AS_IS) payload.Priority = editCasesDraft.priority;
+    if (editCasesDraft.location !== KEEP_AS_IS)
+      payload.Location = editCasesDraft.location;
+    if (editCasesDraft.category !== KEEP_AS_IS)
+      payload.Category = editCasesDraft.category;
+    if (editCasesDraft.caseType !== KEEP_AS_IS)
+      payload["Case Type"] = editCasesDraft.caseType;
+    if (editCasesDraft.status !== KEEP_AS_IS)
+      payload.Status = editCasesDraft.status;
+    if (editCasesDraft.priority !== KEEP_AS_IS)
+      payload.Priority = editCasesDraft.priority;
     if (editCasesDraft.dueDate != null) {
       payload["Due Date"] = editCasesDraft.dueDate.format("YYYY-MM-DD");
     }
     if (editCasesDraft.pertinentToFileReview !== KEEP_AS_IS) {
-      payload["Pertinent to File Review"] = editCasesDraft.pertinentToFileReview === true || editCasesDraft.pertinentToFileReview === "true";
+      payload["Pertinent to File Review"] =
+        editCasesDraft.pertinentToFileReview === true ||
+        editCasesDraft.pertinentToFileReview === "true";
     }
-    if (editCasesDraft.fileNumber !== KEEP_AS_IS) payload["File Number"] = editCasesDraft.fileNumber;
-    if (editCasesDraft.assignee !== KEEP_AS_IS) payload.Assignee = editCasesDraft.assignee;
-    if (editCasesDraft.relatedMembers !== KEEP_AS_IS) payload["Related Member(s)"] = editCasesDraft.relatedMembers;
+    if (editCasesDraft.fileNumber !== KEEP_AS_IS)
+      payload["File Number"] = editCasesDraft.fileNumber;
+    if (editCasesDraft.assignee !== KEEP_AS_IS)
+      payload.Assignee = editCasesDraft.assignee;
+    if (editCasesDraft.relatedMembers !== KEEP_AS_IS)
+      payload["Related Member(s)"] = editCasesDraft.relatedMembers;
     if (Object.keys(payload).length > 0 && applyCasesUpdateRef.current) {
       applyCasesUpdateRef.current(keys, payload);
     }
@@ -213,7 +237,9 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     globleFilters,
   } = useTableColumns();
 
-  const { currentTemplateId } = useSelector((state) => state.applicationWithFilter);
+  const { currentTemplateId } = useSelector(
+    (state) => state.applicationWithFilter,
+  );
 
   const plainOptions = ["Approve", "Reject"];
   const screenName = location?.state?.search;
@@ -246,15 +272,20 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     },
   ];
   const handleAction = (label, e) => {
-
     // now safe
   };
   const [contactDrawer, setcontactDrawer] = useState(false);
 
   const defaultMenuItems = [
-    { label: "Executive council approval", onClick: (e) => handleBulkApproval(selectedIds) },
+    {
+      label: "Executive council approval",
+      onClick: (e) => handleBulkApproval(selectedIds),
+    },
     { label: "Bulk Changes", onClick: (e) => handleAction("Bulk Changes", e) },
-    { label: "Send Notification", onClick: (e) => handleAction("Bulk Changes", e) },
+    {
+      label: "Send Notification",
+      onClick: (e) => handleAction("Bulk Changes", e),
+    },
     { label: "Print Labels", onClick: (e) => handleAction("Print Labels", e) },
     {
       label: "Generate Bulk NFC Tag",
@@ -266,10 +297,17 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       label: `Assign ${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"}`,
       onClick: (e) => {
         e?.domEvent?.stopPropagation();
-        
+
         // Selection check for lookup routes
-        if ((nav === "/worklocation" || nav === "/region" || nav === "/branch") && selectedWorkLocations.length === 0) {
-          MyAlert("warning", "Selection Required", "plz select region barch or worklocation frist");
+        if (
+          (nav === "/worklocation" || nav === "/region" || nav === "/branch") &&
+          selectedWorkLocations.length === 0
+        ) {
+          MyAlert(
+            "warning",
+            "Selection Required",
+            "plz select region barch or worklocation frist",
+          );
           return;
         }
 
@@ -302,14 +340,12 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     if (data) {
       const filteredResults = globleFilters?.reduce((acc, i) => {
         const filteredColumns = data.filter(
-          (column) => column?.titleColumn === i?.titleColumn && i?.isCheck
+          (column) => column?.titleColumn === i?.titleColumn && i?.isCheck,
         );
         return [...acc, ...filteredColumns];
       }, []);
 
-
       settrueFilters(filteredResults);
-
     }
   }
 
@@ -329,7 +365,10 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
 
   const regions = useSelector((state) => state.regions.regions, shallowEqual);
   const regionsLoading = useSelector((state) => state.regions.loading);
-  const { selectedWorkLocations = [] } = useSelector((state) => state.lookups, shallowEqual);
+  const { selectedWorkLocations = [] } = useSelector(
+    (state) => state.lookups,
+    shallowEqual,
+  );
   useEffect(() => {
     if (!regionsLoading && (!regions || regions.length === 0)) {
       dispatch(fetchRegions());
@@ -338,7 +377,11 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
   const [tempSelectedDate, setTempSelectedDate] = useState(null);
   const handleBulkApproval = async (selectedApplications) => {
     if (!selectedApplications || selectedApplications.length === 0) {
-      MyAlert('error', 'Selection Required', 'Please select at least one application to approve.');
+      MyAlert(
+        "error",
+        "Selection Required",
+        "Please select at least one application to approve.",
+      );
       return;
     }
 
@@ -349,12 +392,12 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
 
     // Create the modal
     modalRef = Modal.confirm({
-      title: 'Select Processing Date',
+      title: "Select Processing Date",
       icon: null,
       width: 500,
-      className: 'bulk-approval-modal',
+      className: "bulk-approval-modal",
       content: (
-        <div style={{ padding: '10px 0 20px 0' }}>
+        <div style={{ padding: "10px 0 20px 0" }}>
           <MyDatePicker1
             label="Processing Date"
             name="processingDate"
@@ -366,11 +409,13 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                 modalRef.update({
                   okButtonProps: {
                     disabled: !date,
-                    style: date ? {
-                      backgroundColor: '#45669d',
-                      borderColor: '#45669d'
-                    } : {}
-                  }
+                    style: date
+                      ? {
+                          backgroundColor: "#45669d",
+                          borderColor: "#45669d",
+                        }
+                      : {},
+                  },
                 });
               }
             }}
@@ -379,42 +424,46 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             format="DD/MM/YYYY"
           />
           {isProcessing && (
-            <div style={{
-              textAlign: 'center',
-              padding: '30px 0 10px 0',
-              borderTop: '1px solid #f0f0f0',
-              marginTop: '20px'
-            }}>
-              <LoadingOutlined style={{ fontSize: 32, color: '#45669d', marginBottom: 15 }} />
-              <div style={{ fontSize: 16, fontWeight: 500, color: '#45669d' }}>
+            <div
+              style={{
+                textAlign: "center",
+                padding: "30px 0 10px 0",
+                borderTop: "1px solid #f0f0f0",
+                marginTop: "20px",
+              }}
+            >
+              <LoadingOutlined
+                style={{ fontSize: 32, color: "#45669d", marginBottom: 15 }}
+              />
+              <div style={{ fontSize: 16, fontWeight: 500, color: "#45669d" }}>
                 Processing {selectedApplications.length} application(s)...
               </div>
-              <div style={{ marginTop: 8, color: '#666', fontSize: 14 }}>
+              <div style={{ marginTop: 8, color: "#666", fontSize: 14 }}>
                 This may take a moment for large batches
               </div>
             </div>
           )}
         </div>
       ),
-      okText: 'Approve',
-      cancelText: 'Cancel',
+      okText: "Approve",
+      cancelText: "Cancel",
       okButtonProps: {
         disabled: true,
         style: {
-          backgroundColor: '#45669d',
-          borderColor: '#45669d',
-          color: 'white',
-        }
+          backgroundColor: "#45669d",
+          borderColor: "#45669d",
+          color: "white",
+        },
       },
       cancelButtonProps: {
         style: {
-          borderColor: '#d9d9d9',
-          color: 'rgba(0, 0, 0, 0.88)'
-        }
+          borderColor: "#d9d9d9",
+          color: "rgba(0, 0, 0, 0.88)",
+        },
       },
       onOk: async () => {
         if (!selectedDate) {
-          MyAlert('error', 'Date Required', 'Please select a processing date.');
+          MyAlert("error", "Date Required", "Please select a processing date.");
           return Promise.reject();
         }
 
@@ -426,39 +475,39 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
               disabled: true,
               loading: true,
               style: {
-                backgroundColor: '#45669d',
-                borderColor: '#45669d',
-                opacity: 0.7
-              }
+                backgroundColor: "#45669d",
+                borderColor: "#45669d",
+                opacity: 0.7,
+              },
             },
             cancelButtonProps: {
               disabled: true,
               style: {
                 opacity: 0.5,
-                pointerEvents: 'none'
-              }
-            }
+                pointerEvents: "none",
+              },
+            },
           });
         }
 
         try {
           const applicationIds = selectedApplications; // It's already an array of IDs
-          const formattedDate = dayjs(selectedDate).format('YYYY-MM-DD');
+          const formattedDate = dayjs(selectedDate).format("YYYY-MM-DD");
 
           const requestData = {
             applicationIds: applicationIds,
-            processingDate: formattedDate
+            processingDate: formattedDate,
           };
 
           // Show processing notification
-          const processingKey = 'bulk-approval-processing';
+          const processingKey = "bulk-approval-processing";
           message.loading({
             content: `Approving ${selectedApplications.length} application(s)...`,
             duration: 0,
             key: processingKey,
             style: {
-              marginTop: '50vh',
-            }
+              marginTop: "50vh",
+            },
           });
 
           const token = localStorage.getItem("token");
@@ -467,11 +516,11 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             requestData,
             {
               headers: {
-                'Content-Type': 'application/json',
-                'Authorization': `Bearer ${token}`
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${token}`,
               },
               timeout: 300000,
-            }
+            },
           );
 
           // Clear processing notification
@@ -479,21 +528,26 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
 
           if (response.status === 200 || response.status === 204) {
             MyAlert(
-              'success',
-              'Approval Successful',
-              `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format('DD/MM/YYYY')}!`
+              "success",
+              "Approval Successful",
+              `Successfully approved ${applicationIds.length} application(s) with processing date ${dayjs(selectedDate).format("DD/MM/YYYY")}!`,
             );
 
             // Clear selected IDs context
             setSelectedIds([]);
 
             // Refresh the grid
-            if (location.pathname === "/applicationMgt" || location.pathname === "/Applications") {
-              dispatch(getApplicationsWithFilter({
-                templateId: currentTemplateId || "",
-                page: 1,
-                limit: 10
-              }));
+            if (
+              location.pathname === "/applicationMgt" ||
+              location.pathname === "/Applications"
+            ) {
+              dispatch(
+                getApplicationsWithFilter({
+                  templateId: currentTemplateId || "",
+                  page: 1,
+                  limit: 10,
+                }),
+              );
             } else {
               dispatch(getAllApplications());
             }
@@ -502,18 +556,16 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             return Promise.resolve();
           } else {
             MyAlert(
-              'warning',
-              'Partial Success',
-              `Approval completed but with status: ${response.status}`
+              "warning",
+              "Partial Success",
+              `Approval completed but with status: ${response.status}`,
             );
             Modal.destroyAll();
             return Promise.resolve();
           }
         } catch (error) {
-
-
           // Clear any processing notifications
-          message.destroy('bulk-approval-processing');
+          message.destroy("bulk-approval-processing");
 
           // Reset modal state on error
           isProcessing = false;
@@ -522,53 +574,55 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
               okButtonProps: {
                 disabled: !selectedDate,
                 loading: false,
-                style: selectedDate ? {
-                  backgroundColor: '#45669d',
-                  borderColor: '#45669d'
-                } : {}
+                style: selectedDate
+                  ? {
+                      backgroundColor: "#45669d",
+                      borderColor: "#45669d",
+                    }
+                  : {},
               },
               cancelButtonProps: {
                 disabled: false,
                 style: {
-                  borderColor: '#d9d9d9',
-                  color: 'rgba(0, 0, 0, 0.88)'
-                }
-              }
+                  borderColor: "#d9d9d9",
+                  color: "rgba(0, 0, 0, 0.88)",
+                },
+              },
             });
           }
 
-          if (error.code === 'ECONNABORTED') {
+          if (error.code === "ECONNABORTED") {
             MyAlert(
-              'error',
-              'Request Timeout',
+              "error",
+              "Request Timeout",
               `The approval request is taking too long to process ${selectedApplications.length} applications. ` +
-              `The process may still be running in the background. Please check back later.`
+                `The process may still be running in the background. Please check back later.`,
             );
           } else if (error.response) {
             MyAlert(
-              'error',
-              'Approval Failed',
-              `Error ${error.response.status}: ${error.response.data?.message || 'Failed to approve applications'}`
+              "error",
+              "Approval Failed",
+              `Error ${error.response.status}: ${error.response.data?.message || "Failed to approve applications"}`,
             );
           } else if (error.request) {
             MyAlert(
-              'error',
-              'Network Error',
-              'No response from server. Please check your connection.'
+              "error",
+              "Network Error",
+              "No response from server. Please check your connection.",
             );
           } else {
             MyAlert(
-              'error',
-              'Error',
-              `Failed to approve applications: ${error.message}`
+              "error",
+              "Error",
+              `Failed to approve applications: ${error.message}`,
             );
           }
           return Promise.reject();
         }
       },
       onCancel: () => {
-        if (typeof MyAlert === 'function') {
-          MyAlert('info', 'Cancelled', 'Approval process was cancelled.');
+        if (typeof MyAlert === "function") {
+          MyAlert("info", "Cancelled", "Approval process was cancelled.");
         }
       },
     });
@@ -576,15 +630,24 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
 
   const handleAssignIRO = async (selectedUser, selectedWorkLocations) => {
     if (!selectedWorkLocations || selectedWorkLocations.length === 0) {
-      MyAlert("warning", "Selection Required", "Please select at least one work location.");
+      MyAlert(
+        "warning",
+        "Selection Required",
+        "Please select at least one work location.",
+      );
       return;
     }
 
     const token = localStorage.getItem("token");
     const isUnassign = !selectedUser;
-    const officerId = isUnassign ? null : (selectedUser._id || selectedUser.id);
+    const officerId = isUnassign ? null : selectedUser._id || selectedUser.id;
 
-    const officerLabel = nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO";
+    const officerLabel =
+      nav === "/branch"
+        ? "Branch Manager"
+        : nav === "/region"
+          ? "Region Officer"
+          : "IRO";
     const actionLabel = isUnassign ? "Unassigning" : "Assigning";
 
     const processingKey = "iro-assignment-processing";
@@ -595,7 +658,9 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     });
 
     try {
-      const locationIds = selectedWorkLocations.map((location) => location._id || location.id);
+      const locationIds = selectedWorkLocations.map(
+        (location) => location._id || location.id,
+      );
       const payload = {
         ids: locationIds,
         officer: officerId,
@@ -617,7 +682,10 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       dispatch(getAllLookups());
       setcontactDrawer(false);
     } catch (error) {
-      console.error(`Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}:`, error);
+      console.error(
+        `Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}:`,
+        error,
+      );
       message.error({
         content: `Failed to ${isUnassign ? "unassign" : "assign"} ${officerLabel}: ${error.response?.data?.message || error.message}`,
         key: processingKey,
@@ -673,7 +741,12 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
   ];
 
   const addMore = [
-    { titleColumn: "Membership No", ellipsis: true, isGride: true, width: "100px" },
+    {
+      titleColumn: "Membership No",
+      ellipsis: true,
+      isGride: true,
+      width: "100px",
+    },
     { titleColumn: "Forename", ellipsis: true, isGride: true, width: "120px" },
     { titleColumn: "Surname", ellipsis: true, isGride: true, width: "420px" },
     { titleColumn: "Full Name", ellipsis: true, isGride: true, width: "420px" },
@@ -824,45 +897,43 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
           location?.pathname === "/RosterSummary" ||
           location?.pathname === "/EventsSummary" ||
           location?.pathname === "/CasesSummary") && (
-            <FaClipboardList
-              style={{
-                fontSize: "15px",
-                color: "#45669d",
-              }}
-            />
-          )}
+          <FaClipboardList
+            style={{
+              fontSize: "15px",
+              color: "#45669d",
+            }}
+          />
+        )}
       </>
     );
   };
   const currentKey = null;
 
-  const batchSearchPaths = [
-
-  ];
+  const batchSearchPaths = [];
   const isBatchSearchPage = batchSearchPaths.includes(location.pathname);
 
   return (
     <div className="" style={{ width: "100%", minWidth: 0 }}>
       {/* New Breadcrumb Component */}
-      {
-        !hideBreadcrumb &&
+      {!hideBreadcrumb &&
         location?.pathname !== "/CommunicationBatchDetail" &&
         !location?.pathname?.startsWith("/BatchMemberSummary") &&
         !location?.pathname?.startsWith("/Batch/") &&
-        !location?.pathname?.startsWith("/SimpleBatchMemberSummary") &&
-        <Breadcrumb />
-      }
+        !location?.pathname?.startsWith("/SimpleBatchMemberSummary") && (
+          <Breadcrumb />
+        )}
 
       <div
-        className={`details-header d-flex w-100 overflow-hidden ${location?.pathname == "/Details" ||
+        className={`details-header d-flex w-100 overflow-hidden ${
+          location?.pathname == "/Details" ||
           location?.pathname == "/CasesById" ||
           location?.pathname == "/AddNewProfile" ||
           location?.pathname == "/ClaimsById" ||
           location?.pathname == "/AddClaims" ||
           location?.pathname == "/Doucmnets"
-          ? "Header-border"
-          : ""
-          }`}
+            ? "Header-border"
+            : ""
+        }`}
       >
         <div style={{ width: "100%" }}>
           {/* Action buttons for detail pages */}
@@ -874,80 +945,80 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             location?.pathname == "/Doucmnets" ||
             location?.pathname == "/AproveMembersip" ||
             location?.pathname == "/ChangeCatById") && (
-              <div className="d-flex justify-content-end align-items-baseline mb-3">
-                <div className="d-flex align-items-baseline">
-                  {location?.pathname == "/AproveMembersip" ||
-                    location?.pathname == "/ChangeCatById" ? (
-                    <Radio.Group
-                      style={{ marginRight: "10px" }}
-                      options={plainOptions}
-                      value={selectedValue1}
-                      onChange={handleChangeCheckBox}
-                      optionType="button"
-                      buttonStyle="solid"
-                    />
-                  ) : (
-                    <Button
-                      style={{
-                        marginRight: "50px",
-                        color: "white",
-                        borderRadius: "3px",
-                        backgroundColor: "#45669d",
-                      }}
-                      onClick={() => {
-                        if (nav == "/ClaimsById") handlClaimDrawerChng();
-                      }}
-                    >
-                      Create
-                    </Button>
-                  )}
-                  <Button onClick={goBack} className="me-1 gray-btn butn">
-                    Return to summary
-                  </Button>
-                  <Button onClick={goBack} className="me-1 gray-btn butn">
-                    Print
-                  </Button>
+            <div className="d-flex justify-content-end align-items-baseline mb-3">
+              <div className="d-flex align-items-baseline">
+                {location?.pathname == "/AproveMembersip" ||
+                location?.pathname == "/ChangeCatById" ? (
+                  <Radio.Group
+                    style={{ marginRight: "10px" }}
+                    options={plainOptions}
+                    value={selectedValue1}
+                    onChange={handleChangeCheckBox}
+                    optionType="button"
+                    buttonStyle="solid"
+                  />
+                ) : (
                   <Button
-                    disabled={
-                      !gridData?.length ||
-                      navigationRowIndex < 0 ||
-                      navigationRowIndex <= 0
-                    }
-                    onClick={profilPrevBtnFtn}
-                    className="me-1 gray-btn butn"
-                  >
-                    <FaAngleLeft className="deatil-header-icon" />
-                  </Button>
-                  <p
-                    className=""
                     style={{
-                      fontWeight: "500",
-                      fontSize: "14px",
-                      marginLeft: "4px",
+                      marginRight: "50px",
+                      color: "white",
+                      borderRadius: "3px",
+                      backgroundColor: "#45669d",
+                    }}
+                    onClick={() => {
+                      if (nav == "/ClaimsById") handlClaimDrawerChng();
                     }}
                   >
-                    {(() => {
-                      const total = gridData?.length ?? 0;
-                      if (!total) return "—";
-                      if (navigationRowIndex < 0) return `— of ${total}`;
-                      return `${navigationRowIndex + 1} of ${total}`;
-                    })()}
-                  </p>
-                  <Button
-                    disabled={
-                      !gridData?.length ||
-                      navigationRowIndex < 0 ||
-                      navigationRowIndex >= gridData.length - 1
-                    }
-                    onClick={profilNextBtnFtn}
-                    className="me-1 gray-btn butn"
-                    style={{ marginLeft: "8px" }}
-                  >
-                    <FaAngleRight className="deatil-header-icon" />
+                    Create
                   </Button>
-                </div>
+                )}
+                <Button onClick={goBack} className="me-1 gray-btn butn">
+                  Return to summary
+                </Button>
+                <Button onClick={goBack} className="me-1 gray-btn butn">
+                  Print
+                </Button>
+                <Button
+                  disabled={
+                    !gridData?.length ||
+                    navigationRowIndex < 0 ||
+                    navigationRowIndex <= 0
+                  }
+                  onClick={profilPrevBtnFtn}
+                  className="me-1 gray-btn butn"
+                >
+                  <FaAngleLeft className="deatil-header-icon" />
+                </Button>
+                <p
+                  className=""
+                  style={{
+                    fontWeight: "500",
+                    fontSize: "14px",
+                    marginLeft: "4px",
+                  }}
+                >
+                  {(() => {
+                    const total = gridData?.length ?? 0;
+                    if (!total) return "—";
+                    if (navigationRowIndex < 0) return `— of ${total}`;
+                    return `${navigationRowIndex + 1} of ${total}`;
+                  })()}
+                </p>
+                <Button
+                  disabled={
+                    !gridData?.length ||
+                    navigationRowIndex < 0 ||
+                    navigationRowIndex >= gridData.length - 1
+                  }
+                  onClick={profilNextBtnFtn}
+                  className="me-1 gray-btn butn"
+                  style={{ marginLeft: "8px" }}
+                >
+                  <FaAngleRight className="deatil-header-icon" />
+                </Button>
               </div>
-            )}
+            </div>
+          )}
 
           {(location?.pathname == "/ClaimSummary" ||
             location?.pathname == "/Applications" ||
@@ -987,342 +1058,381 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             location?.pathname == "/write-offs" ||
             location?.pathname == "/Refunds" ||
             location?.pathname == "/InAppNotifications") && (
-              <div className="search-main">
-                <div className="title d-flex justify-content-between align-items-start">
-                  <div>
-                    {nav === "/RemindersSummary" ? (
-                      <>
-                        <h2 className="title-main" style={{ marginBottom: 4 }}>
-                          Reminder Batches
-                        </h2>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: 14,
-                            color: "#595959",
-                            fontWeight: 400,
-                          }}
-                        >
-                          Manage and monitor your reminders
-                        </p>
-                      </>
-                    ) : nav === "/Cancallation" ? (
-                      <>
-                        <h2 className="title-main" style={{ marginBottom: 4 }}>
-                          Cancellation batches
-                        </h2>
-                        <p
-                          style={{
-                            margin: 0,
-                            fontSize: 14,
-                            color: "#595959",
-                            fontWeight: 400,
-                          }}
-                        >
-                          Manage and monitor membership cancellations
-                        </p>
-                      </>
-                    ) : (
-                      <h2 className="title-main">
-                        {nav == "/" && location?.state == null
-                          ? `Profile`
-                          : location?.state?.search || (nav === "/DirectDebitAuthorization" ? "Direct Debit Authorization" : nav === "/DirectDebit" ? "Direct Debit" : nav === "/DirectDebitBatchDetails" ? "Direct Debit Batch Details" : nav === "/Refunds" ? "Refunds" : nav === "/write-offs" ? "Write-offs" : nav === "/onlinePayment" ? "Finance" : nav === "/MembershipDashboard" ? "Subscriptions & Rewards" : "")}
+            <div className="search-main">
+              <div className="title d-flex justify-content-between align-items-start">
+                <div>
+                  {nav === "/RemindersSummary" ? (
+                    <>
+                      <h2 className="title-main" style={{ marginBottom: 4 }}>
+                        Reminder Batches
                       </h2>
-                    )}
-                  </div>
-
-                  <div className="d-flex">
-                    {/* For templateSummary, only show Create button */}
-                    {nav === "/templeteSummary" ? (
-                      <Button
-                        onClick={() => {
-                          navigate('/templeteConfig', { state: { state: "Templetes" } });
-                        }}
+                      <p
                         style={{
-                          marginRight: "50px", // This gives the margin right
-                          color: "white",
-                          borderRadius: "3px",
-                          backgroundColor: "#45669d",
+                          margin: 0,
+                          fontSize: 14,
+                          color: "#595959",
+                          fontWeight: 400,
                         }}
-                        className="butn"
                       >
-                        Create
-                      </Button>
-                    ) : (
-                      <>
-                        {nav === "/CorrespondencesSummary" ||
-                          nav === "/Sms" ||
-                          nav === "/Emails" ? (
-                          <div style={{ marginRight: "50px" }}>
-                            <New />
-                          </div>
-                        ) : nav === "/ClaimSummary" ? (
-                          <CreateClaim />
-                        ) : (
-                          nav === "/Reconciliation" || (
-                            ["/Batches", "/Import", "/Deductions", "/StandingOrders", "/Cheque", "/Refunds", "/write-offs", "/onlinePayment", "/DirectDebit"].includes(nav) && !hasPermission('payments:create')
-                          ) || (
-                              ["/Applications", "/Summary"].includes(nav) && !hasPermission('application:create')
-                            ) || (
-                              nav === "/EventsSummary" && !hasPermission('events:create')
-                            ) || (
-                              nav === "/ChangCateSumm" && !hasPermission('changeOfCategory:create')
-                            ) || (
-                              nav === "/CasesSummary" && (screenName === "All Issues" || screenName === "Assigned to me") && !hasPermission('queries:create')
-                            ) || (
-                              nav === "/InAppNotifications" && !hasPermission('notifications:create')
-                            ) ? null : (
-                            <Button
-                              onClick={() => {
-                                if (nav == "/Applications") {
-                                  navigate('/applicationMgt')
-                                } else if (nav == "/ClaimSummary") {
-                                  handlClaimDrawerChng();
-                                } else if (nav == "/Transfers")
-                                  setTransferDrawer(!TransferDrawer);
-                                else if (nav === "/RosterSummary")
-                                  setrosterDrawer(!rosterDrawer);
-                                else if (nav === "/Summary") navigate('/applicationMgt');
-                                else if (
-                                  nav === "/CornMarket" ||
-                                  nav === "/NewGraduate" ||
-                                  nav === "/CornMarketRewards" ||
-                                  nav === "/RecruitAFriend" ||
-                                  nav === "/DirectDebit" ||
-                                  nav === "/InAppNotifications"
-                                ) {
-                                  setIsSimpleBatchOpen(true);
-                                }
-                                else if (
-                                  nav === "/Import" ||
-                                  // nav === "/onlinePayment" ||
-                                  nav === "/Deductions" ||
-                                  nav === "/StandingOrders" ||
-                                  nav === "/Cheque" ||
-                                  nav === "/CornMarket"
-                                ) {
-                                  setIsBatchOpen(!isBatchOpen);
-                                } else if (nav === "/ChangCateSumm") {
-                                  setisDrawerOpen(!isDrawerOpen);
-                                } else if (nav === "/DirectDebitAuthorization") {
-                                  setDdDrawerOpen(true);
-                                } else if (nav === "/Refunds") {
-                                  setRefundDrawerOpen(true);
-                                } else if (nav === "/write-offs") {
-                                  setWriteOffDrawerOpen(true);
-                                } else if (nav === "/CasesSummary") {
-                                  setCasesDrawerOpen(true);
-                                } else if (nav === "/EventsSummary") {
-                                  setEventDrawerOpen(true);
-                                }
-                              }}
-                              style={{
-                                marginRight: "50px",
-                                color: "white",
-                                borderRadius: "3px",
-                                backgroundColor: "#45669d",
-                              }}
-                              className="butn"
-                            >
-                              Create
-                            </Button>
-                          )
-                        )}
-                        <SimpleMenu
-                          title={
-                            <>
-                              <Button className="me-1 gray-btn butn">Export</Button>
-                            </>
-                          }
-                          data={exportbtn}
-                          isSearched={true}
-                          isCheckBox={false}
-                          actions={genaratePdf}
-                        />
-
-                        {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
-                        <Button className="me-1 gray-btn butn">Share</Button>
-                        <Button className="me-1 gray-btn butn">DETAILS VIEW</Button>
-                        {currentKey && (
-                          <Button
-                            className="me-1 gray-btn butn"
-                            onClick={() => toggleView(currentKey)}
-                          >
-                            {viewMode[currentKey] === "card"
-                              ? "Card view"
-                              : "Grid view"}
-                          </Button>
-                        )}
-                        <ActionDropdown items={menuItems} />
-                      </>
-                    )}
-                  </div>
+                        Manage and monitor your reminders
+                      </p>
+                    </>
+                  ) : nav === "/Cancallation" ? (
+                    <>
+                      <h2 className="title-main" style={{ marginBottom: 4 }}>
+                        Cancellation Batches
+                      </h2>
+                      <p
+                        style={{
+                          margin: 0,
+                          fontSize: 14,
+                          color: "#595959",
+                          fontWeight: 400,
+                        }}
+                      >
+                        Manage and monitor membership cancellations
+                      </p>
+                    </>
+                  ) : (
+                    <h2 className="title-main">
+                      {nav == "/" && location?.state == null
+                        ? `Profile`
+                        : location?.state?.search ||
+                          (nav === "/DirectDebitAuthorization"
+                            ? "Direct Debit Authorization"
+                            : nav === "/DirectDebit"
+                              ? "Direct Debit"
+                              : nav === "/DirectDebitBatchDetails"
+                                ? "Direct Debit Batch Details"
+                                : nav === "/Refunds"
+                                  ? "Refunds"
+                                  : nav === "/write-offs"
+                                    ? "Write-offs"
+                                    : nav === "/onlinePayment"
+                                      ? "Finance"
+                                      : nav === "/MembershipDashboard"
+                                        ? "Subscriptions & Rewards"
+                                        : "")}
+                    </h2>
+                  )}
                 </div>
-                {nav == "/Reconciliation" ? (
-                  <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                    <Row className="align-items-baseline w-100">
-                      <DatePicker
-                        format="DD/MM/YYYY"
-                        placeholder="From Date"
-                        style={{ width: 220, marginRight: 12 }}
-                      />
-                      <DatePicker
-                        format="DD/MM/YYYY"
-                        placeholder="To Date"
-                        style={{ width: 220 }}
-                      />
-                    </Row>
-                  </div>
-                ) : nav == "/RemindersSummary" ? (
-                  <div
-                    className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
-                    style={{ gap: 8 }}
-                  >
-                    <div style={{ flex: "0 0 250px", minWidth: 200 }}>
-                      <Input
-                        className="my-input-field"
-                        placeholder="Reminder batch title"
-                        value={draftTitle}
-                        onChange={(e) => setDraftTitle(e.target.value)}
-                        onPressEnter={reminderApplySearch}
-                        style={{
-                          height: "30px",
-                          borderRadius: "4px",
-                          color: "gray",
-                        }}
-                      />
-                    </div>
-                    <DatePicker
-                      picker="year"
-                      format="YYYY"
-                      value={draftYear}
-                      onChange={setDraftYear}
-                      allowClear
-                      placeholder="Reminder year"
-                      style={{ width: 160, height: 30 }}
-                    />
+
+                <div className="d-flex">
+                  {/* For templateSummary, only show Create button */}
+                  {nav === "/templeteSummary" ? (
                     <Button
-                      htmlType="button"
-                      onClick={reminderReset}
-                      style={{
-                        backgroundColor: "#091e420a",
-                        borderRadius: "4px",
-                        border: "none",
-                        height: "32px",
-                        fontWeight: "500",
-                        color: "#42526e",
+                      onClick={() => {
+                        navigate("/templeteConfig", {
+                          state: { state: "Templetes" },
+                        });
                       }}
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      htmlType="button"
-                      onClick={reminderApplySearch}
                       style={{
-                        backgroundColor: "#45669d",
-                        borderRadius: "4px",
-                        border: "none",
-                        height: "32px",
-                        fontWeight: "500",
+                        marginRight: "50px", // This gives the margin right
                         color: "white",
-                      }}
-                    >
-                      Search
-                    </Button>
-                  </div>
-                ) : nav === "/Cancallation" ? (
-                  <div
-                    className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
-                    style={{ gap: 8 }}
-                  >
-                    <div style={{ flex: "0 0 250px", minWidth: 200 }}>
-                      <Input
-                        className="my-input-field"
-                        placeholder="Cancellation batch title"
-                        value={cbFilter.draftTitle}
-                        onChange={(e) => cbFilter.setDraftTitle(e.target.value)}
-                        onPressEnter={cbFilter.applySearch}
-                        style={{
-                          height: "30px",
-                          borderRadius: "4px",
-                          color: "gray",
-                        }}
-                      />
-                    </div>
-                    <DatePicker
-                      picker="year"
-                      format="YYYY"
-                      value={cbFilter.draftYear}
-                      onChange={cbFilter.setDraftYear}
-                      allowClear
-                      placeholder="Batch year"
-                      style={{ width: 160, height: 30 }}
-                    />
-                    <Button
-                      htmlType="button"
-                      onClick={cbFilter.reset}
-                      style={{
-                        backgroundColor: "#091e420a",
-                        borderRadius: "4px",
-                        border: "none",
-                        height: "32px",
-                        fontWeight: "500",
-                        color: "#42526e",
-                      }}
-                    >
-                      Reset
-                    </Button>
-                    <Button
-                      htmlType="button"
-                      onClick={cbFilter.applySearch}
-                      style={{
+                        borderRadius: "3px",
                         backgroundColor: "#45669d",
-                        borderRadius: "4px",
-                        border: "none",
-                        height: "32px",
-                        fontWeight: "500",
-                        color: "white",
                       }}
+                      className="butn"
                     >
-                      Search
+                      Create
                     </Button>
+                  ) : (
+                    <>
+                      {nav === "/CorrespondencesSummary" ||
+                      nav === "/Sms" ||
+                      nav === "/Emails" ? (
+                        <div style={{ marginRight: "50px" }}>
+                          <New />
+                        </div>
+                      ) : nav === "/ClaimSummary" ? (
+                        <CreateClaim />
+                      ) : nav === "/Reconciliation" ||
+                        ([
+                          "/Batches",
+                          "/Import",
+                          "/Deductions",
+                          "/StandingOrders",
+                          "/Cheque",
+                          "/Refunds",
+                          "/write-offs",
+                          "/onlinePayment",
+                          "/DirectDebit",
+                        ].includes(nav) &&
+                          !hasPermission("payments:create")) ||
+                        (["/Applications", "/Summary"].includes(nav) &&
+                          !hasPermission("application:create")) ||
+                        (nav === "/EventsSummary" &&
+                          !hasPermission("events:create")) ||
+                        (nav === "/ChangCateSumm" &&
+                          !hasPermission("changeOfCategory:create")) ||
+                        (nav === "/CasesSummary" &&
+                          (screenName === "All Issues" ||
+                            screenName === "Assigned to me") &&
+                          !hasPermission("queries:create")) ||
+                        (nav === "/InAppNotifications" &&
+                          !hasPermission("notifications:create")) ? null : (
+                        <Button
+                          onClick={() => {
+                            if (nav == "/Applications") {
+                              navigate("/applicationMgt");
+                            } else if (nav == "/ClaimSummary") {
+                              handlClaimDrawerChng();
+                            } else if (nav == "/Transfers")
+                              setTransferDrawer(!TransferDrawer);
+                            else if (nav === "/RosterSummary")
+                              setrosterDrawer(!rosterDrawer);
+                            else if (nav === "/Summary")
+                              navigate("/applicationMgt");
+                            else if (
+                              nav === "/CornMarket" ||
+                              nav === "/NewGraduate" ||
+                              nav === "/CornMarketRewards" ||
+                              nav === "/RecruitAFriend" ||
+                              nav === "/DirectDebit" ||
+                              nav === "/InAppNotifications"
+                            ) {
+                              setIsSimpleBatchOpen(true);
+                            } else if (
+                              nav === "/Import" ||
+                              // nav === "/onlinePayment" ||
+                              nav === "/Deductions" ||
+                              nav === "/StandingOrders" ||
+                              nav === "/Cheque" ||
+                              nav === "/CornMarket"
+                            ) {
+                              setIsBatchOpen(!isBatchOpen);
+                            } else if (nav === "/ChangCateSumm") {
+                              setisDrawerOpen(!isDrawerOpen);
+                            } else if (nav === "/DirectDebitAuthorization") {
+                              setDdDrawerOpen(true);
+                            } else if (nav === "/Refunds") {
+                              setRefundDrawerOpen(true);
+                            } else if (nav === "/write-offs") {
+                              setWriteOffDrawerOpen(true);
+                            } else if (nav === "/CasesSummary") {
+                              setCasesDrawerOpen(true);
+                            } else if (nav === "/EventsSummary") {
+                              setEventDrawerOpen(true);
+                            }
+                          }}
+                          style={{
+                            marginRight: "50px",
+                            color: "white",
+                            borderRadius: "3px",
+                            backgroundColor: "#45669d",
+                          }}
+                          className="butn"
+                        >
+                          Create
+                        </Button>
+                      )}
+                      <SimpleMenu
+                        title={
+                          <>
+                            <Button className="me-1 gray-btn butn">
+                              Export
+                            </Button>
+                          </>
+                        }
+                        data={exportbtn}
+                        isSearched={true}
+                        isCheckBox={false}
+                        actions={genaratePdf}
+                      />
+
+                      {/* <Button className="me-1 gray-btn butn">Executive Council</Button> */}
+                      <Button className="me-1 gray-btn butn">Share</Button>
+                      <Button className="me-1 gray-btn butn">
+                        DETAILS VIEW
+                      </Button>
+                      {currentKey && (
+                        <Button
+                          className="me-1 gray-btn butn"
+                          onClick={() => toggleView(currentKey)}
+                        >
+                          {viewMode[currentKey] === "card"
+                            ? "Card view"
+                            : "Grid view"}
+                        </Button>
+                      )}
+                      <ActionDropdown items={menuItems} />
+                    </>
+                  )}
+                </div>
+              </div>
+              {nav == "/Reconciliation" ? (
+                <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
+                  <Row className="align-items-baseline w-100">
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      placeholder="From Date"
+                      style={{ width: 220, marginRight: 12 }}
+                    />
+                    <DatePicker
+                      format="DD/MM/YYYY"
+                      placeholder="To Date"
+                      style={{ width: 220 }}
+                    />
+                  </Row>
+                </div>
+              ) : nav == "/RemindersSummary" ? (
+                <div
+                  className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
+                  style={{ gap: 8 }}
+                >
+                  <div style={{ flex: "0 0 250px", minWidth: 200 }}>
+                    <Input
+                      className="my-input-field"
+                      placeholder="Reminder batch title"
+                      value={draftTitle}
+                      onChange={(e) => setDraftTitle(e.target.value)}
+                      onPressEnter={reminderApplySearch}
+                      style={{
+                        height: "30px",
+                        borderRadius: "4px",
+                        color: "gray",
+                      }}
+                    />
                   </div>
-                ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
+                  <DatePicker
+                    picker="year"
+                    format="YYYY"
+                    value={draftYear}
+                    onChange={setDraftYear}
+                    allowClear
+                    placeholder="Reminder year"
+                    style={{ width: 160, height: 30 }}
+                  />
+                  <Button
+                    htmlType="button"
+                    onClick={reminderReset}
+                    style={{
+                      backgroundColor: "#091e420a",
+                      borderRadius: "4px",
+                      border: "none",
+                      height: "32px",
+                      fontWeight: "500",
+                      color: "#42526e",
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    htmlType="button"
+                    onClick={reminderApplySearch}
+                    style={{
+                      backgroundColor: "#45669d",
+                      borderRadius: "4px",
+                      border: "none",
+                      height: "32px",
+                      fontWeight: "500",
+                      color: "white",
+                    }}
+                  >
+                    Search
+                  </Button>
+                </div>
+              ) : nav === "/Cancallation" ? (
+                <div
+                  className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
+                  style={{ gap: 8 }}
+                >
+                  <div style={{ flex: "0 0 250px", minWidth: 200 }}>
+                    <Input
+                      className="my-input-field"
+                      placeholder="Cancellation batch title"
+                      value={cbFilter.draftTitle}
+                      onChange={(e) => cbFilter.setDraftTitle(e.target.value)}
+                      onPressEnter={cbFilter.applySearch}
+                      style={{
+                        height: "30px",
+                        borderRadius: "4px",
+                        color: "gray",
+                      }}
+                    />
+                  </div>
+                  <DatePicker
+                    picker="year"
+                    format="YYYY"
+                    value={cbFilter.draftYear}
+                    onChange={cbFilter.setDraftYear}
+                    allowClear
+                    placeholder="Batch year"
+                    style={{ width: 160, height: 30 }}
+                  />
+                  <Button
+                    htmlType="button"
+                    onClick={cbFilter.reset}
+                    style={{
+                      backgroundColor: "#091e420a",
+                      borderRadius: "4px",
+                      border: "none",
+                      height: "32px",
+                      fontWeight: "500",
+                      color: "#42526e",
+                    }}
+                  >
+                    Reset
+                  </Button>
+                  <Button
+                    htmlType="button"
+                    onClick={cbFilter.applySearch}
+                    style={{
+                      backgroundColor: "#45669d",
+                      borderRadius: "4px",
+                      border: "none",
+                      height: "32px",
+                      fontWeight: "500",
+                      color: "white",
+                    }}
+                  >
+                    Search
+                  </Button>
+                </div>
+              ) : (
+                nav !== "/templeteSummary" &&
+                nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">
                     {isBatchSearchPage ? (
                       <Search
                         placeholder="Search by Batch Number"
-                        onSearch={(value) => { }}
+                        onSearch={(value) => {}}
                         style={{ width: 300 }}
                         className="inp"
                       />
-                    ) : (location?.pathname === "/worklocation" || location?.pathname === "/region" || location?.pathname === "/branch") ? null : (
+                    ) : location?.pathname === "/worklocation" ||
+                      location?.pathname === "/region" ||
+                      location?.pathname === "/branch" ? null : (
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <Toolbar />
                       </div>
                     )}
                     <div className="d-flex flex-shrink-0">
-                      {(location?.pathname === "/worklocation" || location?.pathname === "/region" || location?.pathname === "/branch") ? null : (
+                      {location?.pathname === "/worklocation" ||
+                      location?.pathname === "/region" ||
+                      location?.pathname === "/branch" ? null : (
                         <SaveViewMenu className="ms-3" />
                       )}
                     </div>
                   </div>
-                )}
-              </div>
-            )}
+                )
+              )}
+            </div>
+          )}
         </div>
       </div>
       <MyDrawer
-        title={`${nav === "/CasesById"
-          ? "Enter Issue"
-          : nav == "/ClaimSummary"
-            ? "Enter Claims"
-            : nav === "/ClaimsById"
+        title={`${
+          nav === "/CasesById"
+            ? "Enter Issue"
+            : nav == "/ClaimSummary"
               ? "Enter Claims"
-              : nav === "/Details"
-                ? "Enter Profile"
-                : ""
-          }`}
+              : nav === "/ClaimsById"
+                ? "Enter Claims"
+                : nav === "/Details"
+                  ? "Enter Profile"
+                  : ""
+        }`}
         open={claimsDrawer}
         onClose={() => handlClaimDrawerChng()}
         width={600}
@@ -1472,9 +1582,7 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                   await isSaveChng(true);
                   await handleSave(ReportName);
                   showHidSavModal();
-                } catch (error) {
-
-                }
+                } catch (error) {}
               }}
             >
               Save
@@ -1528,8 +1636,8 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
               <div className="inpt-sub-con">
                 <Input
                   className="inp"
-                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                // value={drawerIpnuts?.LookupType?.code}
+                  // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                  // value={drawerIpnuts?.LookupType?.code}
                 />
                 <h1 className="error-text"></h1>
               </div>
@@ -1545,8 +1653,8 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
               <div className="inpt-sub-con">
                 <Input
                   className="inp"
-                // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
-                // value={drawerIpnuts?.LookupType?.code}
+                  // onChange={(value) => drawrInptChng('LookupType', 'code', value.target.value)}
+                  // value={drawerIpnuts?.LookupType?.code}
                 />
                 <h1 className="error-text"></h1>
               </div>
@@ -1601,24 +1709,25 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       <MyDrawer
         isPagination={false}
         width="1300px"
-        title={`${nav === "/RemindersSummary"
-          ? "Batch"
-          : nav === "/Batches"
-            ? ""
-            : nav === "/onlinePayment"
+        title={`${
+          nav === "/RemindersSummary"
+            ? "Batch"
+            : nav === "/Batches"
               ? ""
-              : nav === "/Import"
+              : nav === "/onlinePayment"
                 ? ""
-                : nav === "/Cheque"
+                : nav === "/Import"
                   ? ""
-                  : nav === "/CancellationBatch"
-                    ? "Cancellation Batch"
-                    : nav === "/CornMarket"
-                      ? "Corn Market Batch"
-                      : nav === "/StandingOrders"
-                        ? "Standing Orders Batch"
-                        : ""
-          }`}
+                  : nav === "/Cheque"
+                    ? ""
+                    : nav === "/CancellationBatch"
+                      ? "Cancellation Batch"
+                      : nav === "/CornMarket"
+                        ? "Corn Market Batch"
+                        : nav === "/StandingOrders"
+                          ? "Standing Orders Batch"
+                          : ""
+        }`}
         open={isBatchOpen}
         isDisable={false}
         onClose={() => {
@@ -1626,7 +1735,11 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
         }}
         add={async () => {
           // Try to submit the batch form inside drawer first
-          if (batchFormRef && batchFormRef.current && typeof batchFormRef.current.submit === 'function') {
+          if (
+            batchFormRef &&
+            batchFormRef.current &&
+            typeof batchFormRef.current.submit === "function"
+          ) {
             const result = await batchFormRef.current.submit();
             if (!result) return; // validation failed or API failed
 
@@ -1647,11 +1760,17 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
           }
         }}
       >
-        {nav === "/Batches" || nav === "/Import" || nav === "/Import" || nav === "/Deductions" || nav === "/StandingOrders" || nav === "/Cheque" || nav === "/onlinePayment" ? (
-          <CreateBatchPayment ref={batchFormRef} />)
-          :
-          <CreateBatchPayment ref={batchFormRef} />}
-
+        {nav === "/Batches" ||
+        nav === "/Import" ||
+        nav === "/Import" ||
+        nav === "/Deductions" ||
+        nav === "/StandingOrders" ||
+        nav === "/Cheque" ||
+        nav === "/onlinePayment" ? (
+          <CreateBatchPayment ref={batchFormRef} />
+        ) : (
+          <CreateBatchPayment ref={batchFormRef} />
+        )}
       </MyDrawer>
       <ChangeCategoryDrawer
         open={isDrawerOpen}
@@ -1663,7 +1782,13 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
         onClose={() => setcontactDrawer(false)}
         title={`${nav === "/branch" ? "Branch Manager" : nav === "/region" ? "Region Officer" : "IRO"} Assignment`}
         onAssign={handleAssignIRO}
-        type={nav === "/branch" ? "Branch" : nav === "/region" ? "Region" : "workLocation"}
+        type={
+          nav === "/branch"
+            ? "Branch"
+            : nav === "/region"
+              ? "Region"
+              : "workLocation"
+        }
       />
       <SimpleBatch
         open={isSimpleBatchOpen}
@@ -1678,16 +1803,21 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
             batchType = "recruit-friend";
           } else if (nav.toLowerCase().includes("directdebit")) {
             batchType = "direct-debit";
-          } else if (nav.toLowerCase().includes("inappnotifications") || nav.toLowerCase().includes("communicationbatchdetail")) {
+          } else if (
+            nav.toLowerCase().includes("inappnotifications") ||
+            nav.toLowerCase().includes("communicationbatchdetail")
+          ) {
             batchType = "communication";
           }
 
           if (batchType) {
-            dispatch(fetchBatchesByType({
-              type: batchType,
-              page: 1,
-              limit: 500
-            }));
+            dispatch(
+              fetchBatchesByType({
+                type: batchType,
+                page: 1,
+                limit: 500,
+              }),
+            );
           }
         }}
       />
@@ -1702,7 +1832,6 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
         <DirectDebitForm
           onCancel={() => setDdDrawerOpen(false)}
           onSubmit={(data) => {
-
             setDdDrawerOpen(false);
           }}
         />
@@ -1744,90 +1873,161 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                 type="primary"
                 onClick={handleSaveEditCases}
               >
-                Save (apply to {selectedCaseRows.length} issue{selectedCaseRows.length !== 1 ? "s" : ""})
+                Save (apply to {selectedCaseRows.length} issue
+                {selectedCaseRows.length !== 1 ? "s" : ""})
               </Button>
             </div>
           }
         >
           {selectedCaseRows.length === 0 ? (
             <div className="create-case-drawer-content">
-              <p style={{ color: "#8c8c8c" }}>Select one or more cases from the table to edit.</p>
+              <p style={{ color: "#8c8c8c" }}>
+                Select one or more cases from the table to edit.
+              </p>
             </div>
           ) : (
             <div className="create-case-drawer-content edit-cases-drawer-content">
               <div className="form-section">
                 <h3 className="section-title">Issue Details</h3>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Incident Date</span>
                   <DatePicker
                     value={editCasesDraft.incidentDate}
-                    onChange={(d) => setEditCasesDraft((prev) => ({ ...prev, incidentDate: d }))}
+                    onChange={(d) =>
+                      setEditCasesDraft((prev) => ({
+                        ...prev,
+                        incidentDate: d,
+                      }))
+                    }
                     format="YYYY-MM-DD"
                     style={{ width: "100%" }}
                     placeholder="Keep As Is"
                     allowClear
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Location</span>
                   <Input
-                    value={editCasesDraft.location === KEEP_AS_IS ? "" : editCasesDraft.location}
-                    onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, location: e.target.value.trim() === "" ? KEEP_AS_IS : e.target.value }))}
+                    value={
+                      editCasesDraft.location === KEEP_AS_IS
+                        ? ""
+                        : editCasesDraft.location
+                    }
+                    onChange={(e) =>
+                      setEditCasesDraft((prev) => ({
+                        ...prev,
+                        location:
+                          e.target.value.trim() === ""
+                            ? KEEP_AS_IS
+                            : e.target.value,
+                      }))
+                    }
                     placeholder="Keep As Is"
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Category</span>
                   <Select
                     value={editCasesDraft.category}
-                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, category: v }))}
+                    onChange={(v) =>
+                      setEditCasesDraft((prev) => ({ ...prev, category: v }))
+                    }
                     style={{ width: "100%" }}
-                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesCategories.map((c) => ({ value: c, label: c }))]}
+                    options={[
+                      { value: KEEP_AS_IS, label: "Keep As Is" },
+                      ...casesCategories.map((c) => ({ value: c, label: c })),
+                    ]}
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Case Type</span>
                   <Select
                     value={editCasesDraft.caseType}
-                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, caseType: v }))}
+                    onChange={(v) =>
+                      setEditCasesDraft((prev) => ({ ...prev, caseType: v }))
+                    }
                     style={{ width: "100%" }}
-                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesTypes.map((t) => ({ value: t, label: t }))]}
+                    options={[
+                      { value: KEEP_AS_IS, label: "Keep As Is" },
+                      ...casesTypes.map((t) => ({ value: t, label: t })),
+                    ]}
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Status</span>
                   <Select
                     value={editCasesDraft.status}
-                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, status: v }))}
+                    onChange={(v) =>
+                      setEditCasesDraft((prev) => ({ ...prev, status: v }))
+                    }
                     style={{ width: "100%" }}
-                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesStatuses.map((s) => ({ value: s, label: s }))]}
+                    options={[
+                      { value: KEEP_AS_IS, label: "Keep As Is" },
+                      ...casesStatuses.map((s) => ({ value: s, label: s })),
+                    ]}
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Priority</span>
                   <Select
                     value={editCasesDraft.priority}
-                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, priority: v }))}
+                    onChange={(v) =>
+                      setEditCasesDraft((prev) => ({ ...prev, priority: v }))
+                    }
                     style={{ width: "100%" }}
-                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesPriorities.map((p) => ({ value: p, label: p }))]}
+                    options={[
+                      { value: KEEP_AS_IS, label: "Keep As Is" },
+                      ...casesPriorities.map((p) => ({ value: p, label: p })),
+                    ]}
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Due Date</span>
                   <DatePicker
                     value={editCasesDraft.dueDate}
-                    onChange={(d) => setEditCasesDraft((prev) => ({ ...prev, dueDate: d }))}
+                    onChange={(d) =>
+                      setEditCasesDraft((prev) => ({ ...prev, dueDate: d }))
+                    }
                     format="YYYY-MM-DD"
                     style={{ width: "100%" }}
                     placeholder="Keep As Is"
                     allowClear
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Pertinent to File Review</span>
                   <Select
                     value={editCasesDraft.pertinentToFileReview}
-                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, pertinentToFileReview: v }))}
+                    onChange={(v) =>
+                      setEditCasesDraft((prev) => ({
+                        ...prev,
+                        pertinentToFileReview: v,
+                      }))
+                    }
                     style={{ width: "100%" }}
                     options={[
                       { value: KEEP_AS_IS, label: "Keep As Is" },
@@ -1836,28 +2036,63 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                     ]}
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">File Number</span>
                   <Input
-                    value={editCasesDraft.fileNumber === KEEP_AS_IS ? "" : editCasesDraft.fileNumber}
-                    onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, fileNumber: e.target.value.trim() === "" ? KEEP_AS_IS : e.target.value }))}
+                    value={
+                      editCasesDraft.fileNumber === KEEP_AS_IS
+                        ? ""
+                        : editCasesDraft.fileNumber
+                    }
+                    onChange={(e) =>
+                      setEditCasesDraft((prev) => ({
+                        ...prev,
+                        fileNumber:
+                          e.target.value.trim() === ""
+                            ? KEEP_AS_IS
+                            : e.target.value,
+                      }))
+                    }
                     placeholder="Keep As Is"
                   />
                 </div>
-                <div className="case-input-container" style={{ marginBottom: 16 }}>
+                <div
+                  className="case-input-container"
+                  style={{ marginBottom: 16 }}
+                >
                   <span className="form-label">Assignee</span>
                   <Select
                     value={editCasesDraft.assignee}
-                    onChange={(v) => setEditCasesDraft((prev) => ({ ...prev, assignee: v }))}
+                    onChange={(v) =>
+                      setEditCasesDraft((prev) => ({ ...prev, assignee: v }))
+                    }
                     style={{ width: "100%" }}
-                    options={[{ value: KEEP_AS_IS, label: "Keep As Is" }, ...casesAssignees.map((a) => ({ value: a, label: a }))]}
+                    options={[
+                      { value: KEEP_AS_IS, label: "Keep As Is" },
+                      ...casesAssignees.map((a) => ({ value: a, label: a })),
+                    ]}
                   />
                 </div>
                 <div className="case-input-container">
                   <span className="form-label">Related Member(s)</span>
                   <Input
-                    value={editCasesDraft.relatedMembers === KEEP_AS_IS ? "" : editCasesDraft.relatedMembers}
-                    onChange={(e) => setEditCasesDraft((prev) => ({ ...prev, relatedMembers: e.target.value.trim() === "" ? KEEP_AS_IS : e.target.value }))}
+                    value={
+                      editCasesDraft.relatedMembers === KEEP_AS_IS
+                        ? ""
+                        : editCasesDraft.relatedMembers
+                    }
+                    onChange={(e) =>
+                      setEditCasesDraft((prev) => ({
+                        ...prev,
+                        relatedMembers:
+                          e.target.value.trim() === ""
+                            ? KEEP_AS_IS
+                            : e.target.value,
+                      }))
+                    }
                     placeholder="Keep As Is"
                   />
                 </div>

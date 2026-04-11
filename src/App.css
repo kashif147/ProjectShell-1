@@ -1912,3 +1912,17 @@ table tbody tr:nth-child(odd):hover td {
   background-color: #f0f0f0;
   /* Optional: Add a background */
 }
+
+/* Reminders / cancellation batch member tables — same shell as membership TableComponent (.common-table) */
+.common-table.reminder-cancellation-members-wrap {
+  width: 100%;
+}
+
+.common-table.reminder-cancellation-members-wrap .ant-table-cell {
+  white-space: nowrap !important;
+}
+
+.common-table.reminder-cancellation-members-wrap .membership-table-balance-cell {
+  color: #cf1322 !important;
+  font-weight: 600;
+}

@@ -298,7 +298,7 @@ function CancellationDetail() {
         dataIndex: "outstandingBalance",
         key: "outstandingBalance",
         render: (v) => (
-          <span style={{ color: "#cf1322", fontWeight: 600, whiteSpace: "nowrap" }}>
+          <span className="membership-table-balance-cell" style={{ whiteSpace: "nowrap" }}>
             {v ?? "—"}
           </span>
         ),
@@ -454,7 +454,6 @@ function CancellationDetail() {
   return (
     <div>
       <style>{`
-        .ant-table-cell { white-space: nowrap !important; }
         .reminder-details-payment-stack { width: 100%; min-width: 0; }
         .reminder-details-payment-stack .recharts-responsive-container { width: 100% !important; }
         .reminder-details-analysis-row > .ant-col { display: flex; }
@@ -464,13 +463,6 @@ function CancellationDetail() {
         .reminder-details-analysis-row .reminder-details-twin-card .ant-card-head { flex-shrink: 0; }
         .reminder-details-analysis-row .reminder-details-twin-card .ant-card-body {
           flex: 1; display: flex; flex-direction: column; min-height: 0;
-        }
-        .reminder-details-members-table { margin-top: 0 !important; }
-        .reminder-details-members-table .ant-table-tbody > tr.ant-table-measure-row,
-        .reminder-details-members-table .ant-table-tbody > tr.ant-table-measure-row > td {
-          height: 0 !important; min-height: 0 !important; line-height: 0 !important;
-          padding: 0 !important; border-top: 0 !important; border-bottom: 0 !important;
-          font-size: 0 !important; overflow: hidden !important; visibility: hidden !important;
         }
       `}</style>
       <div className="p-3">
@@ -1043,16 +1035,25 @@ function CancellationDetail() {
             </div>
           }
         >
-          <div style={{ overflowX: "auto" }}>
+          <div
+            className="common-table reminder-cancellation-members-wrap"
+            style={{
+              width: "100%",
+              overflowX: "auto",
+              paddingBottom: "16px",
+            }}
+          >
             <Table
-              className="claims-table reminder-details-members-table"
               rowKey="_rowKey"
               rowSelection={rowSelection}
               columns={columns}
               dataSource={tableMembers}
               pagination={false}
               bordered
-              scroll={{ x: "max-content" }}
+              tableLayout="fixed"
+              sticky
+              scroll={{ x: "max-content", y: 590 }}
+              size="middle"
               locale={{
                 emptyText: cancallationbyId
                   ? "No members in this batch"

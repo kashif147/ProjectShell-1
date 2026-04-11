@@ -78,6 +78,20 @@ const Sidebar = () => {
     if (isCorrespondenceRoute && activeKey !== "Correspondence") {
       dispatch(updateMenuLbl({ key: "Correspondence", value: true }));
     }
+
+    const subscriptionsRewardsPaths = [
+      "/RemindersSummary",
+      "/RemindersDetails",
+      "/Cancallation",
+      "/CancellationDetail",
+    ];
+    const isSubscriptionsRewardsRoute = subscriptionsRewardsPaths.includes(path);
+    if (
+      isSubscriptionsRewardsRoute &&
+      activeKey !== "Subscriptions & Rewards"
+    ) {
+      dispatch(updateMenuLbl({ key: "Subscriptions & Rewards", value: true }));
+    }
   }, [location.pathname, activeKey, dispatch]);
 
   // These are the menu links for various modules, imported from a constants file
@@ -382,7 +396,9 @@ const Sidebar = () => {
       "/Batches": "Batches",
       "/Applications": "Applications",
       "/RemindersSummary": "Reminders",
+      "/RemindersDetails": "Reminders",
       "/Cancallation": "Cancellations",
+      "/CancellationDetail": "Cancellations",
       "/ChangCateSumm": "Change Category",
       "/Import": "Imports",
       "/Deductions": "Deductions",
