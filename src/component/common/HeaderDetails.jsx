@@ -74,6 +74,7 @@ import CreateCasesDrawer from "../cases/CreateCasesDrawer";
 import CreateEventDrawer from "../event/CreateEventDrawer";
 import { useCasesEdit } from "../../context/CasesEditContext";
 import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
+import { useCancellationBatchesFilter } from "../../context/CancellationBatchesFilterContext";
 import { getAllLookups } from "../../features/LookupsSlice";
 import { baseURL } from "../../utils/Utilities";
 import "../../styles/CreateCasesDrawer.css";
@@ -184,6 +185,8 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
     applySearch: reminderApplySearch,
     reset: reminderReset,
   } = useReminderBatchesFilter();
+
+  const cbFilter = useCancellationBatchesFilter();
 
   const showHidSavModal = () => {
     setIsSaveModalOpen(!isSaveModalOpen);
@@ -831,8 +834,7 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
       </>
     );
   };
-  const currentKey =
-    location.pathname === "/Cancallation" ? "Cancallation" : null;
+  const currentKey = null;
 
   const batchSearchPaths = [
 
@@ -1002,6 +1004,22 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                           }}
                         >
                           Manage and monitor your reminders
+                        </p>
+                      </>
+                    ) : nav === "/Cancallation" ? (
+                      <>
+                        <h2 className="title-main" style={{ marginBottom: 4 }}>
+                          Cancellation batches
+                        </h2>
+                        <p
+                          style={{
+                            margin: 0,
+                            fontSize: 14,
+                            color: "#595959",
+                            fontWeight: 400,
+                          }}
+                        >
+                          Manage and monitor membership cancellations
                         </p>
                       </>
                     ) : (
@@ -1212,22 +1230,62 @@ function HeaderDetails({ hideBreadcrumb = false, setcontactDrawer: setExternalCo
                       Search
                     </Button>
                   </div>
-                ) : nav == "/Cancallation" ? (
-                  <div className="d-flex search-fliters align-items-baseline w-100 mt-2 mb-1">
-                    <Row className="align-items-baseline w-100" gutter={12}>
-                      <Col>
-                        <DatePicker
-                          picker="year"
-                          format="YYYY"
-                          value={value}
-                          onChange={(e) => handleDateChange(e)}
-                          inputReadOnly={false}
-                          allowClear={false}
-                          style={{ width: 220 }}
-                          placeholder="Search anything..."
-                        />
-                      </Col>
-                    </Row>
+                ) : nav === "/Cancallation" ? (
+                  <div
+                    className="d-flex search-fliters align-items-center flex-wrap w-100 mt-2 mb-1"
+                    style={{ gap: 8 }}
+                  >
+                    <div style={{ flex: "0 0 250px", minWidth: 200 }}>
+                      <Input
+                        className="my-input-field"
+                        placeholder="Cancellation batch title"
+                        value={cbFilter.draftTitle}
+                        onChange={(e) => cbFilter.setDraftTitle(e.target.value)}
+                        onPressEnter={cbFilter.applySearch}
+                        style={{
+                          height: "30px",
+                          borderRadius: "4px",
+                          color: "gray",
+                        }}
+                      />
+                    </div>
+                    <DatePicker
+                      picker="year"
+                      format="YYYY"
+                      value={cbFilter.draftYear}
+                      onChange={cbFilter.setDraftYear}
+                      allowClear
+                      placeholder="Batch year"
+                      style={{ width: 160, height: 30 }}
+                    />
+                    <Button
+                      htmlType="button"
+                      onClick={cbFilter.reset}
+                      style={{
+                        backgroundColor: "#091e420a",
+                        borderRadius: "4px",
+                        border: "none",
+                        height: "32px",
+                        fontWeight: "500",
+                        color: "#42526e",
+                      }}
+                    >
+                      Reset
+                    </Button>
+                    <Button
+                      htmlType="button"
+                      onClick={cbFilter.applySearch}
+                      style={{
+                        backgroundColor: "#45669d",
+                        borderRadius: "4px",
+                        border: "none",
+                        height: "32px",
+                        fontWeight: "500",
+                        color: "white",
+                      }}
+                    >
+                      Search
+                    </Button>
                   </div>
                 ) : nav !== "/templeteSummary" && nav !== "/CommunicationBatchDetail" && (
                   <div className="d-flex me-4 search-fliters align-items-baseline justify-content-between flex-wrap mt-2 mb-1">

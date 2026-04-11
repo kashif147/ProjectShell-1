@@ -2,55 +2,59 @@ import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useReminders } from "../../context/CampaignDetailsProvider";
 import { useTableColumns } from "../../context/TableColumnsContext ";
-import { useReminderBatchesFilter } from "../../context/ReminderBatchesFilterContext";
-import { campaigns } from "../../Data";
-import ReminderBatchesTable from "../../component/reminders/ReminderBatchesTable";
+import { useCancellationBatchesFilter } from "../../context/CancellationBatchesFilterContext";
+import { cancellations, cancellationDetail } from "../../Data";
+import CancellationBatchesTable from "../../component/cancellations/CancellationBatchesTable";
 import { parseReminderDateToMs } from "../../utils/Utilities";
 
-function enrichCampaign(item) {
+function parseMemberCount(m) {
+  if (m == null) return 0;
+  const digits = String(m).replace(/\D/g, "");
+  if (digits) return parseInt(digits, 10) || 0;
+  const n = Number(m);
+  return Number.isFinite(n) ? n : 0;
+}
+
+function countReminder3(members) {
+  let r3Count = 0;
+  if (!members?.length) return r3Count;
+  for (const m of members) {
+    if (m == null || typeof m !== "object") continue;
+    const rn = String(m.reminderNo || "")
+      .trim()
+      .toUpperCase();
+    if (rn === "R3") r3Count++;
+  }
+  return r3Count;
+}
+
+function enrichCancellation(item) {
   const parts = String(item.date || "").split("/");
   const month = parts[0] ? parseInt(parts[0], 10) : 0;
   const year = parts[2] ? parseInt(parts[2], 10) : null;
   const batchCode =
-    item.batchCode ||
-    (year && month
-      ? `BATCH-${year}-${String(month).padStart(2, "0")}`
-      : `BATCH-${item.id}`);
-  const hash = Number(item.id) * 17;
-  const perf = (i) => {
-    const positive = (hash + i) % 3 !== 0;
-    const pct = Math.round((((hash + i * 11) % 250) / 10) * 10) / 10;
-    return { positive, pct };
-  };
+    year && month
+      ? `CBATCH-${year}-${String(month).padStart(2, "0")}`
+      : `CBATCH-${item.id}`;
+  const detail = cancellationDetail.find(
+    (d) => String(d.id) === String(item.id),
+  );
+  const r3Count = countReminder3(detail?.members);
+  const batchTotal = parseMemberCount(item.members);
   return {
     ...item,
     batchCode,
-    performance: item.performance || {
-      R1: perf(1),
-      R2: perf(2),
-      R3: perf(3),
-    },
+    batchTotal,
+    r3Count,
+    hasCancellationDetail: detail != null,
   };
 }
 
-function batchGrandTotal(stats) {
-  let sum = 0;
-  let any = false;
-  for (const k of ["R1", "R2", "R3"]) {
-    const n = Number(stats?.[k]);
-    if (!Number.isNaN(n)) {
-      sum += n;
-      any = true;
-    }
-  }
-  return any ? sum : null;
-}
-
-function RemindersSummary() {
+function CancellationSummary() {
   const navigate = useNavigate();
-  const { getRemindersById } = useReminders();
+  const { getCancellationById } = useReminders();
   const { disableFtn } = useTableColumns();
-  const { applied } = useReminderBatchesFilter();
+  const { applied } = useCancellationBatchesFilter();
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(500);
   const [sortState, setSortState] = useState({
@@ -59,7 +63,7 @@ function RemindersSummary() {
   });
 
   const filteredData = useMemo(() => {
-    const enriched = campaigns.map(enrichCampaign);
+    const enriched = cancellations.map(enrichCancellation);
     return enriched.filter((c) => {
       const titleOk =
         !applied.title ||
@@ -94,15 +98,10 @@ function RemindersSummary() {
           mult *
           (parseReminderDateToMs(a.date) - parseReminderDateToMs(b.date)),
       );
-    } else if (columnKey === "batchTotals") {
-      arr.sort((a, b) => {
-        const ta = batchGrandTotal(a.stats);
-        const tb = batchGrandTotal(b.stats);
-        if (ta == null && tb == null) return 0;
-        if (ta == null) return order === "ascend" ? 1 : -1;
-        if (tb == null) return order === "ascend" ? -1 : 1;
-        return mult * (ta - tb);
-      });
+    } else if (columnKey === "batchTotal") {
+      arr.sort((a, b) => mult * (a.batchTotal - b.batchTotal));
+    } else if (columnKey === "reminder3Totals") {
+      arr.sort((a, b) => mult * (a.r3Count - b.r3Count));
     }
     return arr;
   }, [filteredData, sortState]);
@@ -118,13 +117,13 @@ function RemindersSummary() {
   };
 
   const openBatch = (item) => {
-    navigate("/RemindersDetails", {
+    navigate("/CancellationDetail", {
       state: {
-        reminderBatchTitle: item?.title,
-        reminderBatchId: item?.id,
+        cancellationBatchTitle: item?.title,
+        cancellationBatchId: item?.id,
       },
     });
-    getRemindersById(item?.id);
+    getCancellationById(item?.id);
     if (item?.isSelected === true) {
       disableFtn(true);
     } else {
@@ -141,7 +140,7 @@ function RemindersSummary() {
 
   return (
     <div style={{ width: "100%" }}>
-      <ReminderBatchesTable
+      <CancellationBatchesTable
         dataSource={paginatedData}
         onOpenBatch={openBatch}
         total={sortedFilteredData.length}
@@ -160,4 +159,4 @@ function RemindersSummary() {
   );
 }
 
-export default RemindersSummary;
+export default CancellationSummary;

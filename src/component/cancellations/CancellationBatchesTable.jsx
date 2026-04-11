@@ -1,12 +1,11 @@
 import React, { useMemo } from "react";
 import { Table, Tag } from "antd";
-import "./ReminderBatchesTable.css";
+import "../reminders/ReminderBatchesTable.css";
 import { RightOutlined } from "@ant-design/icons";
 import { LuRefreshCw } from "react-icons/lu";
 import UnifiedPagination from "../common/UnifiedPagination";
 import { formatDateDdMmYyyy } from "../../utils/Utilities";
 
-/** Same height for row 1 in stack columns so row 2 (ID / trigger / created date / breakdown) lines up */
 const STACK_ROW1_H = 26;
 const stackRow1 = {
   height: STACK_ROW1_H,
@@ -29,46 +28,7 @@ function formatCount(n) {
   return num.toLocaleString();
 }
 
-function batchGrandTotal(stats) {
-  let sum = 0;
-  let any = false;
-  for (const k of ["R1", "R2", "R3"]) {
-    const n = Number(stats?.[k]);
-    if (!Number.isNaN(n)) {
-      sum += n;
-      any = true;
-    }
-  }
-  return any ? sum : null;
-}
-
-function PerfCell({ positive, pct, size = 13 }) {
-  const p = typeof pct === "number" ? pct.toFixed(1) : pct;
-  return (
-    <span
-      style={{
-        fontWeight: 600,
-        fontSize: size,
-        color: positive ? "#389e0d" : "#cf1322",
-        lineHeight: 1.3,
-        whiteSpace: "nowrap",
-      }}
-    >
-      <span style={{ marginRight: 4 }} aria-hidden>
-        {positive ? "↗" : "↘"}
-      </span>
-      {p}%
-    </span>
-  );
-}
-
-function perfSecondaryLabel(k, perf) {
-  const p = typeof perf.pct === "number" ? perf.pct.toFixed(1) : perf.pct;
-  const arrow = perf.positive ? "↗" : "↘";
-  return `${k} (${arrow}${p}%)`;
-}
-
-function ReminderBatchesTable({
+function CancellationBatchesTable({
   dataSource,
   onOpenBatch,
   total,
@@ -126,7 +86,7 @@ function ReminderBatchesTable({
           className: "reminder-batches-table__cell-stack",
         }),
         render: (_, record) => {
-          const completed = Boolean(record.triggered);
+          const completed = Boolean(record.processed);
           return (
             <div>
               <div style={stackRow1}>
@@ -149,8 +109,8 @@ function ReminderBatchesTable({
                 }}
               >
                 {completed
-                  ? formatDateDdMmYyyy(record.triggered)
-                  : "Not triggered"}
+                  ? formatDateDdMmYyyy(record.processed)
+                  : "Not processed"}
               </div>
             </div>
           );
@@ -192,78 +152,86 @@ function ReminderBatchesTable({
         ),
       },
       {
-        title: "Batch totals",
-        key: "batchTotals",
-        width: 240,
+        title: "Batch Total",
+        key: "batchTotal",
+        width: 200,
         sorter: () => 0,
         sortOrder:
-          sortColumnKey === "batchTotals"
-            ? sortOrder ?? undefined
-            : undefined,
+          sortColumnKey === "batchTotal" ? sortOrder ?? undefined : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
         render: (_, record) => {
-          const grand = batchGrandTotal(record.stats);
-          const r1 = formatCount(record.stats?.R1);
-          const r2 = formatCount(record.stats?.R2);
-          const r3 = formatCount(record.stats?.R3);
+          const bt = Number(record.batchTotal) || 0;
+          const r3 = Number(record.r3Count ?? 0) || 0;
+          const batchExceedsR3 =
+            record.hasCancellationDetail === true && bt > r3;
+          const alertColor = "#cf1322";
           return (
-            <div>
+            <div
+              title={
+                batchExceedsR3
+                  ? "Batch total is higher than Reminder 3 total — review this batch."
+                  : undefined
+              }
+            >
               <div style={stackRow1}>
                 <div
                   style={{
                     fontWeight: 600,
                     fontSize: 13,
-                    color: "#262626",
+                    color: batchExceedsR3 ? alertColor : "#262626",
                     lineHeight: 1.3,
                   }}
                 >
-                  {grand != null ? formatCount(grand) : "—"}
+                  {formatCount(record.batchTotal)}
                 </div>
               </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>
-                R1 ({r1}) R2 ({r2}) R3 ({r3})
+              <div
+                style={{
+                  ...stackRow2,
+                  color: batchExceedsR3 ? alertColor : "#8c8c8c",
+                }}
+              >
+                {batchExceedsR3
+                  ? "Exceeds Reminder 3 — check data"
+                  : "In cancellation batch"}
               </div>
             </div>
           );
         },
       },
       {
-        title: "Performance (vs prev month)",
-        key: "performance",
-        width: 240,
+        title: "Reminder 3 Totals",
+        key: "reminder3Totals",
+        width: 200,
+        sorter: () => 0,
+        sortOrder:
+          sortColumnKey === "reminder3Totals"
+            ? sortOrder ?? undefined
+            : undefined,
         onCell: () => ({
           className: "reminder-batches-table__cell-stack",
         }),
-        render: (_, record) => {
-          const keys = ["R1", "R2", "R3"];
-          const perfs = keys.map(
-            (k) =>
-              record.performance?.[k] || {
-                positive: true,
-                pct: 0,
-              },
-          );
-          return (
-            <div>
+        render: (_, record) => (
+          <div>
+            <div style={stackRow1}>
               <div
                 style={{
-                  ...stackRow1,
-                  gap: 12,
-                  flexWrap: "nowrap",
+                  fontWeight: 600,
+                  fontSize: 13,
+                  color: "#262626",
+                  lineHeight: 1.3,
                 }}
               >
-                {keys.map((k, i) => (
-                  <PerfCell key={k} positive={perfs[i].positive} pct={perfs[i].pct} size={13} />
-                ))}
-              </div>
-              <div style={{ ...stackRow2, color: "#8c8c8c" }}>
-                {keys.map((k, i) => perfSecondaryLabel(k, perfs[i])).join(" ")}
+                {formatCount(record.r3Count ?? 0)}
               </div>
             </div>
-          );
-        },
+            <div style={{ ...stackRow2, color: "#8c8c8c" }}>
+              Reminder 3 members
+            </div>
+          </div>
+        ),
       },
       {
         title: "",
@@ -303,7 +271,9 @@ function ReminderBatchesTable({
         ? "batchName"
         : s.field === "date" || s.field === "user"
           ? "createdDate"
-          : null);
+          : s.field === "batchTotal"
+            ? "batchTotal"
+            : null);
     if (colKey) {
       onSortChange?.(colKey, s.order);
     }
@@ -321,24 +291,24 @@ function ReminderBatchesTable({
       }}
     >
       <div className="reminder-batches-table-wrap">
-      <Table
-        rowKey={(r) => r.id}
-        rowClassName={() => ""}
-        columns={columns}
-        dataSource={dataSource}
-        pagination={false}
-        bordered
-        tableLayout="fixed"
-        sticky
-        scroll={{ x: "max-content", y: "calc(100vh - 380px)" }}
-        size="small"
-        locale={{ emptyText: "No Data" }}
-        onChange={handleTableChange}
-        onRow={(record) => ({
-          onClick: () => onOpenBatch(record),
-          style: { cursor: "pointer" },
-        })}
-      />
+        <Table
+          rowKey={(r) => String(r.id)}
+          rowClassName={() => ""}
+          columns={columns}
+          dataSource={dataSource}
+          pagination={false}
+          bordered
+          tableLayout="fixed"
+          sticky
+          scroll={{ x: "max-content", y: "calc(100vh - 380px)" }}
+          size="small"
+          locale={{ emptyText: "No Data" }}
+          onChange={handleTableChange}
+          onRow={(record) => ({
+            onClick: () => onOpenBatch(record),
+            style: { cursor: "pointer" },
+          })}
+        />
       </div>
       <div
         className="d-flex justify-content-center align-items-center tbl-footer"
@@ -399,4 +369,4 @@ function ReminderBatchesTable({
   );
 }
 
-export default ReminderBatchesTable;
+export default CancellationBatchesTable;

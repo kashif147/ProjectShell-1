@@ -14,6 +14,7 @@ import RoutePermissionWrapper from "./component/common/RoutePermissionWrapper";
 import OnlinePayment from "./pages/finance/OnlinePayment";
 import RoutePermissions from "./constants/RoutePermissions";
 import { ReminderBatchesFilterProvider } from "./context/ReminderBatchesFilterContext";
+import { CancellationBatchesFilterProvider } from "./context/CancellationBatchesFilterContext";
 
 // Wrapper for lazy loading with retry logic
 const lazyWithRetry = (componentImport) => {
@@ -279,6 +280,7 @@ function Entry() {
   return (
     <AuthorizationProvider>
       <ReminderBatchesFilterProvider>
+      <CancellationBatchesFilterProvider>
       <div
         style={{
           height: "100vh",
@@ -310,14 +312,32 @@ function Entry() {
               {showHeaderDetails && <HeaderDetails />}
 
               {/* Content area + resizable section */}
-              <div style={{ flex: 1, display: "flex" }}>
+              <div
+                style={{
+                  flex: 1,
+                  display: "flex",
+                  minHeight: 0,
+                  overflow: "hidden",
+                }}
+              >
                 <div
                   style={{
                     flex: 1,
+                    minHeight: 0,
                     scrollbarWidth:
-                      location.pathname === "/CasesDetails" ? "auto" : "none",
+                      location.pathname === "/CasesDetails" ||
+                      location.pathname === "/RemindersDetails" ||
+                      location.pathname === "/CancellationDetail"
+                        ? "auto"
+                        : "none",
                   }}
-                  className={`main-main ${location.pathname === "/CasesDetails" ? "enable-vertical-scroll" : ""}`}
+                  className={`main-main ${
+                    location.pathname === "/CasesDetails" ||
+                    location.pathname === "/RemindersDetails" ||
+                    location.pathname === "/CancellationDetail"
+                      ? "enable-vertical-scroll"
+                      : ""
+                  }`}
                 >
                   <Suspense
                     fallback={
@@ -1126,6 +1146,7 @@ function Entry() {
         {/* Footer - also hide for noSidebarRoutes */}
         {showSidebar && <MyFooter />}
       </div>
+      </CancellationBatchesFilterProvider>
       </ReminderBatchesFilterProvider>
     </AuthorizationProvider>
   );
