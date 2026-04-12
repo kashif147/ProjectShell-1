@@ -184,6 +184,12 @@ function AppTabs() {
       key: "approvalDate",
       render: (date) => formatDateOnly(date),
     },
+    {
+      title: "Join Date",
+      dataIndex: "joinDate",
+      key: "joinDate",
+      render: (date) => formatDateOnly(date),
+    },
     { title: "Approved By", dataIndex: "approvedBy", key: "approvedBy" },
     { title: "Status", dataIndex: "applicationStatus", key: "applicationStatus" },
   ];

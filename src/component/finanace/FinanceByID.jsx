@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
-import { Button, Empty, notification, Dropdown, Tooltip } from "antd";
+import { Button, Empty, notification, Dropdown, Tooltip, Segmented } from "antd";
 import { MoreOutlined, InfoCircleOutlined } from "@ant-design/icons";
 import RefundDrawer from "./RefundDrawer";
 import WriteOffDrawer from "./WriteOffDrawer";
@@ -9,7 +9,7 @@ import { useLocation, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { useSelector } from "react-redux";
 import MyTable from "../common/MyTable";
-import { centsToEuro, convertToLocalTime } from "../../utils/Utilities";
+import { centsToEuro, formatDateOnly } from "../../utils/Utilities";
 // import axios from "axios";
 import { useTableColumns } from "../../context/TableColumnsContext ";
 
@@ -18,8 +18,7 @@ function displayDocTypeLabel(raw) {
   if (raw == null || String(raw).trim() === "") return "—";
   const s = String(raw).trim();
   const norm = s.toLowerCase();
-  if (norm === "claim") return "Receipt";
-  if (norm === "adjustment") return "Fee Adjustment";
+  if (norm === "ledgersummary") return "Summary";
   return s;
 }
 
@@ -29,6 +28,84 @@ function pickFirstNonEmptyString(...candidates) {
     if (c != null && String(c).trim() !== "") return String(c).trim();
   }
   return null;
+}
+
+function glFromLedgerItem(item) {
+  return (
+    item?.glTransaction ??
+    (Array.isArray(item?.glTransactions) && item.glTransactions.length
+      ? item.glTransactions[0]
+      : null)
+  );
+}
+
+/**
+ * System timestamps for a ledger line (not Tx/posting date). Used for running balance order.
+ */
+function createdAtChainRaw(item) {
+  const gl = glFromLedgerItem(item);
+  return pickFirstNonEmptyString(
+    item?.createdAt,
+    item?.created_at,
+    gl?.createdAt,
+    gl?.created_at,
+    item?.insertedAt,
+    item?.inserted_at,
+    item?.updatedAt,
+    item?.updated_at,
+    gl?.updatedAt,
+    gl?.updated_at
+  );
+}
+
+function createdAtSortKeyMs(item) {
+  const raw = createdAtChainRaw(item);
+  if (raw && dayjs(raw).isValid()) return dayjs(raw).valueOf();
+  return null;
+}
+
+/** Oldest-first by createdAt (etc.) only; Tx Date is not used. Tie-break: doc/id. */
+function compareLedgerByCreatedAtAsc(a, b) {
+  const ka = createdAtSortKeyMs(a);
+  const kb = createdAtSortKeyMs(b);
+  if (ka != null && kb != null && ka !== kb) return ka - kb;
+  if (ka != null && kb == null) return -1;
+  if (ka == null && kb != null) return 1;
+  const ida = String(a._id ?? a.docNo ?? "");
+  const idb = String(b._id ?? b.docNo ?? "");
+  return ida.localeCompare(idb);
+}
+
+/** Sort by posting Tx date only (column header). */
+function compareLedgerByTransactionDateAsc(a, b) {
+  const ta = dayjs(a.date).isValid() ? dayjs(a.date).unix() : 0;
+  const tb = dayjs(b.date).isValid() ? dayjs(b.date).unix() : 0;
+  if (ta !== tb) return ta - tb;
+  const ka = String(a._id ?? a.key ?? a.docNo ?? "");
+  const kb = String(b._id ?? b.key ?? b.docNo ?? "");
+  return ka.localeCompare(kb);
+}
+
+function resolveLedgerCreatedAtDisplay(item) {
+  const raw = createdAtChainRaw(item);
+  return raw && dayjs(raw).isValid() ? raw : "";
+}
+
+/** For row ordering: prefer API updatedAt, else transaction date. */
+function resolveLedgerUpdatedAt(item, gl, transactionDate) {
+  const raw = pickFirstNonEmptyString(
+    item.updatedAt,
+    item.updated_at,
+    gl?.updatedAt,
+    gl?.updated_at,
+    item.modifiedAt,
+    item.modified_at,
+    item.lastModified,
+    item.last_modified
+  );
+  if (raw && dayjs(raw).isValid()) return raw;
+  if (transactionDate && dayjs(transactionDate).isValid()) return transactionDate;
+  return "";
 }
 
 /** How the payment was received (ledger / settlement / GL). */
@@ -132,17 +209,12 @@ const TransactionHistory = () => {
   const [writeOffLedgerRows, setWriteOffLedgerRows] = useState([]);
   const [reallocationDrawerOpen, setReallocationDrawerOpen] = useState(false);
   const [reallocationSourceRow, setReallocationSourceRow] = useState(null);
+  const [ledgerView, setLedgerView] = useState("simple");
   const targetTransactionId = String(
     location.state?.transactionId || searchParams.get("transactionId") || ""
   )
     .trim()
     .toLowerCase();
-
-  useEffect(() => {
-    if (memberId) {
-      fetchLedgerData();
-    }
-  }, [memberId]);
 
   useEffect(() => {
     if (!targetTransactionId || !Array.isArray(data) || !data.length) return;
@@ -165,13 +237,14 @@ const TransactionHistory = () => {
 
   }, [data, location.state?.transactionId, searchParams, targetTransactionId]);
 
-  const fetchLedgerData = async () => {
+  const fetchLedgerData = useCallback(async () => {
     setLoading(true);
     try {
       const token = localStorage.getItem("token");
       const response = await axios.get(
         `${process.env.REACT_APP_ACCOUNT_SERVICE_URL}/reports/member/${memberId}/ledger`,
         {
+          params: { view: ledgerView },
           headers: {
             Authorization: `Bearer ${token}`,
           },
@@ -191,8 +264,8 @@ const TransactionHistory = () => {
         )
       );
 
-      // Sort chronologically for correct running balance calculation
-      const sortedData = [...filteredRawData].sort((a, b) => dayjs(a.date).unix() - dayjs(b.date).unix());
+      // Oldest-first by createdAt/updatedAt only — running balance does not use Tx Date
+      const sortedData = [...filteredRawData].sort(compareLedgerByCreatedAtAsc);
 
       let cumulativeBalance = 0;
       const ledgerData = sortedData.map((item, index) => {
@@ -213,11 +286,7 @@ const TransactionHistory = () => {
 
         cumulativeBalance += (totalCredit - totalDebit);
 
-        const gl =
-          item.glTransaction ??
-          (Array.isArray(item.glTransactions) && item.glTransactions.length
-            ? item.glTransactions[0]
-            : null);
+        const gl = glFromLedgerItem(item);
 
         const docType =
           item.docType ?? item.doc_type ?? item.documentType ??
@@ -231,6 +300,14 @@ const TransactionHistory = () => {
           item.description
         );
         const paymentType = resolvePaymentTypeSource(item, gl);
+        const docTypeDisplayLabel = pickFirstNonEmptyString(
+          item.displayLabel,
+          gl?.displayLabel,
+          item.docTypeDisplayLabel,
+          gl?.docTypeDisplayLabel
+        );
+        const updatedAt = resolveLedgerUpdatedAt(item, gl, item.date);
+        const ledgerCreatedAt = resolveLedgerCreatedAtDisplay(item);
 
         return {
           ...item,
@@ -239,7 +316,10 @@ const TransactionHistory = () => {
           docNo,
           memo: memoField,
           paymentType,
-          reference: (docNo || item.reference || "-").trim(),
+          displayLabel: docTypeDisplayLabel || "",
+          updatedAt,
+          ledgerCreatedAt,
+          reference: (item.reference || docNo || "-").trim(),
           debit: totalDebit,
           credit: totalCredit,
           balance: cumulativeBalance,
@@ -251,15 +331,20 @@ const TransactionHistory = () => {
         return hasDate && hasAmount;
       });
 
-      // Show newest first in the table
-      setData([...ledgerData].reverse());
+      setData(ledgerData);
     } catch (error) {
       console.error("Error fetching ledger data:", error);
       setData([]);
     } finally {
       setLoading(false);
     }
-  };
+  }, [memberId, ledgerView]);
+
+  useEffect(() => {
+    if (memberId) {
+      fetchLedgerData();
+    }
+  }, [memberId, fetchLedgerData]);
 
   const closeRefundDrawer = useCallback(() => {
     setRefundDrawerOpen(false);
@@ -390,15 +475,43 @@ const TransactionHistory = () => {
 
     return [
     {
-      title: "Date",
-      dataIndex: "date",
-      key: "date",
-      width: 165,
+      title: "Created",
+      dataIndex: "ledgerCreatedAt",
+      key: "ledgerCreatedAt",
+      width: 158,
       sorter: {
-        compare: (a, b) => dayjs(a.date).unix() - dayjs(b.date).unix(),
+        compare: (a, b) => {
+          const va = dayjs(a.ledgerCreatedAt).isValid()
+            ? dayjs(a.ledgerCreatedAt).valueOf()
+            : NaN;
+          const vb = dayjs(b.ledgerCreatedAt).isValid()
+            ? dayjs(b.ledgerCreatedAt).valueOf()
+            : NaN;
+          const okA = !Number.isNaN(va);
+          const okB = !Number.isNaN(vb);
+          if (okA && okB && va !== vb) return va - vb;
+          if (okA && !okB) return -1;
+          if (!okA && okB) return 1;
+          return String(a._id ?? a.key ?? "").localeCompare(
+            String(b._id ?? b.key ?? "")
+          );
+        },
       },
       render: (text) =>
-        text && dayjs(text).isValid() ? convertToLocalTime(text) : "-",
+        text && dayjs(text).isValid()
+          ? dayjs(text).format("DD/MM/YYYY HH:mm")
+          : "—",
+    },
+    {
+      title: "Tx Date",
+      dataIndex: "date",
+      key: "date",
+      width: 130,
+      sorter: {
+        compare: (a, b) => compareLedgerByTransactionDateAsc(a, b),
+      },
+      render: (text) =>
+        text && dayjs(text).isValid() ? formatDateOnly(text) : "-",
     },
     {
       title: "Doc Type",
@@ -419,11 +532,47 @@ const TransactionHistory = () => {
         displayDocTypeLabel(record.docType ?? record.doc_type ?? record.documentType) ===
         value,
       filterSearch: true,
-      render: (_, r) =>
-        displayDocTypeLabel(r.docType ?? r.doc_type ?? r.documentType),
+      render: (_, r) => {
+        const main = displayDocTypeLabel(
+          r.docType ?? r.doc_type ?? r.documentType
+        );
+        const tip =
+          r.displayLabel != null && String(r.displayLabel).trim() !== ""
+            ? String(r.displayLabel).trim()
+            : "";
+        return (
+          <span
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: 6,
+              maxWidth: "100%",
+            }}
+          >
+            <span
+              style={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                minWidth: 0,
+              }}
+            >
+              {main}
+            </span>
+            {tip ? (
+              <Tooltip title={tip}>
+                <InfoCircleOutlined
+                  style={{ color: "#8c8c8c", flexShrink: 0, cursor: "help" }}
+                  aria-label="Document type description"
+                />
+              </Tooltip>
+            ) : null}
+          </span>
+        );
+      },
     },
     {
-      title: "Payment Type",
+      title: "Tx Type",
       dataIndex: "paymentType",
       key: "paymentType",
       width: 150,
@@ -554,7 +703,16 @@ const TransactionHistory = () => {
         width: '100%'
       }}
     >
-      <div className="d-flex justify-content-end align-items-center mb-2">
+      <div className="d-flex justify-content-between align-items-center mb-2 flex-wrap gap-2">
+        <Segmented
+          aria-label="Ledger detail level"
+          options={[
+            { label: "Simple", value: "simple" },
+            { label: "Full detail", value: "full" },
+          ]}
+          value={ledgerView}
+          onChange={(v) => setLedgerView(v)}
+        />
         <Dropdown
           menu={{
             items: [
@@ -605,7 +763,7 @@ const TransactionHistory = () => {
         rowSelection={{ selectedRowKeys }}
         onSelectionChange={(keys) => setSelectedRowKeys(keys)}
         tablePadding={{ paddingLeft: "0", paddingRight: "0" }}
-        defaultSortField="date"
+        defaultSortField="ledgerCreatedAt"
         defaultSortOrder="descend"
       />
 
